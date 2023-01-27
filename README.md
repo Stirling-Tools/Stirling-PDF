@@ -31,6 +31,8 @@ Prerequisites
 
 
 ### Docker
+https://hub.docker.com/r/frooodle/s-pdf
+
 docker pull frooodle/s-pdf
 
 docker run -p 8080:8080 frooodle/s-pdf
