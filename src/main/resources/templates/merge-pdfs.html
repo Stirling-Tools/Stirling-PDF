@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:insert="~{common :: head}"></th:block>
+<title>S-PDF MergePDFs</title>
+
+<script>
+dropContainer.ondragover = dropContainer.ondragenter = function(evt) {
+  evt.preventDefault();
+};
+
+dropContainer.ondrop = function(evt) {
+  // pretty simple -- but not for IE :(
+  fileInput.files = evt.dataTransfer.files;
+
+  // If you want to use some of the dropped files
+  const dT = new DataTransfer();
+  dT.items.add(evt.dataTransfer.files[0]);
+  dT.items.add(evt.dataTransfer.files[3]);
+  fileInput.files = dT.files;
+
+  evt.preventDefault();
+};
+</script>
+</head>
+
+<body>
+	<div th:insert="~{navbar.html :: navbar}"></div>
+	<br>
+	<br>
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-md-6" id="dropContainer">
+				<h2>Merge multiple PDFs (2+)</h2>
+				<form action="/merge-pdfs" method="post"
+					enctype="multipart/form-data">
+					<div class="form-group">
+						<label>Select (or drag & drop) all PDFs to merge</label>
+						<div class="custom-file">
+							<input type="file" class="custom-file-input" id="fileInput"
+								name="fileInput" multiple> <label
+								class="custom-file-label">Choose PDFs</label>
+						</div>
+					</div>
+					<div class="form-group text-center">
+						<button type="submit" class="btn btn-primary">Merge</button>
+					</div>
+				</form>
+				<th:block th:insert="~{common :: filelist}"></th:block>
+
+
+
+
+
+
+			</div>
+		</div>
+	</div>
+	<div th:insert="~{footer.html :: footer}"></div>
+</body>
+</html>

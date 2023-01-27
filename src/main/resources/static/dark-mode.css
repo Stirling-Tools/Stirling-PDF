@@ -1,0 +1,14 @@
+/* Dark Mode Styles */
+body {
+    background-color: #333;
+    color: #fff;
+}
+
+.dark-card {
+  background-color: #333 !important;
+  color: white;
+}
+.jumbotron {
+  background-color: #222; /* or any other dark color */
+  color: #fff; /* or any other light color */
+}

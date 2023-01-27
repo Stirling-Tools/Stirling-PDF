@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:insert="~{common :: head}"></th:block>
+<title>S-PDF Organizer</title>
+</head>
+
+<body>
+	<div th:insert="~{navbar.html :: navbar}"></div>
+	<br>
+	<br>
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-md-6">
+				<h2>PDF Page Organizer</h2>
+
+
+
+				<form th:action="@{/rearrange-pages}" method="post"
+					enctype="multipart/form-data">
+					<div class="custom-file">
+						<input type="file" class="custom-file-input" id="fileInput"
+							name="fileInput" required> <label
+							class="custom-file-label" for="fileInput">Choose PDF</label>
+					</div>
+					<div class="form-group">
+						<label for="pageOrder">Page Order (Enter a comma-separated
+							list of page numbers) :</label> <input type="text" class="form-control"
+							id="fileInput" name="pageOrder"
+							placeholder="(e.g. 1,3,2 or 4-8,2,10-12)" required>
+					</div>
+					<button type="submit" class="btn btn-primary">Rearrange
+						Pages</button>
+				</form>
+				<th:block th:insert="~{common :: filelist}"></th:block>
+
+			</div>
+		</div>
+	</div>
+	<div th:insert="~{footer.html :: footer}"></div>
+</body>
+</html>
