@@ -35,6 +35,6 @@ jobs:
     
     
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag frooodle/s-pdf:${{ steps.versionNumber.outputs.stdout }}
+      run: "docker build . --file Dockerfile --tag frooodle/s-pdf:${{ steps.versionNumber.outputs.stdout }}"
  
 
