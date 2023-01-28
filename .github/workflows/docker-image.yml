@@ -27,6 +27,7 @@ jobs:
         arguments: clean build
 
     - name: versionNumber
+      id: versionNumber
       uses: gradle/gradle-build-action@v2.3.3
       with:
         gradle-version: 7.6
