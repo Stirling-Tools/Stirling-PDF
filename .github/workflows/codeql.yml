@@ -31,12 +31,6 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix:
-        language: [ 'java' ]
-        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
-        # Use only 'java' to analyze code written in Java, Kotlin or both
-        # Use only 'javascript' to analyze code written in JavaScript, TypeScript or both
-        # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
     - name: Checkout repository
@@ -47,11 +41,6 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-
-  #  - name: Gradle Build Action
-  #    uses: gradle/gradle-build-action@v2.3.3
-  #    with:
-  #      gradle-version: 7.6
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
