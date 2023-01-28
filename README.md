@@ -1,6 +1,8 @@
-# Stirling-PDF
+# Stirling-PDF (Made in 1 day with 100% ChatGPT, Even this readme!)
 
 This is a locally hosted web application that allows you to perform various operations on PDF files, such as splitting and adding images.
+
+I will support and fix/add things to this if there is a demand [Discord](https://discord.gg/Cn8pWhQRxZ)
 
 ## Features
 
@@ -31,6 +33,8 @@ Prerequisites
 
 
 ### Docker
+https://hub.docker.com/r/frooodle/s-pdf
+
 docker pull frooodle/s-pdf
 
 docker run -p 8080:8080 frooodle/s-pdf
