@@ -42,7 +42,7 @@ public class FromPDFController {
 	private String getMediaType(String imageFormat) {
 	    if(imageFormat.equalsIgnoreCase("PNG"))
 	        return "image/png";
-	    else if(imageFormat.equalsIgnoreCase("JPEG"))
+	    else if(imageFormat.equalsIgnoreCase("JPEG") || imageFormat.equalsIgnoreCase("JPG") )
 	        return "image/jpeg";
 	    else if(imageFormat.equalsIgnoreCase("GIF"))
 	        return "image/gif";
