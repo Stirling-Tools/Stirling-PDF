@@ -80,7 +80,9 @@ jobs:
     #     echo "Run, Build Application using script"
     #     ./location_of_script_within_repo/buildscript.sh
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+    - name: Run CodeQL
+      uses: actions/codeql-action@v2
       with:
-        category: "/language:${{matrix.language}}"
+        codeql-action-version: latest
+        command: analyze
+        args: --language java --project-root .
