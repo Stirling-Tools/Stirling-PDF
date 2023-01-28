@@ -1,77 +1,95 @@
 <head th:fragment="head">
-<link rel="shortcut icon" href="favicon.svg">
-<script
-	src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
-<link rel="stylesheet"
-	href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-<script
-	src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<meta charset="UTF-8">
+	<link rel="shortcut icon" href="favicon.svg">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+	<meta charset="UTF-8">
 
-<link rel="stylesheet" th:href="@{dark-mode.css}" id="dark-mode-styles">
-<script>
-    function toggleDarkMode() {
-        var checkbox = document.getElementById("toggle-dark-mode");
-        var darkModeStyles = document.getElementById("dark-mode-styles");
-        if (checkbox.checked) {
-        	localStorage.setItem("dark-mode", "on");
-            darkModeStyles.disabled = false;
-        } else {
-        	localStorage.setItem("dark-mode", "off");
-            darkModeStyles.disabled = true;
-        }
-    }
-    $(document).ready(function () {
-    	var darkModeStyles = document.getElementById("dark-mode-styles");
-    	var checkbox = document.getElementById("toggle-dark-mode");
-    	if(localStorage.getItem("dark-mode") == "on"){
-    		darkModeStyles.disabled = false;
-    		checkbox.checked = true;
-    	}
-    	if(localStorage.getItem("dark-mode") == "off"){
-    		darkModeStyles.disabled = true;
-    		checkbox.checked = false;
-    	}
-    
-    });
+	<link rel="stylesheet" th:href="@{dark-mode.css}" id="dark-mode-styles">
+	<script>
+		function toggleDarkMode() {
+			var checkbox = document.getElementById("toggle-dark-mode");
+			var darkModeStyles = document.getElementById("dark-mode-styles");
+			if (checkbox.checked) {
+				localStorage.setItem("dark-mode", "on");
+				darkModeStyles.disabled = false;
+			} else {
+				localStorage.setItem("dark-mode", "off");
+				darkModeStyles.disabled = true;
+			}
+		}
+		$(document).ready(function () {
+			var darkModeStyles = document.getElementById("dark-mode-styles");
+			var checkbox = document.getElementById("toggle-dark-mode");
+			if (localStorage.getItem("dark-mode") == "on") {
+				darkModeStyles.disabled = false;
+				checkbox.checked = true;
+			}
+			if (localStorage.getItem("dark-mode") == "off") {
+				darkModeStyles.disabled = true;
+				checkbox.checked = false;
+			}
+
+		});
 	</script>
-<link rel="stylesheet" href="general.css">
+	<link rel="stylesheet" href="general.css">
 </head>
 
 <th:block th:fragment="filelist">
 	<div id="fileList"></div>
 	<div id="fileList2"></div>
 	<script>
-	var input = document.getElementById("fileInput");
-	var output = document.getElementById("fileList");
-	
-		input.addEventListener("change", function() {
-		  var files = input.files;
-		  var fileNames = "";
-		
-		  for (var i = 0; i < files.length; i++) {
-		    fileNames += (i + 1) + ". " + files[i].name + "<br>";
-		  }
-		
-		  output.innerHTML = fileNames;
+		var input = document.getElementById("fileInput");
+		var output = document.getElementById("fileList");
+
+		input.addEventListener("change", function () {
+			var files = input.files;
+			var fileNames = "";
+
+			for (var i = 0; i < files.length; i++) {
+				fileNames += (i + 1) + ". " + files[i].name + "<br>";
+			}
+
+			output.innerHTML = fileNames;
 		});
-	
+
 	</script>
 	<script>
-	var input2 = document.getElementById("fileInput2");
-	var output2 = document.getElementById("fileList2");
-	if(input2 != null && !input2) {
-		input2.addEventListener("change", function() {
-		  var files = input2.files;
-		  var fileNames = "";
-		
-		  for (var i = 0; i < files.length; i++) {
-		    fileNames += (i + 1) + ". " + files[i].name + "<br>";
-		  }
-		
-		  output2.innerHTML = fileNames;
-		});
-	}
+		var input2 = document.getElementById("fileInput2");
+		var output2 = document.getElementById("fileList2");
+		if (input2 != null && !input2) {
+			input2.addEventListener("change", function () {
+				var files = input2.files;
+				var fileNames = "";
+
+				for (var i = 0; i < files.length; i++) {
+					fileNames += (i + 1) + ". " + files[i].name + "<br>";
+				}
+
+				output2.innerHTML = fileNames;
+			});
+		}
+	</script>
+
+
+	<script>
+		if (dropContainer) {
+			dropContainer.ondragover = dropContainer.ondragenter = function (evt) {
+				evt.preventDefault();
+			};
+
+			dropContainer.ondrop = function (evt) {
+				if(fileInput) {
+					fileInput.files = evt.dataTransfer.files;
+	
+					const dT = new DataTransfer();
+					dT.items.add(evt.dataTransfer.files[0]);
+					dT.items.add(evt.dataTransfer.files[3]);
+					fileInput.files = dT.files;
+	
+					evt.preventDefault();
+				}
+			};
+		}
 	</script>
 </th:block>
-

@@ -17,7 +17,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.apache.pdfbox:pdfbox:2.0.27'
-	implementation 'log4j:log4j'
+	implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
 }
 
 tasks.named('test') {
