@@ -33,6 +33,10 @@ jobs:
       fail-fast: false
       matrix:
         language: [ 'java' ]
+        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
+        # Use only 'java' to analyze code written in Java, Kotlin or both
+        # Use only 'javascript' to analyze code written in JavaScript, TypeScript or both
+        # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
     - name: Checkout repository
@@ -42,21 +46,22 @@ jobs:
       uses: actions/setup-java@v3
       with:
         java-version: '17'
-        distribution: 'adopt'
+        distribution: 'temurin'
+
+  #  - name: Gradle Build Action
+  #    uses: gradle/gradle-build-action@v2.3.3
+  #    with:
+  #      gradle-version: 7.6
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:
-        languages: ${{ matrix.language }}
-        # If you wish to specify custom queries, you can do so here or in a config file.
-        # By default, queries listed here will override any specified in a config file.
-        # Prefix the list here with "+" to use these queries and those in the config file.
+        languages: java
 
-    - name: Gradle Build Action
-      uses: gradle/gradle-build-action@v2.3.3
+    - uses: gradle/gradle-build-action@v2
       with:
-        gradle-version: 7.6
+        # skipping build cache is needed so that all modules will be analyzed
+        arguments: assemble --no-build-cache
 
-
-    - name: Perform CodeQL Analysis
+    - name: Perform CodeQL analysis
       uses: github/codeql-action/analyze@v2
