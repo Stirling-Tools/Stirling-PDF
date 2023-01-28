@@ -58,9 +58,9 @@ jobs:
       with:
         languages: java
 
-    - uses: gradle/gradle-build-action@v2
+    - uses: gradle/gradle-build-action@v2.3.3
       with:
-        # skipping build cache is needed so that all modules will be analyzed
+        gradle-version: 7.6
         arguments: assemble --no-build-cache
 
     - name: Perform CodeQL analysis
