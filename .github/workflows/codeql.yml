@@ -41,6 +41,12 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'adopt'
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
@@ -57,8 +63,12 @@ jobs:
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, Go, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
+    - name: Gradle Build Action
+      # You may pin to the exact commit or the version.
+      # uses: gradle/gradle-build-action@3fbe033aaae657f011f88f29be9e65ed26bd29ef
+      uses: gradle/gradle-build-action@v2.3.3
+      with:
+        gradle-version: 7.6
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
