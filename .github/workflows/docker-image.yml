@@ -3,8 +3,6 @@ name: Build and Push Docker Image with gradle VersionNumber
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
 
