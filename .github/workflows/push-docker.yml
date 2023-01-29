@@ -1,4 +1,4 @@
-name: Build and Push Docker Image with gradle VersionNumber
+name: Push Docker Image with VersionNumber
 
 on:
   push:
