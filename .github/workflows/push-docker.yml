@@ -2,8 +2,9 @@ name: Push Docker Image with VersionNumber
 
 on:
   push:
-    branches: [ "main" ]
-
+    branches: 
+      - master
+      - main
 jobs:
 
   build:
@@ -45,3 +46,14 @@ jobs:
         push: true
         tags: |
           frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
+
+    - name: Build and push
+      uses: docker/build-push-action@v3
+      if: github.ref == 'refs/heads/master' 
+      with:
+        context: .
+        push: true
+        tags: |
+          frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
+
+
