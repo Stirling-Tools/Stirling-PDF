@@ -26,6 +26,10 @@ jobs:
         gradle-version: 7.6
         arguments: clean build
 
+    - name: Make Gradle wrapper executable
+      run: chmod +x gradlew
+
+
     - name: Get version number
       id: versionNumber
       run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet)"
