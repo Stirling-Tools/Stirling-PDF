@@ -32,7 +32,7 @@ jobs:
 
     - name: Get version number
       id: versionNumber
-      run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet)"
+      run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet | tail -1)"
     
     
     - name: Build the Docker image
