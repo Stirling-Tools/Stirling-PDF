@@ -5,11 +5,15 @@ on:
     branches: 
       - master
       - main
+      - test
 jobs:
   
   detectChangeType:
 
     runs-on: ubuntu-latest
+    
+    outputs:
+      status: ${{ steps.early.conclusion }}
     steps:
     - uses: actions/checkout@v3
 
@@ -24,7 +28,8 @@ jobs:
   push:
 
     runs-on: ubuntu-latest
-    if: steps.changed.outputs.changed == 'true'
+    needs: detectChangeType
+    if: needs.detectChangeType.outputs.changed == 'true'
     steps:
    
     
