@@ -26,16 +26,12 @@ jobs:
         gradle-version: 7.6
         arguments: clean build
 
-    - name: versionNumber
+    - name: Get version number
       id: versionNumber
-      uses: gradle/gradle-build-action@v2.3.3
-      with:
-        gradle-version: 7.6
-        arguments: printVersion -q
-
+      run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet)"
     
     
     - name: Build the Docker image
-      run: "docker build . --file Dockerfile --tag frooodle/s-pdf:${{ steps.versionNumber.outputs.* }}"
+      run: "docker build . --file Dockerfile --tag frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}"
  
 
