@@ -54,6 +54,6 @@ jobs:
         context: .
         push: true
         tags: |
-          frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
+          frooodle/s-pdf:latest
 
 
