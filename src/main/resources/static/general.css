@@ -3,3 +3,7 @@
   bottom: 0;
   width: 100%;
 }
+
+#image {
+  transform: rotate(0deg);
+}

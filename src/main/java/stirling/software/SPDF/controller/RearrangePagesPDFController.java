@@ -27,6 +27,7 @@ public class RearrangePagesPDFController {
 
 	@GetMapping("/pdf-organizer")
 	public String pageOrganizer(Model model) {
+		model.addAttribute("currentPage", "pdf-organizer");
 		return "pdf-organizer";
 	}
 

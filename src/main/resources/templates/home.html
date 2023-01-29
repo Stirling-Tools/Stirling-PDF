@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-<th:block th:insert="~{common :: head}"></th:block>
-<title>S-PDF</title>
+	<th:block th:insert="~{common :: head}"></th:block>
+	<title>S-PDF</title>
 </head>
 
 <body>
@@ -17,6 +18,8 @@
 	</div>
 
 	<!-- Features -->
+
+
 	<div class="container">
 		<div class="row h-100">
 			<div class="col-4 h-100">
@@ -32,29 +35,8 @@
 				<div class="dark-card card">
 					<div class="card-body">
 						<h5 class="card-title">Split PDFs</h5>
-						<p class="card-text">Split your PDFs into multiple single-page
-							documents or at specific page numbers.</p>
+						<p class="card-text">Split PDFs into multiple documents</p>
 						<a href="#" class="btn btn-primary" th:href="@{/split-pdfs}">Go</a>
-					</div>
-				</div>
-			</div>
-			<div class="col-4 h-100">
-				<div class="dark-card card">
-					<div class="card-body">
-						<h5 class="card-title">Convert to PDF</h5>
-						<p class="card-text">Convert images to PDF.</p>
-						<a href="#" class="btn btn-primary" th:href="@{/convert-to-pdf}">Go</a>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="row h-100">
-			<div class="col-4 h-100">
-				<div class="dark-card card">
-					<div class="card-body dark-card">
-						<h5 class="card-title">Convert from PDF</h5>
-						<p class="card-text">Convert PDF to Image.</p>
-						<a href="#" class="btn btn-primary" th:href="@{/convert-from-pdf}">Go</a>
 					</div>
 				</div>
 			</div>
@@ -67,18 +49,60 @@
 					</div>
 				</div>
 			</div>
+		</div>
+		<br>
+		<div class="row h-100">
+			<div class="col-4 h-100">
+				<div class="dark-card card">
+					<div class="card-body">
+						<h5 class="card-title">Convert to/from PDF</h5>
+						<p class="card-text">Convert images to/from PDF.</p>
+						<a href="#" class="btn btn-primary" th:href="@{/convert-pdf}">Go</a>
+					</div>
+				</div>
+			</div>
+
 			<div class="col-4 h-100">
 				<div class="dark-card card">
 					<div class="card-body">
 						<h5 class="card-title">PDF Organizer</h5>
-						<p class="card-text">Rearrange PDF pages into any order (or
-							remove)</p>
+						<p class="card-text">Remove/Rearrange pages in any order</p>
 						<a href="#" class="btn btn-primary" th:href="@{/pdf-organizer}">Go</a>
 					</div>
 				</div>
 			</div>
+
+			<div class="col-4 h-100">
+				<div class="dark-card card">
+					<div class="card-body">
+						<h5 class="card-title">Rotate PDFs</h5>
+						<p class="card-text">Easily rotate your PDFs.</p>
+						<a href="#" class="btn btn-primary" th:href="@{/rotate-pdf}">Go</a>
+					</div>
+				</div>
+			</div>
+
+		</div>
+		<br>
+		<div class="row h-100">
+
+
+
+
+
+			<div class="col-4 h-100">
+				<div class="dark-card card">
+					<div class="card-body">
+						<h5 class="card-title">Compress PDFs</h5>
+						<p class="card-text">Compress PDFs to reduce their file size.</p>
+						<a href="#" class="btn btn-primary" th:href="@{/compress-pdf}">Go</a>
+					</div>
+				</div>
+			</div>
+
 		</div>
 	</div>
 	<div th:insert="~{footer.html :: footer}"></div>
 </body>
+
 </html>

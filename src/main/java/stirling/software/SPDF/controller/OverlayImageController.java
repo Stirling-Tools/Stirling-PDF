@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,7 +23,8 @@ public class OverlayImageController {
 	private static final Logger logger = LoggerFactory.getLogger(OverlayImageController.class);
 
 	@GetMapping("/add-image")
-	public String overlayImage() {
+	public String overlayImage(Model model) {
+		model.addAttribute("currentPage", "add-image");
 		return "add-image";
 	}
 

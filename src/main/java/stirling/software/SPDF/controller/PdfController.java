@@ -33,13 +33,13 @@ public class PdfController {
 
 	@GetMapping("/merge-pdfs")
 	public String hello(Model model) {
-		model.addAttribute("message", "Hello, World!");
+		model.addAttribute("currentPage", "merge-pdfs");
 		return "merge-pdfs";
 	}
 
 	@GetMapping("/home")
 	public String home(Model model) {
-		model.addAttribute("message", "Hello, World!");
+		model.addAttribute("currentPage", "home");
 		return "home";
 	}
 
