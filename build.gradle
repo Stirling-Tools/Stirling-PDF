@@ -5,11 +5,15 @@ plugins {
 }
 
 group = 'stirling.software'
-version = '0.1.0'
+version = '0.2.0'
 sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
+	maven {
+        url "https://repo.e-iceblue.com/nexus/content/groups/public/"
+        name "com.e-iceblue"
+    }
 }
 
 dependencies {
@@ -18,6 +22,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.apache.pdfbox:pdfbox:2.0.27'
 	implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
+	implementation 'e-iceblue:spire.pdf.free:5.1.0'
 }
 
 jar {
@@ -27,6 +32,7 @@ jar {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
 task printVersion {
   println project.version
 }

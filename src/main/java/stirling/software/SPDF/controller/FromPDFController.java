@@ -21,10 +21,6 @@ public class FromPDFController {
 
 	private static final Logger logger = LoggerFactory.getLogger(FromPDFController.class);
 
-	@GetMapping("/convert-from-pdf")
-	public String convertFromPdfForm() {
-		return "convert-from-pdf";
-	}
 
 	@PostMapping("/convert-from-pdf")
 	public ResponseEntity<byte[]> convertToImage(@RequestParam("fileInput") MultipartFile file,
@@ -42,7 +38,7 @@ public class FromPDFController {
 	private String getMediaType(String imageFormat) {
 	    if(imageFormat.equalsIgnoreCase("PNG"))
 	        return "image/png";
-	    else if(imageFormat.equalsIgnoreCase("JPEG") || imageFormat.equalsIgnoreCase("JPG") )
+	    else if(imageFormat.equalsIgnoreCase("JPEG") || imageFormat.equalsIgnoreCase("JPG"))
 	        return "image/jpeg";
 	    else if(imageFormat.equalsIgnoreCase("GIF"))
 	        return "image/gif";
