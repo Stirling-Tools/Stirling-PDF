@@ -28,8 +28,10 @@ jobs:
 
     - name: Make Gradle wrapper executable
       run: chmod +x gradlew
-
-
+      
+    - name: Print libs
+      run: ls -lrt build/libs/
+      
     - name: Get version number
       id: versionNumber
       run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet | tail -1)"
