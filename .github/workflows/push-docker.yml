@@ -41,6 +41,7 @@ jobs:
  
     - name: Build and push
       uses: docker/build-push-action@v3
+      if: github.ref == 'refs/heads/main' 
       with:
         context: .
         push: true
