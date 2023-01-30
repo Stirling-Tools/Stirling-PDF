@@ -15,6 +15,8 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 - Convert PDFs to and from images
 - Reorganize PDF pages into different orders.
 - Add images to PDFs at specified locations.
+- Rotating PDFs in 90 degree increments.
+- Compressing PDFs to decrease their filesize.
 - Dark mode support.
 
 ## Technologies used
