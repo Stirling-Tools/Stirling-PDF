@@ -4,6 +4,10 @@ This is a locally hosted web application that allows you to perform various oper
 
 I will support and fix/add things to this if there is a demand [Discord](https://discord.gg/Cn8pWhQRxZ)
 
+
+![stirling-home](images/stirling-home.png)
+
+
 ## Features
 
 - Split PDFs into multiple files at specified page numbers or extract all pages as individual files.
