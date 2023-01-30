@@ -12,3 +12,12 @@ body {
   background-color: #222; /* or any other dark color */
   color: #fff; /* or any other light color */
 }
+
+.list-group {
+  background-color: #222 !important;
+  color: fff !important;
+}
+.list-group-item {
+  background-color: #222 !important;
+  color: fff !important;
+}
