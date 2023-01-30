@@ -6,25 +6,9 @@ on:
       - master
       - main
 jobs:
-  
-  detectChangeType:
-
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Has Changed
-      uses: YassinEldeeb/has-changed-path@v2.1
-      id: changed
-      with:
-        # Paths to detect changes
-        paths: build.gradle  src/ Dockerfile
-  
-  
   push:
 
     runs-on: ubuntu-latest
-    if: steps.changed.outputs.changed == 'true'
     steps:
    
     
