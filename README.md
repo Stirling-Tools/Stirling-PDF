@@ -1,6 +1,7 @@
-# Stirling-PDF (Made in 1 day with 100% ChatGPT, Even this readme!)
+# Stirling-PDF
 
 This is a locally hosted web application that allows you to perform various operations on PDF files, such as splitting and adding images.
+Started off as a 100% ChatGPT made application, slowly moving away from that as more features are added
 
 I will support and fix/add things to this if there is a demand [Discord](https://discord.gg/Cn8pWhQRxZ)
 
