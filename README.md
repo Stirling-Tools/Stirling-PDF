@@ -39,10 +39,19 @@ Prerequisites
 ### Docker
 https://hub.docker.com/r/frooodle/s-pdf
 
-docker pull frooodle/s-pdf
-
+Docker Run
+```
 docker run -p 8080:8080 frooodle/s-pdf
-
+```
+Docker Compose
+```
+version: '3.3'
+services:
+    s-pdf:
+        ports:
+            - '8080:8080'
+        image: frooodle/s-pdf
+```
 
 ## How to View
 1. Open a web browser and navigate to `http://localhost:8080/`
