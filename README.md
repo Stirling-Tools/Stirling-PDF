@@ -20,6 +20,7 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 ## Technologies used
 - Spring Boot + Thymeleaf
 - PDFBox
+- e-iceblue spire.pdf.free (for PDF compression untill i find a nicer way)
 - HTML, CSS, JavaScript
 - Docker
 
@@ -29,20 +30,29 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 
 Prerequisites
 - Java 17 or later
-- Gradle 6.0 or later
+- Gradle 7.0 or later
 
 1. Clone or download the repository.
 2. Build the project using Gradle by running `./gradlew build`
-3. Start the application by running `./gradlew bootRun`
+3. Start the application by running `./gradlew bootRun` or by calling the build jar in build/libs with java -jar jarName.jar
 
 
 ### Docker
 https://hub.docker.com/r/frooodle/s-pdf
 
-docker pull frooodle/s-pdf
-
+Docker Run
+```
 docker run -p 8080:8080 frooodle/s-pdf
-
+```
+Docker Compose
+```
+version: '3.3'
+services:
+    s-pdf:
+        ports:
+            - '8080:8080'
+        image: frooodle/s-pdf
+```
 
 ## How to View
 1. Open a web browser and navigate to `http://localhost:8080/`
