@@ -44,21 +44,15 @@ jobs:
         docker buildx create --name mybuilder
         docker buildx use mybuilder
         
-    - name: Build and push amd64
+    - name: Build and push versioned amd64 and v8
       if: github.ref == 'refs/heads/armSupport' 
       run: | 
         docker buildx build --platform="linux/amd64,linux/amd64/v8" --push --tag "frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}" .
 
    
-          
-          
-    - name: Build and push
-      uses: docker/build-push-action@v3
+    - name: Build and push latest amd64 and v8
       if: github.ref == 'refs/heads/master' 
-      with:
-        context: .
-        push: true
-        tags: |
-          frooodle/s-pdf:latest
-
-
+      run: | 
+        docker buildx build --platform="linux/amd64,linux/amd64/v8" --push --tag "frooodle/s-pdf:latest" .
+        
+        
