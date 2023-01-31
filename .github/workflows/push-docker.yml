@@ -43,7 +43,7 @@ jobs:
     - name: Build and push amd64
       if: github.ref == 'refs/heads/armSupport' 
       run: | 
-        docker buildx build --platform=linux/amd64,linux/amd64/v8 --push --tag frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
+        docker buildx build --platform="linux/amd64,linux/amd64/v8" --push --tag "frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}" .
 
    
           
