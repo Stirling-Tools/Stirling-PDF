@@ -5,7 +5,6 @@ on:
     branches: 
       - master
       - main
-      - armSupport
 jobs:
   push:
 
@@ -45,14 +44,14 @@ jobs:
         docker buildx use mybuilder
         
     - name: Build and push versioned amd64 and v8
-      if: github.ref == 'refs/heads/armSupport' 
+      if: github.ref == 'refs/heads/main' 
       run: | 
-        docker buildx build --platform="linux/amd64,linux/amd64/v8" --push --tag "frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}" .
+        docker buildx build --platform="linux/amd64,linux/arm64/v8" --push --tag "frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}" .
 
    
     - name: Build and push latest amd64 and v8
       if: github.ref == 'refs/heads/master' 
       run: | 
-        docker buildx build --platform="linux/amd64,linux/amd64/v8" --push --tag "frooodle/s-pdf:latest" .
+        docker buildx build --platform="linux/amd64,linux/arm64/v8" --push --tag "frooodle/s-pdf:latest" .
         
         
