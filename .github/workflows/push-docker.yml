@@ -50,46 +50,16 @@ jobs:
         tags: |
           frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
 
-    - name: Build and push arm
+    - name: Build and push linux/arm64/v8
       uses: docker/build-push-action@v3
       if: github.ref == 'refs/heads/armSupport' 
       with:
         context: .
         push: true
-        platforms: "linux/arm"
+        platforms: "linux/arm64/v8"
         tags: |
           frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
 
-    - name: Build and push 386
-      uses: docker/build-push-action@v3
-      if: github.ref == 'refs/heads/armSupport' 
-      with:
-        context: .
-        push: true
-        platforms: "linux/386"
-        tags: |
-          frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
-
-    - name: Build and push 386
-      uses: docker/build-push-action@v3
-      if: github.ref == 'refs/heads/armSupport' 
-      with:
-        context: .
-        push: true
-        platforms: "linux/386"
-        tags: |
-          frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
-          
-    - name: Build and push arm/v6
-      uses: docker/build-push-action@v3
-      if: github.ref == 'refs/heads/armSupport' 
-      with:
-        context: .
-        push: true
-        platforms: "linux/arm/v6"
-        tags: |
-          frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
-          
           
           
     - name: Build and push
