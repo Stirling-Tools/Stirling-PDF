@@ -41,25 +41,11 @@ jobs:
         
  
     - name: Build and push amd64
-      uses: docker/build-push-action@v3
       if: github.ref == 'refs/heads/armSupport' 
-      with:
-        context: .
-        push: true
-        platforms: "linux/amd64"
-        tags: |
-          frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
+      run: | 
+        docker buildx build --platform=linux/amd64,linux/amd64/v8 --push --tag frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
 
-    - name: Build and push linux/arm64/v8
-      uses: docker/build-push-action@v3
-      if: github.ref == 'refs/heads/armSupport' 
-      with:
-        context: .
-        push: true
-        platforms: "linux/arm64/v8"
-        tags: |
-          frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
-
+   
           
           
     - name: Build and push
