@@ -40,16 +40,58 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_API }} 
         
  
-    - name: Build and push
+    - name: Build and push amd64
       uses: docker/build-push-action@v3
       if: github.ref == 'refs/heads/armSupport' 
       with:
         context: .
         push: true
-        platforms: "linux/amd64,linux/arm,linux/arm/v6,linux/amd64,linux/386"
+        platforms: "linux/amd64"
         tags: |
           frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
 
+    - name: Build and push arm
+      uses: docker/build-push-action@v3
+      if: github.ref == 'refs/heads/armSupport' 
+      with:
+        context: .
+        push: true
+        platforms: "linux/arm"
+        tags: |
+          frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
+
+    - name: Build and push 386
+      uses: docker/build-push-action@v3
+      if: github.ref == 'refs/heads/armSupport' 
+      with:
+        context: .
+        push: true
+        platforms: "linux/386"
+        tags: |
+          frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
+
+    - name: Build and push 386
+      uses: docker/build-push-action@v3
+      if: github.ref == 'refs/heads/armSupport' 
+      with:
+        context: .
+        push: true
+        platforms: "linux/386"
+        tags: |
+          frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
+          
+    - name: Build and push arm/v6
+      uses: docker/build-push-action@v3
+      if: github.ref == 'refs/heads/armSupport' 
+      with:
+        context: .
+        push: true
+        platforms: "linux/arm/v6"
+        tags: |
+          frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
+          
+          
+          
     - name: Build and push
       uses: docker/build-push-action@v3
       if: github.ref == 'refs/heads/master' 
