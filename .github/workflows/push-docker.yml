@@ -5,6 +5,7 @@ on:
     branches: 
       - master
       - main
+      - armSupport
 jobs:
   push:
 
@@ -41,10 +42,11 @@ jobs:
  
     - name: Build and push
       uses: docker/build-push-action@v3
-      if: github.ref == 'refs/heads/main' 
+      if: github.ref == 'refs/heads/armSupport' 
       with:
         context: .
         push: true
+        platforms: "linux/amd64,linux/arm,linux/arm/v6,linux/amd64,linux/386"
         tags: |
           frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}
 
