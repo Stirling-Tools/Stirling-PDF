@@ -42,4 +42,29 @@ public class ConvertPDFController {
 		ResponseEntity<byte[]> response = new ResponseEntity<>(bytes, headers, HttpStatus.OK);
 		return response;
 	}
+	
+	@PostMapping("/convert-from-pdf")
+	public ResponseEntity<byte[]> convertToImage(@RequestParam("fileInput") MultipartFile file,
+			@RequestParam("imageFormat") String imageFormat) throws IOException {
+		byte[] pdfBytes = file.getBytes();
+		//returns bytes for image
+		byte[] result =  PdfUtils.convertFromPdf(pdfBytes, imageFormat.toLowerCase());
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.parseMediaType(getMediaType(imageFormat)));
+		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+		ResponseEntity<byte[]> response = new ResponseEntity<>(result, headers, HttpStatus.OK);
+		return response;
+	}
+
+	private String getMediaType(String imageFormat) {
+	    if(imageFormat.equalsIgnoreCase("PNG"))
+	        return "image/png";
+	    else if(imageFormat.equalsIgnoreCase("JPEG") || imageFormat.equalsIgnoreCase("JPG"))
+	        return "image/jpeg";
+	    else if(imageFormat.equalsIgnoreCase("GIF"))
+	        return "image/gif";
+	    else
+	        return "application/octet-stream";
+	}
+	
 }
