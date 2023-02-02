@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<th:block th:insert="~{fragments/common :: head}"></th:block>
+<title>S-PDF Page Remover</title>
+</head>
+
+<body>
+	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+	<br>
+	<br>
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-md-6">
+				<h2>PDF Page remover</h2>
+
+				<form th:action="@{delete-pages}" method="post"
+					enctype="multipart/form-data">
+					<div class="custom-file">
+						<input type="file" class="custom-file-input" id="fileInput"
+							name="fileInput" required> <label
+							class="custom-file-label" for="fileInput">Choose PDF</label>
+					</div>
+					<div class="form-group">
+						<label for="pagesToDelete">Pages to delete (Enter a comma-separated
+							list of page numbers) :</label> <input type="text" class="form-control"
+							id="fileInput" name="pagesToDelete"
+							placeholder="(e.g. 1,2,6 or 1-10,15-30)" required>
+					</div>
+					<button type="submit" class="btn btn-primary">Delete
+						Pages</button>
+				</form>
+				<th:block th:insert="~{fragments/common :: filelist}"></th:block>
+
+			</div>
+		</div>
+	</div>
+	<div th:insert="~{fragments/footer.html :: footer}"></div>
+</body>
+</html>

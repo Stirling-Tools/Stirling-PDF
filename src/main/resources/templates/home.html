@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+<th:block th:insert="~{fragments/common :: head}"></th:block>
+<title>S-PDF</title>
+</head>
+
+<body>
+	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+	<!-- Jumbotron -->
+	<div class="jumbotron jumbotron-fluid" id="jumbotron">
+		<div class="container">
+			<h1 class="display-4">Stirling PDF</h1>
+			<p class="lead">Your locally hosted one-stop-shop for all your
+				PDF needs. (Made 100% in ChatGPT in 1 day as a experiment)</p>
+		</div>
+	</div>
+
+	<!-- Features -->
+	<div class="container">
+		<div class="row h-100">
+			<div class="col-4 h-100">
+				<div class="dark-card card">
+					<div class="card-body">
+						<h5 class="card-title">Merge PDFs</h5>
+						<p class="card-text">Easily merge multiple PDFs into one.</p>
+						<a href="#" class="btn btn-primary" th:href="@{merge-pdfs}">Go</a>
+					</div>
+				</div>
+			</div>
+			<div class="col-4 h-100">
+				<div class="dark-card card">
+					<div class="card-body">
+						<h5 class="card-title">Split PDFs</h5>
+						<p class="card-text">Split PDFs into multiple documents</p>
+						<a href="#" class="btn btn-primary" th:href="@{split-pdfs}">Go</a>
+					</div>
+				</div>
+			</div>
+			<div class="col-4 h-100">
+				<div class="dark-card card">
+					<div class="card-body">
+						<h5 class="card-title">Add image to PDF</h5>
+						<p class="card-text">Adds image/watermark to a PDF</p>
+						<a href="#" class="btn btn-primary" th:href="@{add-image}">Go</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<br>
+		<div class="row h-100">
+			<div class="col-4 h-100">
+				<div class="dark-card card">
+					<div class="card-body">
+						<h5 class="card-title">Convert to/from PDF</h5>
+						<p class="card-text">Convert images to/from PDF.</p>
+						<a href="#" class="btn btn-primary" th:href="@{convert-pdf}">Go</a>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-4 h-100">
+				<div class="dark-card card">
+					<div class="card-body">
+						<h5 class="card-title">PDF Organizer</h5>
+						<p class="card-text">Remove/Rearrange pages in any order</p>
+						<a href="#" class="btn btn-primary" th:href="@{pdf-organizer}">Go</a>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-4 h-100">
+				<div class="dark-card card">
+					<div class="card-body">
+						<h5 class="card-title">Rotate PDFs</h5>
+						<p class="card-text">Easily rotate your PDFs.</p>
+						<a href="#" class="btn btn-primary" th:href="@{rotate-pdf}">Go</a>
+					</div>
+				</div>
+			</div>
+
+		</div>
+		<br>
+		<div class="row h-100">
+
+
+
+
+
+			<div class="col-4 h-100">
+				<div class="dark-card card">
+					<div class="card-body">
+						<h5 class="card-title">Compress PDFs</h5>
+						<p class="card-text">Compress PDFs to reduce their file size.</p>
+						<a href="#" class="btn btn-primary" th:href="@{compress-pdf}">Go</a>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+	<div th:insert="~{fragments/footer.html :: footer}"></div>
+</body>
+
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+<th:block th:insert="~{fragments/common :: head}"></th:block>
+<title>S-PDF Add-Image</title>
+</head>
+
+<body>
+	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+	<br>
+	<br>
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-md-6">
+				<h2>Rotate PDF</h2>
+
+
+
+				<form action="#" th:action="@{rotate-pdf}" th:object="${rotateForm}"
+					method="post" enctype="multipart/form-data">
+					<div class="custom-file">
+						<input type="file" class="custom-file-input" id="fileInput"
+							name="fileInput" required> <label
+							class="custom-file-label" for="fileInput">Choose PDF</label>
+					</div>
+
+					<label for="angle">Select rotation angle (in multiples of
+						90 degrees):</label> <select id="angle" class="form-control" name="angle">
+						<option value="90">90</option>
+						<option value="180">180</option>
+						<option value="270">270</option>
+						<option value="-90">-90</option>
+						<option value="-180">-180</option>
+						<option value="-270">-270</option>
+					</select> <br>
+					<button type="submit" class="btn btn-primary">Rotate</button>
+				</form>
+				<th:block th:insert="~{fragments/common :: filelist}"></th:block>
+
+			</div>
+		</div>
+	</div>
+	<div th:insert="~{fragments/footer.html :: footer}"></div>
+</body>
+
+</html>

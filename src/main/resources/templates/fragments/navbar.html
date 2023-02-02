@@ -1,0 +1,87 @@
+<div th:fragment="navbar">
+	<nav class="navbar navbar-expand-lg navbar-light bg-light">
+		<div class="container">
+			<a class="navbar-brand" href="#" th:href="@{/}">Stirling PDF</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse"
+				data-target="#navbarNav" aria-controls="navbarNav"
+				aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav">
+
+					<li class="nav-item"><a class="nav-link" href="#"
+						th:href="@{merge-pdfs}"
+						th:classappend="${currentPage}=='merge-pdfs' ? 'active' : ''">Merge
+							PDFs</a></li>
+					<li class="nav-item"><a class="nav-link" href="#"
+						th:href="@{split-pdfs}"
+						th:classappend="${currentPage}=='split-pdfs' ? 'active' : ''">Split
+							PDFs</a></li>
+					<li class="nav-item"><a class="nav-link" href="#"
+						th:href="@{pdf-organizer}"
+						th:classappend="${currentPage}=='pdf-organizer' ? 'active' : ''">Page
+							Organizer</a></li>		
+							
+					<li class="nav-item"><a class="nav-link" href="#"
+						th:href="@{rotate-pdf}"
+						th:classappend="${currentPage}=='rotate-pdf' ? 'active' : ''">Rotate PDF</a></li>
+						
+						
+						
+								
+					
+					<li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' ? 'active' : ''">
+												<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					Convert
+					</a>
+					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''">PDF to Image</a>
+						<a class="dropdown-item" href="#" th:href="@{img-to-pdf}" th:classappend="${currentPage}=='img-to-pdf' ? 'active' : ''">Image to PDF</a>
+					</div>
+				</li>
+				
+				<li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='change-permissions' OR ${currentPage}=='add-watermark' ? 'active' : ''">
+												<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					Security
+					</a>
+					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<a class="dropdown-item" href="#" th:href="@{add-password}" th:classappend="${currentPage}=='add-password' ? 'active' : ''">Add password (Encrypt)</a>
+						<a class="dropdown-item" href="#" th:href="@{remove-password}" th:classappend="${currentPage}=='remove-password' ? 'active' : ''">Remove password (Decrypt)</a>
+						<a class="dropdown-item" href="#" th:href="@{change-permissions}" th:classappend="${currentPage}=='change-permissions' ? 'active' : ''">Change permissions</a>
+						<a class="dropdown-item" href="#" th:href="@{add-watermark}" th:classappend="${currentPage}=='add-watermark' ? 'active' : ''">Add Watermark</a>
+					</div>
+				</li>	
+				
+				<li class="nav-item dropdown" th:classappend="${currentPage}=='delete-pages' OR ${currentPage}=='add-image' OR ${currentPage}=='compress-pdf' ? 'active' : ''">
+												<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					Others
+					</a>
+					<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<a class="dropdown-item" href="#" th:href="@{add-image}" th:classappend="${currentPage}=='add-image' ? 'active' : ''">Add
+							image to PDF</a>
+						<a class="dropdown-item" href="#" th:href="@{compress-pdf}" th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''">Compress PDF</a>
+						<a class="dropdown-item" href="#" th:href="@{delete-pages}" th:classappend="${currentPage}=='delete-pages' ? 'active' : ''">Remove Pages</a>
+					</div>
+				</li>				
+				
+				
+				
+				<li class="nav-item"><a class="nav-link" href="#"
+						th:href="@{add-image}"
+						th:classappend="${currentPage}=='add-image' ? 'active' : ''"></a></li>
+					
+					<li class="nav-item"><a class="nav-link" href="#"
+						th:href="@{compress-pdf}"
+						th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''"></a></li>	
+									
+					<input type="checkbox" id="toggle-dark-mode" checked="true"
+						th:onclick="javascript:toggleDarkMode()">
+					<a class="nav-link" href="#" for="toggle-dark-mode">Dark Mode</a>
+
+				</ul>
+
+			</div>
+		</div>
+	</nav>
+</div>
