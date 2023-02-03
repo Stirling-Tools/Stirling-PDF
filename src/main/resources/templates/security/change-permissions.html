@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
-<head>
-<th:block th:insert="~{fragments/common :: head}"></th:block>
-<title>S-PDF Add-Image</title>
-</head>
+<th:block th:insert="~{fragments/common :: head(title='Change Permissions')}"></th:block>
 
-<body>
+
+<body>	<div id="page-container">
+		<div id="content-wrap">
 	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
 	<br>
 	<br>
 	<div class="container">
 		<div class="row justify-content-center">
 			<div class="col-md-6">
-				<h2>Change permissions (Warning to have these permissions be
+				<h2>Change permissions</h2>
+				<p>Warning to have these permissions be
 					unchangeable it is recommended to set them with a password via the
-					add-password page)</h2>
-
+					add-password page</p>
 				<form action="add-password" method="post"
 					enctype="multipart/form-data">
 					<div class="form-group">
@@ -87,6 +86,8 @@
 			</div>
 		</div>
 	</div>
-	<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
+		<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
 </body>
 </html>

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-<th:block th:insert="~{fragments/common :: head}"></th:block>
-<title>S-PDF Split PDFs</title>
-</head>
+
+<th:block th:insert="~{fragments/common :: head(title='Split')}"></th:block>
+
 
 <body>
+
+ <div id="page-container">
+   <div id="content-wrap">
 	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
 	<br>
 	<br>
@@ -44,6 +46,8 @@
 			</div>
 		</div>
 	</div>
+	</div>
 	<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
 </body>
 </html>

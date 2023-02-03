@@ -1,106 +1,61 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
-<head>
-<th:block th:insert="~{fragments/common :: head}"></th:block>
-<title>S-PDF</title>
-</head>
+
+<th:block th:insert="~{fragments/common :: head(title='')}"></th:block>
+
 
 <body>
-	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
-	<!-- Jumbotron -->
-	<div class="jumbotron jumbotron-fluid" id="jumbotron">
-		<div class="container">
-			<h1 class="display-4">Stirling PDF</h1>
-			<p class="lead">Your locally hosted one-stop-shop for all your
-				PDF needs. (Made 100% in ChatGPT in 1 day as a experiment)</p>
+
+	<div id="page-container">
+		<div id="content-wrap">
+			<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+			<!-- Jumbotron -->
+			<div class="jumbotron jumbotron-fluid" id="jumbotron">
+				<div class="container">
+					<h1 class="display-4">Stirling PDF</h1>
+					<p class="lead">Your locally hosted one-stop-shop for all your
+						PDF needs. (Made 100% in ChatGPT in 1 day as a experiment)</p>
+				</div>
+			</div>
+
+			<!-- Features -->
+			<div class="container">
+				<div class="row h-100">
+					<div th:replace="~{fragments/card :: card(cardTitle='Merge PDFs', cardText='Easily merge multiple PDFs into one.', cardLink='merge-pdfs')}"></div>
+					<div th:replace="~{fragments/card :: card(cardTitle='Split PDFs', cardText='Split PDFs into multiple documents', cardLink='split-pdfs')}"></div>
+					<div th:replace="~{fragments/card :: card(cardTitle='Rotate PDFs', cardText='Easily rotate your PDFs.', cardLink='rotate-pdf')}"></div>
+				</div>
+
+				<br>
+
+				<div class="row h-100">
+					<div th:replace="~{fragments/card :: card(cardTitle='Image to PDF', cardText='Convert a images (PNG, JPEG, GIF) to PDF.', cardLink='img-to-pdf')}"></div>
+					<div th:replace="~{fragments/card :: card(cardTitle='PDF to Image', cardText='Convert a PDF to a image. (PNG, JPEG, GIF)', cardLink='pdf-to-img')}"></div>
+					<div th:replace="~{fragments/card :: card(cardTitle='PDF Organizer', cardText='Remove/Rearrange pages in any order', cardLink='pdf-organizer')}"></div>
+				</div>
+				<br>
+				<div class="row h-100">
+					<div th:replace="~{fragments/card :: card(cardTitle='Add image onto PDF', cardText='Adds a image onto a set location on the PDF (Work in progress)', cardLink='add-image')}"></div>
+					<div th:replace="~{fragments/card :: card(cardTitle='Add Watermark', cardText='Add a custom watermark to your PDF document.', cardLink='add-watermark')}"></div>
+					<div th:replace="~{fragments/card :: card(cardTitle='Change Permissions', cardText='Change the permissions of your PDF document, such as print, copy, edit, etc.', cardLink='change-permissions')}"></div>
+				</div>
+				<br>
+				<div class="row h-100">
+					<div th:replace="~{fragments/card :: card(cardTitle='Remove Pages', cardText='Delete unwanted pages from your PDF document.', cardLink='remove-pages')}"></div>
+					<div th:replace="~{fragments/card :: card(cardTitle='Add Password', cardText='Encrypt your PDF document with a password.', cardLink='add-password')}"></div>
+					<div th:replace="~{fragments/card :: card(cardTitle='Remove Password', cardText='Remove password protection from your PDF document.', cardLink='remove-password')}"></div>
+				</div>
+				<br>
+				<div class="row h-100">
+					<div th:replace="~{fragments/card :: card(cardTitle='Compress PDFs', cardText='Compress PDFs to reduce their file size.', cardLink='compress-pdf')}"></div>
+				</div>
+				<br>
+
+			</div>
 		</div>
+		<div th:insert="~{fragments/footer.html :: footer}"></div>
 	</div>
-
-	<!-- Features -->
-	<div class="container">
-		<div class="row h-100">
-			<div class="col-4 h-100">
-				<div class="dark-card card">
-					<div class="card-body">
-						<h5 class="card-title">Merge PDFs</h5>
-						<p class="card-text">Easily merge multiple PDFs into one.</p>
-						<a href="#" class="btn btn-primary" th:href="@{merge-pdfs}">Go</a>
-					</div>
-				</div>
-			</div>
-			<div class="col-4 h-100">
-				<div class="dark-card card">
-					<div class="card-body">
-						<h5 class="card-title">Split PDFs</h5>
-						<p class="card-text">Split PDFs into multiple documents</p>
-						<a href="#" class="btn btn-primary" th:href="@{split-pdfs}">Go</a>
-					</div>
-				</div>
-			</div>
-			<div class="col-4 h-100">
-				<div class="dark-card card">
-					<div class="card-body">
-						<h5 class="card-title">Add image to PDF</h5>
-						<p class="card-text">Adds image/watermark to a PDF</p>
-						<a href="#" class="btn btn-primary" th:href="@{add-image}">Go</a>
-					</div>
-				</div>
-			</div>
-		</div>
-		<br>
-		<div class="row h-100">
-			<div class="col-4 h-100">
-				<div class="dark-card card">
-					<div class="card-body">
-						<h5 class="card-title">Convert to/from PDF</h5>
-						<p class="card-text">Convert images to/from PDF.</p>
-						<a href="#" class="btn btn-primary" th:href="@{convert-pdf}">Go</a>
-					</div>
-				</div>
-			</div>
-
-			<div class="col-4 h-100">
-				<div class="dark-card card">
-					<div class="card-body">
-						<h5 class="card-title">PDF Organizer</h5>
-						<p class="card-text">Remove/Rearrange pages in any order</p>
-						<a href="#" class="btn btn-primary" th:href="@{pdf-organizer}">Go</a>
-					</div>
-				</div>
-			</div>
-
-			<div class="col-4 h-100">
-				<div class="dark-card card">
-					<div class="card-body">
-						<h5 class="card-title">Rotate PDFs</h5>
-						<p class="card-text">Easily rotate your PDFs.</p>
-						<a href="#" class="btn btn-primary" th:href="@{rotate-pdf}">Go</a>
-					</div>
-				</div>
-			</div>
-
-		</div>
-		<br>
-		<div class="row h-100">
-
-
-
-
-
-			<div class="col-4 h-100">
-				<div class="dark-card card">
-					<div class="card-body">
-						<h5 class="card-title">Compress PDFs</h5>
-						<p class="card-text">Compress PDFs to reduce their file size.</p>
-						<a href="#" class="btn btn-primary" th:href="@{compress-pdf}">Go</a>
-					</div>
-				</div>
-			</div>
-
-		</div>
-	</div>
-	<div th:insert="~{fragments/footer.html :: footer}"></div>
 </body>
 
 </html>

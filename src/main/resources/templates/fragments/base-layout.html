@@ -1,0 +1,15 @@
+
+ <div id="page-container" th:fragment="page-container">
+   <div id="content-wrap">
+	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+	
+	
+	
+	<div th:replace="content :: content"></div>
+
+</div>
+
+
+
+<div th:insert="~{fragments/footer.html :: footer}"></div>
+</div>
