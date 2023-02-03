@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-<th:block th:insert="~{common :: head}"></th:block>
-<title>S-PDF MergePDFs</title>
+
+<th:block th:insert="~{fragments/common :: head(title='Merge PDFs')}"></th:block>
 
 
-</head>
-
-<body>
-	<div th:insert="~{navbar.html :: navbar}"></div>
+<body>	<div id="page-container">
+		<div id="content-wrap">
+	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
 	<br>
 	<br>
 	<div class="container" id="dropContainer">
 		<div class="row justify-content-center">
-			<div class="col-md-6" >
+			<div class="col-md-6">
 				<h2>Merge multiple PDFs (2+)</h2>
 				<form action="merge-pdfs" method="post"
 					enctype="multipart/form-data">
@@ -21,79 +19,106 @@
 						<label>Select (or drag & drop) all PDFs to merge</label>
 						<div class="custom-file">
 							<input type="file" class="custom-file-input" id="fileInput"
-								name="fileInput" multiple> <label
+								name="fileInput" multiple required> <label
 								class="custom-file-label">Choose PDFs</label>
 						</div>
 					</div>
 					<div class="form-group">
-					    <ul id="selectedFiles" class="list-group"></ul>
-					  </div>
+						<ul id="selectedFiles" class="list-group"></ul>
+					</div>
 					<div class="form-group text-center">
 						<button type="submit" class="btn btn-primary">Merge</button>
 					</div>
 				</form>
-				
-				
 
-				
 
-<script>
-document.getElementById("fileInput").addEventListener("change", function() {
-    var files = this.files;
-    var list = document.getElementById("selectedFiles");
-    list.innerHTML = "";
-    for (var i = 0; i < files.length; i++) {
-      var item = document.createElement("li");
-      item.className = "list-group-item d-flex justify-content-between align-items-center";
-      item.textContent = files[i].name;
-      item.innerHTML += '<div><button class="btn btn-secondary move-up">Move Up</button> <button class="btn btn-secondary move-down">Move Down</button></div>';
-      list.appendChild(item);
-    }
-    var moveUpButtons = document.querySelectorAll(".move-up");
-    for (var i = 0; i < moveUpButtons.length; i++) {
-      moveUpButtons[i].addEventListener("click", function(event) {
-        event.preventDefault();
-        var parent = this.parentNode.parentNode;
-        var grandParent = parent.parentNode;
-        if (parent.previousElementSibling) {
-          grandParent.insertBefore(parent, parent.previousElementSibling);
-          updateFiles();
-        }
-      });
-    }
-    var moveDownButtons = document.querySelectorAll(".move-down");
-    for (var i = 0; i < moveDownButtons.length; i++) {
-      moveDownButtons[i].addEventListener("click", function(event) {
-        event.preventDefault();
-        var parent = this.parentNode.parentNode;
-        var grandParent = parent.parentNode;
-        if (parent.nextElementSibling) {
-          grandParent.insertBefore(parent.nextElementSibling, parent);
-          updateFiles();
-        } 
-      });
-    }
 
-    function updateFiles() {
-      var dataTransfer = new DataTransfer();
-      var liElements = document.querySelectorAll("#selectedFiles li");
-      
-      for (var i = 0; i < liElements.length; i++) {
-    	var fileNameFromList = liElements[i].innerText.replace("\nMove Up Move Down","");
-    	var fileFromFiles 
-    	for (var j = 0; j < files.length; j++) {
-        	var file = files[j];
-        	if(file.name === fileNameFromList){
-        		dataTransfer.items.add(file);
-        		break;
-        	}
-    	}
-      }
-      document.getElementById("fileInput").files = dataTransfer.files;
-    }
-  });
-  
-</script>
+
+
+				<script>
+					document
+							.getElementById("fileInput")
+							.addEventListener(
+									"change",
+									function() {
+										var files = this.files;
+										var list = document
+												.getElementById("selectedFiles");
+										list.innerHTML = "";
+										for (var i = 0; i < files.length; i++) {
+											var item = document
+													.createElement("li");
+											item.className = "list-group-item d-flex justify-content-between align-items-center";
+											item.textContent = files[i].name;
+											item.innerHTML += '<div><button class="btn btn-secondary move-up">Move Up</button> <button class="btn btn-secondary move-down">Move Down</button></div>';
+											list.appendChild(item);
+										}
+										var moveUpButtons = document
+												.querySelectorAll(".move-up");
+										for (var i = 0; i < moveUpButtons.length; i++) {
+											moveUpButtons[i]
+													.addEventListener(
+															"click",
+															function(event) {
+																event
+																		.preventDefault();
+																var parent = this.parentNode.parentNode;
+																var grandParent = parent.parentNode;
+																if (parent.previousElementSibling) {
+																	grandParent
+																			.insertBefore(
+																					parent,
+																					parent.previousElementSibling);
+																	updateFiles();
+																}
+															});
+										}
+										var moveDownButtons = document
+												.querySelectorAll(".move-down");
+										for (var i = 0; i < moveDownButtons.length; i++) {
+											moveDownButtons[i]
+													.addEventListener(
+															"click",
+															function(event) {
+																event
+																		.preventDefault();
+																var parent = this.parentNode.parentNode;
+																var grandParent = parent.parentNode;
+																if (parent.nextElementSibling) {
+																	grandParent
+																			.insertBefore(
+																					parent.nextElementSibling,
+																					parent);
+																	updateFiles();
+																}
+															});
+										}
+
+										function updateFiles() {
+											var dataTransfer = new DataTransfer();
+											var liElements = document
+													.querySelectorAll("#selectedFiles li");
+
+											for (var i = 0; i < liElements.length; i++) {
+												var fileNameFromList = liElements[i].innerText
+														.replace(
+																"\nMove Up Move Down",
+																"");
+												var fileFromFiles
+												for (var j = 0; j < files.length; j++) {
+													var file = files[j];
+													if (file.name === fileNameFromList) {
+														dataTransfer.items
+																.add(file);
+														break;
+													}
+												}
+											}
+											document
+													.getElementById("fileInput").files = dataTransfer.files;
+										}
+									});
+				</script>
 
 
 
@@ -101,6 +126,8 @@ document.getElementById("fileInput").addEventListener("change", function() {
 			</div>
 		</div>
 	</div>
-	<div th:insert="~{footer.html :: footer}"></div>
+	</div>
+		<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
 </body>
 </html>

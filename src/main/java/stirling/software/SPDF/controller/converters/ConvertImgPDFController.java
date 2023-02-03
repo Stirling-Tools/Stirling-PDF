@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller;
+package stirling.software.SPDF.controller.converters;
 
 import java.io.IOException;
 
@@ -18,37 +18,37 @@ import org.springframework.web.multipart.MultipartFile;
 import stirling.software.SPDF.utils.PdfUtils;
 
 @Controller
-public class ConvertPDFController {
+public class ConvertImgPDFController {
 
-	private static final Logger logger = LoggerFactory.getLogger(ConvertPDFController.class);
+	private static final Logger logger = LoggerFactory.getLogger(ConvertImgPDFController.class);
 
-	@GetMapping("/convert-pdf")
+	@GetMapping("/img-to-pdf")
 	public String convertToPdfForm(Model model) {
-		model.addAttribute("currentPage", "convert-pdf");
-		return "convert-pdf";
+		model.addAttribute("currentPage", "img-to-pdf");
+		return "convert/img-to-pdf";
 	}
 
-	@PostMapping("/convert-to-pdf")
+	@GetMapping("/pdf-to-img")
+	public String pdfToimgForm(Model model) {
+		model.addAttribute("currentPage", "pdf-to-img");
+		return "convert/pdf-to-img";
+	}
+
+	@PostMapping("/img-to-pdf")
 	public ResponseEntity<byte[]> convertToPdf(@RequestParam("fileInput") MultipartFile file) throws IOException {
 		// Convert the file to PDF and get the resulting bytes
 		byte[] bytes = PdfUtils.convertToPdf(file.getInputStream());
 		logger.info("File {} successfully converted to pdf", file.getOriginalFilename());
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_PDF);
-		String filename = "converted.pdf";
-		headers.setContentDispositionFormData(filename, filename);
-		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-		ResponseEntity<byte[]> response = new ResponseEntity<>(bytes, headers, HttpStatus.OK);
-		return response;
+		return PdfUtils.bytesToWebResponse(bytes, file.getName() + "_coverted.pdf");
 	}
-	
-	@PostMapping("/convert-from-pdf")
+
+	@PostMapping("/pdf-to-img")
 	public ResponseEntity<byte[]> convertToImage(@RequestParam("fileInput") MultipartFile file,
 			@RequestParam("imageFormat") String imageFormat) throws IOException {
 		byte[] pdfBytes = file.getBytes();
-		//returns bytes for image
-		byte[] result =  PdfUtils.convertFromPdf(pdfBytes, imageFormat.toLowerCase());
+		// returns bytes for image
+		byte[] result = PdfUtils.convertFromPdf(pdfBytes, imageFormat.toLowerCase());
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.parseMediaType(getMediaType(imageFormat)));
 		headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
@@ -57,14 +57,14 @@ public class ConvertPDFController {
 	}
 
 	private String getMediaType(String imageFormat) {
-	    if(imageFormat.equalsIgnoreCase("PNG"))
-	        return "image/png";
-	    else if(imageFormat.equalsIgnoreCase("JPEG") || imageFormat.equalsIgnoreCase("JPG"))
-	        return "image/jpeg";
-	    else if(imageFormat.equalsIgnoreCase("GIF"))
-	        return "image/gif";
-	    else
-	        return "application/octet-stream";
+		if (imageFormat.equalsIgnoreCase("PNG"))
+			return "image/png";
+		else if (imageFormat.equalsIgnoreCase("JPEG") || imageFormat.equalsIgnoreCase("JPG"))
+			return "image/jpeg";
+		else if (imageFormat.equalsIgnoreCase("GIF"))
+			return "image/gif";
+		else
+			return "application/octet-stream";
 	}
-	
+
 }

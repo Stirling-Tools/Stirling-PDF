@@ -1,5 +1,14 @@
+#page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#content-wrap {
+  flex: 1;
+}
+
 #footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
+bottom: 0;
+width: 100%;
 }

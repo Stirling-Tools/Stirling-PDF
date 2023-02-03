@@ -22,6 +22,12 @@ import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
+import com.spire.pdf.PdfDocument;
 
 public class PdfUtils {
 
@@ -120,5 +126,43 @@ public class PdfUtils {
 			logger.error("Error overlaying image onto PDF", e);
 			throw e;
 		}
+	}
+
+	public static ResponseEntity<byte[]> pdfDocToWebResponse(PdfDocument document, String docName) throws IOException {
+
+		// Open Byte Array and save document to it
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		document.saveToStream(baos);
+		// Close the document
+		document.close();
+
+		return PdfUtils.boasToWebResponse(baos, docName);
+	}
+
+	public static ResponseEntity<byte[]> pdfDocToWebResponse(PDDocument document, String docName) throws IOException {
+
+		// Open Byte Array and save document to it
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		document.save(baos);
+		// Close the document
+		document.close();
+
+		return PdfUtils.boasToWebResponse(baos, docName);
+	}
+
+	public static ResponseEntity<byte[]> boasToWebResponse(ByteArrayOutputStream baos, String docName)
+			throws IOException {
+		return PdfUtils.bytesToWebResponse(baos.toByteArray(), docName);
+
+	}
+
+	public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName) throws IOException {
+
+		// Return the PDF as a response
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_PDF);
+		headers.setContentLength(bytes.length);
+		headers.setContentDispositionFormData("attachment", docName);
+		return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
 	}
 }

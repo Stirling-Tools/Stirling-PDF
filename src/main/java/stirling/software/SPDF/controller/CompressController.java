@@ -25,6 +25,7 @@ import com.spire.pdf.exporting.PdfImageInfo;
 import com.spire.pdf.graphics.PdfBitmap;
 
 import stirling.software.SPDF.utils.PdfUtils;
+
 //import com.spire.pdf.*;
 @Controller
 public class CompressController {
@@ -40,48 +41,34 @@ public class CompressController {
 	@PostMapping("/compress-pdf")
 	public ResponseEntity<byte[]> compressPDF(@RequestParam("fileInput") MultipartFile pdfFile,
 			@RequestParam("imageCompressionLevel") String imageCompressionLevel) throws IOException {
-		
 
-		//Load a sample PDF document
-        PdfDocument document = new PdfDocument();
-        document.loadFromBytes(pdfFile.getBytes());
-        
-        //Compress PDF
-        document.getFileInfo().setIncrementalUpdate(false);
-        document.setCompressionLevel(PdfCompressionLevel.Best);
-        
-        //compress PDF Images
-        for (int i = 0; i < document.getPages().getCount(); i++) {
+		// Load a sample PDF document
+		PdfDocument document = new PdfDocument();
+		document.loadFromBytes(pdfFile.getBytes());
 
-            PdfPageBase page = document.getPages().get(i);
-            PdfImageInfo[] images = page.getImagesInfo();
-            if (images != null && images.length > 0)
-                for (int j = 0; j < images.length; j++) {
-                    PdfImageInfo image = images[j];
-                    PdfBitmap bp = new PdfBitmap(image.getImage());
-                    //bp.setPngDirectToJpeg(true);
-                    bp.setQuality(Integer.valueOf(imageCompressionLevel));
+		// Compress PDF
+		document.getFileInfo().setIncrementalUpdate(false);
+		document.setCompressionLevel(PdfCompressionLevel.Best);
 
-                    page.replaceImage(j, bp);
+		// compress PDF Images
+		for (int i = 0; i < document.getPages().getCount(); i++) {
 
-                }
-        }
-        
-     // Save the rearranged PDF to a ByteArrayOutputStream
-	ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-	document.saveToStream(outputStream);
+			PdfPageBase page = document.getPages().get(i);
+			PdfImageInfo[] images = page.getImagesInfo();
+			if (images != null && images.length > 0)
+				for (int j = 0; j < images.length; j++) {
+					PdfImageInfo image = images[j];
+					PdfBitmap bp = new PdfBitmap(image.getImage());
+					// bp.setPngDirectToJpeg(true);
+					bp.setQuality(Integer.valueOf(imageCompressionLevel));
 
-	// Close the original document
-	document.close();
+					page.replaceImage(j, bp);
 
-	// Prepare the response headers
-	HttpHeaders headers = new HttpHeaders();
-	headers.setContentType(MediaType.APPLICATION_PDF);
-	headers.setContentDispositionFormData("attachment", "compressed.pdf");
-	headers.setContentLength(outputStream.size());
+				}
+		}
 
-	// Return the response with the PDF data and headers
-	return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
+		return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_compressed.pdf");
+
 	}
 
 }

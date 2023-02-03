@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.SPDF.utils.PdfUtils;
+
 @Controller
 public class RearrangePagesPDFController {
 
@@ -31,6 +33,60 @@ public class RearrangePagesPDFController {
 		return "pdf-organizer";
 	}
 
+	@GetMapping("/delete-pages")
+	public String pageDeleter(Model model) {
+		model.addAttribute("currentPage", "delete-pages");
+		return "delete-pages";
+	}
+
+	@PostMapping("/delete-pages")
+	public ResponseEntity<byte[]> deletePages(@RequestParam("fileInput") MultipartFile pdfFile,
+			@RequestParam("pagesToDelete") String pagesToDelete) throws IOException {
+		
+		PDDocument document = PDDocument.load(pdfFile.getBytes());
+		 
+		// Split the page order string into an array of page numbers or range of numbers
+		String[] pageOrderArr = pagesToDelete.split(",");
+					
+		List<Integer> pagesToRemove = pageOrderToString(pageOrderArr, document.getNumberOfPages());
+		
+		for (int i = pagesToRemove.size() - 1; i >= 0; i--) {
+		      int pageIndex = pagesToRemove.get(i);
+		      document.removePage(pageIndex);
+		    }
+		
+		return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_removed_pages.pdf");
+
+	}
+
+	private List<Integer> pageOrderToString(String[] pageOrderArr, int totalPages) {
+		List<Integer> newPageOrder = new ArrayList<Integer>();
+		// loop through the page order array
+		for (String element : pageOrderArr) {
+			// check if the element contains a range of pages
+			if (element.contains("-")) {
+				// split the range into start and end page
+				String[] range = element.split("-");
+				int start = Integer.parseInt(range[0]);
+				int end = Integer.parseInt(range[1]);
+				// check if the end page is greater than total pages
+				if (end > totalPages) {
+					end = totalPages;
+				}
+				// loop through the range of pages
+				for (int j = start; j <= end; j++) {
+					// print the current index
+					newPageOrder.add(j - 1);
+				}
+			} else {
+				// if the element is a single page
+				newPageOrder.add(Integer.parseInt(element) - 1);
+			}
+		}
+
+		return newPageOrder;
+	}
+
 	@PostMapping("/rearrange-pages")
 	public ResponseEntity<byte[]> rearrangePages(@RequestParam("fileInput") MultipartFile pdfFile,
 			@RequestParam("pageOrder") String pageOrder) {
@@ -40,33 +96,11 @@ public class RearrangePagesPDFController {
 
 			// Split the page order string into an array of page numbers or range of numbers
 			String[] pageOrderArr = pageOrder.split(",");
-			List<Integer> newPageOrder = new ArrayList<Integer>();
-			//int[] newPageOrder = new int[pageOrderArr.length];
+			// int[] newPageOrder = new int[pageOrderArr.length];
 			int totalPages = document.getNumberOfPages();
 
-			// loop through the page order array
-			for (String element : pageOrderArr) {
-				// check if the element contains a range of pages
-				if (element.contains("-")) {
-					// split the range into start and end page
-					String[] range = element.split("-");
-					int start = Integer.parseInt(range[0]);
-					int end = Integer.parseInt(range[1]);
-					// check if the end page is greater than total pages
-					if (end > totalPages) {
-						end = totalPages;
-					}
-					// loop through the range of pages
-					for (int j = start; j <= end; j++) {
-						// print the current index
-						newPageOrder.add( j - 1);
-					}
-				} else {
-					// if the element is a single page
-					newPageOrder.add( Integer.parseInt(element) - 1);
-				}
-			}
-
+			List<Integer> newPageOrder = pageOrderToString(pageOrderArr, totalPages);
+			
 			// Create a new list to hold the pages in the new order
 			List<PDPage> newPages = new ArrayList<>();
 			for (int i = 0; i < newPageOrder.size(); i++) {
@@ -83,21 +117,7 @@ public class RearrangePagesPDFController {
 				document.addPage(page);
 			}
 
-			// Save the rearranged PDF to a ByteArrayOutputStream
-			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			document.save(outputStream);
-
-			// Close the original document
-			document.close();
-
-			// Prepare the response headers
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_PDF);
-			headers.setContentDispositionFormData("attachment", "rearranged.pdf");
-			headers.setContentLength(outputStream.size());
-
-			// Return the response with the PDF data and headers
-			return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
+			return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_rearranged.pdf");
 		} catch (IOException e) {
 
 			logger.error("Failed rearranging documents", e);

@@ -19,6 +19,9 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 - Add images to PDFs at specified locations.
 - Rotating PDFs in 90 degree increments.
 - Compressing PDFs to decrease their filesize.
+- Add and remove passwords
+- Set PDF Permissions
+- Add watermark(s)
 - Dark mode support.
 
 ## Technologies used

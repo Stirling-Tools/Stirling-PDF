@@ -53,21 +53,7 @@ public class RotationController {
 			page.setRotation(Integer.valueOf(angle));
 		}
 
-		// Save the rearranged PDF to a ByteArrayOutputStream
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		document.save(outputStream);
-
-		// Close the document
-		document.close();
-
-		// Prepare the response headers
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_PDF);
-		headers.setContentDispositionFormData("attachment", "output.pdf");
-		headers.setContentLength(outputStream.size());
-
-		// Return the response with the PDF data and headers
-		return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
+		return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_rotated.pdf");
 
 	}
 

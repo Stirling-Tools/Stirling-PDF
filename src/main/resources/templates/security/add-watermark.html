@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title='Add Watermark')}"></th:block>
+
+<body>	<div id="page-container">
+		<div id="content-wrap">
+	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+	<br>
+	<br>
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-md-6">
+				<h2>Add Watermark</h2>
+
+				<form method="post" enctype="multipart/form-data" action="add-watermark">
+		            <div class="form-group">
+						<label>Select PDF to add watermark to:</label>
+						<div class="custom-file">
+							<input type="file" class="custom-file-input" id="fileInput"
+								name="fileInput" required> <label
+								class="custom-file-label">Choose PDF</label>
+						</div>
+					</div>
+		            <div class="form-group">
+		                <label for="watermarkText">Watermark Text:</label>
+		                <input type="text" id="watermarkText" name="watermarkText" class="form-control" placeholder="Stirling-PDF" required/>
+		            </div>
+		            <div class="form-group">
+		                <label for="fontSize">Font Size:</label>
+		                <input type="text" id="fontSize" name="fontSize" class="form-control" value="30"/>
+		            </div>
+		            <div class="form-group">
+		                <label for="rotation">Rotation (0-360):</label>
+		                <input type="text" id="rotation" name="rotation" class="form-control"  value="45"/>
+		            </div>
+		            <div class="form-group">
+		                <label for="widthSpacer">widthSpacer (Space between each watermark horizontally):</label>
+		                <input type="text" id="widthSpacer" name="widthSpacer" class="form-control" value="50"/>
+		            </div>
+		            <div class="form-group">
+		                <label for="heightSpacer">heightSpacer (Space between each watermark vertically):</label>
+		                <input type="text" id="heightSpacer" name="heightSpacer" class="form-control" value="50"/>
+		            </div>
+		            <div class="form-group text-center">
+		                <input type="submit" value="Add Watermark" class="btn btn-primary"/>
+		            </div>
+        </form> 
+</div>
+		</div>
+	</div>
+	</div>
+		<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
+</body>
+</html>

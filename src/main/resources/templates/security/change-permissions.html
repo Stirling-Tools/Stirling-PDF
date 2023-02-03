@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title='Change Permissions')}"></th:block>
+
+
+<body>	<div id="page-container">
+		<div id="content-wrap">
+	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+	<br>
+	<br>
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-md-6">
+				<h2>Change permissions</h2>
+				<p>Warning to have these permissions be
+					unchangeable it is recommended to set them with a password via the
+					add-password page</p>
+				<form action="add-password" method="post"
+					enctype="multipart/form-data">
+					<div class="form-group">
+						<label>Select PDF to change permissions</label>
+						<div class="custom-file">
+							<input type="file" class="custom-file-input" id="fileInput"
+								name="fileInput"> <label class="custom-file-label">Choose
+								PDF</label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label>Permissions to set</label>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox"
+								id="canAssembleDocument" name="canAssembleDocument"> <label
+								class="form-check-label" for="canAssembleDocument">
+								Prevent assembly of document </label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox"
+								id="canExtractContent" name="canExtractContent"> <label
+								class="form-check-label" for="canExtractContent">
+								Prevent content extraction </label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox"
+								id="canExtractForAccessibility"
+								name="canExtractForAccessibility"> <label
+								class="form-check-label" for="canExtractForAccessibility">
+								Prevent extraction for accessibility </label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox"
+								id="canFillInForm" name="canFillInForm"> <label
+								class="form-check-label" for="canFillInForm"> Prevent
+								filling in form </label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" id="canModify"
+								name="canModify"> <label class="form-check-label"
+								for="canModify"> Prevent modification </label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox"
+								id="canModifyAnnotations" name="canModifyAnnotations"> <label
+								class="form-check-label" for="canModifyAnnotations">
+								Prevent annotation modification </label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" id="canPrint"
+								name="canPrint"> <label class="form-check-label"
+								for="canPrint"> Prevent printing </label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox"
+								id="canPrintFaithful" name="canPrintFaithful"> <label
+								class="form-check-label" for="canPrintFaithful"> Prevent
+								printing different formats </label>
+						</div>
+
+					</div>
+					<br />
+					<div class="form-group text-center">
+						<button type="submit" class="btn btn-primary">Change</button>
+					</div>
+
+				</form>
+			</div>
+		</div>
+	</div>
+	</div>
+		<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
+</body>
+</html>
