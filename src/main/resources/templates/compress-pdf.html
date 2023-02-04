@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 
-<th:block th:insert="~{fragments/common :: head(title='Compress')}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{compress.title})}"></th:block>
 
 
 <body>	<div id="page-container">
@@ -13,25 +13,23 @@
 	<div class="container">
 		<div class="row justify-content-center">
 			<div class="col-md-6">
-				<h2>Compress PDF</h2>
+				<h2 th:text="#{compress.header}"></h2>
 				<form action="#" th:action="@{compress-pdf}"
 					th:object="${rotateForm}" method="post"
 					enctype="multipart/form-data">
-					<p>Warning: This process can take up to a minute depending on
-						file-size</p>
+					<p th:text="#{processTimeWarning}"></p>
 					<div class="custom-file">
 						<input type="file" class="custom-file-input" id="fileInput"
 							name="fileInput" required> <label
-							class="custom-file-label" for="fileInput">Choose PDF</label>
+							class="custom-file-label" for="fileInput" th:text="#{pdfPrompt}"></label>
 					</div>
 					<div class="form-group">
-						<label for="imageCompressionLevel">Value between 1 and 100
-							(1 being most reduced)</label> <input type="number" class="form-control"
+						<label for="imageCompressionLevel" th:text="#{compress.compressLevel}"></label> <input type="number" class="form-control"
 							id="imageCompressionLevel" name="imageCompressionLevel" step="1"
 							value="1" min="1" max="100" required>
 					</div>
 
-					<button type="submit" class="btn btn-primary">Compress</button>
+					<button type="submit" class="btn btn-primary" th:text="#{compress.title}"></button>
 				</form>
 				<th:block th:insert="~{fragments/common :: filelist}"></th:block>
 

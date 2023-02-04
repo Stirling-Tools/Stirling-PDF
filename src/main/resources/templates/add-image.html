@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 
-<th:block th:insert="~{fragments/common :: head(title='Add-Image')}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{addImage.title})}"></th:block>
 
 
 <body>
@@ -14,7 +14,7 @@
 	<div class="container">
 		<div class="row justify-content-center">
 			<div class="col-md-6">
-				<h2>Add image to PDF (Work in progress)</h2>
+				<h2 th:text="#{addImage.header}"></h2>
 
 
 
@@ -24,12 +24,12 @@
 					<div class="custom-file">
 						<input type="file" class="custom-file-input" id="fileInput"
 							name="fileInput" required> <label
-							class="custom-file-label" for="fileInput">Choose PDF</label>
+							class="custom-file-label" for="fileInput" th:text="#{pdfPrompt}"></label>
 					</div>
 					<div class="custom-file">
 						<input type="file" class="custom-file-input" id="fileInput2"
 							name="fileInput2" required> <label
-							class="custom-file-label" for="fileInput2">Choose Image</label>
+							class="custom-file-label" for="fileInput2" th:text="#{imgPrompt}"></label>
 					</div>
 					<div class="form-group">
 						<label for="x">X</label> <input type="number" class="form-control"
@@ -39,7 +39,7 @@
 						<label for="y">Y</label> <input type="number" class="form-control"
 							id="y" name="y" step="0.01" required>
 					</div>
-					<button type="submit" class="btn btn-primary">Submit</button>
+					<button type="submit" class="btn btn-primary" th:text="#{genericSubmit}"></button>
 				</form>
 				<th:block th:insert="~{fragments/common :: filelist}"></th:block>
 

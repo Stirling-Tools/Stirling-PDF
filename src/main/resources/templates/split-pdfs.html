@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title='Split')}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{split.title})}"></th:block>
 
 
 <body>
@@ -14,33 +14,31 @@
 	<div class="container">
 		<div class="row justify-content-center">
 			<div class="col-md-6">
-				<h1>Split PDF</h1>
-				<p>The numbers you select are the page number you wish to do a
-					split on</p>
-				<p>As such selecting 1,3,7-8 would split a 10 page document into
-					6 separate PDFS with:</p>
-				<p>Document #1: Page 1</p>
-				<p>Document #2: Page 2 and 3</p>
-				<p>Document #3: Page 4, 5 and 6</p>
-				<p>Document #4: Page 7</p>
-				<p>Document #5: Page 8</p>
-				<p>Document #6: Page 9 and 10</p>
+				<h1 th:text="#{split.header}"></h1>
+				<p th:text="#{split.desc.1}"></p>
+				<p th:text="#{split.desc.2}"></p>
+				<p th:text="#{split.desc.3}"></p>
+				<p th:text="#{split.desc.4}"></p>
+				<p th:text="#{split.desc.5}"></p>
+				<p th:text="#{split.desc.6}"></p>
+				<p th:text="#{split.desc.7}"></p>
+				<p th:text="#{split.desc.8}"></p>
 
 				<form th:action="@{split-pages}" method="post"
 					enctype="multipart/form-data">
 					<div class="custom-file">
 						<input type="file" class="custom-file-input" id="fileInput"
 							name="fileInput" required> <label
-							class="custom-file-label" for="fileInput">Choose PDF</label>
+							class="custom-file-label" for="fileInput" th:text="#{pdfPrompt}"></label>
 					</div>
 
 					<div class="form-group">
-						<label for="pages">Enter pages to split on:</label> <input
+						<label for="pages" th:text="#{split.splitPages}"></label> <input
 							type="text" class="form-control" id="pages" name="pages"
 							placeholder="1,3,5-10" required>
 					</div>
 					<br>
-					<button type="submit" class="btn btn-primary">Submit</button>
+					<button type="submit" class="btn btn-primary" th:text="#{genericSubmit}"></button>
 				</form>
 				<th:block th:insert="~{fragments/common :: filelist}"></th:block>
 			</div>
