@@ -4,6 +4,22 @@
 
 <th:block th:insert="~{fragments/common :: head(title='')}"></th:block>
 
+<style>
+	.features-container {
+		display: flex;
+		flex-wrap: wrap;
+    	justify-content: space-between;
+    	row-gap: 25px;
+    	column-gap: 30px;
+	}
+	.feature-card {
+		border: 1px solid rgba(0,0,0,.125);
+		border-radius: 0.25rem;
+		padding: 1.25rem;
+		width: 21rem;
+		flex-grow: 1;
+	}
+</style>
 
 <body>
 
@@ -20,37 +36,24 @@
 			</div>
 
 			<!-- Features -->
-			<div class="container">
-				<div class="row h-100">
-					<div th:replace="~{fragments/card :: card(cardTitle='Merge PDFs', cardText='Easily merge multiple PDFs into one.', cardLink='merge-pdfs')}"></div>
-					<div th:replace="~{fragments/card :: card(cardTitle='Split PDFs', cardText='Split PDFs into multiple documents', cardLink='split-pdfs')}"></div>
-					<div th:replace="~{fragments/card :: card(cardTitle='Rotate PDFs', cardText='Easily rotate your PDFs.', cardLink='rotate-pdf')}"></div>
-				</div>
+			<div class="features-container container">
+				<div th:replace="~{fragments/card :: card(cardTitle='Merge PDFs', cardText='Easily merge multiple PDFs into one.', cardLink='merge-pdfs')}"></div>
+				<div th:replace="~{fragments/card :: card(cardTitle='Split PDFs', cardText='Split PDFs into multiple documents', cardLink='split-pdfs')}"></div>
+				<div th:replace="~{fragments/card :: card(cardTitle='Rotate PDFs', cardText='Easily rotate your PDFs.', cardLink='rotate-pdf')}"></div>
 
-				<br>
+				<div th:replace="~{fragments/card :: card(cardTitle='Image to PDF', cardText='Convert a images (PNG, JPEG, GIF) to PDF.', cardLink='img-to-pdf')}"></div>
+				<div th:replace="~{fragments/card :: card(cardTitle='PDF to Image', cardText='Convert a PDF to a image. (PNG, JPEG, GIF)', cardLink='pdf-to-img')}"></div>
+				<div th:replace="~{fragments/card :: card(cardTitle='PDF Organizer', cardText='Remove/Rearrange pages in any order', cardLink='pdf-organizer')}"></div>
 
-				<div class="row h-100">
-					<div th:replace="~{fragments/card :: card(cardTitle='Image to PDF', cardText='Convert a images (PNG, JPEG, GIF) to PDF.', cardLink='img-to-pdf')}"></div>
-					<div th:replace="~{fragments/card :: card(cardTitle='PDF to Image', cardText='Convert a PDF to a image. (PNG, JPEG, GIF)', cardLink='pdf-to-img')}"></div>
-					<div th:replace="~{fragments/card :: card(cardTitle='PDF Organizer', cardText='Remove/Rearrange pages in any order', cardLink='pdf-organizer')}"></div>
-				</div>
-				<br>
-				<div class="row h-100">
-					<div th:replace="~{fragments/card :: card(cardTitle='Add image onto PDF', cardText='Adds a image onto a set location on the PDF (Work in progress)', cardLink='add-image')}"></div>
-					<div th:replace="~{fragments/card :: card(cardTitle='Add Watermark', cardText='Add a custom watermark to your PDF document.', cardLink='add-watermark')}"></div>
-					<div th:replace="~{fragments/card :: card(cardTitle='Change Permissions', cardText='Change the permissions of your PDF document, such as print, copy, edit, etc.', cardLink='change-permissions')}"></div>
-				</div>
-				<br>
-				<div class="row h-100">
-					<div th:replace="~{fragments/card :: card(cardTitle='Remove Pages', cardText='Delete unwanted pages from your PDF document.', cardLink='remove-pages')}"></div>
-					<div th:replace="~{fragments/card :: card(cardTitle='Add Password', cardText='Encrypt your PDF document with a password.', cardLink='add-password')}"></div>
-					<div th:replace="~{fragments/card :: card(cardTitle='Remove Password', cardText='Remove password protection from your PDF document.', cardLink='remove-password')}"></div>
-				</div>
-				<br>
-				<div class="row h-100">
-					<div th:replace="~{fragments/card :: card(cardTitle='Compress PDFs', cardText='Compress PDFs to reduce their file size.', cardLink='compress-pdf')}"></div>
-				</div>
-				<br>
+				<div th:replace="~{fragments/card :: card(cardTitle='Add image onto PDF', cardText='Adds a image onto a set location on the PDF (Work in progress)', cardLink='add-image')}"></div>
+				<div th:replace="~{fragments/card :: card(cardTitle='Add Watermark', cardText='Add a custom watermark to your PDF document.', cardLink='add-watermark')}"></div>
+				<div th:replace="~{fragments/card :: card(cardTitle='Change Permissions', cardText='Change the permissions of your PDF document, such as print, copy, edit, etc.', cardLink='change-permissions')}"></div>
+
+				<div th:replace="~{fragments/card :: card(cardTitle='Remove Pages', cardText='Delete unwanted pages from your PDF document.', cardLink='remove-pages')}"></div>
+				<div th:replace="~{fragments/card :: card(cardTitle='Add Password', cardText='Encrypt your PDF document with a password.', cardLink='add-password')}"></div>
+				<div th:replace="~{fragments/card :: card(cardTitle='Remove Password', cardText='Remove password protection from your PDF document.', cardLink='remove-password')}"></div>
+
+				<div th:replace="~{fragments/card :: card(cardTitle='Compress PDFs', cardText='Compress PDFs to reduce their file size.', cardLink='compress-pdf')}"></div>
 
 			</div>
 		</div>

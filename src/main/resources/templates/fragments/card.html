@@ -1,9 +1,5 @@
-<div th:fragment="card"  class="col-4 h-100">
-	<div class="dark-card card">
-		<div class="card-body">
-			<h5 class="card-title" th:text="${cardTitle}"></h5>
-			<p class="card-text" th:text="${cardText}"></p>
-			<a class="btn btn-primary" th:href="${cardLink}">Go</a>
-		</div>
-	</div>
+<div th:fragment="card"  class="feature-card">
+	<h5 class="card-title" th:text="${cardTitle}"></h5>
+	<p class="card-text" th:text="${cardText}"></p>
+	<a class="btn btn-primary" th:href="${cardLink}">Go</a>
 </div>
