@@ -53,7 +53,7 @@
 					</div>
 				</li>	
 				
-				<li class="nav-item dropdown" th:classappend="${currentPage}=='delete-pages' OR ${currentPage}=='add-image' OR ${currentPage}=='compress-pdf' ? 'active' : ''">
+				<li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='add-image' OR ${currentPage}=='compress-pdf' ? 'active' : ''">
 												<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 					Others
 					</a>
@@ -61,7 +61,7 @@
 						<a class="dropdown-item" href="#" th:href="@{add-image}" th:classappend="${currentPage}=='add-image' ? 'active' : ''">Add
 							image to PDF</a>
 						<a class="dropdown-item" href="#" th:href="@{compress-pdf}" th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''">Compress PDF</a>
-						<a class="dropdown-item" href="#" th:href="@{delete-pages}" th:classappend="${currentPage}=='delete-pages' ? 'active' : ''">Remove Pages</a>
+						<a class="dropdown-item" href="#" th:href="@{remove-pages}" th:classappend="${currentPage}=='remove-pages' ? 'active' : ''">Remove Pages</a>
 					</div>
 				</li>				
 				

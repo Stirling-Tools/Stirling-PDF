@@ -33,13 +33,13 @@ public class RearrangePagesPDFController {
 		return "pdf-organizer";
 	}
 
-	@GetMapping("/delete-pages")
+	@GetMapping("/remove-pages")
 	public String pageDeleter(Model model) {
-		model.addAttribute("currentPage", "delete-pages");
-		return "delete-pages";
+		model.addAttribute("currentPage", "remove-pages");
+		return "remove-pages";
 	}
 
-	@PostMapping("/delete-pages")
+	@PostMapping("/remove-pages")
 	public ResponseEntity<byte[]> deletePages(@RequestParam("fileInput") MultipartFile pdfFile,
 			@RequestParam("pagesToDelete") String pagesToDelete) throws IOException {
 		
