@@ -15,28 +15,20 @@
 			<div class="col-md-6">
 				<h2>Rotate PDF</h2>
 
+				<form action="#" th:action="@{rotate-pdf}" th:object="${rotateForm}" method="post" enctype="multipart/form-data">
+					<div th:replace="fragments/common :: fileSelector(name='fileInput', multiple=false)"></div>
+					<input type="hidden" id="angleInput" name="angle" value="0">
 
-
-				<form action="#" th:action="@{rotate-pdf}" th:object="${rotateForm}"
-					method="post" enctype="multipart/form-data">
-					<div class="custom-file">
-						<input type="file" class="custom-file-input" id="fileInput"
-							name="fileInput" required> <label
-							class="custom-file-label" for="fileInput">Choose PDF</label>
+					<div class="previewContainer">
+						<img id="pdf-preview"/>
 					</div>
 
-					<label for="angle">Select rotation angle (in multiples of
-						90 degrees):</label> <select id="angle" class="form-control" name="angle">
-						<option value="90">90</option>
-						<option value="180">180</option>
-						<option value="270">270</option>
-						<option value="-90">-90</option>
-						<option value="-180">-180</option>
-						<option value="-270">-270</option>
-					</select> <br>
-					<button type="submit" class="btn btn-primary">Rotate</button>
+					<div class="buttonContainer">
+						<button type="button" class="btn btn-secondary" onclick="rotate(-90)">L</button>
+						<button type="submit" class="btn btn-primary">Complete</button>
+						<button type="button" class="btn btn-secondary" onclick="rotate(90)">R</button>
+					</div>
 				</form>
-				<th:block th:insert="~{fragments/common :: filelist}"></th:block>
 
 			</div>
 		</div>
@@ -44,6 +36,80 @@
 	</div>
 		<div th:insert="~{fragments/footer.html :: footer}"></div>
 	</div>
+
+	<script>
+		const angleInput = document.getElementById("angleInput");
+		const fileInput = document.getElementById("fileInput-input");
+		const preview = document.getElementById("pdf-preview");
+		fileInput.addEventListener("change", async function() {
+			console.log("loading pdf");
+
+			preview.parentElement.style.display = "block";
+			document.querySelector(".buttonContainer").style.display = "flex";
+
+			var file = fileInput.files[0];
+			var url = URL.createObjectURL(file)
+			var loadingTask = pdfjsLib.getDocument(url);
+
+			const pdf = await loadingTask.promise;
+			const page = await pdf.getPage(1);
+
+			const canvas = document.createElement("canvas");
+
+			// set the canvas size to the size of the page
+			canvas.width = page.view[2];
+			canvas.height = page.view[3];
+
+			// render the page onto the canvas
+			var renderContext = {
+			  canvasContext: canvas.getContext("2d"),
+			  viewport: page.getViewport({ scale: 1 })
+			};
+
+			await page.render(renderContext).promise;
+			preview.src = canvas.toDataURL();
+		});
+
+		function rotate(deg) {
+			var lastTransform = preview.style.transform;
+			if (!lastTransform) {
+				lastTransform = "0";
+			}
+			const lastAngle = parseInt(lastTransform.replace(/[^\d-]/g, ''));
+			const newAngle = lastAngle + deg;
+
+			preview.style.transform = "rotate(" + newAngle + "deg)";
+			angleInput.value = newAngle;
+		}
+	</script>
+	<style>
+		#pdf-preview {
+			margin: 0 auto;
+			display: block;
+			max-width: 100%;
+			max-height: 100%;
+    		box-shadow: 0 0 4px rgba(100,100,100,.25);
+    		transition: transform .3s;
+		}
+		.previewContainer {
+			aspect-ratio: 1;
+			width: 100%;
+			border: 1px solid rgba(0,0,0,.125);
+			border-radius: 0.25rem;
+			margin: 1rem 0 0;
+			padding: 15px;
+			display: none;
+			overflow: hidden;
+		}
+
+		.buttonContainer {
+			display: none;
+			justify-content: space-around;
+		}
+		button {
+			top-margin: -100%;
+		}
+	</style>
 </body>
 
 </html>
