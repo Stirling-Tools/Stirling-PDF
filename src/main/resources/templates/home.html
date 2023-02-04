@@ -6,18 +6,14 @@
 
 <style>
 	.features-container {
-		display: flex;
-		flex-wrap: wrap;
-    	justify-content: space-between;
-    	row-gap: 25px;
-    	column-gap: 30px;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(21rem, 3fr));
+		gap: 25px 30px;
 	}
 	.feature-card {
 		border: 1px solid rgba(0,0,0,.125);
 		border-radius: 0.25rem;
 		padding: 1.25rem;
-		width: 21rem;
-		flex-grow: 1;
 	}
 </style>
 
