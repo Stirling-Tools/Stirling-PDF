@@ -40,33 +40,34 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_API }} 
    
     - name: Check if tag exists
+      id: checkIdExists
+      continue-on-error: true
       run: |
         response=$(curl -s https://hub.docker.com/v2/repositories/frooodle/s-pdf/tags/?name=${{ steps.versionNumber.outputs.versionNumber }})
         result=$(echo $response | jq ".results")
         if [ "$result" == "[]" ]; then
           echo "Tag ${{ steps.versionNumber.outputs.versionNumber }} doesnt exist. Continuing with build and push."
-          echo "JOB_END_EARLY=false" >> $JOB_END_EARLY
         else
           echo "Tag ${{ steps.versionNumber.outputs.versionNumber }} already exists. Skipping build and push."
-          echo "JOB_END_EARLY=true" >> $JOB_END_EARLY
+          exit 1;
         fi
 
    
    
     - name: Setup buildx
-      if: env.JOB_END_EARLY != true
+      if: steps.checkIdExists.outcome == 'success'
       run: |
         docker buildx create --name mybuilder
         docker buildx use mybuilder
         
     - name: Build and push versioned amd64 and v8 
-      if: github.ref == 'refs/heads/main' && env.JOB_END_EARLY != true
+      if: github.ref == 'refs/heads/main' && steps.checkIdExists.outcome == 'success'
       run: | 
         docker buildx build --platform="linux/amd64,linux/arm64/v8" --push --tag "frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}" .
 
    
     - name: Build and push latest amd64 and v8
-      if: github.ref == 'refs/heads/master' && env.JOB_END_EARLY != true
+      if: github.ref == 'refs/heads/master' && steps.checkIdExists.outcome == 'success'
       run: | 
         docker buildx build --platform="linux/amd64,linux/arm64/v8" --push --tag "frooodle/s-pdf:latest" .
         
