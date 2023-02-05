@@ -16,7 +16,7 @@ The data-language-code is the code used to reference the file in the next step.
 
 Start by copying the existing english property file 
 
-https://github.com/Frooodle/Stirling-PDF/tree/langSetup/src/main/resources/messages_en_GB.properties
+[https://github.com/Frooodle/Stirling-PDF/tree/langSetup/src/main/resources/messages_en_GB.properties](https://github.com/Frooodle/Stirling-PDF/blob/main/src/main/resources/messages_en_US.properties)
 
 Copy and rename it to messages_{your data-language-code here}.properties, in the polish example you would set the name to messages_pl_PL.properties
 
