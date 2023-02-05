@@ -41,7 +41,7 @@ jobs:
    
     - name: Check if tag exists
       run: |
-        response=$(curl -s https://hub.docker.com/v2/repositories/frooodle/s-pdf/tags/?name={{ steps.versionNumber.outputs.versionNumber }}")
+        response=$(curl -s https://hub.docker.com/v2/repositories/frooodle/s-pdf/tags/?name=${{ steps.versionNumber.outputs.versionNumber }}")
         result=$(echo $response | jq ".results")
         if [ "$result" == "[]" ]; then
           echo "Tag {{ steps.versionNumber.outputs.versionNumber }} doesnt exist. Continuing with build and push."
