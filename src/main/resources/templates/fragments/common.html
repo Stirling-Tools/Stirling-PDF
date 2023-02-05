@@ -6,6 +6,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.3.122/build/pdf.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.3.122/web/pdf_viewer.min.css" rel="stylesheet">
+
 <link rel="stylesheet" th:href="@{dark-mode.css}" id="dark-mode-styles">
 <script>
 	function toggleDarkMode() {
@@ -92,5 +95,26 @@
 				}
 			};
 		}
+	</script>
+</th:block>
+
+<th:block th:fragment="fileSelector(name, multiple)">
+	<div class="custom-file-chooser">
+		<div class="custom-file">
+			<input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:multiple="${multiple}">
+			<label class="custom-file-label" th:for="${name}+'-input'" th:text="#{pdfPrompt}"></label>
+		</div>
+	</div>
+
+	<script th:inline="javascript">
+		$([[${"#"+name+"-input"}]]).on("change", function() {
+			const files = $(this).get(0).files;
+			const fileNames = Array.from(files).map(f => f.name).join(", ");
+			if (fileNames) {
+				$(this).siblings(".custom-file-label").addClass("selected").html(fileNames);
+			} else {
+				$(this).siblings(".custom-file-label").addClass("selected").html([[#{pdfPrompt}]]);
+			}
+		});
 	</script>
 </th:block>

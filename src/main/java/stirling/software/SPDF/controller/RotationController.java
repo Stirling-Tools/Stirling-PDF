@@ -37,7 +37,7 @@ public class RotationController {
 
 	@PostMapping("/rotate-pdf")
 	public ResponseEntity<byte[]> rotatePDF(@RequestParam("fileInput") MultipartFile pdfFile,
-			@RequestParam("angle") String angle) throws IOException {
+			@RequestParam("angle") Integer angle) throws IOException {
 
 		// Load the PDF document
 		PDDocument document = PDDocument.load(pdfFile.getBytes());
@@ -50,7 +50,7 @@ public class RotationController {
 
 		while (iterPage.hasNext()) {
 			PDPage page = iterPage.next();
-			page.setRotation(Integer.valueOf(angle));
+			page.setRotation(page.getRotation() + angle);
 		}
 
 		return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_rotated.pdf");
