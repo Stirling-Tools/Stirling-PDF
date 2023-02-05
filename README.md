@@ -1,5 +1,5 @@
-<center><img src="https://raw.githubusercontent.com/Frooodle/Stirling-PDF/main/docs/stirling.png" width="80" ><br><h1>Stirling-PDF</h1>
-</center>
+<p align="center"><img src="https://raw.githubusercontent.com/Frooodle/Stirling-PDF/main/docs/stirling.png" width="80" ><br><h1 align="center">Stirling-PDF</h1>
+</p>
 
 
 This is a locally hosted web application that allows you to perform various operations on PDF files, such as splitting and adding images.
