@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 
-<th:block th:insert="~{fragments/common :: head(title='Rotate')}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{rotate.title})}"></th:block>
 
 
 <body>	<div id="page-container">
@@ -13,7 +13,7 @@
 	<div class="container">
 		<div class="row justify-content-center">
 			<div class="col-md-6">
-				<h2>Rotate PDF</h2>
+				<h2 th:text="#{rotate.header}"></h2>
 
 
 
@@ -22,11 +22,10 @@
 					<div class="custom-file">
 						<input type="file" class="custom-file-input" id="fileInput"
 							name="fileInput" required> <label
-							class="custom-file-label" for="fileInput">Choose PDF</label>
+							class="custom-file-label" for="fileInput" th:text="#{pdfPrompt}"></label>
 					</div>
 
-					<label for="angle">Select rotation angle (in multiples of
-						90 degrees):</label> <select id="angle" class="form-control" name="angle">
+					<label for="angle" th:text="#{rotate.selectAngle}"></label> <select id="angle" class="form-control" name="angle">
 						<option value="90">90</option>
 						<option value="180">180</option>
 						<option value="270">270</option>
@@ -34,7 +33,7 @@
 						<option value="-180">-180</option>
 						<option value="-270">-270</option>
 					</select> <br>
-					<button type="submit" class="btn btn-primary">Rotate</button>
+					<button type="submit" class="btn btn-primary" th:text="#{rotate.submit}"></button>
 				</form>
 				<th:block th:insert="~{fragments/common :: filelist}"></th:block>
 
