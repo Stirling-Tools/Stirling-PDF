@@ -1,8 +1,10 @@
 <h1><img src="https://github.com/Frooodle/Stirling-PDF/blob/main/docs/stirling.png?raw=true"  width="60" height="60">tirling-PDF</h1>
 
-How to add new languages to Stirling-PDF
+# How to add new languages to Stirling-PDF
 
-First add reference to the language in the navbar by adding a new language entry to the drop
+Fork Stirling-PDF and make a new branch out of Main
+
+Then add reference to the language in the navbar by adding a new language entry to the dropdown
 
 https://github.com/Frooodle/Stirling-PDF/blob/main/src/main/resources/templates/fragments/navbar.html#L80
 
@@ -20,6 +22,8 @@ Copy and rename it to messages_{your data-language-code here}.properties, in the
 
 
 Then simply translate all property entries within that file and make a PR into main for others to use!
+
+If you do not have a java IDE i am happy to verify the changes worked once you raise PR (but wont be able to verify the translations themselves)
 
 
 

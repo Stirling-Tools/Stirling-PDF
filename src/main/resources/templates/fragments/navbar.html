@@ -68,10 +68,9 @@
 					<input type="checkbox" id="toggle-dark-mode" checked="true"
 						th:onclick="javascript:toggleDarkMode()">
 					<a class="nav-link" href="#" for="toggle-dark-mode" th:text="#{navbar.darkmode}"></a>
-
-				</ul>
-
-				<li class="nav-item dropdown">
+					
+					
+					<li class="nav-item dropdown">
 				  <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 				    Language
 				  </a>
@@ -80,19 +79,26 @@
 					<a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_GB">English (UK)</a>
 				  </div>
 				</li>
+
+				</ul>
+
+				
 				
 				<script>
 				document.addEventListener('DOMContentLoaded', function() {
 					  // Get the dropdown items
 					  var dropdownItems = document.querySelectorAll('.lang_dropdown-item');
-
+					  
 					  // Loop through the dropdown items
 					  for (var i = 0; i < dropdownItems.length; i++) {
+						  dropdownItems[i].classList.remove('active');
+						  if(dropdownItems[i].dataset.languageCode ===  localStorage.getItem('languageCode')){
+						 	dropdownItems[i].classList.add('active');
+					  	}
 					    // Add a click event listener to each dropdown item
 					    dropdownItems[i].addEventListener('click', function(event) {
 					    	
-					       
-					        
+
 					      // Prevent the default link behavior
 					      event.preventDefault();
 	
