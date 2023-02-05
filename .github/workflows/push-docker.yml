@@ -55,19 +55,19 @@ jobs:
    
    
     - name: Setup buildx
-      if: steps.checkIdExists.outcome == 'success'
+      if: steps.checkIdExists.outcome != 'failure'
       run: |
         docker buildx create --name mybuilder
         docker buildx use mybuilder
         
     - name: Build and push versioned amd64 and v8 
-      if: github.ref == 'refs/heads/main' && steps.checkIdExists.outcome == 'success'
+      if: github.ref == 'refs/heads/main' && steps.checkIdExists.outcome != 'failure'
       run: | 
         docker buildx build --platform="linux/amd64,linux/arm64/v8" --push --tag "frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}" .
 
    
     - name: Build and push latest amd64 and v8
-      if: github.ref == 'refs/heads/master' && steps.checkIdExists.outcome == 'success'
+      if: github.ref == 'refs/heads/master' && steps.checkIdExists.outcome != 'failure'
       run: | 
         docker buildx build --platform="linux/amd64,linux/arm64/v8" --push --tag "frooodle/s-pdf:latest" .
         
