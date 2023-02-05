@@ -60,13 +60,13 @@ jobs:
         docker buildx use mybuilder
         
     - name: Build and push versioned amd64 and v8 
-      if: github.ref == 'refs/heads/main' and env.JOB_END_EARLY != true
+      if: github.ref == 'refs/heads/main' && env.JOB_END_EARLY != true
       run: | 
         docker buildx build --platform="linux/amd64,linux/arm64/v8" --push --tag "frooodle/s-pdf:${{ steps.versionNumber.outputs.versionNumber }}" .
 
    
     - name: Build and push latest amd64 and v8
-      if: github.ref == 'refs/heads/master' and env.JOB_END_EARLY != true
+      if: github.ref == 'refs/heads/master' && env.JOB_END_EARLY != true
       run: | 
         docker buildx build --platform="linux/amd64,linux/arm64/v8" --push --tag "frooodle/s-pdf:latest" .
         
