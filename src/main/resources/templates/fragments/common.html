@@ -102,7 +102,7 @@
 	<div class="custom-file-chooser">
 		<div class="custom-file">
 			<input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:multiple="${multiple}">
-			<label class="custom-file-label" th:for="${name}+'-input'">Choose file</label>
+			<label class="custom-file-label" th:for="${name}+'-input'" th:text="#{pdfPrompt}"></label>
 		</div>
 	</div>
 
@@ -113,7 +113,7 @@
 			if (fileNames) {
 				$(this).siblings(".custom-file-label").addClass("selected").html(fileNames);
 			} else {
-				$(this).siblings(".custom-file-label").addClass("selected").html("Choose file");
+				$(this).siblings(".custom-file-label").addClass("selected").html([[#{pdfPrompt}]]);
 			}
 		});
 	</script>
