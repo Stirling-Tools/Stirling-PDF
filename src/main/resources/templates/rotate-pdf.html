@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 
-<th:block th:insert="~{fragments/common :: head(title='Rotate')}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{rotate.title})}"></th:block>
 
 
 <body>	<div id="page-container">
@@ -13,7 +13,7 @@
 	<div class="container">
 		<div class="row justify-content-center">
 			<div class="col-md-6">
-				<h2>Rotate PDF</h2>
+				<h2 th:text="#{rotate.header}"></h2>
 
 				<form action="#" th:action="@{rotate-pdf}" th:object="${rotateForm}" method="post" enctype="multipart/form-data">
 					<div th:replace="fragments/common :: fileSelector(name='fileInput', multiple=false)"></div>

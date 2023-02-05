@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title='Image to PDF')}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{imageToPDF.title})}"></th:block>
 
 
 <body>	<div id="page-container">
@@ -12,18 +12,18 @@
 	<div class="container">
 		<div class="row justify-content-center">
 			<div class="col-md-6">
-				<h2>Image to PDF</h2>
+				<h2 th:text="#{imageToPDF.header}"></h2>
 
 				<form method="post" enctype="multipart/form-data"
 					th:action="@{img-to-pdf}">
 					<div class="custom-file">
 						<input type="file" class="custom-file-input" id="fileInput"
 							name="fileInput" required> <label
-							class="custom-file-label" for="fileInput">Choose Image</label>
+							class="custom-file-label" for="fileInput" th:text="#{imgPrompt}"></label>
 					</div>
 					<br>
 					<br>
-					<button type="submit" class="btn btn-primary">Convert</button>
+					<button type="submit" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
 
 				</form>
 				<th:block th:insert="~{fragments/common :: filelist}"></th:block>
