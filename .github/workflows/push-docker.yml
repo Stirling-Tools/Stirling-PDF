@@ -45,10 +45,10 @@ jobs:
         result=$(echo $response | jq ".results")
         if [ "$result" == "[]" ]; then
           echo "Tag ${{ steps.versionNumber.outputs.versionNumber }} doesnt exist. Continuing with build and push."
+          echo "JOB_END_EARLY=false" >> $JOB_END_EARLY
         else
           echo "Tag ${{ steps.versionNumber.outputs.versionNumber }} already exists. Skipping build and push."
-          env:
-            JOB_END_EARLY: true
+          echo "JOB_END_EARLY=true" >> $JOB_END_EARLY
         fi
 
    
