@@ -1,4 +1,5 @@
-<h1><img src="https://github.com/Frooodle/Stirling-PDF/blob/main/docs/stirling.png?raw=true"  width="60" height="60">tirling-PDF</h1>
+<center><img src="https://raw.githubusercontent.com/Frooodle/Stirling-PDF/main/docs/stirling.png" width="80" ><br><h1>Stirling-PDF</h1>
+</center>
 
 
 This is a locally hosted web application that allows you to perform various operations on PDF files, such as splitting and adding images.
@@ -34,7 +35,7 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 
 ## How to use
 
-### Locally 
+### Locally
 
 Prerequisites
 - Java 17 or later
