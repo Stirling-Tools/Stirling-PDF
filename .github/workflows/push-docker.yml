@@ -55,7 +55,6 @@ jobs:
    
    
     - name: Setup buildx
-      if: steps.checkIdExists.outcome != 'failure'
       run: |
         docker buildx create --name mybuilder
         docker buildx use mybuilder
