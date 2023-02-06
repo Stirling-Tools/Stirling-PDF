@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{removeMetadata.title})}"></th:block>
+
+<body>	<div id="page-container">
+		<div id="content-wrap">
+	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+	<br>
+	<br>
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-md-6">
+				<h2 th:text="#{removeMetadata.header}"></h2>
+
+				<form method="post" enctype="multipart/form-data" th:action="@{/update-metadata}">
+  <div class="form-group">
+    <label for="pdfFile">PDF File:</label>
+    <input type="file" id="pdfFile" name="pdfFile"/>
+  </div>
+  <p>Please select the variables you wish to change</p>
+  <div class="form-group">
+    <label for="author">Author:</label>
+    <input type="checkbox" id="changeAuthor">
+    <input type="text" id="author" disabled>
+</div>
+
+<div class="form-group">
+    <label for="creationDate">Creation Date:</label>
+    <input type="checkbox" id="changeCreationDate">
+    <input type="text" id="creationDate" disabled>
+</div>
+
+<div class="form-group">
+    <label for="creator">Creator:</label>
+    <input type="checkbox" id="changeCreator">
+    <input type="text" id="creator" disabled>
+</div>
+
+<div class="form-group">
+    <label for="keywords">Keywords:</label>
+    <input type="checkbox" id="changeKeywords">
+    <input type="text" id="keywords" disabled>
+</div>
+
+<div class="form-group">
+    <label for="modificationDate">Modification Date:</label>
+    <input type="checkbox" id="changeModificationDate">
+    <input type="text" id="modificationDate" disabled>
+</div>
+
+<div class="form-group">
+    <label for="producer">Producer:</label>
+    <input type="checkbox" id="changeProducer">
+    <input type="text" id="producer" disabled>
+</div>
+
+<div class="form-group">
+    <label for="subject">Subject:</label>
+    <input type="checkbox" id="changeSubject">
+    <input type="text" id="subject" disabled>
+</div>
+
+<div class="form-group">
+    <label for="title">Title:</label>
+    <input type="checkbox" id="changeTitle">
+    <input type="text" id="title" disabled>
+</div>
+
+<div class="form-group">
+    <label for="trapped">Trapped:</label>
+    <input type="checkbox" id="changeTrapped">
+    <input type="text" id="trapped" disabled>
+</div>
+  <script>
+  const formGroups = document.querySelectorAll(".form-group");
+
+  formGroups.forEach(formGroup => {
+    const checkbox = formGroup.querySelector("input[type='checkbox']");
+    const textbox = formGroup.querySelector("input[type='text']");
+	if(checkbox)
+	    checkbox.addEventListener("change", function() {
+	      textbox.disabled = !checkbox.checked;
+	    });
+  });
+  const pdfFileInput = document.querySelector("#pdfFile");
+  const authorInput = document.querySelector("#author");
+  const creationDateInput = document.querySelector("#creationDate");
+  const creatorInput = document.querySelector("#creator");
+  const keywordsInput = document.querySelector("#keywords");
+  const modificationDateInput = document.querySelector("#modificationDate");
+  const producerInput = document.querySelector("#producer");
+  const subjectInput = document.querySelector("#subject");
+  const titleInput = document.querySelector("#title");
+  const trappedInput = document.querySelector("#trapped");
+
+  pdfFileInput.addEventListener("change", async function() {
+    const file = this.files[0];
+    const pdf = await pdfjsLib.getDocument(file).promise;
+    const pdfMetadata = pdf.pdfInfo.metadata;
+    authorInput.value = pdfMetadata.Author;
+    creationDateInput.value = pdfMetadata.CreationDate;
+    creatorInput.value = pdfMetadata.Creator;
+    keywordsInput.value = pdfMetadata.Keywords;
+    modificationDateInput.value = pdfMetadata.ModDate;
+    producerInput.value = pdfMetadata.Producer;
+    subjectInput.value = pdfMetadata.Subject;
+    titleInput.value = pdfMetadata.Title;
+    trappedInput.value = pdfMetadata.Trapped;
+  });
+</script>
+  </form>
+  
+			</div>
+		</div>
+	</div>
+	</div>
+		<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
+</body>
+</html>
