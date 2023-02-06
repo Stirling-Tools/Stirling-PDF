@@ -1,4 +1,6 @@
-<h1><img src="https://github.com/Frooodle/Stirling-PDF/blob/main/docs/stirling.png?raw=true"  width="60" height="60">tirling-PDF</h1>
+<p align="center"><img src="https://raw.githubusercontent.com/Frooodle/Stirling-PDF/main/docs/stirling.png" width="80" ><br><h1 align="center">Stirling-PDF</h1>
+</p>
+
 
 # How to add new languages to Stirling-PDF
 
