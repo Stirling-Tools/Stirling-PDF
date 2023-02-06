@@ -67,7 +67,7 @@ jobs:
 
    
     - name: Build and push latest amd64 and v8
-      if: github.ref == 'refs/heads/master' && steps.checkIdExists.outcome != 'failure'
+      if: github.ref == 'refs/heads/master'
       run: | 
         docker buildx build --platform="linux/amd64,linux/arm64/v8" --push --tag "frooodle/s-pdf:latest" .
         
