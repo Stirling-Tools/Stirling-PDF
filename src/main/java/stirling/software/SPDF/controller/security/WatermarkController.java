@@ -34,7 +34,7 @@ public class WatermarkController {
 	}
 
 	@PostMapping("/add-watermark")
-	public ResponseEntity<byte[]> addWatermark(@RequestParam("pdfFile") MultipartFile pdfFile,
+	public ResponseEntity<byte[]> addWatermark(@RequestParam("fileInput") MultipartFile pdfFile,
 			@RequestParam("watermarkText") String watermarkText,
 			@RequestParam(defaultValue = "30", name = "fontSize") float fontSize,
 			@RequestParam(defaultValue = "0", name = "rotation") float rotation,
