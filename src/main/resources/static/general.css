@@ -1,14 +1,23 @@
 #page-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 #content-wrap {
-  flex: 1;
+    flex: 1;
 }
 
 #footer {
-bottom: 0;
-width: 100%;
+    bottom: 0;
+    width: 100%;
+}
+
+:is(html[lang=en], html[lang=fr]) * {
+    direction: ltr;
+}
+
+:is(html[lang=ar]) * {
+    direction: rtl;
+    text-align: right;
 }
