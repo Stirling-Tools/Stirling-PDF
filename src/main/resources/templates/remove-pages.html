@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <th:block th:insert="~{fragments/common :: head(title=#{pageRemover.title})}"></th:block>
 
@@ -16,7 +16,7 @@
 
 				<form th:action="@{remove-pages}" method="post"
 					enctype="multipart/form-data">
-					<div th:replace="fragments/common :: fileSelector(name='fileInput', multiple=false)"></div>
+					<div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
 					<div class="form-group">
 						<label for="pagesToDelete" th:text="#{pageRemover.pagesToDelete}"></label> <input type="text" class="form-control"
 							id="fileInput" name="pagesToDelete"

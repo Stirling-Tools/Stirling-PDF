@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 
 <th:block th:insert="~{fragments/common :: head(title=#{addImage.title})}"></th:block>
@@ -21,7 +21,7 @@
 				<form method="post" th:action="@{add-image}"
 					enctype="multipart/form-data">
 
-					<div th:replace="fragments/common :: fileSelector(name='fileInput', multiple=false)"></div>
+					<div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
 					<div class="custom-file">
 						<input type="file" class="custom-file-input" id="fileInput2"
 							name="fileInput2" required> <label

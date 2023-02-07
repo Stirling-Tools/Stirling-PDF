@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 
 <th:block th:insert="~{fragments/common :: head(title=#{compress.title})}"></th:block>
@@ -18,7 +18,7 @@
 					th:object="${rotateForm}" method="post"
 					enctype="multipart/form-data">
 					<p th:text="#{processTimeWarning}"></p>
-					<div th:replace="fragments/common :: fileSelector(name='fileInput', multiple=false)"></div>
+					<div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
 					<div class="form-group">
 						<label for="imageCompressionLevel" th:text="#{compress.compressLevel}"></label> <input type="number" class="form-control"
 							id="imageCompressionLevel" name="imageCompressionLevel" step="1"
