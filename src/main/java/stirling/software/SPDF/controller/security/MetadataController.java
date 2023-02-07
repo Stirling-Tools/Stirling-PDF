@@ -29,10 +29,10 @@ import stirling.software.SPDF.utils.PdfUtils;
 @Controller
 public class MetadataController {
 
-	@GetMapping("/remove-metadata")
+	@GetMapping("/change-metadata")
 	public String addWatermarkForm(Model model) {
-		model.addAttribute("currentPage", "remove-metadata");
-		return "security/remove-metadata";
+		model.addAttribute("currentPage", "change-metadata");
+		return "security/change-metadata";
 	}
 
 	@PostMapping("/update-metadata")
