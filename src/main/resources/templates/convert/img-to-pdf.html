@@ -1,38 +1,39 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
 <th:block th:insert="~{fragments/common :: head(title=#{imageToPDF.title})}"></th:block>
 
+<body>
+<div id="page-container">
+	<div id="content-wrap">
 
-<body>	<div id="page-container">
-		<div id="content-wrap">
-	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
-	<br>
-	<br>
-	<div class="container">
-		<div class="row justify-content-center">
-			<div class="col-md-6">
-				<h2 th:text="#{imageToPDF.header}"></h2>
+		<div th:insert="~{fragments/navbar.html :: navbar}"></div>
 
-				<form method="post" enctype="multipart/form-data"
-					th:action="@{img-to-pdf}">
-					<div class="custom-file">
-						<input type="file" class="custom-file-input" id="fileInput"
-							name="fileInput" required> <label
-							class="custom-file-label" for="fileInput" th:text="#{imgPrompt}"></label>
-					</div>
-					<br>
-					<br>
-					<button type="submit" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
+		<br>
+		<br>
 
-				</form>
-				<th:block th:insert="~{fragments/common :: filelist}"></th:block>
+		<div class="container">
+			<div class="row justify-content-center">
+				<div class="col-md-6">
+					<h2 th:text="#{imageToPDF.header}"></h2>
+
+					<form method="post" enctype="multipart/form-data" th:action="@{img-to-pdf}">
+						<div class="custom-file">
+							<input type="file" class="custom-file-input" id="fileInput" name="fileInput" required>
+							<label class="custom-file-label" for="fileInput" th:text="#{imgPrompt}"></label>
+						</div>
+						<br>
+						<br>
+						<button type="submit" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
+					</form>
+
+					<th:block th:insert="~{fragments/common :: filelist}"></th:block>
+				</div>
 			</div>
 		</div>
-	</div>
 
 	</div>
-		<div th:insert="~{fragments/footer.html :: footer}"></div>
-	</div>
+	<div th:insert="~{fragments/footer.html :: footer}"></div>
+</div>
 </body>
 </html>

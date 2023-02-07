@@ -1,55 +1,49 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
 
 <th:block th:insert="~{fragments/common :: head(title=#{rotate.title})}"></th:block>
 
 
 <body>	<div id="page-container">
-		<div id="content-wrap">
-	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
-	<br>
-	<br>
-	<div class="container">
-		<div class="row justify-content-center">
-			<div class="col-md-6">
-				<h2 th:text="#{rotate.header}"></h2>
+	<div id="content-wrap">
+		<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+		<br>
+		<br>
+		<div class="container">
+			<div class="row justify-content-center">
+				<div class="col-md-6">
+					<h2 th:text="#{rotate.header}"></h2>
 
-				<form action="#" th:action="@{rotate-pdf}" th:object="${rotateForm}" method="post" enctype="multipart/form-data">
-					<div th:replace="fragments/common :: fileSelector(name='fileInput', multiple=false)"></div>
-					<input type="hidden" id="angleInput" name="angle" value="0">
+					<form action="#" th:action="@{rotate-pdf}" th:object="${rotateForm}" method="post" enctype="multipart/form-data">
+						<div th:replace="fragments/common :: fileSelector(name='fileInput', multiple=false)"></div>
+						<input type="hidden" id="angleInput" name="angle" value="0">
 
-					<div id="editSection" style="display: none">
-						<div class="previewContainer">
-							<img id="pdf-preview"/>
+						<div id="editSection" style="display: none">
+							<div class="previewContainer">
+								<img id="pdf-preview"/>
+							</div>
+
+							<div class="buttonContainer">
+								<button type="button" class="btn btn-secondary" onclick="rotate(-90)">
+									<i class="bi bi-arrow-counterclockwise"></i>
+								</button>
+								<button type="submit" class="btn btn-primary" th:text="#{rotate.submit}"></button>
+								<button type="button" class="btn btn-secondary" onclick="rotate(90)">
+									<i class="bi bi-arrow-clockwise"></i>
+								</button>
+							</div>
 						</div>
+					</form>
 
-						<div class="buttonContainer">
-							<button type="button" class="btn btn-secondary" onclick="rotate(-90)">
-								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
-									<path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
-									<path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/>
-								</svg>
-							</button>
-							<button type="submit" class="btn btn-primary" th:text="#{rotate.submit}"></button>
-							<button type="button" class="btn btn-secondary" onclick="rotate(90)">
-								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-									<path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-									<path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-								</svg>
-							</button>
-						</div>
-					</div>
-				</form>
-
+				</div>
 			</div>
 		</div>
 	</div>
-	</div>
-		<div th:insert="~{fragments/footer.html :: footer}"></div>
-	</div>
+	<div th:insert="~{fragments/footer.html :: footer}"></div>
+</div>
 
-	<script>
+<script>
 		const angleInput = document.getElementById("angleInput");
 		const fileInput = document.getElementById("fileInput-input");
 		const preview = document.getElementById("pdf-preview");
@@ -96,7 +90,7 @@
 			angleInput.value = newAngle;
 		}
 	</script>
-	<style>
+<style>
 		#pdf-preview {
 			margin: 0 auto;
 			display: block;
