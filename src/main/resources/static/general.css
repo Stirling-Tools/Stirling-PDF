@@ -13,11 +13,11 @@
     width: 100%;
 }
 
-:is(html[lang=en], html[lang=fr]) * {
+html[lang-direction=ltr] * {
     direction: ltr;
 }
 
-:is(html[lang=ar]) * {
+html[lang-direction=rtl] * {
     direction: rtl;
     text-align: right;
 }
