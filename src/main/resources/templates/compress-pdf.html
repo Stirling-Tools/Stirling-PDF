@@ -18,11 +18,7 @@
 					th:object="${rotateForm}" method="post"
 					enctype="multipart/form-data">
 					<p th:text="#{processTimeWarning}"></p>
-					<div class="custom-file">
-						<input type="file" class="custom-file-input" id="fileInput"
-							name="fileInput" required> <label
-							class="custom-file-label" for="fileInput" th:text="#{pdfPrompt}"></label>
-					</div>
+					<div th:replace="fragments/common :: fileSelector(name='fileInput', multiple=false)"></div>
 					<div class="form-group">
 						<label for="imageCompressionLevel" th:text="#{compress.compressLevel}"></label> <input type="number" class="form-control"
 							id="imageCompressionLevel" name="imageCompressionLevel" step="1"

@@ -21,11 +21,7 @@
 				<form method="post" th:action="@{add-image}"
 					enctype="multipart/form-data">
 
-					<div class="custom-file">
-						<input type="file" class="custom-file-input" id="fileInput"
-							name="fileInput" required> <label
-							class="custom-file-label" for="fileInput" th:text="#{pdfPrompt}"></label>
-					</div>
+					<div th:replace="fragments/common :: fileSelector(name='fileInput', multiple=false)"></div>
 					<div class="custom-file">
 						<input type="file" class="custom-file-input" id="fileInput2"
 							name="fileInput2" required> <label

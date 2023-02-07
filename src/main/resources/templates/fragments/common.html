@@ -1,15 +1,20 @@
 <head th:fragment="head">
 <link rel="shortcut icon" href="favicon.svg">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="js/jquery.min.js"></script>
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<script src="js/bootstrap.min.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.3.122/build/pdf.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.3.122/web/pdf_viewer.min.css" rel="stylesheet">
-
-<link rel="stylesheet" th:href="@{dark-mode.css}" id="dark-mode-styles">
+<script src="pdfjs/pdf.min.js"></script>
+<link href="pdfjs/pdf_viewer.min.css" rel="stylesheet">
+<link rel="stylesheet" th:href="@{css/dark-mode.css}" id="dark-mode-styles">
+<link rel="stylesheet" href="css/all.css">
+<link rel="stylesheet" href="css/all.min.css">
+<link rel="stylesheet" href="css/brands.css">
+<link rel="stylesheet" href="css/brands.min.css">
+<link rel="stylesheet" href="css/fontawesome-all.css">
+<link rel="stylesheet" href="css/fontawesome.min.css">
 <script>
 	function toggleDarkMode() {
 		var checkbox = document.getElementById("toggle-dark-mode");
@@ -37,7 +42,7 @@
 	});
 </script>
 <title th:text="'S-PDF ' + ${title}"></title>
-<link rel="stylesheet" href="general.css">
+<link rel="stylesheet" href="css/general.css">
 </head>
 
 <th:block th:fragment="filelist">

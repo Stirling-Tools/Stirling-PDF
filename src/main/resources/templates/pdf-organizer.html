@@ -16,11 +16,7 @@
 				
 				<form th:action="@{rearrange-pages}" method="post"
 					enctype="multipart/form-data">
-					<div class="custom-file">
-						<input type="file" class="custom-file-input" id="fileInput"
-							name="fileInput" required> <label
-							class="custom-file-label" for="fileInput" th:text="#{pdfPrompt}"></label>
-					</div>
+					<div th:replace="fragments/common :: fileSelector(name='fileInput', multiple=false)"></div>
 					<div class="form-group">
 						<label for="pageOrder" th:text="#{pageOrderPrompt}"></label> <input type="text" class="form-control"
 							id="fileInput" name="pageOrder"
