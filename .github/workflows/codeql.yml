@@ -7,9 +7,8 @@
 # ******** NOTE ********
 # We have attempted to detect the languages in your repository. Please check
 # the `language` matrix defined below to confirm you have the correct set of
-# supported CodeQL languages.
-#
-name: "CodeQL"
+
+name: "Build repo"
 
 on:
   push:
@@ -42,15 +41,15 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
-      with:
-        languages: java
+   # - name: Initialize CodeQL
+   #   uses: github/codeql-action/init@v2
+   #   with:
+   #     languages: java
 
     - uses: gradle/gradle-build-action@v2.3.3
       with:
         gradle-version: 7.6
         arguments: assemble --no-build-cache
 
-    - name: Perform CodeQL analysis
-      uses: github/codeql-action/analyze@v2
+    #- name: Perform CodeQL analysis
+    #  uses: github/codeql-action/analyze@v2
