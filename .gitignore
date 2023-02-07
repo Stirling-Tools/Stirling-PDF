@@ -108,3 +108,5 @@ local.properties
 *.zip
 *.tar.gz
 *.rar
+
+/build
