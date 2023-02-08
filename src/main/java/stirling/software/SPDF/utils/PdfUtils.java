@@ -1,5 +1,6 @@
 package stirling.software.SPDF.utils;
 
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -7,19 +8,22 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
-import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
-import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageOutputStream;
-
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -76,27 +80,55 @@ public class PdfUtils {
 		}
 	}
 
-	public static byte[] convertFromPdf(byte[] inputStream, String imageType) throws IOException {
-		try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputStream))) {
-			// Create a PDFRenderer to convert the PDF to an image
-			PDFRenderer pdfRenderer = new PDFRenderer(document);
-			BufferedImage bim = pdfRenderer.renderImageWithDPI(0, 300, ImageType.RGB);
+	public static byte[] convertFromPdf(byte[] inputStream, String imageType, ImageType colorType, boolean singleImage) throws IOException, Exception {
+	    try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputStream))) {
+	        PDFRenderer pdfRenderer = new PDFRenderer(document);
+	        int pageCount = document.getNumberOfPages();
+	        List<BufferedImage> images = new ArrayList<>();
+	        // Create images of all pages
+	        for (int i = 0; i < pageCount; i++) {
+	            images.add(pdfRenderer.renderImageWithDPI(i, 300, colorType));
+	        }
 
-			// Get an ImageWriter for the specified image type
-			Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName(imageType);
-			ImageWriter writer = writers.next();
+	        if (singleImage) {
+	            // Combine all images into a single big image
+	            BufferedImage combined = new BufferedImage(images.get(0).getWidth() ,
+	                    images.get(0).getHeight()* pageCount, BufferedImage.TYPE_INT_RGB);
+	            Graphics g = combined.getGraphics();
+	            for (int i = 0; i < images.size(); i++) {
+	                g.drawImage(images.get(i), 0, i * images.get(0).getHeight(), null);
+	            }
+	            images = Arrays.asList(combined);
+	        }
 
-			// Create a ByteArrayOutputStream to save the image to
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
-				writer.setOutput(ios);
-				// Write the image to the output stream
-				writer.write(new IIOImage(bim, null, null));
-				// Log that the image was successfully written to the byte array
-				logger.info("Image successfully written to byte array");
-			}
-			return baos.toByteArray();
-		} catch (IOException e) {
+
+	        // Create a ByteArrayOutputStream to save the image(s) to
+	        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	        if (singleImage) {
+	            // Write the image to the output stream
+	        	ImageIO.write(images.get(0), "PNG", baos);
+
+	            // Log that the image was successfully written to the byte array
+	            logger.info("Image successfully written to byte array");
+	        } else {
+	            // Zip the images and return as byte array
+	            try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+	                for (int i = 0; i < images.size(); i++) {
+	                    BufferedImage image = images.get(i);
+	                    try (ByteArrayOutputStream baosImage = new ByteArrayOutputStream()) {
+	                    	ImageIO.write(image, "PNG", baosImage);
+
+	                        // Add the image to the zip file
+	                        zos.putNextEntry(new ZipEntry(String.format("page_%d.%s", i + 1, "png")));
+	                        zos.write(baosImage.toByteArray());
+	                    }
+	                }
+	                // Log that the images were successfully written to the byte array
+	                logger.info("Images successfully written to byte array as a zip");
+	            }
+	        }
+	        return baos.toByteArray();
+	    } catch (IOException e) {
 			// Log an error message if there is an issue converting the PDF to an image
 			logger.error("Error converting PDF to image", e);
 			throw e;

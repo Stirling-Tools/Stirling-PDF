@@ -14,24 +14,20 @@
 				<h2 th:text="#{changeMetadata.header}"></h2>
 
 				<form method="post" enctype="multipart/form-data" th:action="@{/update-metadata}">
-  <div class="form-group">
-    <label for="pdfFile">PDF File:</label>
-    <input type="file" id="pdfFile" name="pdfFile"/>
-  </div>
+  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
 
  
   <p class="text-muted">Please select the variables you wish to change</p>
- 
- <div class="form-group">
-  <label for="advancedMode">Delete all metadata</label>
+
+<div class="form-group form-check form-check-inline">
   <input type="checkbox"  class="form-check-input"  id="deleteAll">
+  <label class="ml-3" for="deleteAll">Delete all metadata</label>
 </div>
 
- <div class="form-group">
-  <label for="advancedMode">Show Advanced Metadata:</label>
-  <input type="checkbox"  class="form-check-input"  id="advancedMode">
+<div class="form-group form-check form-check-inline">
+  <input type="checkbox"  class="form-check-input"  id="advancedModeCheckbox">
+  <label class="ml-3" for="advancedModeCheckbox">Show Advanced Metadata:</label>
 </div>
-  
   
   <div class="form-group form-check">
     <label class="form-check-label" for="author">Author:</label>
@@ -69,12 +65,12 @@
   </div>
   
   <div class="form-group form-check">
-    <label class="form-check-label" for="title">Subject:</label>
+    <label class="form-check-label" for="title">Title:</label>
     <input type="text" class="form-control" id="title">
   </div>
     
   <div class="form-group form-check">
-    <label class="form-check-label" for="trapped">Subject:</label>
+    <label class="form-check-label" for="trapped">Trapped:</label>
     <input type="text" class="form-control" id="trapped">
   </div>
   <div id="advancedMetadata" style="display:none;">
@@ -82,13 +78,13 @@
 	  <div class="form-group" id="otherMetadataEntries"></div>
   </div>
   <div id="customMetadataEntries"></div>
-  <button type="button" id="addMetadataBtn">Add Custom Metadata Entry</button>
+  <button type="button" class="btn btn-secondary" id="addMetadataBtn">Add Custom Metadata Entry</button>
   <br><br>
-  <button type="submit">Save Changes and Download PDF</button>
+  <button class="btn btn-primary" type="submit">Save Changes and Download PDF</button>
   <script>
   
   
-  const advancedModeCheckbox = document.getElementById('advancedMode');
+  const advancedModeCheckbox = document.getElementById('advancedModeCheckbox');
   const advancedMetadataDiv = document.getElementById('advancedMetadata');
   const otherMetadataEntriesDiv = document.getElementById('otherMetadataEntries');
 
@@ -113,23 +109,9 @@
     customMetadataFormContainer.appendChild(valueInput);
   });
 
-  // async function addCustomMetadata(pdf, key, value) {
-  //  const pdfMetadata = pdf.getMetadata();
-  //  pdfMetadata.then((metadata) => {
-  //    metadata[key] = value;
-  //    pdf.setMetadata(metadata).then(() => {
-  //      console.log(`Successfully added custom metadata with key '${key}' and value '${value}'`);
-  //    }).catch((err) => {
-  //      console.error(`Error adding custom metadata: ${err}`);
-  //    });
-  //  });
-  //}
-
-    //const customMetadataEntries = customMetadataFormContainer.querySelectorAll("input[type='text']");
-    //for (let i = 0; i < customMetadataEntries.length; i += 2) {
   
 
-  const pdfFileInput = document.querySelector("#pdfFile");
+  const fileInput = document.querySelector("#fileInput-input");
   const authorInput = document.querySelector("#author");
   const creationDateInput = document.querySelector("#creationDate");
   const creatorInput = document.querySelector("#creator");
@@ -141,7 +123,7 @@
   const trappedInput = document.querySelector("#trapped");
   
   var lastPDFFileMeta = null;
-  pdfFile.addEventListener("change", async function() {
+  fileInput.addEventListener("change", async function() {
     const file = this.files[0];
     var url = URL.createObjectURL(file)
 
@@ -161,39 +143,41 @@
     
     addExtra();
   });
-  
-  
+
+	function addExtra() {
+ 		 const event = document.getElementById("advancedModeCheckbox");
+ 		
+ 	
+ 		if (event.checked) {
+ 	      advancedMetadataDiv.style.display = 'block';
+ 	      for (const [key, value] of Object.entries(lastPDFFile)) {
+ 	        if (key === 'Author' || key === 'CreationDate' || key === 'Creator' || key === 'Keywords' || key === 'ModDate' || key === 'Producer' || key === 'Subject' || key === 'Title' || key === 'Trapped') {
+ 	          continue;
+ 	        }
+ 	        const entryDiv = document.createElement('div');
+ 	        entryDiv.className = 'form-group';
+ 	        
+ 	        
+ 	      
+ 	        entryDiv.innerHTML = `<div class="form-group form-check"><label class="form-check-label" for="${key}">${key}:</label><input value="${value}" type="text" class="form-control" id="${key}"></div>`;
+ 	        otherMetadataEntriesDiv.appendChild(entryDiv);
+ 	      }
+ 	    } else {
+ 	      advancedMetadataDiv.style.display = 'none';
+ 	      while (otherMetadataEntriesDiv.firstChild) {
+ 	        otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
+ 	      }
+ 	    }
+ 	    
+ 	
+ 	}
+ 	
   advancedModeCheckbox.addEventListener('change', (event) => {
 	 
 	  addExtra();
 	  });
   
-  
-  	function addExtra() {
-  		 const event = document.getElementById("advancedModeCheckbox");
-  		
-  	
-  		if (event.target.checked) {
-  	      advancedMetadataDiv.style.display = 'block';
-  	      for (const [key, value] of Object.entries(pdfMetadata.info)) {
-  	        if (key === 'Author' || key === 'CreationDate' || key === 'Creator' || key === 'Keywords' || key === 'ModDate' || key === 'Producer' || key === 'Subject' || key === 'Title' || key === 'Trapped') {
-  	          continue;
-  	        }
-  	        const entryDiv = document.createElement('div');
-  	        entryDiv.className = 'form-group';
-  	        entryDiv.innerHTML = `<label for="${key}">${key}:</label><input type="text" id="${key}" value="${value}" disabled>`;
-  	        otherMetadataEntriesDiv.appendChild(entryDiv);
-  	      }
-  	    } else {
-  	      advancedMetadataDiv.style.display = 'none';
-  	      while (otherMetadataEntriesDiv.firstChild) {
-  	        otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
-  	      }
-  	    }
-  	    
-  	
-  	}
-  	
+
 </script>
   </form>
   
