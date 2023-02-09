@@ -21,104 +21,102 @@ import stirling.software.SPDF.utils.PdfUtils;
 @Controller
 public class RearrangePagesPDFController {
 
-	private static final Logger logger = LoggerFactory.getLogger(RearrangePagesPDFController.class);
+    private static final Logger logger = LoggerFactory.getLogger(RearrangePagesPDFController.class);
 
-	@GetMapping("/pdf-organizer")
-	public String pageOrganizer(Model model) {
-		model.addAttribute("currentPage", "pdf-organizer");
-		return "pdf-organizer";
-	}
+    @GetMapping("/pdf-organizer")
+    public String pageOrganizer(Model model) {
+        model.addAttribute("currentPage", "pdf-organizer");
+        return "pdf-organizer";
+    }
 
-	@GetMapping("/remove-pages")
-	public String pageDeleter(Model model) {
-		model.addAttribute("currentPage", "remove-pages");
-		return "remove-pages";
-	}
+    @GetMapping("/remove-pages")
+    public String pageDeleter(Model model) {
+        model.addAttribute("currentPage", "remove-pages");
+        return "remove-pages";
+    }
 
-	@PostMapping("/remove-pages")
-	public ResponseEntity<byte[]> deletePages(@RequestParam("fileInput") MultipartFile pdfFile,
-			@RequestParam("pagesToDelete") String pagesToDelete) throws IOException {
+    @PostMapping("/remove-pages")
+    public ResponseEntity<byte[]> deletePages(@RequestParam("fileInput") MultipartFile pdfFile, @RequestParam("pagesToDelete") String pagesToDelete) throws IOException {
 
-		PDDocument document = PDDocument.load(pdfFile.getBytes());
+        PDDocument document = PDDocument.load(pdfFile.getBytes());
 
-		// Split the page order string into an array of page numbers or range of numbers
-		String[] pageOrderArr = pagesToDelete.split(",");
+        // Split the page order string into an array of page numbers or range of numbers
+        String[] pageOrderArr = pagesToDelete.split(",");
 
-		List<Integer> pagesToRemove = pageOrderToString(pageOrderArr, document.getNumberOfPages());
+        List<Integer> pagesToRemove = pageOrderToString(pageOrderArr, document.getNumberOfPages());
 
-		for (int i = pagesToRemove.size() - 1; i >= 0; i--) {
-			int pageIndex = pagesToRemove.get(i);
-			document.removePage(pageIndex);
-		}
+        for (int i = pagesToRemove.size() - 1; i >= 0; i--) {
+            int pageIndex = pagesToRemove.get(i);
+            document.removePage(pageIndex);
+        }
 
-		return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_removed_pages.pdf");
+        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_removed_pages.pdf");
 
-	}
+    }
 
-	private List<Integer> pageOrderToString(String[] pageOrderArr, int totalPages) {
-		List<Integer> newPageOrder = new ArrayList<>();
-		// loop through the page order array
-		for (String element : pageOrderArr) {
-			// check if the element contains a range of pages
-			if (element.contains("-")) {
-				// split the range into start and end page
-				String[] range = element.split("-");
-				int start = Integer.parseInt(range[0]);
-				int end = Integer.parseInt(range[1]);
-				// check if the end page is greater than total pages
-				if (end > totalPages) {
-					end = totalPages;
-				}
-				// loop through the range of pages
-				for (int j = start; j <= end; j++) {
-					// print the current index
-					newPageOrder.add(j - 1);
-				}
-			} else {
-				// if the element is a single page
-				newPageOrder.add(Integer.parseInt(element) - 1);
-			}
-		}
+    private List<Integer> pageOrderToString(String[] pageOrderArr, int totalPages) {
+        List<Integer> newPageOrder = new ArrayList<>();
+        // loop through the page order array
+        for (String element : pageOrderArr) {
+            // check if the element contains a range of pages
+            if (element.contains("-")) {
+                // split the range into start and end page
+                String[] range = element.split("-");
+                int start = Integer.parseInt(range[0]);
+                int end = Integer.parseInt(range[1]);
+                // check if the end page is greater than total pages
+                if (end > totalPages) {
+                    end = totalPages;
+                }
+                // loop through the range of pages
+                for (int j = start; j <= end; j++) {
+                    // print the current index
+                    newPageOrder.add(j - 1);
+                }
+            } else {
+                // if the element is a single page
+                newPageOrder.add(Integer.parseInt(element) - 1);
+            }
+        }
 
-		return newPageOrder;
-	}
+        return newPageOrder;
+    }
 
-	@PostMapping("/rearrange-pages")
-	public ResponseEntity<byte[]> rearrangePages(@RequestParam("fileInput") MultipartFile pdfFile,
-			@RequestParam("pageOrder") String pageOrder) {
-		try {
-			// Load the input PDF
-			PDDocument document = PDDocument.load(pdfFile.getInputStream());
+    @PostMapping("/rearrange-pages")
+    public ResponseEntity<byte[]> rearrangePages(@RequestParam("fileInput") MultipartFile pdfFile, @RequestParam("pageOrder") String pageOrder) {
+        try {
+            // Load the input PDF
+            PDDocument document = PDDocument.load(pdfFile.getInputStream());
 
-			// Split the page order string into an array of page numbers or range of numbers
-			String[] pageOrderArr = pageOrder.split(",");
-			// int[] newPageOrder = new int[pageOrderArr.length];
-			int totalPages = document.getNumberOfPages();
+            // Split the page order string into an array of page numbers or range of numbers
+            String[] pageOrderArr = pageOrder.split(",");
+            // int[] newPageOrder = new int[pageOrderArr.length];
+            int totalPages = document.getNumberOfPages();
 
-			List<Integer> newPageOrder = pageOrderToString(pageOrderArr, totalPages);
+            List<Integer> newPageOrder = pageOrderToString(pageOrderArr, totalPages);
 
-			// Create a new list to hold the pages in the new order
-			List<PDPage> newPages = new ArrayList<>();
-			for (int i = 0; i < newPageOrder.size(); i++) {
-				newPages.add(document.getPage(newPageOrder.get(i)));
-			}
+            // Create a new list to hold the pages in the new order
+            List<PDPage> newPages = new ArrayList<>();
+            for (int i = 0; i < newPageOrder.size(); i++) {
+                newPages.add(document.getPage(newPageOrder.get(i)));
+            }
 
-			// Remove all the pages from the original document
-			for (int i = document.getNumberOfPages() - 1; i >= 0; i--) {
-				document.removePage(i);
-			}
+            // Remove all the pages from the original document
+            for (int i = document.getNumberOfPages() - 1; i >= 0; i--) {
+                document.removePage(i);
+            }
 
-			// Add the pages in the new order
-			for (PDPage page : newPages) {
-				document.addPage(page);
-			}
+            // Add the pages in the new order
+            for (PDPage page : newPages) {
+                document.addPage(page);
+            }
 
-			return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_rearranged.pdf");
-		} catch (IOException e) {
+            return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_rearranged.pdf");
+        } catch (IOException e) {
 
-			logger.error("Failed rearranging documents", e);
-			return null;
-		}
-	}
+            logger.error("Failed rearranging documents", e);
+            return null;
+        }
+    }
 
 }

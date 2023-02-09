@@ -18,27 +18,26 @@ import stirling.software.SPDF.utils.PdfUtils;
 @Controller
 public class OverlayImageController {
 
-	private static final Logger logger = LoggerFactory.getLogger(OverlayImageController.class);
+    private static final Logger logger = LoggerFactory.getLogger(OverlayImageController.class);
 
-	@GetMapping("/add-image")
-	public String overlayImage(Model model) {
-		model.addAttribute("currentPage", "add-image");
-		return "add-image";
-	}
+    @GetMapping("/add-image")
+    public String overlayImage(Model model) {
+        model.addAttribute("currentPage", "add-image");
+        return "add-image";
+    }
 
-	@PostMapping("/add-image")
-	public ResponseEntity<byte[]> overlayImage(@RequestParam("fileInput") MultipartFile pdfFile,
-			@RequestParam("fileInput2") MultipartFile imageFile, @RequestParam("x") float x,
-			@RequestParam("y") float y) {
-		try {
-			byte[] pdfBytes = pdfFile.getBytes();
-			byte[] imageBytes = imageFile.getBytes();
-			byte[] result = PdfUtils.overlayImage(pdfBytes, imageBytes, x, y);
+    @PostMapping("/add-image")
+    public ResponseEntity<byte[]> overlayImage(@RequestParam("fileInput") MultipartFile pdfFile, @RequestParam("fileInput2") MultipartFile imageFile, @RequestParam("x") float x,
+            @RequestParam("y") float y) {
+        try {
+            byte[] pdfBytes = pdfFile.getBytes();
+            byte[] imageBytes = imageFile.getBytes();
+            byte[] result = PdfUtils.overlayImage(pdfBytes, imageBytes, x, y);
 
-			return PdfUtils.bytesToWebResponse(result, pdfFile.getName() + "_overlayed.pdf");
-		} catch (IOException e) {
-			logger.error("Failed to add image to PDF", e);
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-		}
-	}
+            return PdfUtils.bytesToWebResponse(result, pdfFile.getName() + "_overlayed.pdf");
+        } catch (IOException e) {
+            logger.error("Failed to add image to PDF", e);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
 }

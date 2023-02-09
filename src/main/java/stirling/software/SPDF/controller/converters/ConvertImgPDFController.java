@@ -23,83 +23,78 @@ import stirling.software.SPDF.utils.PdfUtils;
 @Controller
 public class ConvertImgPDFController {
 
-	private static final Logger logger = LoggerFactory.getLogger(ConvertImgPDFController.class);
+    private static final Logger logger = LoggerFactory.getLogger(ConvertImgPDFController.class);
 
-	@GetMapping("/img-to-pdf")
-	public String convertToPdfForm(Model model) {
-		model.addAttribute("currentPage", "img-to-pdf");
-		return "convert/img-to-pdf";
-	}
+    @GetMapping("/img-to-pdf")
+    public String convertToPdfForm(Model model) {
+        model.addAttribute("currentPage", "img-to-pdf");
+        return "convert/img-to-pdf";
+    }
 
-	@GetMapping("/pdf-to-img")
-	public String pdfToimgForm(Model model) {
-		model.addAttribute("currentPage", "pdf-to-img");
-		return "convert/pdf-to-img";
-	}
+    @GetMapping("/pdf-to-img")
+    public String pdfToimgForm(Model model) {
+        model.addAttribute("currentPage", "pdf-to-img");
+        return "convert/pdf-to-img";
+    }
 
-	@PostMapping("/img-to-pdf")
-	public ResponseEntity<byte[]> convertToPdf(@RequestParam("fileInput") MultipartFile file) throws IOException {
-		// Convert the file to PDF and get the resulting bytes
-		byte[] bytes = PdfUtils.convertToPdf(file.getInputStream());
-		logger.info("File {} successfully converted to pdf", file.getOriginalFilename());
+    @PostMapping("/img-to-pdf")
+    public ResponseEntity<byte[]> convertToPdf(@RequestParam("fileInput") MultipartFile file) throws IOException {
+        // Convert the file to PDF and get the resulting bytes
+        byte[] bytes = PdfUtils.convertToPdf(file.getInputStream());
+        logger.info("File {} successfully converted to pdf", file.getOriginalFilename());
 
-		return PdfUtils.bytesToWebResponse(bytes, file.getName() + "_coverted.pdf");
-	}
+        return PdfUtils.bytesToWebResponse(bytes, file.getName() + "_coverted.pdf");
+    }
 
-	@PostMapping("/pdf-to-img")
-	public ResponseEntity<Resource> convertToImage(@RequestParam("fileInput") MultipartFile file,
-			@RequestParam("imageFormat") String imageFormat, @RequestParam("singleOrMultiple") String singleOrMultiple,
-			@RequestParam("colorType") String colorType, @RequestParam("dpi") String dpi,
-			@RequestParam("contrast") String contrast, @RequestParam("brightness") String brightness)
-			throws IOException {
+    @PostMapping("/pdf-to-img")
+    public ResponseEntity<Resource> convertToImage(@RequestParam("fileInput") MultipartFile file, @RequestParam("imageFormat") String imageFormat,
+            @RequestParam("singleOrMultiple") String singleOrMultiple, @RequestParam("colorType") String colorType, @RequestParam("dpi") String dpi,
+            @RequestParam("contrast") String contrast, @RequestParam("brightness") String brightness) throws IOException {
 
-		byte[] pdfBytes = file.getBytes();
-		ImageType colorTypeResult = ImageType.RGB;
-		if ("greyscale".equals(colorType)) {
-			colorTypeResult = ImageType.GRAY;
-		} else if ("blackwhite".equals(colorType)) {
-			colorTypeResult = ImageType.BINARY;
-		}
-		// returns bytes for image
-		boolean singleImage = singleOrMultiple.equals("single");
-		byte[] result = null;
-		try {
-			result = PdfUtils.convertFromPdf(pdfBytes, imageFormat.toLowerCase(), colorTypeResult, singleImage,
-					Integer.valueOf(dpi), Integer.valueOf(contrast), Integer.valueOf(brightness)); // DPI, contrast,
-																									// brightness
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		if (singleImage) {
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.parseMediaType(getMediaType(imageFormat)));
-			headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-			ResponseEntity<Resource> response = new ResponseEntity<>(new ByteArrayResource(result), headers,
-					HttpStatus.OK);
-			return response;
-		} else {
-			ByteArrayResource resource = new ByteArrayResource(result);
-			// return the Resource in the response
-			return ResponseEntity.ok()
-					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=converted_documents.zip")
-					.contentType(MediaType.APPLICATION_OCTET_STREAM).contentLength(resource.contentLength())
-					.body(resource);
-		}
-	}
+        byte[] pdfBytes = file.getBytes();
+        ImageType colorTypeResult = ImageType.RGB;
+        if ("greyscale".equals(colorType)) {
+            colorTypeResult = ImageType.GRAY;
+        } else if ("blackwhite".equals(colorType)) {
+            colorTypeResult = ImageType.BINARY;
+        }
+        // returns bytes for image
+        boolean singleImage = singleOrMultiple.equals("single");
+        byte[] result = null;
+        try {
+            result = PdfUtils.convertFromPdf(pdfBytes, imageFormat.toLowerCase(), colorTypeResult, singleImage, Integer.valueOf(dpi), Integer.valueOf(contrast),
+                    Integer.valueOf(brightness)); // DPI, contrast,
+                                                  // brightness
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        if (singleImage) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(getMediaType(imageFormat)));
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+            ResponseEntity<Resource> response = new ResponseEntity<>(new ByteArrayResource(result), headers, HttpStatus.OK);
+            return response;
+        } else {
+            ByteArrayResource resource = new ByteArrayResource(result);
+            // return the Resource in the response
+            return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=converted_documents.zip").contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentLength(resource.contentLength()).body(resource);
+        }
+    }
 
-	private String getMediaType(String imageFormat) {
-		if (imageFormat.equalsIgnoreCase("PNG"))
-			return "image/png";
-		else if (imageFormat.equalsIgnoreCase("JPEG") || imageFormat.equalsIgnoreCase("JPG"))
-			return "image/jpeg";
-		else if (imageFormat.equalsIgnoreCase("GIF"))
-			return "image/gif";
-		else
-			return "application/octet-stream";
-	}
+    private String getMediaType(String imageFormat) {
+        if (imageFormat.equalsIgnoreCase("PNG"))
+            return "image/png";
+        else if (imageFormat.equalsIgnoreCase("JPEG") || imageFormat.equalsIgnoreCase("JPG"))
+            return "image/jpeg";
+        else if (imageFormat.equalsIgnoreCase("GIF"))
+            return "image/gif";
+        else
+            return "application/octet-stream";
+    }
 
 }

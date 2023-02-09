@@ -14,21 +14,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class MetadataController {
 
-	@GetMapping("/change-metadata")
-	public String addWatermarkForm(Model model) {
-		model.addAttribute("currentPage", "change-metadata");
-		return "security/change-metadata";
-	}
+    @GetMapping("/change-metadata")
+    public String addWatermarkForm(Model model) {
+        model.addAttribute("currentPage", "change-metadata");
+        return "security/change-metadata";
+    }
 
-	@PostMapping("/update-metadata")
-	public ResponseEntity<byte[]> metadata(@RequestParam Map<String, String> allRequestParams) throws IOException {
+    @PostMapping("/update-metadata")
+    public ResponseEntity<byte[]> metadata(@RequestParam Map<String, String> allRequestParams) throws IOException {
 
-		System.out.println("1 allRequestParams.size() = " + allRequestParams.size());
-		for (Entry entry : allRequestParams.entrySet()) {
-			System.out.println("1 key=" + entry.getKey() + ", value=" + entry.getValue());
-		}
-		return null;
-	}
+        System.out.println("1 allRequestParams.size() = " + allRequestParams.size());
+        for (Entry entry : allRequestParams.entrySet()) {
+            System.out.println("1 key=" + entry.getKey() + ", value=" + entry.getValue());
+        }
+        return null;
+    }
 
 //	@PostMapping("/update-metadata")
 //	public ResponseEntity<byte[]> addWatermark(@RequestParam("fileInput") MultipartFile pdfFile,
