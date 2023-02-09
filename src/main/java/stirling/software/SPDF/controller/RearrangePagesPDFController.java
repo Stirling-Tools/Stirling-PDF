@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,9 +8,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -60,7 +56,7 @@ public class RearrangePagesPDFController {
 	}
 
 	private List<Integer> pageOrderToString(String[] pageOrderArr, int totalPages) {
-		List<Integer> newPageOrder = new ArrayList<Integer>();
+		List<Integer> newPageOrder = new ArrayList<>();
 		// loop through the page order array
 		for (String element : pageOrderArr) {
 			// check if the element contains a range of pages

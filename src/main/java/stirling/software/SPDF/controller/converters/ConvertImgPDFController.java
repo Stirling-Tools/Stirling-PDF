@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.converters;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.pdfbox.rendering.ImageType;
