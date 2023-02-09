@@ -49,12 +49,14 @@ public class ConvertImgPDFController {
 
 	@PostMapping("/pdf-to-img")
 	public ResponseEntity<Resource> convertToImage(@RequestParam("fileInput") MultipartFile file,
-			@RequestParam("imageFormat") String imageFormat,
-			@RequestParam("singleOrMultiple") String singleOrMultiple,
-			@RequestParam("colorType") String colorType) throws IOException {
+			@RequestParam("imageFormat") String imageFormat, @RequestParam("singleOrMultiple") String singleOrMultiple,
+			@RequestParam("colorType") String colorType, @RequestParam("dpi") String dpi,
+			@RequestParam("contrast") String contrast, @RequestParam("brightness") String brightness)
+			throws IOException {
+
 		byte[] pdfBytes = file.getBytes();
 		ImageType colorTypeResult = ImageType.RGB;
-		if("greyscale".equals(colorType)) {
+		if ("greyscale".equals(colorType)) {
 			colorTypeResult = ImageType.GRAY;
 		} else if ("blackwhite".equals(colorType)) {
 			colorTypeResult = ImageType.BINARY;
@@ -63,7 +65,9 @@ public class ConvertImgPDFController {
 		boolean singleImage = singleOrMultiple.equals("single");
 		byte[] result = null;
 		try {
-			result = PdfUtils.convertFromPdf(pdfBytes, imageFormat.toLowerCase(), colorTypeResult, singleImage);
+			result = PdfUtils.convertFromPdf(pdfBytes, imageFormat.toLowerCase(), colorTypeResult, singleImage,
+					Integer.valueOf(dpi), Integer.valueOf(contrast), Integer.valueOf(brightness)); // DPI, contrast,
+																									// brightness
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -71,17 +75,20 @@ public class ConvertImgPDFController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if(singleImage) {
+		if (singleImage) {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.parseMediaType(getMediaType(imageFormat)));
 			headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-			ResponseEntity<Resource> response = new ResponseEntity<>(new ByteArrayResource(result), headers, HttpStatus.OK);
+			ResponseEntity<Resource> response = new ResponseEntity<>(new ByteArrayResource(result), headers,
+					HttpStatus.OK);
 			return response;
 		} else {
 			ByteArrayResource resource = new ByteArrayResource(result);
 			// return the Resource in the response
-			return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=converted_documents.zip")
-					.contentType(MediaType.APPLICATION_OCTET_STREAM).contentLength(resource.contentLength()).body(resource);
+			return ResponseEntity.ok()
+					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=converted_documents.zip")
+					.contentType(MediaType.APPLICATION_OCTET_STREAM).contentLength(resource.contentLength())
+					.body(resource);
 		}
 	}
 

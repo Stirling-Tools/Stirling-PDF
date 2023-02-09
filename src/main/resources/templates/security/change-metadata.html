@@ -3,85 +3,84 @@
 
 <th:block th:insert="~{fragments/common :: head(title=#{changeMetadata.title})}"></th:block>
 
-<body>	<div id="page-container">
-		<div id="content-wrap">
-	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
-	<br>
-	<br>
-	<div class="container">
-		<div class="row justify-content-center">
-			<div class="col-md-6">
-				<h2 th:text="#{changeMetadata.header}"></h2>
+<body>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{changeMetadata.header}"></h2>
 
-				<form method="post" enctype="multipart/form-data" th:action="@{/update-metadata}">
-  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                        <form method="post" enctype="multipart/form-data" th:action="@{/update-metadata}">
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                            <p class="text-muted">Please select the variables you wish to change</p>
 
- 
-  <p class="text-muted">Please select the variables you wish to change</p>
+                            <div class="form-group form-check form-check-inline">
+                                <input type="checkbox" class="form-check-input" id="deleteAll"> 
+                                <label class="ml-3" for="deleteAll">Delete all metadata</label>
+                            </div>
 
-<div class="form-group form-check form-check-inline">
-  <input type="checkbox"  class="form-check-input"  id="deleteAll">
-  <label class="ml-3" for="deleteAll">Delete all metadata</label>
-</div>
+                            <div class="form-group form-check form-check-inline">
+                                <input type="checkbox" class="form-check-input" id="advancedModeCheckbox"> 
+                                <label class="ml-3" for="advancedModeCheckbox">Show Advanced Metadata:</label>
+                            </div>
 
-<div class="form-group form-check form-check-inline">
-  <input type="checkbox"  class="form-check-input"  id="advancedModeCheckbox">
-  <label class="ml-3" for="advancedModeCheckbox">Show Advanced Metadata:</label>
-</div>
-  
-  <div class="form-group form-check">
-    <label class="form-check-label" for="author">Author:</label>
-    <input type="text" class="form-control" id="author">
-  </div>
+                            <div class="form-group form-check">
+                                <label class="form-check-label" for="author">Author:</label> 
+                                <input type="text" class="form-control" id="author">
+                            </div>
 
-  <div class="form-group form-check">
-    <label class="form-check-label" for="creationDate">Creation Date:</label>
-    <input type="text" class="form-control" id="creationDate">
-  </div>
+                            <div class="form-group form-check">
+                                <label class="form-check-label" for="creationDate">Creation Date:</label> 
+                                <input type="text" class="form-control" id="creationDate">
+                            </div>
 
-  <div class="form-group form-check">
-    <label class="form-check-label" for="creator">Creator:</label>
-    <input type="text" class="form-control" id="creator">
-  </div>
+                            <div class="form-group form-check">
+                                <label class="form-check-label" for="creator">Creator:</label> 
+                                <input type="text" class="form-control" id="creator">
+                            </div>
 
-  <div class="form-group form-check">
-    <label class="form-check-label" for="keywords">Keywords:</label>
-    <input type="text" class="form-control" id="keywords">
-  </div>
+                            <div class="form-group form-check">
+                                <label class="form-check-label" for="keywords">Keywords:</label> 
+                                <input type="text" class="form-control" id="keywords">
+                            </div>
 
-  <div class="form-group form-check">
-    <label class="form-check-label" for="modificationDate">Modification Date:</label>
-    <input type="text" class="form-control" id="modificationDate">
-  </div>
+                            <div class="form-group form-check">
+                                <label class="form-check-label" for="modificationDate">Modification Date:</label> 
+                                <input type="text" class="form-control" id="modificationDate">
+                            </div>
 
-  <div class="form-group form-check">
-    <label class="form-check-label" for="producer">Producer:</label>
-    <input type="text" class="form-control" id="producer">
-  </div>
+                            <div class="form-group form-check">
+                                <label class="form-check-label" for="producer">Producer:</label> 
+                                <input type="text" class="form-control" id="producer">
+                            </div>
 
-  <div class="form-group form-check">
-    <label class="form-check-label" for="subject">Subject:</label>
-    <input type="text" class="form-control" id="subject">
-  </div>
-  
-  <div class="form-group form-check">
-    <label class="form-check-label" for="title">Title:</label>
-    <input type="text" class="form-control" id="title">
-  </div>
-    
-  <div class="form-group form-check">
-    <label class="form-check-label" for="trapped">Trapped:</label>
-    <input type="text" class="form-control" id="trapped">
-  </div>
-  <div id="advancedMetadata" style="display:none;">
-	  <p>Other Metadata:</p>
-	  <div class="form-group" id="otherMetadataEntries"></div>
-  </div>
-  <div id="customMetadataEntries"></div>
-  <button type="button" class="btn btn-secondary" id="addMetadataBtn">Add Custom Metadata Entry</button>
-  <br><br>
-  <button class="btn btn-primary" type="submit">Save Changes and Download PDF</button>
-  <script>
+                            <div class="form-group form-check">
+                                <label class="form-check-label" for="subject">Subject:</label> 
+                                <input type="text" class="form-control" id="subject">
+                            </div>
+
+                            <div class="form-group form-check">
+                                <label class="form-check-label" for="title">Title:</label> 
+                                <input type="text" class="form-control" id="title">
+                            </div>
+
+                            <div class="form-group form-check">
+                                <label class="form-check-label" for="trapped">Trapped:</label> 
+                                <input type="text" class="form-control" id="trapped">
+                            </div>
+                            <div id="advancedMetadata" style="display: none;">
+                                <p>Other Metadata:</p>
+                                <div class="form-group" id="otherMetadataEntries"></div>
+                            </div>
+                            <div id="customMetadataEntries"></div>
+                            <button type="button" class="btn btn-secondary" id="addMetadataBtn">Add Custom Metadata Entry</button>
+                            <br>
+                            <br>
+                            <button class="btn btn-primary" type="submit">Save Changes and Download PDF</button>
+                            <script>
   
   
   const advancedModeCheckbox = document.getElementById('advancedModeCheckbox');
@@ -179,13 +178,13 @@
   
 
 </script>
-  </form>
-  
-			</div>
-		</div>
-	</div>
-	</div>
-		<div th:insert="~{fragments/footer.html :: footer}"></div>
-	</div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
 </body>
 </html>

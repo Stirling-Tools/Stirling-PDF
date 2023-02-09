@@ -38,20 +38,17 @@ public class MetadataController {
 		model.addAttribute("currentPage", "change-metadata");
 		return "security/change-metadata";
 	}
+
 	@PostMapping("/update-metadata")
-	public ResponseEntity<byte[]> metadata(
-			@RequestParam Map<String,String> allRequestParams) throws IOException {
-		
+	public ResponseEntity<byte[]> metadata(@RequestParam Map<String, String> allRequestParams) throws IOException {
+
 		System.out.println("1 allRequestParams.size() = " + allRequestParams.size());
-		  for(Entry entry : allRequestParams.entrySet()) {
-			  System.out.println("1 key=" + entry.getKey() + ", value=" + entry.getValue());
-		  }
+		for (Entry entry : allRequestParams.entrySet()) {
+			System.out.println("1 key=" + entry.getKey() + ", value=" + entry.getValue());
+		}
 		return null;
 	}
-	
-	
-	
-	
+
 //	@PostMapping("/update-metadata")
 //	public ResponseEntity<byte[]> addWatermark(@RequestParam("fileInput") MultipartFile pdfFile,
 //			@RequestParam Map<String,String> allRequestParams,HttpServletRequest request, ModelMap model) throws IOException {
@@ -88,7 +85,6 @@ public class MetadataController {
 //	  return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_metadata.pdf");
 //	}
 
-	
 //	  // Loop over all pages and remove annotations
 //	  for (PDPage page : document.getPages()) {
 //	    page.getAnnotations().clear();

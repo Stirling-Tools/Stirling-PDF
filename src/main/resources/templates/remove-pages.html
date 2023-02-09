@@ -4,33 +4,31 @@
 <th:block th:insert="~{fragments/common :: head(title=#{pageRemover.title})}"></th:block>
 
 
-<body>	<div id="page-container">
-		<div id="content-wrap">
-	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
-	<br>
-	<br>
-	<div class="container">
-		<div class="row justify-content-center">
-			<div class="col-md-6">
-				<h2 th:text="#{pageRemover.header}"></h2>
+<body>
+  <div id="page-container">
+    <div id="content-wrap">
+      <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+      <br> <br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6">
+            <h2 th:text="#{pageRemover.header}"></h2>
 
-				<form th:action="@{remove-pages}" method="post"
-					enctype="multipart/form-data">
-					<div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
-					<div class="form-group">
-						<label for="pagesToDelete" th:text="#{pageRemover.pagesToDelete}"></label> <input type="text" class="form-control"
-							id="fileInput" name="pagesToDelete"
-							placeholder="(e.g. 1,2,6 or 1-10,15-30)" required>
-					</div>
-					<button type="submit" class="btn btn-primary" th:text="#{pageRemover.submit}"></button>
-				</form>
-				<th:block th:insert="~{fragments/common :: filelist}"></th:block>
+            <form th:action="@{remove-pages}" method="post" enctype="multipart/form-data">
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+              <div class="form-group">
+                <label for="pagesToDelete" th:text="#{pageRemover.pagesToDelete}"></label> 
+                <input type="text" class="form-control" id="fileInput" name="pagesToDelete" placeholder="(e.g. 1,2,6 or 1-10,15-30)" required>
+              </div>
+              <button type="submit" class="btn btn-primary" th:text="#{pageRemover.submit}"></button>
+            </form>
+            <th:block th:insert="~{fragments/common :: filelist}"></th:block>
 
-			</div>
-		</div>
-	</div>
-	</div>
-		<div th:insert="~{fragments/footer.html :: footer}"></div>
-	</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div th:insert="~{fragments/footer.html :: footer}"></div>
+  </div>
 </body>
 </html>

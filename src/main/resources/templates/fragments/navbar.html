@@ -65,11 +65,11 @@
 					<li class="nav-item">
 						<a class="nav-link" href="#" th:href="@{compress-pdf}" th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''"></a>
 					</li>
-
+                  
 					<input type="checkbox" id="toggle-dark-mode" checked="true" th:onclick="javascript:toggleDarkMode()">
-
 					<a class="nav-link" href="#" for="toggle-dark-mode" th:text="#{navbar.darkmode}"></a>
-
+                   
+                    
 					<li class="nav-item dropdown">
 						<a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 							<i class="bi bi-globe2"></i>
@@ -78,7 +78,7 @@
 							<a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_US">English (US)</a>
 							<a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_GB">English (UK)</a>
 							<a class="dropdown-item lang_dropdown-item" href="" data-language-code="ar_AR">العربية</a>
-							<a class="dropdown-item lang_dropdown-item" href="" data-language-code="de_DE">German</a>
+							<a class="dropdown-item lang_dropdown-item" href="" data-language-code="de_DE">Deutsch</a>
 							<a class="dropdown-item lang_dropdown-item" href="" data-language-code="fr_FR">Français</a>
 						</div>
 					</li>

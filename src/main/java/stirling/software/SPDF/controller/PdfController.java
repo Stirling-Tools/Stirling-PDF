@@ -31,13 +31,10 @@ public class PdfController {
 		return "redirect:/";
 	}
 
-
 	@GetMapping("/")
 	public String home(Model model) {
 		model.addAttribute("currentPage", "home");
 		return "home";
 	}
-
-	
 
 }

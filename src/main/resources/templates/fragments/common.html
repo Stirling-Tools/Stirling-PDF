@@ -1,29 +1,29 @@
 <head th:fragment="head">
 
-	<!-- Metadata -->
-	<meta charset="UTF-8">
-	<title th:text="'S-PDF ' + ${title}"></title>
-	<link rel="shortcut icon" href="favicon.svg">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Metadata -->
+<meta charset="UTF-8">
+<title th:text="'S-PDF ' + ${title}"></title>
+<link rel="shortcut icon" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	<!-- jQuery -->
-	<script src="js/jquery.min.js"></script>
+<!-- jQuery -->
+<script src="js/jquery.min.js"></script>
 
-	<!-- Bootstrap -->
-	<script src="js/popper.min.js"></script>
-	<script src="js/bootstrap.min.js"></script>
-	<link rel="stylesheet" href="css/bootstrap.min.css">
-	<link rel="stylesheet" href="css/bootstrap-icons.css">
+<!-- Bootstrap -->
+<script src="js/popper.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="css/bootstrap-icons.css">
 
-	<!-- PDF.js -->
-	<script src="pdfjs/pdf.min.js"></script>
-	<link href="pdfjs/pdf_viewer.min.css" rel="stylesheet">
+<!-- PDF.js -->
+<script src="pdfjs/pdf.min.js"></script>
+<link href="pdfjs/pdf_viewer.min.css" rel="stylesheet">
 
-	<!-- Custom -->
-	<link rel="stylesheet" href="css/general.css">
-	<link rel="stylesheet" th:href="@{css/dark-mode.css}" id="dark-mode-styles">
+<!-- Custom -->
+<link rel="stylesheet" href="css/general.css">
+<link rel="stylesheet" th:href="@{css/dark-mode.css}" id="dark-mode-styles">
 
-	<script>
+<script>
 		function toggleDarkMode() {
 			var checkbox = document.getElementById("toggle-dark-mode");
 			var darkModeStyles = document.getElementById("dark-mode-styles");
@@ -52,9 +52,9 @@
 </head>
 
 <th:block th:fragment="filelist">
-	<div id="fileList"></div>
-	<div id="fileList2"></div>
-	<script>
+    <div id="fileList"></div>
+    <div id="fileList2"></div>
+    <script>
 		var input = document.getElementById("fileInput");
 		var output = document.getElementById("fileList");
 
@@ -69,7 +69,7 @@
 			output.innerHTML = fileNames;
 		});
 	</script>
-	<script>
+    <script>
 		var input2 = document.getElementById("fileInput2");
 		var output2 = document.getElementById("fileList2");
 		if (input2 != null && !input2) {
@@ -87,7 +87,7 @@
 	</script>
 
 
-	<script>
+    <script>
 		if (dropContainer) {
 			dropContainer.ondragover = dropContainer.ondragenter = function(evt) {
 				evt.preventDefault();
@@ -110,14 +110,14 @@
 </th:block>
 
 <th:block th:fragment="fileSelector(name, multiple)">
-	<div class="custom-file-chooser">
-		<div class="custom-file">
-			<input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:multiple="${multiple}">
-			<label class="custom-file-label" th:for="${name}+'-input'" th:text="#{pdfPrompt}"></label>
-		</div>
-	</div>
+    <div class="custom-file-chooser">
+        <div class="custom-file">
+            <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:multiple="${multiple}"> 
+            <label class="custom-file-label" th:for="${name}+'-input'" th:text="#{pdfPrompt}"></label>
+        </div>
+    </div>
 
-	<script th:inline="javascript">
+    <script th:inline="javascript">
 		$([[${"#"+name+"-input"}]]).on("change", function() {
 			const files = $(this).get(0).files;
 			const fileNames = Array.from(files).map(f => f.name).join(", ");
@@ -129,9 +129,9 @@
 		});
 	</script>
 
-	<style>
-		.custom-file-label {
-			padding-right: 90px;
-		}
-	</style>
+    <style>
+    .custom-file-label {
+    	padding-right: 90px;
+    }
+    </style>
 </th:block>

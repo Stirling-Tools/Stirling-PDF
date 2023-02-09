@@ -42,19 +42,19 @@ public class RearrangePagesPDFController {
 	@PostMapping("/remove-pages")
 	public ResponseEntity<byte[]> deletePages(@RequestParam("fileInput") MultipartFile pdfFile,
 			@RequestParam("pagesToDelete") String pagesToDelete) throws IOException {
-		
+
 		PDDocument document = PDDocument.load(pdfFile.getBytes());
-		 
+
 		// Split the page order string into an array of page numbers or range of numbers
 		String[] pageOrderArr = pagesToDelete.split(",");
-					
+
 		List<Integer> pagesToRemove = pageOrderToString(pageOrderArr, document.getNumberOfPages());
-		
+
 		for (int i = pagesToRemove.size() - 1; i >= 0; i--) {
-		      int pageIndex = pagesToRemove.get(i);
-		      document.removePage(pageIndex);
-		    }
-		
+			int pageIndex = pagesToRemove.get(i);
+			document.removePage(pageIndex);
+		}
+
 		return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_removed_pages.pdf");
 
 	}
@@ -100,7 +100,7 @@ public class RearrangePagesPDFController {
 			int totalPages = document.getNumberOfPages();
 
 			List<Integer> newPageOrder = pageOrderToString(pageOrderArr, totalPages);
-			
+
 			// Create a new list to hold the pages in the new order
 			List<PDPage> newPages = new ArrayList<>();
 			for (int i = 0; i < newPageOrder.size(); i++) {

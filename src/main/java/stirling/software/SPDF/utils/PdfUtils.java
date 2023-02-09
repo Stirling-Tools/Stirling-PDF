@@ -2,6 +2,7 @@ package stirling.software.SPDF.utils;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.awt.image.RescaleOp;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -80,55 +81,61 @@ public class PdfUtils {
 		}
 	}
 
-	public static byte[] convertFromPdf(byte[] inputStream, String imageType, ImageType colorType, boolean singleImage) throws IOException, Exception {
-	    try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputStream))) {
-	        PDFRenderer pdfRenderer = new PDFRenderer(document);
-	        int pageCount = document.getNumberOfPages();
-	        List<BufferedImage> images = new ArrayList<>();
-	        // Create images of all pages
-	        for (int i = 0; i < pageCount; i++) {
-	            images.add(pdfRenderer.renderImageWithDPI(i, 300, colorType));
-	        }
+	public static byte[] convertFromPdf(byte[] inputStream, String imageType, ImageType colorType, boolean singleImage,
+			int DPI, int contrast, int brightness) throws IOException, Exception {
+		try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputStream))) {
+			PDFRenderer pdfRenderer = new PDFRenderer(document);
+			int pageCount = document.getNumberOfPages();
+			List<BufferedImage> images = new ArrayList<>();
 
-	        if (singleImage) {
-	            // Combine all images into a single big image
-	            BufferedImage combined = new BufferedImage(images.get(0).getWidth() ,
-	                    images.get(0).getHeight()* pageCount, BufferedImage.TYPE_INT_RGB);
-	            Graphics g = combined.getGraphics();
-	            for (int i = 0; i < images.size(); i++) {
-	                g.drawImage(images.get(i), 0, i * images.get(0).getHeight(), null);
-	            }
-	            images = Arrays.asList(combined);
-	        }
+			// Create images of all pages
+			for (int i = 0; i < pageCount; i++) {
+				BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300, colorType);
+				float scale = contrast + 1f;
+				float offset = brightness;
+				RescaleOp rescaleOp = new RescaleOp(scale, offset, null);
+				BufferedImage dest = rescaleOp.filter(image, null);
+				images.add(dest);
+			}
 
+			if (singleImage) {
+				// Combine all images into a single big image
+				BufferedImage combined = new BufferedImage(images.get(0).getWidth(),
+						images.get(0).getHeight() * pageCount, BufferedImage.TYPE_INT_RGB);
+				Graphics g = combined.getGraphics();
+				for (int i = 0; i < images.size(); i++) {
+					g.drawImage(images.get(i), 0, i * images.get(0).getHeight(), null);
+				}
+				images = Arrays.asList(combined);
+			}
 
-	        // Create a ByteArrayOutputStream to save the image(s) to
-	        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	        if (singleImage) {
-	            // Write the image to the output stream
-	        	ImageIO.write(images.get(0), "PNG", baos);
+			// Create a ByteArrayOutputStream to save the image(s) to
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			if (singleImage) {
+				// Write the image to the output stream
+				ImageIO.write(images.get(0), "PNG", baos);
 
-	            // Log that the image was successfully written to the byte array
-	            logger.info("Image successfully written to byte array");
-	        } else {
-	            // Zip the images and return as byte array
-	            try (ZipOutputStream zos = new ZipOutputStream(baos)) {
-	                for (int i = 0; i < images.size(); i++) {
-	                    BufferedImage image = images.get(i);
-	                    try (ByteArrayOutputStream baosImage = new ByteArrayOutputStream()) {
-	                    	ImageIO.write(image, "PNG", baosImage);
+				// Log that the image was successfully written to the byte array
+				logger.info("Image successfully written to byte array");
+			} else {
+				// Zip the images and return as byte array
+				try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+					for (int i = 0; i < images.size(); i++) {
+						BufferedImage image = images.get(i);
+						try (ByteArrayOutputStream baosImage = new ByteArrayOutputStream()) {
+							ImageIO.write(image, "PNG", baosImage);
 
-	                        // Add the image to the zip file
-	                        zos.putNextEntry(new ZipEntry(String.format("page_%d.%s", i + 1, "png")));
-	                        zos.write(baosImage.toByteArray());
-	                    }
-	                }
-	                // Log that the images were successfully written to the byte array
-	                logger.info("Images successfully written to byte array as a zip");
-	            }
-	        }
-	        return baos.toByteArray();
-	    } catch (IOException e) {
+							// Add the image to the zip file
+							zos.putNextEntry(new ZipEntry(String.format("page_%d.%s", i + 1, "png")));
+							zos.write(baosImage.toByteArray());
+						}
+					}
+					// Log that the images were successfully written to the byte array
+					logger.info("Images successfully written to byte array as a zip");
+				}
+			}
+			return baos.toByteArray();
+		} catch (IOException e) {
 			// Log an error message if there is an issue converting the PDF to an image
 			logger.error("Error converting PDF to image", e);
 			throw e;

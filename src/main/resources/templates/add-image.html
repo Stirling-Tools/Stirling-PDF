@@ -6,45 +6,35 @@
 
 
 <body>
-	<div id="page-container">
-		<div id="content-wrap">
-	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
-	<br>
-	<br>
-	<div class="container">
-		<div class="row justify-content-center">
-			<div class="col-md-6">
-				<h2 th:text="#{addImage.header}"></h2>
-
-
-
-				<form method="post" th:action="@{add-image}"
-					enctype="multipart/form-data">
-
-					<div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
-					<div class="custom-file">
-						<input type="file" class="custom-file-input" id="fileInput2"
-							name="fileInput2" required> <label
-							class="custom-file-label" for="fileInput2" th:text="#{imgPrompt}"></label>
-					</div>
-					<div class="form-group">
-						<label for="x">X</label> <input type="number" class="form-control"
-							id="x" name="x" step="0.01" required>
-					</div>
-					<div class="form-group">
-						<label for="y">Y</label> <input type="number" class="form-control"
-							id="y" name="y" step="0.01" required>
-					</div>
-					<button type="submit" class="btn btn-primary" th:text="#{addImage.submit}"></button>
-				</form>
-				<th:block th:insert="~{fragments/common :: filelist}"></th:block>
-
-			</div>
-		</div>
-	</div>
-	</div>
-		<div th:insert="~{fragments/footer.html :: footer}"></div>
-	</div>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{addImage.header}"></h2>
+                        <form method="post" th:action="@{add-image}" enctype="multipart/form-data">
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="fileInput2" name="fileInput2" required> 
+                                <label class="custom-file-label" for="fileInput2" th:text="#{imgPrompt}"></label>
+                            </div>
+                            <div class="form-group">
+                                <label for="x">X</label> <input type="number" class="form-control" id="x" name="x" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="y">Y</label> <input type="number" class="form-control" id="y" name="y" step="0.01" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" th:text="#{addImage.submit}"></button>
+                        </form>
+                        <th:block th:insert="~{fragments/common :: filelist}"></th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
 </body>
 
 </html>
