@@ -2,7 +2,6 @@ package stirling.software.SPDF.utils;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.awt.image.RescaleOp;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -31,7 +30,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import com.spire.pdf.PdfDocument;
-//Generate tests for the below class
+
 public class PdfUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
