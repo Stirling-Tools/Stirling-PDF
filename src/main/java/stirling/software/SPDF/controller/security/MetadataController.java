@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,40 +29,74 @@ public class MetadataController {
         return "security/change-metadata";
     }
 
+    private String checkUndefined(String entry) {
+        // Check if the string is "undefined"
+        if("undefined".equals(entry)) {
+            // Return null if it is
+            return null;
+        }
+        // Return the original string if it's not "undefined"
+        return entry;
+        
+    }
     @PostMapping("/update-metadata")
     public ResponseEntity<byte[]> metadata(@RequestParam("fileInput") MultipartFile pdfFile,
-            @RequestParam(value = "deleteAll", required = false, defaultValue = "false") Boolean deleteAll,
-            @RequestParam(value = "author", required = false) String author,
-            @RequestParam(value = "creationDate", required = false) String creationDate,
-            @RequestParam(value = "creator", required = false) String creator,
-            @RequestParam(value = "keywords", required = false) String keywords,
-            @RequestParam(value = "modificationDate", required = false) String modificationDate,
-            @RequestParam(value = "producer", required = false) String producer,
-            @RequestParam(value = "subject", required = false) String subject,
-            @RequestParam(value = "title", required = false) String title,
-            @RequestParam(value = "trapped", required = false) String trapped,
+            @RequestParam(value = "deleteAll", required = false, defaultValue = "false") Boolean deleteAll, @RequestParam(value = "author", required = false) String author,
+            @RequestParam(value = "creationDate", required = false) String creationDate, @RequestParam(value = "creator", required = false) String creator,
+            @RequestParam(value = "keywords", required = false) String keywords, @RequestParam(value = "modificationDate", required = false) String modificationDate,
+            @RequestParam(value = "producer", required = false) String producer, @RequestParam(value = "subject", required = false) String subject,
+            @RequestParam(value = "title", required = false) String title, @RequestParam(value = "trapped", required = false) String trapped,
             @RequestParam Map<String, String> allRequestParams) throws IOException {
 
-        System.out.println("1 allRequestParams.size() = " + allRequestParams.size());
-        for (Entry entry : allRequestParams.entrySet()) {
-            System.out.println("1 key=" + entry.getKey() + ", value=" + entry.getValue());
-        }
-        
+        // Load the PDF file into a PDDocument
         PDDocument document = PDDocument.load(pdfFile.getBytes());
-        
-        // Remove all metadata based on flag
+
+        // Get the document information from the PDF
         PDDocumentInformation info = document.getDocumentInformation();
         
-        if(deleteAll) { 
+        // Check if each metadata value is "undefined" and set it to null if it is
+        author = checkUndefined(author);
+        creationDate = checkUndefined(creationDate);
+        creator = checkUndefined(creator);
+        keywords = checkUndefined(keywords);
+        modificationDate = checkUndefined(modificationDate);
+        producer = checkUndefined(producer);
+        subject = checkUndefined(subject);
+        title = checkUndefined(title);
+        trapped = checkUndefined(trapped);
+     
+     // If the "deleteAll" flag is set, remove all metadata from the document information
+        if (deleteAll) {
             for (String key : info.getMetadataKeys()) {
                 info.setCustomMetadataValue(key, null);
-              }
+            }
+            author = null;
+            creationDate = null;
+            creator = null;
+            keywords = null;
+            modificationDate = null;
+            producer = null;
+            subject = null;
+            title = null;
+            trapped = null;
         } else {
-        if(author != null && author.length() > 0) {
-            info.setAuthor(author);
+         // Iterate through the request parameters and set the metadata values
+            for (Entry<String, String> entry : allRequestParams.entrySet()) {
+                String key = entry.getKey();
+                // Check if the key is a standard metadata key
+                if (!key.equalsIgnoreCase("Author") && !key.equalsIgnoreCase("CreationDate") && !key.equalsIgnoreCase("Creator") && !key.equalsIgnoreCase("Keywords")
+                        && !key.equalsIgnoreCase("modificationDate") && !key.equalsIgnoreCase("Producer") && !key.equalsIgnoreCase("Subject") && !key.equalsIgnoreCase("Title")
+                        && !key.equalsIgnoreCase("Trapped") && !key.contains("customKey") && !key.contains("customValue")) {
+                    info.setCustomMetadataValue(key, entry.getValue());
+                } else if (key.contains("customKey")) {
+                    int number = Integer.parseInt(key.replaceAll("\\D", ""));
+                    String customKey = entry.getValue();
+                    String customValue = allRequestParams.get("customValue" + number);
+                    info.setCustomMetadataValue(customKey, customValue);
+                }
+            }
         }
-        
-        if(creationDate != null && creationDate.length() > 0) {
+        if (creationDate != null && creationDate.length() > 0) {
             Calendar creationDateCal = Calendar.getInstance();
             try {
                 creationDateCal.setTime(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(creationDate));
@@ -69,14 +104,10 @@ public class MetadataController {
                 e.printStackTrace();
             }
             info.setCreationDate(creationDateCal);
+        } else {
+            info.setCreationDate(null);
         }
-        if(creator != null && creator.length() > 0) {
-            info.setCreator(creator);
-        }
-        if(keywords != null && keywords.length() > 0) {
-            info.setKeywords(keywords);
-        }
-        if(modificationDate != null && modificationDate.length() > 0) {
+        if (modificationDate != null && modificationDate.length() > 0) {
             Calendar modificationDateCal = Calendar.getInstance();
             try {
                 modificationDateCal.setTime(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(modificationDate));
@@ -84,53 +115,21 @@ public class MetadataController {
                 e.printStackTrace();
             }
             info.setModificationDate(modificationDateCal);
+        } else {
+            info.setModificationDate(null);
         }
-        if(producer != null && producer.length() > 0) {
-            info.setProducer(producer);
-        }
-        if(subject != null && subject.length() > 0) {
-            info.setSubject(subject);
-        }
-        if(title != null && title.length() > 0) {
-            info.setTitle(title);
-        }
-        if(trapped != null && trapped.length() > 0) {
-            info.setTrapped(trapped);
-        }
-        }
+        info.setCreator(creator);
+        info.setKeywords(keywords);
+        info.setAuthor(author);
+        info.setProducer(producer);
+        info.setSubject(subject);
+        info.setTitle(title);
+        info.setTrapped(trapped);
         
-
-
-
-
+        document.setDocumentInformation(info);
         return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_metadata.pdf");
-      }
-
-//	@PostMapping("/update-metadata")
-//	public ResponseEntity<byte[]> addWatermark(@RequestParam("fileInput") MultipartFile pdfFile,
-//			@RequestParam Map<String,String> allRequestParams,HttpServletRequest request, ModelMap model) throws IOException {
-//	  // Load the PDF file
-//		System.out.println("1 allRequestParams.size() = " + allRequestParams.size());
-//	  for(Entry entry : allRequestParams.entrySet()) {
-//		  System.out.println("1 key=" + entry.getKey() + ", value=" + entry.getValue());
-//	  }
-//
-//
-//	  System.out.println("request.getParameterMap().size() = " + request.getParameterMap().size());
-//	  for(Entry entry : request.getParameterMap().entrySet()) {
-//		  System.out.println("2 key=" + entry.getKey() + ", value=" + entry.getValue());
-//	  }
-//
-//
-//	  System.out.println("mdoel.size() = " + model.size());
-//	  for(Entry entry :  model.entrySet()) {
-//		  System.out.println("3 key=" + entry.getKey() + ", value=" + entry.getValue());
-//	  }
-//
-
-
-//	  // Loop over all pages and remove annotations
-//	  for (PDPage page : document.getPages()) {
-//	    page.getAnnotations().clear();
-//	  }
+    }
+    
+    
+    
 }
