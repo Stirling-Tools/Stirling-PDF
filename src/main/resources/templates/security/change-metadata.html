@@ -132,6 +132,8 @@
   var lastPDFFileMeta = null;
   fileInput.addEventListener("change", async function() {
 	  
+	  
+	  
 	  while (otherMetadataEntriesDiv.firstChild) {
 		  otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
 	  }
@@ -148,6 +150,12 @@
     const pdfMetadata = await pdf.getMetadata();
     lastPDFFile = pdfMetadata?.info
     console.log(pdfMetadata);
+    if(!pdfMetadata?.info?.Custom || pdfMetadata?.info?.Custom.size == 0) {
+    	customModeCheckbox.disabled = true;
+        customModeCheckbox.checked = false;
+    } else {
+    	customModeCheckbox.disabled = false;
+    }
     authorInput.value = pdfMetadata?.info?.Author;
     creationDateInput.value = convertDateFormat(pdfMetadata?.info?.CreationDate);
     creatorInput.value = pdfMetadata?.info?.Creator;
@@ -171,15 +179,16 @@
   });
   
   addMetadataBtn.addEventListener("click", () => {
+	  
 	    const keyInput = document.createElement("input");
 	    keyInput.type = "text";
-	    keyInput.placeholder = "Key";
+	    keyInput.placeholder = 'Key';
 	    keyInput.className = "form-control";
 	    keyInput.name = "customKey" + count;
 	    
 	    const valueInput = document.createElement("input");
 	    valueInput.type = "text";
-	    valueInput.placeholder = "Value";
+	    valueInput.placeholder = 'Value';
 	    valueInput.className = "form-control";
 	    valueInput.name = "customValue" + count;
 	    count = count + 1;
@@ -211,7 +220,7 @@
          const event = document.getElementById("customModeCheckbox");
         
     
-        if (event.checked && lastPDFFile?.Custom) {
+        if (event.checked && lastPDFFile.Custom != null) {
           customMetadataDiv.style.display = 'block';
           for (const [key, value] of Object.entries(lastPDFFile.Custom)) {
             if (key === 'Author' || key === 'CreationDate' || key === 'Creator' || key === 'Keywords' || key === 'ModDate' || key === 'Producer' || key === 'Subject' || key === 'Title' || key === 'Trapped') {
