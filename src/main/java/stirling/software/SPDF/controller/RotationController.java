@@ -1,19 +1,12 @@
 package stirling.software.SPDF.controller;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.ListIterator;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,34 +20,29 @@ import stirling.software.SPDF.utils.PdfUtils;
 @Controller
 public class RotationController {
 
-	private static final Logger logger = LoggerFactory.getLogger(RotationController.class);
+    private static final Logger logger = LoggerFactory.getLogger(RotationController.class);
 
-	@GetMapping("/rotate-pdf")
-	public String rotatePdfForm(Model model) {
-		model.addAttribute("currentPage", "rotate-pdf");
-		return "rotate-pdf";
-	}
+    @GetMapping("/rotate-pdf")
+    public String rotatePdfForm(Model model) {
+        model.addAttribute("currentPage", "rotate-pdf");
+        return "rotate-pdf";
+    }
 
-	@PostMapping("/rotate-pdf")
-	public ResponseEntity<byte[]> rotatePDF(@RequestParam("fileInput") MultipartFile pdfFile,
-			@RequestParam("angle") Integer angle) throws IOException {
+    @PostMapping("/rotate-pdf")
+    public ResponseEntity<byte[]> rotatePDF(@RequestParam("fileInput") MultipartFile pdfFile, @RequestParam("angle") Integer angle) throws IOException {
 
-		// Load the PDF document
-		PDDocument document = PDDocument.load(pdfFile.getBytes());
+        // Load the PDF document
+        PDDocument document = PDDocument.load(pdfFile.getBytes());
 
-		// Get the list of pages in the document
-		PDPageTree pages = document.getPages();
+        // Get the list of pages in the document
+        PDPageTree pages = document.getPages();
 
-		// Rotate all pages by the specified angle
-		Iterator<PDPage> iterPage = pages.iterator();
+        for (PDPage page : pages) {
+            page.setRotation(page.getRotation() + angle);
+        }
 
-		while (iterPage.hasNext()) {
-			PDPage page = iterPage.next();
-			page.setRotation(page.getRotation() + angle);
-		}
+        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_rotated.pdf");
 
-		return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_rotated.pdf");
-
-	}
+    }
 
 }

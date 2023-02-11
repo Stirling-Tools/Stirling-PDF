@@ -1,45 +1,57 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{pdfToImage})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{pdfToImage.title})}"></th:block>
+
 
 <body>
-<div id="page-container">
-	<div id="content-wrap">
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
 
-		<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{pdfToImage.header}"></h2>
+                        <p th:text="#{processTimeWarning}"></p>
+                        <form method="post" enctype="multipart/form-data" th:action="@{pdf-to-img}">
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                            <div class="form-group">
+                                <label th:text="#{pdfToImage.selectText}"></label> 
+                                <select class="form-control" name="imageFormat">
+                                    <option value="png">PNG</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label th:text="#{pdfToImage.singleOrMultiple}"></label> 
+                                <select class="form-control" name="singleOrMultiple">
+                                    <option value="single" th:text="#{pdfToImage.single}"></option>
+                                    <option value="multiple" th:text="#{pdfToImage.multi}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label th:text="#{pdfToImage.colorType}"></label> 
+                                <select class="form-control" name="colorType">
+                                    <option value="color" th:text="#{pdfToImage.color}"></option>
+                                    <option value="greyscale" th:text="#{pdfToImage.grey}"></option>
+                                    <option value="blackwhite" th:text="#{pdfToImage.blackwhite}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="dpi">DPI:</label> 
+                                <input type="number" name="dpi" class="form-control" id="dpi" min="1" max="100" step="1" value="30" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" th:text="#{pdfToImage.submit}"></button>
+                        </form>
+                        <th:block th:insert="~{fragments/common :: filelist}"></th:block>
 
-		<br>
-		<br>
+                    </div>
+                </div>
+            </div>
 
-		<div class="container">
-			<div class="row justify-content-center">
-				<div class="col-md-6">
-					<h2 th:text="#{pdfToImage.header}"></h2>
-
-					<form method="post" enctype="multipart/form-data" th:action="@{pdf-to-img}">
-						<div class="custom-file">
-							<input type="file" class="custom-file-input" id="fileInput" name="fileInput" required>
-							<label class="custom-file-label" for="fileInput" th:text="#{pdfPrompt}"></label>
-						</div>
-						<div class="form-group">
-							<label th:text="#{pdfToImage.selectText}"></label> <select class="form-control"
-																					   name="imageFormat">
-							<option value="jpg">JPEG</option>
-							<option value="png">PNG</option>
-							<option value="gif">GIF</option>
-						</select>
-						</div>
-						<button type="submit" class="btn btn-primary" th:text="#{pdfToImage.submit}"></button>
-					</form>
-
-					<th:block th:insert="~{fragments/common :: filelist}"></th:block>
-				</div>
-			</div>
-		</div>
-
-	</div>
-	<div th:insert="~{fragments/footer.html :: footer}"></div>
-</div>
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
 </body>
 </html>

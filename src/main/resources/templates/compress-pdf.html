@@ -5,40 +5,32 @@
 <th:block th:insert="~{fragments/common :: head(title=#{compress.title})}"></th:block>
 
 
-<body>	<div id="page-container">
-		<div id="content-wrap">
-	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
-	<br>
-	<br>
-	<div class="container">
-		<div class="row justify-content-center">
-			<div class="col-md-6">
-				<h2 th:text="#{compress.header}"></h2>
-				<form action="#" th:action="@{compress-pdf}"
-					th:object="${rotateForm}" method="post"
-					enctype="multipart/form-data">
-					<p th:text="#{processTimeWarning}"></p>
-					<div class="custom-file">
-						<input type="file" class="custom-file-input" id="fileInput"
-							name="fileInput" required> <label
-							class="custom-file-label" for="fileInput" th:text="#{pdfPrompt}"></label>
-					</div>
-					<div class="form-group">
-						<label for="imageCompressionLevel" th:text="#{compress.compressLevel}"></label> <input type="number" class="form-control"
-							id="imageCompressionLevel" name="imageCompressionLevel" step="1"
-							value="1" min="1" max="100" required>
-					</div>
+<body>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{compress.header}"></h2>
+                        <form action="#" th:action="@{compress-pdf}" th:object="${rotateForm}" method="post" enctype="multipart/form-data">
+                            <p th:text="#{processTimeWarning}"></p>
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                            <div class="form-group">
+                                <label for="imageCompressionLevel" th:text="#{compress.compressLevel}"></label> 
+                                <input type="number" class="form-control" id="imageCompressionLevel" name="imageCompressionLevel" step="1" value="1" min="1" max="100" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" th:text="#{compress.submit}"></button>
+                        </form>
+                        <th:block th:insert="~{fragments/common :: filelist}"></th:block>
 
-					<button type="submit" class="btn btn-primary" th:text="#{compress.submit}"></button>
-				</form>
-				<th:block th:insert="~{fragments/common :: filelist}"></th:block>
-
-			</div>
-		</div>
-	</div>
-	</div>
-		<div th:insert="~{fragments/footer.html :: footer}"></div>
-	</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
 </body>
 
 </html>

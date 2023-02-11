@@ -24,54 +24,52 @@ import org.springframework.web.multipart.MultipartFile;
 @Controller
 public class MergeController {
 
-	private static final Logger logger = LoggerFactory.getLogger(MergeController.class);
+    private static final Logger logger = LoggerFactory.getLogger(MergeController.class);
 
-	@GetMapping("/merge-pdfs")
-	public String hello(Model model) {
-		model.addAttribute("currentPage", "merge-pdfs");
-		return "merge-pdfs";
-	}
+    @GetMapping("/merge-pdfs")
+    public String hello(Model model) {
+        model.addAttribute("currentPage", "merge-pdfs");
+        return "merge-pdfs";
+    }
 
-	@PostMapping("/merge-pdfs")
-	public ResponseEntity<InputStreamResource> mergePdfs(@RequestParam("fileInput") MultipartFile[] files)
-			throws IOException {
-		// Read the input PDF files into PDDocument objects
-		List<PDDocument> documents = new ArrayList<>();
+    @PostMapping("/merge-pdfs")
+    public ResponseEntity<InputStreamResource> mergePdfs(@RequestParam("fileInput") MultipartFile[] files) throws IOException {
+        // Read the input PDF files into PDDocument objects
+        List<PDDocument> documents = new ArrayList<>();
 
-		// Loop through the files array and read each file into a PDDocument
-		for (MultipartFile file : files) {
-			documents.add(PDDocument.load(file.getInputStream()));
-		}
+        // Loop through the files array and read each file into a PDDocument
+        for (MultipartFile file : files) {
+            documents.add(PDDocument.load(file.getInputStream()));
+        }
 
-		PDDocument mergedDoc = mergeDocuments(documents);
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		mergedDoc.save(byteArrayOutputStream);
-		mergedDoc.close();
+        PDDocument mergedDoc = mergeDocuments(documents);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        mergedDoc.save(byteArrayOutputStream);
+        mergedDoc.close();
 
-		// Create an InputStreamResource from the merged PDF
-		InputStreamResource resource = new InputStreamResource(
-				new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
+        // Create an InputStreamResource from the merged PDF
+        InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
 
-		// Return the merged PDF as a response
-		return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(resource);
-	}
+        // Return the merged PDF as a response
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(resource);
+    }
 
-	private PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
-		// Create a new empty document
-		PDDocument mergedDoc = new PDDocument();
+    private PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
+        // Create a new empty document
+        PDDocument mergedDoc = new PDDocument();
 
-		// Iterate over the list of documents and add their pages to the merged document
-		for (PDDocument doc : documents) {
-			// Get all pages from the current document
-			PDPageTree pages = doc.getPages();
-			// Iterate over the pages and add them to the merged document
-			for (PDPage page : pages) {
-				mergedDoc.addPage(page);
-			}
-		}
+        // Iterate over the list of documents and add their pages to the merged document
+        for (PDDocument doc : documents) {
+            // Get all pages from the current document
+            PDPageTree pages = doc.getPages();
+            // Iterate over the pages and add them to the merged document
+            for (PDPage page : pages) {
+                mergedDoc.addPage(page);
+            }
+        }
 
-		// Return the merged document
-		return mergedDoc;
-	}
+        // Return the merged document
+        return mergedDoc;
+    }
 
 }

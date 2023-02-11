@@ -1,0 +1,23 @@
+#page-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#content-wrap {
+    flex: 1;
+}
+
+#footer {
+    bottom: 0;
+    width: 100%;
+}
+
+html[lang-direction=ltr] * {
+    direction: ltr;
+}
+
+html[lang-direction=rtl] * {
+    direction: rtl;
+    text-align: right;
+}

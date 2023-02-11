@@ -5,62 +5,63 @@
 <th:block th:insert="~{fragments/common :: head(title='')}"></th:block>
 
 <style>
-	.features-container {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(21rem, 3fr));
-		gap: 25px 30px;
-	}
-	.feature-card {
-		border: 1px solid rgba(0,0,0,.125);
-		border-radius: 0.25rem;
-		padding: 1.25rem;
+.features-container {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(21rem, 3fr));
+	gap: 25px 30px;
+}
 
-		display: flex;
-	  	flex-direction: column;
-	  	align-items: flex-start;
-	}
-	.feature-card .card-text {
-		flex: 1;
-	}
+.feature-card {
+	border: 1px solid rgba(0, 0, 0, .125);
+	border-radius: 0.25rem;
+	padding: 1.25rem;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.feature-card .card-text {
+	flex: 1;
+}
 </style>
 
 <body>
 
-	<div id="page-container">
-		<div id="content-wrap">
-			<div th:insert="~{fragments/navbar.html :: navbar}"></div>
-			<!-- Jumbotron -->
-			<div class="jumbotron jumbotron-fluid" id="jumbotron">
-				<div class="container">
-					<h1 class="display-4">Stirling PDF</h1>
-					<p class="lead" th:text="#{home.desc}"></p>					
-				</div>
-			</div>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <!-- Jumbotron -->
+            <div class="jumbotron jumbotron-fluid" id="jumbotron">
+                <div class="container">
+                    <h1 class="display-4">Stirling PDF</h1>
+                    <p class="lead" th:text="#{home.desc}"></p>
+                </div>
+            </div>
 
-			<!-- Features -->
-			<div class="features-container container">
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.merge.title}, cardText=#{home.merge.desc}, cardLink='merge-pdfs')}"></div>
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.split.title}, cardText=#{home.split.desc}, cardLink='split-pdfs')}"></div>
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.rotate.title}, cardText=#{home.rotate.desc}, cardLink='rotate-pdf')}"></div>
+            <!-- Features -->
+            <div class="features-container container">
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.merge.title}, cardText=#{home.merge.desc}, cardLink='merge-pdfs')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.split.title}, cardText=#{home.split.desc}, cardLink='split-pdfs')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.rotate.title}, cardText=#{home.rotate.desc}, cardLink='rotate-pdf')}"></div>
 
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.imageToPdf.title}, cardText=#{home.imageToPdf.desc}, cardLink='img-to-pdf')}"></div>
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.pdfToImage.title}, cardText=#{home.pdfToImage.desc}, cardLink='pdf-to-img')}"></div>
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.pdfOrganiser.title}, cardText=#{home.pdfOrganiser.desc}, cardLink='pdf-organizer')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.imageToPdf.title}, cardText=#{home.imageToPdf.desc}, cardLink='img-to-pdf')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.pdfToImage.title}, cardText=#{home.pdfToImage.desc}, cardLink='pdf-to-img')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.pdfOrganiser.title}, cardText=#{home.pdfOrganiser.desc}, cardLink='pdf-organizer')}"></div>
 
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.addImage.title}, cardText=#{home.addImage.desc}, cardLink='add-image')}"></div>
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.watermark.title}, cardText=#{home.watermark.desc}, cardLink='add-watermark')}"></div>
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.permissions.title}, cardText=#{home.permissions.desc}, cardLink='change-permissions')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.addImage.title}, cardText=#{home.addImage.desc}, cardLink='add-image')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.watermark.title}, cardText=#{home.watermark.desc}, cardLink='add-watermark')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.permissions.title}, cardText=#{home.permissions.desc}, cardLink='change-permissions')}"></div>
 
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.removePages.title}, cardText=#{home.removePages.desc}, cardLink='remove-pages')}"></div>
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.addPassword.title}, cardText=#{home.addPassword.desc}, cardLink='add-password')}"></div>
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.removePassword.title}, cardText=#{home.removePassword.desc}, cardLink='remove-password')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.removePages.title}, cardText=#{home.removePages.desc}, cardLink='remove-pages')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.addPassword.title}, cardText=#{home.addPassword.desc}, cardLink='add-password')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.removePassword.title}, cardText=#{home.removePassword.desc}, cardLink='remove-password')}"></div>
 
-				<div th:replace="~{fragments/card :: card(cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf')}"></div>
-
-			</div>
-		</div>
-		<div th:insert="~{fragments/footer.html :: footer}"></div>
-	</div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.changeMetadata.title}, cardText=#{home.changeMetadata.desc}, cardLink='change-metadata')}"></div>
+            </div>
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
 </body>
 
 </html>

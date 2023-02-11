@@ -4,81 +4,68 @@
 <th:block th:insert="~{fragments/common :: head(title=#{permissions.title})}"></th:block>
 
 
-<body>	<div id="page-container">
-		<div id="content-wrap">
-	<div th:insert="~{fragments/navbar.html :: navbar}"></div>
-	<br>
-	<br>
-	<div class="container">
-		<div class="row justify-content-center">
-			<div class="col-md-6">
-				<h2 th:text="#{permissions.header}"></h2>
-				<p th:text="#{permissions.warning}"></p>
-				<form action="add-password" method="post"
-					enctype="multipart/form-data">
-					<div class="form-group">
-						<label th:text="#{permissions.selectText.1}"></label>
-						<div class="custom-file">
-							<input type="file" class="custom-file-input" id="fileInput"
-								name="fileInput"> <label class="custom-file-label" th:text="#{pdfPrompt}"></label>
-						</div>
-					</div>
-					<div class="form-group">
-						<label th:text="#{permissions.selectText.2}"></label>
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox"
-								id="canAssembleDocument" name="canAssembleDocument"> <label
-								class="form-check-label" for="canAssembleDocument" th:text="#{permissions.selectText.3}"></label>
-						</div>
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox"
-								id="canExtractContent" name="canExtractContent"> <label
-								class="form-check-label" for="canExtractContent" th:text="#{permissions.selectText.4}"></label>
-						</div>
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox"
-								id="canExtractForAccessibility"
-								name="canExtractForAccessibility"> <label
-								class="form-check-label" for="canExtractForAccessibility" th:text="#{permissions.selectText.5}"></label>
-						</div>
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox"
-								id="canFillInForm" name="canFillInForm"> <label
-								class="form-check-label" for="canFillInForm" th:text="#{permissions.selectText.6}"></label>
-						</div>
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox" id="canModify"
-								name="canModify"> <label class="form-check-label"
-								for="canModify" th:text="#{permissions.selectText.7}"></label>
-						</div>
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox"
-								id="canModifyAnnotations" name="canModifyAnnotations"> <label
-								class="form-check-label" for="canModifyAnnotations" th:text="#{permissions.selectText.8}"></label>
-						</div>
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox" id="canPrint"
-								name="canPrint"> <label class="form-check-label"
-								for="canPrint" th:text="#{permissions.selectText.9}"></label>
-						</div>
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox"
-								id="canPrintFaithful" name="canPrintFaithful"> <label
-								class="form-check-label" for="canPrintFaithful" th:text="#{permissions.selectText.10}"></label>
-						</div>
+<body>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{permissions.header}"></h2>
+                        <p th:text="#{permissions.warning}"></p>
+                        <form action="add-password" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label th:text="#{permissions.selectText.1}"></label>
+                                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                            </div>
+                            <div class="form-group">
+                                <label th:text="#{permissions.selectText.2}"></label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="canAssembleDocument" name="canAssembleDocument"> 
+                                    <label class="form-check-label" for="canAssembleDocument" th:text="#{permissions.selectText.3}"></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="canExtractContent" name="canExtractContent"> 
+                                    <label class="form-check-label" for="canExtractContent" th:text="#{permissions.selectText.4}"></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="canExtractForAccessibility" name="canExtractForAccessibility"> 
+                                    <label class="form-check-label" for="canExtractForAccessibility" th:text="#{permissions.selectText.5}"></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="canFillInForm" name="canFillInForm"> 
+                                    <label class="form-check-label" for="canFillInForm" th:text="#{permissions.selectText.6}"></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="canModify" name="canModify"> 
+                                    <label class="form-check-label" for="canModify" th:text="#{permissions.selectText.7}"></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="canModifyAnnotations" name="canModifyAnnotations"> 
+                                    <label class="form-check-label" for="canModifyAnnotations" th:text="#{permissions.selectText.8}"></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="canPrint" name="canPrint"> 
+                                    <label class="form-check-label" for="canPrint" th:text="#{permissions.selectText.9}"></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="canPrintFaithful" name="canPrintFaithful"> 
+                                    <label class="form-check-label" for="canPrintFaithful" th:text="#{permissions.selectText.10}"></label>
+                                </div>
 
-					</div>
-					<br />
-					<div class="form-group text-center">
-						<button type="submit" class="btn btn-primary" th:text="#{permissions.submit}"></button>
-					</div>
+                            </div>
+                            <br />
+                            <div class="form-group text-center">
+                                <button type="submit" class="btn btn-primary" th:text="#{permissions.submit}"></button>
+                            </div>
 
-				</form>
-			</div>
-		</div>
-	</div>
-	</div>
-		<div th:insert="~{fragments/footer.html :: footer}"></div>
-	</div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
 </body>
 </html>
