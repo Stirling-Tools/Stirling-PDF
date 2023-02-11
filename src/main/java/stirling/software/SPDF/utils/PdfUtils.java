@@ -31,7 +31,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import com.spire.pdf.PdfDocument;
-
+//Generate tests for the below class
 public class PdfUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
@@ -79,7 +79,7 @@ public class PdfUtils {
         }
     }
 
-    public static byte[] convertFromPdf(byte[] inputStream, String imageType, ImageType colorType, boolean singleImage, int DPI, int contrast, int brightness)
+    public static byte[] convertFromPdf(byte[] inputStream, String imageType, ImageType colorType, boolean singleImage, int DPI)
             throws IOException, Exception {
         try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputStream))) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
@@ -88,14 +88,9 @@ public class PdfUtils {
 
             // Create images of all pages
             for (int i = 0; i < pageCount; i++) {
-                BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300, colorType);
-                float scale = contrast + 1f;
-                float offset = brightness;
-                RescaleOp rescaleOp = new RescaleOp(scale, offset, null);
-                BufferedImage dest = rescaleOp.filter(image, null);
-                images.add(dest);
+                images.add(pdfRenderer.renderImageWithDPI(i, 300, colorType));
             }
-
+            
             if (singleImage) {
                 // Combine all images into a single big image
                 BufferedImage combined = new BufferedImage(images.get(0).getWidth(), images.get(0).getHeight() * pageCount, BufferedImage.TYPE_INT_RGB);

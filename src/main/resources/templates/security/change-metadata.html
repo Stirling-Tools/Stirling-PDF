@@ -13,66 +13,70 @@
                     <div class="col-md-6">
                         <h2 th:text="#{changeMetadata.header}"></h2>
 
-                        <form method="post" enctype="multipart/form-data" th:action="@{/update-metadata}">
+                        <form method="post" id="form1" enctype="multipart/form-data" th:action="@{/update-metadata}">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
                             <p class="text-muted">Please select the variables you wish to change</p>
 
-                            <div class="form-group form-check form-check-inline">
-                                <input type="checkbox" class="form-check-input" id="deleteAll"> 
+                            <div class="form-group-inline form-check">
+                                <input type="checkbox" class="form-check-input" id="deleteAll" name="deleteAll"> 
                                 <label class="ml-3" for="deleteAll">Delete all metadata</label>
                             </div>
 
-                            <div class="form-group form-check form-check-inline">
+                            <div class="form-group-inline form-check">
                                 <input type="checkbox" class="form-check-input" id="advancedModeCheckbox"> 
                                 <label class="ml-3" for="advancedModeCheckbox">Show Advanced Metadata:</label>
                             </div>
 
-                            <div class="form-group form-check">
+                            <div class="form-group">
                                 <label class="form-check-label" for="author">Author:</label> 
-                                <input type="text" class="form-control" id="author">
+                                <input type="text" class="form-control" id="author" name="author">
                             </div>
 
-                            <div class="form-group form-check">
+                            <div class="form-group">
                                 <label class="form-check-label" for="creationDate">Creation Date:</label> 
-                                <input type="text" class="form-control" id="creationDate">
+                                <input type="text" class="form-control" id="creationDate" name="creationDate" placeholder="2020/12/25 18:30:59">
                             </div>
 
-                            <div class="form-group form-check">
+                            <div class="form-group">
                                 <label class="form-check-label" for="creator">Creator:</label> 
-                                <input type="text" class="form-control" id="creator">
+                                <input type="text" class="form-control" id="creator" name="creator">
                             </div>
 
-                            <div class="form-group form-check">
+                            <div class="form-group">
                                 <label class="form-check-label" for="keywords">Keywords:</label> 
-                                <input type="text" class="form-control" id="keywords">
+                                <input type="text" class="form-control" id="keywords" name="keywords">
                             </div>
 
-                            <div class="form-group form-check">
+                            <div class="form-group">
                                 <label class="form-check-label" for="modificationDate">Modification Date:</label> 
-                                <input type="text" class="form-control" id="modificationDate">
+                                <input type="text" class="form-control" id="modificationDate" name="modificationDate" placeholder="2020/12/25 18:30:59">
                             </div>
 
-                            <div class="form-group form-check">
+                            <div class="form-group">
                                 <label class="form-check-label" for="producer">Producer:</label> 
-                                <input type="text" class="form-control" id="producer">
+                                <input type="text" class="form-control" id="producer" name="producer">
                             </div>
 
-                            <div class="form-group form-check">
+                            <div class="form-group">
                                 <label class="form-check-label" for="subject">Subject:</label> 
-                                <input type="text" class="form-control" id="subject">
+                                <input type="text" class="form-control" id="subject" name="subject">
                             </div>
 
-                            <div class="form-group form-check">
+                            <div class="form-group">
                                 <label class="form-check-label" for="title">Title:</label> 
-                                <input type="text" class="form-control" id="title">
+                                <input type="text" class="form-control" id="title" name="title">
                             </div>
 
-                            <div class="form-group form-check">
+                            <div class="form-group">
                                 <label class="form-check-label" for="trapped">Trapped:</label> 
-                                <input type="text" class="form-control" id="trapped">
+                                <select class="form-control" id="trapped" name="trapped">
+                                    <option value="True">True</option>
+                                    <option value="False">False</option>
+                                    <option value="Unknown">Unknown</option>
+                                  </select>
                             </div>
                             <div id="advancedMetadata" style="display: none;">
-                                <p>Other Metadata:</p>
+                                <h3>Other Metadata:</h3>
                                 <div class="form-group" id="otherMetadataEntries"></div>
                             </div>
                             <div id="customMetadataEntries"></div>
@@ -87,25 +91,32 @@
   const advancedMetadataDiv = document.getElementById('advancedMetadata');
   const otherMetadataEntriesDiv = document.getElementById('otherMetadataEntries');
 
-  
-  
-  
-  
+
   
   const addMetadataBtn = document.getElementById("addMetadataBtn");
   const customMetadataFormContainer = document.getElementById("customMetadataEntries");
-
+  var count = 1;
   addMetadataBtn.addEventListener("click", () => {
     const keyInput = document.createElement("input");
     keyInput.type = "text";
     keyInput.placeholder = "Key";
-
+    keyInput.className = "form-control";
+    keyInput.name = "customKey" + count;
+    
     const valueInput = document.createElement("input");
     valueInput.type = "text";
     valueInput.placeholder = "Value";
-
-    customMetadataFormContainer.appendChild(keyInput);
-    customMetadataFormContainer.appendChild(valueInput);
+    valueInput.className = "form-control";
+    valueInput.name = "customValue1" + count;
+    count = count + 1;
+    
+    const formGroup = document.createElement("div");
+    formGroup.className = "form-group";
+    formGroup.appendChild(keyInput);
+    formGroup.appendChild(valueInput);
+    
+    
+    customMetadataFormContainer.appendChild(formGroup);
   });
 
   
@@ -126,15 +137,15 @@
     const file = this.files[0];
     var url = URL.createObjectURL(file)
 
-	const pdf = await pdfjsLib.getDocument(url).promise;
+    const pdf = await pdfjsLib.getDocument(url).promise;
     const pdfMetadata = await pdf.getMetadata();
     lastPDFFile = pdfMetadata?.info
     console.log(pdfMetadata);
     authorInput.value = pdfMetadata?.info?.Author;
-    creationDateInput.value = pdfMetadata?.info?.CreationDate;
+    creationDateInput.value = convertDateFormat(pdfMetadata?.info?.CreationDate);
     creatorInput.value = pdfMetadata?.info?.Creator;
     keywordsInput.value = pdfMetadata?.info?.Keywords;
-    modificationDateInput.value = pdfMetadata?.info?.ModDate;
+    modificationDateInput.value = convertDateFormat(pdfMetadata?.info?.ModDate);
     producerInput.value = pdfMetadata?.info?.Producer;
     subjectInput.value = pdfMetadata?.info?.Subject;
     titleInput.value = pdfMetadata?.info?.Title;
@@ -142,39 +153,53 @@
     
     addExtra();
   });
+  function convertDateFormat(dateTimeString) {
+	  if (!dateTimeString || dateTimeString.length < 17) {
+	    return dateTimeString;
+	  }
 
-	function addExtra() {
- 		 const event = document.getElementById("advancedModeCheckbox");
- 		
- 	
- 		if (event.checked) {
- 	      advancedMetadataDiv.style.display = 'block';
- 	      for (const [key, value] of Object.entries(lastPDFFile)) {
- 	        if (key === 'Author' || key === 'CreationDate' || key === 'Creator' || key === 'Keywords' || key === 'ModDate' || key === 'Producer' || key === 'Subject' || key === 'Title' || key === 'Trapped') {
- 	          continue;
- 	        }
- 	        const entryDiv = document.createElement('div');
- 	        entryDiv.className = 'form-group';
- 	        
- 	        
- 	      
- 	        entryDiv.innerHTML = `<div class="form-group form-check"><label class="form-check-label" for="${key}">${key}:</label><input value="${value}" type="text" class="form-control" id="${key}"></div>`;
- 	        otherMetadataEntriesDiv.appendChild(entryDiv);
- 	      }
- 	    } else {
- 	      advancedMetadataDiv.style.display = 'none';
- 	      while (otherMetadataEntriesDiv.firstChild) {
- 	        otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
- 	      }
- 	    }
- 	    
- 	
- 	}
- 	
+	  const year = dateTimeString.substring(2, 6);
+	  const month = dateTimeString.substring(6, 8);
+	  const day = dateTimeString.substring(8, 10);
+	  const hour = dateTimeString.substring(10, 12);
+	  const minute = dateTimeString.substring(12, 14);
+	  const second = dateTimeString.substring(14, 16);
+
+	  return year + "/" + month + "/" + day + " " + hour + ":" + minute + ":" + second;
+	}
+  
+    function addExtra() {
+         const event = document.getElementById("advancedModeCheckbox");
+        
+    
+        if (event.checked) {
+          advancedMetadataDiv.style.display = 'block';
+          for (const [key, value] of Object.entries(lastPDFFile)) {
+            if (key === 'Author' || key === 'CreationDate' || key === 'Creator' || key === 'Keywords' || key === 'ModDate' || key === 'Producer' || key === 'Subject' || key === 'Title' || key === 'Trapped') {
+              continue;
+            }
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'form-group';
+            
+            
+          
+            entryDiv.innerHTML = `<div class="form-group"><label class="form-check-label" for="${key}">${key}:</label><input name="${key}" value="${value}" type="text" class="form-control" id="${key}"></div>`;
+            otherMetadataEntriesDiv.appendChild(entryDiv);
+          }
+        } else {
+          advancedMetadataDiv.style.display = 'none';
+          while (otherMetadataEntriesDiv.firstChild) {
+            otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
+          }
+        }
+        
+    
+    }
+    
   advancedModeCheckbox.addEventListener('change', (event) => {
-	 
-	  addExtra();
-	  });
+     
+      addExtra();
+      });
   
 
 </script>

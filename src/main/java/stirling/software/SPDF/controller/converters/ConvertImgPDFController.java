@@ -48,8 +48,7 @@ public class ConvertImgPDFController {
 
     @PostMapping("/pdf-to-img")
     public ResponseEntity<Resource> convertToImage(@RequestParam("fileInput") MultipartFile file, @RequestParam("imageFormat") String imageFormat,
-            @RequestParam("singleOrMultiple") String singleOrMultiple, @RequestParam("colorType") String colorType, @RequestParam("dpi") String dpi,
-            @RequestParam("contrast") String contrast, @RequestParam("brightness") String brightness) throws IOException {
+            @RequestParam("singleOrMultiple") String singleOrMultiple, @RequestParam("colorType") String colorType, @RequestParam("dpi") String dpi) throws IOException {
 
         byte[] pdfBytes = file.getBytes();
         ImageType colorTypeResult = ImageType.RGB;
@@ -62,9 +61,7 @@ public class ConvertImgPDFController {
         boolean singleImage = singleOrMultiple.equals("single");
         byte[] result = null;
         try {
-            result = PdfUtils.convertFromPdf(pdfBytes, imageFormat.toLowerCase(), colorTypeResult, singleImage, Integer.valueOf(dpi), Integer.valueOf(contrast),
-                    Integer.valueOf(brightness)); // DPI, contrast,
-                                                  // brightness
+            result = PdfUtils.convertFromPdf(pdfBytes, imageFormat.toLowerCase(), colorTypeResult, singleImage, Integer.valueOf(dpi));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

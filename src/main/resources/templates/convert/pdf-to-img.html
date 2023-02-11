@@ -39,18 +39,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="dpi" th:text="#{pdfToImage.dpi}"></label> 
+                                <label for="dpi">DPI:</label> 
                                 <input type="number" name="dpi" class="form-control" id="dpi" min="1" max="100" step="1" value="30" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="contrast" th:text="#{pdfToImage.contrast}"></label> 
-                                <input type="number" name="contrast" class="form-control" id="contrast" min="-255" max="255" value="0" step="1" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="brightness" th:text="#{pdfToImage.brightness}"></label> 
-                                <input type="number" name="brightness" class="form-control" id="brightness" min="-255" max="255" step="1" value="1" required>
                             </div>
                             <button type="submit" class="btn btn-primary" th:text="#{pdfToImage.submit}"></button>
                         </form>
