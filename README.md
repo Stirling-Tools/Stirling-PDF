@@ -10,26 +10,12 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 
 
 ![stirling-home](images/stirling-home.png)
+[![Docker Pulls](https://img.shields.io/docker/pulls/frooodle/s-pdf)](https://hub.docker.com/r/frooodle/s-pdf)
+[![Discord](https://img.shields.io/discord/1068636748814483718?label=Discord)](https://discord.com/invite/1068636748814483718)
+[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest)](https://github.com/Frooodle/Stirling-PDF/)
+[![GitHub Repo stars](https://img.shields.io/github/stars/frooodle/stirling-pdf?style=social)](https://github.com/Frooodle/stirling-pdf)
+[![Paypal Donate](https://img.shields.io/badge/Paypal%20Donate-yellow?style=flat&logo=paypal)](https://www.paypal.com/paypalme/froodleplex)
 
-<a href="https://hub.docker.com/r/frooodle/s-pdf">
-  ![Docker Pulls](https://img.shields.io/docker/pulls/frooodle/s-pdf)
-</a>
-
-<a href="https://discord.com/invite/1068636748814483718">
-  ![Discord](https://img.shields.io/discord/1068636748814483718?label=Discord)
-</a>
-
-<a href="https://github.com/Frooodle/Stirling-PDF/releases">
-  ![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest)
-</a>
-
-<a href="https://github.com/Frooodle/stirling-pdf">
-  ![GitHub Repo stars](https://img.shields.io/github/stars/frooodle/stirling-pdf?style=social)
-</a>
-
-<a href="https://www.paypal.com/paypalme/froodleplex">
-  ![Paypal Donate](https://img.shields.io/badge/Paypal%20Donate-yellow?style=flat&logo=paypal)
-</a>
 
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/frooodle/s-pdf?link=https://hub.docker.com/r/frooodle/s-pdf)
