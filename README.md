@@ -1,6 +1,11 @@
 <p align="center"><img src="https://raw.githubusercontent.com/Frooodle/Stirling-PDF/main/docs/stirling.png" width="80" ><br><h1 align="center">Stirling-PDF</h1>
 </p>
 
+[![Docker Pulls](https://img.shields.io/docker/pulls/frooodle/s-pdf)](https://hub.docker.com/r/frooodle/s-pdf)
+[![Discord](https://img.shields.io/discord/1068636748814483718?label=Discord)](https://discord.com/invite/1068636748814483718)
+[![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest)](https://github.com/Frooodle/Stirling-PDF/)
+[![GitHub Repo stars](https://img.shields.io/github/stars/frooodle/stirling-pdf?style=social)](https://github.com/Frooodle/stirling-pdf)
+[![Paypal Donate](https://img.shields.io/badge/Paypal%20Donate-yellow?style=flat&logo=paypal)](https://www.paypal.com/paypalme/froodleplex)
 
 This is a locally hosted web application that allows you to perform various operations on PDF files, such as splitting and adding images.
 
@@ -18,12 +23,13 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 - Merge multiple PDFs together into a single resultant file
 - Convert PDFs to and from images
 - Reorganize PDF pages into different orders.
-- Add images to PDFs at specified locations.
+- Add images to PDFs at specified locations. (WIP)
 - Rotating PDFs in 90 degree increments.
 - Compressing PDFs to decrease their filesize.
 - Add and remove passwords
 - Set PDF Permissions
 - Add watermark(s)
+- Edit metadata
 - Dark mode support.
 
 ## Technologies used
