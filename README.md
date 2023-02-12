@@ -12,9 +12,9 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 ![stirling-home](images/stirling-home.png)
 
 
-![Docker Pulls](https://img.shields.io/docker/pulls/frooodle/s-pdf)
+![Docker Pulls](https://img.shields.io/docker/pulls/frooodle/s-pdf?link=https://hub.docker.com/r/frooodle/s-pdf)
 ![Discord](https://img.shields.io/discord/1068636748814483718?label=Discord)
-![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest)
+![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest?link=https://github.com/Frooodle/Stirling-PDF/)
 ![GitHub Repo stars](https://img.shields.io/github/stars/frooodle/stirling-pdf?style=social)
 ![Paypal Donate](https://img.shields.io/badge/Paypal%20Donate-yellow?style=flat&logo=paypal&link=https://www.paypal.com/paypalme/froodleplex)
 ## Features
