@@ -12,18 +12,24 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 ![stirling-home](images/stirling-home.png)
 
 
+![Docker Pulls](https://img.shields.io/docker/pulls/frooodle/s-pdf)
+![Discord](https://img.shields.io/discord/1068636748814483718?label=Discord)
+![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest)
+![GitHub Repo stars](https://img.shields.io/github/stars/frooodle/stirling-pdf?style=social)
+
 ## Features
 
 - Split PDFs into multiple files at specified page numbers or extract all pages as individual files.
 - Merge multiple PDFs together into a single resultant file
 - Convert PDFs to and from images
 - Reorganize PDF pages into different orders.
-- Add images to PDFs at specified locations.
+- Add images to PDFs at specified locations. (WIP)
 - Rotating PDFs in 90 degree increments.
 - Compressing PDFs to decrease their filesize.
 - Add and remove passwords
 - Set PDF Permissions
 - Add watermark(s)
+- Edit metadata
 - Dark mode support.
 
 ## Technologies used
