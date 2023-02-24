@@ -41,7 +41,7 @@ public class RotationController {
             page.setRotation(page.getRotation() + angle);
         }
 
-        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_rotated.pdf");
+        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_rotated.pdf");
 
     }
 

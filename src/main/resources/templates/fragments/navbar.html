@@ -30,15 +30,16 @@
 						<a class="nav-link" href="#" th:href="@{rotate-pdf}" th:classappend="${currentPage}=='rotate-pdf' ? 'active' : ''" th:text="#{home.rotate.title}"></a>
 					</li>
 
-					<li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' ? 'active' : ''">
+					<li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='xlsx-to-pdf' ? 'active' : ''">
 						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  th:text="#{navbar.convert}"></a>
 						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
 							<a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''"  th:text="#{home.pdfToImage.title}"></a>
 							<a class="dropdown-item" href="#" th:href="@{img-to-pdf}" th:classappend="${currentPage}=='img-to-pdf' ? 'active' : ''" th:text="#{home.imageToPdf.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{xlsx-to-pdf}" th:classappend="${currentPage}=='xlsx-to-pdf' ? 'active' : ''" th:text="#{home.xlsToPdf.title}"></a>
 						</div>
 					</li>
 
-					<li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='change-permissions' OR ${currentPage}=='add-watermark' ? 'active' : ''">
+					<li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='change-permissions' OR ${currentPage}=='add-watermark' OR ${currentPage}=='remove-watermark' ? 'active' : ''">
 						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  th:text="#{navbar.security}"></a>
 						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
 							<a class="dropdown-item" href="#" th:href="@{add-password}" th:classappend="${currentPage}=='add-password' ? 'active' : ''" th:text="#{home.addPassword.title}"></a>
@@ -84,7 +85,7 @@
 					</li>
 
 				</ul>
-
+                
 				<script>
 					document.addEventListener('DOMContentLoaded', function() {
 						// Get the dropdown items
@@ -128,4 +129,5 @@
 			</div>
 		</div>
 	</nav>
+    <div th:insert="~{fragments/errorBanner.html :: errorBanner}"></div>
 </div>

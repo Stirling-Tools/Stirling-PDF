@@ -50,7 +50,7 @@
 
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.addImage.title}, cardText=#{home.addImage.desc}, cardLink='add-image')}"></div>
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.watermark.title}, cardText=#{home.watermark.desc}, cardLink='add-watermark')}"></div>
-                <div th:replace="~{fragments/card :: card(cardTitle=#{home.permissions.title}, cardText=#{home.permissions.desc}, cardLink='change-permissions')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.xlsToPdf.title}, cardText=#{home.xlsToPdf.desc}, cardLink='xlsx-to-pdf')}"></div>
 
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.removePages.title}, cardText=#{home.removePages.desc}, cardLink='remove-pages')}"></div>
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.addPassword.title}, cardText=#{home.addPassword.desc}, cardLink='add-password')}"></div>
@@ -58,6 +58,9 @@
 
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf')}"></div>
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.changeMetadata.title}, cardText=#{home.changeMetadata.desc}, cardLink='change-metadata')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.permissions.title}, cardText=#{home.permissions.desc}, cardLink='change-permissions')}"></div>
+                
+                
             </div>
         </div>
         <div th:insert="~{fragments/footer.html :: footer}"></div>

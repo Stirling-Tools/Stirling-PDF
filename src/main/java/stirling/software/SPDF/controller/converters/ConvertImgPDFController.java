@@ -43,7 +43,7 @@ public class ConvertImgPDFController {
         byte[] bytes = PdfUtils.convertToPdf(file.getInputStream());
         logger.info("File {} successfully converted to pdf", file.getOriginalFilename());
 
-        return PdfUtils.bytesToWebResponse(bytes, file.getName() + "_coverted.pdf");
+        return PdfUtils.bytesToWebResponse(bytes, file.getOriginalFilename().replaceFirst("[.][^.]+$", "")+ "_coverted.pdf");
     }
 
     @PostMapping("/pdf-to-img")

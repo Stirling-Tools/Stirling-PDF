@@ -34,7 +34,7 @@ public class OverlayImageController {
             byte[] imageBytes = imageFile.getBytes();
             byte[] result = PdfUtils.overlayImage(pdfBytes, imageBytes, x, y);
 
-            return PdfUtils.bytesToWebResponse(result, pdfFile.getName() + "_overlayed.pdf");
+            return PdfUtils.bytesToWebResponse(result, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_overlayed.pdf");
         } catch (IOException e) {
             logger.error("Failed to add image to PDF", e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

@@ -44,7 +44,7 @@ public class PasswordController {
     public ResponseEntity<byte[]> compressPDF(@RequestParam("fileInput") MultipartFile fileInput, @RequestParam(name = "password") String password) throws IOException {
         PDDocument document = PDDocument.load(fileInput.getBytes(), password);
         document.setAllSecurityToBeRemoved(true);
-        return PdfUtils.pdfDocToWebResponse(document, fileInput.getName() + "_password_removed.pdf");
+        return PdfUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "")+ "_password_removed.pdf");
     }
 
     @PostMapping("/add-password")
@@ -75,7 +75,7 @@ public class PasswordController {
 
         document.protect(spp);
 
-        return PdfUtils.pdfDocToWebResponse(document, fileInput.getName() + "_passworded.pdf");
+        return PdfUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "")+ "_passworded.pdf");
     }
 
 }

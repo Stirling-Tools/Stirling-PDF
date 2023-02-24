@@ -18,6 +18,7 @@ import com.spire.pdf.PdfPageBase;
 import com.spire.pdf.exporting.PdfImageInfo;
 import com.spire.pdf.graphics.PdfBitmap;
 
+import stirling.software.SPDF.utils.ErrorUtils;
 import stirling.software.SPDF.utils.PdfUtils;
 
 //import com.spire.pdf.*;
@@ -35,7 +36,6 @@ public class CompressController {
     @PostMapping("/compress-pdf")
     public ResponseEntity<byte[]> compressPDF(@RequestParam("fileInput") MultipartFile pdfFile, @RequestParam("imageCompressionLevel") String imageCompressionLevel)
             throws IOException {
-
         // Load a sample PDF document
         PdfDocument document = new PdfDocument();
         document.loadFromBytes(pdfFile.getBytes());
@@ -61,7 +61,7 @@ public class CompressController {
                 }
         }
 
-        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_compressed.pdf");
+        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_compressed.pdf");
 
     }
 

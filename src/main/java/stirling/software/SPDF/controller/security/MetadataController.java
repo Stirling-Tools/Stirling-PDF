@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +50,7 @@ public class MetadataController {
 
         // Load the PDF file into a PDDocument
         PDDocument document = PDDocument.load(pdfFile.getBytes());
-
+        
         // Get the document information from the PDF
         PDDocumentInformation info = document.getDocumentInformation();
         
@@ -69,6 +70,9 @@ public class MetadataController {
             for (String key : info.getMetadataKeys()) {
                 info.setCustomMetadataValue(key, null);
             }
+            // Remove metadata from the PDF history
+            document.getDocumentCatalog().getCOSObject().removeItem(COSName.getPDFName("Metadata"));
+            document.getDocumentCatalog().getCOSObject().removeItem(COSName.getPDFName("PieceInfo"));
             author = null;
             creationDate = null;
             creator = null;
@@ -126,7 +130,7 @@ public class MetadataController {
         info.setTrapped(trapped);
         
         document.setDocumentInformation(info);
-        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_metadata.pdf");
+        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_metadata.pdf");
     }
     
     

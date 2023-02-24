@@ -69,6 +69,6 @@ public class WatermarkController {
             // Close the content stream
             contentStream.close();
         }
-        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_watermarked.pdf");
+        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "")  + "_watermarked.pdf");
     }
 }

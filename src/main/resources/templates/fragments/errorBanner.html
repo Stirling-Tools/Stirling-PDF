@@ -1,0 +1,74 @@
+<th:block th:fragment="errorBanner">
+  <style>
+    #github-button,
+    #discord-button {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background-color: #008CBA;
+      color: #fff;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 3rem;
+      transition: all 0.3s ease-in-out;
+    }
+
+    #github-button:hover,
+    #discord-button:hover {
+      background-color: #005b7f;
+    }
+  </style>
+   <br  th:if="${message}">
+  <div id="errorContainer" th:if="${message}" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <h4 class="alert-heading" th:text="'Error:  ' + ${status} + '  ' + ${error}"></h4>
+    <p th:text="${message} + ' for path: ' + ${path}"></p>
+    <button type="button" class="btn btn-danger" th:if="${trace}" onclick="toggletrace()">Show Stack Trace</button>
+    <button type="button" class="btn btn-secondary" th:if="${trace}" onclick="copytrace()">Copy Stack Trace</button>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="dismissError()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+    <!-- Stack trace section -->
+    <div id="trace" th:if="${trace}" style="max-height: 0; overflow: hidden;">
+      <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; padding: 10px; margin-top: 5px;">
+        <pre id="traceContent" th:text="${trace}"></pre>
+      </div>
+      <!-- Buttons to submit a ticket on GitHub and join Discord server -->
+      <a href="https://github.com/Frooodle/Stirling-PDF/issues" id="github-button" target="_blank">Submit a ticket on GitHub</a>
+      <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" target="_blank">Join our Discord server</a>
+    </div>
+  </div>
+  
+<script>
+  function toggletrace() {
+    var traceDiv = document.getElementById("trace");
+    if (traceDiv.style.maxHeight === "0px") {
+      traceDiv.style.maxHeight = "500px";
+    } else {
+      traceDiv.style.maxHeight = "0px";
+    }
+    adjustContainerHeight();
+  }
+
+  function copytrace() {
+    var traceContent = document.getElementById("traceContent");
+    var range = document.createRange();
+    range.selectNode(traceContent);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.execCommand("copy");
+    window.getSelection().removeAllRanges();
+  }
+
+  function dismissError() {
+    var errorContainer = document.getElementById("errorContainer");
+    errorContainer.style.display = "none";
+    errorContainer.style.height ="0";
+  }
+
+  function adjustContainerHeight() {
+  var errorContainer = document.getElementById("errorContainer");
+  var traceDiv = document.getElementById("trace");
+  errorContainer.style.height = errorContainer.scrollHeight - traceDiv.scrollHeight + traceDiv.offsetHeight + "px";
+  }
+  </script>
+
+</th:block>
