@@ -1,16 +1,16 @@
 /* Dark Mode Styles */
 body {
-    background-color: #333;
-    color: #fff;
+    background-color: #333  !important;
+    color: #fff  !important;
 }
 
 .dark-card {
   background-color: #333 !important;
-  color: white;
+  color: white !important;
 }
 .jumbotron {
   background-color: #222; /* or any other dark color */
-  color: #fff; /* or any other light color */
+  color: #fff !important; /* or any other light color */
 }
 
 .list-group {
@@ -20,4 +20,7 @@ body {
 .list-group-item {
   background-color: #222 !important;
   color: fff !important;
+}
+#support-section {
+   background-color: #444 !important;
 }

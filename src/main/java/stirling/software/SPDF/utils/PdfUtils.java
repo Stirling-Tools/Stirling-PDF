@@ -29,6 +29,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.pdf.PdfWriter;
 import com.spire.pdf.PdfDocument;
 
 public class PdfUtils {
@@ -157,6 +160,18 @@ public class PdfUtils {
         }
     }
 
+    public static ResponseEntity<byte[]> iTextDocToWebResponse(Document document, String docName) throws IOException, DocumentException {
+        // Close the document
+        document.close();
+        
+        // Open Byte Array and save document to it
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PdfWriter.getInstance(document, baos).close();
+        
+
+        return PdfUtils.boasToWebResponse(baos, docName);
+    }
+    
     public static ResponseEntity<byte[]> pdfDocToWebResponse(PdfDocument document, String docName) throws IOException {
 
         // Open Byte Array and save document to it

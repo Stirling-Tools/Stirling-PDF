@@ -23,6 +23,12 @@ dependencies {
 	implementation 'org.apache.pdfbox:pdfbox:2.0.27'
 	implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
 	implementation 'e-iceblue:spire.pdf.free:5.1.0'
+	
+	implementation 'org.apache.poi:poi:5.2.0'
+    implementation 'org.apache.poi:poi-ooxml:5.2.0'
+    implementation 'com.itextpdf:itextpdf:5.5.13.2'
+    
+    
 }
 
 jar {

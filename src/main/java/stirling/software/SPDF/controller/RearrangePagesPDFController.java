@@ -50,7 +50,7 @@ public class RearrangePagesPDFController {
             document.removePage(pageIndex);
         }
 
-        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_removed_pages.pdf");
+        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_removed_pages.pdf");
 
     }
 
@@ -111,7 +111,7 @@ public class RearrangePagesPDFController {
                 document.addPage(page);
             }
 
-            return PdfUtils.pdfDocToWebResponse(document, pdfFile.getName() + "_rearranged.pdf");
+            return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_rearranged.pdf");
         } catch (IOException e) {
 
             logger.error("Failed rearranging documents", e);
