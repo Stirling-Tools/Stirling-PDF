@@ -61,7 +61,7 @@ public class ConvertImgPDFController {
         boolean singleImage = singleOrMultiple.equals("single");
         byte[] result = null;
         try {
-            result = PdfUtils.convertFromPdf(pdfBytes, imageFormat.toLowerCase(), colorTypeResult, singleImage, Integer.valueOf(dpi));
+            result = PdfUtils.convertFromPdf(pdfBytes, imageFormat.toUpperCase(), colorTypeResult, singleImage, Integer.valueOf(dpi));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
