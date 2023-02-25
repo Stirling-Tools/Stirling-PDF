@@ -107,7 +107,7 @@ public class PdfUtils {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             if (singleImage) {
                 // Write the image to the output stream
-                ImageIO.write(images.get(0), "PNG", baos);
+                ImageIO.write(images.get(0), imageType, baos);
 
                 // Log that the image was successfully written to the byte array
                 logger.info("Image successfully written to byte array");
@@ -117,10 +117,10 @@ public class PdfUtils {
                     for (int i = 0; i < images.size(); i++) {
                         BufferedImage image = images.get(i);
                         try (ByteArrayOutputStream baosImage = new ByteArrayOutputStream()) {
-                            ImageIO.write(image, "PNG", baosImage);
+                            ImageIO.write(image, imageType, baosImage);
 
                             // Add the image to the zip file
-                            zos.putNextEntry(new ZipEntry(String.format("page_%d.%s", i + 1, "png")));
+                            zos.putNextEntry(new ZipEntry(String.format("page_%d.%s", i + 1, imageType.toLowerCase())));
                             zos.write(baosImage.toByteArray());
                         }
                     }
