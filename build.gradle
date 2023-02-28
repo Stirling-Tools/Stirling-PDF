@@ -25,7 +25,7 @@ dependencies {
 	implementation 'e-iceblue:spire.pdf.free:5.1.0'
 	
 	implementation 'org.apache.poi:poi:5.2.0'
-    implementation 'org.apache.poi:poi-ooxml:5.2.0'
+    implementation 'org.apache.poi:poi-ooxml:5.2.3'
     implementation 'com.itextpdf:itextpdf:5.5.13.3'
     
     
