@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{extractImages.title})}"></th:block>
+
+
+<body>
+  <div id="page-container">
+    <div id="content-wrap">
+      <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+      <br> <br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6">
+            <h2 th:text="#{extractImages.header}"></h2>
+
+            <form id="multiPdfForm" th:action="@{extract-images}" method="post" enctype="multipart/form-data">
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=true)}"></div>
+              <div class="form-group">
+                <label th:text="#{extractImages.selectText}"></label> 
+                <select class="form-control" name="format">
+                    <option value="png">PNG</option>
+                    <option value="jpg">JPG</option>
+                    <option value="gif">GIF</option>
+                </select>
+            </div>
+              <button type="submit" class="btn btn-primary" th:text="#{extractImages.submit}"></button>
+            </form>
+            <th:block th:insert="~{fragments/common :: filelist}"></th:block>
+            <div id="progressBarContainer" style="display: none;">
+                <div class="progress">
+                    <div id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <script>
+            
+            $('#multiPdfForm').submit(function(event) {
+            	 event.preventDefault(); // Prevent the default form handling behavior
+
+
+            	    submitMultiPdfForm(event);
+            });
+            
+            async function submitMultiPdfForm(event) {
+
+
+                // Get the selected PDF files
+                var files = $('#fileInput-input')[0].files;
+
+                // Get the existing form data
+                var formData = new FormData($('form')[0]);
+                formData.delete('fileInput');
+                
+                // Show the progress bar
+                $('#progressBarContainer').show();
+             
+                // Submit each PDF file sequentially
+                for (var i = 0; i < files.length; i++) {
+                    formData.append('fileInput', files[i]);
+
+                    console.log('Submitting request for file ' + i);
+
+                    // Initialize the progress bar
+                    var progressBar = $('#progressBar');
+                    progressBar.css('width', '0%');
+                    progressBar.attr('aria-valuenow', 0);
+                    progressBar.attr('aria-valuemax', files.length);
+                    
+                    await fetch('extract-images', {
+                        method: 'POST',
+                        body: formData
+                    }).then(function(response) {
+                        console.log('Received response for file ' + i + ': ' + response);
+
+                        var contentDisposition = response.headers.get('content-disposition');
+                        var fileName = contentDisposition.split('filename=')[1].replace(/"/g, '');
+
+                        response.blob().then(function(blob) {
+                            var url = window.URL.createObjectURL(blob);
+                            var a = document.createElement('a');
+                            a.href = url;
+                            a.download = fileName;
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                        });
+                    }).catch(function(error) {
+                        console.error('Error submitting request for file ' + i + ': ' + error);
+                    }).finally(function() {
+                    	
+                        // Update the progress bar
+                        var progress = Math.round(((i + 1) / files.length) * 100);
+                        
+                        console.log('progress ' + progress);
+                        progressBar.css('width', progress + '%');
+                        progressBar.attr('aria-valuenow', i + 1);
+                    });
+                }
+            }
+
+
+
+            </script>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div th:insert="~{fragments/footer.html :: footer}"></div>
+  </div>
+</body>
+</html>

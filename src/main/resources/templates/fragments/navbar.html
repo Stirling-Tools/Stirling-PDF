@@ -67,6 +67,7 @@
 						<a class="nav-link" href="#" th:href="@{compress-pdf}" th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''"></a>
 					</li>
                   
+                    
 					<input type="checkbox" id="toggle-dark-mode" checked="true" th:onclick="javascript:toggleDarkMode()">
 					<a class="nav-link" href="#" for="toggle-dark-mode" th:text="#{navbar.darkmode}"></a>
                    
@@ -86,6 +87,11 @@
 
 				</ul>
                 
+                <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                          <button type="button" class="btn btn-outline-primary" id="update-btn">Update available</button>
+                        </li>
+                    </ul>
 				<script>
 					document.addEventListener('DOMContentLoaded', function() {
 						// Get the dropdown items
