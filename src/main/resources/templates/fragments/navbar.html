@@ -1,139 +1,278 @@
-<div th:fragment="navbar">
-	<nav class="navbar navbar-expand-lg navbar-light bg-light">
-		<div class="container">
+<div th:fragment="navbar" class="mx-auto">
 
-			<a class="navbar-brand" href="#" th:href="@{/}">Stirling PDF</a>
 
-			<button class="navbar-toggler" type="button" data-toggle="collapse"
-					data-target="#navbarNav" aria-controls="navbarNav"
-					aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
-			</button>
 
-			<div class="collapse navbar-collapse" id="navbarNav">
+    <style>
+.toggle-container {
+	display: flex;
+	align-items: center;
+	margin-right: 10px;
+}
 
-				<ul class="navbar-nav">
+.toggle {
+	position: relative;
+	display: inline-block;
+	width: 50px;
+	height: 28px;
+}
 
-					<li class="nav-item">
-						<a class="nav-link" href="#" th:href="@{merge-pdfs}" th:classappend="${currentPage}=='merge-pdfs' ? 'active' : ''" th:text="#{home.merge.title}"></a>
-					</li>
+.toggle input {
+	display: none;
+}
 
-					<li class="nav-item">
-						<a class="nav-link" href="#" th:href="@{split-pdfs}" th:classappend="${currentPage}=='split-pdfs' ? 'active' : ''" th:text="#{home.split.title}"></a>
-					</li>
+.slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	border-radius: 28px;
+	transition: .4s;
+}
 
-					<li class="nav-item">
-						<a class="nav-link" href="#" th:href="@{pdf-organizer}" th:classappend="${currentPage}=='pdf-organizer' ? 'active' : ''" th:text="#{home.pdfOrganiser.title}"></a>
-					</li>
+.slider:before {
+	position: absolute;
+	content: "";
+	height: 20px;
+	width: 20px;
+	left: 4px;
+	bottom: 4px;
+	background-color: white;
+	border-radius: 50%;
+	transition: .4s;
+}
 
-					<li class="nav-item">
-						<a class="nav-link" href="#" th:href="@{rotate-pdf}" th:classappend="${currentPage}=='rotate-pdf' ? 'active' : ''" th:text="#{home.rotate.title}"></a>
-					</li>
+input:checked+.slider {
+	background-color: #2196F3;
+}
 
-					<li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='xlsx-to-pdf' ? 'active' : ''">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  th:text="#{navbar.convert}"></a>
-						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
-							<a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''"  th:text="#{home.pdfToImage.title}"></a>
-							<a class="dropdown-item" href="#" th:href="@{img-to-pdf}" th:classappend="${currentPage}=='img-to-pdf' ? 'active' : ''" th:text="#{home.imageToPdf.title}"></a>
-                            <a class="dropdown-item" href="#" th:href="@{xlsx-to-pdf}" th:classappend="${currentPage}=='xlsx-to-pdf' ? 'active' : ''" th:text="#{home.xlsToPdf.title}"></a>
-						</div>
-					</li>
+input:focus+.slider {
+	box-shadow: 0 0 1px #2196F3;
+}
 
-					<li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='change-permissions' OR ${currentPage}=='add-watermark' OR ${currentPage}=='remove-watermark' ? 'active' : ''">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  th:text="#{navbar.security}"></a>
-						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
-							<a class="dropdown-item" href="#" th:href="@{add-password}" th:classappend="${currentPage}=='add-password' ? 'active' : ''" th:text="#{home.addPassword.title}"></a>
-							<a class="dropdown-item" href="#" th:href="@{remove-password}" th:classappend="${currentPage}=='remove-password' ? 'active' : ''" th:text="#{home.removePassword.title}"></a>
-							<a class="dropdown-item" href="#" th:href="@{change-permissions}" th:classappend="${currentPage}=='change-permissions' ? 'active' : ''" th:text="#{home.permissions.title}"></a>
-							<a class="dropdown-item" href="#" th:href="@{add-watermark}" th:classappend="${currentPage}=='add-watermark' ? 'active' : ''"  th:text="#{home.watermark.title}"></a>
-							<a class="dropdown-item" href="#" th:href="@{change-metadata}" th:classappend="${currentPage}=='change-metadata' ? 'active' : ''"  th:text="#{home.changeMetadata.title}"></a>
-						</div>
-					</li>
+input:checked+.slider:before {
+	transform: translateX(22px);
+}
 
-					<li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='add-image' OR ${currentPage}=='compress-pdf' ? 'active' : ''">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" th:text="#{navbar.other}"></a>
-						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
-							<a class="dropdown-item" href="#" th:href="@{add-image}" th:classappend="${currentPage}=='add-image' ? 'active' : ''" th:text="#{home.addImage.title}"></a>
-							<a class="dropdown-item" href="#" th:href="@{compress-pdf}" th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''" th:text="#{home.compressPdfs.title}"></a>
-							<a class="dropdown-item" href="#" th:href="@{remove-pages}" th:classappend="${currentPage}=='remove-pages' ? 'active' : ''" th:text="#{home.removePages.title}"></a>
-						</div>
-					</li>
+.toggle-label {
+	margin-top: 2px;
+	margin-left: 2px;
+	text-align: center;
+	font-size: 14px;
+	color: #333;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 20px;
+	width: 60px;
+}
 
-					<li class="nav-item">
-						<a class="nav-link" href="#" th:href="@{add-image}" th:classappend="${currentPage}=='add-image' ? 'active' : ''"></a>
-					</li>
+.navbar-nav {
+  width: 100% !important;
+  white-space: nowrap !important;
+}
 
-					<li class="nav-item">
-						<a class="nav-link" href="#" th:href="@{compress-pdf}" th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''"></a>
-					</li>
-                  
-                    
-					<input type="checkbox" id="toggle-dark-mode" checked="true" th:onclick="javascript:toggleDarkMode()">
-					<a class="nav-link" href="#" for="toggle-dark-mode" th:text="#{navbar.darkmode}"></a>
-                   
-                    
-					<li class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							<i class="bi bi-globe2"></i>
-						</a>
-						<div class="dropdown-menu" aria-labelledby="languageDropdown">
-							<a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_US">English (US)</a>
-							<a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_GB">English (UK)</a>
-							<a class="dropdown-item lang_dropdown-item" href="" data-language-code="ar_AR">العربية</a>
-							<a class="dropdown-item lang_dropdown-item" href="" data-language-code="de_DE">Deutsch</a>
-							<a class="dropdown-item lang_dropdown-item" href="" data-language-code="fr_FR">Français</a>
-						</div>
-					</li>
 
-				</ul>
-                
-                <ul class="navbar-nav ml-auto">
-                        <li class="nav-item">
-                          <button type="button" class="btn btn-outline-primary" id="update-btn">Update available</button>
-                        </li>
-                    </ul>
-				<script>
-					document.addEventListener('DOMContentLoaded', function() {
-						// Get the dropdown items
-						var dropdownItems = document.querySelectorAll('.lang_dropdown-item');
+</style>
+    <script>
+					document
+							.addEventListener(
+									'DOMContentLoaded',
+									function() {
+										// Get the dropdown items
+										var dropdownItems = document
+												.querySelectorAll('.lang_dropdown-item');
 
-						// Loop through the dropdown items
-						for (var i = 0; i < dropdownItems.length; i++) {
-							dropdownItems[i].classList.remove('active');
-							if (dropdownItems[i].dataset.languageCode ===  localStorage.getItem('languageCode')) {
-								dropdownItems[i].classList.add('active');
-							}
+										// Loop through the dropdown items
+										for (var i = 0; i < dropdownItems.length; i++) {
+											dropdownItems[i].classList
+													.remove('active');
+											if (dropdownItems[i].dataset.languageCode === localStorage
+													.getItem('languageCode')) {
+												dropdownItems[i].classList
+														.add('active');
+											}
 
-							// Add a click event listener to each dropdown item
-							dropdownItems[i].addEventListener('click', function(event) {
+											// Add a click event listener to each dropdown item
+											dropdownItems[i]
+													.addEventListener(
+															'click',
+															function(event) {
 
-								// Prevent the default link behavior
-								event.preventDefault();
+																// Prevent the default link behavior
+																event
+																		.preventDefault();
 
-								// Get the language code
-								var languageCode = this.dataset.languageCode;
+																// Get the language code
+																var languageCode = this.dataset.languageCode;
 
-								// Save the language code to local storage
-								localStorage.setItem('languageCode', languageCode);
+																// Save the language code to local storage
+																localStorage
+																		.setItem(
+																				'languageCode',
+																				languageCode);
 
-								// Get the current URL
-								var currentUrl = window.location.href;
+																// Get the current URL
+																var currentUrl = window.location.href;
 
-								// Check if the URL already contains a "?lang" query parameter
-								if (currentUrl.indexOf('?lang=') === -1) {
-									// Update the URL with the "?lang" query parameter
-									window.location.href = currentUrl + '?lang=' + languageCode;
-								} else {
-									// Replace the "?lang" query parameter with the new value
-									window.location.href = currentUrl.replace(/\?lang=\w{2,}/, '?lang=' + languageCode);
-								}
-							});
-						}
-					});
+																// Check if the URL already contains a "?lang" query parameter
+																if (currentUrl
+																		.indexOf('?lang=') === -1) {
+																	// Update the URL with the "?lang" query parameter
+																	window.location.href = currentUrl
+																			+ '?lang='
+																			+ languageCode;
+																} else {
+																	// Replace the "?lang" query parameter with the new value
+																	window.location.href = currentUrl
+																			.replace(
+																					/\?lang=\w{2,}/,
+																					'?lang='
+																							+ languageCode);
+																}
+															});
+										}
+									});
 				</script>
 
-			</div>
-		</div>
-	</nav>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container ">
+
+            <a class="navbar-brand" href="#" th:href="@{/}">Stirling PDF</a>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+
+                <ul class="navbar-nav mr-auto flex-nowrap">
+
+                    <li class="nav-item"><a class="nav-link" href="#" th:href="@{merge-pdfs}" th:classappend="${currentPage}=='merge-pdfs' ? 'active' : ''" th:text="#{home.merge.title}"></a></li>
+
+                    <li class="nav-item"><a class="nav-link" href="#" th:href="@{split-pdfs}" th:classappend="${currentPage}=='split-pdfs' ? 'active' : ''" th:text="#{home.split.title}"></a></li>
+
+                    <li class="nav-item"><a class="nav-link" href="#" th:href="@{pdf-organizer}" th:classappend="${currentPage}=='pdf-organizer' ? 'active' : ''" th:text="#{home.pdfOrganiser.title}"></a></li>
+
+                    <li class="nav-item"><a class="nav-link" href="#" th:href="@{rotate-pdf}" th:classappend="${currentPage}=='rotate-pdf' ? 'active' : ''" th:text="#{home.rotate.title}"></a></li>
+
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='xlsx-to-pdf' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false" th:text="#{navbar.convert}"></a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''" th:text="#{home.pdfToImage.title}"></a> 
+                            <a class="dropdown-item" href="#" th:href="@{img-to-pdf}" th:classappend="${currentPage}=='img-to-pdf' ? 'active' : ''" th:text="#{home.imageToPdf.title}"></a> 
+                            <a class="dropdown-item" href="#" th:href="@{xlsx-to-pdf}" th:classappend="${currentPage}=='xlsx-to-pdf' ? 'active' : ''" th:text="#{home.xlsToPdf.title}"></a>
+                        </div>
+                    </li>
+
+                   
+                   <li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='change-permissions' OR ${currentPage}=='add-watermark' OR ${currentPage}=='remove-watermark' ? 'active' : ''">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  th:text="#{navbar.security}"></a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="#" th:href="@{add-password}" th:classappend="${currentPage}=='add-password' ? 'active' : ''" th:text="#{home.addPassword.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{remove-password}" th:classappend="${currentPage}=='remove-password' ? 'active' : ''" th:text="#{home.removePassword.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{change-permissions}" th:classappend="${currentPage}=='change-permissions' ? 'active' : ''" th:text="#{home.permissions.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{add-watermark}" th:classappend="${currentPage}=='add-watermark' ? 'active' : ''"  th:text="#{home.watermark.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{change-metadata}" th:classappend="${currentPage}=='change-metadata' ? 'active' : ''"  th:text="#{home.changeMetadata.title}"></a>
+                        </div>
+                    </li>
+                   
+                   
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='add-image' OR ${currentPage}=='compress-pdf' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false" th:text="#{navbar.other}"></a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="#" th:href="@{add-image}" th:classappend="${currentPage}=='add-image' ? 'active' : ''" th:text="#{home.addImage.title}"></a> <a class="dropdown-item" href="#" th:href="@{compress-pdf}"
+                                th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''" th:text="#{home.compressPdfs.title}"></a> <a class="dropdown-item" href="#" th:href="@{remove-pages}" th:classappend="${currentPage}=='remove-pages' ? 'active' : ''" th:text="#{home.removePages.title}"></a>
+                        </div></li>
+
+
+
+                    <div class="toggle-container">
+                        <label class="toggle"> <input type="checkbox" id="toggle-dark-mode" checked="true" th:onclick="javascript:toggleDarkMode()"> <span class="slider round"></span>
+                        </label> <label class="toggle-label" for="toggle-dark-mode" th:text="#{navbar.darkmode}"></label>
+                    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+                    <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> <i class="bi bi-globe2"></i>
+                    </a>
+                        <div class="dropdown-menu" aria-labelledby="languageDropdown">
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_US">English (US)</a> <a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_GB">English (UK)</a> <a class="dropdown-item lang_dropdown-item" href="" data-language-code="ar_AR">العربية</a>
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="de_DE">Deutsch</a> <a class="dropdown-item lang_dropdown-item" href="" data-language-code="fr_FR">Français</a>
+                        </div></li>
+
+                </ul>
+
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <button type="button" class="btn btn-outline-primary" id="update-btn">Update available</button>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </nav>
     <div th:insert="~{fragments/errorBanner.html :: errorBanner}"></div>
+
+    <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settingsModalLabel">Settings</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p th:text="'App Version:' + ${appVersion}"></p>
+                    <div class="form-group">
+                        <label for="downloadOption">Choose download option (For non ZIP downloads):</label> <select class="form-control" id="downloadOption">
+                            <option value="sameWindow">Open in same window (Single file downloads only)</option>
+                            <option value="newWindow">Open in new window</option>
+                            <option value="downloadFile">Download file</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Settings Button -->
+    <button type="button" class="btn btn-secondary float-right" data-toggle="modal" data-target="#settingsModal">
+        <span class="glyphicon glyphicon-cog"></span> Settings/About
+    </button>
+    <script>
+					// Get the download option from local storage, or set it to 'sameWindow' if it doesn't exist
+					var downloadOption = localStorage.getItem('downloadOption')
+							|| 'sameWindow';
+
+					// Set the selected option in the dropdown
+					document.getElementById('downloadOption').value = downloadOption;
+
+					// Save the selected option to local storage when the dropdown value changes
+					document.getElementById('downloadOption').addEventListener(
+							'change',
+							function() {
+								downloadOption = this.value;
+								localStorage.setItem('downloadOption',
+										downloadOption);
+							});
+				</script>
+
+
+
 </div>

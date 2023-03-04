@@ -111,27 +111,45 @@
 
 <th:block th:fragment="fileSelector(name, multiple)">
     <div class="custom-file-chooser">
-        <div class="custom-file">
-            <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:multiple="${multiple}"> 
-            <label class="custom-file-label" th:for="${name}+'-input'" th:text="#{pdfPrompt}"></label>
-        </div>
-    </div>
+  <div class="custom-file">
+    <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:multiple="${multiple}">
+    <label class="custom-file-label" th:for="${name}+'-input'" th:text="#{pdfPrompt}"></label>
+  </div>
+  <div class="selected-files"></div>
+</div>
+
 
     <script th:inline="javascript">
-		$([[${"#"+name+"-input"}]]).on("change", function() {
-			const files = $(this).get(0).files;
-			const fileNames = Array.from(files).map(f => f.name).join(", ");
-			if (fileNames) {
-				$(this).siblings(".custom-file-label").addClass("selected").html(fileNames);
-			} else {
-				$(this).siblings(".custom-file-label").addClass("selected").html([[#{pdfPrompt}]]);
-			}
-		});
+    $([[${"#"+name+"-input"}]]).on("change", function() {
+    	  const files = $(this).get(0).files;
+    	  const fileNames = Array.from(files).map(f => f.name);
+    	  const selectedFilesContainer = $(this).siblings(".selected-files");
+    	  selectedFilesContainer.empty();
+    	  fileNames.forEach(fileName => {
+    	    selectedFilesContainer.append("<div>" + fileName + "</div>");
+    	  });
+    	  if (fileNames.length === 1) {
+		    $(this).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
+		  } else if (fileNames.length > 1) {
+		    $(this).siblings(".custom-file-label").addClass("selected").html(fileNames.length + " files selected");
+		  } else {
+		    $(this).siblings(".custom-file-label").addClass("selected").html([[#{pdfPrompt}]]);
+		  }
+    	});
+
 	</script>
 
     <style>
     .custom-file-label {
-    	padding-right: 90px;
-    }
+  padding-right: 90px;
+}
+
+.selected-files {
+  margin-top: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
     </style>
 </th:block>

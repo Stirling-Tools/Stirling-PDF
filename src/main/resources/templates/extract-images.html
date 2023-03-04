@@ -27,18 +27,20 @@
               <button type="submit" class="btn btn-primary" th:text="#{extractImages.submit}"></button>
             </form>
             <th:block th:insert="~{fragments/common :: filelist}"></th:block>
-            <div id="progressBarContainer" style="display: none;">
-                <div class="progress">
-                    <div id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div>
+            
+            <br>
+            <div id="progressBarContainer" style="display: none; position: relative;">
+                <div class="progress" style="height: 1rem;">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                        <span class="sr-only">Loading...</span>
+                    </div>
                 </div>
             </div>
 
             <script>
-            $('#multiPdfForm').submit(function(event) {
+            $('form').submit(function(event) {
             	 event.preventDefault(); // Prevent the default form handling behavior
-
-
-            	    submitMultiPdfForm(event);
+            	 submitMultiPdfForm(event);
             });
             
          
