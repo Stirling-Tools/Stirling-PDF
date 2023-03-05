@@ -140,66 +140,113 @@ function toggleDarkMode() {
             <script>
             
             $('form').submit(function(event) {
+            	console.log("start download code")
             	var files = $('#fileInput-input')[0].files;
             	var url = this.action;
+            	console.log(url)
+            	event.preventDefault(); // Prevent the default form handling behavior
                  /* Check if ${multiple} is false */
                  var multiple = [[${multiple}]] || false;
                  if (!multiple && files.length > 1) {
-                	 event.preventDefault(); // Prevent the default form handling behavior
+                	 console.log("multi parallel download")
                      submitMultiPdfForm(event,url);
                  } else {
-                	// Get the selected download option from localStorage
-                	  const downloadOption = localStorage.getItem('downloadOption');
+                     console.log("start single download")
 
-                	  // Create an XMLHttpRequest object to send the request to the server
-                	  const xhr = new XMLHttpRequest();
-                	  
-                	  // Set up the response type and event listener for the XMLHttpRequest object
-                	  xhr.responseType = 'blob';
-                	  xhr.addEventListener('load', function() {
-                		const filename = xhr.getResponseHeader('Content-Disposition').match(/filename=(.+)$/)[1];
-                	    // Check if the response is a PDF or an image
-                	    if (xhr.response.type.includes('pdf') || xhr.response.type.includes('image')) {
-                	      // Perform the appropriate action based on the download option
-                	      if (downloadOption === 'sameWindow') {
-                	        // Open the file in the same window
-                	        window.location.href = URL.createObjectURL(xhr.response);
-                	      } else if (downloadOption === 'newWindow') {
-                	        // Open the file in a new window
-                	        window.open(URL.createObjectURL(xhr.response), '_blank');
-                	      } else {
-                	        // Download the file
-                	        const link = document.createElement('a');
-                	        link.href = URL.createObjectURL(xhr.response);
-                	        link.download = filename
-                	        link.click();
-                	      }
-                	    } else {
-                	      // For ZIP files or other file types, just download the file
-                	      const link = document.createElement('a');
-                	      link.href = URL.createObjectURL(xhr.response);
-                	      link.download = filename
-                	      link.click();
-                	    }
-                	  });
-                	  
-                	  // Set up the error listener for the XMLHttpRequest object
-                	  xhr.addEventListener('error', function() {
-                	    // Extract the error message and stack trace from the response
-                	    const errorResponse = JSON.parse(xhr.responseText);
-                	    const errorMessage = errorResponse.message;
-                	    const stackTrace = errorResponse.stackTrace.join('\n');
-                	    
-                	    // Create an error message to display to the user
-                	    const message = `${errorMessage}\n\n${stackTrace}`;
+                     // Get the selected download option from localStorage
+                     const downloadOption = localStorage.getItem('downloadOption');
 
-                	   
-            	      // Display the error message to the user
-            	      alert(message);
-            	     });
-            
+                     var formData = new FormData($('form')[0]);
+                     
+                     // Send the request to the server using the fetch() API
+                     fetch(url, {
+                         method: 'POST',
+                         body: formData
+                     }).then(response => {
+                         if (!response) {
+                             throw new Error('Received null response for file ' + i);
+                         }
+                         console.log("load single download")
+
+                         
+                         // Extract the filename from the Content-Disposition header, if present
+                        let filename = null;
+                        const contentDispositionHeader = response.headers.get('Content-Disposition');
+                        console.log(contentDispositionHeader)
+                        if (contentDispositionHeader && contentDispositionHeader.indexOf('attachment') !== -1) {
+                            filename = contentDispositionHeader.match(/filename=(.+)$/)[1];
+                        } else {
+                            // If the Content-Disposition header is not present or does not contain the filename, use a default filename
+                            filename = 'download';
+                        }
+                        console.log("filename=" + filename)
+
+                    
+                        const contentType = response.headers.get('Content-Type');
+                        console.log("contentType=" + contentType)
+                         // Check if the response is a PDF or an image
+                         if (contentType.includes('pdf') || contentType.includes('image')) {
+                        	 response.blob().then(blob => {
+                                 console.log("pdf/image")
+    
+                                 // Perform the appropriate action based on the download option
+                                 if (downloadOption === 'sameWindow') {
+                                     console.log("same window")
+    
+                                     // Open the file in the same window
+                                     window.location.href = URL.createObjectURL(blob);
+                                 } else if (downloadOption === 'newWindow') {
+                                     console.log("new window")
+    
+                                     // Open the file in a new window
+                                     window.open(URL.createObjectURL(blob), '_blank');
+                                 } else {
+                                     console.log("else save")
+    
+                                     // Download the file
+                                     const link = document.createElement('a');
+                                     link.href = URL.createObjectURL(blob);
+                                     link.download = filename;
+                                     link.click();
+                                 }
+                        	 });
+                         } else if (contentType.includes('json')) {
+                        	// Handle the JSON response
+                        	    response.json().then(data => {
+                        	      // Format the error message
+                        	      const errorMessage = JSON.stringify(data, null, 2);
+                        	      
+                        	      // Display the error message in an alert
+                        	      alert(`An error occurred: ${errorMessage}`);
+                        	    });
+                        	 
+                         } else {
+                        	 response.blob().then(blob => {
+                                 console.log("else save 2 zip")
+    
+                                 // For ZIP files or other file types, just download the file
+                                 const link = document.createElement('a');
+                                 link.href = URL.createObjectURL(blob);
+                                 link.download = filename;
+                                 link.click();
+                        	 });
+                         }
+                    })
+                     .catch(error => {
+                         console.log("error listener")
+
+                         // Extract the error message and stack trace from the response
+                         const errorMessage = error.message;
+                         const stackTrace = error.stack;
+
+                         // Create an error message to display to the user
+                         const message = `${errorMessage}\n\n${stackTrace}`;
+
+                         // Display the error message to the user
+                         alert(message);
+                     });
                  }
-            }
+             });
 
             async function submitMultiPdfForm(event,url) {
                 // Get the selected PDF files
@@ -208,6 +255,7 @@ function toggleDarkMode() {
                 // Get the existing form data
                 var formData = new FormData($('form')[0]);
                 formData.delete('fileInput');
+                
                 // Show the progress bar
                 $('#progressBarContainer').show();
 
@@ -221,11 +269,10 @@ function toggleDarkMode() {
                 var promises = [];
                 for (var i = 0; i < files.length; i++) {
                     var promise = new Promise(function(resolve, reject) {
-                        
-                    	var fileFormData = new FormData();
+                        var fileFormData = new FormData();
                         fileFormData.append('fileInput', files[i]);
                         for (var pair of formData.entries()) {
-                          fileFormData.append(pair[0], pair[1]);
+                            fileFormData.append(pair[0], pair[1]);
                         }
                         console.log(fileFormData);
 
@@ -233,7 +280,7 @@ function toggleDarkMode() {
                             method: 'POST',
                             body: fileFormData
                         }).then(function(response) {
-                        	if (!response) {
+                            if (!response) {
                                 throw new Error('Received null response for file ' + i);
                             }
                             console.log('Received response for file ' + i + ': ' + response);
@@ -252,27 +299,28 @@ function toggleDarkMode() {
                                 resolve();
                             });
                         }).catch(function(error) {
-                        	 console.error('Error submitting request for file ' + i + ': ' + error);
-                    	    /* Set default values or fallbacks for error properties */
-                    	    var status = error && error.status || 500;
-                    	    var statusText = error && error.statusText || 'Internal Server Error';
-                    	    var message = error && error.message || 'An error occurred while processing your request.';
-                    	    
-                            /* Reject the Promise to signal that the request has failed */
+                            console.error('Error submitting request for file ' + i + ': ' + error);
+                            
+                            // Set default values or fallbacks for error properties
+                            var status = error && error.status || 500;
+                            var statusText = error && error.statusText || 'Internal Server Error';
+                            var message = error && error.message || 'An error occurred while processing your request.';
+                                
+                            // Reject the Promise to signal that the request has failed 
                             reject();
-                            /* Redirect to error page with Spring Boot error parameters */
+                            // Redirect to error page with Spring Boot error parameters 
                             var url = '/error?status=' + status + '&error=' + encodeURIComponent(statusText) + '&message=' + encodeURIComponent(message);
                             window.location.href = url;
                         });
                     });
-                    
-                 // Update the progress bar as each request finishes
+                                
+                    // Update the progress bar as each request finishes
                     promise.then(function() {
                         var progress = ((progressBar.attr('aria-valuenow') / files.length) * 100) + (100 / files.length);
                         progressBar.css('width', progress + '%');
                         progressBar.attr('aria-valuenow', parseInt(progressBar.attr('aria-valuenow')) + 1);
                     });
-                 
+                             
                     promises.push(promise);
                 }
 
@@ -287,7 +335,7 @@ function toggleDarkMode() {
                 progressBar.css('width', '100%');
                 progressBar.attr('aria-valuenow', files.length);
             }
-
+            
             
 
             </script>
