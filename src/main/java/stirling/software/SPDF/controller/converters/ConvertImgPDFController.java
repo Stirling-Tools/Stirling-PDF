@@ -78,7 +78,7 @@ public class ConvertImgPDFController {
         } else {
             ByteArrayResource resource = new ByteArrayResource(result);
             // return the Resource in the response
-            return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=converted_documents.zip").contentType(MediaType.APPLICATION_OCTET_STREAM)
+            return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename="+ file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_convertedToImages.zip").contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .contentLength(resource.contentLength()).body(resource);
         }
     }

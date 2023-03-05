@@ -15,7 +15,7 @@
             <h2 th:text="#{extractImages.header}"></h2>
 
             <form id="multiPdfForm" th:action="@{extract-images}" method="post" enctype="multipart/form-data">
-              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=true)}"></div>
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
               <div class="form-group">
                 <label th:text="#{extractImages.selectText}"></label> 
                 <select class="form-control" name="format">
@@ -26,102 +26,6 @@
             </div>
               <button type="submit" class="btn btn-primary" th:text="#{extractImages.submit}"></button>
             </form>
-            <th:block th:insert="~{fragments/common :: filelist}"></th:block>
-            
-            <br>
-            <div id="progressBarContainer" style="display: none; position: relative;">
-                <div class="progress" style="height: 1rem;">
-                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                        <span class="sr-only">Loading...</span>
-                    </div>
-                </div>
-            </div>
-
-            <script>
-            $('form').submit(function(event) {
-            	 event.preventDefault(); // Prevent the default form handling behavior
-            	 submitMultiPdfForm(event);
-            });
-            
-         
-
-            async function submitMultiPdfForm(event) {
-                // Get the selected PDF files
-                var files = $('#fileInput-input')[0].files;
-
-                // Get the existing form data
-                var formData = new FormData($('form')[0]);
-                formData.delete('fileInput');
-
-                // Show the progress bar
-                $('#progressBarContainer').show();
-
-                // Initialize the progress bar
-                var progressBar = $('#progressBar');
-                progressBar.css('width', '0%');
-                progressBar.attr('aria-valuenow', 0);
-                progressBar.attr('aria-valuemax', files.length);
-
-                // Submit each PDF file in parallel
-                var promises = [];
-                for (var i = 0; i < files.length; i++) {
-                    var promise = new Promise(function(resolve, reject) {
-                        var fileFormData = new FormData();
-                        fileFormData.append('fileInput', files[i]);
-                        fileFormData.append('format', $('select[name="format"]').val());
-
-                        fetch('extract-images', {
-                            method: 'POST',
-                            body: fileFormData
-                        }).then(function(response) {
-                            console.log('Received response for file ' + i + ': ' + response);
-
-                            var contentDisposition = response.headers.get('content-disposition');
-                            var fileName = contentDisposition.split('filename=')[1].replace(/"/g, '');
-
-                            response.blob().then(function(blob) {
-                                var url = window.URL.createObjectURL(blob);
-                                var a = document.createElement('a');
-                                a.href = url;
-                                a.download = fileName;
-                                document.body.appendChild(a);
-                                a.click();
-                                a.remove();
-                                resolve();
-                            });
-                        }).catch(function(error) {
-                            console.error('Error submitting request for file ' + i + ': ' + error);
-                            reject();
-                        });
-                    });
-                    
-                 // Update the progress bar as each request finishes
-                    promise.then(function() {
-                        var progress = ((progressBar.attr('aria-valuenow') / files.length) * 100) + (100 / files.length);
-                        progressBar.css('width', progress + '%');
-                        progressBar.attr('aria-valuenow', parseInt(progressBar.attr('aria-valuenow')) + 1);
-                    });
-                 
-                    promises.push(promise);
-                }
-
-                // Wait for all requests to finish
-                try {
-                    await Promise.all(promises);
-                } catch (error) {
-                    console.error('Error while uploading files: ' + error);
-                }
-
-                // Update the progress bar
-                progressBar.css('width', '100%');
-                progressBar.attr('aria-valuenow', files.length);
-
-             
-            }
-
-
-
-            </script>
           </div>
         </div>
       </div>

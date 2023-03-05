@@ -21,6 +21,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.apache.pdfbox:pdfbox:2.0.27'
+	//implementation 'org.apache.pdfbox:preflight:2.0.27'
 	implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
 	implementation 'e-iceblue:spire.pdf.free:5.1.0'
 	
@@ -33,6 +34,11 @@ dependencies {
 
 jar {
     enabled = false
+    manifest {
+        attributes 'Implementation-Title': 'Stirling-PDF',
+                   'Implementation-Version': project.version
+    }
+    
 }
 
 tasks.named('test') {
@@ -41,5 +47,10 @@ tasks.named('test') {
 
 task printVersion {
   println project.version
+}
+
+bootRun {
+    systemProperty 'version', project.version
+    systemProperties['version'] = version
 }
 

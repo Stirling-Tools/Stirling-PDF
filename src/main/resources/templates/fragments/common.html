@@ -24,30 +24,41 @@
 <link rel="stylesheet" th:href="@{css/dark-mode.css}" id="dark-mode-styles">
 
 <script>
-		function toggleDarkMode() {
-			var checkbox = document.getElementById("toggle-dark-mode");
-			var darkModeStyles = document.getElementById("dark-mode-styles");
-			if (checkbox.checked) {
-				localStorage.setItem("dark-mode", "on");
-				darkModeStyles.disabled = false;
-			} else {
-				localStorage.setItem("dark-mode", "off");
-				darkModeStyles.disabled = true;
-			}
-		}
-		$(document).ready(function() {
-			var darkModeStyles = document.getElementById("dark-mode-styles");
-			var checkbox = document.getElementById("toggle-dark-mode");
-			if (localStorage.getItem("dark-mode") == "on") {
-				darkModeStyles.disabled = false;
-				checkbox.checked = true;
-			}
-			if (localStorage.getItem("dark-mode") == "off") {
-				darkModeStyles.disabled = true;
-				checkbox.checked = false;
-			}
+function toggleDarkMode() {
+	  var checkbox = document.getElementById("toggle-dark-mode");
+	  var darkModeStyles = document.getElementById("dark-mode-styles");
+	  if (checkbox.checked) {
+	    localStorage.setItem("dark-mode", "on");
+	    darkModeStyles.disabled = false;
+	  } else {
+	    localStorage.setItem("dark-mode", "off");
+	    darkModeStyles.disabled = true;
+	  }
+	}
 
-		});
+	$(document).ready(function() {
+	  var darkModeStyles = document.getElementById("dark-mode-styles");
+	  var checkbox = document.getElementById("toggle-dark-mode");
+
+	  // Check if the user has already set a preference
+	  if (localStorage.getItem("dark-mode") == "on") {
+	    darkModeStyles.disabled = false;
+	    checkbox.checked = true;
+	  } else if (localStorage.getItem("dark-mode") == "off") {
+	    darkModeStyles.disabled = true;
+	    checkbox.checked = false;
+	  } else {
+	    // Check the OS's default dark mode setting
+	    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+	      darkModeStyles.disabled = false;
+	      checkbox.checked = true;
+	    } else {
+	      darkModeStyles.disabled = true;
+	      checkbox.checked = false;
+	    }
+	  }
+	});
+
 	</script>
 </head>
 
@@ -112,13 +123,176 @@
 <th:block th:fragment="fileSelector(name, multiple)">
     <div class="custom-file-chooser">
   <div class="custom-file">
-    <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:multiple="${multiple}">
+    <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" multiple>
     <label class="custom-file-label" th:for="${name}+'-input'" th:text="#{pdfPrompt}"></label>
   </div>
   <div class="selected-files"></div>
 </div>
+<br>
+    <div id="progressBarContainer" style="display: none; position: relative;">
+                <div class="progress" style="height: 1rem;">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+            </div>
 
+            <script>
+            
+            $('form').submit(function(event) {
+            	var files = $('#fileInput-input')[0].files;
+            	var url = this.action;
+                 /* Check if ${multiple} is false */
+                 var multiple = [[${multiple}]] || false;
+                 if (!multiple && files.length > 1) {
+                	 event.preventDefault(); // Prevent the default form handling behavior
+                     submitMultiPdfForm(event,url);
+                 } else {
+                	// Get the selected download option from localStorage
+                	  const downloadOption = localStorage.getItem('downloadOption');
 
+                	  // Create an XMLHttpRequest object to send the request to the server
+                	  const xhr = new XMLHttpRequest();
+                	  
+                	  // Set up the response type and event listener for the XMLHttpRequest object
+                	  xhr.responseType = 'blob';
+                	  xhr.addEventListener('load', function() {
+                		const filename = xhr.getResponseHeader('Content-Disposition').match(/filename=(.+)$/)[1];
+                	    // Check if the response is a PDF or an image
+                	    if (xhr.response.type.includes('pdf') || xhr.response.type.includes('image')) {
+                	      // Perform the appropriate action based on the download option
+                	      if (downloadOption === 'sameWindow') {
+                	        // Open the file in the same window
+                	        window.location.href = URL.createObjectURL(xhr.response);
+                	      } else if (downloadOption === 'newWindow') {
+                	        // Open the file in a new window
+                	        window.open(URL.createObjectURL(xhr.response), '_blank');
+                	      } else {
+                	        // Download the file
+                	        const link = document.createElement('a');
+                	        link.href = URL.createObjectURL(xhr.response);
+                	        link.download = filename
+                	        link.click();
+                	      }
+                	    } else {
+                	      // For ZIP files or other file types, just download the file
+                	      const link = document.createElement('a');
+                	      link.href = URL.createObjectURL(xhr.response);
+                	      link.download = filename
+                	      link.click();
+                	    }
+                	  });
+                	  
+                	  // Set up the error listener for the XMLHttpRequest object
+                	  xhr.addEventListener('error', function() {
+                	    // Extract the error message and stack trace from the response
+                	    const errorResponse = JSON.parse(xhr.responseText);
+                	    const errorMessage = errorResponse.message;
+                	    const stackTrace = errorResponse.stackTrace.join('\n');
+                	    
+                	    // Create an error message to display to the user
+                	    const message = `${errorMessage}\n\n${stackTrace}`;
+
+                	   
+            	      // Display the error message to the user
+            	      alert(message);
+            	     });
+            
+                 }
+            }
+
+            async function submitMultiPdfForm(event,url) {
+                // Get the selected PDF files
+                var files = $('#fileInput-input')[0].files;
+
+                // Get the existing form data
+                var formData = new FormData($('form')[0]);
+                formData.delete('fileInput');
+                // Show the progress bar
+                $('#progressBarContainer').show();
+
+                // Initialize the progress bar
+                var progressBar = $('#progressBar');
+                progressBar.css('width', '0%');
+                progressBar.attr('aria-valuenow', 0);
+                progressBar.attr('aria-valuemax', files.length);
+
+                // Submit each PDF file in parallel
+                var promises = [];
+                for (var i = 0; i < files.length; i++) {
+                    var promise = new Promise(function(resolve, reject) {
+                        
+                    	var fileFormData = new FormData();
+                        fileFormData.append('fileInput', files[i]);
+                        for (var pair of formData.entries()) {
+                          fileFormData.append(pair[0], pair[1]);
+                        }
+                        console.log(fileFormData);
+
+                        fetch(url, {
+                            method: 'POST',
+                            body: fileFormData
+                        }).then(function(response) {
+                        	if (!response) {
+                                throw new Error('Received null response for file ' + i);
+                            }
+                            console.log('Received response for file ' + i + ': ' + response);
+
+                            var contentDisposition = response.headers.get('content-disposition');
+                            var fileName = contentDisposition.split('filename=')[1].replace(/"/g, '');
+
+                            response.blob().then(function(blob) {
+                                var url = window.URL.createObjectURL(blob);
+                                var a = document.createElement('a');
+                                a.href = url;
+                                a.download = fileName;
+                                document.body.appendChild(a);
+                                a.click();
+                                a.remove();
+                                resolve();
+                            });
+                        }).catch(function(error) {
+                        	 console.error('Error submitting request for file ' + i + ': ' + error);
+                    	    /* Set default values or fallbacks for error properties */
+                    	    var status = error && error.status || 500;
+                    	    var statusText = error && error.statusText || 'Internal Server Error';
+                    	    var message = error && error.message || 'An error occurred while processing your request.';
+                    	    
+                            /* Reject the Promise to signal that the request has failed */
+                            reject();
+                            /* Redirect to error page with Spring Boot error parameters */
+                            var url = '/error?status=' + status + '&error=' + encodeURIComponent(statusText) + '&message=' + encodeURIComponent(message);
+                            window.location.href = url;
+                        });
+                    });
+                    
+                 // Update the progress bar as each request finishes
+                    promise.then(function() {
+                        var progress = ((progressBar.attr('aria-valuenow') / files.length) * 100) + (100 / files.length);
+                        progressBar.css('width', progress + '%');
+                        progressBar.attr('aria-valuenow', parseInt(progressBar.attr('aria-valuenow')) + 1);
+                    });
+                 
+                    promises.push(promise);
+                }
+
+                // Wait for all requests to finish
+                try {
+                    await Promise.all(promises);
+                } catch (error) {
+                    console.error('Error while uploading files: ' + error);
+                }
+
+                // Update the progress bar
+                progressBar.css('width', '100%');
+                progressBar.attr('aria-valuenow', files.length);
+            }
+
+            
+
+            </script>
+            
+            
     <script th:inline="javascript">
     $([[${"#"+name+"-input"}]]).on("change", function() {
     	  const files = $(this).get(0).files;
@@ -152,4 +326,6 @@
 }
 
     </style>
+    
+    
 </th:block>
