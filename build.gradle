@@ -48,9 +48,3 @@ tasks.named('test') {
 task printVersion {
   println project.version
 }
-
-bootRun {
-    systemProperty 'version', project.version
-    systemProperties['version'] = version
-}
-

@@ -18,7 +18,6 @@ import com.spire.pdf.PdfPageBase;
 import com.spire.pdf.exporting.PdfImageInfo;
 import com.spire.pdf.graphics.PdfBitmap;
 
-import stirling.software.SPDF.utils.ErrorUtils;
 import stirling.software.SPDF.utils.PdfUtils;
 
 //import com.spire.pdf.*;
