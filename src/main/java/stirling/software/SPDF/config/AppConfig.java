@@ -9,6 +9,6 @@ public class AppConfig {
     @Bean(name = "appVersion")
     public String appVersion() {
         String version = getClass().getPackage().getImplementationVersion();
-        return (version != null) ? version : "Develop";
+        return (version != null) ? version : "0.3.3";
     }
 }

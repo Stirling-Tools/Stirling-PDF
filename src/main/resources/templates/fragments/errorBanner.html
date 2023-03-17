@@ -1,4 +1,5 @@
 <th:block th:fragment="errorBanner">
+
   <style>
     #github-button,
     #discord-button {
@@ -17,7 +18,7 @@
       background-color: #005b7f;
     }
   </style>
-   <br  th:if="${message}">
+  <br  th:if="${message}">
   <div id="errorContainer" th:if="${message}" class="alert alert-danger alert-dismissible fade show" role="alert">
     <h4 class="alert-heading" th:text="'Error:  ' + ${status} + '  ' + ${error}"></h4>
     <p th:text="${message} + ' for path: ' + ${path}"></p>
@@ -36,39 +37,53 @@
       <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" target="_blank">Join our Discord server</a>
     </div>
   </div>
-  
-<script>
-  function toggletrace() {
-    var traceDiv = document.getElementById("trace");
-    if (traceDiv.style.maxHeight === "0px") {
-      traceDiv.style.maxHeight = "500px";
-    } else {
-      traceDiv.style.maxHeight = "0px";
+  <script>
+    var traceVisible = false;
+
+    function toggletrace() {
+      var traceDiv = document.getElementById("trace");
+      if (!traceVisible) {
+        traceDiv.style.maxHeight = "500px";
+        traceVisible = true;
+      } else {
+        traceDiv.style.maxHeight = "0px";
+        traceVisible = false;
+      }
+      adjustContainerHeight();
     }
-    adjustContainerHeight();
-  }
 
-  function copytrace() {
-    var traceContent = document.getElementById("traceContent");
-    var range = document.createRange();
-    range.selectNode(traceContent);
-    window.getSelection().removeAllRanges();
-    window.getSelection().addRange(range);
-    document.execCommand("copy");
-    window.getSelection().removeAllRanges();
-  }
+    function copytrace() {
+      var flip = false
+    	if(!traceVisible) {
+    		 toggletrace()
+    		 flip = true
+    	}
+      var traceContent = document.getElementById("traceContent");
+      var range = document.createRange();
+      range.selectNode(traceContent);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      document.execCommand("copy");
+      window.getSelection().removeAllRanges();
+      if(flip){
+    	  toggletrace()
+      }
+    }
 
-  function dismissError() {
-    var errorContainer = document.getElementById("errorContainer");
-    errorContainer.style.display = "none";
-    errorContainer.style.height ="0";
-  }
+    function dismissError() {
+      var errorContainer = document.getElementById("errorContainer");
+      errorContainer.style.display = "none";
+      errorContainer.style.height ="0";
+    }
 
-  function adjustContainerHeight() {
-  var errorContainer = document.getElementById("errorContainer");
-  var traceDiv = document.getElementById("trace");
-  errorContainer.style.height = errorContainer.scrollHeight - traceDiv.scrollHeight + traceDiv.offsetHeight + "px";
-  }
+    function adjustContainerHeight() {
+      var errorContainer = document.getElementById("errorContainer");
+      var traceDiv = document.getElementById("trace");
+      if (traceVisible) {
+        errorContainer.style.height = errorContainer.scrollHeight - traceDiv.scrollHeight + traceDiv.offsetHeight + "px";
+      } else {
+        errorContainer.style.height = "auto";
+      }
+    }
   </script>
-
 </th:block>
