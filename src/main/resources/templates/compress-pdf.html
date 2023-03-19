@@ -14,60 +14,30 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <h2 th:text="#{compress.header}"></h2>
-                        <form method="post" enctype="multipart/form-data" th:action="@{/compress-pdf}">
-      <div class="form-group">
-        <label for="fileInput">Select a PDF file to compress:</label>
-        <input type="file" class="form-control-file" id="fileInput" name="fileInput" accept=".pdf">
-      </div>
-      <div class="form-group">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="compressPDF" name="compressPDF" checked>
-          <label class="form-check-label" for="compressPDF">Compress PDF?</label>
-        </div>
-        <div class="form-group">
-          <label for="pdfCompressionLevel">PDF Compression Level:</label>
-          <select class="form-control" id="pdfCompressionLevel" name="pdfCompressionLevel">
-            <option value="0">0 (No compression)</option>
-            <option value="1">1 (Lowest compression)</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5" selected>5 (Default compression)</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9 (Maximum compression)</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="compressImages" name="compressImages" checked>
-          <label class="form-check-label" for="compressImages">Compress Images?</label>
-        </div>
-        </div>
-        <div class="form-group">
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="useLossyCompression" name="useLossyCompression">
-            <label class="form-check-label" for="useLossyCompression">Use Lossy Compression for Images?</label>
-          </div>
-          </div>
-          <div class="form-group">
-            <label for="imageCompressionLevel">Image Compression Level:</label>
-            <select class="form-control" id="imageCompressionLevel" name="imageCompressionLevel">
-              <option value="0">0 (No compression)</option>
-              <option value="10">10 (Lowest quality)</option>
-              <option value="25">25</option>
-              <option value="50" selected>50 (Default quality)</option>
-              <option value="75">75</option>
-              <option value="90">90 (High quality)</option>
-              <option value="100">100 (Best quality)</option>
-             </select> 
-             </div>
-          <div class="form-group">
-            <button type="submit" class="btn btn-primary">Compress PDF</button>
-          </div>
-        </form>
+                        <form action="#" th:action="@{/compress-pdf}" method="post" enctype="multipart/form-data">
+					        <div>
+					            <label for="fileInput">Choose a PDF file</label>
+					            <input type="file" name="fileInput" id="fileInput" accept="application/pdf" required>
+					        </div>
+					        <div>
+					            <label for="optimizeLevel">Optimization level:</label>
+					            <select name="optimizeLevel" id="optimizeLevel">
+					                <option value="0">-O0 (No optimization)</option>
+					                <option value="1" selected>-O1 (Default, lossless optimization)</option>
+					                <option value="2">-O2 (Lossy optimization)</option>
+					                <option value="3">-O3 (Lossy optimization, more aggressive)</option>
+					            </select>
+					        </div>
+					        <div>
+					            <input type="checkbox" name="fastWebView" id="fastWebView" checked>
+					            <label for="fastWebView">Enable fast web view (linearize PDF)</label>
+					        </div>
+					        <div>
+					            <input type="checkbox" name="jbig2Lossy" id="jbig2Lossy">
+					            <label for="jbig2Lossy">Enable lossy JBIG2 encoding</label>
+					        </div>
+					        <button type="submit">Optimize PDF</button>
+					    </form>
              
                         <th:block th:insert="~{fragments/common :: filelist}"></th:block>
 

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+
+<th:block th:insert="~{fragments/common :: head(title=#{addImage.title})}"></th:block>
+
+
+<body>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{ocrPDF.header}"></h2>
+
+						 <form action="#" th:action="@{/ocr-pdf}" method="post" enctype="multipart/form-data" class="mb-3">
+				            <div class="mb-3">
+				                <label for="fileInput" class="form-label">Choose a PDF file</label>
+				                <input type="file" name="fileInput" id="fileInput" accept="application/pdf" required class="form-control">
+				            </div>
+				            <div class="mb-3">
+							    <label for="languages" class="form-label">Select languages that are to be detected within the PDF (Ones listed are the ones currently detected):</label>
+							    <div id="languages">
+							        <div th:each="language: ${languages}">
+							            <input type="checkbox" class="form-check-input" th:name="languages" th:value="${language}" th:id="${'language-' + language}" />
+							            <label class="form-check-label" th:for="${'language-' + language}" th:text="${language}"></label>
+							        </div>
+							    </div>
+							</div>
+							<div class="mb-3">
+						        <input type="checkbox" class="form-check-input" name="sidecar" id="sidecar" />
+						        <label class="form-check-label" for="sidecar">Produce text file containing OCR text alongside the OCR'ed PDF</label>
+						    </div>
+				            <button type="submit" class="btn btn-primary">Process PDF with OCR</button>
+				        </form>
+				        <p>
+				            Please read this documentation on how to use this for other languages and/or not in docker
+				        </p>
+
+                        <th:block th:insert="~{fragments/common :: filelist}"></th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
+</body>
+
+</html>

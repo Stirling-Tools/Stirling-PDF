@@ -21,24 +21,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	
-	implementation 'org.apache.xmlgraphics:batik-transcoder:1.14'
 	implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
 	
 	//general PDF
     implementation 'org.apache.pdfbox:pdfbox:2.0.27'
     implementation 'com.itextpdf:itextpdf:5.5.13.3'
     
-    //xml conversions and others
-    implementation 'org.apache.poi:poi:5.2.3'
-    implementation 'org.apache.poi:poi-scratchpad:5.2.3'
-    implementation 'org.apache.poi:poi-ooxml:5.2.3'
-    implementation 'com.itextpdf.tool:xmlworker:5.5.13.3'
-    
-    //docx conversions
-    implementation('org.docx4j:docx4j:6.1.2') {
-        exclude group: 'org.slf4j', module: 'slf4j-reload4j'
-    }
-    implementation 'org.docx4j:docx4j-export-fo:11.2.9'
 
 }
 
