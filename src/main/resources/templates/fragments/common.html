@@ -9,6 +9,9 @@
 <!-- jQuery -->
 <script src="js/jquery.min.js"></script>
 
+<!-- jQuery -->
+<script src="js/jszip.min.js"></script>
+
 <!-- Bootstrap -->
 <script src="js/popper.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
@@ -60,65 +63,6 @@ function toggleDarkMode() {
 
 	</script>
 </head>
-
-<th:block th:fragment="filelist">
-    <div id="fileList"></div>
-    <div id="fileList2"></div>
-    <script>
-		var input = document.getElementById("fileInput");
-		var output = document.getElementById("fileList");
-
-		input.addEventListener("change", function() {
-			var files = input.files;
-			var fileNames = "";
-
-			for (var i = 0; i < files.length; i++) {
-				fileNames += (i + 1) + ". " + files[i].name + "<br>";
-			}
-
-			output.innerHTML = fileNames;
-		});
-	</script>
-    <script>
-		var input2 = document.getElementById("fileInput2");
-		var output2 = document.getElementById("fileList2");
-		if (input2 != null && !input2) {
-			input2.addEventListener("change", function() {
-				var files = input2.files;
-				var fileNames = "";
-
-				for (var i = 0; i < files.length; i++) {
-					fileNames += (i + 1) + ". " + files[i].name + "<br>";
-				}
-
-				output2.innerHTML = fileNames;
-			});
-		}
-	</script>
-
-
-    <script>
-		if (dropContainer) {
-			dropContainer.ondragover = dropContainer.ondragenter = function(evt) {
-				evt.preventDefault();
-			};
-
-			dropContainer.ondrop = function(evt) {
-				if (fileInput) {
-					fileInput.files = evt.dataTransfer.files;
-
-					const dT = new DataTransfer();
-					dT.items.add(evt.dataTransfer.files[0]);
-					dT.items.add(evt.dataTransfer.files[3]);
-					fileInput.files = dT.files;
-
-					evt.preventDefault();
-				}
-			};
-		}
-	</script>
-</th:block>
-
 <th:block th:fragment="fileSelector(name, multiple)">
     <div class="custom-file-chooser">
   <div class="custom-file">
@@ -263,7 +207,17 @@ function toggleDarkMode() {
                 progressBar.css('width', '0%');
                 progressBar.attr('aria-valuenow', 0);
                 progressBar.attr('aria-valuemax', files.length);
+				
+             	// Check the flag in localStorage
+                const zipFiles = localStorage.getItem('zipParallelFiles') === 'true';
 
+                // Initialize JSZip instance if needed
+                let jszip = null;
+                if (zipFiles) {
+                  jszip = new JSZip();
+                }
+                
+                
                 // Submit each PDF file in parallel
                 var promises = [];
                 for (var i = 0; i < files.length; i++) {
@@ -287,16 +241,24 @@ function toggleDarkMode() {
                             var contentDisposition = response.headers.get('content-disposition');
                             var fileName = contentDisposition.split('filename=')[1].replace(/"/g, '');
 
-                            response.blob().then(function(blob) {
-                                var url = window.URL.createObjectURL(blob);
-                                var a = document.createElement('a');
-                                a.href = url;
-                                a.download = fileName;
-                                document.body.appendChild(a);
-                                a.click();
-                                a.remove();
-                                resolve();
-                            });
+                            response.blob().then(function (blob) {
+                                if (zipFiles) {
+                                  // Add the file to the ZIP archive
+                                  jszip.file(fileName, blob);
+                                  resolve();
+                                } else {
+                                  // Download the file directly
+                                  var url = window.URL.createObjectURL(blob);
+                                  var a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = fileName;
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  a.remove();
+                                  resolve();
+                                }
+                              });
+                            
                         }).catch(function(error) {
                             console.error('Error submitting request for file ' + i + ': ' + error);
                             
@@ -329,10 +291,23 @@ function toggleDarkMode() {
                 } catch (error) {
                     console.error('Error while uploading files: ' + error);
                 }
-
+			
                 // Update the progress bar
                 progressBar.css('width', '100%');
                 progressBar.attr('aria-valuenow', files.length);
+                
+             	// After all requests are finished, download the ZIP file if needed
+                if (zipFiles) {
+                  jszip.generateAsync({ type: "blob" }).then(function (content) {
+                    var url = window.URL.createObjectURL(content);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = "files.zip";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                  });
+                }
             }
             
             
@@ -341,22 +316,54 @@ function toggleDarkMode() {
             
             
     <script th:inline="javascript">
-    $([[${"#"+name+"-input"}]]).on("change", function() {
-    	  const files = $(this).get(0).files;
-    	  const fileNames = Array.from(files).map(f => f.name);
-    	  const selectedFilesContainer = $(this).siblings(".selected-files");
-    	  selectedFilesContainer.empty();
-    	  fileNames.forEach(fileName => {
-    	    selectedFilesContainer.append("<div>" + fileName + "</div>");
+    
+    document.addEventListener('DOMContentLoaded', function () {
+    	  const fileInput = document.getElementById('fileInput-input');
+
+    	  // Prevent default behavior for drag events
+    	  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    	    fileInput.addEventListener(eventName, preventDefaults, false);
     	  });
-    	  if (fileNames.length === 1) {
-		    $(this).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
-		  } else if (fileNames.length > 1) {
-		    $(this).siblings(".custom-file-label").addClass("selected").html(fileNames.length + " files selected");
-		  } else {
-		    $(this).siblings(".custom-file-label").addClass("selected").html([[#{pdfPrompt}]]);
-		  }
+
+    	  function preventDefaults(e) {
+    	    e.preventDefault();
+    	    e.stopPropagation();
+    	  }
+
+    	  // Add drop event listener
+    	  fileInput.addEventListener('drop', handleDrop, false);
+
+    	  function handleDrop(e) {
+    	    const dt = e.dataTransfer;
+    	    const files = dt.files;
+    	    fileInput.files = files;
+    	    handleFileInputChange(fileInput)
+    	  }
+
     	});
+    
+    
+    $([[${"#"+name+"-input"}]]).on("change", function() {
+    		handleFileInputChange(this);
+    	});
+    
+    function handleFileInputChange(inputElement) {
+      const files = $(inputElement).get(0).files;
+  	  const fileNames = Array.from(files).map(f => f.name);
+  	  const selectedFilesContainer = $(inputElement).siblings(".selected-files");
+  	  selectedFilesContainer.empty();
+  	  fileNames.forEach(fileName => {
+  	    selectedFilesContainer.append("<div>" + fileName + "</div>");
+  	  });
+  	  if (fileNames.length === 1) {
+  		$(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
+		  } else if (fileNames.length > 1) {
+			  $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames.length + " files selected");
+		  } else {
+			  $(inputElement).siblings(".custom-file-label").addClass("selected").html([[#{pdfPrompt}]]);
+		  }
+    
+    }
 
 	</script>
 

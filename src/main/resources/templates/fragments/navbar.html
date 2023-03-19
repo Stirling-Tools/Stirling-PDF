@@ -127,12 +127,12 @@ function compareVersions(version1, version2) {
 
                     <li class="nav-item"><a class="nav-link" href="#" th:href="@{rotate-pdf}" th:classappend="${currentPage}=='rotate-pdf' ? 'active' : ''" th:text="#{home.rotate.title}"></a></li>
 
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='xlsx-to-pdf' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='file-to-pdf' OR ${currentPage}=='xlsx-to-pdf' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false" th:text="#{navbar.convert}"></a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''" th:text="#{home.pdfToImage.title}"></a> 
                             <a class="dropdown-item" href="#" th:href="@{img-to-pdf}" th:classappend="${currentPage}=='img-to-pdf' ? 'active' : ''" th:text="#{home.imageToPdf.title}"></a> 
-                            <a class="dropdown-item" href="#" th:href="@{xlsx-to-pdf}" th:classappend="${currentPage}=='xlsx-to-pdf' ? 'active' : ''" th:text="#{home.xlsToPdf.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{file-to-pdf}" th:classappend="${currentPage}=='file-to-pdf' ? 'active' : ''" th:text="#{home.fileToPDF.title}"></a>
                         </div>
                     </li>
 
@@ -149,19 +149,21 @@ function compareVersions(version1, version2) {
                     </li>
                    
                    
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='add-image' OR ${currentPage}=='compress-pdf' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false" th:text="#{navbar.other}"></a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <a class="dropdown-item" href="#" th:href="@{add-image}" th:classappend="${currentPage}=='add-image' ? 'active' : ''" th:text="#{home.addImage.title}"></a> <a class="dropdown-item" href="#" th:href="@{compress-pdf}"
-                                th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''" th:text="#{home.compressPdfs.title}"></a> <a class="dropdown-item" href="#" th:href="@{remove-pages}" th:classappend="${currentPage}=='remove-pages' ? 'active' : ''" th:text="#{home.removePages.title}"></a>
+                        	<a class="dropdown-item" href="#" th:href="@{ocr-pdf}" th:classappend="${currentPage}=='ocr-pdf' ? 'active' : ''" th:text="#{home.ocr.title}"></a> 
+                            <a class="dropdown-item" href="#" th:href="@{add-image}" th:classappend="${currentPage}=='add-image' ? 'active' : ''" th:text="#{home.addImage.title}"></a> 
+                            <a class="dropdown-item" href="#" th:href="@{compress-pdf}" th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''" th:text="#{home.compressPdfs.title}"></a> 
+                            <a class="dropdown-item" href="#" th:href="@{remove-pages}" th:classappend="${currentPage}=='remove-pages' ? 'active' : ''" th:text="#{home.removePages.title}"></a>
+                        	<a class="dropdown-item" href="#" th:href="@{extract-images}" th:classappend="${currentPage}=='extract-images' ? 'active' : ''" th:text="#{home.extractImages.title}"></a>
                         </div></li>
 
 
 
                     <input type="checkbox" id="toggle-dark-mode" checked="true" th:onclick="javascript:toggleDarkMode()">
-                    <a class="nav-link" href="#" for="toggle-dark-mode" th:text="#{navbar.darkmode}"></a>
+                    <a class="nav-link" href="#" for="toggle-dark-mode" th:text="#{navbar.darkmode}" ></a>
                     
-
 
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> 
@@ -178,7 +180,7 @@ function compareVersions(version1, version2) {
                     <li class="nav-item">
                         <!-- Settings Button -->
                         <button type="button" class="btn btn-secondary float-right" data-toggle="modal" data-target="#settingsModal">
-                            <span class="glyphicon glyphicon-cog"></span> Settings/About
+                            <span class="glyphicon glyphicon-cog"></span><span th:text="#{navbar.settings}"></span>
                         </button>
                         </li>
                 </ul>
@@ -191,31 +193,41 @@ function compareVersions(version1, version2) {
     <div th:insert="~{fragments/errorBanner.html :: errorBanner}"></div>
 
     <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="settingsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content dark-card">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="settingsModalLabel">Settings</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content dark-card">
+            <div class="modal-header">
+                <h5 class="modal-title" id="settingsModalLabel" th:text="#{settings.title}"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <p class="mb-0" th:text="#{settings.appVersion} + ' ' + ${@appVersion}"></p>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="update-btn" th:text="#{settings.update}"></button>
                 </div>
-                <button type="button" class="btn btn-outline-primary" id="update-btn">Update available</button>
-                <div class="modal-body">
-                    <p th:text="'App Version: ' + ${@appVersion}"></p>
-                    <div class="form-group">
-                        <label for="downloadOption">Choose download option (For non ZIP downloads):</label> <select class="form-control" id="downloadOption">
-                            <option value="sameWindow">Open in same window (Single file downloads only)</option>
-                            <option value="newWindow">Open in new window</option>
-                            <option value="downloadFile">Download file</option>
-                        </select>
+                <div class="form-group">
+                    <label for="downloadOption" th:text="#{settings.downloadOption.title}"></label>
+                    <select class="form-control" id="downloadOption">
+                        <option value="sameWindow" th:text="#{settings.downloadOption.1}"></option>
+                        <option value="newWindow" th:text="#{settings.downloadOption.2}"></option>
+                        <option value="downloadFile" th:text="#{settings.downloadOption.3}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="zipParallelFiles">
+                        <label class="custom-control-label" for="zipParallelFiles" th:text="#{settings.zip}"></label>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{close}"></button>
             </div>
         </div>
     </div>
+</div>
+
 
     <script>
 					// Get the download option from local storage, or set it to 'sameWindow' if it doesn't exist
@@ -233,6 +245,19 @@ function compareVersions(version1, version2) {
 								localStorage.setItem('downloadOption',
 										downloadOption);
 							});
+					
+					
+					// Get the zipParallelFiles flag from local storage, or set it to false if it doesn't exist
+					var zipParallelFiles = localStorage.getItem('zipParallelFiles') === 'true';
+
+					// Set the checked state of the checkbox
+					document.getElementById('zipParallelFiles').checked = zipParallelFiles;
+
+					// Save the checked state of the checkbox to local storage when it changes
+					document.getElementById('zipParallelFiles').addEventListener('change', function () {
+					  zipParallelFiles = this.checked;
+					  localStorage.setItem('zipParallelFiles', zipParallelFiles);
+					});
 				</script>
 
 

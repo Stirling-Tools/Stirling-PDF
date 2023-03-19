@@ -13,17 +13,13 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <h2 th:text="#{fileToPDF.header}"></h2>
-
+						<p th:text="#{processTimeWarning}">
                         <form method="post" enctype="multipart/form-data" th:action="@{file-to-pdf}">
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="fileInput" name="fileInput" required> 
-                                <label class="custom-file-label" for="fileInput" th:text="#{filePrompt}"></label>
-                            </div>
-                            <br> <br>
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                            <br>
                             <button type="submit" class="btn btn-primary" th:text="#{fileToPDF.submit}"></button>
 
                         </form>
-                        <th:block th:insert="~{fragments/common :: filelist}"></th:block>
                         <p class="mt-3" th:text="#{fileToPDF.credit}"></p>
                         <p class="mt-3" th:text="#{fileToPDF.supportedFileTypes}"></p>
                         <p th:utext="#{fileToPDF.fileTypesList}"></p>

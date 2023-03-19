@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
 
-<th:block th:insert="~{fragments/common :: head(title=#{addImage.title})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{ocr.title})}"></th:block>
 
 
 <body>
@@ -13,15 +13,12 @@
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-md-6">
-                        <h2 th:text="#{ocrPDF.header}"></h2>
+                        <h2 th:text="#{ocr.header}"></h2>
 
 						 <form action="#" th:action="@{/ocr-pdf}" method="post" enctype="multipart/form-data" class="mb-3">
+				            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
 				            <div class="mb-3">
-				                <label for="fileInput" class="form-label">Choose a PDF file</label>
-				                <input type="file" name="fileInput" id="fileInput" accept="application/pdf" required class="form-control">
-				            </div>
-				            <div class="mb-3">
-							    <label for="languages" class="form-label">Select languages that are to be detected within the PDF (Ones listed are the ones currently detected):</label>
+							    <label for="languages" class="form-label" th:text="#{ocr.selectText.1}"></label>
 							    <div id="languages">
 							        <div th:each="language: ${languages}">
 							            <input type="checkbox" class="form-check-input" th:name="languages" th:value="${language}" th:id="${'language-' + language}" />
@@ -31,15 +28,13 @@
 							</div>
 							<div class="mb-3">
 						        <input type="checkbox" class="form-check-input" name="sidecar" id="sidecar" />
-						        <label class="form-check-label" for="sidecar">Produce text file containing OCR text alongside the OCR'ed PDF</label>
+						        <label class="form-check-label" for="sidecar" th:text="#{ocr.selectText.2}"></label>
 						    </div>
-				            <button type="submit" class="btn btn-primary">Process PDF with OCR</button>
+				            <button type="submit" class="btn btn-primary" th:text="#{ocr.submit}"></button>
 				        </form>
-				        <p>
-				            Please read this documentation on how to use this for other languages and/or not in docker
-				        </p>
-
-                        <th:block th:insert="~{fragments/common :: filelist}"></th:block>
+				        <p th:text="#{ocr.credit}"></p>
+				        <p th:text="#{ocr.help}"></p>
+				        <a href="https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md"></a>
                     </div>
                 </div>
             </div>

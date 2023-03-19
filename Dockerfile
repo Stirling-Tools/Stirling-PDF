@@ -35,6 +35,7 @@ RUN apt-get update && \
         python3-uno \
 		python3-pip \
         unoconv \
+		pngquant \
         ocrmypdf && \
 	pip install --user --upgrade ocrmypdf
 
@@ -52,3 +53,6 @@ ENV LOG_LEVEL=INFO
 
 # Run the application
 ENTRYPOINT ["java","-jar","/app.jar","-Dlogging.level=${LOG_LEVEL}"]
+
+
+
