@@ -10,10 +10,6 @@ sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
-	maven {
-        url "https://repo.e-iceblue.com/nexus/content/groups/public/"
-        name "com.e-iceblue"
-    }
 }
 
 dependencies {
