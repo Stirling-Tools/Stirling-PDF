@@ -134,7 +134,7 @@ public class SplitPDFController {
         ByteArrayResource resource = new ByteArrayResource(data);
         new File("split_documents.zip").delete();
         // return the Resource in the response
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=split_documents.zip").contentType(MediaType.APPLICATION_OCTET_STREAM)
+        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_split.zip").contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .contentLength(resource.contentLength()).body(resource);
     }
 }

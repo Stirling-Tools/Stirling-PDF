@@ -32,7 +32,6 @@ import org.springframework.http.ResponseEntity;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfWriter;
-import com.spire.pdf.PdfDocument;
 
 public class PdfUtils {
 
@@ -172,16 +171,7 @@ public class PdfUtils {
         return PdfUtils.boasToWebResponse(baos, docName);
     }
     
-    public static ResponseEntity<byte[]> pdfDocToWebResponse(PdfDocument document, String docName) throws IOException {
-
-        // Open Byte Array and save document to it
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        document.saveToStream(baos);
-        // Close the document
-        document.close();
-
-        return PdfUtils.boasToWebResponse(baos, docName);
-    }
+  
 
     public static ResponseEntity<byte[]> pdfDocToWebResponse(PDDocument document, String docName) throws IOException {
 

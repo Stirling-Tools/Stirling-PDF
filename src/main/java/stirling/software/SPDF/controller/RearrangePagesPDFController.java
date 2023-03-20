@@ -49,7 +49,6 @@ public class RearrangePagesPDFController {
             int pageIndex = pagesToRemove.get(i);
             document.removePage(pageIndex);
         }
-
         return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_removed_pages.pdf");
 
     }

@@ -5,34 +5,34 @@ plugins {
 }
 
 group = 'stirling.software'
-version = '0.3.4'
+version = '0.4.0'
 sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
-	maven {
-        url "https://repo.e-iceblue.com/nexus/content/groups/public/"
-        name "com.e-iceblue"
-    }
 }
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	implementation 'org.apache.pdfbox:pdfbox:2.0.27'
-	implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
-	implementation 'e-iceblue:spire.pdf.free:5.1.0'
 	
-	implementation 'org.apache.poi:poi:5.2.3'
-    implementation 'org.apache.poi:poi-ooxml:5.2.3'
+	implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
+	
+	//general PDF
+    implementation 'org.apache.pdfbox:pdfbox:2.0.27'
     implementation 'com.itextpdf:itextpdf:5.5.13.3'
     
-    
+
 }
 
 jar {
     enabled = false
+    manifest {
+        attributes 'Implementation-Title': 'Stirling-PDF',
+                   'Implementation-Version': project.version
+    }
+    
 }
 
 tasks.named('test') {
@@ -42,4 +42,3 @@ tasks.named('test') {
 task printVersion {
   println project.version
 }
-

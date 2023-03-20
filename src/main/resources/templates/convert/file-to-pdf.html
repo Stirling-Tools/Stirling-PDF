@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{fileToPDF.title})}"></th:block>
+
+
+<body>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{fileToPDF.header}"></h2>
+						<p th:text="#{processTimeWarning}">
+                        <form method="post" enctype="multipart/form-data" th:action="@{file-to-pdf}">
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                            <br>
+                            <button type="submit" class="btn btn-primary" th:text="#{fileToPDF.submit}"></button>
+
+                        </form>
+                        <p class="mt-3" th:text="#{fileToPDF.credit}"></p>
+                        <p class="mt-3" th:text="#{fileToPDF.supportedFileTypes}"></p>
+                        <p th:utext="#{fileToPDF.fileTypesList}"></p>
+                        <a href="https://help.libreoffice.org/latest/en-US/text/shared/guide/supported_formats.html">https://help.libreoffice.org/latest/en-US/text/shared/guide/supported_formats.html</a>
+                        
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
+</body>
+</html>
