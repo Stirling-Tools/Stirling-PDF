@@ -35,6 +35,7 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 - Edit metadata
 - Dark mode support.
 - Custom download options
+- Parallel file processing and downloads
 
 ## Technologies used
 - Spring Boot + Thymeleaf
