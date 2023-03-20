@@ -117,7 +117,7 @@ function toggleDarkMode() {
                         const contentDispositionHeader = response.headers.get('Content-Disposition');
                         console.log(contentDispositionHeader)
                         if (contentDispositionHeader && contentDispositionHeader.indexOf('attachment') !== -1) {
-                            filename = contentDispositionHeader.match(/filename=(.+)$/)[1];
+                        	filename = contentDispositionHeader.split('filename=')[1].replace(/"/g, '');
                         } else {
                             // If the Content-Disposition header is not present or does not contain the filename, use a default filename
                             filename = 'download';

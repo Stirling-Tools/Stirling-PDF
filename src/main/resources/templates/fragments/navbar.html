@@ -172,8 +172,11 @@ function compareVersions(version1, version2) {
                         </svg>
                          </a>
                         <div class="dropdown-menu" aria-labelledby="languageDropdown">
-                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_US">English (US)</a> <a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_GB">English (UK)</a> <a class="dropdown-item lang_dropdown-item" href="" data-language-code="ar_AR">العربية</a>
-                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="de_DE">Deutsch</a> <a class="dropdown-item lang_dropdown-item" href="" data-language-code="fr_FR">Français</a>
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_US">English (US)</a> 
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_GB">English (UK)</a> 
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="ar_AR">العربية</a>
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="de_DE">Deutsch</a> 
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="fr_FR">Français</a>
                         </div>
                     </li>
                     
@@ -204,7 +207,10 @@ function compareVersions(version1, version2) {
             <div class="modal-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <p class="mb-0" th:text="#{settings.appVersion} + ' ' + ${@appVersion}"></p>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="update-btn" th:text="#{settings.update}"></button>
+                    <a href="https://github.com/Frooodle/Stirling-PDF/releases" target="_blank">
+					    <button type="button" class="btn btn-sm btn-outline-primary" id="update-btn" th:text="#{settings.update}"></button>
+					</a>
+
                 </div>
                 <div class="form-group">
                     <label for="downloadOption" th:text="#{settings.downloadOption.title}"></label>
