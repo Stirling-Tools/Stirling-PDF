@@ -25,17 +25,23 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 - Reorganize PDF pages into different orders.
 - Add images to PDFs at specified locations. (WIP)
 - Rotating PDFs in 90 degree increments.
-- Compressing PDFs to decrease their filesize.
+- Compressing PDFs to decrease their filesize. (Using OCRMyPDF)
 - Add and remove passwords
 - Set PDF Permissions
 - Add watermark(s)
+- Convert Any common file to PDF (using LibreOffice)
+- Extract images from PDF
+- OCR on PDF (Using OCRMyPDF)
 - Edit metadata
 - Dark mode support.
+- Custom download options
+- Parallel file processing and downloads
 
 ## Technologies used
 - Spring Boot + Thymeleaf
 - PDFBox
-- e-iceblue spire.pdf.free (for PDF compression untill i find a nicer way)
+- LibreOffice for advanced conversions
+- OcrMyPdf https://github.com/ocrmypdf/OCRmyPDF
 - HTML, CSS, JavaScript
 - Docker
 
