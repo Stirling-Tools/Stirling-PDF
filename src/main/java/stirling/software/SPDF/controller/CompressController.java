@@ -80,6 +80,8 @@ public class CompressController {
         // Prepare the OCRmyPDF command
         List<String> command = new ArrayList<>();
         command.add("ocrmypdf");
+        command.add("--skip-text");
+        command.add("--tesseract-timeout=0");
         command.add("--optimize");
         command.add(String.valueOf(optimizeLevel));
 
