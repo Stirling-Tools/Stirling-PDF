@@ -27,6 +27,45 @@
                                 <input type="text" id="fontSize" name="fontSize" class="form-control" value="30" />
                             </div>
                             <div class="form-group">
+							    <label for="opacity" th:text="#{watermark.selectText.7}"></label> 
+							    <input type="text" id="opacity" name="opacityText" class="form-control" value="50" onblur="updateopacityValue()" />
+							    <input type="hidden" id="opacityReal" name="opacity" value="0.5">
+							</div>
+
+    
+    						<script>
+							    const opacityInput = document.getElementById('opacity');
+							    const opacityRealInput = document.getElementById('opacityReal');
+							
+							    const updateopacityValue = () => {
+							        let percentageValue = parseFloat(opacityInput.value.replace('%', ''));
+							        if (isNaN(percentageValue)) {
+							            percentageValue = 0;
+							        }
+							        percentageValue = Math.min(Math.max(percentageValue, 0), 100);
+							        opacityInput.value = `${percentageValue}`;
+							        opacityRealInput.value = (percentageValue / 100).toFixed(2);
+							    };
+							
+							    const appendPercentageSymbol = () => {
+							        if (!opacityInput.value.endsWith('%')) {
+							            opacityInput.value += '%';
+							        }
+							    };
+							
+							    opacityInput.addEventListener('focus', () => {
+							        opacityInput.value = opacityInput.value.replace('%', '');
+							    });
+							    opacityInput.addEventListener('blur', () => {
+							        updateopacityValue();
+							        appendPercentageSymbol();
+							    });
+							
+							    // Set initial values
+							    updateopacityValue();
+							    appendPercentageSymbol();
+							</script>
+                            <div class="form-group">
                                 <label for="rotation" th:text="#{watermark.selectText.4}"></label> 
                                 <input type="text" id="rotation" name="rotation" class="form-control" value="45" />
                             </div>

@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WatermarkRemover;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 
 @Controller
 public class WatermarkController {
@@ -45,7 +46,8 @@ public class WatermarkController {
     @PostMapping("/add-watermark")
     public ResponseEntity<byte[]> addWatermark(@RequestParam("fileInput") MultipartFile pdfFile, @RequestParam("watermarkText") String watermarkText,
             @RequestParam(defaultValue = "30", name = "fontSize") float fontSize, @RequestParam(defaultValue = "0", name = "rotation") float rotation,
-            @RequestParam(defaultValue = "50", name = "widthSpacer") int widthSpacer, @RequestParam(defaultValue = "50", name = "heightSpacer") int heightSpacer)
+            @RequestParam(defaultValue = "0.5", name = "opacity") float opacity,
+    	@RequestParam(defaultValue = "50", name = "widthSpacer") int widthSpacer, @RequestParam(defaultValue = "50", name = "heightSpacer") int heightSpacer)
             throws IOException {
 
         // Load the input PDF
@@ -53,9 +55,18 @@ public class WatermarkController {
 
         // Create a page in the document
         for (PDPage page : document.getPages()) {
+        	
+        	
+
+            
             // Get the page's content stream
             PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true);
 
+            // Set transparency
+            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+            graphicsState.setNonStrokingAlphaConstant(opacity);
+            contentStream.setGraphicsStateParameters(graphicsState);
+            
             // Set font of watermark
             PDFont font = PDType1Font.HELVETICA_BOLD;
             contentStream.beginText();
