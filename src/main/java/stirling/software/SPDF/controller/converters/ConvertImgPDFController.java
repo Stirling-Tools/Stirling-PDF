@@ -38,12 +38,13 @@ public class ConvertImgPDFController {
     }
 
     @PostMapping("/img-to-pdf")
-    public ResponseEntity<byte[]> convertToPdf(@RequestParam("fileInput") MultipartFile file) throws IOException {
+    public ResponseEntity<byte[]> convertToPdf(@RequestParam("fileInput") MultipartFile[] file,
+            @RequestParam(defaultValue = "false", name = "stretchToFit") boolean stretchToFit,
+            @RequestParam(defaultValue = "true", name = "autoRotate") boolean autoRotate) throws IOException {
         // Convert the file to PDF and get the resulting bytes
-        byte[] bytes = PdfUtils.convertToPdf(file.getInputStream());
-        logger.info("File {} successfully converted to pdf", file.getOriginalFilename());
-
-        return PdfUtils.bytesToWebResponse(bytes, file.getOriginalFilename().replaceFirst("[.][^.]+$", "")+ "_coverted.pdf");
+        System.out.println(stretchToFit);
+        byte[] bytes = PdfUtils.imageToPdf(file, stretchToFit, autoRotate);
+        return PdfUtils.bytesToWebResponse(bytes, file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")+ "_coverted.pdf");
     }
 
     @PostMapping("/pdf-to-img")

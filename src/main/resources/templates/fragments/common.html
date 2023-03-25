@@ -2,6 +2,7 @@
 
 <!-- Metadata -->
 <meta charset="UTF-8">
+
 <title th:text="'S-PDF ' + ${title}"></title>
 <link rel="shortcut icon" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -63,10 +64,10 @@ function toggleDarkMode() {
 
 	</script>
 </head>
-<th:block th:fragment="fileSelector(name, multiple)">
+<th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*'">
     <div class="custom-file-chooser">
   <div class="custom-file">
-    <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" multiple>
+    <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple>
     <label class="custom-file-label" th:for="${name}+'-input'" th:text="#{pdfPrompt}"></label>
   </div>
   <div class="selected-files"></div>
@@ -90,7 +91,9 @@ function toggleDarkMode() {
             	event.preventDefault(); // Prevent the default form handling behavior
                  /* Check if ${multiple} is false */
                  var multiple = [[${multiple}]] || false;
-                 if (!multiple && files.length > 1) {
+                 var override = $('#override').val() || '';
+                 console.log("override=" + override)
+                 if (override === 'multi' || (!multiple && files.length > 1) && override !== 'single' ) {
                 	 console.log("multi parallel download")
                      submitMultiPdfForm(event,url);
                  } else {
@@ -208,8 +211,9 @@ function toggleDarkMode() {
                 progressBar.attr('aria-valuenow', 0);
                 progressBar.attr('aria-valuemax', files.length);
 				
-             	// Check the flag in localStorage
-                const zipFiles = localStorage.getItem('zipParallelFiles') === 'true';
+             	// Check the flag in localStorage, default to 4
+                const zipThreshold = parseInt(localStorage.getItem('zipThreshold'), 10) || 4;
+                const zipFiles = files.length > zipThreshold;
 
                 // Initialize JSZip instance if needed
                 let jszip = null;
@@ -355,6 +359,7 @@ function toggleDarkMode() {
   	  fileNames.forEach(fileName => {
   	    selectedFilesContainer.append("<div>" + fileName + "</div>");
   	  });
+  	  console.log("fileNames.length=" + fileNames.length)
   	  if (fileNames.length === 1) {
   		$(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
 		  } else if (fileNames.length > 1) {

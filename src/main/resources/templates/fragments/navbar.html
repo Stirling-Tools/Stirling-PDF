@@ -206,25 +206,24 @@ function compareVersions(version1, version2) {
             </div>
             <div class="modal-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <p class="mb-0" th:text="#{settings.appVersion} + ' ' + ${@appVersion}"></p>
+                    <p class="mb-0" th:utext="#{settings.appVersion} + ' ' + ${@appVersion}"></p>
                     <a href="https://github.com/Frooodle/Stirling-PDF/releases" target="_blank">
-					    <button type="button" class="btn btn-sm btn-outline-primary" id="update-btn" th:text="#{settings.update}"></button>
+					    <button type="button" class="btn btn-sm btn-outline-primary" id="update-btn" th:utext="#{settings.update}"></button>
 					</a>
 
                 </div>
                 <div class="form-group">
-                    <label for="downloadOption" th:text="#{settings.downloadOption.title}"></label>
+                    <label for="downloadOption" th:utext="#{settings.downloadOption.title}"></label>
                     <select class="form-control" id="downloadOption">
-                        <option value="sameWindow" th:text="#{settings.downloadOption.1}"></option>
-                        <option value="newWindow" th:text="#{settings.downloadOption.2}"></option>
-                        <option value="downloadFile" th:text="#{settings.downloadOption.3}"></option>
+                        <option value="sameWindow" th:utext="#{settings.downloadOption.1}"></option>
+                        <option value="newWindow" th:utext="#{settings.downloadOption.2}"></option>
+                        <option value="downloadFile" th:utext="#{settings.downloadOption.3}"></option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input" id="zipParallelFiles">
-                        <label class="custom-control-label" for="zipParallelFiles" th:text="#{settings.zip}"></label>
-                    </div>
+                    <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label>
+                    <input type="range" class="custom-range" min="0" max="9" step="1" id="zipThreshold" value="4">
+                    <span id="zipThresholdValue" class="ml-2"></span>
                 </div>
             </div>
             <div class="modal-footer">
@@ -253,17 +252,20 @@ function compareVersions(version1, version2) {
 							});
 					
 					
-					// Get the zipParallelFiles flag from local storage, or set it to false if it doesn't exist
-					var zipParallelFiles = localStorage.getItem('zipParallelFiles') === 'true';
+					// Get the zipThreshold value from local storage, or set it to 0 if it doesn't exist
+					var zipThreshold = parseInt(localStorage.getItem('zipThreshold'), 10) || 4;
 
-					// Set the checked state of the checkbox
-					document.getElementById('zipParallelFiles').checked = zipParallelFiles;
+					// Set the value of the slider and the display span
+					document.getElementById('zipThreshold').value = zipThreshold;
+					document.getElementById('zipThresholdValue').textContent = zipThreshold;
 
-					// Save the checked state of the checkbox to local storage when it changes
-					document.getElementById('zipParallelFiles').addEventListener('change', function () {
-					  zipParallelFiles = this.checked;
-					  localStorage.setItem('zipParallelFiles', zipParallelFiles);
+					// Save the selected value to local storage when the slider value changes
+					document.getElementById('zipThreshold').addEventListener('input', function () {
+					    zipThreshold = this.value;
+					    document.getElementById('zipThresholdValue').textContent = zipThreshold;
+					    localStorage.setItem('zipThreshold', zipThreshold);
 					});
+
 				</script>
 
 

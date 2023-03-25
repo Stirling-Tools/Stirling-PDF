@@ -15,7 +15,7 @@
                         <h2 th:text="#{pdfOrganiser.header}"></h2>
 
                         <form th:action="@{rearrange-pages}" method="post" enctype="multipart/form-data">
-                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <div class="form-group">
                                 <label for="pageOrder" th:text="#{pageOrderPrompt}"></label> 
                                 <input type="text" class="form-control" id="fileInput" name="pageOrder" placeholder="(e.g. 1,3,2 or 4-8,2,10-12)" required>

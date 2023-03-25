@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +29,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
@@ -37,48 +39,99 @@ public class PdfUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
 
-    public static byte[] convertToPdf(InputStream imageStream) throws IOException {
-
-        // Create a File object for the image
-        File imageFile = new File("image.jpg");
-
-        try (FileOutputStream fos = new FileOutputStream(imageFile); InputStream input = imageStream) {
-            byte[] buffer = new byte[1024];
-            int len;
-            // Read from the input stream and write to the file
-            while ((len = input.read(buffer)) != -1) {
-                fos.write(buffer, 0, len);
-            }
-            logger.info("Image successfully written to file: {}", imageFile.getAbsolutePath());
-        } catch (IOException e) {
-            logger.error("Error writing image to file: {}", imageFile.getAbsolutePath(), e);
-            throw e;
-        }
-
+    public static byte[] imageToPdf(MultipartFile[] files, boolean stretchToFit, boolean autoRotate) throws IOException {
         try (PDDocument doc = new PDDocument()) {
-            // Create a new PDF page
-            PDPage page = new PDPage();
-            doc.addPage(page);
+            for (MultipartFile file : files) {
+                // Create a temporary file for the image
+                File imageFile = Files.createTempFile("image", ".jpg").toFile();
 
-            // Create an image object from the image file
-            PDImageXObject image = PDImageXObject.createFromFileByContent(imageFile, doc);
+                try (FileOutputStream fos = new FileOutputStream(imageFile); InputStream input = file.getInputStream()) {
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    // Read from the input stream and write to the file
+                    while ((len = input.read(buffer)) != -1) {
+                        fos.write(buffer, 0, len);
+                    }
+                    logger.info("Image successfully written to file: {}", imageFile.getAbsolutePath());
+                } catch (IOException e) {
+                    logger.error("Error writing image to file: {}", imageFile.getAbsolutePath(), e);
+                    throw e;
+                }
 
-            try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
-                // Draw the image onto the page
-                contentStream.drawImage(image, 0, 0);
-                logger.info("Image successfully added to PDF");
-            } catch (IOException e) {
-                logger.error("Error adding image to PDF", e);
-                throw e;
+                // Create a new PDF page
+                PDPage page = new PDPage();
+                doc.addPage(page);
+
+                // Create an image object from the image file
+                PDImageXObject image = PDImageXObject.createFromFileByContent(imageFile, doc);
+
+                float pageWidth = page.getMediaBox().getWidth();
+                float pageHeight = page.getMediaBox().getHeight();
+
+                if (autoRotate && ((image.getWidth() > image.getHeight() && pageHeight > pageWidth) || (image.getWidth() < image.getHeight() && pageWidth > pageHeight))) {
+                    // Rotate the page 90 degrees if the image better fits the page in landscape orientation
+                    page.setRotation(90);
+                    pageWidth = page.getMediaBox().getHeight();
+                    pageHeight = page.getMediaBox().getWidth();
+                }
+
+                try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
+                    if (stretchToFit) {
+                        if (page.getRotation() == 0 || page.getRotation() == 180) {
+                            // Stretch the image to fit the whole page
+                            contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
+                        } else {
+                            // Adjust the width and height of the page when rotated
+                            contentStream.drawImage(image, 0, 0, pageHeight, pageWidth);
+                        }
+                        logger.info("Image successfully added to PDF, stretched to fit page");
+                    } else {
+                        // Ensure the image fits the page but maintain the image's aspect ratio
+                        float imageAspectRatio = (float) image.getWidth() / (float) image.getHeight();
+                        float pageAspectRatio = pageWidth / pageHeight;
+
+                        // Determine the scale factor to fit the image onto the page
+                        float scaleFactor = 1.0f;
+                        if (imageAspectRatio > pageAspectRatio) {
+                            // Image is wider than the page, scale to fit the width
+                            scaleFactor = pageWidth / image.getWidth();
+                        } else {
+                            // Image is taller than the page, scale to fit the height
+                            scaleFactor = pageHeight / image.getHeight();
+                        }
+
+                        // Calculate the position of the image on the page
+                        float xPos = (pageWidth - (image.getWidth() * scaleFactor)) / 2;
+                        float yPos = (pageHeight - (image.getHeight() * scaleFactor)) / 2;
+
+                        // Draw the image onto the page
+                        if (page.getRotation() == 0 || page.getRotation() == 180) {
+                            contentStream.drawImage(image, xPos, yPos, image.getWidth() * scaleFactor, image.getHeight() * scaleFactor);
+                        } else {
+                            // Adjust the width and height of the page when rotated
+                            contentStream.drawImage(image, yPos, xPos, image.getHeight() * scaleFactor, image.getWidth() * scaleFactor);
+                        }
+                        logger.info("Image successfully added to PDF, maintaining aspect ratio");
+                    }
+                } catch (IOException e) {
+                    logger.error("Error adding image to PDF", e);
+                    throw e;
+                }
+
+                // Delete the temporary file
+                imageFile.delete();
             }
 
             // Create a ByteArrayOutputStream to save the PDF to
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             doc.save(byteArrayOutputStream);
             logger.info("PDF successfully saved to byte array");
+
             return byteArrayOutputStream.toByteArray();
         }
+
     }
+
 
     public static byte[] convertFromPdf(byte[] inputStream, String imageType, ImageType colorType, boolean singleImage, int DPI)
             throws IOException, Exception {

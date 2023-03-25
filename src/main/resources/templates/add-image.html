@@ -15,9 +15,9 @@
                     <div class="col-md-6">
                         <h2 th:text="#{addImage.header}"></h2>
                         <form method="post" th:action="@{add-image}" enctype="multipart/form-data">
-                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="fileInput2" name="fileInput2" required> 
+                                <input type="file" class="custom-file-input" id="fileInput2" name="fileInput2" accept="image/*" required> 
                                 <label class="custom-file-label" for="fileInput2" th:text="#{imgPrompt}"></label>
                             </div>
                             <div class="form-group">

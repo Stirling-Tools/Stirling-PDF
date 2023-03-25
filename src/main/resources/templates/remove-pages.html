@@ -15,7 +15,7 @@
             <h2 th:text="#{pageRemover.header}"></h2>
 
             <form th:action="@{remove-pages}" method="post" enctype="multipart/form-data">
-              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
               <div class="form-group">
                 <label for="pagesToDelete" th:text="#{pageRemover.pagesToDelete}"></label> 
                 <input type="text" class="form-control" id="fileInput" name="pagesToDelete" placeholder="(e.g. 1,2,6 or 1-10,15-30)" required>

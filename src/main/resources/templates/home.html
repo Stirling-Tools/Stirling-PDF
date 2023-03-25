@@ -40,7 +40,9 @@
 
             <!-- Features -->
             <div class="features-container container">
+                
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.merge.title}, cardText=#{home.merge.desc}, cardLink='merge-pdfs')}"></div>
+                
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.split.title}, cardText=#{home.split.desc}, cardLink='split-pdfs')}"></div>
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.rotate.title}, cardText=#{home.rotate.desc}, cardLink='rotate-pdf')}"></div>
 
