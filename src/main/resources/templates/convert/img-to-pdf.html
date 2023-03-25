@@ -18,7 +18,7 @@
                         
                            
                             
-                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*', inputText='hi')}"></div>
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*', inputText=#{imgPrompt})}"></div>
 
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input" name="stretchToFit" id="stretchToFit"> 
