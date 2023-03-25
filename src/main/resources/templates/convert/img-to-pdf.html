@@ -19,22 +19,22 @@
                            
                             
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*')}"></div>
-                                
+
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input" name="stretchToFit" id="stretchToFit"> 
-                                <label class="ml-3" for="stretchToFit">Stretch to fit</label>
+                                <label class="ml-3" for="stretchToFit" th:text=#{imageToPDF.selectText.1}></label>
                             </div>
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input" name="autoRotate" id="autoRotate"> 
-                                <label class="ml-3" for="autoRotate">Auto rotate PDF</label>
+                                <label class="ml-3" for="autoRotate" th:text=#{imageToPDF.selectText.2}></label>
                             </div>
                             <br>
                             <input type="hidden" id="override" name="override" value="multi">
                             <div class="form-group">
-                                <label>Multi file logic (Only enabled if working with multiple images)</label> 
+                                <label th:text=#{imageToPDF.selectText.3}></label> 
                                 <select class="form-control" id="conversionType" name="conversionType" disabled>
-                                    <option value="merge">Merge into single PDF</option>
-                                    <option value="convert" selected>Convert to separate PDFs</option>
+                                    <option value="merge" th:text=#{imageToPDF.selectText.4}></option>
+                                    <option value="convert" th:text=#{imageToPDF.selectText.5} selected></option>
                                 </select>
                             </div>
                             
