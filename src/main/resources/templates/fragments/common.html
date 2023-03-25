@@ -64,11 +64,11 @@ function toggleDarkMode() {
 
 	</script>
 </head>
-<th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*'">
+<th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}">
     <div class="custom-file-chooser">
   <div class="custom-file">
     <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple>
-    <label class="custom-file-label" th:for="${name}+'-input'" th:text="#{pdfPrompt}"></label>
+    <label class="custom-file-label" th:for="${name}+'-input'" th:text="${inputText}"></label>
   </div>
   <div class="selected-files"></div>
 </div>
