@@ -16,7 +16,7 @@
                         <form method="post" enctype="multipart/form-data" action="remove-watermark">
                             <div class="form-group">
                                 <label th:text="#{remove-watermark.selectText.1}"></label>
-                                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             </div>
                             <div class="form-group">
                                 <label for="watermarkText" th:text="#{remove-watermark.selectText.2}"></label> 

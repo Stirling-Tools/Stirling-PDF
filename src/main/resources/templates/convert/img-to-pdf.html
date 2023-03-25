@@ -15,13 +15,56 @@
                         <h2 th:text="#{imageToPDF.header}"></h2>
 
                         <form method="post" enctype="multipart/form-data" th:action="@{img-to-pdf}">
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="fileInput" name="fileInput" required> 
-                                <label class="custom-file-label" for="fileInput" th:text="#{imgPrompt}"></label>
+                        
+                           
+                            
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*')}"></div>
+
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="stretchToFit" id="stretchToFit"> 
+                                <label class="ml-3" for="stretchToFit" th:text=#{imageToPDF.selectText.1}></label>
                             </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="autoRotate" id="autoRotate"> 
+                                <label class="ml-3" for="autoRotate" th:text=#{imageToPDF.selectText.2}></label>
+                            </div>
+                            <br>
+                            <input type="hidden" id="override" name="override" value="multi">
+                            <div class="form-group">
+                                <label th:text=#{imageToPDF.selectText.3}></label> 
+                                <select class="form-control" id="conversionType" name="conversionType" disabled>
+                                    <option value="merge" th:text=#{imageToPDF.selectText.4}></option>
+                                    <option value="convert" th:text=#{imageToPDF.selectText.5} selected></option>
+                                </select>
+                            </div>
+                            
                             <br> <br>
                             <button type="submit" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
-
+  <script>
+                                 $('#fileInput-input').on('change', function() {
+                                    var files = document.getElementById("fileInput-input").files;
+                                    var conversionType = document.getElementById("conversionType");
+                                    console.log("files.length=" + files.length)
+                                    if (files.length > 1) {
+                                        conversionType.disabled = false;
+                                    } else {
+                                        conversionType.disabled = true;
+                                    }
+                                 });
+                                
+                                $('#conversionType').change(function() {
+                                    var selectedValue = $(this).val();
+                                    var override = document.getElementById("override");    
+                                    console.log("selectedValue=" + selectedValue)
+                                    if (selectedValue === 'merge') {
+                                        override.value = "single";                          
+                                    } else if (selectedValue === 'convert') {
+                                        override.value = "multi";
+                                    }
+                                });
+                                
+                            </script>
+                                
                         </form>
                     </div>
                 </div>

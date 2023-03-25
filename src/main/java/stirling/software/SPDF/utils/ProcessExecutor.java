@@ -1,13 +1,11 @@
 package stirling.software.SPDF.utils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.List;
-import java.io.BufferedReader;
 import java.util.ArrayList;
+import java.util.List;
 public class ProcessExecutor {
 	public static int runCommandWithOutputHandling(List<String> command) throws IOException, InterruptedException {
 	    ProcessBuilder processBuilder = new ProcessBuilder(command);

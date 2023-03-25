@@ -14,7 +14,7 @@
                         <h2 th:text="#{changeMetadata.header}"></h2>
 
                         <form method="post" id="form1" enctype="multipart/form-data" th:action="@{/update-metadata}">
-                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <p class="text-muted" th:text="#{changeMetadata.selectText.1}"></p>
 
                             <div class="form-group-inline form-check">

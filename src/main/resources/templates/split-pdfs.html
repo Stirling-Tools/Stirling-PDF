@@ -24,7 +24,7 @@
                         <p th:text="#{split.desc.8}"></p>
 
                         <form th:action="@{split-pages}" method="post" enctype="multipart/form-data">
-                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
 
                             <div class="form-group">
                                 <label for="pages" th:text="#{split.splitPages}"></label> 

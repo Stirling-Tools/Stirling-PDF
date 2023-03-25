@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,7 +9,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -108,7 +106,7 @@ public class SplitPDFController {
         document.close();
 
         // create the zip file
-        Path zipFile = Paths.get("split_documents.zip");
+        Path zipFile = Files.createTempFile("split_documents", ".zip");
         URI uri = URI.create("jar:file:" + zipFile.toUri().getPath());
         Map<String, String> env = new HashMap<>();
         env.put("create", "true");
@@ -132,7 +130,7 @@ public class SplitPDFController {
         logger.info("Successfully created zip file with split documents: {}", zipFile.toString());
         byte[] data = Files.readAllBytes(zipFile);
         ByteArrayResource resource = new ByteArrayResource(data);
-        new File("split_documents.zip").delete();
+        Files.delete(zipFile);
         // return the Resource in the response
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_split.zip").contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .contentLength(resource.contentLength()).body(resource);
