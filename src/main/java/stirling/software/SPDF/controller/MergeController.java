@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.SPDF.utils.PdfUtils;
+
 @Controller
 public class MergeController {
 
@@ -33,7 +35,7 @@ public class MergeController {
     }
 
     @PostMapping("/merge-pdfs")
-    public ResponseEntity<InputStreamResource> mergePdfs(@RequestParam("fileInput") MultipartFile[] files) throws IOException {
+    public ResponseEntity<byte[]> mergePdfs(@RequestParam("fileInput") MultipartFile[] files) throws IOException {
         // Read the input PDF files into PDDocument objects
         List<PDDocument> documents = new ArrayList<>();
 
@@ -43,15 +45,9 @@ public class MergeController {
         }
 
         PDDocument mergedDoc = mergeDocuments(documents);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        mergedDoc.save(byteArrayOutputStream);
-        mergedDoc.close();
-
-        // Create an InputStreamResource from the merged PDF
-        InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
 
         // Return the merged PDF as a response
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(resource);
+        return PdfUtils.pdfDocToWebResponse(mergedDoc, files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")+ "_merged.pdf");
     }
 
     private PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
