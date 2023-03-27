@@ -31,7 +31,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 @Controller
 public class SplitPDFController {
 
@@ -105,32 +106,33 @@ public class SplitPDFController {
         // closing the original document
         document.close();
 
-        // create the zip file
         Path zipFile = Files.createTempFile("split_documents", ".zip");
-        URI uri = URI.create("jar:file:" + zipFile.toUri().getPath());
-        Map<String, String> env = new HashMap<>();
-        env.put("create", "true");
-        FileSystem zipfs = FileSystems.newFileSystem(uri, env);
 
-        // loop through the split documents and write them to the zip file
-        for (int i = 0; i < splitDocumentsBoas.size(); i++) {
-            String fileName = "split_document_" + (i + 1) + ".pdf";
-            ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
-            byte[] pdf = baos.toByteArray();
-            Path pathInZipfile = zipfs.getPath(fileName);
-            try (OutputStream os = Files.newOutputStream(pathInZipfile)) {
-                os.write(pdf);
+        try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+            // loop through the split documents and write them to the zip file
+            for (int i = 0; i < splitDocumentsBoas.size(); i++) {
+                String fileName = "split_document_" + (i + 1) + ".pdf";
+                ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
+                byte[] pdf = baos.toByteArray();
+
+                // Add PDF file to the zip
+                ZipEntry pdfEntry = new ZipEntry(fileName);
+                zipOut.putNextEntry(pdfEntry);
+                zipOut.write(pdf);
+                zipOut.closeEntry();
+
                 logger.info("Wrote split document {} to zip file", fileName);
-            } catch (Exception e) {
-                logger.error("Failed writing to zip", e);
-                throw e;
             }
+        } catch (Exception e) {
+            logger.error("Failed writing to zip", e);
+            throw e;
         }
-        zipfs.close();
+
         logger.info("Successfully created zip file with split documents: {}", zipFile.toString());
         byte[] data = Files.readAllBytes(zipFile);
         ByteArrayResource resource = new ByteArrayResource(data);
         Files.delete(zipFile);
+
         // return the Resource in the response
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_split.zip").contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .contentLength(resource.contentLength()).body(resource);
