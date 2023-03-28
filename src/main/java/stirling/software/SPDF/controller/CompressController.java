@@ -69,7 +69,7 @@ public class CompressController {
         command.add(tempInputFile.toString());
         command.add(tempOutputFile.toString());
 
-        int returnCode = ProcessExecutor.runCommandWithOutputHandling(command);
+        int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
         
         // Read the optimized PDF file
         byte[] pdfBytes = Files.readAllBytes(tempOutputFile);

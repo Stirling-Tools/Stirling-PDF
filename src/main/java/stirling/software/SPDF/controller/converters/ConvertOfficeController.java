@@ -53,7 +53,7 @@ public byte[] convertToPdf(MultipartFile inputFile) throws IOException, Interrup
             "-o",
             tempOutputFile.toString(),
             tempInputFile.toString()));
-    int returnCode = ProcessExecutor.runCommandWithOutputHandling(command);
+    int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE).runCommandWithOutputHandling(command);
 
     // Read the converted PDF file
     byte[] pdfBytes = Files.readAllBytes(tempOutputFile);

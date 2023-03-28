@@ -28,6 +28,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import stirling.software.SPDF.utils.ProcessExecutor;
 //import com.spire.pdf.*;
+import java.util.concurrent.Semaphore;
 @Controller
 public class OCRController {
 
@@ -41,10 +42,13 @@ public class OCRController {
 		return modelAndView;
 	}
 
+	private final Semaphore semaphore = new Semaphore(2);
+	
 	@PostMapping("/ocr-pdf")
 	public ResponseEntity<byte[]> processPdfWithOCR(@RequestParam("fileInput") MultipartFile inputFile,
 			@RequestParam("languages") List<String> selectedLanguages,
 			@RequestParam(name = "sidecar", required = false) Boolean sidecar) throws IOException, InterruptedException {
+
 
 		//--output-type pdfa
 		if (selectedLanguages == null || selectedLanguages.size() < 1) {
@@ -60,18 +64,26 @@ public class OCRController {
 
 		// Run OCR Command
 	    String languageOption = String.join("+", selectedLanguages);
-	    List<String> command = new ArrayList<>(Arrays.asList("ocrmypdf","--verbose", "2", "--language", languageOption,
-	            tempInputFile.toString(), tempOutputFile.toString()));
+	    
+	    List<String> command = new ArrayList<>(Arrays.asList("ocrmypdf","--verbose", "2"));
+	    		
+	    
 	    String sidecarFile = tempOutputFile.toString().replace(".pdf", ".txt");
 	    if (sidecar != null && sidecar) {
 	        command.add("--sidecar");
 	        command.add(sidecarFile);
 	    }
-	    int returnCode = ProcessExecutor.runCommandWithOutputHandling(command);
-
+	    
+	    command.addAll(Arrays.asList("--language", languageOption,
+	            tempInputFile.toString(), tempOutputFile.toString()));
+	    
+	    //Run CLI command
+	    int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
+        
 		// Read the OCR processed PDF file
 		byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
-
+		
+	    
 		// Clean up the temporary files
 		Files.delete(tempInputFile);
 		// Return the OCR processed PDF as a response
