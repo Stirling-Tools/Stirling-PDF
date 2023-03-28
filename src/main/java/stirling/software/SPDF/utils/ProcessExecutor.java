@@ -1,13 +1,13 @@
 package stirling.software.SPDF.utils;
 
 import java.io.BufferedReader;
+import java.util.concurrent.ConcurrentHashMap;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.concurrent.Semaphore;
 public class ProcessExecutor {
 	
@@ -16,7 +16,8 @@ public class ProcessExecutor {
         OCR_MY_PDF
     }
 
-    private static final Map<Processes, ProcessExecutor> instances = new HashMap<>();
+	private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
+
 
     private final Semaphore semaphore;
 
@@ -27,7 +28,7 @@ public class ProcessExecutor {
     public static ProcessExecutor getInstance(Processes processType) {
         return instances.computeIfAbsent(processType, key -> {
             int semaphoreLimit = switch (key) {
-                case LIBRE_OFFICE -> 2; 
+                case LIBRE_OFFICE -> 1; 
                 case OCR_MY_PDF -> 2; 
             };
             return new ProcessExecutor(semaphoreLimit);
