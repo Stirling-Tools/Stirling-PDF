@@ -80,7 +80,10 @@ Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 ## Want to add your own language?
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
-And please create a PR to merge it back in so others can use it! Also please note as i add new features i will google translate existing languages so that they dont lose support. This could mean that new features need grammer corrections as added.
+
+And please create a PR to merge it back in so others can use it! 
+
+Also please note as i add new features i will google translate existing languages so that they dont lose support. This could mean that new features need grammer corrections as added.
 
 ## How to View
 1. Open a web browser and navigate to `http://localhost:8080/`
