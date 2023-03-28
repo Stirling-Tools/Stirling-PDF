@@ -15,7 +15,7 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 
 
 ![stirling-home](images/stirling-home.png)
-
+![stirling-home](images/settings.png)
 
 ## Features
 
