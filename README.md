@@ -39,8 +39,8 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 ## Technologies used
 - Spring Boot + Thymeleaf
 - PDFBox
-- LibreOffice for advanced conversions
-- OcrMyPdf https://github.com/ocrmypdf/OCRmyPDF
+- [LibreOffice](https://www.libreoffice.org/discover/libreoffice/) for advanced conversions
+- [OcrMyPdf](https://github.com/ocrmypdf/OCRmyPDF)
 - HTML, CSS, JavaScript
 - Docker
 
