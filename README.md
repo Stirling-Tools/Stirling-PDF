@@ -16,7 +16,6 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 
 ![stirling-home](images/stirling-home.png)
 
-
 ## Features
 
 - Split PDFs into multiple files at specified page numbers or extract all pages as individual files.
@@ -34,14 +33,14 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 - OCR on PDF (Using OCRMyPDF)
 - Edit metadata
 - Dark mode support.
-- Custom download options
+- Custom download options (see [here](https://github.com/Frooodle/Stirling-PDF/blob/main/images/settings.png) for example)
 - Parallel file processing and downloads
 
 ## Technologies used
 - Spring Boot + Thymeleaf
 - PDFBox
-- LibreOffice for advanced conversions
-- OcrMyPdf https://github.com/ocrmypdf/OCRmyPDF
+- [LibreOffice](https://www.libreoffice.org/discover/libreoffice/) for advanced conversions
+- [OcrMyPdf](https://github.com/ocrmypdf/OCRmyPDF)
 - HTML, CSS, JavaScript
 - Docker
 
@@ -75,9 +74,19 @@ services:
         image: frooodle/s-pdf
 ```
 
+## Enable OCR/Compression feature
+Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
+
+## Want to add your own language?
+If you want to add your own language to Stirling-PDF please refer
+https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
+
+And please create a PR to merge it back in so others can use it! 
+
+Also please note as i add new features i will google translate existing languages so that they dont lose support. This could mean that new features need grammer corrections as added.
+
 ## How to View
 1. Open a web browser and navigate to `http://localhost:8080/`
 2. Use the application by following the instructions on the website.
 
-## Note
-The application is currently not thread-safe
+
