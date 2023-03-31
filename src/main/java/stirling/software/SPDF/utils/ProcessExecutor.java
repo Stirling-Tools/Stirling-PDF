@@ -40,7 +40,7 @@ public class ProcessExecutor {
 		semaphore.acquire();
 		try {
 			
-		
+		    System.out.print("Running command: " + String.join(" ", command));
 		    ProcessBuilder processBuilder = new ProcessBuilder(command);
 		    Process process = processBuilder.start();
 	

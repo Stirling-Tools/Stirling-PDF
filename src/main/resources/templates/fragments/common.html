@@ -194,98 +194,106 @@ function toggleDarkMode() {
                  }
              });
 
-            async function submitMultiPdfForm(event,url) {
+            async function submitMultiPdfForm(event, url) {
                 // Get the selected PDF files
-                var files = $('#fileInput-input')[0].files;
+                let files = $('#fileInput-input')[0].files;
 
                 // Get the existing form data
-                var formData = new FormData($('form')[0]);
+                let formData = new FormData($('form')[0]);
                 formData.delete('fileInput');
-                
+
                 // Show the progress bar
                 $('#progressBarContainer').show();
 
                 // Initialize the progress bar
-                var progressBar = $('#progressBar');
+                let progressBar = $('#progressBar');
                 progressBar.css('width', '0%');
                 progressBar.attr('aria-valuenow', 0);
                 progressBar.attr('aria-valuemax', files.length);
-				
-             	// Check the flag in localStorage, default to 4
+
+                // Check the flag in localStorage, default to 4
                 const zipThreshold = parseInt(localStorage.getItem('zipThreshold'), 10) || 4;
                 const zipFiles = files.length > zipThreshold;
 
                 // Initialize JSZip instance if needed
                 let jszip = null;
                 if (zipFiles) {
-                  jszip = new JSZip();
+                    jszip = new JSZip();
                 }
-                
-                
+
                 // Submit each PDF file in parallel
-                var promises = [];
-                for (var i = 0; i < files.length; i++) {
-                    var promise = new Promise(function(resolve, reject) {
-                        var fileFormData = new FormData();
+                let promises = [];
+                for (let i = 0; i < files.length; i++) {
+                    let promise = new Promise(async function(resolve, reject) {
+                        let fileFormData = new FormData();
                         fileFormData.append('fileInput', files[i]);
-                        for (var pair of formData.entries()) {
+                        for (let pair of formData.entries()) {
                             fileFormData.append(pair[0], pair[1]);
                         }
                         console.log(fileFormData);
 
-                        fetch(url, {
-                            method: 'POST',
-                            body: fileFormData
-                        }).then(function(response) {
+                        try {
+                            let response = await fetch(url, {
+                                method: 'POST',
+                                body: fileFormData
+                            });
+
                             if (!response) {
                                 throw new Error('Received null response for file ' + i);
                             }
+
+                            if (!response.ok) {
+                                throw new Error(`Error submitting request for file ${i}: ${response.status} ${response.statusText}`);
+                            }
+
+                            let contentDisposition = response.headers.get('content-disposition');
+                            let fileName = "file.pdf"
+                            if (!contentDisposition) {
+                                //throw new Error('Content-Disposition header not found for file ' + i);
+                            } else {
+                            	fileName = contentDisposition.split('filename=')[1].replace(/"/g, '');
+                            }
                             console.log('Received response for file ' + i + ': ' + response);
 
-                            var contentDisposition = response.headers.get('content-disposition');
-                            var fileName = contentDisposition.split('filename=')[1].replace(/"/g, '');
+  
 
-                            response.blob().then(function (blob) {
-                                if (zipFiles) {
-                                  // Add the file to the ZIP archive
-                                  jszip.file(fileName, blob);
-                                  resolve();
-                                } else {
-                                  // Download the file directly
-                                  var url = window.URL.createObjectURL(blob);
-                                  var a = document.createElement('a');
-                                  a.href = url;
-                                  a.download = fileName;
-                                  document.body.appendChild(a);
-                                  a.click();
-                                  a.remove();
-                                  resolve();
-                                }
-                              });
-                            
-                        }).catch(function(error) {
+                            let blob = await response.blob();
+                            if (zipFiles) {
+                                // Add the file to the ZIP archive
+                                jszip.file(fileName, blob);
+                                resolve();
+                            } else {
+                                // Download the file directly
+                                let url = window.URL.createObjectURL(blob);
+                                let a = document.createElement('a');
+                                a.href = url;
+                                a.download = fileName;
+                                document.body.appendChild(a);
+                                a.click();
+                                a.remove();
+                                resolve();
+                            }
+                        } catch (error) {
                             console.error('Error submitting request for file ' + i + ': ' + error);
-                            
+
                             // Set default values or fallbacks for error properties
-                            var status = error && error.status || 500;
-                            var statusText = error && error.statusText || 'Internal Server Error';
-                            var message = error && error.message || 'An error occurred while processing your request.';
-                                
-                            // Reject the Promise to signal that the request has failed 
+                            let status = error && error.status || 500;
+                            let statusText = error && error.statusText || 'Internal Server Error';
+                            let message = error && error.message || 'An error occurred while processing your request.';
+
+                            // Reject the Promise to signal that the request has failed
                             reject();
-                            // Redirect to error page with Spring Boot error parameters 
-                            var url = '/error?status=' + status + '&error=' + encodeURIComponent(statusText) + '&message=' + encodeURIComponent(message);
+                            // Redirect to error page with Spring Boot error parameters
+                            let url = '/error?status=' + status + '&error=' + encodeURIComponent(statusText) + '&message=' + encodeURIComponent(message);
                             window.location.href = url;
-                        });
+                        }
                     });
-                                
+
                     // Update the progress bar as each request finishes
                     promise.then(function() {
-                        var progress = ((progressBar.attr('aria-valuenow') / files.length) * 100) + (100 / files.length);
-                        progressBar.css('width', progress + '%');
-                        progressBar.attr('aria-valuenow', parseInt(progressBar.attr('aria-valuenow')) + 1);
+                        updateProgressBar(progressBar, files);
                     });
-                             
+
                     promises.push(promise);
                 }
 
@@ -295,24 +303,33 @@ function toggleDarkMode() {
                 } catch (error) {
                     console.error('Error while uploading files: ' + error);
                 }
-			
+
                 // Update the progress bar
                 progressBar.css('width', '100%');
                 progressBar.attr('aria-valuenow', files.length);
-                
-             	// After all requests are finished, download the ZIP file if needed
+
+                // After all requests are finished, download the ZIP file if needed
                 if (zipFiles) {
-                  jszip.generateAsync({ type: "blob" }).then(function (content) {
-                    var url = window.URL.createObjectURL(content);
-                    var a = document.createElement('a');
-                    a.href = url;
-                    a.download = "files.zip";
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                  });
+                    try {
+                        let content = await jszip.generateAsync({ type: "blob" });
+                        let url = window.URL.createObjectURL(content);
+                        let a = document.createElement('a');
+                        a.href = url;
+                        a.download = "files.zip";
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                    } catch (error) {
+                        console.error('Error generating ZIP file: ' + error);
+                    }
                 }
             }
+            function updateProgressBar(progressBar, files) {
+            	let progress = ((progressBar.attr('aria-valuenow') / files.length) * 100) + (100 / files.length);
+            	progressBar.css('width', progress + '%');
+            	progressBar.attr('aria-valuenow', parseInt(progressBar.attr('aria-valuenow')) + 1);
+        	}
+
             
             
 

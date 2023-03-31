@@ -47,9 +47,13 @@ public class OCRController {
 	@PostMapping("/ocr-pdf")
 	public ResponseEntity<byte[]> processPdfWithOCR(@RequestParam("fileInput") MultipartFile inputFile,
 			@RequestParam("languages") List<String> selectedLanguages,
-			@RequestParam(name = "sidecar", required = false) Boolean sidecar) throws IOException, InterruptedException {
+			@RequestParam(name = "sidecar", required = false) Boolean sidecar,
+			@RequestParam(name = "deskew", required = false) Boolean deskew,
+			@RequestParam(name = "clean", required = false) Boolean clean,
+			@RequestParam(name = "clean-final", required = false) Boolean cleanFinal,
+			@RequestParam(name = "ocrType", required = false) String ocrType) throws IOException, InterruptedException {
 
-
+	    
 		//--output-type pdfa
 		if (selectedLanguages == null || selectedLanguages.size() < 1) {
 			throw new IOException("Please select at least one language.");
@@ -62,18 +66,40 @@ public class OCRController {
 		// Prepare the output file path
 		Path tempOutputFile = Files.createTempFile("output_", ".pdf");
 
+		// Prepare the output file path
+        Path sidecarTextPath = null;
+        
 		// Run OCR Command
 	    String languageOption = String.join("+", selectedLanguages);
 	    
 	    List<String> command = new ArrayList<>(Arrays.asList("ocrmypdf","--verbose", "2"));
 	    		
 	    
-	    String sidecarFile = tempOutputFile.toString().replace(".pdf", ".txt");
 	    if (sidecar != null && sidecar) {
+	        sidecarTextPath = Files.createTempFile("sidecar", ".txt");
 	        command.add("--sidecar");
-	        command.add(sidecarFile);
+	        command.add(sidecarTextPath.toString());
 	    }
 	    
+	    if (deskew != null && deskew) {
+            command.add("--deskew");
+	    }
+	    if (clean != null && clean) {
+            command.add("--clean");
+        }
+	    if (cleanFinal != null && cleanFinal) {
+            command.add("--clean-final");
+        }
+	    if (ocrType != null && !ocrType.equals("")) {
+            if("skip-text".equals(ocrType)) {
+                command.add("--skip-text");
+            } else if("force-ocr".equals(ocrType)) {
+                command.add("--force-ocr");
+            } else if("Normal".equals(ocrType)) {
+                
+            }
+        }
+
 	    command.addAll(Arrays.asList("--language", languageOption,
 	            tempInputFile.toString(), tempOutputFile.toString()));
 	    
@@ -104,9 +130,9 @@ public class OCRController {
 	            zipOut.closeEntry();
 
 	            // Add text file to the zip
-	            ZipEntry txtEntry = new ZipEntry(sidecarFile);
+	            ZipEntry txtEntry = new ZipEntry(outputFilename.replace(".pdf", ".txt"));
 	            zipOut.putNextEntry(txtEntry);
-	            Files.copy(Paths.get(sidecarFile), zipOut);
+	            Files.copy(sidecarTextPath, zipOut);
 	            zipOut.closeEntry();
 	        }
 
@@ -115,7 +141,7 @@ public class OCRController {
 	        // Clean up the temporary zip file
 	        Files.delete(tempZipFile);
 	        Files.delete(tempOutputFile);
-	        Files.delete(Paths.get(sidecarFile));
+	        Files.delete(sidecarTextPath);
 	        
 	        // Return the zip file containing both the PDF and the text file
 	        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
