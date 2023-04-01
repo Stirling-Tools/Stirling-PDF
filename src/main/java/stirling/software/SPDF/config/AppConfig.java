@@ -15,6 +15,8 @@ public class AppConfig {
     @Bean(name = "appName")
     public String appName() {
         String appName = System.getProperty("AppName");
+        if(appName == null)
+            appName = System.getenv("APP_NAME");
         return (appName != null) ? appName : "Stirling PDF";
     }
 }

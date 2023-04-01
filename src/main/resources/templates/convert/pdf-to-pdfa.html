@@ -13,6 +13,7 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <h2 th:text="#{pdfToPDFA.header}"></h2>
+                        <p>Currently doesn't work for multiple inputs at once</p>
                         <form method="post" enctype="multipart/form-data" th:action="@{pdf-to-pdfa}">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <br>
