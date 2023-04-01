@@ -53,9 +53,10 @@ public class CompressController {
         command.add("--skip-text");
         command.add("--tesseract-timeout=0");
         command.add("--optimize");
+        command.add(String.valueOf(optimizeLevel));
         command.add("--output-type");
         command.add("pdf");
-        command.add(String.valueOf(optimizeLevel));
+
 
         if (fastWebView != null && fastWebView) {
             long fileSize = inputFile.getSize();

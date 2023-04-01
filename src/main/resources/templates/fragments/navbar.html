@@ -127,12 +127,13 @@ function compareVersions(version1, version2) {
 
                     <li class="nav-item"><a class="nav-link" href="#" th:href="@{rotate-pdf}" th:classappend="${currentPage}=='rotate-pdf' ? 'active' : ''" th:text="#{home.rotate.title}"></a></li>
 
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='file-to-pdf' OR ${currentPage}=='xlsx-to-pdf' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='pdf-to-pdfa' OR ${currentPage}=='file-to-pdf' OR ${currentPage}=='xlsx-to-pdf' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false" th:text="#{navbar.convert}"></a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''" th:text="#{home.pdfToImage.title}"></a> 
                             <a class="dropdown-item" href="#" th:href="@{img-to-pdf}" th:classappend="${currentPage}=='img-to-pdf' ? 'active' : ''" th:text="#{home.imageToPdf.title}"></a> 
                             <a class="dropdown-item" href="#" th:href="@{file-to-pdf}" th:classappend="${currentPage}=='file-to-pdf' ? 'active' : ''" th:text="#{home.fileToPDF.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{pdf-to-pdfa}" th:classappend="${currentPage}=='pdf-to-pdfa' ? 'active' : ''" th:text="#{home.pdfToPDFA.title}"></a>
                         </div>
                     </li>
 
