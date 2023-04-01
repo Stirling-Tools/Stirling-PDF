@@ -72,7 +72,7 @@ public class OCRController {
 		// Run OCR Command
 	    String languageOption = String.join("+", selectedLanguages);
 	    
-	    List<String> command = new ArrayList<>(Arrays.asList("ocrmypdf","--verbose", "2"));
+	    List<String> command = new ArrayList<>(Arrays.asList("ocrmypdf","--verbose", "2", "--output-type", "pdf"));
 	    		
 	    
 	    if (sidecar != null && sidecar) {
