@@ -36,6 +36,7 @@ RUN apt-get update && \
 		python3-pip \
         unoconv \
 		pngquant \
+		unpaper \
         ocrmypdf && \
 	pip install --user --upgrade ocrmypdf
 
