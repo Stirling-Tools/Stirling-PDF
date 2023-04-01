@@ -109,7 +109,7 @@ function compareVersions(version1, version2) {
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container ">
 
-            <a class="navbar-brand" href="#" th:href="@{/}">Stirling PDF</a>
+            <a class="navbar-brand" href="#" th:href="@{/}" th:text="${@appName}"></a>
 
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -173,8 +173,7 @@ function compareVersions(version1, version2) {
                         </svg>
                          </a>
                         <div class="dropdown-menu" aria-labelledby="languageDropdown">
-                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_US">English (US)</a> 
-                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_GB">English (UK)</a> 
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_GB">English</a> 
                             <a class="dropdown-item lang_dropdown-item" href="" data-language-code="ar_AR">العربية</a>
                             <a class="dropdown-item lang_dropdown-item" href="" data-language-code="de_DE">Deutsch</a> 
                             <a class="dropdown-item lang_dropdown-item" href="" data-language-code="fr_FR">Français</a>

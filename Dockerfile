@@ -51,9 +51,10 @@ EXPOSE 8080
 
 # Set environment variables
 ENV LOG_LEVEL=INFO
+ENV APP_NAME="Stirling PDF"
 
 # Run the application
-ENTRYPOINT ["java","-jar","/app.jar","-Dlogging.level=${LOG_LEVEL}"]
+ENTRYPOINT ["java","-jar","/app.jar","-Dlogging.level=${LOG_LEVEL}", "-DAppName=${APP_NAME}"]
 
 
 

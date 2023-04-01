@@ -13,7 +13,7 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <h2 th:text="#{pdfToPDFA.header}"></h2>
-                        <form method="post" enctype="multipart/form-data" th:action="@{file-to-pdf}">
+                        <form method="post" enctype="multipart/form-data" th:action="@{pdf-to-pdfa}">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <br>
                             <button type="submit" class="btn btn-primary" th:text="#{pdfToPDFA.submit}"></button>

@@ -28,7 +28,7 @@ public class ConvertPDFToPDFA {
 	@GetMapping("/pdf-to-pdfa")
     public String pdfToPdfAForm(Model model) {
         model.addAttribute("currentPage", "pdf-to-pdfa");
-        return "pdf-to-pdfa";
+        return "convert/pdf-to-pdfa";
     }
 
     

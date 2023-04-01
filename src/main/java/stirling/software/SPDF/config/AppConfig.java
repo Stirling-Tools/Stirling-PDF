@@ -11,4 +11,10 @@ public class AppConfig {
         String version = getClass().getPackage().getImplementationVersion();
         return (version != null) ? version : "0.3.3";
     }
+    
+    @Bean(name = "appName")
+    public String appName() {
+        String appName = System.getProperty("AppName");
+        return (appName != null) ? appName : "Stirling PDF";
+    }
 }

@@ -3,7 +3,7 @@
 <!-- Metadata -->
 <meta charset="UTF-8">
 
-<title th:text="'S-PDF ' + ${title}"></title>
+<title th:text="${@appName} + (${title} != null and ${title} != '' ? ' - ' + ${title} : '')"></title>
 <link rel="shortcut icon" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 

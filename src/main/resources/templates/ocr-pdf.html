@@ -15,38 +15,38 @@
                     <div class="col-md-6">
                         <h2 th:text="#{ocr.header}"></h2>
 
-						 <form action="#" th:action="@{/ocr-pdf}" method="post" enctype="multipart/form-data" class="mb-3">
-				            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-				            <div class="form-group">
-        <label for="languages" class="form-label" th:text="#{ocr.selectText.1}"></label>
-        <hr>
-        <div id="languages">
-            <div th:each="language, iterStat : ${languages}" >
-                <span th:text="    ${iterStat.index + 1} + '.'"></span>
-                <input type="checkbox" class="form-check-input" th:name="languages" th:value="${language}" th:id="${'language-' + language}" />
-                <label class="form-check-label" th:for="${'language-' + language}" th:text="  ${language}"></label>
-            </div>
-        </div>
-        <hr>
-    </div>
-    <label for="languages" class="form-label" th:text="#{ocr.selectText.9}"></label>
-						  	<div class="form-check">
-						        <input type="checkbox" class="form-check-input" name="sidecar" id="sidecar" />
-						        <label class="form-check-label" for="sidecar" th:text="#{ocr.selectText.2}"></label>
-						    </div>
-						    <div class="form-check">
-						        <input type="checkbox" class="form-check-input" name="deskew" id="deskew" />
-						        <label class="form-check-label" for="deskew" th:text="#{ocr.selectText.3}"></label>
-						    </div>
-						    <div class="form-check">
-						        <input type="checkbox" class="form-check-input" name="clean" id="clean" />
-						        <label class="form-check-label" for="clean" th:text="#{ocr.selectText.4}"></label>
-						    </div>
-						    <div class="form-check">
-						        <input type="checkbox" class="form-check-input" name="clean-final" id="clean-final" />
-						        <label class="form-check-label" for="clean-final" th:text="#{ocr.selectText.5}"></label>
-						    </div>
-						    <div class="form-group">
+                         <form action="#" th:action="@{/ocr-pdf}" method="post" enctype="multipart/form-data" class="mb-3">
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                            <div class="form-group">
+                                <label for="languages" class="form-label" th:text="#{ocr.selectText.1}"></label>
+                                <hr>
+                                <div id="languages">
+                                    <div th:each="language, iterStat : ${languages}" >
+                                        <span th:text="    ${iterStat.index + 1} + '.'"></span>
+                                        <input type="checkbox" class="form-check-input" th:name="languages" th:value="${language}" th:id="${'language-' + language}" />
+                                        <label class="form-check-label" th:for="${'language-' + language}" th:text="  ${language}"></label>
+                                    </div>
+                                </div>
+                                <hr>
+                            </div>
+                            <label for="languages" class="form-label" th:text="#{ocr.selectText.9}"></label>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="sidecar" id="sidecar" />
+                                <label class="form-check-label" for="sidecar" th:text="#{ocr.selectText.2}"></label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="deskew" id="deskew" />
+                                <label class="form-check-label" for="deskew" th:text="#{ocr.selectText.3}"></label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="clean" id="clean" />
+                                <label class="form-check-label" for="clean" th:text="#{ocr.selectText.4}"></label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="clean-final" id="clean-final" />
+                                <label class="form-check-label" for="clean-final" th:text="#{ocr.selectText.5}"></label>
+                            </div>
+                            <div class="form-group">
                                 <label th:text="#{ocr.selectText.10}"></label> 
                                 <select class="form-control" name="ocrType">
                                     <option value="skip-text" th:text="#{ocr.selectText.6}"></option>
@@ -54,11 +54,11 @@
                                     <option value="Normal" th:text="#{ocr.selectText.8}"></option>
                                 </select>
                             </div>
-				            <button type="submit" class="btn btn-primary" th:text="#{ocr.submit}"></button>
-				        </form>
-				        <p th:text="#{ocr.credit}"></p>
-				        <p th:text="#{ocr.help}"></p>
-				        <a href="https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md">https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md</a>
+                            <button type="submit" class="btn btn-primary" th:text="#{ocr.submit}"></button>
+                        </form>
+                        <p th:text="#{ocr.credit}"></p>
+                        <p th:text="#{ocr.help}"></p>
+                        <a href="https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md">https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md</a>
                     </div>
                 </div>
             </div>
