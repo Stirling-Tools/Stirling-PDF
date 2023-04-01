@@ -54,6 +54,9 @@ public class CompressController {
         command.add("--tesseract-timeout=0");
         command.add("--optimize");
         command.add(String.valueOf(optimizeLevel));
+        command.add("--output-type");
+        command.add("pdf");
+
 
         if (fastWebView != null && fastWebView) {
             long fileSize = inputFile.getSize();
@@ -69,7 +72,7 @@ public class CompressController {
         command.add(tempInputFile.toString());
         command.add(tempOutputFile.toString());
 
-        int returnCode = ProcessExecutor.runCommandWithOutputHandling(command);
+        int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
         
         // Read the optimized PDF file
         byte[] pdfBytes = Files.readAllBytes(tempOutputFile);

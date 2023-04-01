@@ -33,7 +33,7 @@
             <!-- Jumbotron -->
             <div class="jumbotron jumbotron-fluid" id="jumbotron">
                 <div class="container">
-                    <h1 class="display-4">Stirling PDF</h1>
+                    <h1 class="display-4" th:text="${@appName}"></h1>
                     <p class="lead" th:text="#{home.desc}"></p>
                 </div>
             </div>
@@ -64,6 +64,7 @@
                 
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.ocr.title}, cardText=#{home.ocr.desc}, cardLink='ocr-pdf')}"></div>
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.extractImages.title}, cardText=#{home.extractImages.desc}, cardLink='extract-images')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.pdfToPDFA.title}, cardText=#{home.pdfToPDFA.desc}, cardLink='pdf-to-pdfa')}"></div>
                 
                 
                 

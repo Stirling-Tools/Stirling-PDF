@@ -73,7 +73,6 @@ public class ConvertImgPDFController {
         if (singleImage) {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType(getMediaType(imageFormat)));
-            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
             ResponseEntity<Resource> response = new ResponseEntity<>(new ByteArrayResource(result), headers, HttpStatus.OK);
             return response;
         } else {
