@@ -17,7 +17,7 @@
                         <form method="post" enctype="multipart/form-data" th:action="@{file-to-pdf}">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
                             <br>
-                            <button type="submit" class="btn btn-primary" th:text="#{fileToPDF.submit}"></button>
+                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{fileToPDF.submit}"></button>
 
                         </form>
                         <p class="mt-3" th:text="#{fileToPDF.credit}"></p>

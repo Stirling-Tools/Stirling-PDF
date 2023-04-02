@@ -34,7 +34,7 @@
             <div class="jumbotron jumbotron-fluid" id="jumbotron">
                 <div class="container">
                     <h1 class="display-4" th:text="${@appName}"></h1>
-                    <p class="lead" th:text="#{home.desc}"></p>
+                    <p class="lead" th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}"></p>
                 </div>
             </div>
 

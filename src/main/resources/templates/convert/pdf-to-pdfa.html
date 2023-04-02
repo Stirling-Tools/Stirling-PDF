@@ -17,7 +17,7 @@
                         <form method="post" enctype="multipart/form-data" th:action="@{pdf-to-pdfa}">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <br>
-                            <button type="submit" class="btn btn-primary" th:text="#{pdfToPDFA.submit}"></button>
+                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfToPDFA.submit}"></button>
                         </form>
                         <p class="mt-3" th:text="#{pdfToPDFA.credit}"></p>
                     </div>

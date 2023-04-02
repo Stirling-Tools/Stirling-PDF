@@ -50,7 +50,9 @@ COPY build/libs/*.jar app.jar
 EXPOSE 8080
 
 # Set environment variables
-ENV APP_NAME="Stirling PDF"
+ENV APP_HOME_NAME="Stirling PDF"
+#ENV APP_HOME_DESCRIPTION="Personal PDF Website!"
+#ENV APP_NAVBAR_NAME="Stirling PDF"
 
 # Run the application
 ENTRYPOINT java -jar /app.jar

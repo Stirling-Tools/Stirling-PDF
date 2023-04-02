@@ -84,6 +84,10 @@ function toggleDarkMode() {
             <script>
             
             $('form').submit(function(event) {
+            	var processing = "Processing..."
+           		var submitButtonText = $('#submitBtn').text()
+            		
+            	$('#submitBtn').text('Processing...');
             	console.log("start download code")
             	var files = $('#fileInput-input')[0].files;
             	var url = this.action;
@@ -187,11 +191,16 @@ function toggleDarkMode() {
 
                          // Create an error message to display to the user
                          const message = `${errorMessage}\n\n${stackTrace}`;
-
+						
+                         $('#submitBtn').text(submitButtonText);
+                         
                          // Display the error message to the user
                          alert(message);
+                         
                      });
+                     
                  }
+                 $('#submitBtn').text(submitButtonText);
              });
 
             async function submitMultiPdfForm(event, url) {

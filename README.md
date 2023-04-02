@@ -74,6 +74,7 @@ services:
         image: frooodle/s-pdf
 ```
 
+
 ## Enable OCR/Compression feature
 Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 
@@ -90,3 +91,7 @@ Also please note as i add new features i will google translate existing language
 2. Use the application by following the instructions on the website.
 
 
+## Customize App Name
+Stirling PDF allows easy customization of the visible application name.
+Simply use environment variables APP_HOME_NAME, APP_HOME_DESCRIPTION and APP_NAVBAR_NAME with Docker or Java. 
+If running Java directly, you can also pass these as properties using -D arguments.
