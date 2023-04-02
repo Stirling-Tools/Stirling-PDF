@@ -91,7 +91,9 @@ Also please note as i add new features i will google translate existing language
 2. Use the application by following the instructions on the website.
 
 
-## Customize App Name
+## Customize App
 Stirling PDF allows easy customization of the visible application name.
 Simply use environment variables APP_HOME_NAME, APP_HOME_DESCRIPTION and APP_NAVBAR_NAME with Docker or Java. 
 If running Java directly, you can also pass these as properties using -D arguments.
+
+Using the same method you can also change the default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR to select your default language (Will always default to English on invalid locale)

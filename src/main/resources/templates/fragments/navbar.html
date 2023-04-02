@@ -1,63 +1,32 @@
 <div th:fragment="navbar" class="mx-auto">
     <script>
-					document
-							.addEventListener(
-									'DOMContentLoaded',
-									function() {
-										// Get the dropdown items
-										var dropdownItems = document
-												.querySelectorAll('.lang_dropdown-item');
+    document.addEventListener('DOMContentLoaded', function () {
+        const defaultLocale = document.documentElement.lang || 'en_GB';
+        const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
+        const dropdownItems = document.querySelectorAll('.lang_dropdown-item');
 
-										// Loop through the dropdown items
-										for (var i = 0; i < dropdownItems.length; i++) {
-											dropdownItems[i].classList
-													.remove('active');
-											if (dropdownItems[i].dataset.languageCode === localStorage
-													.getItem('languageCode')) {
-												dropdownItems[i].classList
-														.add('active');
-											}
+        for (let i = 0; i < dropdownItems.length; i++) {
+            const item = dropdownItems[i];
+            item.classList.remove('active');
+            if (item.dataset.languageCode === storedLocale) {
+                item.classList.add('active');
+            }
+            item.addEventListener('click', handleDropdownItemClick);
+        }
+    });
 
-											// Add a click event listener to each dropdown item
-											dropdownItems[i]
-													.addEventListener(
-															'click',
-															function(event) {
+    function handleDropdownItemClick(event) {
+        event.preventDefault();
+        const languageCode = this.dataset.languageCode;
+        localStorage.setItem('languageCode', languageCode);
 
-																// Prevent the default link behavior
-																event
-																		.preventDefault();
-
-																// Get the language code
-																var languageCode = this.dataset.languageCode;
-
-																// Save the language code to local storage
-																localStorage
-																		.setItem(
-																				'languageCode',
-																				languageCode);
-
-																// Get the current URL
-																var currentUrl = window.location.href;
-
-																// Check if the URL already contains a "?lang" query parameter
-																if (currentUrl
-																		.indexOf('?lang=') === -1) {
-																	// Update the URL with the "?lang" query parameter
-																	window.location.href = currentUrl
-																			+ '?lang='
-																			+ languageCode;
-																} else {
-																	// Replace the "?lang" query parameter with the new value
-																	window.location.href = currentUrl
-																			.replace(
-																					/\?lang=\w{2,}/,
-																					'?lang='
-																							+ languageCode);
-																}
-															});
-										}
-									});
+        const currentUrl = window.location.href;
+        if (currentUrl.indexOf('?lang=') === -1) {
+            window.location.href = currentUrl + '?lang=' + languageCode;
+        } else {
+            window.location.href = currentUrl.replace(/\?lang=\w{2,}/, '?lang=' + languageCode);
+        }
+    }
 				</script>
 
 <script th:inline="javascript">
@@ -173,10 +142,10 @@ function compareVersions(version1, version2) {
                         </svg>
                          </a>
                         <div class="dropdown-menu" aria-labelledby="languageDropdown">
-                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_GB">English</a> 
-                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="ar_AR">العربية</a>
-                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="de_DE">Deutsch</a> 
-                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="fr_FR">Français</a>
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_GB" >English</a> 
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="ar_AR" >العربية</a>
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="de_DE" >Deutsch</a> 
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="fr_FR" >Français</a>
                         </div>
                     </li>
                     
