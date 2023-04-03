@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,6 +30,7 @@ import org.springframework.web.servlet.ModelAndView;
 import stirling.software.SPDF.utils.ProcessExecutor;
 //import com.spire.pdf.*;
 import java.util.concurrent.Semaphore;
+import java.util.regex.Pattern;
 @Controller
 public class OCRController {
 
@@ -41,8 +43,6 @@ public class OCRController {
 		modelAndView.addObject("currentPage", "ocr-pdf");
 		return modelAndView;
 	}
-
-	private final Semaphore semaphore = new Semaphore(2);
 	
 	@PostMapping("/ocr-pdf")
 	public ResponseEntity<byte[]> processPdfWithOCR(@RequestParam("fileInput") MultipartFile inputFile,
@@ -59,9 +59,19 @@ public class OCRController {
 			throw new IOException("Please select at least one language.");
 	    }
 		
+		// Validate and sanitize selected languages using regex
+        String languagePattern = "^[a-zA-Z]{3}$"; // Regex pattern for three-letter language codes
+        selectedLanguages = selectedLanguages.stream()
+                .filter(lang -> Pattern.matches(languagePattern, lang))
+                .collect(Collectors.toList());
+
+        
+        if (selectedLanguages.isEmpty()) {
+            throw new IOException("None of the selected languages are valid.");
+        }
 		// Save the uploaded file to a temporary location
 		Path tempInputFile = Files.createTempFile("input_", ".pdf");
-		inputFile.transferTo(tempInputFile.toFile());
+		Files.copy(inputFile.getInputStream(), tempInputFile, StandardCopyOption.REPLACE_EXISTING);
 
 		// Prepare the output file path
 		Path tempOutputFile = Files.createTempFile("output_", ".pdf");
