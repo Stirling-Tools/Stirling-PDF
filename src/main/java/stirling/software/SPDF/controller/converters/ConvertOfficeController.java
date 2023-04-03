@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.converters;
 
 import java.io.IOException;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.apache.commons.io.FilenameUtils;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 @Controller
@@ -39,14 +40,20 @@ public class ConvertOfficeController {
 	
 	
 public byte[] convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
+ // Check for valid file extension
+    String originalFilename = inputFile.getOriginalFilename();
+    if (originalFilename == null || !isValidFileExtension(FilenameUtils.getExtension(originalFilename))) {
+        throw new IllegalArgumentException("Invalid file extension");
+    }
+
     // Save the uploaded file to a temporary location
-    Path tempInputFile = Files.createTempFile("input_", "." + getFileExtension(inputFile.getOriginalFilename()));
-    inputFile.transferTo(tempInputFile.toFile());
+    Path tempInputFile = Files.createTempFile("input_", "." + FilenameUtils.getExtension(originalFilename));
+    Files.copy(inputFile.getInputStream(), tempInputFile, StandardCopyOption.REPLACE_EXISTING);
 
     // Prepare the output file path
     Path tempOutputFile = Files.createTempFile("output_", ".pdf");
 
- // Run the LibreOffice command
+    // Run the LibreOffice command
     List<String> command = new ArrayList<>(Arrays.asList("unoconv", "-vvv",
             "-f",
             "pdf",
@@ -64,14 +71,8 @@ public byte[] convertToPdf(MultipartFile inputFile) throws IOException, Interrup
 
     return pdfBytes;
 }
-
-
-
-private String getFileExtension(String fileName) {
-    int dotIndex = fileName.lastIndexOf('.');
-    if (dotIndex == -1) {
-        return "";
-    }
-    return fileName.substring(dotIndex + 1);
+private boolean isValidFileExtension(String fileExtension) {
+    String extensionPattern = "^(?i)[a-z0-9]{2,4}$";
+    return fileExtension.matches(extensionPattern);
 }
 }
