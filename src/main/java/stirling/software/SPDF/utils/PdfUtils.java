@@ -188,29 +188,36 @@ public class PdfUtils {
         }
     }
 
-    public static byte[] overlayImage(byte[] pdfBytes, byte[] imageBytes, float x, float y) throws IOException {
+    public static byte[] overlayImage(byte[] pdfBytes, byte[] imageBytes, float x, float y, boolean everyPage) throws IOException {
 
-        try (PDDocument document = PDDocument.load(new ByteArrayInputStream(pdfBytes))) {
+            PDDocument document = PDDocument.load(new ByteArrayInputStream(pdfBytes));
+
             // Get the first page of the PDF
-            PDPage page = document.getPage(0);
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true)) {
-                // Create an image object from the image bytes
-                PDImageXObject image = PDImageXObject.createFromByteArray(document, imageBytes, "");
-                // Draw the image onto the page at the specified x and y coordinates
-                contentStream.drawImage(image, x, y);
-                logger.info("Image successfully overlayed onto PDF");
+            int pages = document.getNumberOfPages();
+            for (int i = 0; i < pages; i++) {
+                PDPage page = document.getPage(i);
+                try (PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true)) {
+                    // Create an image object from the image bytes
+                    PDImageXObject image = PDImageXObject.createFromByteArray(document, imageBytes, "");
+                    // Draw the image onto the page at the specified x and y coordinates
+                    contentStream.drawImage(image, x, y);
+                    logger.info("Image successfully overlayed onto PDF");
+                    if (everyPage == false && i == 0) {
+                        break;
+                    }
+                } catch (IOException e) {
+                    // Log an error message if there is an issue overlaying the image onto the PDF
+                    logger.error("Error overlaying image onto PDF", e);
+                    throw e;
+                }
+
             }
-            // Create a ByteArrayOutputStream to save the PDF to
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            document.save(baos);
-            logger.info("PDF successfully saved to byte array");
-            return baos.toByteArray();
-        } catch (IOException e) {
-            // Log an error message if there is an issue overlaying the image onto the PDF
-            logger.error("Error overlaying image onto PDF", e);
-            throw e;
+        // Create a ByteArrayOutputStream to save the PDF to
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        document.save(baos);
+        logger.info("PDF successfully saved to byte array");
+        return baos.toByteArray();
         }
-    }
 
     public static ResponseEntity<byte[]> iTextDocToWebResponse(Document document, String docName) throws IOException, DocumentException {
         // Close the document
