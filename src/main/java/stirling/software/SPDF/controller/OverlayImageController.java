@@ -28,11 +28,11 @@ public class OverlayImageController {
 
     @PostMapping("/add-image")
     public ResponseEntity<byte[]> overlayImage(@RequestParam("fileInput") MultipartFile pdfFile, @RequestParam("fileInput2") MultipartFile imageFile, @RequestParam("x") float x,
-            @RequestParam("y") float y) {
+            @RequestParam("y") float y, @RequestParam("everyPage") boolean everyPage) {
         try {
             byte[] pdfBytes = pdfFile.getBytes();
             byte[] imageBytes = imageFile.getBytes();
-            byte[] result = PdfUtils.overlayImage(pdfBytes, imageBytes, x, y);
+            byte[] result = PdfUtils.overlayImage(pdfBytes, imageBytes, x, y, everyPage);
 
             return PdfUtils.bytesToWebResponse(result, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_overlayed.pdf");
         } catch (IOException e) {
