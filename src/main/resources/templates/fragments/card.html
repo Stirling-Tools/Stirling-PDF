@@ -1,5 +1,6 @@
 <div th:fragment="card" class="feature-card">
-    <h5 class="card-title" th:text="${cardTitle}"></h5>
-    <p class="card-text" th:text="${cardText}"></p>
-    <a class="btn btn-primary" th:href="${cardLink}" th:text="#{goToPage}"></a>
+    <a th:href="${cardLink}">
+        <h5 class="card-title text-primary" th:text="${cardTitle}"></h5>
+        <p class="card-text" th:text="${cardText}"></p>
+    </a>
 </div>
