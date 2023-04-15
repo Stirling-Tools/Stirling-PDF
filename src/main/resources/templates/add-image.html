@@ -27,7 +27,7 @@
                                 <label for="y">Y</label> <input type="number" class="form-control" id="y" name="y" step="0.01" required>
                             </div>
                             <div class="form-group">
-                                <input type="checkbox" id="everyPage" name="everyPage" value="true"> <label for="everyPage">Every Page?</label>
+                                <input type="checkbox" id="everyPage" name="everyPage" value="true"> <label for="everyPage" th:text="#{addImage.everyPage}"></label>
                             </div>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{addImage.submit}"></button>
                         </form>

@@ -6,22 +6,46 @@
 
 <style>
 .features-container {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(21rem, 3fr));
-	gap: 25px 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(21rem, 3fr));
+    gap: 25px 30px;
 }
 
 .feature-card {
-	border: 1px solid rgba(0, 0, 0, .125);
-	border-radius: 0.25rem;
-	padding: 1.25rem;
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
+    border: 2px solid rgba(0, 0, 0, .25);
+    border-radius: 0.25rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background: rgba(13, 110, 253, 0.05); 
+    transition: transform 0.3s, border 0.3s;
+}
+
+.feature-card a {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
 }
 
 .feature-card .card-text {
-	flex: 1;
+    flex: 1;
+}
+
+.feature-card:hover {
+    border: 2px solid rgba(0, 0, 0, .5);
+    cursor: pointer;
+    transform: scale(1.1);
+}
+
+.feature-card:hover .card-title {
+    text-decoration: underline;
+}
+.card-title.text-primary {
+  color: #013275; /* Replace with your desired shade of blue */
 }
 </style>
 
