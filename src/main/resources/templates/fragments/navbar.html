@@ -137,11 +137,10 @@ function compareVersions(version1, version2) {
                         </div></li>
 
 
-
-                    <input type="checkbox" id="toggle-dark-mode" checked="true" th:onclick="javascript:toggleDarkMode()">
-                    <a class="nav-link" href="#" for="toggle-dark-mode" th:text="#{navbar.darkmode}" ></a>
                     
-
+                    <input type="checkbox" id="toggle-dark-mode" checked="true" th:onclick="javascript:toggleDarkMode()">
+                    <label class="nav-link  mb-0" href="#" for="toggle-dark-mode" th:text="#{navbar.darkmode}"></label>
+                   
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> 
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-globe2" viewBox="0 0 20 20">
