@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'stirling.software'
-version = '0.4.8'
+version = '0.5.0'
 sourceCompatibility = '17'
 
 repositories {
@@ -13,12 +13,9 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	
-	implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
-	
+	implementation 'org.springframework.boot:spring-boot-starter-web:3.0.5'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.0.5'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test:3.0.5'
 	// https://mvnrepository.com/artifact/org.apache.pdfbox/jbig2-imageio
 	implementation group: 'org.apache.pdfbox', name: 'jbig2-imageio', version: '3.0.4'
 	implementation 'commons-io:commons-io:2.11.0'
