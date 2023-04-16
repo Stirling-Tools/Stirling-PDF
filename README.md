@@ -7,11 +7,9 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/frooodle/stirling-pdf?style=social)](https://github.com/Frooodle/stirling-pdf)
 [![Paypal Donate](https://img.shields.io/badge/Paypal%20Donate-yellow?style=flat&logo=paypal)](https://www.paypal.com/paypalme/froodleplex)
 
-This is a locally hosted web application that allows you to perform various operations on PDF files, such as splitting and adding images.
+This is a powerful locally hosted web based PDF manipulation tool using docker that allows you to perform various operations on PDF files, such as splitting merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application started as a 100% ChatGPT-made application and has evolved to include a wide range of features to handle all your PDF needs.
 
-Started off as a 100% ChatGPT made application, slowly moving away from that as more features are added
-
-I will support and fix/add things to this if there is a demand [Discord](https://discord.gg/Cn8pWhQRxZ)
+Feel free to request any features of bug fixes either in github issues or our [Discord](https://discord.gg/Cn8pWhQRxZ)
 
 
 ![stirling-home](images/stirling-home.png)
@@ -29,6 +27,7 @@ I will support and fix/add things to this if there is a demand [Discord](https:/
 - Set PDF Permissions
 - Add watermark(s)
 - Convert Any common file to PDF (using LibreOffice)
+- Convert PDF to Word/Powerpoint/Others (using LibreOffice)
 - Extract images from PDF
 - OCR on PDF (Using OCRMyPDF)
 - Edit metadata
