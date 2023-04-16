@@ -11,6 +11,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationMarkup;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
@@ -26,7 +27,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WatermarkRemover;
-import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 
 @Controller
 public class WatermarkController {

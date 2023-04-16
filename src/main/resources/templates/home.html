@@ -90,6 +90,15 @@
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.extractImages.title}, cardText=#{home.extractImages.desc}, cardLink='extract-images')}"></div>
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.pdfToPDFA.title}, cardText=#{home.pdfToPDFA.desc}, cardLink='pdf-to-pdfa')}"></div>
                 
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.PDFToWord.title}, cardText=#{home.PDFToWord.desc}, cardLink='pdf-to-word')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.PDFToPresentation.title}, cardText=#{home.PDFToPresentation.desc}, cardLink='pdf-to-presentation')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.PDFToText.title}, cardText=#{home.PDFToText.desc}, cardLink='pdf-to-text')}"></div>
+                
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.PDFToHTML.title}, cardText=#{home.PDFToHTML.desc}, cardLink='pdf-to-html')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.PDFToXML.title}, cardText=#{home.PDFToXML.desc}, cardLink='pdf-to-xml')}"></div>
+                
+                
+                
                 
                 
             </div>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{PDFToText.title})}"></th:block>
+<body>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{PDFToText.header}"></h2>
+                        <form method="post" enctype="multipart/form-data" th:action="@{pdf-to-text}">
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                            
+                            <div class="form-group">
+                                <label th:text="#{PDFToText.selectText.1}"></label> 
+                                <select class="form-control" name="outputFormat">
+                                    <option value="rtf">RTF</option>
+                                    <option value="txt:Text">TXT</option>
+                                </select>
+                            </div>
+                            <br>
+                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{PDFToText.submit}"></button>
+
+                        </form>
+                        <p class="mt-3" th:text="#{PDFToText.credit}"></p>
+                    </div>
+                </div>
+        </div>
+    </div>
+    <div th:insert="~{fragments/footer.html :: footer}"></div>
+</div>
