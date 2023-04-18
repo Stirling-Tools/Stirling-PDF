@@ -105,15 +105,17 @@ function compareVersions(version1, version2) {
                         aria-haspopup="true" aria-expanded="false" th:text="#{navbar.convert}"></a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <!-- Existing menu items -->
-                            <a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''" th:text="#{home.pdfToImage.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{img-to-pdf}" th:classappend="${currentPage}=='img-to-pdf' ? 'active' : ''" th:text="#{home.imageToPdf.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{file-to-pdf}" th:classappend="${currentPage}=='file-to-pdf' ? 'active' : ''" th:text="#{home.fileToPDF.title}"></a>
-                            <a class="dropdown-item" href="#" th:href="@{pdf-to-pdfa}" th:classappend="${currentPage}=='pdf-to-pdfa' ? 'active' : ''" th:text="#{home.pdfToPDFA.title}"></a>
+                        	<hr class="dropdown-divider">
+                            <a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''" th:text="#{home.pdfToImage.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-word}" th:classappend="${currentPage}=='pdf-to-word' ? 'active' : ''" th:text="#{home.PDFToWord.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-presentation}" th:classappend="${currentPage}=='pdf-to-presentation' ? 'active' : ''" th:text="#{home.PDFToPresentation.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-text}" th:classappend="${currentPage}=='pdf-to-text' ? 'active' : ''" th:text="#{home.PDFToText.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-html}" th:classappend="${currentPage}=='pdf-to-html' ? 'active' : ''" th:text="#{home.PDFToHTML.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-xml}" th:classappend="${currentPage}=='pdf-to-xml' ? 'active' : ''" th:text="#{home.PDFToXML.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{pdf-to-pdfa}" th:classappend="${currentPage}=='pdf-to-pdfa' ? 'active' : ''" th:text="#{home.pdfToPDFA.title}"></a>
+                           
                         </div>
                     </li>
 
