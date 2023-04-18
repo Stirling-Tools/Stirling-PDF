@@ -21,7 +21,7 @@ dependencies {
 	implementation 'commons-io:commons-io:2.11.0'
 		
 	//general PDF
-    implementation 'org.apache.pdfbox:pdfbox:2.0.27'
+    implementation 'org.apache.pdfbox:pdfbox:2.0.28'
         
     implementation 'com.itextpdf:itextpdf:5.5.13.3'
     developmentOnly("org.springframework.boot:spring-boot-devtools")
