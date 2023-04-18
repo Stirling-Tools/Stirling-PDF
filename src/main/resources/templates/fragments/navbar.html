@@ -90,7 +90,7 @@ function compareVersions(version1, version2) {
 
                     <li class="nav-item"><a class="nav-link" href="#" th:href="@{page-manager}" th:classappend="${currentPage}=='page-manager' ? 'active' : ''" th:text="#{home.pageManager.title}"></a></li>
 
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='pdf-to-pdfa' OR ${currentPage}=='file-to-pdf' OR ${currentPage}=='xlsx-to-pdf' OR ${currentPage}=='pdf-to-word' OR ${currentPage}=='pdf-to-presentation' OR ${currentPage}=='pdf-to-text' OR ${currentPage}=='pdf-to-html' OR ${currentPage}=='pdf-to-xml' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false" th:text="#{navbar.pages}"></a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <!-- Existing menu items -->
