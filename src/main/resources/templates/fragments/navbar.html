@@ -88,13 +88,18 @@ function compareVersions(version1, version2) {
 
                 <ul class="navbar-nav mr-auto flex-nowrap">
 
-                    <li class="nav-item"><a class="nav-link" href="#" th:href="@{merge-pdfs}" th:classappend="${currentPage}=='merge-pdfs' ? 'active' : ''" th:text="#{home.merge.title}"></a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" th:href="@{page-manager}" th:classappend="${currentPage}=='page-manager' ? 'active' : ''" th:text="#{home.pageManager.title}"></a></li>
 
-                    <li class="nav-item"><a class="nav-link" href="#" th:href="@{split-pdfs}" th:classappend="${currentPage}=='split-pdfs' ? 'active' : ''" th:text="#{home.split.title}"></a></li>
-
-                    <li class="nav-item"><a class="nav-link" href="#" th:href="@{pdf-organizer}" th:classappend="${currentPage}=='pdf-organizer' ? 'active' : ''" th:text="#{home.pdfOrganiser.title}"></a></li>
-
-                    <li class="nav-item"><a class="nav-link" href="#" th:href="@{rotate-pdf}" th:classappend="${currentPage}=='rotate-pdf' ? 'active' : ''" th:text="#{home.rotate.title}"></a></li>
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='pdf-to-pdfa' OR ${currentPage}=='file-to-pdf' OR ${currentPage}=='xlsx-to-pdf' OR ${currentPage}=='pdf-to-word' OR ${currentPage}=='pdf-to-presentation' OR ${currentPage}=='pdf-to-text' OR ${currentPage}=='pdf-to-html' OR ${currentPage}=='pdf-to-xml' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false" th:text="#{navbar.pages}"></a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <!-- Existing menu items -->
+                            <a class="dropdown-item" href="#" th:href="@{merge-pdfs}" th:classappend="${currentPage}=='merge-pdfs' ? 'active' : ''" th:text="#{home.merge.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{split-pdfs}" th:classappend="${currentPage}=='split-pdfs' ? 'active' : ''" th:text="#{home.split.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{pdf-organizer}" th:classappend="${currentPage}=='pdf-organizer' ? 'active' : ''" th:text="#{home.pdfOrganiser.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{rotate-pdf}" th:classappend="${currentPage}=='rotate-pdf' ? 'active' : ''" th:text="#{home.rotate.title}"></a>
+                        </div>
+                    </li>
 
                     <li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='pdf-to-pdfa' OR ${currentPage}=='file-to-pdf' OR ${currentPage}=='xlsx-to-pdf' OR ${currentPage}=='pdf-to-word' OR ${currentPage}=='pdf-to-presentation' OR ${currentPage}=='pdf-to-text' OR ${currentPage}=='pdf-to-html' OR ${currentPage}=='pdf-to-xml' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false" th:text="#{navbar.convert}"></a>
