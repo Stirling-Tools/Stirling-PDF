@@ -43,6 +43,8 @@ Feel free to request any features of bug fixes either in github issues or our [D
 - [OcrMyPdf](https://github.com/ocrmypdf/OCRmyPDF)
 - HTML, CSS, JavaScript
 - Docker
+- PDF.js
+- PDF-LIB.js
 
 ## How to use
 
