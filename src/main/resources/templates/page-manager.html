@@ -59,7 +59,23 @@
         var fileName = null;
         const pagesContainer = document.getElementById("pages-container");
 
-        function addPdfs() {
+        // add the bottom "insert pdf" button that appears on the right when hovered over
+        const bottomInsertFileButtonContainer = document.createElement('div');
+        bottomInsertFileButtonContainer.classList.add("insert-file-button-container", "align-bottom");
+        bottomInsertFileButtonContainer.style.transform = "translate(0, 50%)";
+        
+            const bottomInsertFileButton = document.createElement('button');
+            bottomInsertFileButton.classList.add("btn", "btn-primary", "insert-file-button", "align-center-right");
+            bottomInsertFileButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
+                                    <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
+                                    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                                </svg>`;
+            bottomInsertFileButton.onclick = e => addPdfs();
+            bottomInsertFileButtonContainer.appendChild(bottomInsertFileButton);
+
+        pagesContainer.appendChild(bottomInsertFileButtonContainer);
+
+        function addPdfs(nextSiblingElement) {
             var input = document.createElement('input');
             input.type = 'file';
             input.multiple = true;
@@ -69,7 +85,7 @@
                 const files = e.target.files;
                 fileName = files[0].name;
                 for (var i=0; i < files.length; i++) {
-                    addPdfFile(files[i]);
+                    addPdfFile(files[i], nextSiblingElement);
                 }
 
                 document.querySelectorAll(".enable-on-file").forEach(element => {
@@ -80,7 +96,7 @@
             input.click();
         }
 
-        async function addPdfFile(file) {
+        async function addPdfFile(file, nextSiblingElement) {
             const { renderer, pdfDocument } = await loadFile(file);
 
             const moveUpButtonCallback = e => {
@@ -148,6 +164,13 @@
                 }
                 pagesContainer.removeChild(imgContainer);
             };
+            const insertFileButtonCallback = e => {
+                var imgContainer = e.target;
+                while (!imgContainer.classList.contains("page-container")) {
+                    imgContainer = imgContainer.parentNode;
+                }
+                addPdfs(imgContainer)
+            };
 
             for (var i=0; i < renderer.pageCount; i++) {
                 const div = document.createElement('div');
@@ -163,7 +186,7 @@
                     const buttonContainer = document.createElement('div');
                     buttonContainer.classList.add("button-container");
                         
-                    const moveUp = document.createElement('button');
+                        const moveUp = document.createElement('button');
                         moveUp.classList.add("move-up-button","btn", "btn-secondary");
                         moveUp.innerHTML = '<i class="bi bi-arrow-up-short"></i>';
                         moveUp.onclick = moveUpButtonCallback;
@@ -204,7 +227,25 @@
 
                     div.appendChild(buttonContainer);
 
-                pagesContainer.appendChild(div);
+                    const insertFileButtonContainer = document.createElement('div');
+                    insertFileButtonContainer.classList.add("insert-file-button-container", "align-top");
+                    
+                        const insertFileButton = document.createElement('button');
+                        insertFileButton.classList.add("btn", "btn-primary", "insert-file-button", "align-center-right");
+                        insertFileButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
+                                                <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
+                                                <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                                            </svg>`;
+                        insertFileButton.onclick = insertFileButtonCallback;
+                        insertFileButtonContainer.appendChild(insertFileButton);
+
+                    div.appendChild(insertFileButtonContainer);
+
+                if (nextSiblingElement) {
+                    pagesContainer.insertBefore(div, nextSiblingElement);
+                } else {
+                    pagesContainer.appendChild(div);
+                }
             }
         }
 
@@ -337,6 +378,7 @@
             aspect-ratio: 1;
             text-align: center;
             position: relative;
+            user-select: none;
         }
 
         .page-container img {
@@ -348,7 +390,7 @@
             top: 50%;
             translate: -50% -50%;
             box-shadow: 0 0 10px rgba(0,0,0);
-	        transition: rotate .3s;
+	        transition: rotate 0.3s;
         }
 
         .page-container .button-container {
@@ -366,11 +408,35 @@
             width: 16px;
             height: 16px;
         }
-        .page-container:first-child .move-up-button {
+        .page-container:nth-child(2) .move-up-button {
             visibility: hidden;
         }
         .page-container:last-child .move-down-button {
             visibility: hidden;
+        }
+
+        /* "insert pdf" buttons that appear on the right when hover */
+        .insert-file-button-container {
+            translate: 0 -50%;
+            width: 100%;
+            height: 60px;
+
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .insert-file-button-container:hover {
+            opacity: 1;
+            transition: opacity 0.05s;
+        }
+        .insert-file-button {
+            translate: 100% -50%;
+            rotate: 45deg;
+            aspect-ratio: 1;
+            border-radius: 100px 100px 100px 0;
+        }
+        .insert-file-button > * {
+            rotate: -45deg;
         }
 
         #add-pdf-button {
