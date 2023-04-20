@@ -90,7 +90,7 @@ function compareVersions(version1, version2) {
 
                     <li class="nav-item"><a class="nav-link" href="#" th:href="@{page-manager}" th:classappend="${currentPage}=='page-manager' ? 'active' : ''" th:text="#{home.pageManager.title}"></a></li>
 
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='pdf-to-pdfa' OR ${currentPage}=='file-to-pdf' OR ${currentPage}=='xlsx-to-pdf' OR ${currentPage}=='pdf-to-word' OR ${currentPage}=='pdf-to-presentation' OR ${currentPage}=='pdf-to-text' OR ${currentPage}=='pdf-to-html' OR ${currentPage}=='pdf-to-xml' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false" th:text="#{navbar.pages}"></a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <!-- Existing menu items -->
@@ -98,6 +98,7 @@ function compareVersions(version1, version2) {
                             <a class="dropdown-item" href="#" th:href="@{split-pdfs}" th:classappend="${currentPage}=='split-pdfs' ? 'active' : ''" th:text="#{home.split.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-organizer}" th:classappend="${currentPage}=='pdf-organizer' ? 'active' : ''" th:text="#{home.pdfOrganiser.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{rotate-pdf}" th:classappend="${currentPage}=='rotate-pdf' ? 'active' : ''" th:text="#{home.rotate.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{remove-pages}" th:classappend="${currentPage}=='remove-pages' ? 'active' : ''" th:text="#{home.removePages.title}"></a>
                         </div>
                     </li>
 
@@ -105,15 +106,17 @@ function compareVersions(version1, version2) {
                         aria-haspopup="true" aria-expanded="false" th:text="#{navbar.convert}"></a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <!-- Existing menu items -->
-                            <a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''" th:text="#{home.pdfToImage.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{img-to-pdf}" th:classappend="${currentPage}=='img-to-pdf' ? 'active' : ''" th:text="#{home.imageToPdf.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{file-to-pdf}" th:classappend="${currentPage}=='file-to-pdf' ? 'active' : ''" th:text="#{home.fileToPDF.title}"></a>
-                            <a class="dropdown-item" href="#" th:href="@{pdf-to-pdfa}" th:classappend="${currentPage}=='pdf-to-pdfa' ? 'active' : ''" th:text="#{home.pdfToPDFA.title}"></a>
+                        	<hr class="dropdown-divider">
+                            <a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''" th:text="#{home.pdfToImage.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-word}" th:classappend="${currentPage}=='pdf-to-word' ? 'active' : ''" th:text="#{home.PDFToWord.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-presentation}" th:classappend="${currentPage}=='pdf-to-presentation' ? 'active' : ''" th:text="#{home.PDFToPresentation.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-text}" th:classappend="${currentPage}=='pdf-to-text' ? 'active' : ''" th:text="#{home.PDFToText.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-html}" th:classappend="${currentPage}=='pdf-to-html' ? 'active' : ''" th:text="#{home.PDFToHTML.title}"></a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-xml}" th:classappend="${currentPage}=='pdf-to-xml' ? 'active' : ''" th:text="#{home.PDFToXML.title}"></a>
+                            <a class="dropdown-item" href="#" th:href="@{pdf-to-pdfa}" th:classappend="${currentPage}=='pdf-to-pdfa' ? 'active' : ''" th:text="#{home.pdfToPDFA.title}"></a>
+                           
                         </div>
                     </li>
 
@@ -131,13 +134,12 @@ function compareVersions(version1, version2) {
                     </li>
                    
                    
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false" th:text="#{navbar.other}"></a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                         	<a class="dropdown-item" href="#" th:href="@{ocr-pdf}" th:classappend="${currentPage}=='ocr-pdf' ? 'active' : ''" th:text="#{home.ocr.title}"></a> 
                             <a class="dropdown-item" href="#" th:href="@{add-image}" th:classappend="${currentPage}=='add-image' ? 'active' : ''" th:text="#{home.addImage.title}"></a> 
                             <a class="dropdown-item" href="#" th:href="@{compress-pdf}" th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''" th:text="#{home.compressPdfs.title}"></a> 
-                            <a class="dropdown-item" href="#" th:href="@{remove-pages}" th:classappend="${currentPage}=='remove-pages' ? 'active' : ''" th:text="#{home.removePages.title}"></a>
                         	<a class="dropdown-item" href="#" th:href="@{extract-images}" th:classappend="${currentPage}=='extract-images' ? 'active' : ''" th:text="#{home.extractImages.title}"></a>
                         </div></li>
 
