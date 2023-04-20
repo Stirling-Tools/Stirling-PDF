@@ -263,6 +263,7 @@
         function rotateAll(deg) {
             for (var i=0; i<pagesContainer.childNodes.length; i++) {
                 const img = pagesContainer.childNodes[i].querySelector("img");
+                if (!img) continue;
                 rotateElement(img, deg)
             }
         }
@@ -271,6 +272,7 @@
             const pdfDoc = await PDFLib.PDFDocument.create();
             for (var i=0; i<pagesContainer.childNodes.length; i++) {
                 const img = pagesContainer.childNodes[i].querySelector("img");
+                if (!img) continue;
                 const pages = await pdfDoc.copyPages(img.doc, [img.pageIdx])
                 const page = pages[0];
 
