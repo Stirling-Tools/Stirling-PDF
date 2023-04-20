@@ -21,3 +21,17 @@ html[lang-direction=rtl] * {
     direction: rtl;
     text-align: right;
 }
+
+.align-top {
+    position: absolute;
+    top: 0;
+}
+.align-center-right {
+    position: absolute;
+    right: 0;
+    top: 50%;
+}
+.align-bottom {
+    position: absolute;
+    bottom: 0;
+}
