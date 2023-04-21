@@ -25,3 +25,7 @@ body {
    background-color: #444 !important;
 }
 
+.home-card-icon-colour {
+filter: invert(0.2) sepia(2) saturate(50) hue-rotate(190deg);
+}
+
