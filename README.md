@@ -16,7 +16,7 @@ Feel free to request any features of bug fixes either in github issues or our [D
 ![stirling-home](images/stirling-home.png)
 
 ## Features
-
+- Full intractable GUI for merging/splitting/rotating/moving PDFs and their pages.
 - Split PDFs into multiple files at specified page numbers or extract all pages as individual files.
 - Merge multiple PDFs together into a single resultant file
 - Convert PDFs to and from images
