@@ -31,38 +31,47 @@
 
 <script>
 function toggleDarkMode() {
-	  var checkbox = document.getElementById("toggle-dark-mode");
 	  var darkModeStyles = document.getElementById("dark-mode-styles");
-	  if (checkbox.checked) {
-	    localStorage.setItem("dark-mode", "on");
-	    darkModeStyles.disabled = false;
-	  } else {
+	  var darkModeIcon = document.getElementById("dark-mode-icon");
+
+	  if (localStorage.getItem("dark-mode") == "on") {
 	    localStorage.setItem("dark-mode", "off");
 	    darkModeStyles.disabled = true;
+	    darkModeIcon.src = "sun.svg";
+	  } else {
+	    localStorage.setItem("dark-mode", "on");
+	    darkModeStyles.disabled = false;
+	    darkModeIcon.src = "moon.svg";
 	  }
 	}
 
-	$(document).ready(function() {
+document.addEventListener("DOMContentLoaded", function () {
 	  var darkModeStyles = document.getElementById("dark-mode-styles");
-	  var checkbox = document.getElementById("toggle-dark-mode");
+	  var darkModeIcon = document.getElementById("dark-mode-icon");
 
 	  // Check if the user has already set a preference
 	  if (localStorage.getItem("dark-mode") == "on") {
 	    darkModeStyles.disabled = false;
-	    checkbox.checked = true;
+	    darkModeIcon.src = "moon.svg";
 	  } else if (localStorage.getItem("dark-mode") == "off") {
 	    darkModeStyles.disabled = true;
-	    checkbox.checked = false;
+	    darkModeIcon.src = "sun.svg";
 	  } else {
 	    // Check the OS's default dark mode setting
-	    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+	    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
 	      darkModeStyles.disabled = false;
-	      checkbox.checked = true;
+	      darkModeIcon.src = "moon.svg";
 	    } else {
 	      darkModeStyles.disabled = true;
-	      checkbox.checked = false;
+	      darkModeIcon.src = "sun.svg";
 	    }
 	  }
+
+	  // Attach the toggleDarkMode function to the click event of the dark mode toggle
+	  document.getElementById("dark-mode-toggle").addEventListener("click", function (event) {
+	    event.preventDefault();
+	    toggleDarkMode();
+	  });
 	});
 
 	</script>
