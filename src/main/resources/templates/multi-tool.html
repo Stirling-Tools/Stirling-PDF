@@ -285,14 +285,24 @@
                 
                 pdfDoc.addPage(page);
             }
-            const pdfBytes = await pdfDoc.save()
+            const pdfBytes = await pdfDoc.save();
             const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
             const url = URL.createObjectURL(pdfBlob);
+            const downloadOption = localStorage.getItem('downloadOption');
 
-            const downloadLink = document.createElement('a');
-            downloadLink.href = url;
-            downloadLink.download = fileName ? fileName : 'managed.pdf';
-            downloadLink.click(); // Simulate a click on the download link to start the download
+            if (downloadOption === 'sameWindow') {
+                // Open the file in the same window
+                window.location.href = url;
+            } else if (downloadOption === 'newWindow') {
+                // Open the file in a new window
+                window.open(url, '_blank');
+            } else {
+                // Download the file
+                const downloadLink = document.createElement('a');
+                downloadLink.href = url;
+                downloadLink.download = fileName ? fileName : 'managed.pdf';
+                downloadLink.click();
+            }
         }
 
         async function loadFile(file) {

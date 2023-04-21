@@ -124,7 +124,7 @@ function compareVersions(version1, version2) {
         <div class="container ">
 
             <a class="navbar-brand" href="#" th:href="@{/}" >
-                <img class="main-icon" src="favicon.svg" alt="Page Operations Icon">
+                <img th:if="${@navBarText} == 'Stirling PDF'" class="main-icon" src="favicon.svg" alt="icon">
                 <span class="icon-text"  th:text="${@navBarText}"></span>
             </a>
 
@@ -139,36 +139,36 @@ function compareVersions(version1, version2) {
                     
                     <li class="nav-item">
                         <a class="nav-link" href="#" th:href="@{multi-tool}" th:classappend="${currentPage}=='multi-tool' ? 'active' : ''">
-                            <img class="icon" src="images/tools.svg" alt="Page Operations Icon">
+                            <img class="icon" src="images/tools.svg" alt="icon">
                             <span class="icon-text"  th:text="#{home.multiTool.title}"></span>
                         </a>
                     </li>
 <li class="nav-item nav-item-separator"></li>
                     <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' ? 'active' : ''">
     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <img class="icon" src="images/file-earmark-pdf.svg" alt="Page Operations Icon">
+        <img class="icon" src="images/file-earmark-pdf.svg" alt="icon">
         <span class="icon-text"  th:text="#{navbar.pageOps}"></span>
     </a>
     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
         <!-- Existing menu items -->
         <a class="dropdown-item" href="#" th:href="@{merge-pdfs}" th:classappend="${currentPage}=='merge-pdfs' ? 'active' : ''">
-            <img class="icon" src="images/union.svg" alt="Merge Icon">
+            <img class="icon" src="images/union.svg" alt="icon">
             <span class="icon-text"  th:text="#{home.merge.title}"></span>
         </a>
         <a class="dropdown-item" href="#" th:href="@{split-pdfs}" th:classappend="${currentPage}=='split-pdfs' ? 'active' : ''">
-            <img class="icon" src="images/layout-split.svg" alt="Split Icon">
+            <img class="icon" src="images/layout-split.svg" alt="icon">
             <span class="icon-text"  th:text="#{home.split.title}"></span>
         </a>
         <a class="dropdown-item" href="#" th:href="@{pdf-organizer}" th:classappend="${currentPage}=='pdf-organizer' ? 'active' : ''">
-            <img class="icon" src="images/sort-numeric-down.svg" alt="Organizer Icon">
+            <img class="icon" src="images/sort-numeric-down.svg" alt="icon">
             <span class="icon-text"  th:text="#{home.pdfOrganiser.title}"></span>
         </a>
         <a class="dropdown-item" href="#" th:href="@{rotate-pdf}" th:classappend="${currentPage}=='rotate-pdf' ? 'active' : ''">
-            <img class="icon" src="images/arrow-clockwise.svg" alt="Rotate Icon">
+            <img class="icon" src="images/arrow-clockwise.svg" alt="icon">
             <span class="icon-text"  th:text="#{home.rotate.title}"></span>
         </a>
         <a class="dropdown-item" href="#" th:href="@{remove-pages}" th:classappend="${currentPage}=='remove-pages' ? 'active' : ''">
-            <img class="icon" src="images/file-earmark-x.svg" alt="Remove Pages Icon">
+            <img class="icon" src="images/file-earmark-x.svg" alt="icon">
             <span class="icon-text"  th:text="#{home.removePages.title}"></span>
         </a>
     </div>
@@ -176,58 +176,58 @@ function compareVersions(version1, version2) {
 <li class="nav-item nav-item-separator"></li>
                     <li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='pdf-to-pdfa' OR ${currentPage}=='file-to-pdf' OR ${currentPage}=='xlsx-to-pdf' OR ${currentPage}=='pdf-to-word' OR ${currentPage}=='pdf-to-presentation' OR ${currentPage}=='pdf-to-text' OR ${currentPage}=='pdf-to-html' OR ${currentPage}=='pdf-to-xml' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">
-                        <img class="icon" src="images/arrow-left-right.svg" alt="Security Icon" style="width: 16px; height: 16px; vertical-align: middle;"> 
+                        <img class="icon" src="images/arrow-left-right.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> 
                         <span class="icon-text"  th:text="#{navbar.convert}"></span>
                     </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <!-- Existing menu items -->
                             <a class="dropdown-item" href="#" th:href="@{img-to-pdf}" th:classappend="${currentPage}=='img-to-pdf' ? 'active' : ''">
-                                <img class="icon" src="images/image.svg" alt="Picture Icon" style="width: 16px; height: 16px; vertical-align: middle;">
+                                <img class="icon" src="images/image.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;">
                                 <span class="icon-text"  th:text="#{home.imageToPdf.title}"></span>
                             </a>
                             <a class="dropdown-item" href="#" th:href="@{file-to-pdf}" th:classappend="${currentPage}=='file-to-pdf' ? 'active' : ''">
-                                <img class="icon" src="images/file.svg" alt="Picture Icon" style="width: 16px; height: 16px; vertical-align: middle;">
+                                <img class="icon" src="images/file.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;">
                                 <span class="icon-text"  th:text="#{home.fileToPDF.title}"></span>
                             </a>
                         	<hr class="dropdown-divider">
                            <a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''">
                            
                         
-                                <img class="icon" src="images/image.svg" alt="Arrow Icon">
+                                <img class="icon" src="images/image.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.pdfToImage.title}"></span>
                             </a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-word}" th:classappend="${currentPage}=='pdf-to-word' ? 'active' : ''">
                       
                        
-                                <img class="icon" src="images/file-earmark-word.svg" alt="Arrow Icon">
+                                <img class="icon" src="images/file-earmark-word.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.PDFToWord.title}"></span>
                             </a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-presentation}" th:classappend="${currentPage}=='pdf-to-presentation' ? 'active' : ''">
                             
                    
-                                <img class="icon" src="images/file-earmark-ppt.svg" alt="Arrow Icon">
+                                <img class="icon" src="images/file-earmark-ppt.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.PDFToPresentation.title}"></span>
                             </a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-text}" th:classappend="${currentPage}=='pdf-to-text' ? 'active' : ''">
                          
                        
-                                <img class="icon" src="images/filetype-txt.svg" alt="Arrow Icon">
+                                <img class="icon" src="images/filetype-txt.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.PDFToText.title}"></span>
                             </a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-html}" th:classappend="${currentPage}=='pdf-to-html' ? 'active' : ''">
                           
                              
-                                <img class="icon" src="images/filetype-html.svg" alt="Arrow Icon">
+                                <img class="icon" src="images/filetype-html.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.PDFToHTML.title}"></span>
                             </a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-xml}" th:classappend="${currentPage}=='pdf-to-xml' ? 'active' : ''">
                           
-                                <img class="icon" src="images/filetype-xml.svg" alt="Arrow Icon">
+                                <img class="icon" src="images/filetype-xml.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.PDFToXML.title}"></span>
                             </a>
                             <a class="dropdown-item" href="#" th:href="@{pdf-to-pdfa}" th:classappend="${currentPage}=='pdf-to-pdfa' ? 'active' : ''">
           
-                                <img class="icon" src="images/file-earmark-pdf.svg" alt="Arrow Icon">
+                                <img class="icon" src="images/file-earmark-pdf.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.pdfToPDFA.title}"></span>
                             </a>
 
@@ -240,23 +240,23 @@ function compareVersions(version1, version2) {
                    
                   <li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='change-permissions' OR ${currentPage}=='add-watermark' OR ${currentPage}=='remove-watermark' ? 'active' : ''">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <img class="icon" src="images/shield-check.svg" alt="Security Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{navbar.security}"></span>
+                        <img class="icon" src="images/shield-check.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{navbar.security}"></span>
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <a class="dropdown-item" href="#" th:href="@{add-password}" th:classappend="${currentPage}=='add-password' ? 'active' : ''">
-                            <img class="icon" src="images/lock.svg" alt="Add Password Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.addPassword.title}"></span>
+                            <img class="icon" src="images/lock.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.addPassword.title}"></span>
                         </a>
                         <a class="dropdown-item" href="#" th:href="@{remove-password}" th:classappend="${currentPage}=='remove-password' ? 'active' : ''">
-                            <img class="icon" src="images/unlock.svg" alt="Remove Password Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.removePassword.title}"></span>
+                            <img class="icon" src="images/unlock.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.removePassword.title}"></span>
                         </a>
                         <a class="dropdown-item" href="#" th:href="@{change-permissions}" th:classappend="${currentPage}=='change-permissions' ? 'active' : ''">
-                            <img class="icon" src="images/shield-lock.svg" alt="Change Permissions Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.permissions.title}"></span>
+                            <img class="icon" src="images/shield-lock.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.permissions.title}"></span>
                         </a>
                         <a class="dropdown-item" href="#" th:href="@{add-watermark}" th:classappend="${currentPage}=='add-watermark' ? 'active' : ''">
-                            <img class="icon" src="images/droplet.svg" alt="Add Watermark Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.watermark.title}"></span>
+                            <img class="icon" src="images/droplet.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.watermark.title}"></span>
                         </a>
                         <a class="dropdown-item" href="#" th:href="@{change-metadata}" th:classappend="${currentPage}=='change-metadata' ? 'active' : ''">
-                            <img class="icon" src="images/clipboard-data.svg" alt="Change Metadata Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.changeMetadata.title}"></span>
+                            <img class="icon" src="images/clipboard-data.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.changeMetadata.title}"></span>
                         </a>
                     </div>
                 </li>
@@ -264,22 +264,22 @@ function compareVersions(version1, version2) {
                   <li class="nav-item nav-item-separator"></li> 
                     <li class="nav-item dropdown" th:classappend="${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' ? 'active' : ''">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <img class="icon" src="images/card-list.svg" alt="Security Icon" style="width: 16px; height: 16px; vertical-align: middle;"> 
+                        <img class="icon" src="images/card-list.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> 
                         <span class="icon-text"  th:text="#{navbar.other}"></span>
                         
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <a class="dropdown-item" href="#" th:href="@{ocr-pdf}" th:classappend="${currentPage}=='ocr-pdf' ? 'active' : ''">
-                                <img class="icon" src="images/search.svg" alt="OCR Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.ocr.title}"></span>
+                                <img class="icon" src="images/search.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.ocr.title}"></span>
                             </a>
                             <a class="dropdown-item" href="#" th:href="@{add-image}" th:classappend="${currentPage}=='add-image' ? 'active' : ''">
-                                <img class="icon" src="images/file-earmark-richtext.svg" alt="Add Image Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.addImage.title}"></span>
+                                <img class="icon" src="images/file-earmark-richtext.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.addImage.title}"></span>
                             </a>
                             <a class="dropdown-item" href="#" th:href="@{compress-pdf}" th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''">
-                                <img class="icon" src="images/file-zip.svg" alt="Compress PDF Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.compressPdfs.title}"></span>
+                                <img class="icon" src="images/file-zip.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.compressPdfs.title}"></span>
                             </a>
                             <a class="dropdown-item" href="#" th:href="@{extract-images}" th:classappend="${currentPage}=='extract-images' ? 'active' : ''">
-                                <img class="icon" src="images/images.svg" alt="Extract Images Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.extractImages.title}"></span>
+                                <img class="icon" src="images/images.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.extractImages.title}"></span>
                             </a>
                         </div>
                     </li>
@@ -289,7 +289,7 @@ function compareVersions(version1, version2) {
                 <ul class="navbar-nav ml-auto flex-nowrap">
                     <li class="nav-item">
                         <a class="nav-link" id="dark-mode-toggle" href="#">
-                          <img class="navbar-icon" id="dark-mode-icon" src="moon.svg" alt="Toggle Dark Mode" />
+                          <img class="navbar-icon" id="dark-mode-icon" src="moon.svg" alt="icon" />
                         </a>
                       </li>
                    
@@ -301,19 +301,19 @@ function compareVersions(version1, version2) {
                          </a>
                         <div class="dropdown-menu" aria-labelledby="languageDropdown">
                             <a class="dropdown-item lang_dropdown-item" href="" data-language-code="en_GB">
-                                <img src="/images/flags/gb.svg" alt="English Flag" width="20" height="15"> English
+                                <img src="/images/flags/gb.svg" alt="icon" width="20" height="15"> English
                             </a>
                             <a class="dropdown-item lang_dropdown-item" href="" data-language-code="ar_AR">
-                                <img src="/images/flags/sa.svg" alt="Arabic Flag" width="20" height="15"> العربية
+                                <img src="/images/flags/sa.svg" alt="icon" width="20" height="15"> العربية
                             </a>
                             <a class="dropdown-item lang_dropdown-item" href="" data-language-code="de_DE">
-                                <img src="/images/flags/de.svg" alt="German Flag" width="20" height="15"> Deutsch
+                                <img src="/images/flags/de.svg" alt="icon" width="20" height="15"> Deutsch
                             </a>
                             <a class="dropdown-item lang_dropdown-item" href="" data-language-code="fr_FR">
-                                <img src="/images/flags/fr.svg" alt="French Flag" width="20" height="15"> Français
+                                <img src="/images/flags/fr.svg" alt="icon" width="20" height="15"> Français
                             </a>
                             <a class="dropdown-item lang_dropdown-item" href="" data-language-code="es_ES">
-                                <img src="/images/flags/es.svg" alt="Spanish Flag" width="20" height="15"> Español
+                                <img src="/images/flags/es.svg" alt="icon" width="20" height="15"> Español
                             </a>
                         </div>
                     </li>
@@ -321,7 +321,7 @@ function compareVersions(version1, version2) {
                     <li class="nav-item">
                         <!-- Settings Button -->
                         <a href="#" class="nav-link" data-toggle="modal" data-target="#settingsModal">
-                            <img class="navbar-icon" src="/images/gear.svg" alt="Settings Icon" width="24" height="24">
+                            <img class="navbar-icon" src="/images/gear.svg" alt="icon" width="24" height="24">
                         </a>
 
                     </li>
@@ -361,7 +361,7 @@ function compareVersions(version1, version2) {
                 </div>
                 <div class="form-group">
                     <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label>
-                    <input type="range" class="custom-range" min="0" max="9" step="1" id="zipThreshold" value="4">
+                    <input type="range" class="custom-range" min="1" max="9" step="1" id="zipThreshold" value="4">
                     <span id="zipThresholdValue" class="ml-2"></span>
                 </div>
             </div>
