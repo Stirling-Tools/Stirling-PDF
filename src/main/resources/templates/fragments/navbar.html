@@ -79,6 +79,7 @@ function compareVersions(version1, version2) {
         width: 16px;
         height: 16px;
         vertical-align: middle;
+        transform: translateY(-2px);
     }
 
     .icon + .icon {
@@ -86,7 +87,7 @@ function compareVersions(version1, version2) {
     }
 
     .icon-text {
-        margin-left: 8px;
+        margin-left: 4px;
     }
     .settings-cog {
     filter: invert(1); 
@@ -131,7 +132,7 @@ function compareVersions(version1, version2) {
                     <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' ? 'active' : ''">
     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <img class="icon" src="images/file-earmark-pdf.svg" alt="Page Operations Icon">
-        <span th:text="#{navbar.pageOps}"></span>
+        <span class="icon-text"  th:text="#{navbar.pageOps}"></span>
     </a>
     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
         <!-- Existing menu items -->
@@ -160,7 +161,8 @@ function compareVersions(version1, version2) {
 <li class="nav-item nav-item-separator"></li>
                     <li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='pdf-to-pdfa' OR ${currentPage}=='file-to-pdf' OR ${currentPage}=='xlsx-to-pdf' OR ${currentPage}=='pdf-to-word' OR ${currentPage}=='pdf-to-presentation' OR ${currentPage}=='pdf-to-text' OR ${currentPage}=='pdf-to-html' OR ${currentPage}=='pdf-to-xml' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">
-                        <img class="icon" src="images/arrow-left-right.svg" alt="Security Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span th:text="#{navbar.convert}"></span>
+                        <img class="icon" src="images/arrow-left-right.svg" alt="Security Icon" style="width: 16px; height: 16px; vertical-align: middle;"> 
+                        <span class="icon-text"  th:text="#{navbar.convert}"></span>
                     </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <!-- Existing menu items -->
@@ -223,7 +225,7 @@ function compareVersions(version1, version2) {
                    
                   <li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='change-permissions' OR ${currentPage}=='add-watermark' OR ${currentPage}=='remove-watermark' ? 'active' : ''">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <img class="icon" src="images/shield-check.svg" alt="Security Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span th:text="#{navbar.security}"></span>
+                        <img class="icon" src="images/shield-check.svg" alt="Security Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{navbar.security}"></span>
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <a class="dropdown-item" href="#" th:href="@{add-password}" th:classappend="${currentPage}=='add-password' ? 'active' : ''">
@@ -280,7 +282,7 @@ function compareVersions(version1, version2) {
                                 <img src="/images/flags/gb.svg" alt="English Flag" width="20" height="15"> English
                             </a>
                             <a class="dropdown-item lang_dropdown-item" href="" data-language-code="ar_AR">
-                                <img src="/images/flags/ar.svg" alt="Arabic Flag" width="20" height="15"> العربية
+                                <img src="/images/flags/sa.svg" alt="Arabic Flag" width="20" height="15"> العربية
                             </a>
                             <a class="dropdown-item lang_dropdown-item" href="" data-language-code="de_DE">
                                 <img src="/images/flags/de.svg" alt="German Flag" width="20" height="15"> Deutsch
