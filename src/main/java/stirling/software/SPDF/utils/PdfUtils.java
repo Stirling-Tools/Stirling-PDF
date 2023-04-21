@@ -31,9 +31,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.pdf.PdfWriter;
+import java.io.InputStream;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 
 public class PdfUtils {
 
@@ -219,18 +223,7 @@ public class PdfUtils {
         return baos.toByteArray();
         }
 
-    public static ResponseEntity<byte[]> iTextDocToWebResponse(Document document, String docName) throws IOException, DocumentException {
-        // Close the document
-        document.close();
-        
-        // Open Byte Array and save document to it
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PdfWriter.getInstance(document, baos).close();
-        
 
-        return PdfUtils.boasToWebResponse(baos, docName);
-    }
-    
   
 
     public static ResponseEntity<byte[]> pdfDocToWebResponse(PDDocument document, String docName) throws IOException {
@@ -257,5 +250,33 @@ public class PdfUtils {
         headers.setContentLength(bytes.length);
         headers.setContentDispositionFormData("attachment", docName);
         return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
+    }
+    
+    
+    public static KeyPair loadKeyPairFromKeystore(InputStream keystoreInputStream, String keystorePassword) throws Exception {
+        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+        keystore.load(keystoreInputStream, keystorePassword.toCharArray());
+
+        String alias = keystore.aliases().nextElement();
+        PrivateKey privateKey = (PrivateKey) keystore.getKey(alias, keystorePassword.toCharArray());
+        Certificate cert = keystore.getCertificate(alias);
+        PublicKey publicKey = cert.getPublicKey();
+
+        return new KeyPair(publicKey, privateKey);
+    }
+
+    public static X509Certificate[] loadCertificateChainFromKeystore(InputStream keystoreInputStream, String keystorePassword) throws Exception {
+        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+        keystore.load(keystoreInputStream, keystorePassword.toCharArray());
+
+        String alias = keystore.aliases().nextElement();
+        Certificate[] certChain = keystore.getCertificateChain(alias);
+        X509Certificate[] x509CertChain = new X509Certificate[certChain.length];
+        
+        for (int i = 0; i < certChain.length; i++) {
+            x509CertChain[i] = (X509Certificate) certChain[i];
+        }
+
+        return x509CertChain;
     }
 }
