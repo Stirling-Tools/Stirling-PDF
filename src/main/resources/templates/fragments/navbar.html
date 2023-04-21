@@ -96,9 +96,7 @@ function compareVersions(version1, version2) {
     .icon-text {
         margin-left: 4px;
     }
-    .settings-cog {
-    filter: invert(1); 
-}
+
 .nav-item-separator {
     position: relative;
     margin: 0 4px; /* Adjust the margin as needed */
@@ -113,12 +111,12 @@ function compareVersions(version1, version2) {
     width: 1px;
     background-color: #ccc; /* Adjust the color as needed */
 }
-
-#dark-mode-icon {
+.navbar-icon {
   width: 20px;
   height: 20px;
    transform: translateY(-2px);
 }
+
 
 </style>
 
@@ -265,7 +263,11 @@ function compareVersions(version1, version2) {
 
                   <li class="nav-item nav-item-separator"></li> 
                     <li class="nav-item dropdown" th:classappend="${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' ? 'active' : ''">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" th:text="#{navbar.other}"></a>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <img class="icon" src="images/card-list.svg" alt="Security Icon" style="width: 16px; height: 16px; vertical-align: middle;"> 
+                        <span class="icon-text"  th:text="#{navbar.other}"></span>
+                        
+                        </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <a class="dropdown-item" href="#" th:href="@{ocr-pdf}" th:classappend="${currentPage}=='ocr-pdf' ? 'active' : ''">
                                 <img class="icon" src="images/search.svg" alt="OCR Icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.ocr.title}"></span>
@@ -287,7 +289,7 @@ function compareVersions(version1, version2) {
                 <ul class="navbar-nav ml-auto flex-nowrap">
                     <li class="nav-item">
                         <a class="nav-link" id="dark-mode-toggle" href="#">
-                          <img id="dark-mode-icon" src="moon.svg" alt="Toggle Dark Mode" />
+                          <img class="navbar-icon" id="dark-mode-icon" src="moon.svg" alt="Toggle Dark Mode" />
                         </a>
                       </li>
                    
@@ -318,9 +320,9 @@ function compareVersions(version1, version2) {
                     
                     <li class="nav-item">
                         <!-- Settings Button -->
-                        <button type="button" class="btn btn-secondary float-right" data-toggle="modal" data-target="#settingsModal">
-                            <img class="settings-cog icon" src="/images/gear.svg" alt="Settings Icon" width="15" height="15"><span class="icon-text" th:text="#{navbar.settings}"></span>
-                        </button>
+                        <a href="#" class="nav-link" data-toggle="modal" data-target="#settingsModal">
+                            <img class="navbar-icon" src="/images/gear.svg" alt="Settings Icon" width="24" height="24">
+                        </a>
 
                     </li>
                 </ul>
