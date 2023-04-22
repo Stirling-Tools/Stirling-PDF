@@ -117,9 +117,7 @@
                 while (!imgContainer.classList.contains("page-container")) {
                     imgContainer = imgContainer.parentNode;
                 }
-                console.log("imgContainer", imgContainer);
                 const sibling = imgContainer.previousSibling;
-                console.log("sibling", sibling);
                 if (sibling) {
                     pagesContainer.removeChild(imgContainer);
                     pagesContainer.insertBefore(imgContainer, sibling);
@@ -134,17 +132,13 @@
                 while (!imgContainer.classList.contains("page-container")) {
                     imgContainer = imgContainer.parentNode;
                 }
-                console.log("imgContainer", imgContainer);
                 const sibling = imgContainer.nextSibling;
-                console.log("sibling", sibling);
                 if (sibling) {
                     pagesContainer.removeChild(imgContainer);
                     if (sibling.nextSibling) {
                         pagesContainer.insertBefore(imgContainer, sibling.nextSibling);
-                        console.log("insert sibling.nextSibling", sibling.nextSibling);
                     } else {
                         pagesContainer.appendChild(imgContainer)
-                        console.log("append");
                     }
                     imgContainer.scrollIntoView({
                         behavior: "instant",
@@ -307,7 +301,6 @@
                 const rotation = img.style.rotate;
                 if (rotation) {
                     const rotationAngle = parseInt(rotation.replace(/[^\d-]/g, ''));
-                    console.log(img.style.rotate, img.style.rotate.replace(/[^\d-]/g, ''))
                     page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle))
                 }
                 
