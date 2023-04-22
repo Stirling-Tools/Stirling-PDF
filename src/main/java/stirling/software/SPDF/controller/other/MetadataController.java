@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.security;
+package stirling.software.SPDF.controller.other;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -26,19 +26,20 @@ public class MetadataController {
     @GetMapping("/change-metadata")
     public String addWatermarkForm(Model model) {
         model.addAttribute("currentPage", "change-metadata");
-        return "security/change-metadata";
+        return "other/change-metadata";
     }
 
     private String checkUndefined(String entry) {
         // Check if the string is "undefined"
-        if("undefined".equals(entry)) {
+        if ("undefined".equals(entry)) {
             // Return null if it is
             return null;
         }
         // Return the original string if it's not "undefined"
         return entry;
-        
+
     }
+
     @PostMapping("/update-metadata")
     public ResponseEntity<byte[]> metadata(@RequestParam("fileInput") MultipartFile pdfFile,
             @RequestParam(value = "deleteAll", required = false, defaultValue = "false") Boolean deleteAll, @RequestParam(value = "author", required = false) String author,
@@ -50,10 +51,10 @@ public class MetadataController {
 
         // Load the PDF file into a PDDocument
         PDDocument document = PDDocument.load(pdfFile.getBytes());
-        
+
         // Get the document information from the PDF
         PDDocumentInformation info = document.getDocumentInformation();
-        
+
         // Check if each metadata value is "undefined" and set it to null if it is
         author = checkUndefined(author);
         creationDate = checkUndefined(creationDate);
@@ -64,8 +65,9 @@ public class MetadataController {
         subject = checkUndefined(subject);
         title = checkUndefined(title);
         trapped = checkUndefined(trapped);
-     
-     // If the "deleteAll" flag is set, remove all metadata from the document information
+
+        // If the "deleteAll" flag is set, remove all metadata from the document
+        // information
         if (deleteAll) {
             for (String key : info.getMetadataKeys()) {
                 info.setCustomMetadataValue(key, null);
@@ -83,7 +85,7 @@ public class MetadataController {
             title = null;
             trapped = null;
         } else {
-         // Iterate through the request parameters and set the metadata values
+            // Iterate through the request parameters and set the metadata values
             for (Entry<String, String> entry : allRequestParams.entrySet()) {
                 String key = entry.getKey();
                 // Check if the key is a standard metadata key
@@ -128,11 +130,9 @@ public class MetadataController {
         info.setSubject(subject);
         info.setTitle(title);
         info.setTrapped(trapped);
-        
+
         document.setDocumentInformation(info);
         return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_metadata.pdf");
     }
-    
-    
-    
+
 }

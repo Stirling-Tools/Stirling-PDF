@@ -31,34 +31,18 @@ import stirling.software.SPDF.utils.WatermarkRemover;
 @Controller
 public class WatermarkController {
 
-    @GetMapping("/add-watermark")
-    public String addWatermarkForm(Model model) {
-        model.addAttribute("currentPage", "add-watermark");
-        return "security/add-watermark";
-    }
-
-    @GetMapping("/remove-watermark")
-    public String removeWatermarkForm(Model model) {
-        model.addAttribute("currentPage", "remove-watermark");
-        return "security/remove-watermark";
-    }
-    
     @PostMapping("/add-watermark")
     public ResponseEntity<byte[]> addWatermark(@RequestParam("fileInput") MultipartFile pdfFile, @RequestParam("watermarkText") String watermarkText,
             @RequestParam(defaultValue = "30", name = "fontSize") float fontSize, @RequestParam(defaultValue = "0", name = "rotation") float rotation,
-            @RequestParam(defaultValue = "0.5", name = "opacity") float opacity,
-    	@RequestParam(defaultValue = "50", name = "widthSpacer") int widthSpacer, @RequestParam(defaultValue = "50", name = "heightSpacer") int heightSpacer)
-            throws IOException {
+            @RequestParam(defaultValue = "0.5", name = "opacity") float opacity, @RequestParam(defaultValue = "50", name = "widthSpacer") int widthSpacer,
+            @RequestParam(defaultValue = "50", name = "heightSpacer") int heightSpacer) throws IOException {
 
         // Load the input PDF
         PDDocument document = PDDocument.load(pdfFile.getInputStream());
 
         // Create a page in the document
         for (PDPage page : document.getPages()) {
-        	
-        	
 
-            
             // Get the page's content stream
             PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true);
 
@@ -66,7 +50,7 @@ public class WatermarkController {
             PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
             graphicsState.setNonStrokingAlphaConstant(opacity);
             contentStream.setGraphicsStateParameters(graphicsState);
-            
+
             // Set font of watermark
             PDFont font = PDType1Font.HELVETICA_BOLD;
             contentStream.beginText();
@@ -94,19 +78,22 @@ public class WatermarkController {
             // Close the content stream
             contentStream.close();
         }
-        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "")  + "_watermarked.pdf");
+        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_watermarked.pdf");
     }
-    
-    
-    
-    
+
+    @GetMapping("/add-watermark")
+    public String addWatermarkForm(Model model) {
+        model.addAttribute("currentPage", "add-watermark");
+        return "security/add-watermark";
+    }
+
     @PostMapping("/remove-watermark")
     public ResponseEntity<byte[]> removeWatermark(@RequestParam("fileInput") MultipartFile pdfFile, @RequestParam("watermarkText") String watermarkText) throws Exception {
-        
+
         // Load the input PDF
         PDDocument document = PDDocument.load(pdfFile.getInputStream());
 
-     // Create a new PDF document for the output
+        // Create a new PDF document for the output
         PDDocument outputDocument = new PDDocument();
 
         // Loop through the pages
@@ -115,7 +102,8 @@ public class WatermarkController {
             PDPage page = document.getPage(i);
 
             // Process the content stream to remove the watermark text
-            WatermarkRemover editor = new WatermarkRemover(watermarkText) {};
+            WatermarkRemover editor = new WatermarkRemover(watermarkText) {
+            };
             editor.processPage(page);
             editor.processPage(page);
             // Add the page to the output document
@@ -149,9 +137,14 @@ public class WatermarkController {
                 }
             }
         }
-        
+
         return PdfUtils.pdfDocToWebResponse(outputDocument, "removed.pdf");
     }
 
-    
+    @GetMapping("/remove-watermark")
+    public String removeWatermarkForm(Model model) {
+        model.addAttribute("currentPage", "remove-watermark");
+        return "security/remove-watermark";
+    }
+
 }

@@ -1,4 +1,5 @@
 package stirling.software.SPDF.utils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,9 +20,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
+
 public class PDFToFile {
-    public ResponseEntity<byte[]> processPdfToOfficeFormat(MultipartFile inputFile, String outputFormat, String libreOfficeFilter)
-            throws IOException, InterruptedException {
+    public ResponseEntity<byte[]> processPdfToOfficeFormat(MultipartFile inputFile, String outputFormat, String libreOfficeFilter) throws IOException, InterruptedException {
 
         if (!"application/pdf".equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -32,11 +33,11 @@ public class PDFToFile {
         String pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
 
         // Validate output format
-        List<String> allowedFormats = Arrays.asList("doc", "docx", "odt", "ppt", "pptx", "odp", "rtf", "html","xml","txt:Text");
+        List<String> allowedFormats = Arrays.asList("doc", "docx", "odt", "ppt", "pptx", "odp", "rtf", "html", "xml", "txt:Text");
         if (!allowedFormats.contains(outputFormat)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        
+
         Path tempInputFile = null;
         Path tempOutputDir = null;
         byte[] fileBytes;
@@ -52,9 +53,8 @@ public class PDFToFile {
             tempOutputDir = Files.createTempDirectory("output_");
 
             // Run the LibreOffice command
-            List<String> command = new ArrayList<>(Arrays.asList(
-                    "soffice", "--infilter=" + libreOfficeFilter, "--convert-to", outputFormat, "--outdir", tempOutputDir.toString(), tempInputFile.toString()
-            ));
+            List<String> command = new ArrayList<>(
+                    Arrays.asList("soffice", "--infilter=" + libreOfficeFilter, "--convert-to", outputFormat, "--outdir", tempOutputDir.toString(), tempInputFile.toString()));
             int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE).runCommandWithOutputHandling(command);
 
             // Get output files
@@ -64,8 +64,8 @@ public class PDFToFile {
                 // Return single output file
                 File outputFile = outputFiles.get(0);
                 headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-                if(outputFormat.equals("txt:Text")) {
-                    outputFormat="txt";
+                if (outputFormat.equals("txt:Text")) {
+                    outputFormat = "txt";
                 }
                 headers.setContentDispositionFormData("attachment", pdfBaseName + "." + outputFormat);
                 fileBytes = FileUtils.readFileToByteArray(outputFile);

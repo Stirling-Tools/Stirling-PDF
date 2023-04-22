@@ -23,18 +23,6 @@ public class RearrangePagesPDFController {
 
     private static final Logger logger = LoggerFactory.getLogger(RearrangePagesPDFController.class);
 
-    @GetMapping("/pdf-organizer")
-    public String pageOrganizer(Model model) {
-        model.addAttribute("currentPage", "pdf-organizer");
-        return "pdf-organizer";
-    }
-
-    @GetMapping("/remove-pages")
-    public String pageDeleter(Model model) {
-        model.addAttribute("currentPage", "remove-pages");
-        return "remove-pages";
-    }
-
     @PostMapping("/remove-pages")
     public ResponseEntity<byte[]> deletePages(@RequestParam("fileInput") MultipartFile pdfFile, @RequestParam("pagesToDelete") String pagesToDelete) throws IOException {
 
@@ -51,6 +39,12 @@ public class RearrangePagesPDFController {
         }
         return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_removed_pages.pdf");
 
+    }
+
+    @GetMapping("/remove-pages")
+    public String pageDeleter(Model model) {
+        model.addAttribute("currentPage", "remove-pages");
+        return "remove-pages";
     }
 
     private List<Integer> pageOrderToString(String[] pageOrderArr, int totalPages) {
@@ -79,6 +73,12 @@ public class RearrangePagesPDFController {
         }
 
         return newPageOrder;
+    }
+
+    @GetMapping("/pdf-organizer")
+    public String pageOrganizer(Model model) {
+        model.addAttribute("currentPage", "pdf-organizer");
+        return "pdf-organizer";
     }
 
     @PostMapping("/rearrange-pages")

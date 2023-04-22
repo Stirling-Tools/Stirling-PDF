@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller;
+package stirling.software.SPDF.controller.other;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.utils.ProcessExecutor;
 
-
 @Controller
 public class CompressController {
 
@@ -29,16 +28,13 @@ public class CompressController {
     @GetMapping("/compress-pdf")
     public String compressPdfForm(Model model) {
         model.addAttribute("currentPage", "compress-pdf");
-        return "compress-pdf";
+        return "other/compress-pdf";
     }
 
-    
     @PostMapping("/compress-pdf")
-    public ResponseEntity<byte[]> optimizePdf(
-            @RequestParam("fileInput") MultipartFile inputFile,
-            @RequestParam("optimizeLevel") int optimizeLevel,
-            @RequestParam(name = "fastWebView", required = false) Boolean fastWebView,
-            @RequestParam(name = "jbig2Lossy", required = false) Boolean jbig2Lossy) throws IOException, InterruptedException {
+    public ResponseEntity<byte[]> optimizePdf(@RequestParam("fileInput") MultipartFile inputFile, @RequestParam("optimizeLevel") int optimizeLevel,
+            @RequestParam(name = "fastWebView", required = false) Boolean fastWebView, @RequestParam(name = "jbig2Lossy", required = false) Boolean jbig2Lossy)
+            throws IOException, InterruptedException {
 
         // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");
@@ -57,7 +53,6 @@ public class CompressController {
         command.add("--output-type");
         command.add("pdf");
 
-
         if (fastWebView != null && fastWebView) {
             long fileSize = inputFile.getSize();
             long fastWebViewSize = (long) (fileSize * 1.25); // 25% higher than file size
@@ -73,7 +68,7 @@ public class CompressController {
         command.add(tempOutputFile.toString());
 
         int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
-        
+
         // Read the optimized PDF file
         byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
 
@@ -87,6 +82,6 @@ public class CompressController {
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("attachment", outputFilename);
         return ResponseEntity.ok().headers(headers).body(pdfBytes);
-}
+    }
 
 }

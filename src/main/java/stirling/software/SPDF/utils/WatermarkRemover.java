@@ -1,4 +1,5 @@
 package stirling.software.SPDF.utils;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -12,8 +13,8 @@ import org.apache.pdfbox.cos.COSString;
 
 public class WatermarkRemover extends PDFStreamEngine {
 
-    private final String watermarkText;
     private final Pattern pattern;
+    private final String watermarkText;
 
     public WatermarkRemover(String watermarkText) {
         this.watermarkText = watermarkText;
@@ -30,7 +31,7 @@ public class WatermarkRemover extends PDFStreamEngine {
         }
 
         if (processText) {
-            for(int j = 0 ; j < operands.size(); ++j) {
+            for (int j = 0; j < operands.size(); ++j) {
                 COSBase operand = operands.get(j);
                 if (operand instanceof COSString) {
                     COSString cosString = (COSString) operand;
@@ -56,11 +57,10 @@ public class WatermarkRemover extends PDFStreamEngine {
                                 array.set(i, cosString);
                                 operands.set(j, array);
                             }
-                            
+
                         }
                     }
                 }
-                
 
             }
         }
