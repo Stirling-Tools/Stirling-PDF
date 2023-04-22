@@ -26,7 +26,7 @@ body {
 }
 
 
-#pages-container {
+#pages-container-wrapper {
   --background-color: rgba(255, 255, 255, 0.046) !important;
   --scroll-bar-color: #4c4c4c !important;
   --scroll-bar-thumb: #d3d3d3 !important;

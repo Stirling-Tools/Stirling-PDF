@@ -13,7 +13,9 @@
             <div class="container">
                 <div class="row justify-content-center">
                     <h2 th:text="#{multiTool.header}"></h2>
-                    <div class="col-md-12" style="text-align: center" id="pages-container"></div>
+                    <div class="col-md-12" id="pages-container-wrapper">
+                        <div id="pages-container"></div>
+                    </div>
                     <div class="col-md-6" style="text-align: center">
                         <div id="global-buttons-container">
                             
@@ -82,7 +84,7 @@
 
         function scrollLoop() {
             // Scroll the div horizontally by a fraction of the accumulated scroll delta
-            pagesContainer.scrollLeft += scrollDelta * 0.1;
+            pagesContainerWrapper.scrollLeft += scrollDelta * 0.1;
 
             // Reduce the accumulated scroll delta by a fraction
             scrollDelta *= 0.9;
@@ -440,44 +442,51 @@
             margin-left: auto;
         }
 
-        #pages-container {
+        #pages-container-wrapper {
             --background-color: rgba(0, 0, 0, 0.025);
             --scroll-bar-color: #f1f1f1;
             --scroll-bar-thumb: #888;
             --scroll-bar-thumb-hover: #555;
+            background-color: var(--background-color);
             width: 100%;
             display: flex;
+            flex-direction: column;
             padding: 10px 25px;
-            gap: 0px;
-            align-items: center;
-            margin: 30px 0;
+            border-radius: 10px;
             overflow-y: hidden;
             overflow-x: auto;
             min-height: 275px;
-            background-color: var(--background-color);
-            border-radius: 10px;
+            margin: 0 0 30px 0;
+        }
+
+        #pages-container {
+            margin: auto;
+            gap: 0px;
+            display:flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* width */
-        #pages-container::-webkit-scrollbar {
+        #pages-container-wrapper::-webkit-scrollbar {
             width: 10px;
             height: 10px;
         }
 
         /* Track */
-        #pages-container::-webkit-scrollbar-track {
+        #pages-container-wrapper::-webkit-scrollbar-track {
         background: var(--scroll-bar-color);
         }
 
         /* Handle */
-        #pages-container::-webkit-scrollbar-thumb {
+        #pages-container-wrapper::-webkit-scrollbar-thumb {
             border-radius: 10px;
             background: var(--scroll-bar-thumb);
         }
 
         /* Handle on hover */
-        #pages-container::-webkit-scrollbar-thumb:hover {
-        background: var(--scroll-bar-thumb-hover);
+        #pages-container-wrapper::-webkit-scrollbar-thumb:hover {
+            background: var(--scroll-bar-thumb-hover);
         }
 
         .page-container {
