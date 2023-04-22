@@ -5,6 +5,7 @@
 
 
 <body>
+    <div id="image-highlighter"></div>
     <div id="page-container">
         <div id="content-wrap">
             <div th:insert="~{fragments/navbar.html :: navbar}"></div>
@@ -55,6 +56,12 @@
 
     <script>
         var fileName = null;
+
+        /**
+         * 
+         *  Manage Page container scroll
+         * 
+         */
         const pagesContainer = document.getElementById("pages-container");
 
         var scrollDelta = 0; // variable to store the accumulated scroll delta
@@ -88,6 +95,26 @@
             }
         }
 
+        /**
+         * 
+         *  Manage image highlighter clearing
+         * 
+         */
+        const imageHighlighter = document.getElementById('image-highlighter');
+        imageHighlighter.onclick = (e) => {
+            imageHighlighter.childNodes.forEach((child) => {
+                child.classList.add('remove');
+                setTimeout(() => {
+                    imageHighlighter.removeChild(child);
+                }, 100)
+            })
+        }
+
+        /**
+         * 
+         * Methods for managing PDFs
+         * 
+         */
         function addPdfs(nextSiblingElement) {
             var input = document.createElement('input');
             input.type = 'file';
@@ -184,11 +211,23 @@
                 div.classList.add("page-container");
 
                     var img = document.createElement('img');
-                    img.src = await renderer.renderPage(i);
+                    img.classList.add('page-image')
+                    const imageSrc = await renderer.renderPage(i)
+                    img.src = imageSrc;
                     img.pageIdx = i;
                     img.rend = renderer;
                     img.doc = pdfDocument;
                     div.appendChild(img);
+
+                    img.addEventListener('mousedown', (x) => {
+                        var bigImg = document.createElement('img');
+                        bigImg.onclick = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        };
+                        bigImg.src = imageSrc;
+                        imageHighlighter.appendChild(bigImg);
+                    })
 
                     const buttonContainer = document.createElement('div');
                     buttonContainer.classList.add("button-container");
@@ -479,6 +518,10 @@
             display: none;
         }
 
+        .page-image {
+            cursor:pointer;
+        }
+
         /* "insert pdf" buttons that appear on the right when hover */
         .insert-file-button-container {
             translate: 0 -50%;
@@ -527,6 +570,46 @@
             translate: 50% -50%;
             aspect-ratio: 1;
             border-radius: 100px;
+        }
+
+        #image-highlighter {
+            position: fixed;
+            display:flex;
+            inset: 0;
+            z-index: 10000;
+            background-color: rgba(0, 0, 0, 0);
+            visibility: hidden;
+            align-items: center;
+            justify-content: center;
+            transition: visbility 0.1s linear, background-color 0.1s linear;
+        }
+
+        #image-highlighter > * {
+            max-width: 80vw;
+            max-height: 80vh;
+            animation: image-highlight .1s linear;
+            transition: transform .1s linear, opacity .1s linear;
+        }
+        
+        #image-highlighter > *.remove {
+            transform: scale(0.8) !important;
+            opacity: 0 !important;
+        }
+
+        #image-highlighter:not(:empty) {
+            background-color: rgba(0, 0, 0, 0.37);
+            visibility: visible;
+        }
+
+        @keyframes image-highlight {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         #add-pdf-button {
