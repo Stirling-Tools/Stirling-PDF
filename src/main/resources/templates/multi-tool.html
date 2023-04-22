@@ -219,6 +219,9 @@
                     img.doc = pdfDocument;
                     div.appendChild(img);
 
+                    /**
+                     *  Making pages larger when clicking on them
+                     */
                     img.addEventListener('mousedown', (x) => {
                         var bigImg = document.createElement('img');
                         bigImg.onclick = (e) => {
@@ -228,7 +231,10 @@
                         bigImg.src = imageSrc;
                         imageHighlighter.appendChild(bigImg);
                     })
-
+                    
+                    /**
+                     *  Rendering the various buttons to manipulate and move pdf pages
+                     */
                     const buttonContainer = document.createElement('div');
                     buttonContainer.classList.add("button-container");
                         
@@ -263,7 +269,7 @@
                         buttonContainer.appendChild(rotateCW);
 
                         const deletePage = document.createElement('button');
-                        deletePage.classList.add("btn", "btn-secondary");
+                        deletePage.classList.add("btn", "btn-danger");
                         deletePage.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
                                             <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
                                             <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
@@ -435,7 +441,7 @@
         }
 
         #pages-container {
-            --background-color: rgba(0, 0, 0, 0.046);
+            --background-color: rgba(0, 0, 0, 0.025);
             --scroll-bar-color: #f1f1f1;
             --scroll-bar-thumb: #888;
             --scroll-bar-thumb-hover: #555;
@@ -494,7 +500,8 @@
             left: 50%;
             top: 50%;
             translate: -50% -50%;
-            box-shadow: 0 0 10px rgba(0,0,0);
+            box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+            border-radius: 4px;
             transition: rotate 0.3s;
         }
 
