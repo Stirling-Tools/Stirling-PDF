@@ -65,11 +65,14 @@
          * 
          */
         const pagesContainer = document.getElementById("pages-container");
+        const pagesContainerWrapper = document.getElementById("pages-container-wrapper")
+
+        const pageDirection = getComputedStyle(document.body).direction;
 
         var scrollDelta = 0; // variable to store the accumulated scroll delta
         var isScrolling = false; // variable to track if scroll is already in progress
 
-        pagesContainer.addEventListener("wheel", function(e) {
+        pagesContainerWrapper.addEventListener("wheel", function(e) {
             e.preventDefault(); // prevent default mousewheel behavior
 
             // Accumulate the horizontal scroll delta
@@ -237,18 +240,21 @@
                     /**
                      *  Rendering the various buttons to manipulate and move pdf pages
                      */
+
+                    const leftDirection = pageDirection === 'rtl' ? 'right' : 'left'
+                    const rightDirection = pageDirection === 'rtl' ? 'left' : 'right'
                     const buttonContainer = document.createElement('div');
                     buttonContainer.classList.add("button-container");
                         
                         const moveUp = document.createElement('button');
                         moveUp.classList.add("move-left-button","btn", "btn-secondary");
-                        moveUp.innerHTML = '<i class="bi bi-arrow-left-short"></i>';
+                        moveUp.innerHTML = `<i class="bi bi-arrow-${leftDirection}-short"></i>`;
                         moveUp.onclick = moveUpButtonCallback;
                         buttonContainer.appendChild(moveUp);
 
                         const moveDown = document.createElement('button');
                         moveDown.classList.add("move-right-button","btn", "btn-secondary");
-                        moveDown.innerHTML = '<i class="bi bi-arrow-right-short"></i>';
+                        moveDown.innerHTML = `<i class="bi bi-arrow-${rightDirection}-short"></i>`;
                         moveDown.onclick = moveDownButtonCallback;
                         buttonContainer.appendChild(moveDown);
                         
@@ -282,7 +288,11 @@
                     div.appendChild(buttonContainer);
 
                     const insertFileButtonContainer = document.createElement('div');
-                    insertFileButtonContainer.classList.add("insert-file-button-container","left", "align-center-left");
+                    
+                    insertFileButtonContainer.classList.add(
+                        "insert-file-button-container",
+                        leftDirection,
+                        `align-center-${leftDirection}`);
                     
                         const insertFileButton = document.createElement('button');
                         insertFileButton.classList.add("btn", "btn-primary", "insert-file-button");
@@ -297,7 +307,10 @@
                     
                     // add this button to every element, but only show it on the last one :D
                     const insertFileButtonRightContainer = document.createElement('div');
-                    insertFileButtonRightContainer.classList.add("insert-file-button-container","right", "align-center-right");
+                    insertFileButtonRightContainer.classList.add(
+                        "insert-file-button-container",
+                        rightDirection,
+                        `align-center-${rightDirection}`);
                     
                         const insertFileButtonRight = document.createElement('button');
                         insertFileButtonRight.classList.add("btn", "btn-primary", "insert-file-button");
@@ -557,7 +570,11 @@
             right: -20px;
         }
 
-        .insert-file-button-container.align-center-right {
+        html[lang-direction=ltr] .insert-file-button-container.right {
+            display:none;
+        }
+
+        html[lang-direction=rtl] .insert-file-button-container.left {
             display:none;
         }
 
@@ -571,7 +588,12 @@
             translate: 0 -50%;
         }
 
-        .page-container:last-child > .insert-file-button-container.right {
+        html[lang-direction=ltr] .page-container:last-child > .insert-file-button-container.right {
+            display: block;
+        }
+
+        
+        html[lang-direction=rtl] .page-container:last-child > .insert-file-button-container.left {
             display: block;
         }
 
