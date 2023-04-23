@@ -162,6 +162,7 @@
 
             const moveUpButtonCallback = e => {
                 var imgContainer = e.target;
+                const startingPosition = imgContainer.getBoundingClientRect();
                 while (!imgContainer.classList.contains("page-container")) {
                     imgContainer = imgContainer.parentNode;
                 }
@@ -169,9 +170,10 @@
                 if (sibling) {
                     pagesContainer.removeChild(imgContainer);
                     pagesContainer.insertBefore(imgContainer, sibling);
-                    imgContainer.scrollIntoView({
-                        behavior: "instant",
-                        block: "center",
+
+                    const { width } = imgContainer.getBoundingClientRect();
+                    pagesContainerWrapper.scroll({
+                        left: pagesContainerWrapper.scrollLeft - width,
                     })
                 }
             };
@@ -188,9 +190,9 @@
                     } else {
                         pagesContainer.appendChild(imgContainer)
                     }
-                    imgContainer.scrollIntoView({
-                        behavior: "instant",
-                        block: "center",
+                    const { width } = imgContainer.getBoundingClientRect();
+                    pagesContainerWrapper.scroll({
+                        left: pagesContainerWrapper.scrollLeft + width,
                     })
                 }
             };
