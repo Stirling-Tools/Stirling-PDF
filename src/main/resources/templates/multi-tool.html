@@ -67,7 +67,7 @@
         const pagesContainer = document.getElementById("pages-container");
         const pagesContainerWrapper = document.getElementById("pages-container-wrapper")
 
-        const pageDirection = getComputedStyle(document.body).direction;
+        const pageDirection = document.documentElement.getAttribute("lang-direction");
 
         var scrollDelta = 0; // variable to store the accumulated scroll delta
         var isScrolling = false; // variable to track if scroll is already in progress
@@ -106,13 +106,25 @@
          * 
          */
         const imageHighlighter = document.getElementById('image-highlighter');
-        imageHighlighter.onclick = (e) => {
+        imageHighlighter.onclick = () => {
             imageHighlighter.childNodes.forEach((child) => {
                 child.classList.add('remove');
                 setTimeout(() => {
                     imageHighlighter.removeChild(child);
                 }, 100)
             })
+        }
+
+        const imageHighlightCallback = (highlightEvent) => {
+            var bigImg = document.createElement('img');
+            bigImg.onclick = (imageClickEvent) => {
+                // This prevents the highlighter's onClick from closing the image when clicking on the image
+                // instead of next to it.
+                imageClickEvent.preventDefault();
+                imageClickEvent.stopPropagation();
+            };
+            bigImg.src = highlightEvent.target.src;
+            imageHighlighter.appendChild(bigImg);
         }
 
         /**
@@ -227,15 +239,7 @@
                     /**
                      *  Making pages larger when clicking on them
                      */
-                    img.addEventListener('mousedown', (x) => {
-                        var bigImg = document.createElement('img');
-                        bigImg.onclick = (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        };
-                        bigImg.src = imageSrc;
-                        imageHighlighter.appendChild(bigImg);
-                    })
+                    img.addEventListener('click',imageHighlightCallback)
                     
                     /**
                      *  Rendering the various buttons to manipulate and move pdf pages
