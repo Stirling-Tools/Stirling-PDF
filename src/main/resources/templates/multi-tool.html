@@ -5,15 +5,18 @@
 
 
 <body>
+    <div id="image-highlighter"></div>
     <div id="page-container">
         <div id="content-wrap">
             <div th:insert="~{fragments/navbar.html :: navbar}"></div>
             <br> <br>
             <div class="container">
                 <div class="row justify-content-center">
+                    <h2 th:text="#{multiTool.header}"></h2>
+                    <div class="col-md-12" id="pages-container-wrapper">
+                        <div id="pages-container"></div>
+                    </div>
                     <div class="col-md-6" style="text-align: center">
-                        <h2 th:text="#{multiTool.header}"></h2>
-                        
                         <div id="global-buttons-container">
                             
                             <button class="btn btn-primary" onclick="addPdfs()">
@@ -45,10 +48,8 @@
                             </button>
 
                         </div>
-
-                        <div id="pages-container"></div>
-
                     </div>
+
                 </div>
             </div>
         </div>
@@ -57,24 +58,80 @@
 
     <script>
         var fileName = null;
+
+        /**
+         * 
+         *  Manage Page container scroll
+         * 
+         */
         const pagesContainer = document.getElementById("pages-container");
+        const pagesContainerWrapper = document.getElementById("pages-container-wrapper")
 
-        // add the bottom "insert pdf" button that appears on the right when hovered over
-        const bottomInsertFileButtonContainer = document.createElement('div');
-        bottomInsertFileButtonContainer.classList.add("insert-file-button-container", "align-bottom");
-        bottomInsertFileButtonContainer.style.transform = "translate(0, 50%)";
-        
-            const bottomInsertFileButton = document.createElement('button');
-            bottomInsertFileButton.classList.add("btn", "btn-primary", "insert-file-button");
-            bottomInsertFileButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
-                                    <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
-                                    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-                                </svg>`;
-            bottomInsertFileButton.onclick = e => addPdfs();
-            bottomInsertFileButtonContainer.appendChild(bottomInsertFileButton);
+        const pageDirection = document.documentElement.getAttribute("lang-direction");
 
-        pagesContainer.appendChild(bottomInsertFileButtonContainer);
+        var scrollDelta = 0; // variable to store the accumulated scroll delta
+        var isScrolling = false; // variable to track if scroll is already in progress
 
+        pagesContainerWrapper.addEventListener("wheel", function(e) {
+            e.preventDefault(); // prevent default mousewheel behavior
+
+            // Accumulate the horizontal scroll delta
+            scrollDelta -= e.deltaX || e.wheelDeltaX || -e.deltaY || -e.wheelDeltaY;
+
+            // If scroll is not already in progress, start the scroll loop
+            if (!isScrolling) {
+                isScrolling = true;
+                requestAnimationFrame(scrollLoop);
+            }
+        });
+
+        function scrollLoop() {
+            // Scroll the div horizontally by a fraction of the accumulated scroll delta
+            pagesContainerWrapper.scrollLeft += scrollDelta * 0.1;
+
+            // Reduce the accumulated scroll delta by a fraction
+            scrollDelta *= 0.9;
+
+            // If scroll delta is still significant, continue the scroll loop
+            if (Math.abs(scrollDelta) > 0.1) {
+                requestAnimationFrame(scrollLoop);
+            } else {
+                isScrolling = false; // Reset scroll in progress flag
+            }
+        }
+
+        /**
+         * 
+         *  Manage image highlighter clearing
+         * 
+         */
+        const imageHighlighter = document.getElementById('image-highlighter');
+        imageHighlighter.onclick = () => {
+            imageHighlighter.childNodes.forEach((child) => {
+                child.classList.add('remove');
+                setTimeout(() => {
+                    imageHighlighter.removeChild(child);
+                }, 100)
+            })
+        }
+
+        const imageHighlightCallback = (highlightEvent) => {
+            var bigImg = document.createElement('img');
+            bigImg.onclick = (imageClickEvent) => {
+                // This prevents the highlighter's onClick from closing the image when clicking on the image
+                // instead of next to it.
+                imageClickEvent.preventDefault();
+                imageClickEvent.stopPropagation();
+            };
+            bigImg.src = highlightEvent.target.src;
+            imageHighlighter.appendChild(bigImg);
+        }
+
+        /**
+         * 
+         * Methods for managing PDFs
+         * 
+         */
         function addPdfs(nextSiblingElement) {
             var input = document.createElement('input');
             input.type = 'file';
@@ -104,9 +161,7 @@
                 while (!imgContainer.classList.contains("page-container")) {
                     imgContainer = imgContainer.parentNode;
                 }
-                console.log("imgContainer", imgContainer);
                 const sibling = imgContainer.previousSibling;
-                console.log("sibling", sibling);
                 if (sibling) {
                     pagesContainer.removeChild(imgContainer);
                     pagesContainer.insertBefore(imgContainer, sibling);
@@ -121,17 +176,13 @@
                 while (!imgContainer.classList.contains("page-container")) {
                     imgContainer = imgContainer.parentNode;
                 }
-                console.log("imgContainer", imgContainer);
                 const sibling = imgContainer.nextSibling;
-                console.log("sibling", sibling);
                 if (sibling) {
                     pagesContainer.removeChild(imgContainer);
                     if (sibling.nextSibling) {
                         pagesContainer.insertBefore(imgContainer, sibling.nextSibling);
-                        console.log("insert sibling.nextSibling", sibling.nextSibling);
                     } else {
                         pagesContainer.appendChild(imgContainer)
-                        console.log("append");
                     }
                     imgContainer.scrollIntoView({
                         behavior: "instant",
@@ -177,24 +228,37 @@
                 div.classList.add("page-container");
 
                     var img = document.createElement('img');
-                    img.src = await renderer.renderPage(i);
+                    img.classList.add('page-image')
+                    const imageSrc = await renderer.renderPage(i)
+                    img.src = imageSrc;
                     img.pageIdx = i;
                     img.rend = renderer;
                     img.doc = pdfDocument;
                     div.appendChild(img);
 
+                    /**
+                     *  Making pages larger when clicking on them
+                     */
+                    img.addEventListener('click',imageHighlightCallback)
+                    
+                    /**
+                     *  Rendering the various buttons to manipulate and move pdf pages
+                     */
+
+                    const leftDirection = pageDirection === 'rtl' ? 'right' : 'left'
+                    const rightDirection = pageDirection === 'rtl' ? 'left' : 'right'
                     const buttonContainer = document.createElement('div');
                     buttonContainer.classList.add("button-container");
                         
                         const moveUp = document.createElement('button');
-                        moveUp.classList.add("move-up-button","btn", "btn-secondary");
-                        moveUp.innerHTML = '<i class="bi bi-arrow-up-short"></i>';
+                        moveUp.classList.add("move-left-button","btn", "btn-secondary");
+                        moveUp.innerHTML = `<i class="bi bi-arrow-${leftDirection}-short"></i>`;
                         moveUp.onclick = moveUpButtonCallback;
                         buttonContainer.appendChild(moveUp);
 
                         const moveDown = document.createElement('button');
-                        moveDown.classList.add("move-down-button","btn", "btn-secondary");
-                        moveDown.innerHTML = '<i class="bi bi-arrow-down-short"></i>';
+                        moveDown.classList.add("move-right-button","btn", "btn-secondary");
+                        moveDown.innerHTML = `<i class="bi bi-arrow-${rightDirection}-short"></i>`;
                         moveDown.onclick = moveDownButtonCallback;
                         buttonContainer.appendChild(moveDown);
                         
@@ -217,7 +281,7 @@
                         buttonContainer.appendChild(rotateCW);
 
                         const deletePage = document.createElement('button');
-                        deletePage.classList.add("btn", "btn-secondary");
+                        deletePage.classList.add("btn", "btn-danger");
                         deletePage.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
                                             <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
                                             <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
@@ -228,7 +292,11 @@
                     div.appendChild(buttonContainer);
 
                     const insertFileButtonContainer = document.createElement('div');
-                    insertFileButtonContainer.classList.add("insert-file-button-container", "align-top");
+                    
+                    insertFileButtonContainer.classList.add(
+                        "insert-file-button-container",
+                        leftDirection,
+                        `align-center-${leftDirection}`);
                     
                         const insertFileButton = document.createElement('button');
                         insertFileButton.classList.add("btn", "btn-primary", "insert-file-button");
@@ -238,8 +306,26 @@
                                             </svg>`;
                         insertFileButton.onclick = insertFileButtonCallback;
                         insertFileButtonContainer.appendChild(insertFileButton);
-
+                    
                     div.appendChild(insertFileButtonContainer);
+                    
+                    // add this button to every element, but only show it on the last one :D
+                    const insertFileButtonRightContainer = document.createElement('div');
+                    insertFileButtonRightContainer.classList.add(
+                        "insert-file-button-container",
+                        rightDirection,
+                        `align-center-${rightDirection}`);
+                    
+                        const insertFileButtonRight = document.createElement('button');
+                        insertFileButtonRight.classList.add("btn", "btn-primary", "insert-file-button");
+                        insertFileButtonRight.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
+                                                <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
+                                                <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                                                insertFileButtonRight</svg>`;
+                        insertFileButtonRight.onclick = () => addPdfs();
+                        insertFileButtonRightContainer.appendChild(insertFileButtonRight);
+
+                    div.appendChild(insertFileButtonRightContainer);
 
                 if (nextSiblingElement) {
                     pagesContainer.insertBefore(div, nextSiblingElement);
@@ -279,7 +365,6 @@
                 const rotation = img.style.rotate;
                 if (rotation) {
                     const rotationAngle = parseInt(rotation.replace(/[^\d-]/g, ''));
-                    console.log(img.style.rotate, img.style.rotate.replace(/[^\d-]/g, ''))
                     page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle))
                 }
                 
@@ -358,11 +443,9 @@
             border: 1px solid rgba(0, 0, 0, .25);
             backdrop-filter: blur(2px);
 
-            position: sticky;
             top: 10px;
             z-index: 10;
             padding: 10px;
-            margin-top: 30px;
             border-radius: 8px;
         }
         #global-buttons-container > * {
@@ -376,21 +459,63 @@
             margin-left: auto;
         }
 
-        #pages-container {
+        #pages-container-wrapper {
+            --background-color: rgba(0, 0, 0, 0.025);
+            --scroll-bar-color: #f1f1f1;
+            --scroll-bar-thumb: #888;
+            --scroll-bar-thumb-hover: #555;
+            background-color: var(--background-color);
             width: 100%;
             display: flex;
-            gap: 0px;
             flex-direction: column;
+            padding: 10px 25px;
+            border-radius: 10px;
+            overflow-y: hidden;
+            overflow-x: auto;
+            min-height: 275px;
+            margin: 0 0 30px 0;
+        }
+
+        #pages-container {
+            margin: auto;
+            gap: 0px;
+            display:flex;
             align-items: center;
-            margin: 30px 0;
+            justify-content: center;
+        }
+
+        /* width */
+        #pages-container-wrapper::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        /* Track */
+        #pages-container-wrapper::-webkit-scrollbar-track {
+        background: var(--scroll-bar-color);
+        }
+
+        /* Handle */
+        #pages-container-wrapper::-webkit-scrollbar-thumb {
+            border-radius: 10px;
+            background: var(--scroll-bar-thumb);
+        }
+
+        /* Handle on hover */
+        #pages-container-wrapper::-webkit-scrollbar-thumb:hover {
+            background: var(--scroll-bar-thumb-hover);
         }
 
         .page-container {
-            width: 500px;
+            height:250px;
+            display: flex;
+            align-items: center;
+            flex-direction: column-reverse;
             aspect-ratio: 1;
             text-align: center;
             position: relative;
             user-select: none;
+
         }
 
         .page-container img {
@@ -401,15 +526,14 @@
             left: 50%;
             top: 50%;
             translate: -50% -50%;
-            box-shadow: 0 0 10px rgba(0,0,0);
+            box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+            border-radius: 4px;
             transition: rotate 0.3s;
         }
 
         .page-container .button-container {
-            position: absolute;
-            top: 50%;
-            translate: 0 -50%;
-            right: 6px;
+            z-index: 2;
+            display:flex;
         }
         .page-container .button-container > * {
             padding: 0.25rem 0.5rem;
@@ -420,23 +544,63 @@
             width: 16px;
             height: 16px;
         }
-        .page-container:nth-child(2) .move-up-button {
-            visibility: hidden;
+        .page-container:nth-child(1) .move-left-button {
+            display: none;
         }
-        .page-container:last-child .move-down-button {
-            visibility: hidden;
+        .page-container:last-child .move-right-button {
+            display: none;
+        }
+
+        .page-image {
+            cursor:pointer;
         }
 
         /* "insert pdf" buttons that appear on the right when hover */
         .insert-file-button-container {
             translate: 0 -50%;
-            width: 100%;
-            height: 60px;
-
+            width: 80px;
+            height: 100%;
+            
             z-index: 1;
             opacity: 0;
             transition: opacity 0.2s;
         }
+
+        .insert-file-button-container.left {
+            left: -20px;
+        }
+
+        .insert-file-button-container.right {
+            right: -20px;
+        }
+
+        html[lang-direction=ltr] .insert-file-button-container.right {
+            display:none;
+        }
+
+        html[lang-direction=rtl] .insert-file-button-container.left {
+            display:none;
+        }
+
+        .insert-file-button-container.left .insert-file-button {
+            left: 0;
+            translate: 0 -50%;
+        }
+
+        .insert-file-button-container.right .insert-file-button {
+            right: 0;
+            translate: 0 -50%;
+        }
+
+        html[lang-direction=ltr] .page-container:last-child > .insert-file-button-container.right {
+            display: block;
+        }
+
+        
+        html[lang-direction=rtl] .page-container:last-child > .insert-file-button-container.left {
+            display: block;
+        }
+
         .insert-file-button-container:hover {
             opacity: 1;
             transition: opacity 0.05s;
@@ -448,6 +612,46 @@
             translate: 50% -50%;
             aspect-ratio: 1;
             border-radius: 100px;
+        }
+
+        #image-highlighter {
+            position: fixed;
+            display:flex;
+            inset: 0;
+            z-index: 10000;
+            background-color: rgba(0, 0, 0, 0);
+            visibility: hidden;
+            align-items: center;
+            justify-content: center;
+            transition: visbility 0.1s linear, background-color 0.1s linear;
+        }
+
+        #image-highlighter > * {
+            max-width: 80vw;
+            max-height: 80vh;
+            animation: image-highlight .1s linear;
+            transition: transform .1s linear, opacity .1s linear;
+        }
+        
+        #image-highlighter > *.remove {
+            transform: scale(0.8) !important;
+            opacity: 0 !important;
+        }
+
+        #image-highlighter:not(:empty) {
+            background-color: rgba(0, 0, 0, 0.37);
+            visibility: visible;
+        }
+
+        @keyframes image-highlight {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         #add-pdf-button {
