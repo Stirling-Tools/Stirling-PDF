@@ -59,7 +59,7 @@
         </div>
         <div th:insert="~{fragments/footer.html :: footer}"></div>
     </div>
-
+    <div id="drag-container"></div>
     <script>
         var fileName = null;
 
@@ -72,7 +72,7 @@
         const pagesContainerWrapper = document.getElementById("pages-container-wrapper")
 
         const pageDirection = document.documentElement.getAttribute("lang-direction");
-
+        var pageDragging = false;
         var scrollDelta = 0; // variable to store the accumulated scroll delta
         var isScrolling = false; // variable to track if scroll is already in progress
 
@@ -131,6 +131,56 @@
             imageHighlighter.appendChild(bigImg);
         }
 
+        
+        /**
+         * 
+         *  Manage visual aspect of dragging images
+         * 
+         */
+        const dragContainer = document.getElementById('drag-container');
+        var draggedEl;
+        var draggedImageEl;
+        var hoveredEl;
+
+        const startDraggingPage = (div, imageSrc) => {
+            pageDragging = true;
+            draggedEl = div;
+            div.classList.add('dragging');
+            const imgEl = document.createElement('img');
+            imgEl.classList.add('dragged-img');
+            imgEl.src = imageSrc;
+            draggedImageEl = imgEl;
+            draggedImageEl.style.left = screenX;
+            draggedImageEl.style.right = screenY;
+            dragContainer.appendChild(imgEl);
+            window.addEventListener('mouseup', (e) => {
+                stopDraggingPage();
+            })
+            window.addEventListener('mousemove', onDragEl)
+            
+        }
+
+        const onDragEl = (mouseEvent) => {
+            const { clientX, clientY } = mouseEvent;
+            if(draggedImageEl) {
+                draggedImageEl.style.left = `${clientX}px`;
+                draggedImageEl.style.top = `${clientY}px`;
+            }
+        }
+
+        const stopDraggingPage = () => {
+            window.removeEventListener('mousemove', onDragEl);
+            draggedImageEl = undefined;
+            pageDragging = false;
+            draggedEl.classList.remove('dragging');
+            hoveredEl.classList.remove('draghover');
+            dragContainer.childNodes.forEach((dragChild) => {
+                dragContainer.removeChild(dragChild);
+            })
+            movePageTo(draggedEl, hoveredEl);
+        }
+
+
         /**
          * 
          * Methods for managing PDFs
@@ -157,6 +207,30 @@
             input.click();
         }
 
+        
+        const movePageTo = (startElement, endElement, scrollTo = false) => {
+            const childArray = Array.from(pagesContainer.childNodes);
+            const startIndex = childArray.indexOf(startElement);
+            const endIndex = childArray.indexOf(endElement);
+            pagesContainer.removeChild(startElement);
+            if(!endElement) {
+                pagesContainer.append(startElement);
+            } else {
+                pagesContainer.insertBefore(startElement, endElement);
+            }
+
+            if(scrollTo) {
+                const { width } = startElement.getBoundingClientRect();
+                const vector = (endIndex !== -1 && startIndex > endIndex)
+                    ?  0-width
+                    : width;
+                
+                pagesContainerWrapper.scroll({
+                    left: pagesContainerWrapper.scrollLeft + vector,
+                })
+            }
+        }
+
         async function addPdfFile(file, nextSiblingElement) {
             const { renderer, pdfDocument } = await loadFile(file);
 
@@ -166,15 +240,10 @@
                 while (!imgContainer.classList.contains("page-container")) {
                     imgContainer = imgContainer.parentNode;
                 }
+                
                 const sibling = imgContainer.previousSibling;
                 if (sibling) {
-                    pagesContainer.removeChild(imgContainer);
-                    pagesContainer.insertBefore(imgContainer, sibling);
-
-                    const { width } = imgContainer.getBoundingClientRect();
-                    pagesContainerWrapper.scroll({
-                        left: pagesContainerWrapper.scrollLeft - width,
-                    })
+                    movePageTo(imgContainer, sibling, true);
                 }
             };
             const moveDownButtonCallback = e => {
@@ -184,16 +253,7 @@
                 }
                 const sibling = imgContainer.nextSibling;
                 if (sibling) {
-                    pagesContainer.removeChild(imgContainer);
-                    if (sibling.nextSibling) {
-                        pagesContainer.insertBefore(imgContainer, sibling.nextSibling);
-                    } else {
-                        pagesContainer.appendChild(imgContainer)
-                    }
-                    const { width } = imgContainer.getBoundingClientRect();
-                    pagesContainerWrapper.scroll({
-                        left: pagesContainerWrapper.scrollLeft + width,
-                    })
+                    movePageTo(imgContainer, sibling.nextSibling, true);
                 }
             };
             const rotateCCWButtonCallback = e => {
@@ -231,6 +291,23 @@
 
             for (var i=0; i < renderer.pageCount; i++) {
                 const div = document.createElement('div');
+
+                div.addEventListener('dragstart', (e) => {
+                    startDraggingPage(div, imageSrc);
+                });
+
+                div.addEventListener('mouseenter', () => {
+                    if (pageDragging) {
+                        hoveredEl = div;
+                        div.classList.add('draghover');
+                    }
+                })
+
+                div.addEventListener('mouseleave', () => {
+                    hoveredEl = undefined;
+                    div.classList.remove('draghover');
+                })
+
                 div.classList.add("page-container");
 
                     var img = document.createElement('img');
@@ -525,12 +602,35 @@
             text-align: center;
             position: relative;
             user-select: none;
+            transition: width 1s linear;
 
         }
 
+        .page-container.dragging {
+            width: 0px;
+            visibility: hidden;
+        }
+
+        .page-container.draghover {
+            width: 500px !important;
+        }
+
+        .page-container.draghover .insert-file-button-container {
+            display: none !important;
+        }
+
+        .page-container.draghover .button-container {
+            visibility: hidden !important;
+        }
+
+        .page-container.draghover img {
+            left: calc(50% + 125px) !important;
+        }
+
         .page-container img {
-            max-width: calc(100% - 15px);
+            /* max-width: calc(100% - 15px); */
             max-height: calc(100% - 15px);
+            max-width: 237px;
             display: block;
             position: absolute;
             left: 50%;
@@ -669,6 +769,27 @@
                 transform: scale(1);
                 opacity: 1;
             }
+        }
+
+        #drag-container {
+            position: fixed;
+            display:flex;
+            inset: 0;
+            pointer-events: none;
+            z-index: 10000;
+            visibility: hidden;
+        }
+
+        #drag-container:not(:empty) {
+            visibility: visible;
+        }
+
+        #drag-container .dragged-img {
+            position: fixed;
+            max-width: 200px;
+            max-height: 200px;
+            transform: translate(-50%, -50%);
+            box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.58);
         }
 
         #add-pdf-button {
