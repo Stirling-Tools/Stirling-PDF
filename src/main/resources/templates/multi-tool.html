@@ -10,12 +10,16 @@
         <div id="content-wrap">
             <div th:insert="~{fragments/navbar.html :: navbar}"></div>
             <br> <br>
-            <div class="container">
+            <div class="multi-tool-container">
                 <div class="row justify-content-center">
                     <h2 th:text="#{multiTool.header}"></h2>
                     <div class="col-md-12" id="pages-container-wrapper">
                         <div id="pages-container"></div>
                     </div>
+                </div>
+            </div>
+            <div class="container">
+                <div class="row justify-content-center">
                     <div class="col-md-6" style="text-align: center">
                         <div id="global-buttons-container">
                             
@@ -434,6 +438,10 @@
     </script>
 
     <style>
+        .multi-tool-container {
+            max-width: 95vw;
+            margin: 0 auto;
+        }
         #global-buttons-container {
             display: flex;
             gap: 10px;
@@ -534,7 +542,14 @@
         .page-container .button-container {
             z-index: 2;
             display:flex;
+            opacity: 0;
+            transition: opacity 0.1s linear;
         }
+
+        .page-container:hover .button-container {
+            opacity: 1;
+        }
+
         .page-container .button-container > * {
             padding: 0.25rem 0.5rem;
             margin: 3px;
