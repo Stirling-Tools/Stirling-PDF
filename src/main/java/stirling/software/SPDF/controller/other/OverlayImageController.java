@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller;
+package stirling.software.SPDF.controller.other;
 
 import java.io.IOException;
 
@@ -23,7 +23,7 @@ public class OverlayImageController {
     @GetMapping("/add-image")
     public String overlayImage(Model model) {
         model.addAttribute("currentPage", "add-image");
-        return "add-image";
+        return "other/add-image";
     }
 
     @PostMapping("/add-image")

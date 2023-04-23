@@ -28,23 +28,11 @@ public class PasswordController {
         return "security/add-password";
     }
 
-    @GetMapping("/remove-password")
-    public String removePasswordForm(Model model) {
-        model.addAttribute("currentPage", "remove-password");
-        return "security/remove-password";
-    }
-
-    @GetMapping("/change-permissions")
-    public String permissionsForm(Model model) {
-        model.addAttribute("currentPage", "change-permissions");
-        return "security/change-permissions";
-    }
-
     @PostMapping("/remove-password")
     public ResponseEntity<byte[]> compressPDF(@RequestParam("fileInput") MultipartFile fileInput, @RequestParam(name = "password") String password) throws IOException {
         PDDocument document = PDDocument.load(fileInput.getBytes(), password);
         document.setAllSecurityToBeRemoved(true);
-        return PdfUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "")+ "_password_removed.pdf");
+        return PdfUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_password_removed.pdf");
     }
 
     @PostMapping("/add-password")
@@ -75,7 +63,19 @@ public class PasswordController {
 
         document.protect(spp);
 
-        return PdfUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "")+ "_passworded.pdf");
+        return PdfUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_passworded.pdf");
+    }
+
+    @GetMapping("/change-permissions")
+    public String permissionsForm(Model model) {
+        model.addAttribute("currentPage", "change-permissions");
+        return "security/change-permissions";
+    }
+
+    @GetMapping("/remove-password")
+    public String removePasswordForm(Model model) {
+        model.addAttribute("currentPage", "remove-password");
+        return "security/remove-password";
     }
 
 }

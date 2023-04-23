@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class MultiToolController {
 
-	private static final Logger logger = LoggerFactory.getLogger(MultiToolController.class);
+    private static final Logger logger = LoggerFactory.getLogger(MultiToolController.class);
 
-	@GetMapping("/multi-tool")
-	public String multiToolForm(Model model) {
-		model.addAttribute("currentPage", "multi-tool");
-		return "multi-tool";
-	}
+    @GetMapping("/multi-tool")
+    public String multiToolForm(Model model) {
+        model.addAttribute("currentPage", "multi-tool");
+        return "multi-tool";
+    }
 
 }

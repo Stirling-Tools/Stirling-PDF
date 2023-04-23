@@ -30,22 +30,6 @@ public class MergeController {
         return "merge-pdfs";
     }
 
-    @PostMapping("/merge-pdfs")
-    public ResponseEntity<byte[]> mergePdfs(@RequestParam("fileInput") MultipartFile[] files) throws IOException {
-        // Read the input PDF files into PDDocument objects
-        List<PDDocument> documents = new ArrayList<>();
-
-        // Loop through the files array and read each file into a PDDocument
-        for (MultipartFile file : files) {
-            documents.add(PDDocument.load(file.getInputStream()));
-        }
-
-        PDDocument mergedDoc = mergeDocuments(documents);
-
-        // Return the merged PDF as a response
-        return PdfUtils.pdfDocToWebResponse(mergedDoc, files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")+ "_merged.pdf");
-    }
-
     private PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         // Create a new empty document
         PDDocument mergedDoc = new PDDocument();
@@ -62,6 +46,22 @@ public class MergeController {
 
         // Return the merged document
         return mergedDoc;
+    }
+
+    @PostMapping("/merge-pdfs")
+    public ResponseEntity<byte[]> mergePdfs(@RequestParam("fileInput") MultipartFile[] files) throws IOException {
+        // Read the input PDF files into PDDocument objects
+        List<PDDocument> documents = new ArrayList<>();
+
+        // Loop through the files array and read each file into a PDDocument
+        for (MultipartFile file : files) {
+            documents.add(PDDocument.load(file.getInputStream()));
+        }
+
+        PDDocument mergedDoc = mergeDocuments(documents);
+
+        // Return the merged PDF as a response
+        return PdfUtils.pdfDocToWebResponse(mergedDoc, files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_merged.pdf");
     }
 
 }

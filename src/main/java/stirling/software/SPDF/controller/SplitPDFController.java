@@ -27,16 +27,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+
 @Controller
 public class SplitPDFController {
 
     private static final Logger logger = LoggerFactory.getLogger(SplitPDFController.class);
-
-    @GetMapping("/split-pdfs")
-    public String splitPdfForm(Model model) {
-        model.addAttribute("currentPage", "split-pdfs");
-        return "split-pdfs";
-    }
 
     @PostMapping("/split-pages")
     public ResponseEntity<Resource> splitPdf(@RequestParam("fileInput") MultipartFile file, @RequestParam("pages") String pages) throws IOException {
@@ -128,7 +123,13 @@ public class SplitPDFController {
         Files.delete(zipFile);
 
         // return the Resource in the response
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_split.zip").contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .contentLength(resource.contentLength()).body(resource);
+        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_split.zip")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM).contentLength(resource.contentLength()).body(resource);
+    }
+
+    @GetMapping("/split-pdfs")
+    public String splitPdfForm(Model model) {
+        model.addAttribute("currentPage", "split-pdfs");
+        return "split-pdfs";
     }
 }
