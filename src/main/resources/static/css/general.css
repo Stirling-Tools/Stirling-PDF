@@ -31,6 +31,13 @@ html[lang-direction=rtl] * {
     right: 0;
     top: 50%;
 }
+
+.align-center-left {
+    position: absolute;
+    left: 0;
+    top: 50%;
+}
+
 .align-bottom {
     position: absolute;
     bottom: 0;
