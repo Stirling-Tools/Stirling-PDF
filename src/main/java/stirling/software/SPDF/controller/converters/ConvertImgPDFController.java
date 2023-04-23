@@ -25,28 +25,6 @@ public class ConvertImgPDFController {
 
     private static final Logger logger = LoggerFactory.getLogger(ConvertImgPDFController.class);
 
-    @GetMapping("/img-to-pdf")
-    public String convertToPdfForm(Model model) {
-        model.addAttribute("currentPage", "img-to-pdf");
-        return "convert/img-to-pdf";
-    }
-
-    @GetMapping("/pdf-to-img")
-    public String pdfToimgForm(Model model) {
-        model.addAttribute("currentPage", "pdf-to-img");
-        return "convert/pdf-to-img";
-    }
-
-    @PostMapping("/img-to-pdf")
-    public ResponseEntity<byte[]> convertToPdf(@RequestParam("fileInput") MultipartFile[] file,
-            @RequestParam(defaultValue = "false", name = "stretchToFit") boolean stretchToFit,
-            @RequestParam(defaultValue = "true", name = "autoRotate") boolean autoRotate) throws IOException {
-        // Convert the file to PDF and get the resulting bytes
-        System.out.println(stretchToFit);
-        byte[] bytes = PdfUtils.imageToPdf(file, stretchToFit, autoRotate);
-        return PdfUtils.bytesToWebResponse(bytes, file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "")+ "_coverted.pdf");
-    }
-
     @PostMapping("/pdf-to-img")
     public ResponseEntity<Resource> convertToImage(@RequestParam("fileInput") MultipartFile file, @RequestParam("imageFormat") String imageFormat,
             @RequestParam("singleOrMultiple") String singleOrMultiple, @RequestParam("colorType") String colorType, @RequestParam("dpi") String dpi) throws IOException {
@@ -78,9 +56,25 @@ public class ConvertImgPDFController {
         } else {
             ByteArrayResource resource = new ByteArrayResource(result);
             // return the Resource in the response
-            return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename="+ file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_convertedToImages.zip").contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .contentLength(resource.contentLength()).body(resource);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_convertedToImages.zip")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM).contentLength(resource.contentLength()).body(resource);
         }
+    }
+
+    @PostMapping("/img-to-pdf")
+    public ResponseEntity<byte[]> convertToPdf(@RequestParam("fileInput") MultipartFile[] file, @RequestParam(defaultValue = "false", name = "stretchToFit") boolean stretchToFit,
+            @RequestParam(defaultValue = "true", name = "autoRotate") boolean autoRotate) throws IOException {
+        // Convert the file to PDF and get the resulting bytes
+        System.out.println(stretchToFit);
+        byte[] bytes = PdfUtils.imageToPdf(file, stretchToFit, autoRotate);
+        return PdfUtils.bytesToWebResponse(bytes, file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_coverted.pdf");
+    }
+
+    @GetMapping("/img-to-pdf")
+    public String convertToPdfForm(Model model) {
+        model.addAttribute("currentPage", "img-to-pdf");
+        return "convert/img-to-pdf";
     }
 
     private String getMediaType(String imageFormat) {
@@ -92,6 +86,12 @@ public class ConvertImgPDFController {
             return "image/gif";
         else
             return "application/octet-stream";
+    }
+
+    @GetMapping("/pdf-to-img")
+    public String pdfToimgForm(Model model) {
+        model.addAttribute("currentPage", "pdf-to-img");
+        return "convert/pdf-to-img";
     }
 
 }

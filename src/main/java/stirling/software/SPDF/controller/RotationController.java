@@ -22,12 +22,6 @@ public class RotationController {
 
     private static final Logger logger = LoggerFactory.getLogger(RotationController.class);
 
-    @GetMapping("/rotate-pdf")
-    public String rotatePdfForm(Model model) {
-        model.addAttribute("currentPage", "rotate-pdf");
-        return "rotate-pdf";
-    }
-
     @PostMapping("/rotate-pdf")
     public ResponseEntity<byte[]> rotatePDF(@RequestParam("fileInput") MultipartFile pdfFile, @RequestParam("angle") Integer angle) throws IOException {
 
@@ -43,6 +37,12 @@ public class RotationController {
 
         return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_rotated.pdf");
 
+    }
+
+    @GetMapping("/rotate-pdf")
+    public String rotatePdfForm(Model model) {
+        model.addAttribute("currentPage", "rotate-pdf");
+        return "rotate-pdf";
     }
 
 }

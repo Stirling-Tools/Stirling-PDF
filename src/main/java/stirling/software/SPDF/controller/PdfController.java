@@ -10,11 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class PdfController {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfController.class);
-    
-    @GetMapping("/home")
-    public String root(Model model) {
-        return "redirect:/";
-    }
 
     @GetMapping("/")
     public String home(Model model) {
@@ -22,6 +17,9 @@ public class PdfController {
         return "home";
     }
 
+    @GetMapping("/home")
+    public String root(Model model) {
+        return "redirect:/";
+    }
 
-    
 }

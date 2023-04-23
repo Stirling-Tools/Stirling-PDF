@@ -15,12 +15,10 @@ import stirling.software.SPDF.utils.PDFToFile;
 @Controller
 public class ConvertPDFToOffice {
 
-    
-    
-    @GetMapping("/pdf-to-word")
-    public ModelAndView pdfToWord() {
-        ModelAndView modelAndView = new ModelAndView("convert/pdf-to-word");
-        modelAndView.addObject("currentPage", "pdf-to-word");
+    @GetMapping("/pdf-to-html")
+    public ModelAndView pdfToHTML() {
+        ModelAndView modelAndView = new ModelAndView("convert/pdf-to-html");
+        modelAndView.addObject("currentPage", "pdf-to-html");
         return modelAndView;
     }
 
@@ -38,10 +36,10 @@ public class ConvertPDFToOffice {
         return modelAndView;
     }
 
-    @GetMapping("/pdf-to-html")
-    public ModelAndView pdfToHTML() {
-        ModelAndView modelAndView = new ModelAndView("convert/pdf-to-html");
-        modelAndView.addObject("currentPage", "pdf-to-html");
+    @GetMapping("/pdf-to-word")
+    public ModelAndView pdfToWord() {
+        ModelAndView modelAndView = new ModelAndView("convert/pdf-to-word");
+        modelAndView.addObject("currentPage", "pdf-to-word");
         return modelAndView;
     }
 
@@ -52,33 +50,31 @@ public class ConvertPDFToOffice {
         return modelAndView;
     }
 
-    
-    @PostMapping("/pdf-to-word")
-    public ResponseEntity<byte[]> processPdfToWord(@RequestParam("fileInput") MultipartFile inputFile,
-                                                   @RequestParam("outputFormat") String outputFormat) throws IOException, InterruptedException {
-        PDFToFile pdfToFile = new PDFToFile();
-        return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
-    }
-    
-    @PostMapping("/pdf-to-presentation")
-    public ResponseEntity<byte[]> processPdfToPresentation(@RequestParam("fileInput") MultipartFile inputFile,
-                                                           @RequestParam("outputFormat") String outputFormat) throws IOException, InterruptedException {
-        PDFToFile pdfToFile = new PDFToFile();
-        return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "impress_pdf_import");
-    }
-    
-    @PostMapping("/pdf-to-text")
-    public ResponseEntity<byte[]> processPdfToRTForTXT(@RequestParam("fileInput") MultipartFile inputFile,
-                                                       @RequestParam("outputFormat") String outputFormat) throws IOException, InterruptedException {
-        PDFToFile pdfToFile = new PDFToFile();
-        return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
-    }
-    
-    
     @PostMapping("/pdf-to-html")
     public ResponseEntity<byte[]> processPdfToHTML(@RequestParam("fileInput") MultipartFile inputFile) throws IOException, InterruptedException {
         PDFToFile pdfToFile = new PDFToFile();
         return pdfToFile.processPdfToOfficeFormat(inputFile, "html", "writer_pdf_import");
+    }
+
+    @PostMapping("/pdf-to-presentation")
+    public ResponseEntity<byte[]> processPdfToPresentation(@RequestParam("fileInput") MultipartFile inputFile, @RequestParam("outputFormat") String outputFormat)
+            throws IOException, InterruptedException {
+        PDFToFile pdfToFile = new PDFToFile();
+        return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "impress_pdf_import");
+    }
+
+    @PostMapping("/pdf-to-text")
+    public ResponseEntity<byte[]> processPdfToRTForTXT(@RequestParam("fileInput") MultipartFile inputFile, @RequestParam("outputFormat") String outputFormat)
+            throws IOException, InterruptedException {
+        PDFToFile pdfToFile = new PDFToFile();
+        return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
+    }
+
+    @PostMapping("/pdf-to-word")
+    public ResponseEntity<byte[]> processPdfToWord(@RequestParam("fileInput") MultipartFile inputFile, @RequestParam("outputFormat") String outputFormat)
+            throws IOException, InterruptedException {
+        PDFToFile pdfToFile = new PDFToFile();
+        return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
     }
 
     @PostMapping("/pdf-to-xml")
@@ -86,12 +82,5 @@ public class ConvertPDFToOffice {
         PDFToFile pdfToFile = new PDFToFile();
         return pdfToFile.processPdfToOfficeFormat(inputFile, "xml", "writer_pdf_import");
     }
- 
-    
-    
-    
-    
-    
-    
-    
+
 }

@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller;
+package stirling.software.SPDF.controller.other;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -36,15 +36,9 @@ public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
 
-    @GetMapping("/extract-images")
-    public String extractImagesForm(Model model) {
-        model.addAttribute("currentPage", "extract-images");
-        return "extract-images";
-    }
-
     @PostMapping("/extract-images")
     public ResponseEntity<Resource> extractImages(@RequestParam("fileInput") MultipartFile file, @RequestParam("format") String format) throws IOException {
-        
+
         System.out.println(System.currentTimeMillis() + "file=" + file.getName() + ", format=" + format);
         PDDocument document = PDDocument.load(file.getBytes());
 
@@ -58,7 +52,7 @@ public class ExtractImagesController {
         zos.setLevel(Deflater.BEST_COMPRESSION);
 
         int imageIndex = 1;
-        
+
         int pageNum = 1;
         // Iterate over each page
         for (PDPage page : document.getPages()) {
@@ -72,21 +66,18 @@ public class ExtractImagesController {
                     RenderedImage renderedImage = image.getImage();
                     BufferedImage bufferedImage = null;
                     if (format.equalsIgnoreCase("png")) {
-                        bufferedImage = new BufferedImage(renderedImage.getWidth(), renderedImage.getHeight(),
-                                BufferedImage.TYPE_INT_ARGB);
+                        bufferedImage = new BufferedImage(renderedImage.getWidth(), renderedImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
                     } else if (format.equalsIgnoreCase("jpeg") || format.equalsIgnoreCase("jpg")) {
-                        bufferedImage = new BufferedImage(renderedImage.getWidth(), renderedImage.getHeight(),
-                                BufferedImage.TYPE_INT_RGB);
+                        bufferedImage = new BufferedImage(renderedImage.getWidth(), renderedImage.getHeight(), BufferedImage.TYPE_INT_RGB);
                     } else if (format.equalsIgnoreCase("gif")) {
-                        bufferedImage = new BufferedImage(renderedImage.getWidth(), renderedImage.getHeight(),
-                                BufferedImage.TYPE_BYTE_INDEXED);
-                    } 
+                        bufferedImage = new BufferedImage(renderedImage.getWidth(), renderedImage.getHeight(), BufferedImage.TYPE_BYTE_INDEXED);
+                    }
 
                     // Write image to zip file
                     String imageName = "Image " + imageIndex + " (Page " + pageNum + ")." + format;
                     ZipEntry zipEntry = new ZipEntry(imageName);
                     zos.putNextEntry(zipEntry);
-                    
+
                     Graphics2D g = bufferedImage.createGraphics();
                     g.drawImage((Image) renderedImage, 0, 0, null);
                     g.dispose();
@@ -94,12 +85,11 @@ public class ExtractImagesController {
                     ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
                     ImageIO.write(bufferedImage, format, imageBaos);
                     zos.write(imageBaos.toByteArray());
-                
-                    
+
                     zos.closeEntry();
                     imageIndex++;
                 }
-            }       
+            }
         }
 
         // Close ZipOutputStream and PDDocument
@@ -110,20 +100,22 @@ public class ExtractImagesController {
         byte[] zipContents = baos.toByteArray();
         ByteArrayResource resource = new ByteArrayResource(zipContents);
 
-        // Set content disposition header to indicate that the response should be downloaded as a file
+        // Set content disposition header to indicate that the response should be
+        // downloaded as a file
         HttpHeaders headers = new HttpHeaders();
         headers.setContentLength(zipContents.length);
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_extracted-images.zip");
-        
+
         // Return ResponseEntity with ByteArrayResource and headers
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .headers(headers)
-                
-                .header("Cache-Control", "no-cache")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(resource);
+        return ResponseEntity.status(HttpStatus.OK).headers(headers)
+
+                .header("Cache-Control", "no-cache").contentType(MediaType.APPLICATION_OCTET_STREAM).body(resource);
     }
-    
-    
+
+    @GetMapping("/extract-images")
+    public String extractImagesForm(Model model) {
+        model.addAttribute("currentPage", "extract-images");
+        return "other/extract-images";
+    }
+
 }

@@ -13,12 +13,24 @@ import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 @Configuration
 public class Beans implements WebMvcConfigurer {
 
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(localeChangeInterceptor());
+    }
+
+    @Bean
+    public LocaleChangeInterceptor localeChangeInterceptor() {
+        LocaleChangeInterceptor lci = new LocaleChangeInterceptor();
+        lci.setParamName("lang");
+        return lci;
+    }
+
     @Bean
     public LocaleResolver localeResolver() {
         SessionLocaleResolver slr = new SessionLocaleResolver();
 
         String appLocaleEnv = System.getProperty("APP_LOCALE");
-        if(appLocaleEnv == null)
+        if (appLocaleEnv == null)
             appLocaleEnv = System.getenv("APP_LOCALE");
         Locale defaultLocale = Locale.UK; // Fallback to UK locale if environment variable is not set
 
@@ -35,18 +47,6 @@ public class Beans implements WebMvcConfigurer {
 
         slr.setDefaultLocale(defaultLocale);
         return slr;
-    }
-
-    @Bean
-    public LocaleChangeInterceptor localeChangeInterceptor() {
-        LocaleChangeInterceptor lci = new LocaleChangeInterceptor();
-        lci.setParamName("lang");
-        return lci;
-    }
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(localeChangeInterceptor());
     }
 
 }
