@@ -13,7 +13,7 @@ import java.util.concurrent.Semaphore;
 public class ProcessExecutor {
 
     public enum Processes {
-        LIBRE_OFFICE, OCR_MY_PDF
+        LIBRE_OFFICE, OCR_MY_PDF, PYTHON_OPENCV
     }
 
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
@@ -23,6 +23,7 @@ public class ProcessExecutor {
             int semaphoreLimit = switch (key) {
             case LIBRE_OFFICE -> 1;
             case OCR_MY_PDF -> 2;
+            case PYTHON_OPENCV -> 8;
             };
             return new ProcessExecutor(semaphoreLimit);
         });

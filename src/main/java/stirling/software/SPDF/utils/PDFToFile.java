@@ -15,7 +15,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +40,7 @@ public class PDFToFile {
         Path tempInputFile = null;
         Path tempOutputDir = null;
         byte[] fileBytes;
-        // Prepare response
-        HttpHeaders headers = new HttpHeaders();
+        String fileName = "temp.file";
 
         try {
             // Save the uploaded file to a temporary location
@@ -60,19 +58,18 @@ public class PDFToFile {
             // Get output files
             List<File> outputFiles = Arrays.asList(tempOutputDir.toFile().listFiles());
 
+            
             if (outputFiles.size() == 1) {
                 // Return single output file
                 File outputFile = outputFiles.get(0);
-                headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
                 if (outputFormat.equals("txt:Text")) {
                     outputFormat = "txt";
                 }
-                headers.setContentDispositionFormData("attachment", pdfBaseName + "." + outputFormat);
+                fileName = pdfBaseName + "." + outputFormat;
                 fileBytes = FileUtils.readFileToByteArray(outputFile);
             } else {
                 // Return output files in a ZIP archive
-                headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-                headers.setContentDispositionFormData("attachment", pdfBaseName + "To" + outputFormat + ".zip");
+                fileName =  pdfBaseName + "To" + outputFormat + ".zip";
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream);
 
@@ -96,6 +93,6 @@ public class PDFToFile {
             if (tempOutputDir != null)
                 FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
-        return new ResponseEntity<>(fileBytes, headers, HttpStatus.OK);
+        return PdfUtils.bytesToWebResponse(fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
     }
 }

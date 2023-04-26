@@ -6,8 +6,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
 @Controller
@@ -52,10 +51,7 @@ public class ConvertPDFToPDFA {
 
         // Return the optimized PDF as a response
         String outputFilename = inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_PDFA.pdf";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", outputFilename);
-        return ResponseEntity.ok().headers(headers).body(pdfBytes);
+        return PdfUtils.bytesToWebResponse(pdfBytes, outputFilename);
     }
 
     @GetMapping("/pdf-to-pdfa")

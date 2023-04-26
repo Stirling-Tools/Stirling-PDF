@@ -18,10 +18,6 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -31,13 +27,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.SPDF.utils.PdfUtils;
+
 @Controller
 public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
 
     @PostMapping("/extract-images")
-    public ResponseEntity<Resource> extractImages(@RequestParam("fileInput") MultipartFile file, @RequestParam("format") String format) throws IOException {
+    public ResponseEntity<byte[]> extractImages(@RequestParam("fileInput") MultipartFile file, @RequestParam("format") String format) throws IOException {
 
         System.out.println(System.currentTimeMillis() + "file=" + file.getName() + ", format=" + format);
         PDDocument document = PDDocument.load(file.getBytes());
@@ -98,18 +96,8 @@ public class ExtractImagesController {
 
         // Create ByteArrayResource from byte array
         byte[] zipContents = baos.toByteArray();
-        ByteArrayResource resource = new ByteArrayResource(zipContents);
-
-        // Set content disposition header to indicate that the response should be
-        // downloaded as a file
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentLength(zipContents.length);
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_extracted-images.zip");
-
-        // Return ResponseEntity with ByteArrayResource and headers
-        return ResponseEntity.status(HttpStatus.OK).headers(headers)
-
-                .header("Cache-Control", "no-cache").contentType(MediaType.APPLICATION_OCTET_STREAM).body(resource);
+        
+        return PdfUtils.boasToWebResponse(baos, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_extracted-images.zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 
     @GetMapping("/extract-images")

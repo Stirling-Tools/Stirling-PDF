@@ -17,7 +17,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -27,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
 @Controller
@@ -123,8 +123,6 @@ public class OCRController {
         // Return the OCR processed PDF as a response
         String outputFilename = inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
 
-        HttpHeaders headers = new HttpHeaders();
-
         if (sidecar != null && sidecar) {
             // Create a zip file containing both the PDF and the text file
             String outputZipFilename = inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_OCR.zip";
@@ -150,17 +148,13 @@ public class OCRController {
             Files.delete(tempZipFile);
             Files.delete(tempOutputFile);
             Files.delete(sidecarTextPath);
-
+            
             // Return the zip file containing both the PDF and the text file
-            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            headers.setContentDispositionFormData("attachment", outputZipFilename);
-            return ResponseEntity.ok().headers(headers).body(zipBytes);
+            return PdfUtils.bytesToWebResponse(pdfBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
         } else {
             // Return the OCR processed PDF as a response
             Files.delete(tempOutputFile);
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment", outputFilename);
-            return ResponseEntity.ok().headers(headers).body(pdfBytes);
+            return PdfUtils.bytesToWebResponse(pdfBytes, outputFilename);
         }
 
     }

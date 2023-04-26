@@ -1,5 +1,9 @@
 # Build jbig2enc in a separate stage
-FROM frooodle/stirling-pdf-base:latest
+FROM frooodle/stirling-pdf-base:beta
+
+# Create pythonScripts folder and copy local scripts
+RUN mkdir /pythonScripts
+COPY ./pythonScripts/* /pythonScripts/
 
 # Copy the application JAR file
 COPY build/libs/*.jar app.jar
