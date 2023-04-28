@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.other;
+package stirling.software.SPDF.controller.api.other;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -20,22 +20,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import stirling.software.SPDF.utils.PdfUtils;
 
-@Controller
+@RestController
 public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
 
-    @PostMapping("/extract-images")
-    public ResponseEntity<byte[]> extractImages(@RequestParam("fileInput") MultipartFile file, @RequestParam("format") String format) throws IOException {
+    @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
+    public ResponseEntity<byte[]> extractImages(@RequestPart(required = true, value = "fileInput") MultipartFile file, @RequestParam("format") String format) throws IOException {
 
         System.out.println(System.currentTimeMillis() + "file=" + file.getName() + ", format=" + format);
         PDDocument document = PDDocument.load(file.getBytes());
@@ -96,14 +98,8 @@ public class ExtractImagesController {
 
         // Create ByteArrayResource from byte array
         byte[] zipContents = baos.toByteArray();
-        
-        return PdfUtils.boasToWebResponse(baos, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_extracted-images.zip", MediaType.APPLICATION_OCTET_STREAM);
-    }
 
-    @GetMapping("/extract-images")
-    public String extractImagesForm(Model model) {
-        model.addAttribute("currentPage", "extract-images");
-        return "other/extract-images";
+        return PdfUtils.boasToWebResponse(baos, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_extracted-images.zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 
 }

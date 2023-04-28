@@ -11,8 +11,8 @@ RUN apt-get update && \
         pkg-config \
         ca-certificates \
         zlib1g-dev \
-        make \
-        g++
+		make \
+		g++
 
 RUN git clone https://github.com/agl/jbig2enc && \
     cd jbig2enc && \
@@ -21,10 +21,9 @@ RUN git clone https://github.com/agl/jbig2enc && \
     make && \
     make install
 
-# Main stage
-FROM openjdk:17-jdk-slim
 
-# Install necessary dependencies
+# Main stage
+FROM openjdk:17-jdk-slim AS base
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libreoffice-core \
@@ -38,52 +37,27 @@ RUN apt-get update && \
         pngquant \
         unpaper \
         ocrmypdf && \
-    pip install --user --upgrade ocrmypdf && \
-    pip3 install opencv-python-headless
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir /usr/share/tesseract-ocr-original && \
+    cp -r /usr/share/tesseract-ocr/* /usr/share/tesseract-ocr-original && \
+    mv /usr/share/tesseract-ocr-original/4.00/tessdata/eng.traineddata /usr/share/tesseract-ocr-original/4.00/tessdata/english.traineddata && \
+    rm -rf /usr/share/tesseract-ocr
 
-# Copy the jbig2enc binary from the builder stage
-COPY --from=jbig2enc_builder /usr/local/bin/jbig2 /usr/local/bin/jbig2# Build jbig2enc in a separate stage
-FROM debian:bullseye-slim as jbig2enc_builder
-
+# Python packages stage
+FROM base AS python-packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        git \
-        automake \
-        autoconf \
-        libtool \
-        libleptonica-dev \
-        pkg-config \
-        ca-certificates \
+        build-essential \
+        libffi-dev \
+        libssl-dev \
         zlib1g-dev \
-        make \
-        g++
+        libjpeg-dev && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir \
+        opencv-python-headless && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://github.com/agl/jbig2enc && \
-    cd jbig2enc && \
-    ./autogen.sh && \
-    ./configure && \
-    make && \
-    make install
-
-# Main stage
-FROM openjdk:17-jdk-slim
-
-# Install necessary dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libreoffice-core \
-        libreoffice-common \
-        libreoffice-writer \
-        libreoffice-calc \
-        libreoffice-impress \
-        python3-uno \
-        python3-pip \
-        unoconv \
-        pngquant \
-        unpaper \
-        ocrmypdf && \
-    pip install --user --upgrade ocrmypdf && \
-    pip3 install opencv-python-headless
-
-# Copy the jbig2enc binary from the builder stage
+# Final stage: Copy necessary files from the previous stage
+FROM base
+COPY --from=python-packages /usr/local /usr/local
 COPY --from=jbig2enc_builder /usr/local/bin/jbig2 /usr/local/bin/jbig2

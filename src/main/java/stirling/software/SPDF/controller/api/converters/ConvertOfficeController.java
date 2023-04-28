@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.converters;
+package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,17 +10,18 @@ import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
-@Controller
+@RestController
 public class ConvertOfficeController {
 
     public byte[] convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
@@ -50,20 +51,13 @@ public class ConvertOfficeController {
 
         return pdfBytes;
     }
-
-    @GetMapping("/file-to-pdf")
-    public String convertToPdfForm(Model model) {
-        model.addAttribute("currentPage", "file-to-pdf");
-        return "convert/file-to-pdf";
-    }
-
     private boolean isValidFileExtension(String fileExtension) {
         String extensionPattern = "^(?i)[a-z0-9]{2,4}$";
         return fileExtension.matches(extensionPattern);
     }
 
-    @PostMapping("/file-to-pdf")
-    public ResponseEntity<byte[]> processPdfWithOCR(@RequestParam("fileInput") MultipartFile inputFile) throws IOException, InterruptedException {
+    @PostMapping(consumes = "multipart/form-data", value = "/file-to-pdf")
+    public ResponseEntity<byte[]> processPdfWithOCR(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile) throws IOException, InterruptedException {
 
         // unused but can start server instance if startup time is to long
         // LibreOfficeListener.getInstance().start();

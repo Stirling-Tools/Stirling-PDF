@@ -16,6 +16,31 @@
 
             <form id="multiPdfForm" th:action="@{extract-image-scans}" method="post" enctype="multipart/form-data">
               <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*, application/pdf')}"></div>
+              <div class="form-group">
+                <label for="angleThreshold">Angle Threshold:</label>
+                <input type="number" class="form-control" id="angleThreshold" name="angle_threshold" value="5">
+                <small id="angleThresholdHelp" class="form-text text-muted">Sets the minimum absolute angle required for the image to be rotated (default: 10).</small>
+              </div>
+              <div class="form-group">
+                <label for="tolerance">Tolerance:</label>
+                <input type="number" class="form-control" id="tolerance" name="tolerance" value="20">
+                <small id="toleranceHelp" class="form-text text-muted">Determines the range of color variation around the estimated background color (default: 30).</small>
+              </div>
+              <div class="form-group">
+                <label for="minArea">Minimum Area:</label>
+                <input type="number" class="form-control" id="minArea" name="min_area" value="8000">
+                <small id="minAreaHelp" class="form-text text-muted">Sets the minimum area threshold for a photo (default: 10000).</small>
+              </div>
+              <div class="form-group">
+                <label for="minContourArea">Minimum Contour Area:</label>
+                <input type="number" class="form-control" id="minContourArea" name="min_contour_area" value="500">
+                <small id="minContourAreaHelp" class="form-text text-muted">Sets the minimum contour area threshold for a photo (default: 500).</small>
+              </div>
+               <div class="form-group">
+                <label for="borderSize">Border Size:</label>
+                <input type="number" class="form-control" id="borderSize" name="border_size" value="0">
+                <small id="borderSizeHelp" class="form-text text-muted">Sets the size of the border added and removed to prevent white borders in the output (default: 0).</small>
+              </div>
               <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{extractImageScans.submit}"></button>
             </form>
           </div>

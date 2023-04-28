@@ -85,7 +85,7 @@ def crop_borders(image, border_color, tolerance=30):
     
     return image[y:y+h, x:x+w]
     
-def split_photos(input_file, output_directory, tolerance=30, min_area=10000, min_contour_area=500, angle_threshold=10, border_size=10):
+def split_photos(input_file, output_directory, tolerance=30, min_area=10000, min_contour_area=500, angle_threshold=10, border_size=0):
     image = cv2.imread(input_file)
     background_color = estimate_background_color(image)
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         print("  [min_area]         - Optional. Sets the minimum area threshold for a photo (default: 10000).")
         print("  [min_contour_area] - Optional. Sets the minimum contour area threshold for a photo (default: 500).")
         print("  [angle_threshold]  - Optional. Sets the minimum absolute angle required for the image to be rotated (default: 10).")
-        print("  [border_size]      - Optional. Sets the size of the border added and removed to prevent white borders in the output (default: 10).")
+        print("  [border_size]      - Optional. Sets the size of the border added and removed to prevent white borders in the output (default: 0).")
         sys.exit(1)
 
     input_file = sys.argv[1]
@@ -130,4 +130,5 @@ if __name__ == "__main__":
     min_area = int(sys.argv[4]) if len(sys.argv) > 4 else 8000
     min_contour_area = int(sys.argv[5]) if len(sys.argv) > 5 else 500
     angle_threshold = int(sys.argv[6]) if len(sys.argv) > 6 else 60
-    split_photos(input_file, output_directory, tolerance=tolerance, min_area=min_area, min_contour_area=min_contour_area, angle_threshold=angle_threshold)
+    border_size = int(sys.argv[7]) if len(sys.argv) > 7 else 0
+    split_photos(input_file, output_directory, tolerance=tolerance, min_area=min_area, min_contour_area=min_contour_area, angle_threshold=angle_threshold, border_size=border_size)

@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.other;
+package stirling.software.SPDF.controller.api.other;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -19,44 +19,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
-@Controller
+@RestController
 public class OCRController {
 
     private static final Logger logger = LoggerFactory.getLogger(OCRController.class);
 
-    public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = "/usr/share/tesseract-ocr/4.00/tessdata";
-        File[] files = new File(tessdataDir).listFiles();
-        if (files == null) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(files).filter(file -> file.getName().endsWith(".traineddata")).map(file -> file.getName().replace(".traineddata", ""))
-                .filter(lang -> !lang.equalsIgnoreCase("osd")).collect(Collectors.toList());
-    }
 
-    @GetMapping("/ocr-pdf")
-    public ModelAndView ocrPdfPage() {
-        ModelAndView modelAndView = new ModelAndView("other/ocr-pdf");
-        modelAndView.addObject("languages", getAvailableTesseractLanguages());
-        modelAndView.addObject("currentPage", "ocr-pdf");
-        return modelAndView;
-    }
-
-    @PostMapping("/ocr-pdf")
-    public ResponseEntity<byte[]> processPdfWithOCR(@RequestParam("fileInput") MultipartFile inputFile, @RequestParam("languages") List<String> selectedLanguages,
-            @RequestParam(name = "sidecar", required = false) Boolean sidecar, @RequestParam(name = "deskew", required = false) Boolean deskew,
-            @RequestParam(name = "clean", required = false) Boolean clean, @RequestParam(name = "clean-final", required = false) Boolean cleanFinal,
-            @RequestParam(name = "ocrType", required = false) String ocrType) throws IOException, InterruptedException {
+    @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
+    public ResponseEntity<byte[]> processPdfWithOCR(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile,
+            @RequestParam("languages") List<String> selectedLanguages, @RequestParam(name = "sidecar", required = false) Boolean sidecar,
+            @RequestParam(name = "deskew", required = false) Boolean deskew, @RequestParam(name = "clean", required = false) Boolean clean,
+            @RequestParam(name = "clean-final", required = false) Boolean cleanFinal, @RequestParam(name = "ocrType", required = false) String ocrType)
+            throws IOException, InterruptedException {
 
         // --output-type pdfa
         if (selectedLanguages == null || selectedLanguages.size() < 1) {
@@ -148,7 +134,7 @@ public class OCRController {
             Files.delete(tempZipFile);
             Files.delete(tempOutputFile);
             Files.delete(sidecarTextPath);
-            
+
             // Return the zip file containing both the PDF and the text file
             return PdfUtils.bytesToWebResponse(pdfBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
         } else {

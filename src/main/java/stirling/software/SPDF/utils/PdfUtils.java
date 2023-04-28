@@ -48,10 +48,10 @@ public class PdfUtils {
     }
 
     public static ResponseEntity<byte[]> boasToWebResponse(ByteArrayOutputStream baos, String docName, MediaType mediaType) throws IOException {
-        return PdfUtils.bytesToWebResponse(baos.toByteArray(), docName, mediaType );
+        return PdfUtils.bytesToWebResponse(baos.toByteArray(), docName, mediaType);
     }
-    
-    public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName, MediaType mediaType ) throws IOException {
+
+    public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName, MediaType mediaType) throws IOException {
 
         // Return the PDF as a response
         HttpHeaders headers = new HttpHeaders();
@@ -61,7 +61,7 @@ public class PdfUtils {
         headers.setContentDispositionFormData("attachment", encodedDocName);
         return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
     }
-    
+
     public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName) throws IOException {
         return bytesToWebResponse(bytes, docName, MediaType.APPLICATION_PDF);
     }

@@ -28,53 +28,78 @@
 <!-- Custom -->
 <link rel="stylesheet" href="css/general.css">
 <link rel="stylesheet" th:href="@{css/dark-mode.css}" id="dark-mode-styles">
-
+<link rel="stylesheet" th:href="@{css/rainbow-mode.css}" id="rainbow-mode-styles" disabled="true">
 <script>
-function toggleDarkMode() {
-	  var darkModeStyles = document.getElementById("dark-mode-styles");
-	  var darkModeIcon = document.getElementById("dark-mode-icon");
+var toggleCount = 0;
+var lastToggleTime = Date.now();
 
-	  if (localStorage.getItem("dark-mode") == "on") {
-	    localStorage.setItem("dark-mode", "off");
-	    darkModeStyles.disabled = true;
-	    darkModeIcon.src = "sun.svg";
-	  } else {
-	    localStorage.setItem("dark-mode", "on");
-	    darkModeStyles.disabled = false;
-	    darkModeIcon.src = "moon.svg";
-	  }
-	}
+function toggleDarkMode() {
+  var currentTime = Date.now();
+  if (currentTime - lastToggleTime < 1000) {
+    toggleCount++;
+  } else {
+    toggleCount = 1;
+  }
+  lastToggleTime = currentTime;
+
+  var darkModeStyles = document.getElementById("dark-mode-styles");
+  var rainbowModeStyles = document.getElementById("rainbow-mode-styles");
+  var darkModeIcon = document.getElementById("dark-mode-icon");
+
+  if (toggleCount >= 18) {
+    localStorage.setItem("dark-mode", "rainbow");
+    darkModeStyles.disabled = true;
+    rainbowModeStyles.disabled = false;
+    darkModeIcon.src = "rainbow.svg";
+  } else if (localStorage.getItem("dark-mode") == "on") {
+    localStorage.setItem("dark-mode", "off");
+    darkModeStyles.disabled = true;
+    rainbowModeStyles.disabled = true;
+    darkModeIcon.src = "sun.svg";
+  } else {
+    localStorage.setItem("dark-mode", "on");
+    darkModeStyles.disabled = false;
+    rainbowModeStyles.disabled = true;
+    darkModeIcon.src = "moon.svg";
+  }
+}
 
 document.addEventListener("DOMContentLoaded", function () {
-	  var darkModeStyles = document.getElementById("dark-mode-styles");
-	  var darkModeIcon = document.getElementById("dark-mode-icon");
+  var darkModeStyles = document.getElementById("dark-mode-styles");
+  var rainbowModeStyles = document.getElementById("rainbow-mode-styles");
+  var darkModeIcon = document.getElementById("dark-mode-icon");
 
-	  // Check if the user has already set a preference
-	  if (localStorage.getItem("dark-mode") == "on") {
-	    darkModeStyles.disabled = false;
-	    darkModeIcon.src = "moon.svg";
-	  } else if (localStorage.getItem("dark-mode") == "off") {
-	    darkModeStyles.disabled = true;
-	    darkModeIcon.src = "sun.svg";
-	  } else {
-	    // Check the OS's default dark mode setting
-	    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-	      darkModeStyles.disabled = false;
-	      darkModeIcon.src = "moon.svg";
-	    } else {
-	      darkModeStyles.disabled = true;
-	      darkModeIcon.src = "sun.svg";
-	    }
-	  }
+  if (localStorage.getItem("dark-mode") == "on") {
+    darkModeStyles.disabled = false;
+    rainbowModeStyles.disabled = true;
+    darkModeIcon.src = "moon.svg";
+  } else if (localStorage.getItem("dark-mode") == "off") {
+    darkModeStyles.disabled = true;
+    rainbowModeStyles.disabled = true;
+    darkModeIcon.src = "sun.svg";
+  } else if (localStorage.getItem("dark-mode") == "rainbow") {
+    darkModeStyles.disabled = true;
+    rainbowModeStyles.disabled = false;
+    darkModeIcon.src = "rainbow.svg";
+  } else {
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      darkModeStyles.disabled = false;
+      rainbowModeStyles.disabled = true;
+      darkModeIcon.src = "moon.svg";
+    } else {
+      darkModeStyles.disabled = true;
+      rainbowModeStyles.disabled = true;
+      darkModeIcon.src = "sun.svg";
+    }
+  }
 
-	  // Attach the toggleDarkMode function to the click event of the dark mode toggle
-	  document.getElementById("dark-mode-toggle").addEventListener("click", function (event) {
-	    event.preventDefault();
-	    toggleDarkMode();
-	  });
-	});
+  document.getElementById("dark-mode-toggle").addEventListener("click", function (event) {
+    event.preventDefault();
+    toggleDarkMode();
+  });
+});
+</script>
 
-	</script>
 </head>
 <th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}">
     <div class="custom-file-chooser">

@@ -1,10 +1,9 @@
-package stirling.software.SPDF.controller.other;
+package stirling.software.SPDF.controller.api.other;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -24,42 +23,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
-@Controller
+@RestController
 public class ExtractImageScansController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImageScansController.class);
 
-
-    @GetMapping("/extract-image-scans")
-    public ModelAndView extractImageScansForm() {
-        ModelAndView modelAndView = new ModelAndView("other/extract-image-scans");
-        modelAndView.addObject("currentPage", "extract-image-scans");
-        return modelAndView;
-    }
-
-    @PostMapping("/extract-image-scans")
-    public ResponseEntity<byte[]> extractImageScans(@RequestParam("fileInput") MultipartFile inputFile,
-                                                    @RequestParam(name = "angle_threshold", defaultValue = "5") int angleThreshold,
-                                                    @RequestParam(name = "tolerance", defaultValue = "20") int tolerance,
-                                                    @RequestParam(name = "min_area", defaultValue = "8000") int minArea,
-                                                    @RequestParam(name = "min_contour_area", defaultValue = "500") int minContourArea) throws IOException, InterruptedException {
+    @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
+    public ResponseEntity<byte[]> extractImageScans(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile,
+            @RequestParam(name = "angle_threshold", defaultValue = "5") int angleThreshold, @RequestParam(name = "tolerance", defaultValue = "20") int tolerance,
+            @RequestParam(name = "min_area", defaultValue = "8000") int minArea, @RequestParam(name = "min_contour_area", defaultValue = "500") int minContourArea,
+            @RequestParam(name = "border_size", defaultValue = "1") int borderSize) throws IOException, InterruptedException {
 
         String fileName = inputFile.getOriginalFilename();
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
 
         List<String> images = new ArrayList<>();
 
-     // Check if input file is a PDF
+        // Check if input file is a PDF
         if (extension.equalsIgnoreCase("pdf")) {
             // Load PDF document
             try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputFile.getBytes()))) {
@@ -87,14 +79,14 @@ public class ExtractImageScansController {
             images.add(tempInputFile.toString());
         }
 
-        
         List<byte[]> processedImageBytes = new ArrayList<>();
 
         // Process each image
         for (int i = 0; i < images.size(); i++) {
 
             Path tempDir = Files.createTempDirectory("openCV_output");
-            List<String> command = new ArrayList<>(Arrays.asList("python3", "/pythonScripts/split_photos.py", images.get(i), tempDir.toString(), String.valueOf(angleThreshold), String.valueOf(tolerance),String.valueOf(minArea),String.valueOf(minContourArea)));
+            List<String> command = new ArrayList<>(Arrays.asList("python3", "/scripts/split_photos.py", images.get(i), tempDir.toString(), String.valueOf(angleThreshold),
+                    String.valueOf(tolerance), String.valueOf(minArea), String.valueOf(minContourArea), String.valueOf(borderSize)));
 
             // Run CLI command
             int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV).runCommandWithOutputHandling(command);
@@ -117,7 +109,7 @@ public class ExtractImageScansController {
             try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(tempZipFile.toFile()))) {
                 // Add processed images to the zip
                 for (int i = 0; i < processedImageBytes.size(); i++) {
-                    ZipEntry entry = new ZipEntry(fileName.replaceFirst("[.][^.]+$", "") + "_" + (i+1) + ".png");
+                    ZipEntry entry = new ZipEntry(fileName.replaceFirst("[.][^.]+$", "") + "_" + (i + 1) + ".png");
                     zipOut.putNextEntry(entry);
                     zipOut.write(processedImageBytes.get(i));
                     zipOut.closeEntry();
@@ -135,11 +127,7 @@ public class ExtractImageScansController {
             byte[] imageBytes = processedImageBytes.get(0);
             return PdfUtils.bytesToWebResponse(imageBytes, fileName.replaceFirst("[.][^.]+$", "") + ".png", MediaType.IMAGE_PNG);
         }
-        
 
     }
-
-
-  
 
 }

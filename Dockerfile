@@ -1,9 +1,9 @@
 # Build jbig2enc in a separate stage
-FROM frooodle/stirling-pdf-base:beta
+FROM frooodle/stirling-pdf-base:beta2
 
-# Create pythonScripts folder and copy local scripts
-RUN mkdir /pythonScripts
-COPY ./pythonScripts/* /pythonScripts/
+# Create scripts folder and copy local scripts
+RUN mkdir /scripts
+COPY ./scripts/* /scripts/
 
 # Copy the application JAR file
 COPY build/libs/*.jar app.jar
@@ -17,7 +17,8 @@ ENV APP_HOME_NAME="Stirling PDF"
 #ENV APP_NAVBAR_NAME="Stirling PDF"
 
 # Run the application
-ENTRYPOINT java -jar /app.jar
+ENTRYPOINT ["/scripts/init.sh"]
+CMD ["java", "-jar", "/app.jar"]
 
 
 

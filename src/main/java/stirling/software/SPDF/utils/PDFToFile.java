@@ -58,7 +58,6 @@ public class PDFToFile {
             // Get output files
             List<File> outputFiles = Arrays.asList(tempOutputDir.toFile().listFiles());
 
-            
             if (outputFiles.size() == 1) {
                 // Return single output file
                 File outputFile = outputFiles.get(0);
@@ -69,7 +68,7 @@ public class PDFToFile {
                 fileBytes = FileUtils.readFileToByteArray(outputFile);
             } else {
                 // Return output files in a ZIP archive
-                fileName =  pdfBaseName + "To" + outputFormat + ".zip";
+                fileName = pdfBaseName + "To" + outputFormat + ".zip";
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream);
 
