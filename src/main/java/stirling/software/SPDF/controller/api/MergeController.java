@@ -37,6 +37,8 @@ public class MergeController {
             for (PDPage page : pages) {
                 mergedDoc.addPage(page);
             }
+            
+            
         }
 
         // Return the merged document
@@ -55,8 +57,16 @@ public class MergeController {
 
         PDDocument mergedDoc = mergeDocuments(documents);
 
+        
         // Return the merged PDF as a response
-        return PdfUtils.pdfDocToWebResponse(mergedDoc, files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_merged.pdf");
+        ResponseEntity<byte[]> response = PdfUtils.pdfDocToWebResponse(mergedDoc, files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_merged.pdf");
+        
+        for (PDDocument doc : documents) {
+            // Close the document after processing
+            doc.close();
+           }
+        
+        return response;
     }
 
 }
