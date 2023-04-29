@@ -1,23 +1,43 @@
-import DragDropManager from "./dragDrop.js";
-import scrollDivHorizontally from "./horizontalScroll.js";
-import getImageHighlighterCallback from "./imageHighlighter.js";
-import PdfActionsManager from './pdfActions.js';
+class PdfContainer {
+    fileName;
+    pagesContainer;
+    pagesContainerWrapper;
+    pdfAdapters;
 
-const createPdfContainer = (id, wrapperId, highlighterId, dragElId) => {
-    var fileName = null;
-    const pagesContainer = document.getElementById(id);
-    const pagesContainerWrapper = document.getElementById(wrapperId);
+    constructor(id, wrapperId, pdfAdapters) {
+        this.fileName = null;
+        this.pagesContainer = document.getElementById(id)
+        this.pagesContainerWrapper = document.getElementById(wrapperId);
+        this.movePageTo = this.movePageTo.bind(this);
+        this.addPdfs = this.addPdfs.bind(this);
+        this.rotateElement = this.rotateElement.bind(this);
+        this.rotateAll = this.rotateAll.bind(this);
+        this.exportPdf = this.exportPdf.bind(this);
 
+        this.pdfAdapters = pdfAdapters;
 
-    const movePageTo = (startElement, endElement, scrollTo = false) => {
-        const childArray = Array.from(pagesContainer.childNodes);
+        this.pdfAdapters.forEach(adapter => {
+            adapter.setActions({
+                movePageTo: this.movePageTo,
+                addPdfs: this.addPdfs,
+                rotateElement: this.rotateElement,
+            })
+        })
+
+        window.addPdfs = this.addPdfs;
+        window.exportPdf = this.exportPdf;
+        window.rotateAll = this.rotateAll;
+    }
+
+    movePageTo(startElement, endElement, scrollTo = false) {
+        const childArray = Array.from(this.pagesContainer.childNodes);
         const startIndex = childArray.indexOf(startElement);
         const endIndex = childArray.indexOf(endElement);
-        pagesContainer.removeChild(startElement);
+        this.pagesContainer.removeChild(startElement);
         if(!endElement) {
-            pagesContainer.append(startElement);
+            this.pagesContainer.append(startElement);
         } else {
-            pagesContainer.insertBefore(startElement, endElement);
+            this.pagesContainer.insertBefore(startElement, endElement);
         }
 
         if(scrollTo) {
@@ -26,13 +46,13 @@ const createPdfContainer = (id, wrapperId, highlighterId, dragElId) => {
                 ?  0-width
                 : width;
             
-            pagesContainerWrapper.scroll({
-                left: pagesContainerWrapper.scrollLeft + vector,
+            this.pagesContainerWrapper.scroll({
+                left: this.pagesContainerWrapper.scrollLeft + vector,
             })
         }
     }
 
-    function addPdfs(nextSiblingElement) {
+    addPdfs(nextSiblingElement) {
         var input = document.createElement('input');
         input.type = 'file';
         input.multiple = true;
@@ -40,9 +60,9 @@ const createPdfContainer = (id, wrapperId, highlighterId, dragElId) => {
 
         input.onchange = async(e) => {
             const files = e.target.files;
-            fileName = files[0].name;
+            this.fileName = files[0].name;
             for (var i=0; i < files.length; i++) {
-                addPdfFile(files[i], nextSiblingElement);
+                this.addPdfFile(files[i], nextSiblingElement);
             }
 
             document.querySelectorAll(".enable-on-file").forEach(element => {
@@ -53,7 +73,7 @@ const createPdfContainer = (id, wrapperId, highlighterId, dragElId) => {
         input.click();
     }
 
-    function rotateElement(element, deg) {
+    rotateElement(element, deg) {
         var lastTransform = element.style.rotate;
         if (!lastTransform) {
             lastTransform = "0";
@@ -63,22 +83,9 @@ const createPdfContainer = (id, wrapperId, highlighterId, dragElId) => {
 
         element.style.rotate = newAngle + "deg";
     }
-    
-    scrollDivHorizontally(wrapperId);
 
-    var imageHighlighterCallback;
-    if (highlighterId) {
-        imageHighlighterCallback = getImageHighlighterCallback(highlighterId);
-    }
-    var dragDropManager;
-    if(dragElId) {
-        dragDropManager = new DragDropManager('drag-container', movePageTo);
-    }
-
-    var pdfActionManager = new PdfActionsManager('page-container', { movePageTo, addPdfs, rotateElement });
-
-    async function addPdfFile(file, nextSiblingElement) {
-        const { renderer, pdfDocument } = await loadFile(file);
+    async addPdfFile(file, nextSiblingElement) {
+        const { renderer, pdfDocument } = await this.loadFile(file);
 
         for (var i=0; i < renderer.pageCount; i++) {
             const div = document.createElement('div');
@@ -94,32 +101,25 @@ const createPdfContainer = (id, wrapperId, highlighterId, dragElId) => {
             img.doc = pdfDocument;
             div.appendChild(img);
 
-            
-            if(dragDropManager) {
-                dragDropManager.attachDragDropCallbacks(div, imageSrc);
-            }
-
-            /**
-             *  Making pages larger when clicking on them
-             */
-            if(imageHighlighterCallback) {
-                img.addEventListener('click', imageHighlighterCallback)
-            }
-
-            /**
-             *  Rendering the various buttons to manipulate and move pdf pages
-             */
-            pdfActionManager.attachPDFActions(div);
-
+            this.pdfAdapters.forEach((adapter) => {
+                adapter.adapt?.(div)
+            })
             if (nextSiblingElement) {
-                pagesContainer.insertBefore(div, nextSiblingElement);
+                this.pagesContainer.insertBefore(div, nextSiblingElement);
             } else {
-                pagesContainer.appendChild(div);
+                this.pagesContainer.appendChild(div);
             }
         }
     }
 
-    async function toRenderer(objectUrl) {
+    async loadFile(file) {
+        var objectUrl = URL.createObjectURL(file);
+        var pdfDocument = await this.toPdfLib(objectUrl);
+        var renderer = await this.toRenderer(objectUrl);
+        return { renderer, pdfDocument };
+    }
+
+    async toRenderer(objectUrl) {
         const pdf = await pdfjsLib.getDocument(objectUrl).promise;
         return {
             document: pdf,
@@ -150,31 +150,26 @@ const createPdfContainer = (id, wrapperId, highlighterId, dragElId) => {
         };
     }
 
-    async function toPdfLib(objectUrl) {
+    async toPdfLib(objectUrl) {
         const existingPdfBytes = await fetch(objectUrl).then(res => res.arrayBuffer());
         const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
         return pdfDoc;
     }
 
-    async function loadFile(file) {
-        var objectUrl = URL.createObjectURL(file);
-        var pdfDocument = await toPdfLib(objectUrl);
-        var renderer = await toRenderer(objectUrl);
-        return { renderer, pdfDocument };
-    }
+    
 
-    function rotateAll(deg) {
-        for (var i=0; i<pagesContainer.childNodes.length; i++) {
-            const img = pagesContainer.childNodes[i].querySelector("img");
+    rotateAll(deg) {
+        for (var i=0; i<this.pagesContainer.childNodes.length; i++) {
+            const img = this.pagesContainer.childNodes[i].querySelector("img");
             if (!img) continue;
-            rotateElement(img, deg)
+            this.rotateElement(img, deg)
         }
     }
 
-    async function exportPdf() {
+    async exportPdf() {
         const pdfDoc = await PDFLib.PDFDocument.create();
-        for (var i=0; i<pagesContainer.childNodes.length; i++) {
-            const img = pagesContainer.childNodes[i].querySelector("img");
+        for (var i=0; i<this.pagesContainer.childNodes.length; i++) {
+            const img = this.pagesContainer.childNodes[i].querySelector("img");
             if (!img) continue;
             const pages = await pdfDoc.copyPages(img.doc, [img.pageIdx])
             const page = pages[0];
@@ -202,16 +197,10 @@ const createPdfContainer = (id, wrapperId, highlighterId, dragElId) => {
             // Download the file
             const downloadLink = document.createElement('a');
             downloadLink.href = url;
-            downloadLink.download = fileName ? fileName : 'managed.pdf';
+            downloadLink.download = this.fileName ? this.fileName : 'managed.pdf';
             downloadLink.click();
         }
     }
-
-    return {
-        addPdfs,
-        rotateAll,
-        exportPdf,
-    }
 }
 
-export default createPdfContainer;
+export default PdfContainer;

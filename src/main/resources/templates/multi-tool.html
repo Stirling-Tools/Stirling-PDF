@@ -52,7 +52,6 @@
 
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -61,20 +60,32 @@
     <div id="drag-container"></div>
     
     <script type="module">
-        import createPdfContainer from '/js/multitool/pdfContainer.js';
-        const {
-            addPdfs,
-            exportPdf,
-            rotateAll,
-        } = createPdfContainer(
+        import PdfContainer from '/js/multitool/PdfContainer.js';
+        import DragDropManager from "/js/multitool/DragDropManager.js";
+        import scrollDivHorizontally from "/js/multitool/horizontalScroll.js";
+        import ImageHighlighter from "/js/multitool/ImageHighlighter.js";
+        import PdfActionsManager from '/js/multitool/PdfActionsManager.js';
+
+        // enables drag and drop
+        const dragDropManager = new DragDropManager('drag-container');
+        // enables image highlight on click
+        const imageHighlighter = new ImageHighlighter('image-highlighter');
+        // enables the default action buttons on each pdf
+        const pdfActionsManager = new PdfActionsManager('pages-container');
+
+        // Scroll the wrapper horizontally
+        scrollDivHorizontally('pages-container-wrapper');
+
+        // Automatically exposes rotateAll, addPdfs and exportPdf to the window for the global buttons.
+        const pdfContainer = new PdfContainer(
             'pages-container',
             'pages-container-wrapper',
-            'image-highlighter',
-            'drag-container'
-        );
-        window.addPdfs = addPdfs;
-        window.exportPdf = exportPdf;
-        window.rotateAll = rotateAll;
+            [
+                dragDropManager,
+                imageHighlighter,
+                pdfActionsManager,
+            ]
+        )
     </script>
 
     <style>
@@ -156,7 +167,7 @@
 
         .page-container {
             height:250px;
-            display: flex;
+            display: flex; 
             align-items: center;
             flex-direction: column-reverse;
             aspect-ratio: 1;

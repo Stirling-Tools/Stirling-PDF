@@ -8,9 +8,8 @@ class DragDropManager {
     draggedImageEl;
     hoveredEl;
 
-    constructor(id, movePageTo) {
+    constructor(id) {
         this.dragContainer = document.getElementById(id);
-        this.movePageTo = movePageTo;
         this.pageDragging = false;
         this.hoveredEl = undefined;
         this.draggelEl = undefined
@@ -19,8 +18,6 @@ class DragDropManager {
         this.startDraggingPage = this.startDraggingPage.bind(this);
         this.onDragEl = this.onDragEl.bind(this);
         this.stopDraggingPage = this.stopDraggingPage.bind(this);
-        this.attachDragDropCallbacks = this.attachDragDropCallbacks.bind(this);
-
     }
 
     startDraggingPage(div, imageSrc) {
@@ -34,9 +31,7 @@ class DragDropManager {
         this.draggedImageEl.style.left = screenX;
         this.draggedImageEl.style.right = screenY;
         this.dragContainer.appendChild(imgEl);
-        window.addEventListener('mouseup', (e) => {
-            this.stopDraggingPage();
-        })
+        window.addEventListener('mouseup', this.stopDraggingPage)
         window.addEventListener('mousemove', this.onDragEl)
     }
 
@@ -51,6 +46,7 @@ class DragDropManager {
     
     stopDraggingPage() {
         window.removeEventListener('mousemove', this.onDragEl);
+        window.removeEventListener('mouseup', this.stopDraggingPage)
         this.draggedImageEl = undefined;
         this.pageDragging = false;
         this.draggedEl.classList.remove('dragging');
@@ -61,10 +57,14 @@ class DragDropManager {
         this.movePageTo(this.draggedEl, this.hoveredEl);
     }
 
+    setActions({ movePageTo }) {
+        this.movePageTo = movePageTo;
+    }
 
-    attachDragDropCallbacks(div, imageSrc) {
+
+    adapt(div) {
         const onDragStart = () => {
-            this.startDraggingPage(div, imageSrc);
+            this.startDraggingPage(div, div.querySelector('img').src);
         }
         
         const onMouseEnter = () => {
@@ -82,6 +82,8 @@ class DragDropManager {
         div.addEventListener('dragstart', onDragStart);
         div.addEventListener('mouseenter', onMouseEnter);
         div.addEventListener('mouseleave', onMouseLeave);
+
+        return div;
     }
 }
 

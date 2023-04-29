@@ -1,12 +1,10 @@
-
-
 const scrollDivHorizontally = (id) => {
     var scrollDelta = 0; // variable to store the accumulated scroll delta
     var isScrolling = false; // variable to track if scroll is already in progress
-    const pagesContainerWrapper = document.getElementById(id);
+    const divToScrollHorizontally = document.getElementById(id)
     function scrollLoop() {
         // Scroll the div horizontally by a fraction of the accumulated scroll delta
-        pagesContainerWrapper.scrollLeft += scrollDelta * 0.1;
+        divToScrollHorizontally.scrollLeft += scrollDelta * 0.1;
 
         // Reduce the accumulated scroll delta by a fraction
         scrollDelta *= 0.9;
@@ -19,7 +17,7 @@ const scrollDivHorizontally = (id) => {
         }
     }
 
-    const divToScrollHorizontally = document.getElementById(id)
+    
     divToScrollHorizontally.addEventListener("wheel", function(e) {
         e.preventDefault(); // prevent default mousewheel behavior
 
