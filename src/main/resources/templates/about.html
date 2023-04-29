@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title='<3')}"></th:block>
+
+<body>
+  <div id="page-container">
+    <div id="content-wrap">
+      <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+      <br> <br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6">
+            <div class="game-container-wrapper" style="position: relative;">
+              <div id="game-container">
+                <div id="lives">Lives: 3</div>
+                <div id="score">Score: 0</div>
+                <div id="high-score">High Score: 0</div>
+                <div id="level">Level: 1</div>
+                <img src="favicon.svg" class="player" id="player">
+            </div>
+              <style>
+                  #game-container {
+                    position: relative;
+                    width: 800px;
+                    height: 600px;
+                    background-color: transparent;
+                    margin: auto;
+                    overflow: hidden;
+                    border: 2px solid black; /* Add border */
+                }
+                .pdf, .player, .projectile {
+                    position: absolute;
+                }
+                .pdf {
+                    width: 50px;
+                    height: 50px;
+                }
+                .player {
+                    width: 50px;
+                    height: 50px;
+                }
+                .projectile {
+                    background-color: black  !important;
+                    width: 5px;
+                    height: 10px;
+                }
+                #score, #level, #lives, #high-score {
+                    color: black;
+                    font-family: sans-serif;
+                    position: absolute;
+                    font-size: 24px;
+                }
+                #score {
+                    top: 10px;
+                    left: 10px;
+                }
+                #lives {
+                    top: 10px;
+                    left: 150px;
+                }
+                #high-score {
+                    top: 10px;
+                    left: 290px;
+                }
+                #level {
+                    top: 10px;
+                    right: 10px;
+                }
+
+              </style>
+              <script src="js/game.js"></script>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div th:insert="~{fragments/footer.html :: footer}"></div>
+  </div>
+</body>
+</html>
+

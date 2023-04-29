@@ -14,11 +14,11 @@ public class GeneralWebController {
         model.addAttribute("currentPage", "merge-pdfs");
         return "merge-pdfs";
     }
-    @GetMapping("/game")
+    @GetMapping("/about")
     @Hidden
     public String gameForm(Model model) {
-        model.addAttribute("currentPage", "game");
-        return "game";
+        model.addAttribute("currentPage", "about");
+        return "about";
     }
     
     @GetMapping("/multi-tool")
