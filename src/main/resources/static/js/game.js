@@ -1,15 +1,22 @@
-document.addEventListener('DOMContentLoaded', function() {
-
+function initializeGame() {
     const gameContainer = document.getElementById('game-container');
     const player = document.getElementById('player');
+    
+    let playerSize = gameContainer.clientWidth * 0.0625; // 5% of container width
+    player.style.width = playerSize + 'px';
+    player.style.height = playerSize + 'px';
+    
+    let playerX = gameContainer.clientWidth / 2 - playerSize / 2;
+    let playerY = gameContainer.clientHeight * 0.1;
     const scoreElement = document.getElementById('score');
     const levelElement = document.getElementById('level');
     const livesElement = document.getElementById('lives');
     const highScoreElement = document.getElementById('high-score');
 
+    let pdfSize = gameContainer.clientWidth * 0.0625; // 5% of container width
+    let projectileWidth = gameContainer.clientWidth * 0.00625; // 0.5% of container width
+    let projectileHeight = gameContainer.clientHeight * 0.01667; // 1% of container height
 
-    let playerX = gameContainer.clientWidth / 2;
-    let playerY = 50;
     let paused = false;
     const fireRate = 200; // Time between shots in milliseconds
     let lastProjectileTime = 0;
@@ -48,6 +55,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     document.addEventListener('keydown', (event) => {
+        if (event.key === ' ') {
+            event.preventDefault();
+        }
         keysPressed[event.key] = true;
         handleKeys();
     });
@@ -75,24 +85,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const projectile = document.createElement('div');
         projectile.classList.add('projectile');
         projectile.style.backgroundColor = 'black';
-        projectile.style.width = '5px';
-        projectile.style.height = '10px';
-        projectile.style.left = playerX + 20 + 'px';
-        projectile.style.top = (gameContainer.clientHeight - playerY - 20) + 'px';
+        projectile.style.width = projectileWidth + 'px';
+        projectile.style.height = projectileHeight + 'px';
+        projectile.style.left = (playerX + playerSize / 2 - projectileWidth / 2) + 'px';
+        projectile.style.top = (gameContainer.clientHeight - playerY - playerSize) + 'px';
         gameContainer.appendChild(projectile);
         projectiles.push(projectile);
     }
+
 
 
     function spawnPdf() {
         const pdf = document.createElement('img');
         pdf.src = 'images/file-earmark-pdf.svg';
         pdf.classList.add('pdf');
-        pdf.style.left = Math.floor(Math.random() * (gameContainer.clientWidth - 50)) + 'px';
+        pdf.style.width = pdfSize + 'px';
+        pdf.style.height = pdfSize + 'px';
+        pdf.style.left = Math.floor(Math.random() * (gameContainer.clientWidth - pdfSize)) + 'px';
         pdf.style.top = '0px';
         gameContainer.appendChild(pdf);
         pdfs.push(pdf);
     }
+
 
 function resetEnemies() {
     pdfs.forEach((pdf) => gameContainer.removeChild(pdf));
@@ -137,30 +151,7 @@ function resetEnemies() {
             }
         });
 
-        function resetGame() {
-            playerX = gameContainer.clientWidth / 2;
-            playerY = 50;
-            updatePlayerPosition();
-
-            pdfs.forEach((pdf) => gameContainer.removeChild(pdf));
-            projectiles.forEach((projectile) => gameContainer.removeChild(projectile));
-
-            pdfs.length = 0;
-            projectiles.length = 0;
-
-            score = 0;
-            level = 1;
-            lives = 3;
-            pdfSpeed = 2;
-            gameOver = false;
-
-            updateScore();
-            updateLevel();
-            updateLives();
-
-            setTimeout(updateGame, 1000 / 60);
-            spawnPdfInterval();
-        }
+       
 
 
 
@@ -189,7 +180,31 @@ function resetEnemies() {
 
         setTimeout(updateGame, 1000 / 60);
     }
+function resetGame() {
+    playerX = gameContainer.clientWidth / 2;
+    playerY = 50;
+    updatePlayerPosition();
 
+    pdfs.forEach((pdf) => gameContainer.removeChild(pdf));
+    projectiles.forEach((projectile) => gameContainer.removeChild(projectile));
+
+    pdfs.length = 0;
+    projectiles.length = 0;
+
+    score = 0;
+    level = 1;
+    lives = 3;
+    pdfSpeed = 1;
+    gameOver = false;
+
+    updateScore();
+    updateLives();
+    levelElement.textContent = 'Level: ' + level;
+
+    clearTimeout(spawnPdfTimeout); // Clear the existing spawnPdfTimeout
+    setTimeout(updateGame, 1000 / 60);
+    spawnPdfInterval();
+}
 
 
 
@@ -228,7 +243,9 @@ function resetEnemies() {
             updateHighScore();
         }
         alert('Game Over! Your final score is: ' + score);
-        resetGame();
+        setTimeout(() => { // Wrap the resetGame() call in a setTimeout
+            resetGame();
+        }, 0);
     }
 
 
@@ -237,10 +254,13 @@ function resetEnemies() {
     let spawnPdfTimeout;
 
     function spawnPdfInterval() {
+         console.log("spawnPdfInterval");
         if (gameOver || paused) {
+            console.log("spawnPdfInterval 2");
             clearTimeout(spawnPdfTimeout);
             return;
         }
+        console.log("spawnPdfInterval 3");
         spawnPdf();
         spawnPdfTimeout = setTimeout(spawnPdfInterval, 1000 - level * 50);
     }
@@ -261,4 +281,6 @@ function resetEnemies() {
 
     });
 
-});
+}
+
+window.initializeGame = initializeGame;

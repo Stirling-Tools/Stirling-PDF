@@ -369,6 +369,12 @@ function compareVersions(version1, version2) {
                     <input type="range" class="custom-range" min="1" max="9" step="1" id="zipThreshold" value="4">
                     <span id="zipThresholdValue" class="ml-2"></span>
                 </div>
+                <div class="form-group">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="boredWaiting">
+                    <label class="custom-control-label" for="boredWaiting">Bored Waiting? :)</label>
+                  </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{close}"></button>
@@ -386,6 +392,7 @@ function compareVersions(version1, version2) {
 					// Set the selected option in the dropdown
 					document.getElementById('downloadOption').value = downloadOption;
 
+					
 					// Save the selected option to local storage when the dropdown value changes
 					document.getElementById('downloadOption').addEventListener(
 							'change',
@@ -403,11 +410,22 @@ function compareVersions(version1, version2) {
 					document.getElementById('zipThreshold').value = zipThreshold;
 					document.getElementById('zipThresholdValue').textContent = zipThreshold;
 
+					
+					
 					// Save the selected value to local storage when the slider value changes
 					document.getElementById('zipThreshold').addEventListener('input', function () {
 					    zipThreshold = this.value;
 					    document.getElementById('zipThresholdValue').textContent = zipThreshold;
 					    localStorage.setItem('zipThreshold', zipThreshold);
+					});
+
+					
+					var boredWaiting = localStorage.getItem('boredWaiting') || 'disabled';
+					document.getElementById('boredWaiting').checked = boredWaiting === 'enabled';
+					
+					document.getElementById('boredWaiting').addEventListener('change', function() {
+					  boredWaiting = this.checked ? 'enabled' : 'disabled';
+					  localStorage.setItem('boredWaiting', boredWaiting);
 					});
 
 				</script>

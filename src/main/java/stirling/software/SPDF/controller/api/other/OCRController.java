@@ -54,7 +54,7 @@ public class OCRController {
             throws IOException, InterruptedException {
 
         // --output-type pdfa
-        if (selectedLanguages == null || selectedLanguages.size() < 1) {
+        if (selectedLanguages == null || selectedLanguages.isEmpty()) {
             throw new IOException("Please select at least one language.");
         }
 
@@ -62,7 +62,7 @@ public class OCRController {
         List<String> availableLanguages = getAvailableTesseractLanguages();
 
         // Validate selected languages
-        selectedLanguages = selectedLanguages.stream().filter(availableLanguages::contains).collect(Collectors.toList());
+        selectedLanguages = selectedLanguages.stream().filter(availableLanguages::contains).toList();
 
         if (selectedLanguages.isEmpty()) {
             throw new IOException("None of the selected languages are valid.");
