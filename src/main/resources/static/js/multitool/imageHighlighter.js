@@ -3,6 +3,13 @@ class ImageHiglighter {
     constructor(id) {
         this.imageHighlighter = document.getElementById(id);
         this.imageHighlightCallback = this.imageHighlightCallback.bind(this);
+
+        var styleElement = document.createElement('link');
+        styleElement.rel = 'stylesheet';
+        styleElement.href = 'css/imageHighlighter.css'
+
+        document.head.appendChild(styleElement);
+
         this.imageHighlighter.onclick = () => {
             this.imageHighlighter.childNodes.forEach((child) => {
                 child.classList.add('remove');

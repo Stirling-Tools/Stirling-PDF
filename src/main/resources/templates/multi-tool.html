@@ -67,7 +67,7 @@
         import PdfActionsManager from '/js/multitool/PdfActionsManager.js';
 
         // enables drag and drop
-        const dragDropManager = new DragDropManager('drag-container');
+        const dragDropManager = new DragDropManager('drag-container', 'pages-container');
         // enables image highlight on click
         const imageHighlighter = new ImageHighlighter('image-highlighter');
         // enables the default action buttons on each pdf
@@ -93,6 +93,7 @@
             max-width: 95vw;
             margin: 0 auto;
         }
+
         #global-buttons-container {
             display: flex;
             gap: 10px;
@@ -178,27 +179,6 @@
 
         }
 
-        .page-container.dragging {
-            width: 0px;
-            visibility: hidden;
-        }
-
-        .page-container.draghover {
-            width: 500px !important;
-        }
-
-        .page-container.draghover .insert-file-button-container {
-            display: none !important;
-        }
-
-        .page-container.draghover .button-container {
-            visibility: hidden !important;
-        }
-
-        .page-container.draghover img {
-            left: calc(50% + 125px) !important;
-        }
-
         .page-container img {
             /* max-width: calc(100% - 15px); */
             max-height: calc(100% - 15px);
@@ -211,157 +191,6 @@
             box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
             border-radius: 4px;
             transition: rotate 0.3s;
-        }
-
-        .page-container .button-container {
-            z-index: 2;
-            display:flex;
-            opacity: 0;
-            transition: opacity 0.1s linear;
-        }
-
-        .page-container:hover .button-container {
-            opacity: 1;
-        }
-
-        .page-container .button-container > * {
-            padding: 0.25rem 0.5rem;
-            margin: 3px;
-            display: block;
-        }
-        .page-container svg {
-            width: 16px;
-            height: 16px;
-        }
-        .page-container:nth-child(1) .move-left-button {
-            display: none;
-        }
-        .page-container:last-child .move-right-button {
-            display: none;
-        }
-
-        .page-image {
-            cursor:pointer;
-        }
-
-        /* "insert pdf" buttons that appear on the right when hover */
-        .insert-file-button-container {
-            translate: 0 -50%;
-            width: 80px;
-            height: 100%;
-            
-            z-index: 1;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .insert-file-button-container.left {
-            left: -20px;
-        }
-
-        .insert-file-button-container.right {
-            right: -20px;
-        }
-
-        html[lang-direction=ltr] .insert-file-button-container.right {
-            display:none;
-        }
-
-        html[lang-direction=rtl] .insert-file-button-container.left {
-            display:none;
-        }
-
-        .insert-file-button-container.left .insert-file-button {
-            left: 0;
-            translate: 0 -50%;
-        }
-
-        .insert-file-button-container.right .insert-file-button {
-            right: 0;
-            translate: 0 -50%;
-        }
-
-        html[lang-direction=ltr] .page-container:last-child > .insert-file-button-container.right {
-            display: block;
-        }
-
-        
-        html[lang-direction=rtl] .page-container:last-child > .insert-file-button-container.left {
-            display: block;
-        }
-
-        .insert-file-button-container:hover {
-            opacity: 1;
-            transition: opacity 0.05s;
-        }
-        .insert-file-button {
-            position: absolute;
-            top: 50%;
-            right: 50%;
-            translate: 50% -50%;
-            aspect-ratio: 1;
-            border-radius: 100px;
-        }
-
-        #image-highlighter {
-            position: fixed;
-            display:flex;
-            inset: 0;
-            z-index: 10000;
-            background-color: rgba(0, 0, 0, 0);
-            visibility: hidden;
-            align-items: center;
-            justify-content: center;
-            transition: visbility 0.1s linear, background-color 0.1s linear;
-        }
-
-        #image-highlighter > * {
-            max-width: 80vw;
-            max-height: 80vh;
-            animation: image-highlight .1s linear;
-            transition: transform .1s linear, opacity .1s linear;
-        }
-        
-        #image-highlighter > *.remove {
-            transform: scale(0.8) !important;
-            opacity: 0 !important;
-        }
-
-        #image-highlighter:not(:empty) {
-            background-color: rgba(0, 0, 0, 0.37);
-            visibility: visible;
-        }
-
-        @keyframes image-highlight {
-            from {
-                transform: scale(0.8);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        #drag-container {
-            position: fixed;
-            display:flex;
-            inset: 0;
-            pointer-events: none;
-            z-index: 10000;
-            visibility: hidden;
-        }
-
-        #drag-container:not(:empty) {
-            visibility: visible;
-        }
-
-        #drag-container .dragged-img {
-            position: fixed;
-            max-width: 200px;
-            max-height: 200px;
-            transform: translate(-50%, -50%);
-            box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.58);
         }
 
         #add-pdf-button {
