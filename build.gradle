@@ -24,8 +24,6 @@ dependencies {
     
 	//general PDF
     implementation 'org.apache.pdfbox:pdfbox:2.0.28'
-        
-    implementation 'com.itextpdf:itextpdf:5.5.13.3'
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
 }

@@ -1,11 +1,12 @@
 package stirling.software.SPDF.config;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class CleanUrlInterceptor implements HandlerInterceptor {
 

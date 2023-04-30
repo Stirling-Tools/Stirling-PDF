@@ -194,13 +194,13 @@ function resetGame() {
     score = 0;
     level = 1;
     lives = 3;
-    pdfSpeed = 1;
+    
     gameOver = false;
 
     updateScore();
     updateLives();
     levelElement.textContent = 'Level: ' + level;
-
+    pdfSpeed = 1;
     clearTimeout(spawnPdfTimeout); // Clear the existing spawnPdfTimeout
     setTimeout(updateGame, 1000 / 60);
     spawnPdfInterval();
