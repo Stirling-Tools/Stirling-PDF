@@ -36,6 +36,15 @@ public class OCRController {
 
     private static final Logger logger = LoggerFactory.getLogger(OCRController.class);
 
+    public List<String> getAvailableTesseractLanguages() {
+        String tessdataDir = "/usr/share/tesseract-ocr/4.00/tessdata";
+        File[] files = new File(tessdataDir).listFiles();
+        if (files == null) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(files).filter(file -> file.getName().endsWith(".traineddata")).map(file -> file.getName().replace(".traineddata", ""))
+                .filter(lang -> !lang.equalsIgnoreCase("osd")).collect(Collectors.toList());
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
     public ResponseEntity<byte[]> processPdfWithOCR(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile,
@@ -49,9 +58,11 @@ public class OCRController {
             throw new IOException("Please select at least one language.");
         }
 
-        // Validate and sanitize selected languages using regex
-        String languagePattern = "^[a-zA-Z]{3}$"; // Regex pattern for three-letter language codes
-        selectedLanguages = selectedLanguages.stream().filter(lang -> Pattern.matches(languagePattern, lang)).collect(Collectors.toList());
+        // Get available Tesseract languages
+        List<String> availableLanguages = getAvailableTesseractLanguages();
+
+        // Validate selected languages
+        selectedLanguages = selectedLanguages.stream().filter(availableLanguages::contains).collect(Collectors.toList());
 
         if (selectedLanguages.isEmpty()) {
             throw new IOException("None of the selected languages are valid.");
@@ -69,7 +80,7 @@ public class OCRController {
         // Run OCR Command
         String languageOption = String.join("+", selectedLanguages);
 
-        List<String> command = new ArrayList<>(Arrays.asList("ocrmypdf", "--verbose", "2", "--output-type", "pdf"));
+        List<String> command = new ArrayList<>(Arrays.asList("ocrmypdf", "--verbose", "2", "--output-type", "pdf", "--pdf-renderer" , "hocr"));
 
         if (sidecar != null && sidecar) {
             sidecarTextPath = Files.createTempFile("sidecar", ".txt");

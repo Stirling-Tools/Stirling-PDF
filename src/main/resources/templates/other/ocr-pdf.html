@@ -20,9 +20,9 @@
                                 <label for="languages" class="form-label" th:text="#{ocr.selectText.1}"></label>
                                 <hr>
                                 <div id="languages">
-                                    <div th:each="language, iterStat : ${languages}" >
+                                    <div th:each="language, iterStat : ${languages}">
                                         <input type="checkbox" class="form-check-input" th:name="languages" th:value="${language}" th:id="${'language-' + language}" />
-                                        <label class="form-check-label" th:for="${'language-' + language}" th:text="  ${language}"></label>
+                                        <label class="form-check-label" th:for="${'language-' + language}" th:text="${(language == 'eng') ? 'English' : language}"></label>
                                     </div>
                                 </div>
                                 <hr>
