@@ -40,7 +40,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir /usr/share/tesseract-ocr-original && \
     cp -r /usr/share/tesseract-ocr/* /usr/share/tesseract-ocr-original && \
-    mv /usr/share/tesseract-ocr-original/4.00/tessdata/eng.traineddata /usr/share/tesseract-ocr-original/4.00/tessdata/english.traineddata && \
     rm -rf /usr/share/tesseract-ocr
 
 # Python packages stage
