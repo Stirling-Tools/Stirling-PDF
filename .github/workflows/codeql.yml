@@ -46,7 +46,7 @@ jobs:
    #   with:
    #     languages: java
 
-    - uses: gradle/gradle-build-action@v2.3.3
+    - uses: gradle/gradle-build-action@v2.4.2
       with:
         gradle-version: 7.6
         arguments: assemble --no-build-cache
