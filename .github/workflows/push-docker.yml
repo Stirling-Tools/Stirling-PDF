@@ -56,6 +56,17 @@ jobs:
         tags: |
           ${{ steps.versionNumber.outputs.versionNumber }}${{ github.ref == 'refs/heads/main' && '-alpha' || '' }}
    
+    - name: Generate tags 2
+      id: meta2
+      if: github.ref == 'refs/heads/master'
+      uses: docker/metadata-action@v4.4.0
+      with:
+        images: |
+          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+          ghcr.io/${{ github.repository_owner }}/s-pdf
+        tags: latest
+   
+   
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2.1.0
       
