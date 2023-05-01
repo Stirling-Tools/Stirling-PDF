@@ -17,8 +17,6 @@ ENV APP_HOME_NAME="Stirling PDF"
 #ENV APP_NAVBAR_NAME="Stirling PDF"
 
 # Run the application
+RUN chmod +x /scripts/init.sh
 ENTRYPOINT ["/scripts/init.sh"]
 CMD ["java", "-jar", "/app.jar"]
-
-
-
