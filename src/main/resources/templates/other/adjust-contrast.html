@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{extractImages.title})}"></th:block>
+
+
+<body>
+  <div id="page-container">
+    <div id="content-wrap">
+      <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+      <br> <br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6">
+            <h2 th:text="#{extractImages.header}"></h2>
+
+            <form id="multiPdfForm" th:action="@{adjust-contrast}" method="post" enctype="multipart/form-data">
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                 <div class="form-group">
+                    <label for="contrastRange">Contrast</label>
+                    <input name="contrastRange" type="range" class="form-control-range" id="contrastRange" min="-100" max="100" value="0" step="1">
+                </div>
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{extractImages.submit}"></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div th:insert="~{fragments/footer.html :: footer}"></div>
+  </div>
+</body>
+</html>

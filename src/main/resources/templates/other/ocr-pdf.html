@@ -53,8 +53,14 @@
                                 <input type="checkbox" class="form-check-input" name="clean-final" id="clean-final" />
                                 <label class="form-check-label" for="clean-final" th:text="#{ocr.selectText.5}"></label>
                             </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="removeImagesAfter" id="removeImagesAfter" />
+                                <label class="form-check-label" for="removeImagesAfter" th:text="#{ocr.selectText.11}"></label>
+                            </div>
+                            
+                            
                             <div class="form-group">
-                                <label>Render Type (Advanced)</label> 
+                                <label th:text="#{ocr.selectText.12}"></label> 
                                 <select class="form-control" name="ocrRenderType">
                                     <option value="hocr">HOCR (Latin/Roman alphabet only)</option>
                                     <option value="sandwich">Sandwich</option>

@@ -72,4 +72,13 @@ public class OtherWebController {
         model.addAttribute("currentPage", "add-image");
         return "other/add-image";
     }
+    
+    @GetMapping("/adjust-contrast")
+    @Hidden
+    public String contrast(Model model) {
+        model.addAttribute("currentPage", "adjust-contrast");
+        return "other/adjust-contrast";
+    }
+    
+    
 }

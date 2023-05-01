@@ -47,7 +47,8 @@ public class OCRController {
             @RequestParam("languages") List<String> selectedLanguages, @RequestParam(name = "sidecar", required = false) Boolean sidecar,
             @RequestParam(name = "deskew", required = false) Boolean deskew, @RequestParam(name = "clean", required = false) Boolean clean,
             @RequestParam(name = "clean-final", required = false) Boolean cleanFinal, @RequestParam(name = "ocrType", required = false) String ocrType,
-            @RequestParam(name = "ocrRenderType", required = false, defaultValue = "hocr") String ocrRenderType)
+            @RequestParam(name = "ocrRenderType", required = false, defaultValue = "hocr") String ocrRenderType,
+            @RequestParam(name = "removeImagesAfter", required = false) Boolean removeImagesAfter)
             throws IOException, InterruptedException {
 
         // --output-type pdfa
@@ -114,11 +115,24 @@ public class OCRController {
         // Run CLI command
         int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
 
+        
+
+        
+        
+        // Remove images from the OCR processed PDF if the flag is set to true
+        if (removeImagesAfter != null && removeImagesAfter) {
+            Path tempPdfWithoutImages = Files.createTempFile("output_", "_no_images.pdf");
+
+            List<String> gsCommand = Arrays.asList("gs", "-sDEVICE=pdfwrite", "-dFILTERIMAGE", "-o", tempPdfWithoutImages.toString(), tempOutputFile.toString());
+
+            int gsReturnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT).runCommandWithOutputHandling(gsCommand);
+            tempOutputFile = tempPdfWithoutImages;
+        }
         // Read the OCR processed PDF file
         byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
-
         // Clean up the temporary files
         Files.delete(tempInputFile);
+        
         // Return the OCR processed PDF as a response
         String outputFilename = inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
 
