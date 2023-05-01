@@ -138,7 +138,7 @@ function compareVersions(version1, version2) {
                 <ul class="navbar-nav mr-auto flex-nowrap">
                     
                     <li class="nav-item">
-                        <a class="nav-link" href="#" th:href="@{multi-tool}" th:classappend="${currentPage}=='multi-tool' ? 'active' : ''">
+                        <a class="nav-link" href="#" th:href="@{multi-tool}" th:classappend="${currentPage}=='multi-tool' ? 'active' : ''" th:title="#{home.multiTool.desc}">
                             <img class="icon" src="images/tools.svg" alt="icon">
                             <span class="icon-text"  th:text="#{home.multiTool.title}"></span>
                         </a>
@@ -151,23 +151,23 @@ function compareVersions(version1, version2) {
     </a>
     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
         <!-- Existing menu items -->
-        <a class="dropdown-item" href="#" th:href="@{merge-pdfs}" th:classappend="${currentPage}=='merge-pdfs' ? 'active' : ''">
+        <a class="dropdown-item" href="#" th:href="@{merge-pdfs}" th:classappend="${currentPage}=='merge-pdfs' ? 'active' : ''" th:title="#{home.merge.desc}">
             <img class="icon" src="images/union.svg" alt="icon">
             <span class="icon-text"  th:text="#{home.merge.title}"></span>
         </a>
-        <a class="dropdown-item" href="#" th:href="@{split-pdfs}" th:classappend="${currentPage}=='split-pdfs' ? 'active' : ''">
+        <a class="dropdown-item" href="#" th:href="@{split-pdfs}" th:classappend="${currentPage}=='split-pdfs' ? 'active' : ''" th:title="#{home.split.desc}">
             <img class="icon" src="images/layout-split.svg" alt="icon">
             <span class="icon-text"  th:text="#{home.split.title}"></span>
         </a>
-        <a class="dropdown-item" href="#" th:href="@{pdf-organizer}" th:classappend="${currentPage}=='pdf-organizer' ? 'active' : ''">
+        <a class="dropdown-item" href="#" th:href="@{pdf-organizer}" th:classappend="${currentPage}=='pdf-organizer' ? 'active' : ''" th:title="#{home.pdfOrganiser.desc}">
             <img class="icon" src="images/sort-numeric-down.svg" alt="icon">
             <span class="icon-text"  th:text="#{home.pdfOrganiser.title}"></span>
         </a>
-        <a class="dropdown-item" href="#" th:href="@{rotate-pdf}" th:classappend="${currentPage}=='rotate-pdf' ? 'active' : ''">
+        <a class="dropdown-item" href="#" th:href="@{rotate-pdf}" th:classappend="${currentPage}=='rotate-pdf' ? 'active' : ''" th:title="#{home.rotate.desc}">
             <img class="icon" src="images/arrow-clockwise.svg" alt="icon">
             <span class="icon-text"  th:text="#{home.rotate.title}"></span>
         </a>
-        <a class="dropdown-item" href="#" th:href="@{remove-pages}" th:classappend="${currentPage}=='remove-pages' ? 'active' : ''">
+        <a class="dropdown-item" href="#" th:href="@{remove-pages}" th:classappend="${currentPage}=='remove-pages' ? 'active' : ''" th:title="#{home.removePages.desc}">
             <img class="icon" src="images/file-earmark-x.svg" alt="icon">
             <span class="icon-text"  th:text="#{home.removePages.title}"></span>
         </a>
@@ -181,51 +181,51 @@ function compareVersions(version1, version2) {
                     </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <!-- Existing menu items -->
-                            <a class="dropdown-item" href="#" th:href="@{img-to-pdf}" th:classappend="${currentPage}=='img-to-pdf' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{img-to-pdf}" th:classappend="${currentPage}=='img-to-pdf' ? 'active' : ''" th:title="#{home.imageToPdf.desc}">
                                 <img class="icon" src="images/image.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;">
                                 <span class="icon-text"  th:text="#{home.imageToPdf.title}"></span>
                             </a>
-                            <a class="dropdown-item" href="#" th:href="@{file-to-pdf}" th:classappend="${currentPage}=='file-to-pdf' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{file-to-pdf}" th:classappend="${currentPage}=='file-to-pdf' ? 'active' : ''" th:title="#{home.fileToPDF.desc}">
                                 <img class="icon" src="images/file.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;">
                                 <span class="icon-text"  th:text="#{home.fileToPDF.title}"></span>
                             </a>
                         	<hr class="dropdown-divider">
-                           <a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''">
+                           <a class="dropdown-item" href="#" th:href="@{pdf-to-img}" th:classappend="${currentPage}=='pdf-to-img' ? 'active' : ''" th:title="#{home.pdfToImage.desc}">
                            
                         
                                 <img class="icon" src="images/image.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.pdfToImage.title}"></span>
                             </a>
-                            <a class="dropdown-item" href="#" th:href="@{pdf-to-word}" th:classappend="${currentPage}=='pdf-to-word' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{pdf-to-word}" th:classappend="${currentPage}=='pdf-to-word' ? 'active' : ''" th:title="#{home.PDFToWord.desc}">
                       
                        
                                 <img class="icon" src="images/file-earmark-word.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.PDFToWord.title}"></span>
                             </a>
-                            <a class="dropdown-item" href="#" th:href="@{pdf-to-presentation}" th:classappend="${currentPage}=='pdf-to-presentation' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{pdf-to-presentation}" th:classappend="${currentPage}=='pdf-to-presentation' ? 'active' : ''" th:title="#{home.PDFToPresentation.desc}">
                             
                    
                                 <img class="icon" src="images/file-earmark-ppt.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.PDFToPresentation.title}"></span>
                             </a>
-                            <a class="dropdown-item" href="#" th:href="@{pdf-to-text}" th:classappend="${currentPage}=='pdf-to-text' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{pdf-to-text}" th:classappend="${currentPage}=='pdf-to-text' ? 'active' : ''" th:title="#{home.PDFToText.desc}">
                          
                        
                                 <img class="icon" src="images/filetype-txt.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.PDFToText.title}"></span>
                             </a>
-                            <a class="dropdown-item" href="#" th:href="@{pdf-to-html}" th:classappend="${currentPage}=='pdf-to-html' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{pdf-to-html}" th:classappend="${currentPage}=='pdf-to-html' ? 'active' : ''" th:title="#{home.PDFToHTML.desc}">
                           
                              
                                 <img class="icon" src="images/filetype-html.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.PDFToHTML.title}"></span>
                             </a>
-                            <a class="dropdown-item" href="#" th:href="@{pdf-to-xml}" th:classappend="${currentPage}=='pdf-to-xml' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{pdf-to-xml}" th:classappend="${currentPage}=='pdf-to-xml' ? 'active' : ''" th:title="#{home.PDFToXML.desc}">
                           
                                 <img class="icon" src="images/filetype-xml.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.PDFToXML.title}"></span>
                             </a>
-                            <a class="dropdown-item" href="#" th:href="@{pdf-to-pdfa}" th:classappend="${currentPage}=='pdf-to-pdfa' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{pdf-to-pdfa}" th:classappend="${currentPage}=='pdf-to-pdfa' ? 'active' : ''" th:title="#{home.pdfToPDFA.desc}">
           
                                 <img class="icon" src="images/file-earmark-pdf.svg" alt="icon">
                                 <span class="icon-text" th:text="#{home.pdfToPDFA.title}"></span>
@@ -243,16 +243,16 @@ function compareVersions(version1, version2) {
                         <img class="icon" src="images/shield-check.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{navbar.security}"></span>
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="#" th:href="@{add-password}" th:classappend="${currentPage}=='add-password' ? 'active' : ''">
+                        <a class="dropdown-item" href="#" th:href="@{add-password}" th:classappend="${currentPage}=='add-password' ? 'active' : ''" th:title="#{home.addPassword.desc}">
                             <img class="icon" src="images/lock.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.addPassword.title}"></span>
                         </a>
-                        <a class="dropdown-item" href="#" th:href="@{remove-password}" th:classappend="${currentPage}=='remove-password' ? 'active' : ''">
+                        <a class="dropdown-item" href="#" th:href="@{remove-password}" th:classappend="${currentPage}=='remove-password' ? 'active' : ''" th:title="#{home.removePassword.desc}">
                             <img class="icon" src="images/unlock.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.removePassword.title}"></span>
                         </a>
-                        <a class="dropdown-item" href="#" th:href="@{change-permissions}" th:classappend="${currentPage}=='change-permissions' ? 'active' : ''">
+                        <a class="dropdown-item" href="#" th:href="@{change-permissions}" th:classappend="${currentPage}=='change-permissions' ? 'active' : ''" th:title="#{home.permissions.desc}">
                             <img class="icon" src="images/shield-lock.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.permissions.title}"></span>
                         </a>
-                        <a class="dropdown-item" href="#" th:href="@{add-watermark}" th:classappend="${currentPage}=='add-watermark' ? 'active' : ''">
+                        <a class="dropdown-item" href="#" th:href="@{add-watermark}" th:classappend="${currentPage}=='add-watermark' ? 'active' : ''" th:title="#{home.watermark.desc}">
                             <img class="icon" src="images/droplet.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.watermark.title}"></span>
                         </a>
                     </div>
@@ -266,21 +266,24 @@ function compareVersions(version1, version2) {
                         
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <a class="dropdown-item" href="#" th:href="@{ocr-pdf}" th:classappend="${currentPage}=='ocr-pdf' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{ocr-pdf}" th:classappend="${currentPage}=='ocr-pdf' ? 'active' : ''" th:title="#{home.ocr.desc}">
                                 <img class="icon" src="images/search.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.ocr.title}"></span>
                             </a>
-                            <a class="dropdown-item" href="#" th:href="@{add-image}" th:classappend="${currentPage}=='add-image' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{add-image}" th:classappend="${currentPage}=='add-image' ? 'active' : ''" th:title="#{home.addImage.desc}">
                                 <img class="icon" src="images/file-earmark-richtext.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.addImage.title}"></span>
                             </a>
-                            <a class="dropdown-item" href="#" th:href="@{compress-pdf}" th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{compress-pdf}" th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''" th:title="#{home.compressPdfs.desc}">
                                 <img class="icon" src="images/file-zip.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.compressPdfs.title}"></span>
                             </a>
-                            <a class="dropdown-item" href="#" th:href="@{extract-images}" th:classappend="${currentPage}=='extract-images' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{extract-images}" th:classappend="${currentPage}=='extract-images' ? 'active' : ''" th:title="#{home.extractImages.desc}">
                                 <img class="icon" src="images/images.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.extractImages.title}"></span>
                             </a>
-                            <a class="dropdown-item" href="#" th:href="@{change-metadata}" th:classappend="${currentPage}=='change-metadata' ? 'active' : ''">
+                            <a class="dropdown-item" href="#" th:href="@{change-metadata}" th:classappend="${currentPage}=='change-metadata' ? 'active' : ''" th:title="#{home.changeMetadata.desc}">
                                 <img class="icon" src="images/clipboard-data.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.changeMetadata.title}"></span>
                             </a>
+                            <a class="dropdown-item" href="#" th:href="@{extract-image-scans}" th:classappend="${currentPage}=='extract-image-scans' ? 'active' : ''" th:title="#{home.ScannerImageSplit.desc}">
+                                <img class="icon" src="images/scanner.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.ScannerImageSplit.title}"></span>
+                            </a>                
                         </div>
                     </li>
 
@@ -364,6 +367,12 @@ function compareVersions(version1, version2) {
                     <input type="range" class="custom-range" min="1" max="9" step="1" id="zipThreshold" value="4">
                     <span id="zipThresholdValue" class="ml-2"></span>
                 </div>
+                <div class="form-group">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="boredWaiting">
+                    <label class="custom-control-label" for="boredWaiting">Bored Waiting? :)</label>
+                  </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{close}"></button>
@@ -381,6 +390,7 @@ function compareVersions(version1, version2) {
 					// Set the selected option in the dropdown
 					document.getElementById('downloadOption').value = downloadOption;
 
+					
 					// Save the selected option to local storage when the dropdown value changes
 					document.getElementById('downloadOption').addEventListener(
 							'change',
@@ -398,11 +408,22 @@ function compareVersions(version1, version2) {
 					document.getElementById('zipThreshold').value = zipThreshold;
 					document.getElementById('zipThresholdValue').textContent = zipThreshold;
 
+					
+					
 					// Save the selected value to local storage when the slider value changes
 					document.getElementById('zipThreshold').addEventListener('input', function () {
 					    zipThreshold = this.value;
 					    document.getElementById('zipThresholdValue').textContent = zipThreshold;
 					    localStorage.setItem('zipThreshold', zipThreshold);
+					});
+
+					
+					var boredWaiting = localStorage.getItem('boredWaiting') || 'disabled';
+					document.getElementById('boredWaiting').checked = boredWaiting === 'enabled';
+					
+					document.getElementById('boredWaiting').addEventListener('change', function() {
+					  boredWaiting = this.checked ? 'enabled' : 'disabled';
+					  localStorage.setItem('boredWaiting', boredWaiting);
 					});
 
 				</script>

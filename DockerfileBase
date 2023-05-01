@@ -21,10 +21,9 @@ RUN git clone https://github.com/agl/jbig2enc && \
     make && \
     make install
 
-# Main stage
-FROM openjdk:17-jdk-slim
 
-# Install necessary dependencies
+# Main stage
+FROM openjdk:17-jdk-slim AS base
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libreoffice-core \
@@ -33,12 +32,31 @@ RUN apt-get update && \
         libreoffice-calc \
         libreoffice-impress \
         python3-uno \
-		python3-pip \
+        python3-pip \
         unoconv \
-		pngquant \
-		unpaper \
+        pngquant \
+        unpaper \
         ocrmypdf && \
-	pip install --user --upgrade ocrmypdf
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir /usr/share/tesseract-ocr-original && \
+    cp -r /usr/share/tesseract-ocr/* /usr/share/tesseract-ocr-original && \
+    rm -rf /usr/share/tesseract-ocr
 
-# Copy the jbig2enc binary from the builder stage
+# Python packages stage
+FROM base AS python-packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        libffi-dev \
+        libssl-dev \
+        zlib1g-dev \
+        libjpeg-dev && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir \
+        opencv-python-headless && \
+    rm -rf /var/lib/apt/lists/*
+
+# Final stage: Copy necessary files from the previous stage
+FROM base
+COPY --from=python-packages /usr/local /usr/local
 COPY --from=jbig2enc_builder /usr/local/bin/jbig2 /usr/local/bin/jbig2

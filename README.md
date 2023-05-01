@@ -99,3 +99,7 @@ Simply use environment variables APP_HOME_NAME, APP_HOME_DESCRIPTION and APP_NAV
 If running Java directly, you can also pass these as properties using -D arguments.
 
 Using the same method you can also change the default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR to select your default language (Will always default to English on invalid locale)
+
+## API
+For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
+[here](https://app.swaggerhub.com/apis-docs/Frooodle/Stirling-PDF/1.0.0) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation 

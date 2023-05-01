@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.other;
+package stirling.software.SPDF.controller.api.other;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -10,26 +10,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
 
+import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
-@Controller
+@RestController
 public class OCRController {
 
     private static final Logger logger = LoggerFactory.getLogger(OCRController.class);
@@ -44,28 +42,29 @@ public class OCRController {
                 .filter(lang -> !lang.equalsIgnoreCase("osd")).collect(Collectors.toList());
     }
 
-    @GetMapping("/ocr-pdf")
-    public ModelAndView ocrPdfPage() {
-        ModelAndView modelAndView = new ModelAndView("other/ocr-pdf");
-        modelAndView.addObject("languages", getAvailableTesseractLanguages());
-        modelAndView.addObject("currentPage", "ocr-pdf");
-        return modelAndView;
-    }
-
-    @PostMapping("/ocr-pdf")
-    public ResponseEntity<byte[]> processPdfWithOCR(@RequestParam("fileInput") MultipartFile inputFile, @RequestParam("languages") List<String> selectedLanguages,
-            @RequestParam(name = "sidecar", required = false) Boolean sidecar, @RequestParam(name = "deskew", required = false) Boolean deskew,
-            @RequestParam(name = "clean", required = false) Boolean clean, @RequestParam(name = "clean-final", required = false) Boolean cleanFinal,
-            @RequestParam(name = "ocrType", required = false) String ocrType) throws IOException, InterruptedException {
+    @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
+    public ResponseEntity<byte[]> processPdfWithOCR(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile,
+            @RequestParam("languages") List<String> selectedLanguages, @RequestParam(name = "sidecar", required = false) Boolean sidecar,
+            @RequestParam(name = "deskew", required = false) Boolean deskew, @RequestParam(name = "clean", required = false) Boolean clean,
+            @RequestParam(name = "clean-final", required = false) Boolean cleanFinal, @RequestParam(name = "ocrType", required = false) String ocrType,
+            @RequestParam(name = "ocrRenderType", required = false, defaultValue = "hocr") String ocrRenderType,
+            @RequestParam(name = "removeImagesAfter", required = false) Boolean removeImagesAfter)
+            throws IOException, InterruptedException {
 
         // --output-type pdfa
-        if (selectedLanguages == null || selectedLanguages.size() < 1) {
+        if (selectedLanguages == null || selectedLanguages.isEmpty()) {
             throw new IOException("Please select at least one language.");
         }
+        
+        if(!ocrRenderType.equals("hocr") && !ocrRenderType.equals("sandwich")) {
+            throw new IOException("ocrRenderType wrong");
+        }
+        
+        // Get available Tesseract languages
+        List<String> availableLanguages = getAvailableTesseractLanguages();
 
-        // Validate and sanitize selected languages using regex
-        String languagePattern = "^[a-zA-Z]{3}$"; // Regex pattern for three-letter language codes
-        selectedLanguages = selectedLanguages.stream().filter(lang -> Pattern.matches(languagePattern, lang)).collect(Collectors.toList());
+        // Validate selected languages
+        selectedLanguages = selectedLanguages.stream().filter(availableLanguages::contains).toList();
 
         if (selectedLanguages.isEmpty()) {
             throw new IOException("None of the selected languages are valid.");
@@ -83,7 +82,8 @@ public class OCRController {
         // Run OCR Command
         String languageOption = String.join("+", selectedLanguages);
 
-        List<String> command = new ArrayList<>(Arrays.asList("ocrmypdf", "--verbose", "2", "--output-type", "pdf"));
+        
+        List<String> command = new ArrayList<>(Arrays.asList("ocrmypdf", "--verbose", "2", "--output-type", "pdf", "--pdf-renderer" , ocrRenderType));
 
         if (sidecar != null && sidecar) {
             sidecarTextPath = Files.createTempFile("sidecar", ".txt");
@@ -115,15 +115,26 @@ public class OCRController {
         // Run CLI command
         int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
 
+        
+
+        
+        
+        // Remove images from the OCR processed PDF if the flag is set to true
+        if (removeImagesAfter != null && removeImagesAfter) {
+            Path tempPdfWithoutImages = Files.createTempFile("output_", "_no_images.pdf");
+
+            List<String> gsCommand = Arrays.asList("gs", "-sDEVICE=pdfwrite", "-dFILTERIMAGE", "-o", tempPdfWithoutImages.toString(), tempOutputFile.toString());
+
+            int gsReturnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT).runCommandWithOutputHandling(gsCommand);
+            tempOutputFile = tempPdfWithoutImages;
+        }
         // Read the OCR processed PDF file
         byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
-
         // Clean up the temporary files
         Files.delete(tempInputFile);
+        
         // Return the OCR processed PDF as a response
         String outputFilename = inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
-
-        HttpHeaders headers = new HttpHeaders();
 
         if (sidecar != null && sidecar) {
             // Create a zip file containing both the PDF and the text file
@@ -152,15 +163,11 @@ public class OCRController {
             Files.delete(sidecarTextPath);
 
             // Return the zip file containing both the PDF and the text file
-            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            headers.setContentDispositionFormData("attachment", outputZipFilename);
-            return ResponseEntity.ok().headers(headers).body(zipBytes);
+            return PdfUtils.bytesToWebResponse(pdfBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
         } else {
             // Return the OCR processed PDF as a response
             Files.delete(tempOutputFile);
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment", outputFilename);
-            return ResponseEntity.ok().headers(headers).body(pdfBytes);
+            return PdfUtils.bytesToWebResponse(pdfBytes, outputFilename);
         }
 
     }

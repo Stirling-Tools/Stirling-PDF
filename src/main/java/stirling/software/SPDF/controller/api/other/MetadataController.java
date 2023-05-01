@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.other;
+package stirling.software.SPDF.controller.api.other;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -11,23 +11,17 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.utils.PdfUtils;
 
-@Controller
+@RestController
 public class MetadataController {
 
-    @GetMapping("/change-metadata")
-    public String addWatermarkForm(Model model) {
-        model.addAttribute("currentPage", "change-metadata");
-        return "other/change-metadata";
-    }
 
     private String checkUndefined(String entry) {
         // Check if the string is "undefined"
@@ -40,8 +34,8 @@ public class MetadataController {
 
     }
 
-    @PostMapping("/update-metadata")
-    public ResponseEntity<byte[]> metadata(@RequestParam("fileInput") MultipartFile pdfFile,
+    @PostMapping(consumes = "multipart/form-data", value = "/update-metadata")
+    public ResponseEntity<byte[]> metadata(@RequestPart(required = true, value = "fileInput") MultipartFile pdfFile,
             @RequestParam(value = "deleteAll", required = false, defaultValue = "false") Boolean deleteAll, @RequestParam(value = "author", required = false) String author,
             @RequestParam(value = "creationDate", required = false) String creationDate, @RequestParam(value = "creator", required = false) String creator,
             @RequestParam(value = "keywords", required = false) String keywords, @RequestParam(value = "modificationDate", required = false) String modificationDate,

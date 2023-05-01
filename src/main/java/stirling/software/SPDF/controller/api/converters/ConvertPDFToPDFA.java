@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.converters;
+package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -6,23 +6,20 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
-@Controller
+@RestController
 public class ConvertPDFToPDFA {
 
-    @PostMapping("/pdf-to-pdfa")
-    public ResponseEntity<byte[]> pdfToPdfA(@RequestParam("fileInput") MultipartFile inputFile) throws IOException, InterruptedException {
+    @PostMapping(consumes = "multipart/form-data", value = "/pdf-to-pdfa")
+    public ResponseEntity<byte[]> pdfToPdfA(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile) throws IOException, InterruptedException {
 
         // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");
@@ -52,16 +49,7 @@ public class ConvertPDFToPDFA {
 
         // Return the optimized PDF as a response
         String outputFilename = inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_PDFA.pdf";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", outputFilename);
-        return ResponseEntity.ok().headers(headers).body(pdfBytes);
-    }
-
-    @GetMapping("/pdf-to-pdfa")
-    public String pdfToPdfAForm(Model model) {
-        model.addAttribute("currentPage", "pdf-to-pdfa");
-        return "convert/pdf-to-pdfa";
+        return PdfUtils.bytesToWebResponse(pdfBytes, outputFilename);
     }
 
 }

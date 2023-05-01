@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.KeyPair;
 import java.security.KeyStore;
@@ -43,17 +45,25 @@ public class PdfUtils {
 
     public static ResponseEntity<byte[]> boasToWebResponse(ByteArrayOutputStream baos, String docName) throws IOException {
         return PdfUtils.bytesToWebResponse(baos.toByteArray(), docName);
-
     }
 
-    public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName) throws IOException {
+    public static ResponseEntity<byte[]> boasToWebResponse(ByteArrayOutputStream baos, String docName, MediaType mediaType) throws IOException {
+        return PdfUtils.bytesToWebResponse(baos.toByteArray(), docName, mediaType);
+    }
+
+    public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName, MediaType mediaType) throws IOException {
 
         // Return the PDF as a response
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentType(mediaType);
         headers.setContentLength(bytes.length);
-        headers.setContentDispositionFormData("attachment", docName);
+        String encodedDocName = URLEncoder.encode(docName, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20");
+        headers.setContentDispositionFormData("attachment", encodedDocName);
         return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
+    }
+
+    public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName) throws IOException {
+        return bytesToWebResponse(bytes, docName, MediaType.APPLICATION_PDF);
     }
 
     public static byte[] convertFromPdf(byte[] inputStream, String imageType, ImageType colorType, boolean singleImage, int DPI) throws IOException, Exception {
