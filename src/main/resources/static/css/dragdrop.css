@@ -41,7 +41,7 @@ html[lang-direction=ltr] .drag-manager_draghover img {
 }
 
 html[lang-direction=rtl] .drag-manager_draghover img {
-    left: unset;
+    left: 125px
 }
 
 .drag-manager_dragging-container .hide-on-drag {
