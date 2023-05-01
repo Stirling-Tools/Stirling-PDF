@@ -281,11 +281,9 @@ function compareVersions(version1, version2) {
                             <a class="dropdown-item" href="#" th:href="@{change-metadata}" th:classappend="${currentPage}=='change-metadata' ? 'active' : ''" th:title="#{home.changeMetadata.desc}">
                                 <img class="icon" src="images/clipboard-data.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.changeMetadata.title}"></span>
                             </a>
-                            <a class="dropdown-item" href="#" th:href="@{extract-image-scans}" th:classappend="${currentPage}=='extract-image-scans' ? 'active' : ''" th:title="#{home.ScannerSplit.desc}">
-                                <img class="icon" src="images/scanner.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.ScannerSplit.title}"></span>
+                            <a class="dropdown-item" href="#" th:href="@{extract-image-scans}" th:classappend="${currentPage}=='extract-image-scans' ? 'active' : ''" th:title="#{home.ScannerImageSplit.desc}">
+                                <img class="icon" src="images/scanner.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.ScannerImageSplit.title}"></span>
                             </a>                
-                            
-                            
                         </div>
                     </li>
 

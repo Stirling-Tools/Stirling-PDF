@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{extractImageScans.title})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{home.ScannerImageSplit.title})}"></th:block>
 
 
 <body>
@@ -12,37 +12,38 @@
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-md-6">
-            <h2 th:text="#{extractImageScans.header}"></h2>
+            <h2 th:text="#{home.ScannerImageSplit.title}"></h2>
 
             <form id="multiPdfForm" th:action="@{extract-image-scans}" method="post" enctype="multipart/form-data">
               <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*, application/pdf')}"></div>
               <div class="form-group">
-                <label for="angleThreshold">Angle Threshold:</label>
+                <label for="angleThreshold" th:text="#{ScannerImageSplit.selectText.1}"></label>
                 <input type="number" class="form-control" id="angleThreshold" name="angle_threshold" value="5">
-                <small id="angleThresholdHelp" class="form-text text-muted">Sets the minimum absolute angle required for the image to be rotated (default: 10).</small>
+                <small id="angleThresholdHelp" class="form-text text-muted" th:text="#{ScannerImageSplit.selectText.2}"></small>
               </div>
               <div class="form-group">
-                <label for="tolerance">Tolerance:</label>
+                <label for="tolerance" th:text="#{ScannerImageSplit.selectText.3}"></label>
                 <input type="number" class="form-control" id="tolerance" name="tolerance" value="20">
-                <small id="toleranceHelp" class="form-text text-muted">Determines the range of color variation around the estimated background color (default: 30).</small>
+                <small id="toleranceHelp" class="form-text text-muted" th:text="#{ScannerImageSplit.selectText.4}"></small>
               </div>
               <div class="form-group">
-                <label for="minArea">Minimum Area:</label>
+                <label for="minArea" th:text="#{ScannerImageSplit.selectText.5}"></label>
                 <input type="number" class="form-control" id="minArea" name="min_area" value="8000">
-                <small id="minAreaHelp" class="form-text text-muted">Sets the minimum area threshold for a photo (default: 10000).</small>
+                <small id="minAreaHelp" class="form-text text-muted" th:text="#{ScannerImageSplit.selectText.6}"></small>
               </div>
               <div class="form-group">
-                <label for="minContourArea">Minimum Contour Area:</label>
+                <label for="minContourArea" th:text="#{ScannerImageSplit.selectText.7}"></label>
                 <input type="number" class="form-control" id="minContourArea" name="min_contour_area" value="500">
-                <small id="minContourAreaHelp" class="form-text text-muted">Sets the minimum contour area threshold for a photo (default: 500).</small>
+                <small id="minContourAreaHelp" class="form-text text-muted" th:text="#{ScannerImageSplit.selectText.8}"></small>
               </div>
-               <div class="form-group">
-                <label for="borderSize">Border Size:</label>
-                <input type="number" class="form-control" id="borderSize" name="border_size" value="0">
-                <small id="borderSizeHelp" class="form-text text-muted">Sets the size of the border added and removed to prevent white borders in the output (default: 0).</small>
+              <div class="form-group">
+                <label for="borderSize" th:text="#{ScannerImageSplit.selectText.9}"></label>
+                <input type="number" class="form-control" id="borderSize" name="border_size" value="1">
+                <small id="borderSizeHelp" class="form-text text-muted" th:text="#{ScannerImageSplit.selectText.10}"></small>
               </div>
-              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{extractImageScans.submit}"></button>
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{genericSubmit}"></button>
             </form>
+
           </div>
         </div>
       </div>

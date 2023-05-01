@@ -46,14 +46,19 @@ public class OCRController {
     public ResponseEntity<byte[]> processPdfWithOCR(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile,
             @RequestParam("languages") List<String> selectedLanguages, @RequestParam(name = "sidecar", required = false) Boolean sidecar,
             @RequestParam(name = "deskew", required = false) Boolean deskew, @RequestParam(name = "clean", required = false) Boolean clean,
-            @RequestParam(name = "clean-final", required = false) Boolean cleanFinal, @RequestParam(name = "ocrType", required = false) String ocrType)
+            @RequestParam(name = "clean-final", required = false) Boolean cleanFinal, @RequestParam(name = "ocrType", required = false) String ocrType,
+            @RequestParam(name = "ocrRenderType", required = false, defaultValue = "hocr") String ocrRenderType)
             throws IOException, InterruptedException {
 
         // --output-type pdfa
         if (selectedLanguages == null || selectedLanguages.isEmpty()) {
             throw new IOException("Please select at least one language.");
         }
-
+        
+        if(!ocrRenderType.equals("hocr") && !ocrRenderType.equals("sandwich")) {
+            throw new IOException("ocrRenderType wrong");
+        }
+        
         // Get available Tesseract languages
         List<String> availableLanguages = getAvailableTesseractLanguages();
 
@@ -76,7 +81,8 @@ public class OCRController {
         // Run OCR Command
         String languageOption = String.join("+", selectedLanguages);
 
-        List<String> command = new ArrayList<>(Arrays.asList("ocrmypdf", "--verbose", "2", "--output-type", "pdf", "--pdf-renderer" , "hocr"));
+        
+        List<String> command = new ArrayList<>(Arrays.asList("ocrmypdf", "--verbose", "2", "--output-type", "pdf", "--pdf-renderer" , ocrRenderType));
 
         if (sidecar != null && sidecar) {
             sidecarTextPath = Files.createTempFile("sidecar", ".txt");
