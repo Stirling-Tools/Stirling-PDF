@@ -66,4 +66,15 @@ public class GeneralWebController {
         model.addAttribute("currentPage", "split-pdfs");
         return "split-pdfs";
     }
+    
+    
+    
+    
+    @GetMapping("/sign")
+    @Hidden
+    public String signForm(Model model) {
+        model.addAttribute("currentPage", "sign");
+        return "sign";
+    }
+    
 }

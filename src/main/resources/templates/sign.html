@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <th:block th:insert="~{fragments/common :: head(title=#{extractImages.title})}"></th:block>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Signature App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.18.0/dist/umd/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.10.11/interact.min.js"></script>
+    <style>
+       #pdf-container {
+    position: relative;
+}
+
+#pdf-canvas {
+    border: 1px solid black;
+    margin-top: 10px;
+}
+
+#signature-canvas {
+    border: 1px solid red;
+    position: absolute;
+    touch-action: none;
+    top: 10px; /* Make sure this value matches the margin-top of #pdf-canvas */
+    left: 0;
+}
+
+.signature-pad-container {
+    border: 1px solid black;
+    display: none;
+    margin-top: 10px;
+}
+
+    </style>
+</head>
+
+<body>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{extractImages.header}"></h2>
+                        <input type="file" id="pdf-upload" accept=".pdf" class="btn btn-outline-primary mb-2" />
+                        <input type="file" id="signature-upload" accept="image/*" class="btn btn-outline-primary mb-2" />
+                        <button id="toggle-draw-signature" class="btn btn-outline-primary mb-2">Draw signature</button>
+                        <button id="download-pdf" class="btn btn-outline-primary mb-2">Download PDF</button>
+                        <div id="pdf-container">
+                            <canvas id="pdf-canvas"></canvas>
+                            <canvas id="signature-canvas" hidden style="position: absolute;" data-scale="1"></canvas>
+                        </div>
+                        <!-- Signature Pad -->
+                        <div class="signature-pad-container">
+                            <canvas id="signature-pad-canvas"></canvas>
+                            <button id="clear-signature" class="btn btn-outline-danger mt-2">Clear</button>
+                            <button id="save-signature" class="btn btn-outline-success mt-2">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const pdfUpload = document.getElementById('pdf-upload');
+        const signatureUpload = document.getElementById('signature-upload');
+        const pdfCanvas = document.getElementById('pdf-canvas');
+        const signatureCanvas = document.getElementById('signature-canvas');
+        const downloadPdfBtn = document.getElementById('download-pdf');
+        const toggleDrawSignatureBtn = document.getElementById('toggle-draw-signature');
+        const signaturePadCanvas = document.getElementById('signature-pad-canvas');
+        const clearSignatureBtn = document.getElementById('clear-signature');
+        const saveSignatureBtn = document.getElementById('save-signature');
+        
+        const signaturePad = new SignaturePad(signaturePadCanvas, {
+            minWidth: 1,
+            maxWidth: 2,
+            penColor: 'black',
+        });
+
+        
+        const pdfCtx = pdfCanvas.getContext('2d');
+        let pdfDoc = null;
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
+
+        async function loadPdf(pdfData) {
+            pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
+            renderPage(1);
+        }
+
+        pdfUpload.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const pdfData = await file.arrayBuffer();
+                loadPdf(pdfData);
+            }
+        });
+
+        signatureUpload.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const ctx = signatureCanvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, img.width, img.height);
+                        signatureCanvas.width = img.width;
+                        signatureCanvas.height = img.height;
+                        signatureCanvas.hidden = false;
+                        setTimeout(() => {
+                            const x = 0;
+                            const y = 0;
+                            signatureCanvas.style.transform = `translate(${x}px, ${y}px)`;
+                            signatureCanvas.setAttribute('data-x', x);
+                            signatureCanvas.setAttribute('data-y', y);
+                        }, 0);
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+
+        let usingSignaturePad = false;
+
+        toggleDrawSignatureBtn.addEventListener('click', () => {
+            usingSignaturePad = !usingSignaturePad;
+            if (usingSignaturePad) {
+                signatureCanvas.width = 0;
+                signatureCanvas.height = 0;
+            }
+            document.querySelector('.signature-pad-container').style.display = usingSignaturePad ? 'block' : 'none';
+            toggleDrawSignatureBtn.textContent = usingSignaturePad
+                ? 'Import signature image'
+                : 'Draw signature';
+        });
+
+
+        clearSignatureBtn.addEventListener('click', () => {
+            signaturePad.clear();
+        });
+
+        saveSignatureBtn.addEventListener('click', async () => {
+            if (!signaturePad.isEmpty()) {
+                const dataURL = signaturePad.toDataURL();
+                const img = new Image();
+                img.src = dataURL;
+                img.onload = () => {
+                    const ctx = signatureCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+                    signatureCanvas.width = img.width;
+                    signatureCanvas.height = img.height;
+                    ctx.drawImage(img, 0, 0, img.width, img.height);
+                    signatureCanvas.hidden = false;
+                    setTimeout(() => {
+                        const x = 0;
+                        const y = 0;
+                        signatureCanvas.style.transform = `translate(${x}px, ${y}px)`;
+                        signatureCanvas.setAttribute('data-x', x);
+                        signatureCanvas.setAttribute('data-y', y);
+                    }, 0);
+                };
+            }
+        });
+
+
+        function renderPage(pageNum) {
+            pdfDoc.getPage(pageNum).then((page) => {
+                const viewport = page.getViewport({ scale: 1 });
+                pdfCanvas.width = viewport.width;
+                pdfCanvas.height = viewport.height;
+
+                const renderCtx = {
+                    canvasContext: pdfCtx,
+                    viewport: viewport,
+                };
+
+                page.render(renderCtx);
+            });
+        }
+
+        interact('#signature-canvas')
+        .draggable({
+            listeners: {
+                move: (event) => {
+                    const target = event.target;
+                    const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+                    target.style.transform = `translate(${x}px, ${y}px)`;
+                    target.setAttribute('data-x', x);
+                    target.setAttribute('data-y', y);
+                },
+            },
+        })
+        .resizable({
+            edges: { left: true, right: true, bottom: true, top: true },
+            listeners: {
+                move: (event) => {
+                    const target = event.target;
+                    const x = (parseFloat(target.getAttribute('data-x')) || 0);
+                    const y = (parseFloat(target.getAttribute('data-y')) || 0);
+
+                    const newWidth = event.rect.width;
+                    const newHeight = event.rect.height;
+                    const scale = newWidth / target.width;
+
+                    target.style.width = newWidth + 'px';
+                    target.style.height = newHeight + 'px';
+                    target.setAttribute('data-scale', scale);
+
+                    target.style.transform = `translate(${x}px, ${y}px)`;
+                },
+            },
+            modifiers: [
+                interact.modifiers.restrictSize({
+                    min: { width: 50, height: 50 },
+                }),
+            ],
+            inertia: true,
+        });
+
+
+        async function getSignatureImage() {
+            const dataURL = signatureCanvas.toDataURL();
+            return dataURLToArrayBuffer(dataURL);
+        }
+
+        downloadPdfBtn.addEventListener('click', async () => {
+            if (pdfDoc) {
+                const pdfBytes = await pdfDoc.getData();
+                const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes);
+
+                if (signatureCanvas) {
+                    const signatureBytes = await getSignatureImage();
+                    const signatureImageObject = await pdfDocModified.embedPng(signatureBytes);
+
+                    const pageIndex = 0; // Choose the page index where the signature should be added (0 is the first page)
+                    const page = pdfDocModified.getPages()[pageIndex];
+
+                    const targetElement = signatureCanvas;
+                    const x = parseFloat(targetElement.getAttribute('data-x')) || 0;
+                    const y = parseFloat(targetElement.getAttribute('data-y')) || 0;
+                    const scale = parseFloat(targetElement.getAttribute('data-scale')) || 1;
+
+                    page.drawImage(signatureImageObject, {
+                        x: x,
+                        y: page.getHeight() - y - (targetElement.height * scale),
+                        width: targetElement.width * scale,
+                        height: targetElement.height * scale,
+                    });
+
+                }
+
+                const modifiedPdfBytes = await pdfDocModified.save();
+                const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'signed-document.pdf';
+                link.click();
+            }
+        });
+
+
+        
+        async function dataURLToArrayBuffer(dataURL) {
+            const response = await fetch(dataURL);
+            return response.arrayBuffer();
+        }
+
+        
+    });
+</script>
