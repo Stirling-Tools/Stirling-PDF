@@ -42,3 +42,8 @@ html[lang-direction=rtl] * {
     position: absolute;
     bottom: 0;
 }
+
+.btn-group > label:first-of-type {
+    border-top-left-radius: 0.25rem !important;
+    border-bottom-left-radius: 0.25rem !important;
+}

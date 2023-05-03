@@ -5,6 +5,7 @@
 
 
 <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
         <div id="content-wrap">
             <div th:insert="~{fragments/navbar.html :: navbar}"></div>
@@ -40,7 +41,7 @@
                             
                             <br> <br>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
-  <script>
+                            <script>
                                  $('#fileInput-input').on('change', function() {
                                     var files = document.getElementById("fileInput-input").files;
                                     var conversionType = document.getElementById("conversionType");
