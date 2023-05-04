@@ -37,6 +37,14 @@ public class OtherWebController {
         return "other/extract-images";
     }
     
+    @GetMapping("/flatten")
+    @Hidden
+    public String flattenForm(Model model) {
+        model.addAttribute("currentPage", "flatten");
+        return "other/flatten";
+    }
+    
+    
 
     @GetMapping("/change-metadata")
     @Hidden
