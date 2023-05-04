@@ -208,7 +208,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}">
     <script>
         $(document).ready(function() {
-            $('form').submit(function(event) {
+            $('form').submit(async function(event) {
                 const boredWaiting = localStorage.getItem('boredWaiting');
                 if (boredWaiting === 'enabled') {
                     $('#show-game-btn').show();
@@ -222,33 +222,35 @@ document.addEventListener("DOMContentLoaded", function () {
                 var url = this.action;
                 console.log(url)
                 event.preventDefault(); // Prevent the default form handling behavior
-                    /* Check if ${multiple} is false */
-                    var multiple = [[${multiple}]] || false;
-                    var override = $('#override').val() || '';
-                    console.log("override=" + override)
-                    if (override === 'multi' || (!multiple && files.length > 1) && override !== 'single' ) {
-                        console.log("multi parallel download")
-                        submitMultiPdfForm(event,url);
-                    } else {
-                        console.log("start single download")
 
-                        // Get the selected download option from localStorage
-                        const downloadOption = localStorage.getItem('downloadOption');
+                /* Check if ${multiple} is false */
+                var multiple = [[${multiple}]] || false;
+                var override = $('#override').val() || '';
+                console.log("override=" + override)
+                if (override === 'multi' || (!multiple && files.length > 1) && override !== 'single' ) {
+                    console.log("multi parallel download")
+                    await submitMultiPdfForm(event,url);
+                } else {
+                    console.log("start single download")
 
-                        var formData = new FormData($('form')[0]);
-                        
-                        // Send the request to the server using the fetch() API
-                        fetch(url, {
-                            method: 'POST',
-                            body: formData
-                        }).then(response => {
-                            if (!response) {
-                                throw new Error('Received null response for file ' + i);
-                            }
-                            console.log("load single download")
+                    // Get the selected download option from localStorage
+                    const downloadOption = localStorage.getItem('downloadOption');
+
+                    var formData = new FormData($('form')[0]);
+                    
+                    // Send the request to the server using the fetch() API
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    try {
+                        if (!response) {
+                            throw new Error('Received null response for file ' + i);
+                        }
+                        console.log("load single download")
 
                             
-                            // Extract the filename from the Content-Disposition header, if present
+                        // Extract the filename from the Content-Disposition header, if present
                         let filename = null;
                         const contentDispositionHeader = response.headers.get('Content-Disposition');
                         console.log(contentDispositionHeader)
@@ -263,74 +265,68 @@ document.addEventListener("DOMContentLoaded", function () {
                     
                         const contentType = response.headers.get('Content-Type');
                         console.log("contentType=" + contentType)
-                            // Check if the response is a PDF or an image
-                            if (contentType.includes('pdf') || contentType.includes('image')) {
-                                response.blob().then(blob => {
-                                    console.log("pdf/image")
-    
-                                    // Perform the appropriate action based on the download option
-                                    if (downloadOption === 'sameWindow') {
-                                        console.log("same window")
-    
-                                        // Open the file in the same window
-                                        window.location.href = URL.createObjectURL(blob);
-                                    } else if (downloadOption === 'newWindow') {
-                                        console.log("new window")
-    
-                                        // Open the file in a new window
-                                        window.open(URL.createObjectURL(blob), '_blank');
-                                    } else {
-                                        console.log("else save")
-    
-                                        // Download the file
-                                        const link = document.createElement('a');
-                                        link.href = URL.createObjectURL(blob);
-                                        link.download = filename;
-                                        link.click();
-                                    }
-                                });
-                            } else if (contentType.includes('json')) {
-                            // Handle the JSON response
-                                response.json().then(data => {
-                                    // Format the error message
-                                    const errorMessage = JSON.stringify(data, null, 2);
-                                    
-                                    // Display the error message in an alert
-                                    alert(`An error occurred: ${errorMessage}`);
-                                });
-                                
+                        // Check if the response is a PDF or an image
+                        if (contentType.includes('pdf') || contentType.includes('image')) {
+                            const blob = await response.blob();
+                            console.log("pdf/image")
+
+                            // Perform the appropriate action based on the download option
+                            if (downloadOption === 'sameWindow') {
+                                console.log("same window")
+
+                                // Open the file in the same window
+                                window.location.href = URL.createObjectURL(blob);
+                            } else if (downloadOption === 'newWindow') {
+                                console.log("new window")
+
+                                // Open the file in a new window
+                                window.open(URL.createObjectURL(blob), '_blank');
                             } else {
-                                response.blob().then(blob => {
-                                    console.log("else save 2 zip")
-    
-                                    // For ZIP files or other file types, just download the file
-                                    const link = document.createElement('a');
-                                    link.href = URL.createObjectURL(blob);
-                                    link.download = filename;
-                                    link.click();
-                                });
+                                console.log("else save")
+
+                                // Download the file
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = filename;
+                                link.click();
                             }
-                    })
-                        .catch(error => {
-                            console.log("error listener")
-
-                            // Extract the error message and stack trace from the response
-                            const errorMessage = error.message;
-                            const stackTrace = error.stack;
-
-                            // Create an error message to display to the user
-                            const message = `${errorMessage}\n\n${stackTrace}`;
-                        
-                            $('#submitBtn').text(submitButtonText);
+                        } else if (contentType.includes('json')) {
+                            // Handle the JSON response
+                            const json = await response.json();
+                            // Format the error message
+                            const errorMessage = JSON.stringify(json, null, 2);
+                            // Display the error message in an alert
+                            alert(`An error occurred: ${errorMessage}`);
+                        } else {
+                            const blob = await response.blob()
+                            console.log("else save 2 zip")
                             
-                            // Display the error message to the user
-                            alert(message);
-                            
-                        });
+                            // For ZIP files or other file types, just download the file
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(blob);
+                            link.download = filename;
+                            link.click();
+                        }
+                    } catch(error) {
+                        console.log("error listener")
+
+                        // Extract the error message and stack trace from the response
+                        const errorMessage = error.message;
+                        const stackTrace = error.stack;
+
+                        // Create an error message to display to the user
+                        const message = `${errorMessage}\n\n${stackTrace}`;
+                    
+                        $('#submitBtn').text(submitButtonText);
                         
-                    }
-                    $('#submitBtn').text(submitButtonText);
-                });
+                        // Display the error message to the user
+                        alert(message);
+                        
+                    };
+                        
+                }
+                $('#submitBtn').text(submitButtonText);
+            });
         });
         async function submitMultiPdfForm(event, url) {
             // Get the selected PDF files
