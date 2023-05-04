@@ -60,8 +60,11 @@
                         <div class = "btn-group">
                             <input type="radio" class="btn-check" name="signature-type" id="draw-signature" autocomplete="off" checked>
                             <label class="btn btn-outline-secondary" for="draw-signature">Draw signature</label>
+                            <input type="radio" class="btn-check" name="signature-type" id="generate-signature" autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="generate-signature">Generate Signature</label>
                             <input type="radio" class="btn-check" name="signature-type" id="import-image" autocomplete="off">
                             <label class="btn btn-outline-secondary" for="import-image">Import image</label>
+                            
                         </div>
                         
                         <div th:replace="~{fragments/common :: fileSelector(name='signature-upload', multiple=false, accept='image/*', inputText=#{imgPrompt})}"></div>
@@ -72,7 +75,11 @@
                             <button id="clear-signature" class="btn btn-outline-danger mt-2">Clear</button>
                             <button id="save-signature" class="btn btn-outline-success mt-2">Save</button>
                         </div>
-
+                        <div id="signature-text-input-container" style="display: none;">
+                            <input type="text" id="signature-text-input" class="form-control mt-2" placeholder="Type your signature here...">
+                        </div>
+                        
+                        
                         <div id="pdf-container">
                             <canvas id="pdf-canvas"></canvas>
                             <canvas id="signature-canvas" hidden style="position: absolute;" data-scale="1"></canvas>
@@ -89,6 +96,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const pdfUpload = document.querySelector('input[name=pdf-upload]');
             const signatureUpload = document.querySelector('input[name=signature-upload]');
+            const signatureTextInput = document.querySelector('input[name=signatureTextInput]');
             const pdfCanvas = document.getElementById('pdf-canvas');
             const signatureCanvas = document.getElementById('signature-canvas');
             const downloadPdfBtn = document.getElementById('download-pdf');
@@ -124,17 +132,44 @@
                 signaturePad.clear();
             });
 
-            $("input[name=signature-type]").change(function() {
-                const drawSignatureInput = document.getElementById('draw-signature');
-                signaturePadContainer.style.display = drawSignatureInput.checked ? 'block' : 'none';
-                document.querySelector('input[name=signature-upload]').closest(".custom-file-chooser").style.display = drawSignatureInput.checked ? 'none' : 'block';
+            $("input[name=signature-type]").change(function () {
+                const drawSignatureInput = document.getElementById("draw-signature");
+                const generateSignatureInput = document.getElementById("generate-signature");
+                const importImageInputContainer = document.querySelector("input[name=signature-upload]").closest(".custom-file-chooser");
+                signaturePadContainer.style.display = drawSignatureInput.checked ? "block" : "none";
+                importImageInputContainer.style.display = drawSignatureInput.checked ? "none" : (generateSignatureInput.checked ? "none" : "block");
+                document.getElementById("signature-text-input-container").style.display = generateSignatureInput.checked ? "block" : "none";
 
                 if (drawSignatureInput.checked) {
                     populateSignatureFromPad();
+                } else if (generateSignatureInput.checked) {
+                    populateSignatureFromText();
                 } else {
                     populateSignatureFromFileUpload();
                 }
             });
+
+
+            function populateSignatureFromText() {
+                const signatureText = document.getElementById("signature-text-input").value;
+                if (!signatureText) return;
+
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                ctx.font = "32px Arial";
+                const textMetrics = ctx.measureText(signatureText);
+
+                canvas.width = textMetrics.width;
+                canvas.height = parseInt(ctx.font, 10);
+
+                ctx.fillStyle = "black";
+                ctx.font = "32px Arial";
+                ctx.fillText(signatureText, 0, canvas.height * 0.8);
+
+                const dataURL = canvas.toDataURL();
+                populateSignature(dataURL);
+            }
+
             
             function populateSignature(imgUrl) {
                 const img = new Image();
@@ -184,6 +219,7 @@
                 populateSignature(dataURL);
             }
             signatureUpload.addEventListener('change', populateSignatureFromFileUpload);
+            signatureTextInput.addEventListener('change', populateSignatureFromText);
             saveSignatureBtn.addEventListener('click', populateSignatureFromPad);
 
 
