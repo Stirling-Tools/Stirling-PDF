@@ -115,6 +115,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     document.body.appendChild(script);
                 }
                 let gameScriptLoaded = false;
+                const gameDialog = document.getElementById('game-container-wrapper')
                 $('#show-game-btn').on('click', function() {
                     console.log('Show game button clicked');
                     if (!gameScriptLoaded) {
@@ -127,8 +128,19 @@ document.addEventListener("DOMContentLoaded", function () {
                     } else {
                         window.resetGame();
                     }
-                    document.getElementById('game-container-wrapper').showModal();
+                    gameDialog.showModal();
                 });
+                gameDialog.addEventListener("click", e => {
+                    const dialogDimensions = gameDialog.getBoundingClientRect()
+                    if (
+                        e.clientX < dialogDimensions.left ||
+                        e.clientX > dialogDimensions.right ||
+                        e.clientY < dialogDimensions.top ||
+                        e.clientY > dialogDimensions.bottom
+                    ) {
+                        gameDialog.close()
+                    }
+                })
             })
         </script>
         <div id="game-container">
