@@ -108,8 +108,8 @@ filter: invert(0.2) sepia(2) saturate(50) hue-rotate(190deg);
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.PDFToXML.title}, cardText=#{home.PDFToXML.desc}, cardLink='pdf-to-xml', svgPath='images/filetype-xml.svg')}"></div>
                 
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.ScannerImageSplit.title}, cardText=#{home.ScannerImageSplit.desc}, cardLink='extract-image-scans', svgPath='images/scanner.svg')}"></div>
-                
-                
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.sign.title}, cardText=#{home.sign.desc}, cardLink='sign', svgPath='images/sign.svg')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.flatten.title}, cardText=#{home.flatten.desc}, cardLink='flatten', svgPath='images/flatten.svg')}"></div>
                 
             </div>
         </div>

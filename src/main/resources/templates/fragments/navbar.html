@@ -259,7 +259,7 @@ function compareVersions(version1, version2) {
                 </li>
 
                   <li class="nav-item nav-item-separator"></li> 
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' ? 'active' : ''">
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='sign' OR ${currentPage}=='flatten' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' ? 'active' : ''">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <img class="icon" src="images/card-list.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> 
                         <span class="icon-text"  th:text="#{navbar.other}"></span>
@@ -283,7 +283,13 @@ function compareVersions(version1, version2) {
                             </a>
                             <a class="dropdown-item" href="#" th:href="@{extract-image-scans}" th:classappend="${currentPage}=='extract-image-scans' ? 'active' : ''" th:title="#{home.ScannerImageSplit.desc}">
                                 <img class="icon" src="images/scanner.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.ScannerImageSplit.title}"></span>
-                            </a>                
+                            </a>
+                            <a class="dropdown-item" href="#" th:href="@{sign}" th:classappend="${currentPage}=='sign' ? 'active' : ''" th:title="#{home.sign.desc}">
+                                <img class="icon" src="images/sign.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.sign.title}"></span>
+                            </a>  
+                            <a class="dropdown-item" href="#" th:href="@{flatten}" th:classappend="${currentPage}=='flatten' ? 'active' : ''" th:title="#{home.flatten.desc}">
+                                <img class="icon" src="images/flatten.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.flatten.title}"></span>
+                            </a>               
                         </div>
                     </li>
 
