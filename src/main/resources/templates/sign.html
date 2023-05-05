@@ -10,6 +10,11 @@
     <script src="https://unpkg.com/pdf-lib@1.18.0/dist/umd/pdf-lib.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.10.11/interact.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Estonia&family=Tangerine&family=Windsong&display=swap" rel="stylesheet">
+        
+    
     <style>
        #pdf-container {
             position: relative;
@@ -59,9 +64,11 @@
 
                         <div class = "btn-group">
                             <input type="radio" class="btn-check" name="signature-type" id="draw-signature" autocomplete="off" checked>
-                            <label class="btn btn-outline-secondary" for="draw-signature">Draw signature</label>
+                            <label class="btn btn-outline-secondary" for="draw-signature">Draw</label>
                             <input type="radio" class="btn-check" name="signature-type" id="import-image" autocomplete="off">
-                            <label class="btn btn-outline-secondary" for="import-image">Import image</label>
+                            <label class="btn btn-outline-secondary" for="import-image">Import</label>
+                            <input type="radio" class="btn-check" name="signature-type" id="type-signature" autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="type-signature">Type</label>
                         </div>
                         
                         <div th:replace="~{fragments/common :: fileSelector(name='signature-upload', multiple=false, accept='image/*', inputText=#{imgPrompt})}"></div>
@@ -73,6 +80,18 @@
                             <button id="save-signature" class="btn btn-outline-success mt-2">Save</button>
                         </div>
 
+                        <div id="signature-type-container">
+                            <label class="form-check-label" for="sigText">Signature</label> 
+                            <input type="text" class="form-control" id="sigText" name="sigText">
+                            <label>Font:</label> 
+                            <select class="form-control" name="font" id="font-select">
+                                <option value="Estonia" class="estonia-font">Estonia</option>
+                                <option value="Tangerine" class="tangerine-font">Tangerine</option>
+                                <option value="Windsong" class="windsong-font">Windsong</option>
+                            </select>
+                            <button id="save-text-signature" class="btn btn-outline-success mt-2">Save</button>
+                        </div>
+                        
                         <div id="pdf-container">
                             <canvas id="pdf-canvas"></canvas>
                             <canvas id="signature-canvas" hidden style="position: absolute;" data-scale="1"></canvas>
@@ -87,6 +106,15 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+        	
+        	const fontSelect = document.getElementById('font-select');
+        	fontSelect.addEventListener('change', (event) => {
+        	    const selectedFont = event.target.value;
+        	    fontSelect.style.fontFamily = selectedFont;
+        	});
+
+        	fontSelect.style.fontFamily = fontSelect.value; // Set the initial font family
+
             const pdfUpload = document.querySelector('input[name=pdf-upload]');
             const signatureUpload = document.querySelector('input[name=signature-upload]');
             const pdfCanvas = document.getElementById('pdf-canvas');
@@ -96,9 +124,9 @@
             const signaturePadCanvas = document.getElementById('signature-pad-canvas');
             const clearSignatureBtn = document.getElementById('clear-signature');
             const saveSignatureBtn = document.getElementById('save-signature');
-
+            const signatureTypeContainer = document.getElementById('signature-type-container');
             document.querySelector('input[name=signature-upload]').closest(".custom-file-chooser").style.display = "none"
-
+            signatureTypeContainer.style.display =  'none';
             const signaturePad = new SignaturePad(signaturePadCanvas, {
                 minWidth: 1,
                 maxWidth: 2,
@@ -126,15 +154,44 @@
 
             $("input[name=signature-type]").change(function() {
                 const drawSignatureInput = document.getElementById('draw-signature');
+                const importImageInput = document.getElementById('import-image');
+                const typeSignatureInput = document.getElementById('type-signature');
+                
                 signaturePadContainer.style.display = drawSignatureInput.checked ? 'block' : 'none';
-                document.querySelector('input[name=signature-upload]').closest(".custom-file-chooser").style.display = drawSignatureInput.checked ? 'none' : 'block';
+                signatureTypeContainer.style.display = typeSignatureInput.checked ? 'block' : 'none';
+                document.querySelector('input[name=signature-upload]').closest(".custom-file-chooser").style.display = importImageInput.checked ? 'block' : 'none';
 
                 if (drawSignatureInput.checked) {
                     populateSignatureFromPad();
-                } else {
+                } else if (importImageInput.checked) {
                     populateSignatureFromFileUpload();
                 }
             });
+
+            
+            const saveTextSignatureBtn = document.getElementById('save-text-signature');
+            saveTextSignatureBtn.addEventListener('click', () => {
+                if (!document.getElementById('type-signature').checked) return;
+
+                const sigText = document.getElementById('sigText').value;
+                const font = document.querySelector('select[name=font]').value;
+                const fontSize = 50;
+
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.font = `${fontSize}px ${font}`;
+                const textWidth = ctx.measureText(sigText).width;
+                const textHeight = fontSize;
+
+                canvas.width = textWidth;
+                canvas.height = textHeight*1.35; //for tails
+                ctx.font = `${fontSize}px ${font}`;
+                ctx.fillText(sigText, 0, fontSize);
+
+                const dataURL = canvas.toDataURL();
+                populateSignature(dataURL);
+            });
+
             
             function populateSignature(imgUrl) {
                 const img = new Image();
@@ -178,6 +235,7 @@
                 reader.readAsDataURL(file);
             }
             function populateSignatureFromPad() {
+            	if (!document.getElementById('draw-signature').checked) return;
                 if (signaturePad.isEmpty()) return;
 
                 const dataURL = signaturePad.toDataURL();
