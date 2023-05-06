@@ -21,7 +21,10 @@ Feel free to request any features or bug fixes either in github issues or our [D
 - Merge multiple PDFs together into a single resultant file
 - Convert PDFs to and from images
 - Reorganize PDF pages into different orders.
-- Add images to PDFs at specified locations. (WIP)
+- Add/Generate signatures
+- Flatten PDFs
+- Repair PDFs
+- Add images to PDFs
 - Rotating PDFs in 90 degree increments.
 - Compressing PDFs to decrease their filesize. (Using OCRMyPDF)
 - Add and remove passwords
@@ -35,6 +38,7 @@ Feel free to request any features or bug fixes either in github issues or our [D
 - Dark mode support.
 - Custom download options (see [here](https://github.com/Frooodle/Stirling-PDF/blob/main/images/settings.png) for example)
 - Parallel file processing and downloads
+- API for integration with external scripts 
 
 ## Technologies used
 - Spring Boot + Thymeleaf
@@ -64,16 +68,34 @@ https://hub.docker.com/r/frooodle/s-pdf
 
 Docker Run
 ```
-docker run -p 8080:8080 frooodle/s-pdf
+docker run -d \
+  -p 8080:8080 \
+  -v /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata \
+  --name stirling-pdf \
+  frooodle/s-pdf
+  
+  
+  Can also add these for customisation
+  -e APP_HOME_NAME="Stirling PDF" \
+  -e APP_HOME_DESCRIPTION="Your locally hosted one-stop-shop for all your PDF needs." \
+  -e APP_NAVBAR_NAME="Stirling PDF" \
 ```
 Docker Compose
 ```
 version: '3.3'
 services:
-    s-pdf:
-        ports:
-            - '8080:8080'
-        image: frooodle/s-pdf
+  stirling-pdf:
+    image: frooodle/s-pdf
+    ports:
+      - '8080:8080'
+    volumes:
+      - /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata #Required for extra OCR languages
+#      - /location/of/extraConfigs:/configs
+#    environment:
+#      APP_HOME_NAME: Stirling PDF
+#      APP_HOME_DESCRIPTION: Your locally hosted one-stop-shop for all your PDF needs.
+#      APP_NAVBAR_NAME: Stirling PDF
+
 ```
 
 
