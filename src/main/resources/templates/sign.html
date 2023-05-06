@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <th:block th:insert="~{fragments/common :: head(title=#{extractImages.title})}"></th:block>
+    <th:block th:insert="~{fragments/common :: head(title=#{sign.title})}"></th:block>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Signature App</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -59,7 +59,7 @@
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-md-6">
-                        <h2 th:text="#{extractImages.header}"></h2>
+                        <h2 th:text="#{sign.header}"></h2>
                         <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multiple=false, accept='application/pdf')}"></div>
 
                         <div class = "btn-group">
