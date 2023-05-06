@@ -109,7 +109,7 @@
                         
                         <div id="pdf-container">
                             <canvas id="pdf-canvas"></canvas>
-                            <canvas id="signature-canvas" hidden style="position: absolute;"></canvas>
+                            <canvas id="signature-canvas" hidden style="position: absolute;" data-scale="1"></canvas>
                         </div>
 
                         <button id="download-pdf" class="btn btn-primary mb-2">Download PDF</button>
@@ -220,6 +220,8 @@
                     const x = 0;
                     const y = 0;
                     signatureCanvas.style.transform = `translate(${x}px, ${y}px)`;
+                    signatureCanvas.setAttribute('data-x', x);
+                    signatureCanvas.setAttribute('data-y', y);
                     
                     // calcualte the max size
                     const containerWidth = parseInt(getComputedStyle(pdfCanvas).width.replace('px',''));
@@ -286,10 +288,13 @@
             .draggable({
                 listeners: {
                     move: (event) => {
-                        const transform = parseTransform(event.target)
-                        const x = (transform.x || 0) + event.dx;
-                        const y = (transform.y || 0) + event.dy;
-                        event.target.style.transform = `translate(${x}px, ${y}px)`;
+                        const target = event.target;
+                        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+                        target.style.transform = `translate(${x}px, ${y}px)`;
+                        target.setAttribute('data-x', x);
+                        target.setAttribute('data-y', y);
                     },
                 },
             })
@@ -297,13 +302,23 @@
                 edges: { left: true, right: true, bottom: true, top: true },
                 listeners: {
                     move: (event) => {
-                        const target = event.target;
+                        var target = event.target
+                        var x = (parseFloat(target.getAttribute('data-x')) || 0)
+                        var y = (parseFloat(target.getAttribute('data-y')) || 0)
 
-                        const newWidth = event.rect.width;
-                        const newHeight = event.rect.height;
+                        // update the element's style
+                        target.style.width = event.rect.width + 'px'
+                        target.style.height = event.rect.height + 'px'
 
-                        target.style.width = newWidth + 'px';
-                        target.style.height = newHeight + 'px';
+                        // translate when resizing from top or left edges
+                        x += event.deltaRect.left
+                        y += event.deltaRect.top
+
+                        target.style.transform = 'translate(' + x + 'px,' + y + 'px)'
+
+                        target.setAttribute('data-x', x)
+                        target.setAttribute('data-y', y)
+                        target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
                     },
                 },
                 modifiers: [
