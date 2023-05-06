@@ -47,6 +47,21 @@
         #pdf-canvas {
             width: 100%;
         }
+        #font-select option {
+            font-size: 30px; /* Set the font size as desired */
+        }
+        
+        #font-select option[value="Estonia"] {
+            font-family: 'Estonia', sans-serif;
+        }
+        
+        #font-select option[value="Tangerine"] {
+            font-family: 'Tangerine', cursive;
+        }
+        
+        #font-select option[value="Windsong"] {
+            font-family: 'Windsong', cursive;
+        }
     </style>
 </head>
 
@@ -108,13 +123,12 @@
         document.addEventListener('DOMContentLoaded', () => {
         	
         	const fontSelect = document.getElementById('font-select');
-        	fontSelect.addEventListener('change', (event) => {
-        	    const selectedFont = event.target.value;
-        	    fontSelect.style.fontFamily = selectedFont;
-        	});
-
-        	fontSelect.style.fontFamily = fontSelect.value; // Set the initial font family
-
+            fontSelect.addEventListener('change', (event) => {
+                const selectedFont = event.target.value;
+                fontSelect.style.fontFamily = selectedFont;
+            });
+            fontSelect.style.fontFamily = fontSelect.value; 
+            
             const pdfUpload = document.querySelector('input[name=pdf-upload]');
             const signatureUpload = document.querySelector('input[name=signature-upload]');
             const pdfCanvas = document.getElementById('pdf-canvas');
