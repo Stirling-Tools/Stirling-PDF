@@ -289,7 +289,10 @@ function compareVersions(version1, version2) {
                             </a>  
                             <a class="dropdown-item" href="#" th:href="@{flatten}" th:classappend="${currentPage}=='flatten' ? 'active' : ''" th:title="#{home.flatten.desc}">
                                 <img class="icon" src="images/flatten.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.flatten.title}"></span>
-                            </a>               
+                            </a>  
+                            <a class="dropdown-item" href="#" th:href="@{repair}" th:classappend="${currentPage}=='repair' ? 'active' : ''" th:title="#{home.repair.desc}">
+                                <img class="icon" src="images/wrench.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.repair.title}"></span>
+                            </a>              
                         </div>
                     </li>
 

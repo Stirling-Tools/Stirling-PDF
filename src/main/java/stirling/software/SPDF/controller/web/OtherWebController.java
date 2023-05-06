@@ -88,5 +88,11 @@ public class OtherWebController {
         return "other/adjust-contrast";
     }
     
+    @GetMapping("/repair")
+    @Hidden
+    public String repairForm(Model model) {
+        model.addAttribute("currentPage", "repair");
+        return "other/repair";
+    }
     
 }
