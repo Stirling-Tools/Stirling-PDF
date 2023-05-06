@@ -109,7 +109,7 @@
                         
                         <div id="pdf-container">
                             <canvas id="pdf-canvas"></canvas>
-                            <canvas id="signature-canvas" hidden style="position: absolute;" data-scale="1"></canvas>
+                            <canvas id="signature-canvas" hidden style="position: absolute;"></canvas>
                         </div>
 
                         <button id="download-pdf" class="btn btn-primary mb-2">Download PDF</button>
@@ -220,8 +220,6 @@
                     const x = 0;
                     const y = 0;
                     signatureCanvas.style.transform = `translate(${x}px, ${y}px)`;
-                    signatureCanvas.setAttribute('data-x', x);
-                    signatureCanvas.setAttribute('data-y', y);
                     
                     // calcualte the max size
                     const containerWidth = parseInt(getComputedStyle(pdfCanvas).width.replace('px',''));
@@ -274,17 +272,24 @@
                 });
             }
 
+            function parseTransform(element) {
+                const tansform = element.style.transform.replace(/[^.,-\d]/g, '');
+                const transformComponents = tansform.split(",");
+                return {
+                    x: parseFloat(transformComponents[0]),
+                    y: parseFloat(transformComponents[1]),
+                    width: element.offsetWidth,
+                    height: element.offsetHeight,
+                }
+            }
             interact('#signature-canvas')
             .draggable({
                 listeners: {
                     move: (event) => {
-                        const target = event.target;
-                        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-                        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-
-                        target.style.transform = `translate(${x}px, ${y}px)`;
-                        target.setAttribute('data-x', x);
-                        target.setAttribute('data-y', y);
+                        const transform = parseTransform(event.target)
+                        const x = (transform.x || 0) + event.dx;
+                        const y = (transform.y || 0) + event.dy;
+                        event.target.style.transform = `translate(${x}px, ${y}px)`;
                     },
                 },
             })
@@ -293,18 +298,12 @@
                 listeners: {
                     move: (event) => {
                         const target = event.target;
-                        const x = (parseFloat(target.getAttribute('data-x')) || 0);
-                        const y = (parseFloat(target.getAttribute('data-y')) || 0);
 
                         const newWidth = event.rect.width;
                         const newHeight = event.rect.height;
-                        const scale = newWidth / target.width;
 
                         target.style.width = newWidth + 'px';
                         target.style.height = newHeight + 'px';
-                        target.setAttribute('data-scale', scale);
-
-                        target.style.transform = `translate(${x}px, ${y}px)`;
                     },
                 },
                 modifiers: [
@@ -333,16 +332,25 @@
                         const pageIndex = 0; // Choose the page index where the signature should be added (0 is the first page)
                         const page = pdfDocModified.getPages()[pageIndex];
 
-                        const targetElement = signatureCanvas;
-                        const x = parseFloat(targetElement.getAttribute('data-x')) || 0;
-                        const y = parseFloat(targetElement.getAttribute('data-y')) || 0;
-                        const scale = parseFloat(targetElement.getAttribute('data-scale')) || 1;
+                        const signatureCanvasPositionPixels = parseTransform(signatureCanvas);
+                        const signatureCanvasPositionRelative = {
+                            x: signatureCanvasPositionPixels.x / pdfCanvas.offsetWidth,
+                            y: signatureCanvasPositionPixels.y / pdfCanvas.offsetHeight,
+                            width: signatureCanvasPositionPixels.width / pdfCanvas.offsetWidth,
+                            height: signatureCanvasPositionPixels.height / pdfCanvas.offsetHeight,
+                        }
+                        const signaturePositionPdf = {
+                            x: signatureCanvasPositionRelative.x * page.getWidth(),
+                            y: signatureCanvasPositionRelative.y * page.getHeight(),
+                            width: signatureCanvasPositionRelative.width * page.getWidth(),
+                            height: signatureCanvasPositionRelative.height * page.getHeight(),
+                        }
 
                         page.drawImage(signatureImageObject, {
-                            x: x,
-                            y: page.getHeight() - y - (targetElement.height * scale),
-                            width: targetElement.width * scale,
-                            height: targetElement.height * scale,
+                            x: signaturePositionPdf.x,
+                            y: page.getHeight() - signaturePositionPdf.y - signaturePositionPdf.height,
+                            width: signaturePositionPdf.width,
+                            height: signaturePositionPdf.height,
                         });
 
                     }
