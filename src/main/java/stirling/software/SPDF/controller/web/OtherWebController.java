@@ -53,6 +53,12 @@ public class OtherWebController {
         return "other/change-metadata";
     }
     
+    @GetMapping("/compare")
+    @Hidden
+    public String compareForm(Model model) {
+        model.addAttribute("currentPage", "compare");
+        return "other/compare";
+    }
     
     public List<String> getAvailableTesseractLanguages() {
         String tessdataDir = "/usr/share/tesseract-ocr/4.00/tessdata";

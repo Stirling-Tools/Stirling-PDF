@@ -3,20 +3,21 @@
 
 <head>
     <th:block th:insert="~{fragments/common :: head(title=#{sign.title})}"></th:block>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Signature App</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
-    <script src="https://unpkg.com/pdf-lib@1.18.0/dist/umd/pdf-lib.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.10.11/interact.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Estonia&family=Tangerine&family=Windsong&display=swap" rel="stylesheet">
-</head>
+    <script src="js/signature_pad.umd.min.js"></script>
+    <script src="js/interact.min.js"></script>
 
+</head>
+<style>
+@font-face {
+  font-family: 'Estonia';
+  src: url(fonts/Estonia.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Tangerine';
+  src: url(fonts/Tangerine.woff2) format('woff2');
+}
+</style>
 <body>
-    <th:block th:insert="~{fragments/common.html :: game}"></th:block>
     <div id="page-container">
         <div id="content-wrap">
             <div th:insert="~{fragments/navbar.html :: navbar}"></div>
@@ -49,7 +50,7 @@
                         </script>
 
                         <div class="tab-group show-on-file-selected">
-                            <div class="tab-container" title="Upload Image">
+                            <div class="tab-container" th:title="#{sign.upload}">
                                 <div th:replace="~{fragments/common :: fileSelector(name='image-upload', multiple=true, accept='image/*', inputText=#{imgPrompt})}"></div>
                                 <script>
                                     const imageUpload = document.querySelector('input[name=image-upload]');
@@ -67,11 +68,11 @@
                                     });
                                 </script>
                             </div>
-                            <div class="tab-container drawing-pad-container" title="Draw Signature">
+                            <div class="tab-container drawing-pad-container" th:title="#{sign.draw}">
                                 <canvas id="drawing-pad-canvas"></canvas>
                                 <br>
-                                <button id="clear-signature" class="btn btn-outline-danger mt-2" onclick="signaturePad.clear()">Clear</button>
-                                <button id="save-signature" class="btn btn-outline-success mt-2" onclick="addDraggableFromPad()">Add</button>
+                                <button id="clear-signature" class="btn btn-outline-danger mt-2" onclick="signaturePad.clear()" th:text="#{sign.clear}"></button>
+                                <button id="save-signature" class="btn btn-outline-success mt-2" onclick="addDraggableFromPad()" th:text="#{sign.add}"></button>
                                 <script>
                                     const signaturePadCanvas = document.getElementById('drawing-pad-canvas');
                                     const signaturePad = new SignaturePad(signaturePadCanvas, {
@@ -95,17 +96,16 @@
                                     }
                                 </style>
                             </div>
-                            <div class="tab-container" title="Text Input">
-                                <label class="form-check-label" for="sigText">Text</label> 
+                            <div class="tab-container" th:title="#{sign.text}">
+                                <label class="form-check-label" for="sigText" th:text="#{text}"></label> 
                                 <input type="text" class="form-control" id="sigText" name="sigText">
-                                <label>Font:</label> 
+                                <label th:text="#{font}"></label> 
                                 <select class="form-control" name="font" id="font-select">
                                     <option value="Estonia" class="estonia-font">Estonia</option>
                                     <option value="Tangerine" class="tangerine-font">Tangerine</option>
-                                    <option value="Windsong" class="windsong-font">Windsong</option>
                                 </select>
                                 <div class="margin-auto-parent">
-                                    <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromText()">Add</button>
+                                    <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
                                 </div>
                                 <script>
                                     function addDraggableFromText() {
@@ -148,7 +148,7 @@
                         <!-- draggables box -->
                         <div id="box-drag-container" class="show-on-file-selected">
                             <canvas id="pdf-canvas"></canvas>
-                            <script src="/js/draggable-utils.js"></script>
+                            <script src="js/draggable-utils.js"></script>
                             <div class="draggable-buttons-box ignore-rtl">
                                 <button class="btn btn-outline-secondary" onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
