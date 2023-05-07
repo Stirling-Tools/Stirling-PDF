@@ -1,0 +1,31 @@
+
+.tab-group {
+
+}
+
+.tab-container {
+    display: none;
+}
+.tab-container.active {
+    display: block;
+    border: 1px solid #dee2e6;
+    padding: 15px;
+}
+/*
+.tab-buttons {
+    border-bottom: 1px solid #dee2e6;
+}
+*/
+.tab-buttons > button {
+    margin-bottom: -1px;
+    background: 0 0;
+    border: 1px solid transparent;
+    
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+}
+.tab-buttons > button.active {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+}
