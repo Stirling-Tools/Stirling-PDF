@@ -112,8 +112,8 @@ filter: invert(0.2) sepia(2) saturate(50) hue-rotate(190deg);
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.flatten.title}, cardText=#{home.flatten.desc}, cardLink='flatten', svgPath='images/flatten.svg')}"></div>
                 
                 <div th:replace="~{fragments/card :: card(cardTitle=#{home.repair.title}, cardText=#{home.repair.desc}, cardLink='repair', svgPath='images/wrench.svg')}"></div>
-                <div th:replace="~{fragments/card :: card(cardTitle=#{home.removeBlanks.title}, cardText=#{home.removeBlanks.desc}, cardLink='remove-blanks', svgPath='images/wrench.svg')}"></div>
-                <div th:replace="~{fragments/card :: card(cardTitle=#{home.compare.title}, cardText=#{home.compare.desc}, cardLink='compare', svgPath='images/wrench.svg')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.removeBlanks.title}, cardText=#{home.removeBlanks.desc}, cardLink='remove-blanks', svgPath='images/blank-file.svg')}"></div>
+                <div th:replace="~{fragments/card :: card(cardTitle=#{home.compare.title}, cardText=#{home.compare.desc}, cardLink='compare', svgPath='images/scales.svg')}"></div>
             </div>
         </div>
         <div th:insert="~{fragments/footer.html :: footer}"></div>

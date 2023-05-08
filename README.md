@@ -24,6 +24,8 @@ Feel free to request any features or bug fixes either in github issues or our [D
 - Add/Generate signatures
 - Flatten PDFs
 - Repair PDFs
+- Detect and remove blank pages
+- Compare 2 PDFs and show differences in text
 - Add images to PDFs
 - Rotating PDFs in 90 degree increments.
 - Compressing PDFs to decrease their filesize. (Using OCRMyPDF)
@@ -77,10 +79,12 @@ docker run -d \
   frooodle/s-pdf
   
   
-  Can also add these for customisation
+  Can also add these for customisation but are not required
   -e APP_HOME_NAME="Stirling PDF" \
   -e APP_HOME_DESCRIPTION="Your locally hosted one-stop-shop for all your PDF needs." \
   -e APP_NAVBAR_NAME="Stirling PDF" \
+  -e ALLOW_GOOGLE_VISABILITY="true" \
+  -e APP_LOCALE="en_GB" \
 ```
 Docker Compose
 ```
@@ -94,9 +98,11 @@ services:
       - /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata #Required for extra OCR languages
 #      - /location/of/extraConfigs:/configs
 #    environment:
+#      APP_LOCALE: en_GB
 #      APP_HOME_NAME: Stirling PDF
 #      APP_HOME_DESCRIPTION: Your locally hosted one-stop-shop for all your PDF needs.
 #      APP_NAVBAR_NAME: Stirling PDF
+#      ALLOW_GOOGLE_VISABILITY: true
 
 ```
 
@@ -122,7 +128,9 @@ Stirling PDF allows easy customization of the visible application name.
 Simply use environment variables APP_HOME_NAME, APP_HOME_DESCRIPTION and APP_NAVBAR_NAME with Docker or Java. 
 If running Java directly, you can also pass these as properties using -D arguments.
 
-Using the same method you can also change the default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR to select your default language (Will always default to English on invalid locale)
+Using the same method you can also change 
+- The default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR to select your default language (Will always default to English on invalid locale)
+- Enable/Disable search engine visablility with ALLOW_GOOGLE_VISABILITY with true / false values. Default disable visability.
 
 ## API
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation

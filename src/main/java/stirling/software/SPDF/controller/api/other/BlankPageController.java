@@ -30,8 +30,9 @@ public class BlankPageController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
     public ResponseEntity<byte[]> removeBlankPages(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile) throws IOException, InterruptedException {
+        PDDocument document = null;
         try {
-            PDDocument document = PDDocument.load(inputFile.getInputStream());
+            document = PDDocument.load(inputFile.getInputStream());
             PDPageTree pages = document.getDocumentCatalog().getPages();
             PDFTextStripper textStripper = new PDFTextStripper();
 
@@ -67,7 +68,7 @@ public class BlankPageController {
                 BufferedImage image = pdfRenderer.renderImageWithDPI(i - 1, 300);
                 ImageIO.write(image, "png", tempFile.toFile());
                 
-                List<String> command = new ArrayList<>(Arrays.asList("python3", "./scripts/detect-blank-pages.py", tempFile.toString())); 
+                List<String> command = new ArrayList<>(Arrays.asList("python3", System.getProperty("user.dir") + "scripts/detect-blank-pages.py", tempFile.toString())); 
 
                 // Run CLI command
                 int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV).runCommandWithOutputHandling(command);
@@ -81,12 +82,15 @@ public class BlankPageController {
             }
             
 
-            document.close();
+
             
             return PdfUtils.pdfDocToWebResponse(outputDocument, inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_blanksRemoved.pdf");
         } catch (IOException e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        } finally {
+            if(document != null)
+                document.close();
         }
     }
     

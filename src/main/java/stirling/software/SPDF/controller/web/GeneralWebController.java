@@ -84,9 +84,9 @@ public class GeneralWebController {
         if (allowGoogleVisibility == null)
             allowGoogleVisibility = System.getenv("ALLOW_GOOGLE_VISABILITY");
         if (allowGoogleVisibility == null)
-            allowGoogleVisibility = "true";
+            allowGoogleVisibility = "false";
         if (Boolean.parseBoolean(allowGoogleVisibility)) {
-            return "User-agent: Googlebot\nAllow: /\n\nUser-agent: *\nDisallow: /";
+            return "User-agent: Googlebot\nAllow: /\n\nUser-agent: *\nAllow: /";
         } else {
             return "User-agent: Googlebot\nDisallow: /\n\nUser-agent: *\nDisallow: /";
         }
