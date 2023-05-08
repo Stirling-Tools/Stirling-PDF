@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
 
 @RestController
@@ -22,9 +24,17 @@ public class RearrangePagesPDFController {
 
     private static final Logger logger = LoggerFactory.getLogger(RearrangePagesPDFController.class);
 
+
     @PostMapping(consumes = "multipart/form-data", value = "/remove-pages")
-    public ResponseEntity<byte[]> deletePages(@RequestPart(required = true, value = "fileInput") MultipartFile pdfFile, @RequestParam("pagesToDelete") String pagesToDelete)
-            throws IOException {
+    @Operation(summary = "Remove pages from a PDF file",
+            description = "This endpoint removes specified pages from a given PDF file. Users can provide a comma-separated list of page numbers or ranges to delete.")
+    public ResponseEntity<byte[]> deletePages(
+            @RequestPart(required = true, value = "fileInput")
+            @Parameter(description = "The input PDF file from which pages will be removed")
+                    MultipartFile pdfFile,
+            @RequestParam("pagesToDelete")
+            @Parameter(description = "Comma-separated list of pages or page ranges to delete, e.g., '1,3,5-8'")
+                    String pagesToDelete) throws IOException {
 
         PDDocument document = PDDocument.load(pdfFile.getBytes());
 
@@ -70,7 +80,15 @@ public class RearrangePagesPDFController {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/rearrange-pages")
-    public ResponseEntity<byte[]> rearrangePages(@RequestPart(required = true, value = "fileInput") MultipartFile pdfFile, @RequestParam("pageOrder") String pageOrder) {
+    @Operation(summary = "Rearrange pages in a PDF file",
+            description = "This endpoint rearranges pages in a given PDF file based on the specified page order. Users can provide a page order as a comma-separated list of page numbers or page ranges.")
+    public ResponseEntity<byte[]> rearrangePages(
+            @RequestPart(required = true, value = "fileInput")
+            @Parameter(description = "The input PDF file to rearrange pages")
+                    MultipartFile pdfFile,
+            @RequestParam("pageOrder")
+            @Parameter(description = "The new page order as a comma-separated list of page numbers or page ranges (e.g., '1,3,5-7')")
+                    String pageOrder) {
         try {
             // Load the input PDF
             PDDocument document = PDDocument.load(pdfFile.getInputStream());
