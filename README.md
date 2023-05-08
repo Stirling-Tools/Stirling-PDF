@@ -40,6 +40,8 @@ Feel free to request any features or bug fixes either in github issues or our [D
 - Parallel file processing and downloads
 - API for integration with external scripts 
 
+Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) hosted by the team at adminforge.de
+
 ## Technologies used
 - Spring Boot + Thymeleaf
 - PDFBox

@@ -1,25 +1,27 @@
 /* Dark Mode Styles */
 body {
-    background-color: #333  !important;
-    color: #fff  !important;
+    --body-background-color: 51, 51, 51;
+    --base-font-color: 255, 255, 255;
+    background-color: rgb(var(--body-background-color)) !important;
+    color: rgb(var(--base-font-color))  !important;
 }
 
 .dark-card {
-  background-color: #333 !important;
-  color: white !important;
+  background-color: rgb(var(--body-background-color)) !important;
+  color: rgb(var(--base-font-color)) !important;
 }
 .jumbotron {
   background-color: #222; /* or any other dark color */
-  color: #fff !important; /* or any other light color */
+  color: rgb(var(--base-font-color)) !important; /* or any other light color */
 }
 
 .list-group {
   background-color: #222 !important;
-  color: fff !important;
+  color: rgb(var(--base-font-color)) !important;
 }
 .list-group-item {
   background-color: #222 !important;
-  color: fff !important;
+  color: rgb(var(--base-font-color)) !important;
 }
 #support-section {
    background-color: #444 !important;
@@ -30,5 +32,5 @@ body {
   --background-color: rgba(255, 255, 255, 0.046) !important;
   --scroll-bar-color: #4c4c4c !important;
   --scroll-bar-thumb: #d3d3d3 !important;
-  --scroll-bar-thumb-hover: #ffffff !important;
+  --scroll-bar-thumb-hover: rgb(var(--base-font-color)) !important;
 }

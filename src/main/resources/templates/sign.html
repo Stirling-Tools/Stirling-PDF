@@ -3,70 +3,21 @@
 
 <head>
     <th:block th:insert="~{fragments/common :: head(title=#{sign.title})}"></th:block>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Signature App</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
-    <script src="https://unpkg.com/pdf-lib@1.18.0/dist/umd/pdf-lib.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.10.11/interact.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Estonia&family=Tangerine&family=Windsong&display=swap" rel="stylesheet">
-        
-    
-    <style>
-       #pdf-container {
-            position: relative;
-        }
+    <script src="js/signature_pad.umd.min.js"></script>
+    <script src="js/interact.min.js"></script>
 
-        #pdf-canvas {
-            border: 1px solid black;
-            margin-top: 10px;
-        }
-
-        #signature-canvas {
-            border: 1px solid red;
-            position: absolute;
-            touch-action: none;
-            top: 10px; /* Make sure this value matches the margin-top of #pdf-canvas */
-            left: 0;
-        }
-
-        #signature-pad-container {
-            border: 1px solid black;
-            display: block;
-            text-align: center;
-            padding: 15px;
-        }
-
-        #signature-pad-canvas {
-            background: rgba(125,125,125,0.2);
-        }
-
-        #pdf-canvas {
-            width: 100%;
-        }
-        #font-select option {
-            font-size: 30px; /* Set the font size as desired */
-        }
-        
-        #font-select option[value="Estonia"] {
-            font-family: 'Estonia', sans-serif;
-        }
-        
-        #font-select option[value="Tangerine"] {
-            font-family: 'Tangerine', cursive;
-        }
-        
-        #font-select option[value="Windsong"] {
-            font-family: 'Windsong', cursive;
-        }
-    </style>
 </head>
-
+<style>
+@font-face {
+  font-family: 'Estonia';
+  src: url(fonts/Estonia.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Tangerine';
+  src: url(fonts/Tangerine.woff2) format('woff2');
+}
+</style>
 <body>
-    <th:block th:insert="~{fragments/common.html :: game}"></th:block>
     <div id="page-container">
         <div id="content-wrap">
             <div th:insert="~{fragments/navbar.html :: navbar}"></div>
@@ -75,316 +26,264 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <h2 th:text="#{sign.header}"></h2>
+
+                        <!-- pdf selector -->
                         <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multiple=false, accept='application/pdf')}"></div>
+                        <script>
+                            document.querySelector('input[name=pdf-upload]').addEventListener('change', async (event) => {
+                                const file = event.target.files[0];
+                                if (file) {
+                                    const pdfData = await file.arrayBuffer();
+                                    const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
+                                    await DraggableUtils.renderPage(pdfDoc, 0);
 
-                        <div class = "btn-group">
-                            <input type="radio" class="btn-check" name="signature-type" id="draw-signature" autocomplete="off" checked>
-                            <label class="btn btn-outline-secondary" for="draw-signature">Draw</label>
-                            <input type="radio" class="btn-check" name="signature-type" id="import-image" autocomplete="off">
-                            <label class="btn btn-outline-secondary" for="import-image">Import</label>
-                            <input type="radio" class="btn-check" name="signature-type" id="type-signature" autocomplete="off">
-                            <label class="btn btn-outline-secondary" for="type-signature">Type</label>
-                        </div>
-                        
-                        <div th:replace="~{fragments/common :: fileSelector(name='signature-upload', multiple=false, accept='image/*', inputText=#{imgPrompt})}"></div>
-                        <!-- Signature Pad -->
-                        <div id="signature-pad-container">
-                            <canvas id="signature-pad-canvas"></canvas>
-                            <br>
-                            <button id="clear-signature" class="btn btn-outline-danger mt-2">Clear</button>
-                            <button id="save-signature" class="btn btn-outline-success mt-2">Save</button>
+                                    document.querySelectorAll(".show-on-file-selected").forEach(el => {
+                                        el.style.cssText = '';
+                                    })
+                                }
+                            });
+                            document.addEventListener("DOMContentLoaded", () => {
+                                document.querySelectorAll(".show-on-file-selected").forEach(el => {
+                                    el.style.cssText = "display:none !important";
+                                })
+                            });
+                        </script>
+
+                        <div class="tab-group show-on-file-selected">
+                            <div class="tab-container" th:title="#{sign.upload}">
+                                <div th:replace="~{fragments/common :: fileSelector(name='image-upload', multiple=true, accept='image/*', inputText=#{imgPrompt})}"></div>
+                                <script>
+                                    const imageUpload = document.querySelector('input[name=image-upload]');
+                                    imageUpload.addEventListener('change', e => {
+                                        if(!e.target.files) {
+                                            return;
+                                        }
+                                        for (const imageFile of e.target.files) {
+                                            var reader = new FileReader();
+                                            reader.readAsDataURL(imageFile);
+                                            reader.onloadend = function (e) {
+                                                DraggableUtils.createDraggableCanvasFromUrl(e.target.result);
+                                            };
+                                        }
+                                    });
+                                </script>
+                            </div>
+                            <div class="tab-container drawing-pad-container" th:title="#{sign.draw}">
+                                <canvas id="drawing-pad-canvas"></canvas>
+                                <br>
+                                <button id="clear-signature" class="btn btn-outline-danger mt-2" onclick="signaturePad.clear()" th:text="#{sign.clear}"></button>
+                                <button id="save-signature" class="btn btn-outline-success mt-2" onclick="addDraggableFromPad()" th:text="#{sign.add}"></button>
+                                <script>
+                                    const signaturePadCanvas = document.getElementById('drawing-pad-canvas');
+                                    const signaturePad = new SignaturePad(signaturePadCanvas, {
+                                        minWidth: 1,
+                                        maxWidth: 2,
+                                        penColor: 'black',
+                                    });
+                                    function addDraggableFromPad() {
+                                        if (signaturePad.isEmpty()) return;
+                                        const startTime = Date.now();
+                                        const croppedDataUrl = getCroppedCanvasDataUrl(signaturePadCanvas)
+                                        console.log(Date.now() - startTime);
+                                        DraggableUtils.createDraggableCanvasFromUrl(croppedDataUrl);
+                                    }
+                                    function getCroppedCanvasDataUrl(canvas) {
+                                        // code is from: https://github.com/szimek/signature_pad/issues/49#issuecomment-1104035775
+                                        let originalCtx = canvas.getContext('2d');
+
+                                        let originalWidth = canvas.width;
+                                        let originalHeight = canvas.height;
+                                        let imageData = originalCtx.getImageData(0,0, originalWidth, originalHeight);
+
+                                        let minX = originalWidth + 1, maxX = -1, minY = originalHeight + 1, maxY = -1, x = 0, y = 0, currentPixelColorValueIndex;
+
+                                        for (y = 0; y < originalHeight; y++) {
+                                            for (x = 0; x < originalWidth; x++) {
+                                                currentPixelColorValueIndex = (y * originalWidth + x) * 4;
+                                                let currentPixelAlphaValue = imageData.data[currentPixelColorValueIndex + 3];
+                                                if (currentPixelAlphaValue > 0) {
+                                                    if (minX > x) minX = x;
+                                                    if (maxX < x) maxX = x;
+                                                    if (minY > y) minY = y;
+                                                    if (maxY < y) maxY = y;
+                                                }
+                                            }
+                                        }
+
+                                        let croppedWidth = maxX - minX;
+                                        let croppedHeight = maxY - minY;
+                                        if (croppedWidth < 0 || croppedHeight < 0) return null;
+                                        let cuttedImageData = originalCtx.getImageData(minX, minY, croppedWidth, croppedHeight);
+
+                                        let croppedCanvas = document.createElement('canvas'),
+                                            croppedCtx    = croppedCanvas.getContext('2d');
+
+                                        croppedCanvas.width = croppedWidth;
+                                        croppedCanvas.height = croppedHeight;
+                                        croppedCtx.putImageData(cuttedImageData, 0, 0);
+
+                                        return croppedCanvas.toDataURL();
+                                    }
+                                    function resizeCanvas() {
+                                        // When zoomed out to less than 100%, for some very strange reason,
+                                        // some browsers report devicePixelRatio as less than 1
+                                        // and only part of the canvas is cleared then.
+                                        var ratio =  Math.max(window.devicePixelRatio || 1, 1);
+
+                                        // This part causes the canvas to be cleared
+                                        signaturePadCanvas.width = signaturePadCanvas.offsetWidth * ratio;
+                                        signaturePadCanvas.height = signaturePadCanvas.offsetHeight * ratio;
+                                        signaturePadCanvas.getContext("2d").scale(ratio, ratio);
+
+                                        // This library does not listen for canvas changes, so after the canvas is automatically
+                                        // cleared by the browser, SignaturePad#isEmpty might still return false, even though the
+                                        // canvas looks empty, because the internal data of this library wasn't cleared. To make sure
+                                        // that the state of this library is consistent with visual state of the canvas, you
+                                        // have to clear it manually.
+                                        signaturePad.clear();
+                                    }
+                                    new IntersectionObserver((entries, observer) => {
+                                        if (entries.some(entry => entry.intersectionRatio > 0)) {
+                                            resizeCanvas();
+                                        }
+                                    }).observe(signaturePadCanvas);
+                                    new ResizeObserver(resizeCanvas).observe(signaturePadCanvas);
+                                </script>
+                                <style>
+                                    .drawing-pad-container {
+                                        text-align: center;
+                                    }
+
+                                    #drawing-pad-canvas {
+                                        background: rgba(125,125,125,0.2);
+                                        width: 100%;
+                                        height: 300px;
+                                    }
+                                </style>
+                            </div>
+                            <div class="tab-container" th:title="#{sign.text}">
+                                <label class="form-check-label" for="sigText" th:text="#{text}"></label> 
+                                <input type="text" class="form-control" id="sigText" name="sigText">
+                                <label th:text="#{font}"></label> 
+                                <select class="form-control" name="font" id="font-select">
+                                    <option value="Estonia" class="estonia-font">Estonia</option>
+                                    <option value="Tangerine" class="tangerine-font">Tangerine</option>
+                                </select>
+                                <div class="margin-auto-parent">
+                                    <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
+                                </div>
+                                <script>
+                                    function addDraggableFromText() {
+                                        const sigText = document.getElementById('sigText').value;
+                                        const font = document.querySelector('select[name=font]').value;
+                                        const fontSize = 100;
+
+                                        const canvas = document.createElement('canvas');
+                                        const ctx = canvas.getContext('2d');
+                                        ctx.font = `${fontSize}px ${font}`;
+                                        const textWidth = ctx.measureText(sigText).width;
+                                        const textHeight = fontSize;
+
+                                        canvas.width = textWidth;
+                                        canvas.height = textHeight*1.35; //for tails
+                                        ctx.font = `${fontSize}px ${font}`;
+                                        ctx.fillText(sigText, 0, fontSize);
+
+                                        const dataURL = canvas.toDataURL();
+                                        DraggableUtils.createDraggableCanvasFromUrl(dataURL);
+                                    }
+                                </script>
+                                <style>
+                                    #font-select option {
+                                        font-size: 30px;
+                                    }
+                                    #font-select option[value="Estonia"] {
+                                        font-family: 'Estonia', sans-serif;
+                                    }
+                                    #font-select option[value="Tangerine"] {
+                                        font-family: 'Tangerine', cursive;
+                                    }
+                                    #font-select option[value="Windsong"] {
+                                        font-family: 'Windsong', cursive;
+                                    }
+                                </style>
+                            </div>
                         </div>
 
-                        <div id="signature-type-container">
-                            <label class="form-check-label" for="sigText">Signature</label> 
-                            <input type="text" class="form-control" id="sigText" name="sigText">
-                            <label>Font:</label> 
-                            <select class="form-control" name="font" id="font-select">
-                                <option value="Estonia" class="estonia-font">Estonia</option>
-                                <option value="Tangerine" class="tangerine-font">Tangerine</option>
-                                <option value="Windsong" class="windsong-font">Windsong</option>
-                            </select>
-                            <button id="save-text-signature" class="btn btn-outline-success mt-2">Save</button>
-                        </div>
-                        
-                        <div id="pdf-container">
+                        <!-- draggables box -->
+                        <div id="box-drag-container" class="show-on-file-selected">
                             <canvas id="pdf-canvas"></canvas>
-                            <canvas id="signature-canvas" hidden style="position: absolute;" data-scale="1"></canvas>
+                            <script src="js/draggable-utils.js"></script>
+                            <div class="draggable-buttons-box ignore-rtl">
+                                <button class="btn btn-outline-secondary" onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                                    </svg>
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="document.documentElement.getAttribute('lang-direction')==='rtl' ? DraggableUtils.incrementPage() : DraggableUtils.decrementPage()" style="margin-left:auto">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-left" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
+                                    </svg>
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="document.documentElement.getAttribute('lang-direction')==='rtl' ? DraggableUtils.decrementPage() : DraggableUtils.incrementPage()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-right" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <style>
+                                #box-drag-container {
+                                    position: relative;
+                                }
+                                #pdf-canvas {
+                                    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+                                    margin: 20px 0;
+                                    width: 100%;
+                                }
+                                .draggable-buttons-box {
+                                    position: absolute;
+                                    top: 20px;
+                                    padding: 10px;
+                                    width: 100%;
+                                    display: flex;
+                                    gap: 5px;
+                                }
+                                .draggable-buttons-box > button {
+                                    z-index: 10;
+                                    background-color: rgba(13, 110, 253, 0.1);
+                                }
+                                .draggable-canvas {
+                                    border: 1px solid red;
+                                    position: absolute;
+                                    touch-action: none;
+                                    user-select: none;
+                                    top: 0px;
+                                    left: 0;
+                                }
+                            </style>
                         </div>
 
-                        <button id="download-pdf" class="btn btn-primary mb-2">Download PDF</button>
+                        <!-- download button -->
+                        <div class="margin-auto-parent">
+                            <button id="download-pdf" class="btn btn-primary mb-2 show-on-file-selected margin-center">Download PDF</button>
+                        </div>
+                        <script>
+                            document.getElementById("download-pdf").addEventListener('click', async() => {
+                                const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
+                                const modifiedPdfBytes = await modifiedPdf.save();
+                                const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = 'signed-document.pdf';
+                                link.click();
+                            });
+                        </script>
                     </div>
                 </div>
             </div>
         </div>
         <div th:insert="~{fragments/footer.html :: footer}"></div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-        	
-        	const fontSelect = document.getElementById('font-select');
-            fontSelect.addEventListener('change', (event) => {
-                const selectedFont = event.target.value;
-                fontSelect.style.fontFamily = selectedFont;
-            });
-            fontSelect.style.fontFamily = fontSelect.value; 
-            
-            const pdfUpload = document.querySelector('input[name=pdf-upload]');
-            const signatureUpload = document.querySelector('input[name=signature-upload]');
-            const pdfCanvas = document.getElementById('pdf-canvas');
-            const signatureCanvas = document.getElementById('signature-canvas');
-            const downloadPdfBtn = document.getElementById('download-pdf');
-            const signaturePadContainer = document.getElementById('signature-pad-container')
-            const signaturePadCanvas = document.getElementById('signature-pad-canvas');
-            const clearSignatureBtn = document.getElementById('clear-signature');
-            const saveSignatureBtn = document.getElementById('save-signature');
-            const signatureTypeContainer = document.getElementById('signature-type-container');
-            document.querySelector('input[name=signature-upload]').closest(".custom-file-chooser").style.display = "none"
-            signatureTypeContainer.style.display =  'none';
-            const signaturePad = new SignaturePad(signaturePadCanvas, {
-                minWidth: 1,
-                maxWidth: 2,
-                penColor: 'black',
-            });
-
-            
-            const pdfCtx = pdfCanvas.getContext('2d');
-            let pdfDoc = null;
-
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
-
-            pdfUpload.addEventListener('change', async (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    const pdfData = await file.arrayBuffer();
-                    pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
-                    renderPage(1);
-                }
-            });
-
-            clearSignatureBtn.addEventListener('click', () => {
-                signaturePad.clear();
-            });
-
-            $("input[name=signature-type]").change(function() {
-                const drawSignatureInput = document.getElementById('draw-signature');
-                const importImageInput = document.getElementById('import-image');
-                const typeSignatureInput = document.getElementById('type-signature');
-                
-                signaturePadContainer.style.display = drawSignatureInput.checked ? 'block' : 'none';
-                signatureTypeContainer.style.display = typeSignatureInput.checked ? 'block' : 'none';
-                document.querySelector('input[name=signature-upload]').closest(".custom-file-chooser").style.display = importImageInput.checked ? 'block' : 'none';
-
-                if (drawSignatureInput.checked) {
-                    populateSignatureFromPad();
-                } else if (importImageInput.checked) {
-                    populateSignatureFromFileUpload();
-                }
-            });
-
-            
-            const saveTextSignatureBtn = document.getElementById('save-text-signature');
-            saveTextSignatureBtn.addEventListener('click', () => {
-                if (!document.getElementById('type-signature').checked) return;
-
-                const sigText = document.getElementById('sigText').value;
-                const font = document.querySelector('select[name=font]').value;
-                const fontSize = 50;
-
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                ctx.font = `${fontSize}px ${font}`;
-                const textWidth = ctx.measureText(sigText).width;
-                const textHeight = fontSize;
-
-                canvas.width = textWidth;
-                canvas.height = textHeight*1.35; //for tails
-                ctx.font = `${fontSize}px ${font}`;
-                ctx.fillText(sigText, 0, fontSize);
-
-                const dataURL = canvas.toDataURL();
-                populateSignature(dataURL);
-            });
-
-            
-            function populateSignature(imgUrl) {
-                const img = new Image();
-                img.onload = () => {
-                    const ctx = signatureCanvas.getContext('2d');
-                    ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
-                    signatureCanvas.width = img.width;
-                    signatureCanvas.height = img.height;
-                    ctx.drawImage(img, 0, 0, img.width, img.height);
-                    signatureCanvas.hidden = false;
-
-                    const x = 0;
-                    const y = 0;
-                    signatureCanvas.style.transform = `translate(${x}px, ${y}px)`;
-                    signatureCanvas.setAttribute('data-x', x);
-                    signatureCanvas.setAttribute('data-y', y);
-                    
-                    // calcualte the max size
-                    const containerWidth = parseInt(getComputedStyle(pdfCanvas).width.replace('px',''));
-                    const containerHeight = parseInt(getComputedStyle(pdfCanvas).height.replace('px',''));
-                    const containerAspectRatio = containerWidth / containerHeight;
-                    const imgAspectRatio = img.width / img.height;
-                    if (imgAspectRatio > containerAspectRatio) {
-                        const width = Math.min(img.width, containerWidth);
-                        signatureCanvas.style.width = width+'px';
-                        signatureCanvas.style.height = (width/imgAspectRatio)+'px';
-                    } else {
-                        const height = Math.min(img.height, containerHeight);
-                        signatureCanvas.style.width = (height*imgAspectRatio)+'px';
-                        signatureCanvas.style.height = height+'px';
-                    }
-                };
-                img.src = imgUrl;
-            }
-            function populateSignatureFromFileUpload() {
-                const file = signatureUpload.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (e) => populateSignature(e.target.result);
-                reader.readAsDataURL(file);
-            }
-            function populateSignatureFromPad() {
-            	if (!document.getElementById('draw-signature').checked) return;
-                if (signaturePad.isEmpty()) return;
-
-                const dataURL = signaturePad.toDataURL();
-                populateSignature(dataURL);
-            }
-            signatureUpload.addEventListener('change', populateSignatureFromFileUpload);
-            saveSignatureBtn.addEventListener('click', populateSignatureFromPad);
-
-
-            function renderPage(pageNum) {
-                pdfDoc.getPage(pageNum).then((page) => {
-                    const viewport = page.getViewport({ scale: 1 });
-                    pdfCanvas.width = viewport.width;
-                    pdfCanvas.height = viewport.height;
-
-                    const renderCtx = {
-                        canvasContext: pdfCtx,
-                        viewport: viewport,
-                    };
-
-                    page.render(renderCtx);
-                });
-            }
-
-            function parseTransform(element) {
-                const tansform = element.style.transform.replace(/[^.,-\d]/g, '');
-                const transformComponents = tansform.split(",");
-                return {
-                    x: parseFloat(transformComponents[0]),
-                    y: parseFloat(transformComponents[1]),
-                    width: element.offsetWidth,
-                    height: element.offsetHeight,
-                }
-            }
-            interact('#signature-canvas')
-            .draggable({
-                listeners: {
-                    move: (event) => {
-                        const target = event.target;
-                        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-                        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-
-                        target.style.transform = `translate(${x}px, ${y}px)`;
-                        target.setAttribute('data-x', x);
-                        target.setAttribute('data-y', y);
-                    },
-                },
-            })
-            .resizable({
-                edges: { left: true, right: true, bottom: true, top: true },
-                listeners: {
-                    move: (event) => {
-                        var target = event.target
-                        var x = (parseFloat(target.getAttribute('data-x')) || 0)
-                        var y = (parseFloat(target.getAttribute('data-y')) || 0)
-
-                        // update the element's style
-                        target.style.width = event.rect.width + 'px'
-                        target.style.height = event.rect.height + 'px'
-
-                        // translate when resizing from top or left edges
-                        x += event.deltaRect.left
-                        y += event.deltaRect.top
-
-                        target.style.transform = 'translate(' + x + 'px,' + y + 'px)'
-
-                        target.setAttribute('data-x', x)
-                        target.setAttribute('data-y', y)
-                        target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
-                    },
-                },
-                modifiers: [
-                    interact.modifiers.restrictSize({
-                        min: { width: 50, height: 50 },
-                    }),
-                ],
-                inertia: true,
-            });
-
-
-            async function getSignatureImage() {
-                const dataURL = signatureCanvas.toDataURL();
-                return dataURLToArrayBuffer(dataURL);
-            }
-
-            downloadPdfBtn.addEventListener('click', async () => {
-                if (pdfDoc) {
-                    const pdfBytes = await pdfDoc.getData();
-                    const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes);
-
-                    if (signatureCanvas) {
-                        const signatureBytes = await getSignatureImage();
-                        const signatureImageObject = await pdfDocModified.embedPng(signatureBytes);
-
-                        const pageIndex = 0; // Choose the page index where the signature should be added (0 is the first page)
-                        const page = pdfDocModified.getPages()[pageIndex];
-
-                        const signatureCanvasPositionPixels = parseTransform(signatureCanvas);
-                        const signatureCanvasPositionRelative = {
-                            x: signatureCanvasPositionPixels.x / pdfCanvas.offsetWidth,
-                            y: signatureCanvasPositionPixels.y / pdfCanvas.offsetHeight,
-                            width: signatureCanvasPositionPixels.width / pdfCanvas.offsetWidth,
-                            height: signatureCanvasPositionPixels.height / pdfCanvas.offsetHeight,
-                        }
-                        const signaturePositionPdf = {
-                            x: signatureCanvasPositionRelative.x * page.getWidth(),
-                            y: signatureCanvasPositionRelative.y * page.getHeight(),
-                            width: signatureCanvasPositionRelative.width * page.getWidth(),
-                            height: signatureCanvasPositionRelative.height * page.getHeight(),
-                        }
-
-                        page.drawImage(signatureImageObject, {
-                            x: signaturePositionPdf.x,
-                            y: page.getHeight() - signaturePositionPdf.y - signaturePositionPdf.height,
-                            width: signaturePositionPdf.width,
-                            height: signaturePositionPdf.height,
-                        });
-
-                    }
-
-                    const modifiedPdfBytes = await pdfDocModified.save();
-                    const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = 'signed-document.pdf';
-                    link.click();
-                }
-            });
-
-            async function dataURLToArrayBuffer(dataURL) {
-                const response = await fetch(dataURL);
-                return response.arrayBuffer();
-            }
-            
-        });
-    </script>
 </body>
 </html>
