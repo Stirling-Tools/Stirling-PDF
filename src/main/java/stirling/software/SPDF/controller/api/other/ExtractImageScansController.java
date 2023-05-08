@@ -82,7 +82,7 @@ public class ExtractImageScansController {
         for (int i = 0; i < images.size(); i++) {
 
             Path tempDir = Files.createTempDirectory("openCV_output");
-            List<String> command = new ArrayList<>(Arrays.asList("python3", "/scripts/split_photos.py", images.get(i), tempDir.toString(), String.valueOf(angleThreshold),
+            List<String> command = new ArrayList<>(Arrays.asList("python3", "./scripts/split_photos.py", images.get(i), tempDir.toString(), String.valueOf(angleThreshold),
                     String.valueOf(tolerance), String.valueOf(minArea), String.valueOf(minContourArea), String.valueOf(borderSize)));
 
             // Run CLI command
