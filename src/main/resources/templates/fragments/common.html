@@ -27,6 +27,7 @@
 
 <!-- Custom -->
 <link rel="stylesheet" href="css/general.css">
+<link rel="stylesheet" th:href="@{css/light-mode.css}" id="light-mode-styles">
 <link rel="stylesheet" th:href="@{css/dark-mode.css}" id="dark-mode-styles">
 <link rel="stylesheet" th:href="@{css/rainbow-mode.css}" id="rainbow-mode-styles" disabled="true">
 <link rel="stylesheet" href="css/tab-container.css">
@@ -46,22 +47,26 @@ function toggleDarkMode() {
   }
   lastToggleTime = currentTime;
 
+  var lightModeStyles = document.getElementById("light-mode-styles");
   var darkModeStyles = document.getElementById("dark-mode-styles");
   var rainbowModeStyles = document.getElementById("rainbow-mode-styles");
   var darkModeIcon = document.getElementById("dark-mode-icon");
 
   if (toggleCount >= 18) {
     localStorage.setItem("dark-mode", "rainbow");
+    lightModeStyles.disabled = true;
     darkModeStyles.disabled = true;
     rainbowModeStyles.disabled = false;
     darkModeIcon.src = "rainbow.svg";
   } else if (localStorage.getItem("dark-mode") == "on") {
     localStorage.setItem("dark-mode", "off");
+    lightModeStyles.disabled = false;
     darkModeStyles.disabled = true;
     rainbowModeStyles.disabled = true;
     darkModeIcon.src = "sun.svg";
   } else {
     localStorage.setItem("dark-mode", "on");
+    lightModeStyles.disabled = true;
     darkModeStyles.disabled = false;
     rainbowModeStyles.disabled = true;
     darkModeIcon.src = "moon.svg";
@@ -69,19 +74,23 @@ function toggleDarkMode() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  var lightModeStyles = document.getElementById("light-mode-styles");
   var darkModeStyles = document.getElementById("dark-mode-styles");
   var rainbowModeStyles = document.getElementById("rainbow-mode-styles");
   var darkModeIcon = document.getElementById("dark-mode-icon");
 
   if (localStorage.getItem("dark-mode") == "on") {
+    lightModeStyles.disabled = true;
     darkModeStyles.disabled = false;
     rainbowModeStyles.disabled = true;
     darkModeIcon.src = "moon.svg";
   } else if (localStorage.getItem("dark-mode") == "off") {
+    lightModeStyles.disabled = false;
     darkModeStyles.disabled = true;
     rainbowModeStyles.disabled = true;
     darkModeIcon.src = "sun.svg";
   } else if (localStorage.getItem("dark-mode") == "rainbow") {
+    lightModeStyles.disabled = true;
     darkModeStyles.disabled = true;
     rainbowModeStyles.disabled = false;
     darkModeIcon.src = "rainbow.svg";

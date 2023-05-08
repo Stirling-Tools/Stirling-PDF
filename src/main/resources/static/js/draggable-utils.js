@@ -66,7 +66,7 @@ const DraggableUtils = {
         createdCanvas.classList.add("draggable-canvas");
 
         const x = 0;
-        const y = 0;
+        const y = 20;
         createdCanvas.style.transform = `translate(${x}px, ${y}px)`;
         createdCanvas.setAttribute('data-x', x);
         createdCanvas.setAttribute('data-y', y);

@@ -81,9 +81,72 @@
                                     });
                                     function addDraggableFromPad() {
                                         if (signaturePad.isEmpty()) return;
-                                        const dataURL = signaturePad.toDataURL();
-                                        DraggableUtils.createDraggableCanvasFromUrl(dataURL);
+                                        const startTime = Date.now();
+                                        const croppedDataUrl = getCroppedCanvasDataUrl(signaturePadCanvas)
+                                        console.log(Date.now() - startTime);
+                                        DraggableUtils.createDraggableCanvasFromUrl(croppedDataUrl);
                                     }
+                                    function getCroppedCanvasDataUrl(canvas) {
+                                        // code is from: https://github.com/szimek/signature_pad/issues/49#issuecomment-1104035775
+                                        let originalCtx = canvas.getContext('2d');
+
+                                        let originalWidth = canvas.width;
+                                        let originalHeight = canvas.height;
+                                        let imageData = originalCtx.getImageData(0,0, originalWidth, originalHeight);
+
+                                        let minX = originalWidth + 1, maxX = -1, minY = originalHeight + 1, maxY = -1, x = 0, y = 0, currentPixelColorValueIndex;
+
+                                        for (y = 0; y < originalHeight; y++) {
+                                            for (x = 0; x < originalWidth; x++) {
+                                                currentPixelColorValueIndex = (y * originalWidth + x) * 4;
+                                                let currentPixelAlphaValue = imageData.data[currentPixelColorValueIndex + 3];
+                                                if (currentPixelAlphaValue > 0) {
+                                                    if (minX > x) minX = x;
+                                                    if (maxX < x) maxX = x;
+                                                    if (minY > y) minY = y;
+                                                    if (maxY < y) maxY = y;
+                                                }
+                                            }
+                                        }
+
+                                        let croppedWidth = maxX - minX;
+                                        let croppedHeight = maxY - minY;
+                                        if (croppedWidth < 0 || croppedHeight < 0) return null;
+                                        let cuttedImageData = originalCtx.getImageData(minX, minY, croppedWidth, croppedHeight);
+
+                                        let croppedCanvas = document.createElement('canvas'),
+                                            croppedCtx    = croppedCanvas.getContext('2d');
+
+                                        croppedCanvas.width = croppedWidth;
+                                        croppedCanvas.height = croppedHeight;
+                                        croppedCtx.putImageData(cuttedImageData, 0, 0);
+
+                                        return croppedCanvas.toDataURL();
+                                    }
+                                    function resizeCanvas() {
+                                        // When zoomed out to less than 100%, for some very strange reason,
+                                        // some browsers report devicePixelRatio as less than 1
+                                        // and only part of the canvas is cleared then.
+                                        var ratio =  Math.max(window.devicePixelRatio || 1, 1);
+
+                                        // This part causes the canvas to be cleared
+                                        signaturePadCanvas.width = signaturePadCanvas.offsetWidth * ratio;
+                                        signaturePadCanvas.height = signaturePadCanvas.offsetHeight * ratio;
+                                        signaturePadCanvas.getContext("2d").scale(ratio, ratio);
+
+                                        // This library does not listen for canvas changes, so after the canvas is automatically
+                                        // cleared by the browser, SignaturePad#isEmpty might still return false, even though the
+                                        // canvas looks empty, because the internal data of this library wasn't cleared. To make sure
+                                        // that the state of this library is consistent with visual state of the canvas, you
+                                        // have to clear it manually.
+                                        signaturePad.clear();
+                                    }
+                                    new IntersectionObserver((entries, observer) => {
+                                        if (entries.some(entry => entry.intersectionRatio > 0)) {
+                                            resizeCanvas();
+                                        }
+                                    }).observe(signaturePadCanvas);
+                                    new ResizeObserver(resizeCanvas).observe(signaturePadCanvas);
                                 </script>
                                 <style>
                                     .drawing-pad-container {
@@ -92,6 +155,8 @@
 
                                     #drawing-pad-canvas {
                                         background: rgba(125,125,125,0.2);
+                                        width: 100%;
+                                        height: 300px;
                                     }
                                 </style>
                             </div>
@@ -186,7 +251,7 @@
                                 }
                                 .draggable-buttons-box > button {
                                     z-index: 10;
-                                    background: rgba(13, 110, 253, 0.1);
+                                    background-color: rgba(13, 110, 253, 0.1);
                                 }
                                 .draggable-canvas {
                                     border: 1px solid red;
