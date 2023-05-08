@@ -113,7 +113,9 @@ const DraggableUtils = {
         })
     },
     deleteDraggableCanvas(element) {
-        element.remove();
+        if (element) {
+            element.remove();
+        }
     },
     deleteDraggableCanvasById(id) {
         this.deleteDraggableCanvas(document.getElementById(id));
