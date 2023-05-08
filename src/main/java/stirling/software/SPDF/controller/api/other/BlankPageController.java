@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import stirling.software.SPDF.utils.ImageFinder;
+import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
 import java.awt.image.BufferedImage;
@@ -45,13 +46,13 @@ public class BlankPageController {
                 boolean hasText = !pageText.trim().isEmpty();
                 if (hasText) {
                 	pagesToKeepIndex.add(pageIndex);
-                	System.out.print("page " + pageIndex + " has text");
+                	System.out.println("page " + pageIndex + " has text");
                 	continue;
                 }
                 boolean hasImages = hasImagesOnPage(page);
                 if (hasImages) {
                 	pagesToKeepIndex.add(pageIndex);
-                	System.out.print("page " + pageIndex + " has image");
+                	System.out.println("page " + pageIndex + " has image");
                     continue;
                 }
             }
@@ -66,7 +67,7 @@ public class BlankPageController {
                 BufferedImage image = pdfRenderer.renderImageWithDPI(i - 1, 300);
                 ImageIO.write(image, "png", tempFile.toFile());
                 
-                List<String> command = new ArrayList<>(Arrays.asList("python3", "/scripts/detect-blank-pages.py", tempFile.toString())); 
+                List<String> command = new ArrayList<>(Arrays.asList("python3", "./scripts/detect-blank-pages.py", tempFile.toString())); 
 
                 // Run CLI command
                 int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV).runCommandWithOutputHandling(command);
@@ -78,13 +79,11 @@ public class BlankPageController {
                 	System.out.print("Found blank page skipping, page #" + i);
                 }
             }
+            
 
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            outputDocument.save(outputStream);
-            outputDocument.close();
             document.close();
-
-            return new ResponseEntity<>(outputStream.toByteArray(), HttpStatus.OK);
+            
+            return PdfUtils.pdfDocToWebResponse(outputDocument, inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_blanksRemoved.pdf");
         } catch (IOException e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -96,8 +95,4 @@ public class BlankPageController {
         imageFinder.processPage(page);
         return imageFinder.hasImages();
     }
-    
-    
-
-    // ... rest of the code (ImageFinder class and hasImagesOnPage method)
 }
