@@ -26,15 +26,25 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 @RestController
 public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
-    public ResponseEntity<byte[]> extractImages(@RequestPart(required = true, value = "fileInput") MultipartFile file, @RequestParam("format") String format) throws IOException {
+    @Operation(summary = "Extract images from a PDF file",
+            description = "This endpoint extracts images from a given PDF file and returns them in a zip file. Users can specify the output image format.")
+    public ResponseEntity<byte[]> extractImages(
+            @RequestPart(required = true, value = "fileInput")
+            @Parameter(description = "The input PDF file containing images")
+                    MultipartFile file,
+            @RequestParam("format")
+            @Parameter(description = "The output image format e.g., 'png', 'jpeg', or 'gif'", schema = @Schema(allowableValues = {"png", "jpeg", "gif"}))
+                    String format) throws IOException {
 
         System.out.println(System.currentTimeMillis() + "file=" + file.getName() + ", format=" + format);
         PDDocument document = PDDocument.load(file.getBytes());

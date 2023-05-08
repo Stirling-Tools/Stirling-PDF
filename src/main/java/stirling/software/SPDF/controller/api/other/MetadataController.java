@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
 
 @RestController
@@ -35,13 +37,44 @@ public class MetadataController {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/update-metadata")
-    public ResponseEntity<byte[]> metadata(@RequestPart(required = true, value = "fileInput") MultipartFile pdfFile,
-            @RequestParam(value = "deleteAll", required = false, defaultValue = "false") Boolean deleteAll, @RequestParam(value = "author", required = false) String author,
-            @RequestParam(value = "creationDate", required = false) String creationDate, @RequestParam(value = "creator", required = false) String creator,
-            @RequestParam(value = "keywords", required = false) String keywords, @RequestParam(value = "modificationDate", required = false) String modificationDate,
-            @RequestParam(value = "producer", required = false) String producer, @RequestParam(value = "subject", required = false) String subject,
-            @RequestParam(value = "title", required = false) String title, @RequestParam(value = "trapped", required = false) String trapped,
-            @RequestParam Map<String, String> allRequestParams) throws IOException {
+    @Operation(summary = "Update metadata of a PDF file",
+            description = "This endpoint allows you to update the metadata of a given PDF file. You can add, modify, or delete standard and custom metadata fields.")
+    public ResponseEntity<byte[]> metadata(
+            @RequestPart(required = true, value = "fileInput")
+            @Parameter(description = "The input PDF file to update metadata")
+                    MultipartFile pdfFile,
+            @RequestParam(value = "deleteAll", required = false, defaultValue = "false")
+            @Parameter(description = "Delete all metadata if set to true")
+                    Boolean deleteAll,
+            @RequestParam(value = "author", required = false)
+            @Parameter(description = "The author of the document")
+                    String author,
+            @RequestParam(value = "creationDate", required = false)
+            @Parameter(description = "The creation date of the document (format: yyyy/MM/dd HH:mm:ss)")
+                    String creationDate,
+            @RequestParam(value = "creator", required = false)
+            @Parameter(description = "The creator of the document")
+                    String creator,
+            @RequestParam(value = "keywords", required = false)
+            @Parameter(description = "The keywords for the document")
+                    String keywords,
+            @RequestParam(value = "modificationDate", required = false)
+            @Parameter(description = "The modification date of the document (format: yyyy/MM/dd HH:mm:ss)")
+                    String modificationDate,
+            @RequestParam(value = "producer", required = false)
+            @Parameter(description = "The producer of the document")
+                    String producer,
+            @RequestParam(value = "subject", required = false)
+            @Parameter(description = "The subject of the document")
+                    String subject,
+            @RequestParam(value = "title", required = false)
+            @Parameter(description = "The title of the document")
+                    String title,
+            @RequestParam(value = "trapped", required = false)
+            @Parameter(description = "The trapped status of the document")
+                    String trapped,
+            @RequestParam Map<String, String> allRequestParams)
+            throws IOException {
 
         // Load the PDF file into a PDDocument
         PDDocument document = PDDocument.load(pdfFile.getBytes());

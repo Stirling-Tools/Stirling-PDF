@@ -29,6 +29,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
@@ -38,10 +40,27 @@ public class ExtractImageScansController {
     private static final Logger logger = LoggerFactory.getLogger(ExtractImageScansController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
-    public ResponseEntity<byte[]> extractImageScans(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile,
-            @RequestParam(name = "angle_threshold", defaultValue = "5") int angleThreshold, @RequestParam(name = "tolerance", defaultValue = "20") int tolerance,
-            @RequestParam(name = "min_area", defaultValue = "8000") int minArea, @RequestParam(name = "min_contour_area", defaultValue = "500") int minContourArea,
-            @RequestParam(name = "border_size", defaultValue = "1") int borderSize) throws IOException, InterruptedException {
+    @Operation(summary = "Extract image scans from an input file",
+            description = "This endpoint extracts image scans from a given file based on certain parameters. Users can specify angle threshold, tolerance, minimum area, minimum contour area, and border size.")
+    public ResponseEntity<byte[]> extractImageScans(
+            @RequestPart(required = true, value = "fileInput")
+            @Parameter(description = "The input file containing image scans")
+                    MultipartFile inputFile,
+            @RequestParam(name = "angle_threshold", defaultValue = "5")
+            @Parameter(description = "The angle threshold for the image scan extraction", example = "5")
+                    int angleThreshold,
+            @RequestParam(name = "tolerance", defaultValue = "20")
+            @Parameter(description = "The tolerance for the image scan extraction", example = "20")
+                    int tolerance,
+            @RequestParam(name = "min_area", defaultValue = "8000")
+            @Parameter(description = "The minimum area for the image scan extraction", example = "8000")
+                    int minArea,
+            @RequestParam(name = "min_contour_area", defaultValue = "500")
+            @Parameter(description = "The minimum contour area for the image scan extraction", example = "500")
+                    int minContourArea,
+            @RequestParam(name = "border_size", defaultValue = "1")
+            @Parameter(description = "The border size for the image scan extraction", example = "1")
+                    int borderSize) throws IOException, InterruptedException {
 
         String fileName = inputFile.getOriginalFilename();
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1);

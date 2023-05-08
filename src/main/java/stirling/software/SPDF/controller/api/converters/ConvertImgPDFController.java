@@ -17,16 +17,34 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 @RestController
 public class ConvertImgPDFController {
 
     private static final Logger logger = LoggerFactory.getLogger(ConvertImgPDFController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf-to-img")
-    public ResponseEntity<Resource> convertToImage(@RequestPart(required = true, value = "fileInput") MultipartFile file, @RequestParam("imageFormat") String imageFormat,
-            @RequestParam("singleOrMultiple") String singleOrMultiple, @RequestParam("colorType") String colorType, @RequestParam("dpi") String dpi) throws IOException {
+    @Operation(summary = "Convert PDF to image(s)",
+            description = "This endpoint converts a PDF file to image(s) with the specified image format, color type, and DPI. Users can choose to get a single image or multiple images.")
+    public ResponseEntity<Resource> convertToImage(
+            @RequestPart(required = true, value = "fileInput")
+            @Parameter(description = "The input PDF file to be converted")
+                    MultipartFile file,
+            @RequestParam("imageFormat")
+            @Parameter(description = "The output image format", schema = @Schema(allowableValues = {"png", "jpeg", "jpg", "gif"}))
+                    String imageFormat,
+            @RequestParam("singleOrMultiple")
+            @Parameter(description = "Choose between a single image containing all pages or separate images for each page", schema = @Schema(allowableValues = {"single", "multiple"}))
+                    String singleOrMultiple,
+            @RequestParam("colorType")
+            @Parameter(description = "The color type of the output image(s)", schema = @Schema(allowableValues = {"rgb", "greyscale", "blackwhite"}))
+                    String colorType,
+            @RequestParam("dpi")
+            @Parameter(description = "The DPI (dots per inch) for the output image(s)")
+                    String dpi) throws IOException {
 
         byte[] pdfBytes = file.getBytes();
         ImageType colorTypeResult = ImageType.RGB;
@@ -62,9 +80,18 @@ public class ConvertImgPDFController {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/img-to-pdf")
-    public ResponseEntity<byte[]> convertToPdf(@RequestPart(required = true, value = "fileInput") MultipartFile[] file,
-            @RequestParam(defaultValue = "false", name = "stretchToFit") boolean stretchToFit, @RequestParam(defaultValue = "true", name = "autoRotate") boolean autoRotate)
-            throws IOException {
+    @Operation(summary = "Convert images to a PDF file",
+            description = "This endpoint converts one or more images to a PDF file. Users can specify whether to stretch the images to fit the PDF page, and whether to automatically rotate the images.")
+    public ResponseEntity<byte[]> convertToPdf(
+            @RequestPart(required = true, value = "fileInput")
+            @Parameter(description = "The input images to be converted to a PDF file")
+                    MultipartFile[] file,
+            @RequestParam(defaultValue = "false", name = "stretchToFit")
+            @Parameter(description = "Whether to stretch the images to fit the PDF page or maintain the aspect ratio", example = "false")
+                    boolean stretchToFit,
+            @RequestParam(defaultValue = "true", name = "autoRotate")
+            @Parameter(description = "Whether to automatically rotate the images to better fit the PDF page", example = "true")
+                    boolean autoRotate) throws IOException {
         // Convert the file to PDF and get the resulting bytes
         System.out.println(stretchToFit);
         byte[] bytes = PdfUtils.imageToPdf(file, stretchToFit, autoRotate);
