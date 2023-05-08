@@ -95,4 +95,11 @@ public class OtherWebController {
         return "other/repair";
     }
     
+    @GetMapping("/remove-blanks")
+    @Hidden
+    public String removeBlanksForm(Model model) {
+        model.addAttribute("currentPage", "remove-blanks");
+        return "other/remove-blanks";
+    }
+    
 }
