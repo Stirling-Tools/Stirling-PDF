@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import stirling.software.SPDF.utils.PDFToFile;
-
 @RestController
 public class ConvertPDFToOffice {
 
@@ -23,22 +25,43 @@ public class ConvertPDFToOffice {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf-to-presentation")
-    public ResponseEntity<byte[]> processPdfToPresentation(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile,
-            @RequestParam("outputFormat") String outputFormat) throws IOException, InterruptedException {
+    @Operation(summary = "Convert PDF to Presentation format",
+            description = "This endpoint converts a given PDF file to a Presentation format.")
+    public ResponseEntity<byte[]> processPdfToPresentation(
+            @RequestPart(required = true, value = "fileInput")
+            @Parameter(description = "The input PDF file")
+                    MultipartFile inputFile,
+            @RequestParam("outputFormat")
+            @Parameter(description = "The output Presentation format", schema = @Schema(allowableValues = {"ppt", "pptx", "odp"}))
+                    String outputFormat) throws IOException, InterruptedException {
         PDFToFile pdfToFile = new PDFToFile();
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "impress_pdf_import");
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf-to-text")
-    public ResponseEntity<byte[]> processPdfToRTForTXT(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile,
-            @RequestParam("outputFormat") String outputFormat) throws IOException, InterruptedException {
+    @Operation(summary = "Convert PDF to Text or RTF format",
+            description = "This endpoint converts a given PDF file to Text or RTF format.")
+    public ResponseEntity<byte[]> processPdfToRTForTXT(
+            @RequestPart(required = true, value = "fileInput")
+            @Parameter(description = "The input PDF file")
+                    MultipartFile inputFile,
+            @RequestParam("outputFormat")
+            @Parameter(description = "The output Text or RTF format", schema = @Schema(allowableValues = {"rtf", "txt:Text"}))
+                    String outputFormat) throws IOException, InterruptedException {
         PDFToFile pdfToFile = new PDFToFile();
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf-to-word")
-    public ResponseEntity<byte[]> processPdfToWord(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile, @RequestParam("outputFormat") String outputFormat)
-            throws IOException, InterruptedException {
+    @Operation(summary = "Convert PDF to Word document",
+            description = "This endpoint converts a given PDF file to a Word document format.")
+    public ResponseEntity<byte[]> processPdfToWord(
+            @RequestPart(required = true, value = "fileInput")
+            @Parameter(description = "The input PDF file")
+                    MultipartFile inputFile,
+            @RequestParam("outputFormat")
+            @Parameter(description = "The output Word document format", schema = @Schema(allowableValues = {"doc", "docx", "odt"}))
+                    String outputFormat) throws IOException, InterruptedException {
         PDFToFile pdfToFile = new PDFToFile();
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
     }

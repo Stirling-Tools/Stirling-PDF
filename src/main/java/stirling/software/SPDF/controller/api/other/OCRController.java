@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
@@ -43,13 +46,36 @@ public class OCRController {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
-    public ResponseEntity<byte[]> processPdfWithOCR(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile,
-            @RequestParam("languages") List<String> selectedLanguages, @RequestParam(name = "sidecar", required = false) Boolean sidecar,
-            @RequestParam(name = "deskew", required = false) Boolean deskew, @RequestParam(name = "clean", required = false) Boolean clean,
-            @RequestParam(name = "clean-final", required = false) Boolean cleanFinal, @RequestParam(name = "ocrType", required = false) String ocrType,
-            @RequestParam(name = "ocrRenderType", required = false, defaultValue = "hocr") String ocrRenderType,
-            @RequestParam(name = "removeImagesAfter", required = false) Boolean removeImagesAfter)
-            throws IOException, InterruptedException {
+    @Operation(summary = "Process a PDF file with OCR",
+            description = "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options.")
+    public ResponseEntity<byte[]> processPdfWithOCR(
+            @RequestPart(required = true, value = "fileInput")
+            @Parameter(description = "The input PDF file to be processed with OCR")
+                    MultipartFile inputFile,
+            @RequestParam("languages")
+            @Parameter(description = "List of languages to use in OCR processing")
+                    List<String> selectedLanguages,
+            @RequestParam(name = "sidecar", required = false)
+            @Parameter(description = "Include OCR text in a sidecar text file if set to true")
+                    Boolean sidecar,
+            @RequestParam(name = "deskew", required = false)
+            @Parameter(description = "Deskew the input file if set to true")
+                    Boolean deskew,
+            @RequestParam(name = "clean", required = false)
+            @Parameter(description = "Clean the input file if set to true")
+                    Boolean clean,
+            @RequestParam(name = "clean-final", required = false)
+            @Parameter(description = "Clean the final output if set to true")
+                    Boolean cleanFinal,
+            @RequestParam(name = "ocrType", required = false)
+            @Parameter(description = "Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'", schema = @Schema(allowableValues = {"skip-text", "force-ocr", "Normal"}))
+                    String ocrType,
+            @RequestParam(name = "ocrRenderType", required = false, defaultValue = "hocr")
+            @Parameter(description = "Specify the OCR render type, either 'hocr' or 'sandwich'", schema = @Schema(allowableValues = {"hocr", "sandwich"}))
+                    String ocrRenderType,
+            @RequestParam(name = "removeImagesAfter", required = false)
+            @Parameter(description = "Remove images from the output PDF if set to true")
+                    Boolean removeImagesAfter) throws IOException, InterruptedException {
 
         // --output-type pdfa
         if (selectedLanguages == null || selectedLanguages.isEmpty()) {

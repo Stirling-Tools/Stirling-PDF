@@ -78,6 +78,7 @@ public class GeneralWebController {
 
     @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
     @ResponseBody
+    @Hidden
     public String getRobotsTxt() {
         String allowGoogleVisibility = System.getProperty("ALLOW_GOOGLE_VISABILITY");
         if (allowGoogleVisibility == null)
