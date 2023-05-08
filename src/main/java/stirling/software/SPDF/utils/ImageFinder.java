@@ -1,5 +1,9 @@
 package stirling.software.SPDF.utils;
 
+import java.awt.geom.Point2D;
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.pdfbox.contentstream.operator.Operator;
 import org.apache.pdfbox.contentstream.operator.OperatorName;
 import org.apache.pdfbox.cos.COSBase;
@@ -9,10 +13,6 @@ import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-
-import java.awt.geom.Point2D;
-import java.io.IOException;
-import java.util.List;
 
 public class ImageFinder extends org.apache.pdfbox.contentstream.PDFGraphicsStreamEngine {
     private boolean hasImages = false;
