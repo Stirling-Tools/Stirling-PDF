@@ -5,6 +5,7 @@ const DraggableUtils = {
     nextId: 0,
     pdfDoc: null,
     pageIndex: 0,
+    documentsMap: new Map(),
 
     init() {
         interact('.draggable-canvas')
@@ -112,21 +113,54 @@ const DraggableUtils = {
             }
         })
     },
+    deleteAllDraggableCanvases() {
+        this.boxDragContainer.querySelectorAll(".draggable-canvas").forEach(el => el.remove());
+    },
     deleteDraggableCanvas(element) {
         if (element) {
             element.remove();
         }
     },
-    deleteDraggableCanvasById(id) {
-        this.deleteDraggableCanvas(document.getElementById(id));
-    },
     getLastInteracted() {
         return this.boxDragContainer.querySelector(".draggable-canvas:last-of-type");
+    },
+
+    storePageContents() {
+        var pagesMap = this.documentsMap.get(this.pdfDoc);
+        if (!pagesMap) {
+            pagesMap = {};
+        }
+        
+        const elements = [...this.boxDragContainer.querySelectorAll(".draggable-canvas")];
+        const draggablesData = elements.map(el => {return{element:el, offsetWidth:el.offsetWidth, offsetHeight:el.offsetHeight}});
+        elements.forEach(el => this.boxDragContainer.removeChild(el));
+
+        pagesMap[this.pageIndex] = draggablesData;
+        pagesMap[this.pageIndex+"-offsetWidth"] = this.pdfCanvas.offsetWidth;
+        pagesMap[this.pageIndex+"-offsetHeight"] = this.pdfCanvas.offsetHeight;
+
+        this.documentsMap.set(this.pdfDoc, pagesMap);
+    },
+    loadPageContents() {
+        var pagesMap = this.documentsMap.get(this.pdfDoc);
+        this.deleteAllDraggableCanvases();
+        if (!pagesMap) {
+            return;
+        }
+        
+        const draggablesData = pagesMap[this.pageIndex];
+        if (draggablesData) {
+            draggablesData.forEach(draggableData => this.boxDragContainer.appendChild(draggableData.element));
+        }
+
+        this.documentsMap.set(this.pdfDoc, pagesMap);
     },
 
     async renderPage(pdfDocument, pageIdx) {
         this.pdfDoc = pdfDocument ? pdfDocument : this.pdfDoc;
         this.pageIndex = pageIdx;
+
+        // persist 
         const page = await this.pdfDoc.getPage(this.pageIndex+1);
 
         // set the canvas size to the size of the page
@@ -149,61 +183,79 @@ const DraggableUtils = {
     },
     async incrementPage() {
         if (this.pageIndex < this.pdfDoc.numPages-1) {
-            return await this.renderPage(this.pdfDoc, this.pageIndex+1)
+            this.storePageContents();
+            await this.renderPage(this.pdfDoc, this.pageIndex+1);
+            this.loadPageContents();
         }
     },
     async decrementPage() {
         if (this.pageIndex > 0) {
-            return await this.renderPage(this.pdfDoc, this.pageIndex-1)
+            this.storePageContents();
+            await this.renderPage(this.pdfDoc, this.pageIndex-1);
+            this.loadPageContents();
         }
     },
 
     parseTransform(element) {
-        const tansform = element.style.transform.replace(/[^.,-\d]/g, '');
-        const transformComponents = tansform.split(",");
-        return {
-            x: parseFloat(transformComponents[0]),
-            y: parseFloat(transformComponents[1]),
-            width: element.offsetWidth,
-            height: element.offsetHeight,
-        }
+        
     },
     async getOverlayedPdfDocument() {
         const pdfBytes = await this.pdfDoc.getData();
         const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes);
+        this.storePageContents();
 
-        const draggables = this.boxDragContainer.querySelectorAll(".draggable-canvas");
-        for (const draggable of draggables) {
-            // embed the draggable canvas
-            const dataURL = draggable.toDataURL();
-            const response = await fetch(dataURL);
-            const draggableImgBytes = await response.arrayBuffer();
-            const pdfImageObject = await pdfDocModified.embedPng(draggableImgBytes);
-
-            const page = pdfDocModified.getPage(this.pageIndex);
-
-            const draggablePositionPixels = this.parseTransform(draggable);
-            const draggablePositionRelative = {
-                x: draggablePositionPixels.x / this.pdfCanvas.offsetWidth,
-                y: draggablePositionPixels.y / this.pdfCanvas.offsetHeight,
-                width: draggablePositionPixels.width / this.pdfCanvas.offsetWidth,
-                height: draggablePositionPixels.height / this.pdfCanvas.offsetHeight,
+        const pagesMap = this.documentsMap.get(this.pdfDoc);
+        for (let pageIdx in pagesMap) {
+            if (pageIdx.includes("offset")) {
+                continue;
             }
-            const draggablePositionPdf = {
-                x: draggablePositionRelative.x * page.getWidth(),
-                y: draggablePositionRelative.y * page.getHeight(),
-                width: draggablePositionRelative.width * page.getWidth(),
-                height: draggablePositionRelative.height * page.getHeight(),
-            }
+            console.log(typeof pageIdx);
+            
+            const page = pdfDocModified.getPage(parseInt(pageIdx));
+            const draggablesData = pagesMap[pageIdx];
+            const offsetWidth = pagesMap[pageIdx+"-offsetWidth"];
+            const offsetHeight = pagesMap[pageIdx+"-offsetHeight"];
 
-            page.drawImage(pdfImageObject, {
-                x: draggablePositionPdf.x,
-                y: page.getHeight() - draggablePositionPdf.y - draggablePositionPdf.height,
-                width: draggablePositionPdf.width,
-                height: draggablePositionPdf.height,
-            });
+            for (const draggableData of draggablesData) {
+                // embed the draggable canvas
+                const draggableElement = draggableData.element;
+                const response = await fetch(draggableElement.toDataURL());
+                const draggableImgBytes = await response.arrayBuffer();
+                const pdfImageObject = await pdfDocModified.embedPng(draggableImgBytes);
+    
+                // calculate the position in the pdf document
+                const tansform = draggableElement.style.transform.replace(/[^.,-\d]/g, '');
+                const transformComponents = tansform.split(",");
+                const draggablePositionPixels = {
+                    x: parseFloat(transformComponents[0]),
+                    y: parseFloat(transformComponents[1]),
+                    width: draggableData.offsetWidth,
+                    height: draggableData.offsetHeight,
+                };
+                const draggablePositionRelative = {
+                    x: draggablePositionPixels.x / offsetWidth,
+                    y: draggablePositionPixels.y / offsetHeight,
+                    width: draggablePositionPixels.width / offsetWidth,
+                    height: draggablePositionPixels.height / offsetHeight,
+                }
+                const draggablePositionPdf = {
+                    x: draggablePositionRelative.x * page.getWidth(),
+                    y: draggablePositionRelative.y * page.getHeight(),
+                    width: draggablePositionRelative.width * page.getWidth(),
+                    height: draggablePositionRelative.height * page.getHeight(),
+                }
+    
+                // draw the image
+                page.drawImage(pdfImageObject, {
+                    x: draggablePositionPdf.x,
+                    y: page.getHeight() - draggablePositionPdf.y - draggablePositionPdf.height,
+                    width: draggablePositionPdf.width,
+                    height: draggablePositionPdf.height,
+                });
+            }
         }
 
+        this.loadPageContents();
         return pdfDocModified;
     },
 }
