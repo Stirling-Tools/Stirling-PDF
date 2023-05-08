@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+
+<th:block th:insert="~{fragments/common :: head(title=#{repair.title})}"></th:block>
+
+
+<body>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{repair.header}"></h2>
+                         
+                        <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                        <div th:replace="~{fragments/common :: fileSelector(name='fileInput2', multiple=false, accept='application/pdf')}"></div>
+                        <button onclick="comparePDFs()">Compare</button>
+                        <div id="result"></div>
+                        <script>
+                        async function comparePDFs() {
+                            const file1 = document.getElementById("fileInput-input").files[0];
+                            const file2 = document.getElementById("fileInput2-input").files[0];
+
+                            if (!file1 || !file2) {
+                                console.error("Please select two PDF files to compare");
+                                return;
+                            }
+                            
+                            const [pdf1, pdf2] = await Promise.all([
+                                pdfjsLib.getDocument(URL.createObjectURL(file1)).promise,
+                                pdfjsLib.getDocument(URL.createObjectURL(file2)).promise
+                            ]);
+
+                            const extractText = async (pdf) => {
+                                const pages = [];
+                                for (let i = 1; i <= pdf.numPages; i++) {
+                                    const page = await pdf.getPage(i);
+                                    const content = await page.getTextContent();
+                                    const strings = content.items.map(item => item.str);
+                                    pages.push(strings.join(""));
+                                }
+                                return pages.join("\n");
+                            };
+
+                            const [text1, text2] = await Promise.all([
+                                extractText(pdf1),
+                                extractText(pdf2)
+                            ]);
+
+                            const diff = (text1, text2) => {
+                                const lines1 = text1.split("\n");
+                                const lines2 = text2.split("\n");
+
+                                const result = [];
+                                let i = 0, j = 0;
+
+                                while (i < lines1.length || j < lines2.length) {
+                                	console.log(`lines1[${i}]='${lines1[i]}', lines2[${j}]='${lines2[j]}'`);
+                                	console.log(`i=${i}, j=${j}`);
+                                    if (lines1[i] === lines2[j]) {
+                                        result.push([i, j, lines1[i]]);
+                                        i++;
+                                        j++;
+                                        console.log(`i=${i}, j=${j}`);
+
+                                    } else {
+                                        let k = i, l = j;
+                                        while (k < lines1.length && l < lines2.length && lines1[k] !== lines2[l]) {
+                                            k++;
+                                            l++;
+                                        }
+
+                                        for (let x = i; x < k; x++) {
+                                            result.push([x, -1, lines1[x]]);
+                                        }
+
+                                        for (let y = j; y < l; y++) {
+                                            result.push([-1, y, lines2[y]]);
+                                        }
+
+                                        i = k;
+                                        j = l;
+                                    }
+                                }
+
+                                return result;
+                            };
+
+                            const differences = diff(text1, text2);
+                            const highlightDifferences = async (pdf, differences) => {
+                                for (const difference of differences) {
+                                    const [pageIndex, lineIndex, lineText] = difference;
+                                    if (lineIndex === -1) {
+                                        continue;
+                                    }
+                                    console.log(pageIndex);
+                                    const page = await pdf.getPage(pageIndex);
+                                    const viewport = page.getViewport({ scale: 1 });
+                                    const [left,top] = viewport.convertToViewportPoint(0, lineIndex * 20);
+                                    const [right, bottom] = viewport.convertToViewportPoint(500, (lineIndex + 1) * 20);
+                                    const annotation = {
+                                            type: "Highlight",
+                                            rect: [left, top, right - left, bottom - top],
+                                            color: [255, 255, 0],
+                                            opacity: 0.5,
+                                            quadPoints:
+                                            [
+                                                left, top, right, top, right, bottom, left, bottom
+                                            ]
+                                        };
+            
+                                        await page.addAnnotation(annotation);
+                                
+                                        const message = `Difference found in page ${pageIndex }, line ${lineIndex + 1}: ${lineText}`;
+                                        const p = document.createElement("p");
+                                        p.textContent = message;
+                                        document.getElementById("result").appendChild(p);
+                                    }
+                                };
+            
+                                await highlightDifferences(pdf1, differences);
+                            }
+    </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
+</body>
+
+</html>
