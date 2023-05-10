@@ -84,6 +84,7 @@ docker run -d \
   -e APP_HOME_DESCRIPTION="Your locally hosted one-stop-shop for all your PDF needs." \
   -e APP_NAVBAR_NAME="Stirling PDF" \
   -e ALLOW_GOOGLE_VISABILITY="true" \
+  -e APP_ROOT_PATH="/" \
   -e APP_LOCALE="en_GB" \
 ```
 Docker Compose
@@ -102,6 +103,7 @@ services:
 #      APP_HOME_NAME: Stirling PDF
 #      APP_HOME_DESCRIPTION: Your locally hosted one-stop-shop for all your PDF needs.
 #      APP_NAVBAR_NAME: Stirling PDF
+#      APP_ROOT_PATH: /
 #      ALLOW_GOOGLE_VISABILITY: true
 
 ```
@@ -131,6 +133,7 @@ If running Java directly, you can also pass these as properties using -D argumen
 Using the same method you can also change 
 - The default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR to select your default language (Will always default to English on invalid locale)
 - Enable/Disable search engine visablility with ALLOW_GOOGLE_VISABILITY with true / false values. Default disable visability.
+- Change root URI for Stirling-PDF ie change server.com/ to server.com/pdf-app by running APP_ROOT_PATH as pdf-app
 
 ## API
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
