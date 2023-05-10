@@ -28,6 +28,7 @@ import javax.imageio.ImageIO;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -139,33 +140,29 @@ public class PdfUtils {
                     throw e;
                 }
 
-                // Create a new PDF page
-                PDPage page = new PDPage();
-                doc.addPage(page);
-
-                // Create an image object from the image file
+             // Create an image object from the image file
                 PDImageXObject image = PDImageXObject.createFromFileByContent(imageFile, doc);
 
+                // Determine the orientation of the image
+                boolean imageIsLandscape = image.getWidth() > image.getHeight();
+                PDRectangle pageSize = PDRectangle.A4;
+                if (autoRotate && imageIsLandscape) {
+                    // Rotate the page only if autoRotate is true and the image is landscape
+                    pageSize = new PDRectangle(pageSize.getHeight(), pageSize.getWidth());
+                }
+                System.out.println(pageSize + "=" + pageSize);
+                PDPage page = new PDPage(pageSize);
+                doc.addPage(page);
+
+
+                // Adjust the page size to match the orientation
                 float pageWidth = page.getMediaBox().getWidth();
                 float pageHeight = page.getMediaBox().getHeight();
 
-                if (autoRotate && ((image.getWidth() > image.getHeight() && pageHeight > pageWidth) || (image.getWidth() < image.getHeight() && pageWidth > pageHeight))) {
-                    // Rotate the page 90 degrees if the image better fits the page in landscape
-                    // orientation
-                    page.setRotation(90);
-                    pageWidth = page.getMediaBox().getHeight();
-                    pageHeight = page.getMediaBox().getWidth();
-                }
-
                 try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
                     if (stretchToFit) {
-                        if (page.getRotation() == 0 || page.getRotation() == 180) {
-                            // Stretch the image to fit the whole page
-                            contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
-                        } else {
-                            // Adjust the width and height of the page when rotated
-                            contentStream.drawImage(image, 0, 0, pageHeight, pageWidth);
-                        }
+                        // Stretch the image to fit the whole page
+                        contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
                         logger.info("Image successfully added to PDF, stretched to fit page");
                     } else {
                         // Ensure the image fits the page but maintain the image's aspect ratio
@@ -187,23 +184,17 @@ public class PdfUtils {
                         float yPos = (pageHeight - (image.getHeight() * scaleFactor)) / 2;
 
                         // Draw the image onto the page
-                        if (page.getRotation() == 0 || page.getRotation() == 180) {
-                            contentStream.drawImage(image, xPos, yPos, image.getWidth() * scaleFactor, image.getHeight() * scaleFactor);
-                        } else {
-                            // Adjust the width and height of the page when rotated
-                            contentStream.drawImage(image, yPos, xPos, image.getHeight() * scaleFactor, image.getWidth() * scaleFactor);
-                        }
+                        contentStream.drawImage(image, xPos, yPos, image.getWidth() * scaleFactor, image.getHeight() * scaleFactor);
                         logger.info("Image successfully added to PDF, maintaining aspect ratio");
                     }
-                } catch (IOException e) {
-                    logger.error("Error adding image to PDF", e);
-                    throw e;
+                    } catch (IOException e) {
+                        logger.error("Error adding image to PDF", e);
+                        throw e;
+                    }
+
+                    // Delete the temporary file
+                    imageFile.delete();
                 }
-
-                // Delete the temporary file
-                imageFile.delete();
-            }
-
             // Create a ByteArrayOutputStream to save the PDF to
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             doc.save(byteArrayOutputStream);

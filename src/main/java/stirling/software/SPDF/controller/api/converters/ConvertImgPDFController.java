@@ -89,11 +89,10 @@ public class ConvertImgPDFController {
             @RequestParam(defaultValue = "false", name = "stretchToFit")
             @Parameter(description = "Whether to stretch the images to fit the PDF page or maintain the aspect ratio", example = "false")
                     boolean stretchToFit,
-            @RequestParam(defaultValue = "true", name = "autoRotate")
+            @RequestParam(defaultValue = "false", name = "autoRotate")
             @Parameter(description = "Whether to automatically rotate the images to better fit the PDF page", example = "true")
                     boolean autoRotate) throws IOException {
         // Convert the file to PDF and get the resulting bytes
-        System.out.println(stretchToFit);
         byte[] bytes = PdfUtils.imageToPdf(file, stretchToFit, autoRotate);
         return PdfUtils.bytesToWebResponse(bytes, file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_coverted.pdf");
     }
