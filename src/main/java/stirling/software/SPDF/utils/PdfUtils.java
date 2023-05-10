@@ -2,6 +2,8 @@ package stirling.software.SPDF.utils;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ColorConvertOp;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -24,11 +26,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -120,89 +124,99 @@ public class PdfUtils {
             throw e;
         }
     }
-
-    public static byte[] imageToPdf(MultipartFile[] files, boolean stretchToFit, boolean autoRotate) throws IOException {
+    public static byte[] imageToPdf(MultipartFile[] files, boolean stretchToFit, boolean autoRotate, String colorType) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             for (MultipartFile file : files) {
-                // Create a temporary file for the image
-                File imageFile = Files.createTempFile("image", ".jpg").toFile();
-
-                try (FileOutputStream fos = new FileOutputStream(imageFile); InputStream input = file.getInputStream()) {
-                    byte[] buffer = new byte[1024];
-                    int len;
-                    // Read from the input stream and write to the file
-                    while ((len = input.read(buffer)) != -1) {
-                        fos.write(buffer, 0, len);
+                String originalFilename = file.getOriginalFilename();
+                if (originalFilename != null && (originalFilename.toLowerCase().endsWith(".tiff") || originalFilename.toLowerCase().endsWith(".tif")) ) {
+                    ImageReader reader = ImageIO.getImageReadersByFormatName("tiff").next();
+                    reader.setInput(ImageIO.createImageInputStream(file.getInputStream()));
+                    int numPages = reader.getNumImages(true);
+                    for (int i = 0; i < numPages; i++) {
+                        BufferedImage pageImage = reader.read(i);
+                        BufferedImage convertedImage = convertColorType(pageImage, colorType);
+                        PDImageXObject pdImage = LosslessFactory.createFromImage(doc, convertedImage);
+                        addImageToDocument(doc, pdImage, stretchToFit, autoRotate);
                     }
-                    logger.info("Image successfully written to file: {}", imageFile.getAbsolutePath());
-                } catch (IOException e) {
-                    logger.error("Error writing image to file: {}", imageFile.getAbsolutePath(), e);
-                    throw e;
-                }
-
-             // Create an image object from the image file
-                PDImageXObject image = PDImageXObject.createFromFileByContent(imageFile, doc);
-
-                // Determine the orientation of the image
-                boolean imageIsLandscape = image.getWidth() > image.getHeight();
-                PDRectangle pageSize = PDRectangle.A4;
-                if (autoRotate && imageIsLandscape) {
-                    // Rotate the page only if autoRotate is true and the image is landscape
-                    pageSize = new PDRectangle(pageSize.getHeight(), pageSize.getWidth());
-                }
-                System.out.println(pageSize + "=" + pageSize);
-                PDPage page = new PDPage(pageSize);
-                doc.addPage(page);
-
-
-                // Adjust the page size to match the orientation
-                float pageWidth = page.getMediaBox().getWidth();
-                float pageHeight = page.getMediaBox().getHeight();
-
-                try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
-                    if (stretchToFit) {
-                        // Stretch the image to fit the whole page
-                        contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
-                        logger.info("Image successfully added to PDF, stretched to fit page");
-                    } else {
-                        // Ensure the image fits the page but maintain the image's aspect ratio
-                        float imageAspectRatio = (float) image.getWidth() / (float) image.getHeight();
-                        float pageAspectRatio = pageWidth / pageHeight;
-
-                        // Determine the scale factor to fit the image onto the page
-                        float scaleFactor = 1.0f;
-                        if (imageAspectRatio > pageAspectRatio) {
-                            // Image is wider than the page, scale to fit the width
-                            scaleFactor = pageWidth / image.getWidth();
-                        } else {
-                            // Image is taller than the page, scale to fit the height
-                            scaleFactor = pageHeight / image.getHeight();
+                } else {
+                    File imageFile = Files.createTempFile("image", ".png").toFile();
+                    try (FileOutputStream fos = new FileOutputStream(imageFile); InputStream input = file.getInputStream()) {
+                        byte[] buffer = new byte[1024];
+                        int len;
+                        while ((len = input.read(buffer)) != -1) {
+                            fos.write(buffer, 0, len);
                         }
-
-                        // Calculate the position of the image on the page
-                        float xPos = (pageWidth - (image.getWidth() * scaleFactor)) / 2;
-                        float yPos = (pageHeight - (image.getHeight() * scaleFactor)) / 2;
-
-                        // Draw the image onto the page
-                        contentStream.drawImage(image, xPos, yPos, image.getWidth() * scaleFactor, image.getHeight() * scaleFactor);
-                        logger.info("Image successfully added to PDF, maintaining aspect ratio");
-                    }
+                        BufferedImage image = ImageIO.read(imageFile);
+                        BufferedImage convertedImage = convertColorType(image, colorType);
+                        PDImageXObject pdImage = LosslessFactory.createFromImage(doc, convertedImage);
+                        addImageToDocument(doc, pdImage, stretchToFit, autoRotate);
                     } catch (IOException e) {
-                        logger.error("Error adding image to PDF", e);
+                        logger.error("Error writing image to file: {}", imageFile.getAbsolutePath(), e);
                         throw e;
+                    } finally {
+                        imageFile.delete();
                     }
-
-                    // Delete the temporary file
-                    imageFile.delete();
                 }
-            // Create a ByteArrayOutputStream to save the PDF to
+            }
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             doc.save(byteArrayOutputStream);
             logger.info("PDF successfully saved to byte array");
-
             return byteArrayOutputStream.toByteArray();
         }
+    }
 
+    private static BufferedImage convertColorType(BufferedImage sourceImage, String colorType) {
+        BufferedImage convertedImage;
+        switch (colorType) {
+            case "greyscale":
+                convertedImage = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+                convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
+                break;
+            case "blackwhite":
+                convertedImage = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
+                convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
+                break;
+            default:  // full color
+                convertedImage = sourceImage;
+                break;
+        }
+        return convertedImage;
+    }
+    
+    private static void addImageToDocument(PDDocument doc, PDImageXObject image, boolean stretchToFit, boolean autoRotate) throws IOException {
+        boolean imageIsLandscape = image.getWidth() > image.getHeight();
+        PDRectangle pageSize = PDRectangle.A4;
+        if (autoRotate && imageIsLandscape) {
+            pageSize = new PDRectangle(pageSize.getHeight(), pageSize.getWidth());
+        }
+        PDPage page = new PDPage(pageSize);
+        doc.addPage(page);
+
+        float pageWidth = page.getMediaBox().getWidth();
+        float pageHeight = page.getMediaBox().getHeight();
+
+        try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
+            if (stretchToFit) {
+                contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
+            } else {
+                float imageAspectRatio = (float) image.getWidth() / (float) image.getHeight();
+                float pageAspectRatio = pageWidth / pageHeight;
+
+                float scaleFactor = 1.0f;
+                if (imageAspectRatio > pageAspectRatio) {
+                    scaleFactor = pageWidth / image.getWidth();
+                } else {
+                    scaleFactor = pageHeight / image.getHeight();
+                }
+
+                float xPos = (pageWidth - (image.getWidth() * scaleFactor)) / 2;
+                float yPos = (pageHeight - (image.getHeight() * scaleFactor)) / 2;
+                contentStream.drawImage(image, xPos, yPos, image.getWidth() * scaleFactor, image.getHeight() * scaleFactor);
+            }
+        } catch (IOException e) {
+            logger.error("Error adding image to PDF", e);
+            throw e;
+        }
     }
 
     public static X509Certificate[] loadCertificateChainFromKeystore(InputStream keystoreInputStream, String keystorePassword) throws Exception {

@@ -89,11 +89,14 @@ public class ConvertImgPDFController {
             @RequestParam(defaultValue = "false", name = "stretchToFit")
             @Parameter(description = "Whether to stretch the images to fit the PDF page or maintain the aspect ratio", example = "false")
                     boolean stretchToFit,
+            @RequestParam("colorType")
+            @Parameter(description = "The color type of the output image(s)", schema = @Schema(allowableValues = {"rgb", "greyscale", "blackwhite"}))
+                    String colorType,
             @RequestParam(defaultValue = "false", name = "autoRotate")
             @Parameter(description = "Whether to automatically rotate the images to better fit the PDF page", example = "true")
                     boolean autoRotate) throws IOException {
         // Convert the file to PDF and get the resulting bytes
-        byte[] bytes = PdfUtils.imageToPdf(file, stretchToFit, autoRotate);
+        byte[] bytes = PdfUtils.imageToPdf(file, stretchToFit, autoRotate, colorType);
         return PdfUtils.bytesToWebResponse(bytes, file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_coverted.pdf");
     }
 
