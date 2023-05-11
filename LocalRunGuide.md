@@ -14,7 +14,7 @@ Install the following software, if not already installed:
 
 - Java 17 or later
 
-- Gradle 7.0 or later
+- Gradle 7.0 or later (included within repo so not needed on server)
 
 - Git
 
