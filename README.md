@@ -57,15 +57,7 @@ Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) h
 ## How to use
 
 ### Locally
-
-Prerequisites
-- Java 17 or later
-- Gradle 7.0 or later
-
-1. Clone or download the repository.
-2. Build the project using Gradle by running `./gradlew build`
-3. Start the application by running `./gradlew bootRun` or by calling the build jar in build/libs with java -jar jarName.jar
-
+Please view https://github.com/Frooodle/Stirling-PDF/blob/main/LocalRunGuide.md
 
 ### Docker
 https://hub.docker.com/r/frooodle/s-pdf
