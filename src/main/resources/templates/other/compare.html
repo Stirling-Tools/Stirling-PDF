@@ -12,12 +12,14 @@
             <br> <br>
             <div class="container">
                 <div class="row justify-content-center">
-                    <div class="col-md-6">
+                    <div class="col-md-9">
                         <h2 th:text="#{repair.header}"></h2>
                          
                         <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                         <div th:replace="~{fragments/common :: fileSelector(name='fileInput2', multiple=false, accept='application/pdf')}"></div>
                         <button onclick="comparePDFs()">Compare</button>
+
+            
                         <div class="row">
                             <div class="col-md-6">
                                 <h3>Document 1</h3>
@@ -32,12 +34,25 @@
                             .result-column {
                                 border: 1px solid #ccc;
                                 padding: 15px;
-                                overflow-y: scroll;
-                                height: 400px;
+                                overflow-y: auto;
+                                height: calc(100vh - 400px);
                                 white-space: pre-wrap;
                             }
                         </style>
                         <script>
+                        // get the elements
+                        var result1 = document.getElementById('result1');
+                        var result2 = document.getElementById('result2');
+
+                        // add event listeners
+                        result1.addEventListener('scroll', function() {
+                            result2.scrollTop = result1.scrollTop;
+                        });
+
+                        result2.addEventListener('scroll', function() {
+                            result1.scrollTop = result2.scrollTop;
+                        });
+                        
                         async function comparePDFs() {
                             const file1 = document.getElementById("fileInput-input").files[0];
                             const file2 = document.getElementById("fileInput2-input").files[0];
@@ -73,8 +88,45 @@
                                 return;
                             }
                             const diff = (text1, text2) => {
-                                // ... Keep the same diff function from the previous response ...
+                                const words1 = text1.split(' ');
+                                const words2 = text2.split(' ');
+
+                                // Create a 2D array to hold our "matrix"
+                                const matrix = Array(words1.length + 1).fill(null).map(() => Array(words2.length + 1).fill(0));
+
+                                // Perform standard LCS algorithm
+                                for (let i = 1; i <= words1.length; i++) {
+                                    for (let j = 1; j <= words2.length; j++) {
+                                        if (words1[i - 1] === words2[j - 1]) {
+                                            matrix[i][j] = matrix[i - 1][j - 1] + 1;
+                                        } else {
+                                            matrix[i][j] = Math.max(matrix[i][j - 1], matrix[i - 1][j]);
+                                        }
+                                    }
+                                }
+
+                                let i = words1.length;
+                                let j = words2.length;
+                                const differences = [];
+
+                                // Backtrack through the matrix to create the diff
+                                while (i > 0 || j > 0) {
+                                    if (i > 0 && j > 0 && words1[i - 1] === words2[j - 1]) {
+                                        differences.unshift(['black', words1[i - 1]]);
+                                        i--;
+                                        j--;
+                                    } else if (j > 0 && (i === 0 || matrix[i][j - 1] >= matrix[i - 1][j])) {
+                                        differences.unshift(['green', words2[j - 1]]);
+                                        j--;
+                                    } else if (i > 0 && (j === 0 || matrix[i][j - 1] < matrix[i - 1][j])) {
+                                        differences.unshift(['red', words1[i - 1]]);
+                                        i--;
+                                    }
+                                }
+
+                                return differences;
                             };
+
 
                             const differences = diff(text1, text2);
 
@@ -83,45 +135,49 @@
                                 const resultDiv2 = document.getElementById("result2");
                                 resultDiv1.innerHTML = "";
                                 resultDiv2.innerHTML = "";
-                                
-                                let doc1Pointer = 0;
-                                let doc2Pointer = 0;
+
                                 differences.forEach(([color, word]) => {
                                     const span1 = document.createElement("span");
                                     const span2 = document.createElement("span");
 
+                                    // If it's an addition, show it in green in the second document and transparent in the first
                                     if (color === "green") {
-                                        span1.style.color = color;
-                                        span1.textContent = word;
-                                        resultDiv1.appendChild(span1);
-                                        doc1Pointer++;
-                                    } else if (color === "red") {
+                                        span1.style.color = "transparent";
+                                        span1.style.userSelect = "none";
                                         span2.style.color = color;
-                                        span2.textContent = word;
-                                        resultDiv2.appendChild(span2);
-                                        doc2Pointer++;
-                                    } else {
+                                    } 
+                                    // If it's a deletion, show it in red in the first document and transparent in the second
+                                    else if (color === "red") {
                                         span1.style.color = color;
-                                        span1.textContent = word;
-                                        resultDiv1.appendChild(span1);
-                                        doc1Pointer++;
-
+                                        span2.style.color = "transparent";
+                                        span2.style.userSelect = "none";
+                                    } 
+                                    // If it's unchanged, show it in black in both
+                                    else {
+                                        span1.style.color = color;
                                         span2.style.color = color;
-                                        span2.textContent = word;
-                                        resultDiv2.appendChild(span2);
-                                        doc2Pointer++;
                                     }
 
-                                    // Add space after each word
-                                    const space1 = document.createElement("span");
-                                    const space2 = document.createElement("span");
-                                    space1.textContent = " ";
-                                    space2.textContent = " ";
-                                    resultDiv1.appendChild(space1);
-                                    resultDiv2.appendChild(space2);
+                                    span1.textContent = word;
+                                    span2.textContent = word;
+                                    resultDiv1.appendChild(span1);
+                                    resultDiv2.appendChild(span2);
+
+                                    // Add space after each word, or a new line if the word ends with a full stop
+                                    const spaceOrNewline1 = document.createElement("span");
+                                    const spaceOrNewline2 = document.createElement("span");
+                                    if (word.endsWith(".")) {
+                                        spaceOrNewline1.innerHTML = "<br>";
+                                        spaceOrNewline2.innerHTML = "<br>";
+                                    } else {
+                                        spaceOrNewline1.textContent = " ";
+                                        spaceOrNewline2.textContent = " ";
+                                    }
+                                    resultDiv1.appendChild(spaceOrNewline1);
+                                    resultDiv2.appendChild(spaceOrNewline2);
                                 });
-                                return result;
                             };
+
                             console.log('Differences:', differences);
                             displayDifferences(differences);
                         }
