@@ -14,7 +14,7 @@ Install the following software, if not already installed:
 
 - Java 17 or later
 
-- Gradle 7.0 or later
+- Gradle 7.0 or later (included within repo so not needed on server)
 
 - Git
 
@@ -40,7 +40,7 @@ For Debian-based systems, you can use the following command:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y git  automake  autoconf  libtool  libleptonica-dev  pkg-config zlib1g-dev make g++ java-17-openjdk  gradle python3 python3-pip
+sudo apt-get install -y git  automake  autoconf  libtool  libleptonica-dev  pkg-config zlib1g-dev make g++ java-17-openjdk python3 python3-pip
 ```
 
 ### Step 2: Clone and Build jbig2enc (Only required for certain OCR functionality)
