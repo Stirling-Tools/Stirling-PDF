@@ -113,6 +113,14 @@ services:
 Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
+Stirling PDF currently supports
+- English
+- Arabic (العربية)
+- German (Deutsch)
+- French (Français)
+- Spanish (Español)
+- Chinese (简体中文)
+
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
 
