@@ -19,7 +19,7 @@ def is_blank_image(image_path, threshold=10, white_percent=99, white_value=255, 
     white_pixels = np.sum(thresholded_image == white_value)
     total_pixels = thresholded_image.size
     white_pixel_percentage = (white_pixels / total_pixels) * 100
-
+    print(f"Page has white pixel percent of {white_pixel_percentage}")
     return white_pixel_percentage > white_percent
 
 
