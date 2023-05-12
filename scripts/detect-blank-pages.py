@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Detect if an image is considered blank or not.')
     parser.add_argument('image_path', help='The path to the image file.')
     parser.add_argument('-t', '--threshold', type=int, default=10, help='Threshold for determining white pixels. The default value is 10.')
-    parser.add_argument('-w', '--white_percent', type=int, default=99, help='The percentage of white pixels for an image to be considered blank. The default value is 99.')
+    parser.add_argument('-w', '--white_percent', type=float, default=99, help='The percentage of white pixels for an image to be considered blank. The default value is 99.')
     args = parser.parse_args()
 
     blank = is_blank_image(args.image_path, args.threshold, args.white_percent)

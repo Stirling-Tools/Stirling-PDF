@@ -36,7 +36,7 @@ public class BlankPageController {
     @PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
     public ResponseEntity<byte[]> removeBlankPages(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile,
             @RequestParam(defaultValue = "10", name = "threshold") int threshold,
-            @RequestParam(defaultValue = "99", name = "whitePercent") int whitePercent) throws IOException, InterruptedException {
+            @RequestParam(defaultValue = "99.9", name = "whitePercent") float whitePercent) throws IOException, InterruptedException {
         PDDocument document = null;
         try {
             document = PDDocument.load(inputFile.getInputStream());
