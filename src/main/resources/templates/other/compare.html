@@ -2,7 +2,7 @@
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
 
-<th:block th:insert="~{fragments/common :: head(title=#{repair.title})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{compare.title})}"></th:block>
 
 
 <body>
@@ -13,20 +13,20 @@
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-md-9">
-                        <h2 th:text="#{repair.header}"></h2>
+                        <h2 th:text="#{compare.header}"></h2>
                          
                         <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                         <div th:replace="~{fragments/common :: fileSelector(name='fileInput2', multiple=false, accept='application/pdf')}"></div>
-                        <button onclick="comparePDFs()">Compare</button>
+                        <button class="btn btn-primary"  onclick="comparePDFs()" th:text="#{compare.submit}"></button>
 
             
                         <div class="row">
                             <div class="col-md-6">
-                                <h3>Document 1</h3>
+                                <h3 th:text="#{compare.document.1}"></h3>
                                 <div id="result1" class="result-column"></div>
                             </div>
                             <div class="col-md-6">
-                                <h3>Document 2</h3>
+                                <h3 th:text="#{compare.document.2}"></h3>
                                 <div id="result2" class="result-column"></div>
                             </div>
                         </div>

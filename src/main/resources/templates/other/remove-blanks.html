@@ -17,14 +17,14 @@
             <form id="multiPdfForm" th:action="@{remove-blanks}" method="post" enctype="multipart/form-data">
               <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                <div class="form-group">
-                <label for="threshold">Threshold:</label>
+                <label for="threshold" th:text="#{removeBlanks.threshold}"></label>
                 <input type="number" class="form-control" id="threshold" name="threshold" value="10">
-                <small id="thresholdHelp" class="form-text text-muted">Threshold for determining how white a white pixel must be)</small>
+                <small id="thresholdHelp" class="form-text text-muted" th:text="#{removeBlanks.thresholdDesc}"></small>
               </div>
                <div class="form-group">
-                <label for="whitePercent">White Percent (%):</label>
+                <label for="whitePercent" th:text="#{removeBlanks.whitePercent}"></label>
                 <input type="number" class="form-control" id="whitePercent" name="whitePercent" value="99">
-                <small id="whitePercentHelp" class="form-text text-muted">Percent of page that must be white to be removed</small>
+                <small id="whitePercentHelp" class="form-text text-muted" th:text="#{removeBlanks.whitePercentDesc}"></small>
               </div>
               <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{removeBlanks.submit}"></button>
             </form>
@@ -36,3 +36,4 @@
   </div>
 </body>
 </html>
+
