@@ -138,6 +138,7 @@ filter: invert(0.2) sepia(2) saturate(50) hue-rotate(190deg);
                         localStorage.removeItem(cardId);
                     }
                     reorderCards();
+                    updateFavoritesDropdown(); 
                 }
 
                 function reorderCards() {
@@ -169,6 +170,7 @@ filter: invert(0.2) sepia(2) saturate(50) hue-rotate(190deg);
                         }
                     });
                     reorderCards();
+                    updateFavoritesDropdown(); 
                 }
                 window.onload = initializeCards;
 

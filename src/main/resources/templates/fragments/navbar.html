@@ -292,13 +292,28 @@ function compareVersions(version1, version2) {
                             </a>  
                             <a class="dropdown-item" href="#" th:href="@{repair}" th:classappend="${currentPage}=='repair' ? 'active' : ''" th:title="#{home.repair.desc}">
                                 <img class="icon" src="images/wrench.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.repair.title}"></span>
-                            </a>              
+                            </a>  
+                            <a class="dropdown-item" href="#" th:href="@{remove-blanks}" th:classappend="${currentPage}=='remove-blanks' ? 'active' : ''" th:title="#{home.removeBlanks.desc}">
+                                <img class="icon" src="images/blank-file.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.removeBlanks.title}"></span>
+                            </a>
+                            <a class="dropdown-item" href="#" th:href="@{compare}" th:classappend="${currentPage}=='compare' ? 'active' : ''" th:title="#{home.compare.desc}">
+                                <img class="icon" src="images/scales.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{home.compare.title}"></span>
+                            </a>            
                         </div>
                     </li>
 
 
                 </ul>
                 <ul class="navbar-nav ml-auto flex-nowrap">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <img class="navbar-icon" src="images/star.svg" alt="icon" width="24" height="24">
+                        </a>
+                        <div class="dropdown-menu" id="favoritesDropdown" aria-labelledby="navbarDropdown">
+                            <!-- Dropdown items will be added here by JavaScript -->
+                        </div>
+                    </li>
+                    
                     <li class="nav-item">
                         <a class="nav-link" id="dark-mode-toggle" href="#">
                           <img class="navbar-icon" id="dark-mode-icon" src="moon.svg" alt="icon" />
@@ -346,6 +361,48 @@ function compareVersions(version1, version2) {
             </div>
 
         </div>
+        <script>
+        
+        
+        function updateFavoritesDropdown() {
+            var dropdown = document.querySelector('#favoritesDropdown');
+            dropdown.innerHTML = '';  // Clear the current favorites
+
+            
+
+            var hasFavorites = false;
+
+            for (var i = 0; i < localStorage.length; i++) {
+                var key = localStorage.key(i);
+                if (localStorage.getItem(key) === 'favorite') {
+                    // Find the corresponding navbar entry
+                    var navbarEntry = document.querySelector(`a[href='${key}']`);
+                    if (navbarEntry) {
+                        // Create a new dropdown entry
+                        var dropdownItem = document.createElement('a');
+                        dropdownItem.className = 'dropdown-item';
+                        dropdownItem.href = navbarEntry.href;
+                        dropdownItem.innerHTML = navbarEntry.innerHTML;
+                        dropdown.appendChild(dropdownItem);
+                        hasFavorites = true;
+                    }
+                }
+            }
+
+            // Show or hide the default item based on whether there are any favorites
+            if(!hasFavorites){
+            	var defaultItem = document.createElement('a');
+                defaultItem.className = 'dropdown-item';
+                defaultItem.textContent = 'No favourites added';
+                dropdown.appendChild(defaultItem);
+            }
+        }
+    document.addEventListener('DOMContentLoaded', function () {
+            
+        updateFavoritesDropdown();
+        });
+        </script>
+        
     </nav>
     <div th:insert="~{fragments/errorBanner.html :: errorBanner}"></div>
 
@@ -395,6 +452,8 @@ function compareVersions(version1, version2) {
 
 
     <script>
+
+
 					// Get the download option from local storage, or set it to 'sameWindow' if it doesn't exist
 					var downloadOption = localStorage.getItem('downloadOption')
 							|| 'sameWindow';
