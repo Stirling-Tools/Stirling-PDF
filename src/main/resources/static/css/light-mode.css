@@ -1,0 +1,5 @@
+/* Dark Mode Styles */
+body {
+    --body-background-color: 255, 255, 255;
+    --base-font-color: 33, 37, 41;
+}

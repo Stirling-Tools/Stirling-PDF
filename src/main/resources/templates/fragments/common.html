@@ -27,8 +27,13 @@
 
 <!-- Custom -->
 <link rel="stylesheet" href="css/general.css">
+<link rel="stylesheet" th:href="@{css/light-mode.css}" id="light-mode-styles">
 <link rel="stylesheet" th:href="@{css/dark-mode.css}" id="dark-mode-styles">
 <link rel="stylesheet" th:href="@{css/rainbow-mode.css}" id="rainbow-mode-styles" disabled="true">
+<link rel="stylesheet" href="css/tab-container.css">
+<script src="js/tab-container.js"></script>
+
+
 <script>
 var toggleCount = 0;
 var lastToggleTime = Date.now();
@@ -42,22 +47,26 @@ function toggleDarkMode() {
   }
   lastToggleTime = currentTime;
 
+  var lightModeStyles = document.getElementById("light-mode-styles");
   var darkModeStyles = document.getElementById("dark-mode-styles");
   var rainbowModeStyles = document.getElementById("rainbow-mode-styles");
   var darkModeIcon = document.getElementById("dark-mode-icon");
 
   if (toggleCount >= 18) {
     localStorage.setItem("dark-mode", "rainbow");
+    lightModeStyles.disabled = true;
     darkModeStyles.disabled = true;
     rainbowModeStyles.disabled = false;
     darkModeIcon.src = "rainbow.svg";
   } else if (localStorage.getItem("dark-mode") == "on") {
     localStorage.setItem("dark-mode", "off");
+    lightModeStyles.disabled = false;
     darkModeStyles.disabled = true;
     rainbowModeStyles.disabled = true;
     darkModeIcon.src = "sun.svg";
   } else {
     localStorage.setItem("dark-mode", "on");
+    lightModeStyles.disabled = true;
     darkModeStyles.disabled = false;
     rainbowModeStyles.disabled = true;
     darkModeIcon.src = "moon.svg";
@@ -65,19 +74,23 @@ function toggleDarkMode() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  var lightModeStyles = document.getElementById("light-mode-styles");
   var darkModeStyles = document.getElementById("dark-mode-styles");
   var rainbowModeStyles = document.getElementById("rainbow-mode-styles");
   var darkModeIcon = document.getElementById("dark-mode-icon");
 
   if (localStorage.getItem("dark-mode") == "on") {
+    lightModeStyles.disabled = true;
     darkModeStyles.disabled = false;
     rainbowModeStyles.disabled = true;
     darkModeIcon.src = "moon.svg";
   } else if (localStorage.getItem("dark-mode") == "off") {
+    lightModeStyles.disabled = false;
     darkModeStyles.disabled = true;
     rainbowModeStyles.disabled = true;
     darkModeIcon.src = "sun.svg";
   } else if (localStorage.getItem("dark-mode") == "rainbow") {
+    lightModeStyles.disabled = true;
     darkModeStyles.disabled = true;
     rainbowModeStyles.disabled = false;
     darkModeIcon.src = "rainbow.svg";
@@ -101,79 +114,158 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 </head>
-<th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}">
 
-
-<script>
-
-
-            
+<th:block th:fragment="game">
+    <dialog id="game-container-wrapper" class="game-container-wrapper" data-modal>
+        <script>
+            console.log("loaded game")
             $(document).ready(function() {
-            	
-            	function loadGameScript(callback) {
-            	    console.log('loadGameScript called');
-            	    const script = document.createElement('script');
-            	    script.src = 'js/game.js';
-            	    script.onload = callback;
-            	    document.body.appendChild(script);
-            	}
-            	let gameScriptLoaded = false;
-            	$('#show-game-btn').on('click', function() {
-            	    console.log('Show game button clicked');
-            	    if (!gameScriptLoaded) {
-            	        console.log('Show game button load');
-            	        loadGameScript(function() {
-            	            console.log('Game script loaded');
-            	            window.initializeGame();
-            	            gameScriptLoaded = true;
-            	        });
-            	    }
-            	    $('#game-container-wrapper').show();
-            	});
-
-
-                $('form').submit(function(event) {
-                    
-                    const boredWaiting = localStorage.getItem('boredWaiting');
-                    if (boredWaiting === 'enabled') {
-                          $('#show-game-btn').show();
+                function loadGameScript(callback) {
+                    console.log('loadGameScript called');
+                    const script = document.createElement('script');
+                    script.src = 'js/game.js';
+                    script.onload = callback;
+                    document.body.appendChild(script);
+                }
+                let gameScriptLoaded = false;
+                const gameDialog = document.getElementById('game-container-wrapper')
+                $('#show-game-btn').on('click', function() {
+                    console.log('Show game button clicked');
+                    if (!gameScriptLoaded) {
+                        console.log('Show game button load');
+                        loadGameScript(function() {
+                            console.log('Game script loaded');
+                            window.initializeGame();
+                            gameScriptLoaded = true;
+                        });
+                    } else {
+                        window.resetGame();
                     }
-                    var processing = "Processing..."
-                    var submitButtonText = $('#submitBtn').text()
+                    gameDialog.showModal();
+                });
+                gameDialog.addEventListener("click", e => {
+                    const dialogDimensions = gameDialog.getBoundingClientRect()
+                    if (
+                        e.clientX < dialogDimensions.left ||
+                        e.clientX > dialogDimensions.right ||
+                        e.clientY < dialogDimensions.top ||
+                        e.clientY > dialogDimensions.bottom
+                    ) {
+                        gameDialog.close()
+                    }
+                })
+            })
+        </script>
+        <div id="game-container">
+            <div id="lives">Lives: 3</div>
+            <div id="score">Score: 0</div>
+            <div id="high-score">High Score: 0</div>
+            <div id="level">Level: 1</div>
+            <img src="favicon.svg" class="player" id="player">
+        </div>
+        <style>
+            #game-container {
+                position: relative;
+                width: 100vh;
+                height: 0;
+                padding-bottom: 75%; /* 4:3 aspect ratio */
+                background-color: transparent;
+                margin: auto;
+                overflow: hidden;
+                border: 2px solid black; /* Add border */
+            }
+
+            .pdf, .player, .projectile {
+                position: absolute;
+            }
+            .pdf {
+                width: 50px;
+                height: 50px;
+            }
+            .player {
+                width: 50px;
+                height: 50px;
+            }
+            .projectile {
+                background-color: black  !important;
+                width: 5px;
+                height: 10px;
+            }
+            #score, #level, #lives, #high-score {
+                color: black;
+                font-family: sans-serif;
+                position: absolute;
+                font-size: calc(14px + 0.25vw); /* Reduced font size */
+            }
+            #score {
+                top: 10px;
+                left: 10px;
+            }
+            #lives {
+                top: 10px;
+                left: calc(7vw); /* Adjusted position */
+            }
+            #high-score {
+                top: 10px;
+                left: calc(14vw); /* Adjusted position */
+            }
+            #level {
+                top: 10px;
+                right: 10px;
+            }
+
+        </style>
+    </dialog>
+</th:block>
+
+<th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: 'true'">
+    <script>
+        $(document).ready(function() {
+            $('form').submit(async function(event) {
+                const boredWaiting = localStorage.getItem('boredWaiting');
+                if (boredWaiting === 'enabled') {
+                    $('#show-game-btn').show();
+                }
+                var processing = "Processing..."
+                var submitButtonText = $('#submitBtn').text()
+                    
+                $('#submitBtn').text('Processing...');
+                console.log("start download code")
+                var files = $('#fileInput-input')[0].files;
+                var url = this.action;
+                console.log(url)
+                event.preventDefault(); // Prevent the default form handling behavior
+
+                /* Check if ${multiple} is false */
+                var multiple = [[${multiple}]] || false;
+                var override = $('#override').val() || '';
+                console.log("override=" + override)
+                
+                if([[${remoteCall}]] === true) {
+                    if (override === 'multi' || (!multiple && files.length > 1) && override !== 'single' ) {
+                        console.log("multi parallel download")
+                        await submitMultiPdfForm(event,url);
+                    } else {
+                        console.log("start single download")
+    
+                        // Get the selected download option from localStorage
+                        const downloadOption = localStorage.getItem('downloadOption');
+    
+                        var formData = new FormData($('form')[0]);
                         
-                    $('#submitBtn').text('Processing...');
-                    console.log("start download code")
-                    var files = $('#fileInput-input')[0].files;
-                    var url = this.action;
-                    console.log(url)
-                    event.preventDefault(); // Prevent the default form handling behavior
-                     /* Check if ${multiple} is false */
-                     var multiple = [[${multiple}]] || false;
-                     var override = $('#override').val() || '';
-                     console.log("override=" + override)
-                     if (override === 'multi' || (!multiple && files.length > 1) && override !== 'single' ) {
-                         console.log("multi parallel download")
-                         submitMultiPdfForm(event,url);
-                     } else {
-                         console.log("start single download")
+                        // Send the request to the server using the fetch() API
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        try {
+                            if (!response) {
+                                throw new Error('Received null response for file ' + i);
+                            }
+                            console.log("load single download")
     
-                         // Get the selected download option from localStorage
-                         const downloadOption = localStorage.getItem('downloadOption');
-    
-                         var formData = new FormData($('form')[0]);
-                         
-                         // Send the request to the server using the fetch() API
-                         fetch(url, {
-                             method: 'POST',
-                             body: formData
-                         }).then(response => {
-                             if (!response) {
-                                 throw new Error('Received null response for file ' + i);
-                             }
-                             console.log("load single download")
-    
-                             
-                             // Extract the filename from the Content-Disposition header, if present
+                                
+                            // Extract the filename from the Content-Disposition header, if present
                             let filename = null;
                             const contentDispositionHeader = response.headers.get('Content-Disposition');
                             console.log(contentDispositionHeader)
@@ -188,369 +280,286 @@ document.addEventListener("DOMContentLoaded", function () {
                         
                             const contentType = response.headers.get('Content-Type');
                             console.log("contentType=" + contentType)
-                             // Check if the response is a PDF or an image
-                             if (contentType.includes('pdf') || contentType.includes('image')) {
-                                 response.blob().then(blob => {
-                                     console.log("pdf/image")
-        
-                                     // Perform the appropriate action based on the download option
-                                     if (downloadOption === 'sameWindow') {
-                                         console.log("same window")
-        
-                                         // Open the file in the same window
-                                         window.location.href = URL.createObjectURL(blob);
-                                     } else if (downloadOption === 'newWindow') {
-                                         console.log("new window")
-        
-                                         // Open the file in a new window
-                                         window.open(URL.createObjectURL(blob), '_blank');
-                                     } else {
-                                         console.log("else save")
-        
-                                         // Download the file
-                                         const link = document.createElement('a');
-                                         link.href = URL.createObjectURL(blob);
-                                         link.download = filename;
-                                         link.click();
-                                     }
-                                 });
-                             } else if (contentType.includes('json')) {
+                            // Check if the response is a PDF or an image
+                            if (contentType.includes('pdf') || contentType.includes('image')) {
+                                const blob = await response.blob();
+                                console.log("pdf/image")
+    
+                                // Perform the appropriate action based on the download option
+                                if (downloadOption === 'sameWindow') {
+                                    console.log("same window")
+    
+                                    // Open the file in the same window
+                                    window.location.href = URL.createObjectURL(blob);
+                                } else if (downloadOption === 'newWindow') {
+                                    console.log("new window")
+    
+                                    // Open the file in a new window
+                                    window.open(URL.createObjectURL(blob), '_blank');
+                                } else {
+                                    console.log("else save")
+    
+                                    // Download the file
+                                    const link = document.createElement('a');
+                                    link.href = URL.createObjectURL(blob);
+                                    link.download = filename;
+                                    link.click();
+                                }
+                            } else if (contentType.includes('json')) {
                                 // Handle the JSON response
-                                    response.json().then(data => {
-                                      // Format the error message
-                                      const errorMessage = JSON.stringify(data, null, 2);
-                                      
-                                      // Display the error message in an alert
-                                      alert(`An error occurred: ${errorMessage}`);
-                                    });
-                                 
-                             } else {
-                                 response.blob().then(blob => {
-                                     console.log("else save 2 zip")
-        
-                                     // For ZIP files or other file types, just download the file
-                                     const link = document.createElement('a');
-                                     link.href = URL.createObjectURL(blob);
-                                     link.download = filename;
-                                     link.click();
-                                 });
-                             }
-                        })
-                         .catch(error => {
-                             console.log("error listener")
+                                const json = await response.json();
+                                // Format the error message
+                                const errorMessage = JSON.stringify(json, null, 2);
+                                // Display the error message in an alert
+                                alert(`An error occurred: ${errorMessage}`);
+                            } else {
+                                const blob = await response.blob()
+                                console.log("else save 2 zip")
+                                
+                                // For ZIP files or other file types, just download the file
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = filename;
+                                link.click();
+                            }
+                        } catch(error) {
+                            console.log("error listener")
     
-                             // Extract the error message and stack trace from the response
-                             const errorMessage = error.message;
-                             const stackTrace = error.stack;
+                            // Extract the error message and stack trace from the response
+                            const errorMessage = error.message;
+                            const stackTrace = error.stack;
     
-                             // Create an error message to display to the user
-                             const message = `${errorMessage}\n\n${stackTrace}`;
+                            // Create an error message to display to the user
+                            const message = `${errorMessage}\n\n${stackTrace}`;
+                        
+                            $('#submitBtn').text(submitButtonText);
                             
-                             $('#submitBtn').text(submitButtonText);
-                             
-                             // Display the error message to the user
-                             alert(message);
-                             
-                         });
-                         
-                     }
-                     $('#submitBtn').text(submitButtonText);
-                 });
-            });
-            async function submitMultiPdfForm(event, url) {
-                // Get the selected PDF files
-                let files = $('#fileInput-input')[0].files;
-
-                // Get the existing form data
-                let formData = new FormData($('form')[0]);
-                formData.delete('fileInput');
-
-                // Show the progress bar
-                $('#progressBarContainer').show();
-
-                // Initialize the progress bar
-                let progressBar = $('#progressBar');
-                progressBar.css('width', '0%');
-                progressBar.attr('aria-valuenow', 0);
-                progressBar.attr('aria-valuemax', files.length);
-
-                // Check the flag in localStorage, default to 4
-                const zipThreshold = parseInt(localStorage.getItem('zipThreshold'), 10) || 4;
-                const zipFiles = files.length > zipThreshold;
-
-                // Initialize JSZip instance if needed
-                let jszip = null;
-                if (zipFiles) {
-                    jszip = new JSZip();
-                }
-
-                // Submit each PDF file in parallel
-                let promises = [];
-                for (let i = 0; i < files.length; i++) {
-                    let promise = new Promise(async function(resolve, reject) {
-                        let fileFormData = new FormData();
-                        fileFormData.append('fileInput', files[i]);
-                        for (let pair of formData.entries()) {
-                            fileFormData.append(pair[0], pair[1]);
-                        }
-                        console.log(fileFormData);
-
-                        try {
-                            let response = await fetch(url, {
-                                method: 'POST',
-                                body: fileFormData
-                            });
-
-                            if (!response) {
-                                throw new Error('Received null response for file ' + i);
-                            }
-
-                            if (!response.ok) {
-                                throw new Error(`Error submitting request for file ${i}: ${response.status} ${response.statusText}`);
-                            }
-
-                            let contentDisposition = response.headers.get('content-disposition');
-                            let fileName = "file.pdf"
-                            if (!contentDisposition) {
-                                //throw new Error('Content-Disposition header not found for file ' + i);
-                            } else {
-                                fileName = contentDisposition.split('filename=')[1].replace(/"/g, '');
-                            }
-                            console.log('Received response for file ' + i + ': ' + response);
-
-  
-
-                            let blob = await response.blob();
-                            if (zipFiles) {
-                                // Add the file to the ZIP archive
-                                jszip.file(fileName, blob);
-                                resolve();
-                            } else {
-                                // Download the file directly
-                                let url = window.URL.createObjectURL(blob);
-                                let a = document.createElement('a');
-                                a.href = url;
-                                a.download = fileName;
-                                document.body.appendChild(a);
-                                a.click();
-                                a.remove();
-                                resolve();
-                            }
-                        } catch (error) {
-                            console.error('Error submitting request for file ' + i + ': ' + error);
-
-                            // Set default values or fallbacks for error properties
-                            let status = error && error.status || 500;
-                            let statusText = error && error.statusText || 'Internal Server Error';
-                            let message = error && error.message || 'An error occurred while processing your request.';
-
-                            // Reject the Promise to signal that the request has failed
-                            reject();
-                            // Redirect to error page with Spring Boot error parameters
-                            let url = '/error?status=' + status + '&error=' + encodeURIComponent(statusText) + '&message=' + encodeURIComponent(message);
-                            window.location.href = url;
-                        }
-                    });
-
-                    // Update the progress bar as each request finishes
-                    promise.then(function() {
-                        updateProgressBar(progressBar, files);
-                    });
-
-                    promises.push(promise);
-                }
-
-                // Wait for all requests to finish
-                try {
-                    await Promise.all(promises);
-                } catch (error) {
-                    console.error('Error while uploading files: ' + error);
-                }
-
-                // Update the progress bar
-                progressBar.css('width', '100%');
-                progressBar.attr('aria-valuenow', files.length);
-
-                // After all requests are finished, download the ZIP file if needed
-                if (zipFiles) {
-                    try {
-                        let content = await jszip.generateAsync({ type: "blob" });
-                        let url = window.URL.createObjectURL(content);
-                        let a = document.createElement('a');
-                        a.href = url;
-                        a.download = "files.zip";
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                    } catch (error) {
-                        console.error('Error generating ZIP file: ' + error);
+                            // Display the error message to the user
+                            alert(message);
+                            
+                        };
+                            
                     }
+                } else {
+                	//Offline do nothing and let other scripts handle everything
+                	
+                }
+                $('#submitBtn').text(submitButtonText);
+            });
+        });
+        async function submitMultiPdfForm(event, url) {
+            // Get the selected PDF files
+            let files = $('#fileInput-input')[0].files;
+
+            // Get the existing form data
+            let formData = new FormData($('form')[0]);
+            formData.delete('fileInput');
+
+            // Show the progress bar
+            $('#progressBarContainer').show();
+
+            // Initialize the progress bar
+            let progressBar = $('#progressBar');
+            progressBar.css('width', '0%');
+            progressBar.attr('aria-valuenow', 0);
+            progressBar.attr('aria-valuemax', files.length);
+
+            // Check the flag in localStorage, default to 4
+            const zipThreshold = parseInt(localStorage.getItem('zipThreshold'), 10) || 4;
+            const zipFiles = files.length > zipThreshold;
+
+            // Initialize JSZip instance if needed
+            let jszip = null;
+            if (zipFiles) {
+                jszip = new JSZip();
+            }
+
+            // Submit each PDF file in parallel
+            let promises = [];
+            for (let i = 0; i < files.length; i++) {
+                let promise = new Promise(async function(resolve, reject) {
+                    let fileFormData = new FormData();
+                    fileFormData.append('fileInput', files[i]);
+                    for (let pair of formData.entries()) {
+                        fileFormData.append(pair[0], pair[1]);
+                    }
+                    console.log(fileFormData);
+
+                    try {
+                        let response = await fetch(url, {
+                            method: 'POST',
+                            body: fileFormData
+                        });
+
+                        if (!response) {
+                            throw new Error('Received null response for file ' + i);
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(`Error submitting request for file ${i}: ${response.status} ${response.statusText}`);
+                        }
+
+                        let contentDisposition = response.headers.get('content-disposition');
+                        let fileName = "file.pdf"
+                        if (!contentDisposition) {
+                            //throw new Error('Content-Disposition header not found for file ' + i);
+                        } else {
+                            fileName = contentDisposition.split('filename=')[1].replace(/"/g, '');
+                        }
+                        console.log('Received response for file ' + i + ': ' + response);
+
+
+
+                        let blob = await response.blob();
+                        if (zipFiles) {
+                            // Add the file to the ZIP archive
+                            jszip.file(fileName, blob);
+                            resolve();
+                        } else {
+                            // Download the file directly
+                            let url = window.URL.createObjectURL(blob);
+                            let a = document.createElement('a');
+                            a.href = url;
+                            a.download = fileName;
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                            resolve();
+                        }
+                    } catch (error) {
+                        console.error('Error submitting request for file ' + i + ': ' + error);
+
+                        // Set default values or fallbacks for error properties
+                        let status = error && error.status || 500;
+                        let statusText = error && error.statusText || 'Internal Server Error';
+                        let message = error && error.message || 'An error occurred while processing your request.';
+
+                        // Reject the Promise to signal that the request has failed
+                        reject();
+                        // Redirect to error page with Spring Boot error parameters
+                        let url = '/error?status=' + status + '&error=' + encodeURIComponent(statusText) + '&message=' + encodeURIComponent(message);
+                        window.location.href = url;
+                    }
+                });
+
+                // Update the progress bar as each request finishes
+                promise.then(function() {
+                    updateProgressBar(progressBar, files);
+                });
+
+                promises.push(promise);
+            }
+
+            // Wait for all requests to finish
+            try {
+                await Promise.all(promises);
+            } catch (error) {
+                console.error('Error while uploading files: ' + error);
+            }
+
+            // Update the progress bar
+            progressBar.css('width', '100%');
+            progressBar.attr('aria-valuenow', files.length);
+
+            // After all requests are finished, download the ZIP file if needed
+            if (zipFiles) {
+                try {
+                    let content = await jszip.generateAsync({ type: "blob" });
+                    let url = window.URL.createObjectURL(content);
+                    let a = document.createElement('a');
+                    a.href = url;
+                    a.download = "files.zip";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } catch (error) {
+                    console.error('Error generating ZIP file: ' + error);
                 }
             }
-            function updateProgressBar(progressBar, files) {
-                let progress = ((progressBar.attr('aria-valuenow') / files.length) * 100) + (100 / files.length);
-                progressBar.css('width', progress + '%');
-                progressBar.attr('aria-valuenow', parseInt(progressBar.attr('aria-valuenow')) + 1);
-            }
+        }
+        function updateProgressBar(progressBar, files) {
+            let progress = ((progressBar.attr('aria-valuenow') / files.length) * 100) + (100 / files.length);
+            progressBar.css('width', progress + '%');
+            progressBar.attr('aria-valuenow', parseInt(progressBar.attr('aria-valuenow')) + 1);
+        }
+    </script>
 
-            
-            
-
-            </script>
-            
-            
-            
-            
     <div class="custom-file-chooser">
-  <div class="custom-file">
-    <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple>
-    <label class="custom-file-label" th:for="${name}+'-input'" th:text="${inputText}"></label>
-  </div>
-  <div class="selected-files"></div>
-</div>
-<br>
+        <div class="custom-file">
+            <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple required>
+            <label class="custom-file-label" th:for="${name}+'-input'" th:text="${inputText}"></label>
+        </div>
+        <div class="selected-files"></div>
+    </div>
     <div id="progressBarContainer" style="display: none; position: relative;">
-                <div class="progress" style="height: 1rem;">
-                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                        <span class="sr-only">Loading...</span>
-                    </div>
-                </div>
+        <div class="progress" style="height: 1rem;">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                <span class="sr-only">Loading...</span>
             </div>
-<button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">Bored waiting?</button>
+        </div>
+    </div>
+    <button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">Bored waiting?</button>
 
-<div id="game-container-wrapper" class="game-container-wrapper" style="display: none;">
-              <div id="game-container">
-                <div id="lives">Lives: 3</div>
-                <div id="score">Score: 0</div>
-                <div id="high-score">High Score: 0</div>
-                <div id="level">Level: 1</div>
-                <img src="favicon.svg" class="player" id="player">
-            </div>
-              <style>
-                #game-container {
-                    position: relative;
-                    width: 100%;
-                    height: 0;
-                    padding-bottom: 75%; /* 4:3 aspect ratio */
-                    background-color: transparent;
-                    margin: auto;
-                    overflow: hidden;
-                    border: 2px solid black; /* Add border */
-                }
-
-                .pdf, .player, .projectile {
-                    position: absolute;
-                }
-                .pdf {
-                    width: 50px;
-                    height: 50px;
-                }
-                .player {
-                    width: 50px;
-                    height: 50px;
-                }
-                .projectile {
-                    background-color: black  !important;
-                    width: 5px;
-                    height: 10px;
-                }
-              #score, #level, #lives, #high-score {
-    color: black;
-    font-family: sans-serif;
-    position: absolute;
-    font-size: calc(14px + 0.25vw); /* Reduced font size */
-}
-#score {
-    top: 10px;
-    left: 10px;
-}
-#lives {
-    top: 10px;
-    left: calc(7vw); /* Adjusted position */
-}
-#high-score {
-    top: 10px;
-    left: calc(14vw); /* Adjusted position */
-}
-#level {
-    top: 10px;
-    right: 10px;
-}
-
-              </style>
-            </div>
- 
-          
-          
-          
-            
-            
-    <script th:inline="javascript">
     
-    document.addEventListener('DOMContentLoaded', function () {
-    	  const fileInput = document.getElementById('fileInput-input');
 
-    	  // Prevent default behavior for drag events
-    	  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    	    fileInput.addEventListener(eventName, preventDefaults, false);
-    	  });
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            const fileInput = document.getElementById([[${name+"-input"}]]);
 
-    	  function preventDefaults(e) {
-    	    e.preventDefault();
-    	    e.stopPropagation();
-    	  }
+            // Prevent default behavior for drag events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileInput.addEventListener(eventName, preventDefaults, false);
+            });
 
-    	  // Add drop event listener
-    	  fileInput.addEventListener('drop', handleDrop, false);
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
 
-    	  function handleDrop(e) {
-    	    const dt = e.dataTransfer;
-    	    const files = dt.files;
-    	    fileInput.files = files;
-    	    handleFileInputChange(fileInput)
-    	  }
+            // Add drop event listener
+            fileInput.addEventListener('drop', handleDrop, false);
 
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                fileInput.files = files;
+                handleFileInputChange(fileInput)
+            }
     	});
     
-    
-    $([[${"#"+name+"-input"}]]).on("change", function() {
+        $([[${"#"+name+"-input"}]]).on("change", function() {
     		handleFileInputChange(this);
     	});
     
-    function handleFileInputChange(inputElement) {
-      const files = $(inputElement).get(0).files;
-  	  const fileNames = Array.from(files).map(f => f.name);
-  	  const selectedFilesContainer = $(inputElement).siblings(".selected-files");
-  	  selectedFilesContainer.empty();
-  	  fileNames.forEach(fileName => {
-  	    selectedFilesContainer.append("<div>" + fileName + "</div>");
-  	  });
-  	  console.log("fileNames.length=" + fileNames.length)
-  	  if (fileNames.length === 1) {
-  		$(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
-		  } else if (fileNames.length > 1) {
-			  $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames.length + " files selected");
-		  } else {
-			  $(inputElement).siblings(".custom-file-label").addClass("selected").html([[#{pdfPrompt}]]);
-		  }
-    
-    }
-
+        function handleFileInputChange(inputElement) {
+            const files = $(inputElement).get(0).files;
+            const fileNames = Array.from(files).map(f => f.name);
+            const selectedFilesContainer = $(inputElement).siblings(".selected-files");
+            selectedFilesContainer.empty();
+            fileNames.forEach(fileName => {
+                selectedFilesContainer.append("<div>" + fileName + "</div>");
+            });
+            console.log("fileNames.length=" + fileNames.length)
+            if (fileNames.length === 1) {
+                $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
+            } else if (fileNames.length > 1) {
+                $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames.length + " files selected");
+            } else {
+                $(inputElement).siblings(".custom-file-label").addClass("selected").html([[#{pdfPrompt}]]);
+            }
+        }
 	</script>
 
     <style>
-    .custom-file-label {
-  padding-right: 90px;
-}
-
-.selected-files {
-  margin-top: 10px;
-  max-height: 150px;
-  overflow-y: auto;
-  white-space: pre-wrap;
-}
-
+        .custom-file-label {
+            padding-right: 90px;
+        }
+        .selected-files {
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
     </style>
-    
     
 </th:block>

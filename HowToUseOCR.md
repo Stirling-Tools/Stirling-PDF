@@ -34,14 +34,14 @@ services:
   your_service_name:
     image: your_docker_image_name
     volumes:
-      - /usr/share/tesseract-ocr/4.00/tessdata:/location/of/trainingData
+      - /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata
 ```
 
 
 #### Docker run
 Add the following to your existing docker run command
 ```bash
--v /usr/share/tesseract-ocr/4.00/tessdata:/location/of/trainingData
+-v /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata
 ```
 
 #### Non-Docker

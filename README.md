@@ -21,7 +21,12 @@ Feel free to request any features or bug fixes either in github issues or our [D
 - Merge multiple PDFs together into a single resultant file
 - Convert PDFs to and from images
 - Reorganize PDF pages into different orders.
-- Add images to PDFs at specified locations. (WIP)
+- Add/Generate signatures
+- Flatten PDFs
+- Repair PDFs
+- Detect and remove blank pages
+- Compare 2 PDFs and show differences in text
+- Add images to PDFs
 - Rotating PDFs in 90 degree increments.
 - Compressing PDFs to decrease their filesize. (Using OCRMyPDF)
 - Add and remove passwords
@@ -35,6 +40,9 @@ Feel free to request any features or bug fixes either in github issues or our [D
 - Dark mode support.
 - Custom download options (see [here](https://github.com/Frooodle/Stirling-PDF/blob/main/images/settings.png) for example)
 - Parallel file processing and downloads
+- API for integration with external scripts 
+
+Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) hosted by the team at adminforge.de
 
 ## Technologies used
 - Spring Boot + Thymeleaf
@@ -49,31 +57,47 @@ Feel free to request any features or bug fixes either in github issues or our [D
 ## How to use
 
 ### Locally
-
-Prerequisites
-- Java 17 or later
-- Gradle 7.0 or later
-
-1. Clone or download the repository.
-2. Build the project using Gradle by running `./gradlew build`
-3. Start the application by running `./gradlew bootRun` or by calling the build jar in build/libs with java -jar jarName.jar
-
+Please view https://github.com/Frooodle/Stirling-PDF/blob/main/LocalRunGuide.md
 
 ### Docker
 https://hub.docker.com/r/frooodle/s-pdf
 
 Docker Run
 ```
-docker run -p 8080:8080 frooodle/s-pdf
+docker run -d \
+  -p 8080:8080 \
+  -v /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata \
+  --name stirling-pdf \
+  frooodle/s-pdf
+  
+  
+  Can also add these for customisation but are not required
+  -e APP_HOME_NAME="Stirling PDF" \
+  -e APP_HOME_DESCRIPTION="Your locally hosted one-stop-shop for all your PDF needs." \
+  -e APP_NAVBAR_NAME="Stirling PDF" \
+  -e ALLOW_GOOGLE_VISABILITY="true" \
+  -e APP_ROOT_PATH="/" \
+  -e APP_LOCALE="en_GB" \
 ```
 Docker Compose
 ```
 version: '3.3'
 services:
-    s-pdf:
-        ports:
-            - '8080:8080'
-        image: frooodle/s-pdf
+  stirling-pdf:
+    image: frooodle/s-pdf
+    ports:
+      - '8080:8080'
+    volumes:
+      - /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata #Required for extra OCR languages
+#      - /location/of/extraConfigs:/configs
+#    environment:
+#      APP_LOCALE: en_GB
+#      APP_HOME_NAME: Stirling PDF
+#      APP_HOME_DESCRIPTION: Your locally hosted one-stop-shop for all your PDF needs.
+#      APP_NAVBAR_NAME: Stirling PDF
+#      APP_ROOT_PATH: /
+#      ALLOW_GOOGLE_VISABILITY: true
+
 ```
 
 
@@ -81,6 +105,14 @@ services:
 Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
+Stirling PDF currently supports
+- English
+- Arabic (العربية)
+- German (Deutsch)
+- French (Français)
+- Spanish (Español)
+- Chinese (简体中文)
+
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
 
@@ -98,7 +130,10 @@ Stirling PDF allows easy customization of the visible application name.
 Simply use environment variables APP_HOME_NAME, APP_HOME_DESCRIPTION and APP_NAVBAR_NAME with Docker or Java. 
 If running Java directly, you can also pass these as properties using -D arguments.
 
-Using the same method you can also change the default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR to select your default language (Will always default to English on invalid locale)
+Using the same method you can also change 
+- The default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR to select your default language (Will always default to English on invalid locale)
+- Enable/Disable search engine visablility with ALLOW_GOOGLE_VISABILITY with true / false values. Default disable visability.
+- Change root URI for Stirling-PDF ie change server.com/ to server.com/pdf-app by running APP_ROOT_PATH as pdf-app
 
 ## API
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation

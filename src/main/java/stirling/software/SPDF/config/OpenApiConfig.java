@@ -6,15 +6,17 @@ import org.springframework.context.annotation.Configuration;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
 
 @Configuration
 public class OpenApiConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
+        String version = getClass().getPackage().getImplementationVersion();
+        version =  (version != null) ? version : "1.0.0";
+        
         return new OpenAPI().components(new Components()).info(
-                new Info().title("Your API Title").version("1.0.0").description("Your API Description").license(new License().name("Your License Name").url("Your License URL")));
+                new Info().title("Stirling PDF API").version(version).description("API documentation for all Server-Side processing.\nPlease note some functionality might be UI only and missing from here."));
     }
 
 }

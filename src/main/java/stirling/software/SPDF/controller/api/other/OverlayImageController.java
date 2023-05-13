@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
 
 @RestController
@@ -20,8 +22,26 @@ public class OverlayImageController {
     private static final Logger logger = LoggerFactory.getLogger(OverlayImageController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-image")
-    public ResponseEntity<byte[]> overlayImage(@RequestPart(required = true, value = "fileInput") MultipartFile pdfFile, @RequestParam("fileInput2") MultipartFile imageFile,
-            @RequestParam("x") float x, @RequestParam("y") float y, @RequestParam("everyPage") boolean everyPage) {
+    @Operation(
+        summary = "Overlay image onto a PDF file",
+        description = "This endpoint overlays an image onto a PDF file at the specified coordinates. The image can be overlaid on every page of the PDF if specified."
+    )
+    public ResponseEntity<byte[]> overlayImage(
+        @RequestPart(required = true, value = "fileInput")
+        @Parameter(description = "The input PDF file to overlay the image onto.", required = true)
+            MultipartFile pdfFile,
+        @RequestParam("fileInput2")
+        @Parameter(description = "The image file to be overlaid onto the PDF.", required = true)
+            MultipartFile imageFile,
+        @RequestParam("x")
+        @Parameter(description = "The x-coordinate at which to place the top-left corner of the image.", example = "0")
+            float x,
+        @RequestParam("y")
+        @Parameter(description = "The y-coordinate at which to place the top-left corner of the image.", example = "0")
+            float y,
+        @RequestParam("everyPage")
+        @Parameter(description = "Whether to overlay the image onto every page of the PDF.", example = "false")
+            boolean everyPage) {
         try {
             byte[] pdfBytes = pdfFile.getBytes();
             byte[] imageBytes = imageFile.getBytes();

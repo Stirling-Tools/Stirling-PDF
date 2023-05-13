@@ -8,11 +8,18 @@ Fork Stirling-PDF and make a new branch out of Main
 
 Then add reference to the language in the navbar by adding a new language entry to the dropdown
 
-https://github.com/Frooodle/Stirling-PDF/blob/main/src/main/resources/templates/fragments/navbar.html#L80
+https://github.com/Frooodle/Stirling-PDF/blob/main/src/main/resources/templates/fragments/navbar.html#L306
+and add a flag svg file to 
+https://github.com/Frooodle/Stirling-PDF/tree/main/src/main/resources/static/images/flags
+Any SVG flags are fine, i got most of mine from [here](https://flagicons.lipis.dev/)
+If your language isnt represented by a flag just find whichever closely matches it, such as for Arabic i chose Saudi Arabia
+
 
 For example to add Polish you would add 
 ```
-<a class="dropdown-item lang_dropdown-item" href="" data-language-code="pl_PL">Polish</a>
+<a class="dropdown-item lang_dropdown-item" href="" data-language-code="pl_PL">
+    <img src="images/flags/pl.svg" alt="icon" width="20" height="15"> Polski
+</a>
 ```
 The data-language-code is the code used to reference the file in the next step.
 

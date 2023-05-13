@@ -27,13 +27,24 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+
 @RestController
 public class SplitPDFController {
 
     private static final Logger logger = LoggerFactory.getLogger(SplitPDFController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/split-pages")
-    public ResponseEntity<Resource> splitPdf(@RequestPart(required = true, value = "fileInput") MultipartFile file, @RequestParam("pages") String pages) throws IOException {
+    @Operation(summary = "Split a PDF file into separate documents",
+            description = "This endpoint splits a given PDF file into separate documents based on the specified page numbers or ranges. Users can specify pages using individual numbers, ranges, or 'all' for every page.")
+    public ResponseEntity<Resource> splitPdf(
+            @RequestPart(required = true, value = "fileInput")
+            @Parameter(description = "The input PDF file to be split")
+                    MultipartFile file,
+            @RequestParam("pages")
+            @Parameter(description = "The pages to be included in separate documents. Specify individual page numbers (e.g., '1,3,5'), ranges (e.g., '1-3,5-7'), or 'all' for every page.")
+                    String pages) throws IOException {
         // parse user input
 
         // open the pdf document

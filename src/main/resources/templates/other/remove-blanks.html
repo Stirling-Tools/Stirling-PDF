@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{removeBlanks.title})}"></th:block>
+
+
+<body>
+  <div id="page-container">
+    <div id="content-wrap">
+      <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+      <br> <br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6">
+            <h2 th:text="#{removeBlanks.header}"></h2>
+
+            <form id="multiPdfForm" th:action="@{remove-blanks}" method="post" enctype="multipart/form-data">
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+               <div class="form-group">
+                <label for="threshold" th:text="#{removeBlanks.threshold}"></label>
+                <input type="number" class="form-control" id="threshold" name="threshold" value="10">
+                <small id="thresholdHelp" class="form-text text-muted" th:text="#{removeBlanks.thresholdDesc}"></small>
+              </div>
+               <div class="form-group">
+                <label for="whitePercent" th:text="#{removeBlanks.whitePercent}"></label>
+                <input type="number" class="form-control" id="whitePercent" name="whitePercent" value="99.9" step="0.1">
+                <small id="whitePercentHelp" class="form-text text-muted" th:text="#{removeBlanks.whitePercentDesc}"></small>
+              </div>
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{removeBlanks.submit}"></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div th:insert="~{fragments/footer.html :: footer}"></div>
+  </div>
+</body>
+</html>
+

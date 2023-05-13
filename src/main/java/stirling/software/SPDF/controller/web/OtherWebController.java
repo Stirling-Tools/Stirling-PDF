@@ -37,6 +37,14 @@ public class OtherWebController {
         return "other/extract-images";
     }
     
+    @GetMapping("/flatten")
+    @Hidden
+    public String flattenForm(Model model) {
+        model.addAttribute("currentPage", "flatten");
+        return "other/flatten";
+    }
+    
+    
 
     @GetMapping("/change-metadata")
     @Hidden
@@ -45,6 +53,12 @@ public class OtherWebController {
         return "other/change-metadata";
     }
     
+    @GetMapping("/compare")
+    @Hidden
+    public String compareForm(Model model) {
+        model.addAttribute("currentPage", "compare");
+        return "other/compare";
+    }
     
     public List<String> getAvailableTesseractLanguages() {
         String tessdataDir = "/usr/share/tesseract-ocr/4.00/tessdata";
@@ -80,5 +94,18 @@ public class OtherWebController {
         return "other/adjust-contrast";
     }
     
+    @GetMapping("/repair")
+    @Hidden
+    public String repairForm(Model model) {
+        model.addAttribute("currentPage", "repair");
+        return "other/repair";
+    }
+    
+    @GetMapping("/remove-blanks")
+    @Hidden
+    public String removeBlanksForm(Model model) {
+        model.addAttribute("currentPage", "remove-blanks");
+        return "other/remove-blanks";
+    }
     
 }

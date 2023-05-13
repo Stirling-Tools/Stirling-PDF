@@ -108,16 +108,17 @@ function initializeGame() {
     }
 
 
-function resetEnemies() {
-    pdfs.forEach((pdf) => gameContainer.removeChild(pdf));
-    pdfs.length = 0;
-}
+    function resetEnemies() {
+        pdfs.forEach((pdf) => gameContainer.removeChild(pdf));
+        pdfs.length = 0;
+    }
 
 
     function updateGame() {
         if (gameOver || paused) return;
 
-        pdfs.forEach((pdf, pdfIndex) => {
+        for (let pdfIndex = 0; pdfIndex < pdfs.length; pdfIndex++) {
+            const pdf = pdfs[pdfIndex];
             const pdfY = parseInt(pdf.style.top) + pdfSpeed;
             if (pdfY + 50 > gameContainer.clientHeight) {
                 gameContainer.removeChild(pdf);
@@ -149,11 +150,7 @@ function resetEnemies() {
                     }
                 }
             }
-        });
-
-       
-
-
+        };
 
         projectiles.forEach((projectile, projectileIndex) => {
             const projectileY = parseInt(projectile.style.top) - 10;
@@ -180,31 +177,32 @@ function resetEnemies() {
 
         setTimeout(updateGame, 1000 / 60);
     }
-function resetGame() {
-    playerX = gameContainer.clientWidth / 2;
-    playerY = 50;
-    updatePlayerPosition();
 
-    pdfs.forEach((pdf) => gameContainer.removeChild(pdf));
-    projectiles.forEach((projectile) => gameContainer.removeChild(projectile));
+    function resetGame() {
+        playerX = gameContainer.clientWidth / 2;
+        playerY = 50;
+        updatePlayerPosition();
 
-    pdfs.length = 0;
-    projectiles.length = 0;
+        pdfs.forEach((pdf) => gameContainer.removeChild(pdf));
+        projectiles.forEach((projectile) => gameContainer.removeChild(projectile));
 
-    score = 0;
-    level = 1;
-    lives = 3;
-    
-    gameOver = false;
+        pdfs.length = 0;
+        projectiles.length = 0;
 
-    updateScore();
-    updateLives();
-    levelElement.textContent = 'Level: ' + level;
-    pdfSpeed = 1;
-    clearTimeout(spawnPdfTimeout); // Clear the existing spawnPdfTimeout
-    setTimeout(updateGame, 1000 / 60);
-    spawnPdfInterval();
-}
+        score = 0;
+        level = 1;
+        lives = 3;
+        
+        gameOver = false;
+
+        updateScore();
+        updateLives();
+        levelElement.textContent = 'Level: ' + level;
+        pdfSpeed = 1;
+        clearTimeout(spawnPdfTimeout); // Clear the existing spawnPdfTimeout
+        setTimeout(updateGame, 1000 / 60);
+        spawnPdfInterval();
+    }
 
 
 
@@ -243,9 +241,7 @@ function resetGame() {
             updateHighScore();
         }
         alert('Game Over! Your final score is: ' + score);
-        setTimeout(() => { // Wrap the resetGame() call in a setTimeout
-            resetGame();
-        }, 0);
+        document.getElementById('game-container-wrapper').close();
     }
 
 
@@ -281,6 +277,7 @@ function resetGame() {
 
     });
 
+    window.resetGame = resetGame;
 }
 
 window.initializeGame = initializeGame;

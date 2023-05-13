@@ -16,10 +16,13 @@
 html[lang-direction=ltr] * {
     direction: ltr;
 }
-
 html[lang-direction=rtl] * {
     direction: rtl;
     text-align: right;
+}
+.ignore-rtl {
+    direction: ltr !important;
+    text-align: left !important;
 }
 
 .align-top {
@@ -41,4 +44,17 @@ html[lang-direction=rtl] * {
 .align-bottom {
     position: absolute;
     bottom: 0;
+}
+
+.btn-group > label:first-of-type {
+    border-top-left-radius: 0.25rem !important;
+    border-bottom-left-radius: 0.25rem !important;
+}
+
+.margin-auto-parent {
+    width: 100%;
+    display: flex;
+}
+.margin-center {
+    margin: 0 auto;
 }

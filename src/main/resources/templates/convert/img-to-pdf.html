@@ -5,6 +5,7 @@
 
 
 <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
         <div id="content-wrap">
             <div th:insert="~{fragments/navbar.html :: navbar}"></div>
@@ -28,6 +29,14 @@
                                 <input type="checkbox" class="form-check-input" name="autoRotate" id="autoRotate"> 
                                 <label class="ml-3" for="autoRotate" th:text=#{imageToPDF.selectText.2}></label>
                             </div>
+                            <div class="form-group">
+                                <label th:text="#{pdfToImage.colorType}"></label> 
+                                <select class="form-control" name="colorType">
+                                    <option value="color" th:text="#{pdfToImage.color}"></option>
+                                    <option value="greyscale" th:text="#{pdfToImage.grey}"></option>
+                                    <option value="blackwhite" th:text="#{pdfToImage.blackwhite}"></option>
+                                </select>
+                            </div>
                             <br>
                             <input type="hidden" id="override" name="override" value="multi">
                             <div class="form-group">
@@ -40,7 +49,7 @@
                             
                             <br> <br>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
-  <script>
+                            <script>
                                  $('#fileInput-input').on('change', function() {
                                     var files = document.getElementById("fileInput-input").files;
                                     var conversionType = document.getElementById("conversionType");
