@@ -34,13 +34,4 @@ public class SecurityWebController {
         model.addAttribute("currentPage", "add-watermark");
         return "security/add-watermark";
     }
-
-    //WIP
-    @GetMapping("/remove-watermark")
-    @Hidden
-    public String removeWatermarkForm(Model model) {
-        model.addAttribute("currentPage", "remove-watermark");
-        return "security/remove-watermark";
-    }
-    
 }

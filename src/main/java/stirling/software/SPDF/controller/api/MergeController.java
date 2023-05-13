@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
 
 @RestController
@@ -43,8 +45,15 @@ public class MergeController {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/merge-pdfs")
-    public ResponseEntity<byte[]> mergePdfs(@RequestPart(required = true, value = "fileInput") MultipartFile[] files) throws IOException {
-        // Read the input PDF files into PDDocument objects
+    @Operation(
+        summary = "Merge multiple PDF files into one",
+        description = "This endpoint merges multiple PDF files into a single PDF file. The merged file will contain all pages from the input files in the order they were provided."
+    )
+    public ResponseEntity<byte[]> mergePdfs(
+        @RequestPart(required = true, value = "fileInput")
+        @Parameter(description = "The input PDF files to be merged into a single file", required = true)
+            MultipartFile[] files) throws IOException {
+    	// Read the input PDF files into PDDocument objects
         List<PDDocument> documents = new ArrayList<>();
 
         // Loop through the files array and read each file into a PDDocument

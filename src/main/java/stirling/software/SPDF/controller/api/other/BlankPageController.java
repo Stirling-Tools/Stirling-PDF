@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.ImageFinder;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
@@ -33,11 +35,23 @@ import stirling.software.SPDF.utils.ProcessExecutor;
 @RestController
 public class BlankPageController {
 
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
-    public ResponseEntity<byte[]> removeBlankPages(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile,
-            @RequestParam(defaultValue = "10", name = "threshold") int threshold,
-            @RequestParam(defaultValue = "99.9", name = "whitePercent") float whitePercent) throws IOException, InterruptedException {
-        PDDocument document = null;
+	@PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
+	@Operation(
+	    summary = "Remove blank pages from a PDF file",
+	    description = "This endpoint removes blank pages from a given PDF file. Users can specify the threshold and white percentage to tune the detection of blank pages."
+	)
+	public ResponseEntity<byte[]> removeBlankPages(
+	    @RequestPart(required = true, value = "fileInput")
+	    @Parameter(description = "The input PDF file from which blank pages will be removed", required = true)
+	        MultipartFile inputFile,
+	    @RequestParam(defaultValue = "10", name = "threshold")
+	    @Parameter(description = "The threshold value to determine blank pages", example = "10")
+	        int threshold,
+	    @RequestParam(defaultValue = "99.9", name = "whitePercent")
+	    @Parameter(description = "The percentage of white color on a page to consider it as blank", example = "99.9")
+	        float whitePercent) throws IOException, InterruptedException {
+		
+    	PDDocument document = null;
         try {
             document = PDDocument.load(inputFile.getInputStream());
             PDPageTree pages = document.getDocumentCatalog().getPages();

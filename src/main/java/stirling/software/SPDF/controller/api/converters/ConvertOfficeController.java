@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
@@ -54,8 +56,18 @@ public class ConvertOfficeController {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/file-to-pdf")
-    public ResponseEntity<byte[]> processPdfWithOCR(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile) throws IOException, InterruptedException {
-
+    @Operation(
+        summary = "Convert a file to a PDF using OCR",
+        description = "This endpoint converts a given file to a PDF using Optical Character Recognition (OCR). The filename of the resulting PDF will be the original filename with '_convertedToPDF.pdf' appended."
+    )
+    public ResponseEntity<byte[]> processPdfWithOCR(
+        @RequestPart(required = true, value = "fileInput")
+        @Parameter(
+            description = "The input file to be converted to a PDF file using OCR",
+            required = true
+        )
+            MultipartFile inputFile
+    ) throws IOException, InterruptedException {
         // unused but can start server instance if startup time is to long
         // LibreOfficeListener.getInstance().start();
 

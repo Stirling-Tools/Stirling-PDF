@@ -2,20 +2,13 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
-import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
-import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationMarkup;
-import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
-import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
-import stirling.software.SPDF.utils.WatermarkRemover;
 
 @RestController
 public class WatermarkController {
@@ -101,62 +93,5 @@ public class WatermarkController {
         }
         return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_watermarked.pdf");
     }
-
-
-    @PostMapping(consumes = "multipart/form-data", value = "/remove-watermark")
-    public ResponseEntity<byte[]> removeWatermark(@RequestPart(required = true, value = "fileInput") MultipartFile pdfFile, @RequestParam("watermarkText") String watermarkText)
-            throws Exception {
-
-        // Load the input PDF
-        PDDocument document = PDDocument.load(pdfFile.getInputStream());
-
-        // Create a new PDF document for the output
-        PDDocument outputDocument = new PDDocument();
-
-        // Loop through the pages
-        int numPages = document.getNumberOfPages();
-        for (int i = 0; i < numPages; i++) {
-            PDPage page = document.getPage(i);
-
-            // Process the content stream to remove the watermark text
-            WatermarkRemover editor = new WatermarkRemover(watermarkText) {
-            };
-            editor.processPage(page);
-            editor.processPage(page);
-            // Add the page to the output document
-            outputDocument.addPage(page);
-        }
-
-        for (PDPage page : outputDocument.getPages()) {
-            List<PDAnnotation> annotations = page.getAnnotations();
-            List<PDAnnotation> annotationsToRemove = new ArrayList<>();
-
-            for (PDAnnotation annotation : annotations) {
-                if (annotation instanceof PDAnnotationMarkup) {
-                    PDAnnotationMarkup markup = (PDAnnotationMarkup) annotation;
-                    String contents = markup.getContents();
-                    if (contents != null && contents.contains(watermarkText)) {
-                        annotationsToRemove.add(markup);
-                    }
-                }
-            }
-
-            annotations.removeAll(annotationsToRemove);
-        }
-        PDDocumentCatalog catalog = outputDocument.getDocumentCatalog();
-        PDAcroForm acroForm = catalog.getAcroForm();
-        if (acroForm != null) {
-            List<PDField> fields = acroForm.getFields();
-            for (PDField field : fields) {
-                String fieldValue = field.getValueAsString();
-                if (fieldValue.contains(watermarkText)) {
-                    field.setValue(fieldValue.replace(watermarkText, ""));
-                }
-            }
-        }
-
-        return PdfUtils.pdfDocToWebResponse(outputDocument, "removed.pdf");
-    }
-
 
 }

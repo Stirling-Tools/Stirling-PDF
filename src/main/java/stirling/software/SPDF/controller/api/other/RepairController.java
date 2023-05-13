@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
@@ -23,8 +25,14 @@ public class RepairController {
     private static final Logger logger = LoggerFactory.getLogger(RepairController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/repair")
-    public ResponseEntity<byte[]> repairPdf(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile)
-            throws IOException, InterruptedException {
+    @Operation(
+        summary = "Repair a PDF file",
+        description = "This endpoint repairs a given PDF file by running Ghostscript command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response."
+    )
+    public ResponseEntity<byte[]> repairPdf(
+        @RequestPart(required = true, value = "fileInput")
+        @Parameter(description = "The input PDF file to be repaired", required = true)
+            MultipartFile inputFile) throws IOException, InterruptedException {
 
         // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");

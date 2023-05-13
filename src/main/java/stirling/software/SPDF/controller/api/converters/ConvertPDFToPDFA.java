@@ -12,14 +12,23 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 
 @RestController
 public class ConvertPDFToPDFA {
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf-to-pdfa")
-    public ResponseEntity<byte[]> pdfToPdfA(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile) throws IOException, InterruptedException {
+	@PostMapping(consumes = "multipart/form-data", value = "/pdf-to-pdfa")
+	@Operation(
+	    summary = "Convert a PDF to a PDF/A",
+	    description = "This endpoint converts a PDF file to a PDF/A file. PDF/A is a format designed for long-term archiving of digital documents."
+	)
+	public ResponseEntity<byte[]> pdfToPdfA(
+	    @RequestPart(required = true, value = "fileInput")
+	    @Parameter(description = "The input PDF file to be converted to a PDF/A file", required = true)
+	        MultipartFile inputFile) throws IOException, InterruptedException {
 
         // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");

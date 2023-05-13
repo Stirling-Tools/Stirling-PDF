@@ -15,18 +15,36 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 @RestController
 public class CompressController {
 
     private static final Logger logger = LoggerFactory.getLogger(CompressController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/compress-pdf")
-    public ResponseEntity<byte[]> optimizePdf(@RequestPart(required = true, value = "fileInput") MultipartFile inputFile, @RequestParam("optimizeLevel") int optimizeLevel,
-            @RequestParam(name = "fastWebView", required = false) Boolean fastWebView, @RequestParam(name = "jbig2Lossy", required = false) Boolean jbig2Lossy)
-            throws IOException, InterruptedException {
+    @Operation(
+        summary = "Optimize PDF file",
+        description = "This endpoint accepts a PDF file and optimizes it based on the provided parameters."
+    )
+    public ResponseEntity<byte[]> optimizePdf(
+        @RequestPart(required = true, value = "fileInput")
+        @Parameter(description = "The input PDF file to be optimized.", required = true)
+            MultipartFile inputFile,
+        @RequestParam("optimizeLevel")
+        @Parameter(description = "The level of optimization to apply to the PDF file. Higher values indicate greater compression but may reduce quality.", 
+                    schema = @Schema(allowableValues = {"0", "1", "2", "3"}), example = "1")
+            int optimizeLevel,
+        @RequestParam(name = "fastWebView", required = false)
+        @Parameter(description = "If true, optimize the PDF for fast web view. This increases the file size by about 25%.", example = "false")
+            Boolean fastWebView,
+        @RequestParam(name = "jbig2Lossy", required = false)
+        @Parameter(description = "If true, apply lossy JB2 compression to the PDF file.", example = "false")
+            Boolean jbig2Lossy)
+        throws IOException, InterruptedException {
 
         // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");
