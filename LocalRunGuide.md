@@ -112,7 +112,7 @@ If you plan to use the OCR (Optical Character Recognition) functionality, you mi
 
 1. Download the desired language pack(s) by selecting the `.traineddata` file(s) for the language(s) you need.
 2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tesseract-ocr/4.00/tessdata`
-Please view  [OCRmyPDF install guide](https:ocrmypdf.readthedocs.io/en/latest/installation.html) for more info.
+Please view  [OCRmyPDF install guide](https://ocrmypdf.readthedocs.io/en/latest/installation.html) for more info.
 **IMPORTANT:** DO NOT REMOVE EXISTING `eng.traineddata`, IT'S REQUIRED.
 
 
