@@ -364,7 +364,7 @@ function compareVersions(version1, version2) {
             </div>
 
         </div>
-        <script>
+        <script th:inline="javascript">
         
         
         function updateFavoritesDropdown() {
@@ -396,7 +396,7 @@ function compareVersions(version1, version2) {
             if(!hasFavorites){
             	var defaultItem = document.createElement('a');
                 defaultItem.className = 'dropdown-item';
-                defaultItem.textContent = 'No favourites added';
+                defaultItem.textContent = [[#{noFavourites}]]
                 dropdown.appendChild(defaultItem);
             }
         }
@@ -442,7 +442,7 @@ function compareVersions(version1, version2) {
                 <div class="form-group">
                   <div class="custom-control custom-checkbox">
                     <input type="checkbox" class="custom-control-input" id="boredWaiting">
-                    <label class="custom-control-label" for="boredWaiting">Bored Waiting? :)</label>
+                    <label class="custom-control-label" for="boredWaiting" th:text="#{bored}"></label>
                   </div>
                 </div>
             </div>
