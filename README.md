@@ -137,4 +137,4 @@ Using the same method you can also change
 
 ## API
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
-[here](https://app.swaggerhub.com/apis-docs/Frooodle/Stirling-PDF/1.0.0) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation 
+[here](https://app.swaggerhub.com/apis-docs/Frooodle/Stirling-PDF/) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation 
