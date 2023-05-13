@@ -58,10 +58,15 @@ filter: invert(0.2) sepia(2) saturate(50) hue-rotate(190deg);
 }
 
 .favorite-icon {
+    display: none;
     position: absolute;
     top: 10px;
     right: 10px;
-    cursor: pointer;
+}
+
+/* Only show the favorite icons when the parent card is being hovered over */
+.feature-card:hover .favorite-icon {
+    display: block;
 }
 .favorite-icon img {
     filter: brightness(0);
