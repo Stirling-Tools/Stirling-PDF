@@ -30,9 +30,11 @@
                         <!-- pdf selector -->
                         <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multiple=false, accept='application/pdf')}"></div>
                         <script>
+                        	let originalFileName = '';
                             document.querySelector('input[name=pdf-upload]').addEventListener('change', async (event) => {
                                 const file = event.target.files[0];
                                 if (file) {
+                                	originalFileName = file.name.replace(/\.[^/.]+$/, "");
                                     const pdfData = await file.arrayBuffer();
                                     const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
                                     await DraggableUtils.renderPage(pdfDoc, 0);
@@ -275,7 +277,7 @@
                                 const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
                                 const link = document.createElement('a');
                                 link.href = URL.createObjectURL(blob);
-                                link.download = 'signed-document.pdf';
+                                link.download = originalFileName + '_signed.pdf';
                                 link.click();
                             });
                         </script>
