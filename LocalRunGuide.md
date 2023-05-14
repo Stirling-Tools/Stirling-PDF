@@ -52,6 +52,8 @@ sudo dnf install -y git automake autoconf libtool leptonica-devel pkg-config zli
 ### Step 2: Clone and Build jbig2enc (Only required for certain OCR functionality)
 
 ```bash
+mkdir ~/.git
+cd ~/.git &&\
 git clone https://github.com/agl/jbig2enc.git &&\
 cd jbig2enc &&\
 ./autogen.sh &&\
@@ -104,6 +106,7 @@ pip3 install uno opencv-python-headless unoconv pngquant
 ### Step 4: Clone and Build Stirling-PDF
 
 ```bash
+cd ~/.git &&\
 git clone https://github.com/Frooodle/Stirling-PDF.git &&\
 cd Stirling-PDF &&\
 chmod +x ./gradlew &&\
@@ -129,9 +132,13 @@ echo "Scripts installed."
 If you plan to use the OCR (Optical Character Recognition) functionality, you might need to install language packs for Tesseract if running non-english scanning.
 
 ##### Installing Language Packs
+Easiest is to use the langpacks provided by your repositories. Skip the other steps
 
-1. Download the desired language pack(s) by selecting the `.traineddata` file(s) for the language(s) you need. You can also use your repositories provided langpacks.
+Manual:
+
+1. Download the desired language pack(s) by selecting the `.traineddata` file(s) for the language(s) you need.
 2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tesseract-ocr/4.00/tessdata`
+3. 
 Please view  [OCRmyPDF install guide](https://ocrmypdf.readthedocs.io/en/latest/installation.html) for more info.
 **IMPORTANT:** DO NOT REMOVE EXISTING `eng.traineddata`, IT'S REQUIRED.
 
@@ -204,4 +211,3 @@ export APP_HOME_NAME="Stirling PDF"
 or
 -DAPP_HOME_NAME="Stirling PDF" 
 ```
-
