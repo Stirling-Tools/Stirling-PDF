@@ -80,5 +80,13 @@
         <div th:insert="~{fragments/footer.html :: footer}"></div>
     </div>
 </body>
-
+<style>
+    html[lang-direction="rtl"] input.form-check-input {
+      position: relative;
+      margin-left: 0px;
+    }
+    html[lang-direction="rtl"] label.form-check-label {
+      display: inline;
+    }
+  </style>
 </html>
