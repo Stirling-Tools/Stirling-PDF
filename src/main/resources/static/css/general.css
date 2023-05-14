@@ -51,6 +51,14 @@ html[lang-direction=rtl] * {
     border-bottom-left-radius: 0.25rem !important;
 }
 
+html[lang-direction="rtl"] input.form-check-input {
+    position: relative;
+    margin-left: 0px;
+}
+html[lang-direction="rtl"] label.form-check-label {
+    display: inline;
+}
+
 .margin-auto-parent {
     width: 100%;
     display: flex;
