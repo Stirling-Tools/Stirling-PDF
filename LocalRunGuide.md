@@ -97,7 +97,7 @@ pip3 install opencv-python-headless
 For Fedora:
 
 ```bash
-sudo dnf install -y libreoffice-writer libreoffice-calc libreoffice-impress unpaper ocrmypdf
+sudo dnf install -y libreoffice-writer libreoffice-calc libreoffice-impress unpaper ocrmypdf tesseract-osd
 pip3 install uno opencv-python-headless unoconv pngquant 
 ```
 
