@@ -170,6 +170,31 @@ or
 java -jar build/libs/app.jar
 ```
 
+### Step 8: Adding a Desktop icon
+
+This will add a modified Appstarter to your Appmenu.
+```bash
+location=$(pwd)/gradlew
+image=$(pwd)/docs/stirling-transparent.svg
+
+cat > ~/.local/share/applications/Stirling-PDF.desktop <<EOF
+[Desktop Entry]
+Name=Stirling PDF;
+GenericName=Launch StirlingPDF and open its WebGUI;
+Category=Office;
+Exec=xdg-open http://localhost:8080 && nohup $location bootRun &;
+Icon=$image;
+Keywords=pdf;
+Type=Application;
+NoDisplay=false;
+Terminal=true;
+EOF
+```
+
+Note: Currently the app will run in the background until manually closed.
+
+---
+
 Remember to set the necessary environment variables before running the project if you want to customize the application the list can be seen in the main readme.
 
 You can do this in the terminal by using the `export` command or -D arguements to java -jar command:
