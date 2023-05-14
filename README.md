@@ -112,6 +112,8 @@ Stirling PDF currently supports
 - French (Français)
 - Spanish (Español)
 - Chinese (简体中文)
+- Catalan (Català)
+- Italian (Italiano)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
