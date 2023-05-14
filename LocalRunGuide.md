@@ -43,6 +43,12 @@ sudo apt-get update
 sudo apt-get install -y git  automake  autoconf  libtool  libleptonica-dev  pkg-config zlib1g-dev make g++ java-17-openjdk python3 python3-pip
 ```
 
+For Fedora-based systems use this command: 
+
+```bash
+sudo dnf install -y git automake autoconf libtool leptonica-devel pkg-config zlib-devel make gcc-c++ java-17-openjdk python3 python3-pip
+```
+
 ### Step 2: Clone and Build jbig2enc (Only required for certain OCR functionality)
 
 ```bash
@@ -86,6 +92,13 @@ For Debian-based systems, you can use the following command:
 ```bash
 sudo apt-get install -y libreoffice-core libreoffice-common libreoffice-writer libreoffice-calc  libreoffice-impress python3-uno  unoconv  pngquant  unpaper  ocrmypdf
 pip3 install opencv-python-headless
+```
+
+For Fedora:
+
+```bash
+sudo dnf install -y libreoffice-writer libreoffice-calc libreoffice-impress unpaper ocrmypdf
+pip3 install uno opencv-python-headless unoconv pngquant 
 ```
 
 ### Step 4: Clone and Build Stirling-PDF
