@@ -1,0 +1,444 @@
+###########
+# Generisk #
+###########
+# riktningen som språket skrivs (ltr = vänster till höger, rtl = höger till vänster)
+language.direction=ltr
+
+pdfPrompt=Välj PDF(er)
+multiPdfPrompt=Välj PDF-filer (2+)
+multiPdfDropPrompt=Välj (eller dra och släpp) alla PDF-filer du behöver
+imgPrompt=Välj bild(er)
+genericSubmit=Skicka
+processTimeWarning=Varning: Denna process kan ta upp till en minut beroende på filstorlek
+pageOrderPrompt=Sidordning (Ange en kommaseparerad lista med sidnummer) :
+goToPage=Gå till
+sant=Sant
+false=Falskt
+unknown=Okänt
+save=Spara
+close=Stäng
+filesSelected=filer valda
+noFavourites=Inga favoriter har lagts till
+bored=Utråkad att vänta?
+#############
+# HEMSIDA #
+#############
+home.desc=Din lokala one-stop-shop för alla dina PDF-behov.
+
+
+navbar.convert=Konvertera
+navbar.security=Säkerhet
+navbar.other=Annat
+navbar.darkmode=Mörkt läge
+navbar.pageOps=Sidoperationer
+
+home.multiTool.title=PDF Multi-verktyg
+home.multiTool.desc=Sammanfoga, rotera, ordna om och ta bort sidor
+
+home.merge.title=Sammanfoga
+home.merge.desc=Sammanfoga enkelt flera PDF-filer till en.
+
+home.split.title=Dela
+home.split.desc=Dela upp PDF-filer i flera dokument
+
+home.rotate.title=Rotera
+home.rotate.desc=Rotera enkelt dina PDF-filer.
+
+home.imageToPdf.title=Bild till PDF
+home.imageToPdf.desc=Konvertera en bild (PNG, JPEG, GIF) till PDF.
+
+home.pdfToImage.title=PDF till bild
+home.pdfToImage.desc=Konvertera en PDF till en bild. (PNG, JPEG, GIF)
+
+home.pdfOrganiser.title=Ordna
+home.pdfOrganiser.desc=Ta bort/ordna om sidor i valfri ordning
+
+home.addImage.title=Lägg till bild
+home.addImage.desc=Lägger till en bild på en angiven plats i PDF:en (pågår arbete)
+
+home.watermark.title=Lägg till vattenstämpel
+home.watermark.desc=Lägg till en anpassad vattenstämpel till ditt PDF-dokument.
+
+home.remove-watermark.title=Ta bort vattenstämpel
+home.remove-watermark.desc=Ta bort vattenstämplar från ditt PDF-dokument.
+
+home.permissions.title=Ändra behörigheter
+home.permissions.desc=Ändra behörigheterna för ditt PDF-dokument
+
+home.removePages.title=Ta bort
+home.removePages.desc=Ta bort oönskade sidor från ditt PDF-dokument.
+
+home.addPassword.title=Lägg till lösenord
+home.addPassword.desc=Kryptera ditt PDF-dokument med ett lösenord.
+
+home.removePassword.title=Ta bort lösenord
+home.removePassword.desc=Ta bort lösenordsskydd från ditt PDF-dokument.
+
+home.compressPdfs.title=Komprimera
+home.compressPdfs.desc=Komprimera PDF-filer för att minska deras filstorlek.
+
+home.changeMetadata.title=Ändra metadata
+home.changeMetadata.desc=Ändra/ta bort/lägg till metadata från ett PDF-dokument
+
+home.fileToPDF.title=Konvertera fil till PDF
+home.fileToPDF.desc=Konvertera nästan vilken fil som helst till PDF (DOCX, PNG, XLS, PPT, TXT och mer)
+
+home.ocr.title=OCR / Rensningsskanningar
+home.ocr.desc=Cleanup skannar och upptäcker text från bilder i en PDF och lägger till den igen som text.
+
+home.extractImages.title=Extrahera bilder
+home.extractImages.desc=Extraherar alla bilder från en PDF och sparar dem till zip
+
+home.pdfToPDFA.title=PDF till PDF/A
+home.pdfToPDFA.desc=Konvertera PDF till PDF/A för långtidslagring
+
+home.PDFToWord.title=PDF till Word
+home.PDFToWord.desc=Konvertera PDF till Word-format (DOC, DOCX och ODT)
+
+home.PDFToPresentation.title=PDF till presentation
+home.PDFToPresentation.desc=Konvertera PDF till presentationsformat (PPT, PPTX och ODP)
+
+home.PDFToText.title=PDF till text/RTF
+home.PDFToText.desc=Konvertera PDF till text- eller RTF-format
+
+home.PDFToHTML.title=PDF till HTML
+home.PDFToHTML.desc=Konvertera PDF till HTML-format
+
+home.PDFToXML.title=PDF till XML
+home.PDFToXML.desc=Konvertera PDF till XML-format
+
+home.ScannerImageSplit.title=Detektera/Dela skannade foton
+home.ScannerImageSplit.desc=Delar flera foton från ett foto/PDF
+
+home.sign.title=Signera
+home.sign.desc=Lägger till signatur till PDF genom ritning, text eller bild
+
+home.flatten.title=Platta till
+home.flatten.desc=Ta bort alla interaktiva element och formulär från en PDF
+
+home.repair.title=Reparera
+home.repair.desc=Försöker reparera en korrupt/trasig PDF
+
+home.removeBlanks.title=Ta bort tomma sidor
+home.removeBlanks.desc=Känner av och tar bort tomma sidor från ett dokument
+
+home.compare.title=Jämför
+home.compare.desc=Jämför och visar skillnaderna mellan 2 PDF-dokument
+
+downloadPdf=Ladda ner PDF
+text=Text
+font=Teckensnitt
+
+removeBlanks.title=Ta bort tomrum
+removeBlanks.header=Ta bort tomma sidor
+removeBlanks.threshold=Tröskel:
+removeBlanks.thresholdDesc=Tröskel för att bestämma hur vit en vit pixel måste vara
+removeBlanks.whitePercent=Vit procent (%):
+removeBlanks.whitePercentDesc=Procentandel av sidan som måste vara vit för att kunna tas bort
+removeBlanks.submit=Ta bort tomrum
+
+compare.title=Jämför
+compare.header=Jämför PDF-filer
+compare.document.1=Dokument 1
+compare.document.2=Dokument 2
+compare.submit=Jämför
+
+sign.title=Signera
+sign.header=Skriv under PDF-filer
+sign.upload=Ladda upp bild
+sign.draw=Rita signatur
+sign.text=Textinmatning
+sign.clear=Rensa
+sign.add=Lägg till
+
+repair.title=Reparera
+repair.header=Reparera PDF-filer
+repair.submit=Reparera
+
+flatten.title=Platta till
+flatten.header=Placera PDF-filer
+flatten.submit=Platta till
+
+ScannerImageSplit.selectText.1=Vinkeltröskel:
+ScannerImageSplit.selectText.2=Ställer in den minsta absoluta vinkeln som krävs för att bilden ska roteras (standard: 10).
+ScannerImageSplit.selectText.3=Tolerans:
+ScannerImageSplit.selectText.4=Bestämmer intervallet för färgvariation runt den uppskattade bakgrundsfärgen (standard: 30).
+ScannerImageSplit.selectText.5=Minsta area:
+ScannerImageSplit.selectText.6=Ställer in minsta areatröskel för ett foto (standard: 10000).
+ScannerImageSplit.selectText.7=Minsta konturarea:
+ScannerImageSplit.selectText.8=Ställer in minsta tröskelvärde för konturarea för ett foto
+ScannerImageSplit.selectText.9=Kantstorlek:
+ScannerImageSplit.selectText.10=Ställer in storleken på kanten som läggs till och tas bort för att förhindra vita kanter i utdata (standard: 1).
+
+navbar.settings=Inställningar
+settings.title=Inställningar
+settings.update=Uppdatering tillgänglig
+settings.appVersion=Appversion:
+settings.downloadOption.title=Välj nedladdningsalternativ (för nedladdning av en fil utan zip):
+settings.downloadOption.1=Öppnas i samma fönster
+settings.downloadOption.2=Öppna i nytt fönster
+settings.downloadOption.3=Ladda ner fil
+settings.zipThreshold=Zip-filer när antalet nedladdade filer överskrider
+
+
+
+                            
+                            
+#OCR
+ocr.title=OCR / Scan Cleanup
+ocr.header=Rengöringsskanningar / OCR (Optical Character Recognition)
+ocr.selectText.1=Välj språk som ska upptäckas i PDF:en (de listade är de som för närvarande identifieras):
+ocr.selectText.2=Producera en textfil som innehåller OCR-text tillsammans med den OCR-skrivna PDF-filen
+ocr.selectText.3=Korrekta sidor skannades i en sned vinkel genom att rotera dem tillbaka på plats
+ocr.selectText.4=Rensa sidan så det är mindre troligt att OCR hittar text i bakgrundsbrus. (Ingen utgångsändring)
+ocr.selectText.5=Rensa sidan så det är mindre sannolikt att OCR kommer att hitta text i bakgrundsbrus, upprätthåller rensning i utdata.
+ocr.selectText.6=Ignorerar sidor som har interaktiv text, endast OCR-sidor som är bilder
+ocr.selectText.7=Tvinga OCR, kommer OCR att ta bort alla ursprungliga textelement
+ocr.selectText.8=Normal (kommer fel om PDF innehåller text)
+ocr.selectText.9=Ytterligare inställningar
+ocr.selectText.10=OCR-läge
+ocr.selectText.11=Ta bort bilder efter OCR (tar bort ALLA bilder, endast användbart om en del av konverteringssteget)
+ocr.selectText.12=Rendertyp (avancerat)
+ocr.help=Vänligen läs den här dokumentationen om hur du använder detta för andra språk och/eller använder inte i docker
+ocr.credit=Denna tjänst använder OCRmyPDF och Tesseract för OCR.
+ocr.submit=Bearbeta PDF med OCR
+
+
+
+extractImages.title=Extrahera bilder
+extractImages.header=Extrahera bilder
+extractImages.selectText=Välj bildformat att konvertera extraherade bilder till
+extractImages.submit=Extrahera
+
+
+#Fil till PDF
+fileToPDF.title=Fil till PDF
+fileToPDF.header=Konvertera valfri fil till PDF
+fileToPDF.credit=Denna tjänst använder LibreOffice och Unoconv för filkonvertering.
+fileToPDF.supportedFileTypes=Filtyper som stöds bör inkludera nedanstående men för en fullständig uppdaterad lista över format som stöds, se LibreOffice-dokumentationen
+fileToPDF.submit=Konvertera till PDF
+
+
+#komprimera
+compress.title=Komprimera
+compress.header=Komprimera PDF
+compress.credit=Denna tjänst använder OCRmyPDF för PDF-komprimering/optimering.
+compress.selectText.1=Optimeringsnivå:
+compress.selectText.2=0 (Ingen optimering)
+compress.selectText.3=1 (Standard, förlustfri optimering)
+compress.selectText.4=2 (förlustoptimering)
+compress.selectText.5=3 (förlustoptimering, mer aggressiv)
+compress.selectText.6=Aktivera snabb webbvy (linjärisera PDF)
+compress.selectText.7=Aktivera JBIG2-kodning med förlust
+compress.submit=Komprimera
+
+
+#Lägg till bild
+addImage.title=Lägg till bild
+addImage.header=Lägg till bild till PDF
+addImage.everyPage=Varje sida?
+addImage.submit=Lägg till bild
+
+
+#sammanfoga
+merge.title=Sammanfoga
+merge.header=Slå samman flera PDF-filer (2+)
+merge.submit=Slå samman
+
+#pdfArrangör
+pdfOrganiser.title=Sidorganisatör
+pdfOrganiser.header=PDF-sidorganisatör
+pdfOrganiser.submit=Ordna om sidor
+
+#multiverktyg
+multiTool.title=PDF-multiverktyg
+multiTool.header=PDF Multi-verktyg
+
+
+#pageRemover
+pageRemover.title=Sidborttagare
+pageRemover.header=PDF Sidborttagning
+pageRemover.pagesToDelete=Sidor att radera (Ange en kommaseparerad lista med sidnummer) :
+pageRemover.submit=Ta bort sidor
+
+#rotera
+rotate.title=Rotera PDF
+rotate.header=Rotera PDF
+rotate.selectAngle=Välj rotationsvinkel (i multipler av 90 grader):
+rotate.submit=Rotera
+
+
+
+
+#sammanfoga
+split.title=Dela upp PDF
+split.header=Dela upp PDF
+split.desc.1=Siffrorna du väljer är sidnumret du vill göra en split på
+split.desc.2=Som sådan skulle ett val av 1,3,7-8 dela upp ett 10-sidigt dokument i 6 separata PDF-filer med:
+split.desc.3=Dokument #1: Sida 1
+split.desc.4=Dokument #2: Sida 2 och 3
+split.desc.5=Dokument #3: Sida 4, 5 och 6
+split.desc.6=Dokument #4: Sida 7
+split.desc.7=Dokument #5: Sida 8
+split.desc.8=Dokument #6: Sida 9 och 10
+split.splitPages=Ange sidor att dela på:
+split.submit=Dela
+
+
+#sammanfoga
+imageToPDF.title=Bild till PDF
+imageToPDF.header=Bild till PDF
+imageToPDF.submit=Konvertera
+imageToPDF.selectText.1=Sträck för att passa
+imageToPDF.selectText.2=Rotera PDF automatiskt
+imageToPDF.selectText.3=Multifillogik (Endast aktiverad om man arbetar med flera bilder)
+imageToPDF.selectText.4=Slå samman till en enda PDF
+imageToPDF.selectText.5=Konvertera till separata PDF-filer
+                                   
+#pdfToImage
+pdfToImage.title=PDF till bild
+pdfToImage.header=PDF till bild
+pdfToImage.selectText=Bildformat
+pdfToImage.singleOrMultiple=Bildresultattyp
+pdfToImage.single=Enstaka stor bild
+pdfToImage.multi=Flera bilder
+pdfToImage.colorType=Färgtyp
+pdfToImage.color=Färg
+pdfToImage.grey=Gråskala
+pdfToImage.blackwhite=Svartvitt (kan förlora data!)
+pdfToImage.submit=Konvertera
+
+#addPassword
+addPassword.title=Lägg till lösenord
+addPassword.header=Lägg till lösenord (kryptera)
+addPassword.selectText.1=Välj PDF för att kryptera
+addPassword.selectText.2=Lösenord
+addPassword.selectText.3=Längd på krypteringsnyckeln
+addPassword.selectText.4=Högre värden är starkare, men lägre värden har bättre kompatibilitet.
+addPassword.selectText.5=Behörigheter att ställa in
+addPassword.selectText.6=Förhindra sammansättning av dokument
+addPassword.selectText.7=Förhindra innehållsextraktion
+addPassword.selectText.8=Förhindra extraktion för tillgänglighet
+addPassword.selectText.9=Förhindra att fylla i formulär
+addPassword.selectText.10=Förhindra modifiering
+addPassword.selectText.11=Förhindra anteckningsändring
+addPassword.selectText.12=Förhindra utskrift
+addPassword.selectText.13=Förhindra utskrift av olika format
+addPassword.submit=Kryptera
+
+#vattenstämpel
+watermark.title=Lägg till vattenstämpel
+watermark.header=Lägg till vattenstämpel
+watermark.selectText.1=Välj PDF för att lägga till vattenstämpel till:
+watermark.selectText.2=Vattenmärkestext:
+watermark.selectText.3=Teckenstorlek:
+watermark.selectText.4=Rotation (0-360):
+watermark.selectText.5=widthSpacer (mellanrum mellan varje vattenstämpel horisontellt):
+watermark.selectText.6=heightSpacer (mellanrum mellan varje vattenstämpel vertikalt):
+watermark.selectText.7=Opacitet (0% - 100%):
+watermark.submit=Lägg till vattenstämpel
+
+#remove-watermark
+remove-watermark.title=Ta bort vattenstämpel
+remove-watermark.header=Ta bort vattenstämpel
+remove-watermark.selectText.1=Välj PDF för att ta bort vattenstämpel från:
+remove-watermark.selectText.2=Vattenstämpeltext:
+remove-watermark.submit=Ta bort vattenstämpel
+
+#Ändra behörigheter
+permissions.title=Ändra behörigheter
+permissions.header=Ändra behörigheter
+permissions.warning=Varning för att dessa behörigheter ska vara oföränderliga, det rekommenderas att ställa in dem med ett lösenord via sidan Lägg till lösenord
+permissions.selectText.1=Välj PDF för att ändra behörigheter
+permissions.selectText.2=Behörigheter att ställa in
+permissions.selectText.3=Förhindra sammansättning av dokument
+permissions.selectText.4=Förhindra innehållsextraktion
+permissions.selectText.5=Förhindra extraktion för tillgänglighet
+permissions.selectText.6=Förhindra att fylla i formulär
+permissions.selectText.7=Förhindra ändring
+permissions.selectText.8=Förhindra anteckningsändring
+permissions.selectText.9=Förhindra utskrift
+permissions.selectText.10=Förhindra utskrift av olika format
+permissions.submit=Ändra
+
+#ta bort lösenord
+removePassword.title=Ta bort lösenord
+removePassword.header=Ta bort lösenord (Dekryptera)
+removePassword.selectText.1=Välj PDF att dekryptera
+removePassword.selectText.2=Lösenord
+removePassword.submit=Ta bort
+
+changeMetadata.title=Ändra metadata
+changeMetadata.header=Ändra metadata
+changeMetadata.selectText.1=Redigera de variabler du vill ändra
+changeMetadata.selectText.2=Ta bort all metadata
+changeMetadata.selectText.3=Visa anpassade metadata:
+changeMetadata.author=Författare:
+changeMetadata.creationDate=Skapningsdatum (åååå/MM/dd HH:mm:ss):
+changeMetadata.creator=Skapare:
+changeMetadata.keywords=Sökord:
+changeMetadata.modDate=Ändringsdatum (åååå/MM/dd HH:mm:ss):
+changeMetadata.producer=Producent:
+changeMetadata.subject=Ämne:
+changeMetadata.title=Titel:
+changeMetadata.trapped=Fångad:
+changeMetadata.selectText.4=Andra metadata:
+changeMetadata.selectText.5=Lägg till anpassad metadatapost
+changeMetadata.submit=Ändra
+
+xlsToPdf.title=Excel till PDF
+xlsToPdf.header=Excel till PDF
+xlsToPdf.selectText.1=Välj XLS eller XLSX Excel-ark att konvertera
+xlsToPdf.convert=konvertera
+
+
+
+
+pdfToPDFA.title=PDF till PDF/A
+pdfToPDFA.header=PDF till PDF/A
+pdfToPDFA.credit=Denna tjänst använder OCRmyPDF för PDF/A-konvertering
+pdfToPDFA.submit=Konvertera
+
+
+
+PDFToWord.title=PDF till Word
+PDFToWord.header=PDF till Word
+PDFToWord.selectText.1=Utdatafilformat
+PDFToWord.credit=Denna tjänst använder LibreOffice för filkonvertering.
+PDFToWord.submit=Konvertera
+
+PDFToPresentation.title=PDF till presentation
+PDFToPresentation.header=PDF till presentation
+PDFToPresentation.selectText.1=Utdatafilformat
+PDFToPresentation.credit=Denna tjänst använder LibreOffice för filkonvertering.
+PDFToPresentation.submit=Konvertera
+
+
+PDFToText.title=PDF till text/RTF
+PDFToText.header=PDF till text/RTF
+PDFToText.selectText.1=Utdatafilformat
+PDFToText.credit=Denna tjänst använder LibreOffice för filkonvertering.
+PDFToText.submit=Konvertera
+
+
+PDFToHTML.title=PDF till HTML
+PDFToHTML.header=PDF till HTML
+PDFToHTML.credit=Denna tjänst använder LibreOffice för filkonvertering.
+PDFToHTML.submit=Konvertera
+
+PDFToXML.title=PDF till XML
+PDFToXML.header=PDF till XML
+PDFToXML.credit=Denna tjänst använder LibreOffice för filkonvertering.
+PDFToXML.submit=Konvertera
+
+
+
+
+
+
+
+
+
+
+
+
