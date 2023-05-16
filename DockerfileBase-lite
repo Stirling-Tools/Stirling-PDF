@@ -1,0 +1,57 @@
+# Build jbig2enc in a separate stage
+FROM debian:bullseye-slim as jbig2enc_builder
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        git \
+        automake \
+        autoconf \
+        libtool \
+        libleptonica-dev \
+        pkg-config \
+        ca-certificates \
+        zlib1g-dev \
+		make \
+		g++
+
+RUN git clone https://github.com/agl/jbig2enc && \
+    cd jbig2enc && \
+    ./autogen.sh && \
+    ./configure && \
+    make && \
+    make install
+
+
+# Main stage
+FROM openjdk:17-jdk-slim AS base
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3-uno \
+        python3-pip \
+        unoconv \
+        pngquant \
+        unpaper \
+        ocrmypdf && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir /usr/share/tesseract-ocr-original && \
+    cp -r /usr/share/tesseract-ocr/* /usr/share/tesseract-ocr-original && \
+    rm -rf /usr/share/tesseract-ocr
+
+# Python packages stage
+FROM base AS python-packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        libffi-dev \
+        libssl-dev \
+        zlib1g-dev \
+        libjpeg-dev && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir \
+        opencv-python-headless && \
+    rm -rf /var/lib/apt/lists/*
+
+# Final stage: Copy necessary files from the previous stage
+FROM base
+COPY --from=python-packages /usr/local /usr/local
+COPY --from=jbig2enc_builder /usr/local/bin/jbig2 /usr/local/bin/jbig2

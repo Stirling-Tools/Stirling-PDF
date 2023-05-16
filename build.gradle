@@ -24,6 +24,11 @@ dependencies {
     
 	//general PDF
     implementation 'org.apache.pdfbox:pdfbox:2.0.28'
+    
+    
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-core'
+    
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
 }
