@@ -18,7 +18,7 @@ Depending on your requirements, you can choose the appropriate language pack for
 ### Installing Language Packs
 
 1. Download the desired language pack(s) by selecting the `.traineddata` file(s) for the language(s) you need.
-2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tesseract-ocr/4.00/tessdata`
+2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tesseract-ocr/4.00/tessdata` (Debian) or `/usr/share/tesseract/tessdata` (Fedora)
 
 # DO NOT REMOVE EXISTING ENG.TRAINEDDATA, ITS REQUIRED.
 
@@ -48,4 +48,29 @@ Add the following to your existing docker run command
 If you are not using Docker, you need to install the OCR components, including the ocrmypdf app.
 You can see [OCRmyPDF install guide](https://ocrmypdf.readthedocs.io/en/latest/installation.html)
 
+Debian based systems, install languages with this command:
 
+```bash
+sudo apt update &&\
+# All languages
+# sudo apt install -y 'tesseract-ocr-*'
+
+# Find languages:
+apt search tesseract-ocr-
+
+# View installed languages:
+dpkg-query -W tesseract-ocr- | sed 's/tesseract-ocr-//g'
+```
+
+Fedora:
+
+```bash
+# All languages
+# sudo dnf install -y tesseract-langpack-*
+
+# Find languages:
+dnf search -C tesseract-langpack-
+
+# View installed languages:
+rpm -qa | grep tesseract-langpack | sed 's/tesseract-langpack-//g'
+```
