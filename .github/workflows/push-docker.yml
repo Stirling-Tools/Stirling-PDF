@@ -46,30 +46,63 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ github.token }}
 
-    - name: Generate tags
-      id: meta
-      uses: docker/metadata-action@v4.4.0
-      with:
-        images: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
-          ghcr.io/${{ github.repository_owner }}/s-pdf
-        tags: |
-          ${{ steps.versionNumber.outputs.versionNumber }}${{ github.ref == 'refs/heads/main' && '-alpha' || '' }}
-          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+      - name: Generate tags
+        id: meta
+        uses: docker/metadata-action@v4.4.0
+        with:
+          images: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+            ghcr.io/${{ github.repository_owner }}/s-pdf
+          tags: |
+            ${{ steps.versionNumber.outputs.versionNumber }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2.1.0
-      
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2.5.0
-        
-    - name: Build and push
-      uses: docker/build-push-action@v4.0.0
-      with:
-        context: .
-        push: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        platforms: linux/amd64,linux/arm64/v8
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2.1.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.5.0
+
+      - name: Build and push main Dockerfile
+        uses: docker/build-push-action@v4.0.0
+        with:
+          context: .
+          dockerfile: ./Dockerfile
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64/v8
+
+      - name: Build and push Dockerfile-lite
+        uses: docker/build-push-action@v4.0.0
+        with:
+          context: .
+          dockerfile: ./Dockerfile-lite
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/stirling-pdf-lite:${{ steps.versionNumber.outputs.versionNumber }}
+            ghcr.io/${{ github.repository_owner }}/stirling-pdf-lite:${{ steps.versionNumber.outputs.versionNumber }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push Dockerfile-ultralite
+        uses: docker/build-push-action@v4.0.0
+        with:
+          context: .
+          dockerfile: ./Dockerfile-ultralite
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/stirling-pdf-ultralite:${{ steps.versionNumber.outputs.versionNumber }}
+            ghcr.io/${{ github.repository_owner }}/stirling-pdf-ultralite:${{ steps.versionNumber.outputs.versionNumber }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
