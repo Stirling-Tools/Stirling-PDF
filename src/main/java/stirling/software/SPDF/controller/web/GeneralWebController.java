@@ -80,9 +80,9 @@ public class GeneralWebController {
     @ResponseBody
     @Hidden
     public String getRobotsTxt() {
-        String allowGoogleVisibility = System.getProperty("ALLOW_GOOGLE_VISABILITY");
+        String allowGoogleVisibility = System.getProperty("ALLOW_GOOGLE_VISIBILITY");
         if (allowGoogleVisibility == null)
-            allowGoogleVisibility = System.getenv("ALLOW_GOOGLE_VISABILITY");
+            allowGoogleVisibility = System.getenv("ALLOW_GOOGLE_VISIBILITY");
         if (allowGoogleVisibility == null)
             allowGoogleVisibility = "false";
         if (Boolean.parseBoolean(allowGoogleVisibility)) {
