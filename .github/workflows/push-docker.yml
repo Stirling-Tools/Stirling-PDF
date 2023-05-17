@@ -38,7 +38,7 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_API }}
-        
+
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v2.1.0
       with:
