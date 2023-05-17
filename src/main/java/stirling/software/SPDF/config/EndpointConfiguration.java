@@ -141,8 +141,27 @@ public class EndpointConfiguration {
         addEndpointToGroup("OCRmyPDF", "compress-pdf");
         addEndpointToGroup("OCRmyPDF", "pdf-to-pdfa");
         
-        disableEndpoint("remove-pages");
-        disableEndpoint("compress-pdf");
+        //Java
+        addEndpointToGroup("Java", "merge-pdfs");
+        addEndpointToGroup("Java", "remove-pages");
+        addEndpointToGroup("Java", "split-pdfs");
+        addEndpointToGroup("Java", "pdf-organizer");
+        addEndpointToGroup("Java", "rotate-pdf");
+        addEndpointToGroup("Java", "pdf-to-img");
+        addEndpointToGroup("Java", "img-to-pdf");
+        addEndpointToGroup("Java", "add-password");
+        addEndpointToGroup("Java", "remove-password");
+        addEndpointToGroup("Java", "change-permissions");
+        addEndpointToGroup("Java", "add-watermark");
+        addEndpointToGroup("Java", "add-image");
+        addEndpointToGroup("Java", "extract-images");
+        addEndpointToGroup("Java", "change-metadata");
+        
+        
+        //Javascript
+        addEndpointToGroup("Javascript", "pdf-organizer");
+        addEndpointToGroup("Javascript", "sign");
+        addEndpointToGroup("Javascript", "compare");
     }
                 
     private void processEnvironmentConfigs() {
