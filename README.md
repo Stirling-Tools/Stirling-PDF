@@ -106,14 +106,15 @@ Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
 Stirling PDF currently supports
-- English
-- Arabic (العربية)
-- German (Deutsch)
-- French (Français)
-- Spanish (Español)
-- Chinese (简体中文)
-- Catalan (Català)
-- Italian (Italiano)
+- English (English) (en_GB)
+- Arabic (العربية) (ar_AR)
+- German (Deutsch) (de_DE)
+- French (Français) (fr_FR)
+- Spanish (Español) (es_ES)
+- Chinese (简体中文) (it_IT)
+- Catalan (Català) (zh_CN)
+- Italian (Italiano) (ca_CA)
+- Swedish (Svenska) (sv_SE)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
@@ -133,7 +134,7 @@ Simply use environment variables APP_HOME_NAME, APP_HOME_DESCRIPTION and APP_NAV
 If running Java directly, you can also pass these as properties using -D arguments.
 
 Using the same method you can also change 
-- The default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR to select your default language (Will always default to English on invalid locale)
+- The default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR (Note the - character not _ ) to select your default language (Will always default to English on invalid locale) Current accepted locales can be seen above
 - Enable/Disable search engine visablility with ALLOW_GOOGLE_VISABILITY with true / false values. Default disable visability.
 - Change root URI for Stirling-PDF ie change server.com/ to server.com/pdf-app by running APP_ROOT_PATH as pdf-app
 
