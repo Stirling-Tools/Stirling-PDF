@@ -7,11 +7,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
+import org.slf4j.Logger;
 @Service
 public class EndpointConfiguration {
-
+    private static final Logger logger = LoggerFactory.getLogger(EndpointConfiguration.class);
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
 
@@ -25,6 +26,7 @@ public class EndpointConfiguration {
     }
 
     public void disableEndpoint(String endpoint) {
+        logger.info("Disabling {}", endpoint);
         endpointStatuses.put(endpoint, false);
     }
 
@@ -162,6 +164,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Javascript", "pdf-organizer");
         addEndpointToGroup("Javascript", "sign");
         addEndpointToGroup("Javascript", "compare");
+        
     }
                 
     private void processEnvironmentConfigs() {

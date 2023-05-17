@@ -1,9 +1,5 @@
 # Build jbig2enc in a separate stage
-FROM frooodle/stirling-pdf-base:beta2
-
-# Create scripts folder and copy local scripts
-RUN mkdir /scripts
-COPY ./scripts/* /scripts/
+FROM openjdk:17-jdk-slim
 
 # Copy the application JAR file
 COPY build/libs/*.jar app.jar
@@ -12,9 +8,7 @@ COPY build/libs/*.jar app.jar
 EXPOSE 8080
 
 # Set environment variables
-ENV GROUPS_TO_REMOVE=LibreOffice
+ENV GROUPS_TO_REMOVE=LibreOffice,CLI
 
 # Run the application
-RUN chmod +x /scripts/init.sh
-ENTRYPOINT ["/scripts/init.sh"]
 CMD ["java", "-jar", "/app.jar"]

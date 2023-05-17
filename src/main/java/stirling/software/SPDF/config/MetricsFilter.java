@@ -33,7 +33,7 @@ public class MetricsFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
 
         // Ignore static resources
-        if (!(uri.startsWith("/css") || uri.startsWith("/js") || uri.startsWith("/images") || uri.endsWith(".ico") || uri.endsWith(".svg")|| uri.endsWith(".js"))) {
+        if (!(uri.startsWith("/js") || uri.startsWith("/images") || uri.endsWith(".ico") || uri.endsWith(".css") || uri.endsWith(".svg")|| uri.endsWith(".js") || uri.contains("swagger") || uri.startsWith("/api"))) {
             Counter counter = Counter.builder("http.requests")
                     .tag("uri", uri)
                     .tag("method", request.getMethod())

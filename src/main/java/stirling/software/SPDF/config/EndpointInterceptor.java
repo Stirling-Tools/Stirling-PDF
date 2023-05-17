@@ -17,7 +17,6 @@ public class EndpointInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
         String requestURI = request.getRequestURI();
-        System.out.println("trying " + requestURI);
         if (!endpointConfiguration.isEndpointEnabled(requestURI)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "This endpoint is disabled");
             return false;
@@ -25,4 +24,3 @@ public class EndpointInterceptor implements HandlerInterceptor {
         return true;
     }
 }
-

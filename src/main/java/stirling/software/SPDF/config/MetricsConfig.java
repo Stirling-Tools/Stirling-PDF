@@ -18,7 +18,7 @@ public class MetricsConfig {
         return new MeterFilter() {
             @Override
             public MeterFilterReply accept(Meter.Id id) {
-                if (id.getName().equals("http.requests") || id.getName().equals("health")) {
+                if (id.getName().equals("http.requests")) {
                     return MeterFilterReply.NEUTRAL;
                 }
                 return MeterFilterReply.DENY;

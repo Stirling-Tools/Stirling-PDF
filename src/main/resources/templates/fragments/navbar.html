@@ -151,11 +151,11 @@ function compareVersions(version1, version2) {
     </a>
     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
         <!-- Existing menu items -->
-        <div th:replace="fragments/navbarEntry :: navbarEntry ('merge-pdfs', 'images/union.svg', 'home.merge.title', 'home.merge.desc')"></div>
-        <div th:replace="fragments/navbarEntry :: navbarEntry ('split-pdfs', 'images/layout-split.svg', 'home.split.title', 'home.split.desc')"></div>
-        <div th:replace="fragments/navbarEntry :: navbarEntry ( 'pdf-organizer', 'images/sort-numeric-down.svg', 'home.pdfOrganiser.title', 'home.pdfOrganiser.desc')"></div>
-        <div th:replace="fragments/navbarEntry :: navbarEntry ( 'rotate-pdf', 'images/arrow-clockwise.svg', 'home.rotate.title', 'home.rotate.desc')"></div>
-        <div th:replace="fragments/navbarEntry :: navbarEntry ( 'remove-pages', 'images/file-earmark-x.svg', 'home.removePages.title', 'home.removePages.desc')"></div>
+        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('merge-pdfs', 'images/union.svg', 'home.merge.title', 'home.merge.desc')}"></div>
+        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdfs', 'images/layout-split.svg', 'home.split.title', 'home.split.desc')}"></div>
+        <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'pdf-organizer', 'images/sort-numeric-down.svg', 'home.pdfOrganiser.title', 'home.pdfOrganiser.desc')}"></div>
+        <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'rotate-pdf', 'images/arrow-clockwise.svg', 'home.rotate.title', 'home.rotate.desc')}"></div>
+        <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'remove-pages', 'images/file-earmark-x.svg', 'home.removePages.title', 'home.removePages.desc')}"></div>
 
     </div>
 </li>
@@ -167,16 +167,16 @@ function compareVersions(version1, version2) {
                     </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <!-- Existing menu items -->
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('img-to-pdf', 'images/image.svg', 'home.imageToPdf.title', 'home.imageToPdf.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('file-to-pdf', 'images/file.svg', 'home.fileToPDF.title', 'home.fileToPDF.desc')"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('img-to-pdf', 'images/image.svg', 'home.imageToPdf.title', 'home.imageToPdf.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('file-to-pdf', 'images/file.svg', 'home.fileToPDF.title', 'home.fileToPDF.desc')}"></div>
                             <hr class="dropdown-divider">
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('pdf-to-img', 'images/image.svg', 'home.pdfToImage.title', 'home.pdfToImage.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('pdf-to-word', 'images/file-earmark-word.svg', 'home.PDFToWord.title', 'home.PDFToWord.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('pdf-to-presentation', 'images/file-earmark-ppt.svg', 'home.PDFToPresentation.title', 'home.PDFToPresentation.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('pdf-to-text', 'images/filetype-txt.svg', 'home.PDFToText.title', 'home.PDFToText.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('pdf-to-html', 'images/filetype-html.svg', 'home.PDFToHTML.title', 'home.PDFToHTML.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('pdf-to-xml', 'images/filetype-xml.svg', 'home.PDFToXML.title', 'home.PDFToXML.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('pdf-to-pdfa', 'images/file-earmark-pdf.svg', 'home.pdfToPDFA.title', 'home.pdfToPDFA.desc')"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-img', 'images/image.svg', 'home.pdfToImage.title', 'home.pdfToImage.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-word', 'images/file-earmark-word.svg', 'home.PDFToWord.title', 'home.PDFToWord.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-presentation', 'images/file-earmark-ppt.svg', 'home.PDFToPresentation.title', 'home.PDFToPresentation.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-text', 'images/filetype-txt.svg', 'home.PDFToText.title', 'home.PDFToText.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-html', 'images/filetype-html.svg', 'home.PDFToHTML.title', 'home.PDFToHTML.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-xml', 'images/filetype-xml.svg', 'home.PDFToXML.title', 'home.PDFToXML.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-pdfa', 'images/file-earmark-pdf.svg', 'home.pdfToPDFA.title', 'home.pdfToPDFA.desc')}"></div>
                             
                             
 
@@ -191,10 +191,10 @@ function compareVersions(version1, version2) {
                         <img class="icon" src="images/shield-check.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{navbar.security}"></span>
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <div th:replace="fragments/navbarEntry :: navbarEntry ('add-password', 'images/lock.svg', 'home.addPassword.title', 'home.addPassword.desc')"></div>
-                        <div th:replace="fragments/navbarEntry :: navbarEntry ('remove-password', 'images/unlock.svg', 'home.removePassword.title', 'home.removePassword.desc')"></div>
-                        <div th:replace="fragments/navbarEntry :: navbarEntry ('change-permissions', 'images/shield-lock.svg', 'home.permissions.title', 'home.permissions.desc')"></div>
-                        <div th:replace="fragments/navbarEntry :: navbarEntry ('add-watermark', 'images/droplet.svg', 'home.watermark.title', 'home.watermark.desc')"></div>
+                        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-password', 'images/lock.svg', 'home.addPassword.title', 'home.addPassword.desc')}"></div>
+                        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-password', 'images/unlock.svg', 'home.removePassword.title', 'home.removePassword.desc')}"></div>
+                        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('change-permissions', 'images/shield-lock.svg', 'home.permissions.title', 'home.permissions.desc')}"></div>
+                        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-watermark', 'images/droplet.svg', 'home.watermark.title', 'home.watermark.desc')}"></div>
 
                     </div>
                 </li>
@@ -207,18 +207,17 @@ function compareVersions(version1, version2) {
                         
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('ocr-pdf', 'images/search.svg', 'home.ocr.title', 'home.ocr.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('add-image', 'images/file-earmark-richtext.svg', 'home.addImage.title', 'home.addImage.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('compress-pdf', 'images/file-zip.svg', 'home.compressPdfs.title', 'home.compressPdfs.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('extract-images', 'images/images.svg', 'home.extractImages.title', 'home.extractImages.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('change-metadata', 'images/clipboard-data.svg', 'home.changeMetadata.title', 'home.changeMetadata.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('extract-image-scans', 'images/scanner.svg', 'home.ScannerImageSplit.title', 'home.ScannerImageSplit.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('sign', 'images/sign.svg', 'home.sign.title', 'home.sign.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('flatten', 'images/flatten.svg', 'home.flatten.title', 'home.flatten.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('repair', 'images/wrench.svg', 'home.repair.title', 'home.repair.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('remove-blanks', 'images/blank-file.svg', 'home.removeBlanks.title', 'home.removeBlanks.desc')"></div>
-                            <div th:replace="fragments/navbarEntry :: navbarEntry ('compare', 'images/scales.svg', 'home.compare.title', 'home.compare.desc')"></div>
-                                                        
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('ocr-pdf', 'images/search.svg', 'home.ocr.title', 'home.ocr.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-image', 'images/file-earmark-richtext.svg', 'home.addImage.title', 'home.addImage.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('compress-pdf', 'images/file-zip.svg', 'home.compressPdfs.title', 'home.compressPdfs.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('extract-images', 'images/images.svg', 'home.extractImages.title', 'home.extractImages.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('change-metadata', 'images/clipboard-data.svg', 'home.changeMetadata.title', 'home.changeMetadata.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('extract-image-scans', 'images/scanner.svg', 'home.ScannerImageSplit.title', 'home.ScannerImageSplit.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('sign', 'images/sign.svg', 'home.sign.title', 'home.sign.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('flatten', 'images/flatten.svg', 'home.flatten.title', 'home.flatten.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('repair', 'images/wrench.svg', 'home.repair.title', 'home.repair.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-blanks', 'images/blank-file.svg', 'home.removeBlanks.title', 'home.removeBlanks.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('compare', 'images/scales.svg', 'home.compare.title', 'home.compare.desc')}"></div>
                         </div>
                     </li>
 
@@ -351,9 +350,13 @@ function compareVersions(version1, version2) {
             <div class="modal-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <p class="mb-0" th:utext="#{settings.appVersion} + ' ' + ${@appVersion}"></p>
+                    <a href="swagger-ui/index.html" target="_blank">
+                        <button type="button" class="btn btn-sm btn-outline-primary"> API </button>
+                    </a>
                     <a href="https://github.com/Frooodle/Stirling-PDF/releases" target="_blank">
 					    <button type="button" class="btn btn-sm btn-outline-primary" id="update-btn" th:utext="#{settings.update}"></button>
 					</a>
+                    
 
                 </div>
                 <div class="form-group">
@@ -375,6 +378,7 @@ function compareVersions(version1, version2) {
                     <label class="custom-control-label" for="boredWaiting" th:text="#{bored}"></label>
                   </div>
                 </div>
+ 
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{close}"></button>
@@ -385,6 +389,17 @@ function compareVersions(version1, version2) {
 
 
     <script>
+    $(document).ready(function() {
+        $(".nav-item.dropdown").each(function() {
+            var $dropdownMenu = $(this).find(".dropdown-menu");
+            if ($dropdownMenu.children().length <= 2 && $dropdownMenu.children("hr.dropdown-divider").length === $dropdownMenu.children().length) {
+                $(this).prev('.nav-item.nav-item-separator').remove();
+                $(this).remove();
+            }
+        });
+    });
+
+
 
 
 					// Get the download option from local storage, or set it to 'sameWindow' if it doesn't exist
