@@ -85,8 +85,8 @@ jobs:
           ghcr.io/${{ github.repository_owner }}/s-pdf
         tags: |
           ${{ steps.versionNumber.outputs.versionNumber }}-ultra-light
-          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
+          type=raw,value=latest-ultra-light,enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=alpha-ultra-light,enable=${{ github.ref == 'refs/heads/main' }}
           
     - name: Convert repository owner to lowercase
       id: repoowner
