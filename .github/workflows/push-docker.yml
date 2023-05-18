@@ -76,6 +76,10 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         platforms: linux/amd64,linux/arm64/v8
 
+    - name: Convert repository owner to lowercase
+      id: repoowner
+      run: echo "::set-output name=lowercase::$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')"
+
     - name: Build and push Dockerfile-ultralite
       uses: docker/build-push-action@v4.0.0
       with:
@@ -86,11 +90,12 @@ jobs:
         cache-to: type=gha,mode=max
         tags: |
           ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf:ultra-light-latest
-          ghcr.io/${{ github.repository_owner.toLowerCase() }}/s-pdf:ultra-light-latest
+          ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf:ultra-light-latest
         labels: |
           ${{ steps.meta.outputs.labels }}
           type=raw,value=ultra-light-latest,enable=${{ github.ref == 'refs/heads/master' }}
           type=raw,value=ultra-light-alpha,enable=${{ github.ref == 'refs/heads/main' }}
         platforms: linux/amd64,linux/arm64/v8
+
 
 
