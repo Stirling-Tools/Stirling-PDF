@@ -56,6 +56,7 @@ jobs:
       tags: |
         ${{ steps.versionNumber.outputs.versionNumber }}
         type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+        type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2.1.0
