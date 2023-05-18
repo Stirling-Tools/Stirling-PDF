@@ -1,0 +1,6 @@
+<div th:fragment="navbarEntry (endpoint, imgSrc, titleKey, descKey)" th:if="${@endpointConfiguration.isEndpointEnabled(endpoint)}">
+    <a class="dropdown-item" href="#" th:href="@{${endpoint}}"  th:classappend="${endpoint.equals(currentPage)} ? 'active' : ''" th:title="#{${descKey}}">
+        <img class="icon" th:src="@{${imgSrc}}" alt="icon">
+        <span class="icon-text"  th:text="#{${titleKey}}"></span>
+    </a>
+</div>

@@ -26,11 +26,11 @@ RUN git clone https://github.com/agl/jbig2enc && \
 FROM openjdk:17-jdk-slim AS base
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libreoffice-core \
+        libreoffice-core-nogui \
         libreoffice-common \
-        libreoffice-writer \
-        libreoffice-calc \
-        libreoffice-impress \
+        libreoffice-writer-nogui \
+        libreoffice-calc-nogui \
+        libreoffice-impress-nogui \
         python3-uno \
         python3-pip \
         unoconv \
