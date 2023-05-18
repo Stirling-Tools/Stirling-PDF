@@ -54,7 +54,7 @@ jobs:
           ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
           ghcr.io/${{ github.repository_owner }}/s-pdf
         tags: |
-          ${{ steps.versionNumber.outputs.versionNumber }}
+          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
           type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
           type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
@@ -84,7 +84,7 @@ jobs:
           ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
           ghcr.io/${{ github.repository_owner }}/s-pdf
         tags: |
-          ${{ steps.versionNumber.outputs.versionNumber }}-ultra-light
+          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-light,enable=${{ github.ref == 'refs/heads/master' }}
           type=raw,value=latest-ultra-light,enable=${{ github.ref == 'refs/heads/master' }}
           type=raw,value=alpha-ultra-light,enable=${{ github.ref == 'refs/heads/main' }}
           
