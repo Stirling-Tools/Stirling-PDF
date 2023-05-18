@@ -102,13 +102,6 @@ jobs:
         cache-to: type=gha,mode=max
         tags: ${{ steps.meta2.outputs.tags }}
         labels: ${{ steps.meta2.outputs.labels }}
-        tags: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf:ultra-light-latest
-          ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf:ultra-light-latest
-        labels: |
-          ${{ steps.meta2.outputs.labels }}
-          type=raw,value=ultra-light-latest,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=ultra-light-alpha,enable=${{ github.ref == 'refs/heads/main' }}
         platforms: linux/amd64,linux/arm64/v8
 
 
