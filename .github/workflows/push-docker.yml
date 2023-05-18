@@ -96,7 +96,7 @@ jobs:
       uses: docker/build-push-action@v4.0.0
       with:
         context: .
-        dockerfile: ./Dockerfile-ultralite
+        file: ./Dockerfile-ultralite
         push: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
