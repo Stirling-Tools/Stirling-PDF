@@ -151,3 +151,24 @@ Using the same method you can also change
 ## API
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
 [here](https://app.swaggerhub.com/apis-docs/Frooodle/Stirling-PDF/) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation 
+
+
+## FAQ
+
+### Q1: Where is the authentication for Stirling PDF
+There is no Auth within Stirling PDF and there is none planned. This feature will not be added. Instead its recommended to use trusted and secure auth software like Authentik or Authelia.
+
+### Q2: What are your planned features
+- Crop
+- Progress bar/Tracking
+- Annotations (Sign/draw logic directly on page)
+- Full custom logic pipelines to combine multiple operations together.
+- Folder support with auto scanning to perform operations on
+- Redact text
+- Add page numbers
+- Auto rename (Renames file based on file title text)
+- URL to PDF
+- Change contrast
+
+### Q3: Why is my application download .htm files
+This is a issue caused commonly by your NGINX congifuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. client_max_body_size SIZE; Where "SIZE" is 50M for example for 50MB files.

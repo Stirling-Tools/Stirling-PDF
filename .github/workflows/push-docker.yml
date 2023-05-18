@@ -75,22 +75,6 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         platforms: linux/amd64,linux/arm64/v8
 
-    - name: Build and push Dockerfile-lite
-      uses: docker/build-push-action@v4.0.0
-      with:
-        context: .
-        dockerfile: ./Dockerfile-lite
-        push: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        tags: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/stirling-pdf-lite:${{ steps.versionNumber.outputs.versionNumber }}
-          ghcr.io/${{ github.repository_owner }}/stirling-pdf-lite:${{ steps.versionNumber.outputs.versionNumber }}
-        labels: |
-          ${{ steps.meta.outputs.labels }}
-          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
-
     - name: Build and push Dockerfile-ultralite
       uses: docker/build-push-action@v4.0.0
       with:
@@ -100,9 +84,11 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         tags: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/stirling-pdf-ultralite:${{ steps.versionNumber.outputs.versionNumber }}
-          ghcr.io/${{ github.repository_owner }}/stirling-pdf-ultralite:${{ steps.versionNumber.outputs.versionNumber }}
+          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf:ultra-light-latest
+          ghcr.io/${{ github.repository_owner }}/s-pdf:ultra-light-latest
         labels: |
           ${{ steps.meta.outputs.labels }}
-          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
+          type=raw,value=ultra-light-latest,enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=ultra-light-alpha,enable=${{ github.ref == 'refs/heads/main' }}
+        platforms: linux/amd64,linux/arm64/v8
+

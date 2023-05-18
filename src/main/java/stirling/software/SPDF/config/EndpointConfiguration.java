@@ -117,6 +117,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("CLI", "pdf-to-text");
         addEndpointToGroup("CLI", "pdf-to-html");
         addEndpointToGroup("CLI", "pdf-to-xml");
+        addEndpointToGroup("CLI", "ocr-pdf");
         
         //python
         addEndpointToGroup("Python", "extract-image-scans");
@@ -142,6 +143,7 @@ public class EndpointConfiguration {
         //OCRmyPDF
         addEndpointToGroup("OCRmyPDF", "compress-pdf");
         addEndpointToGroup("OCRmyPDF", "pdf-to-pdfa");
+        addEndpointToGroup("OCRmyPDF", "ocr-pdf");
         
         //Java
         addEndpointToGroup("Java", "merge-pdfs");
