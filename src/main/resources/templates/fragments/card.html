@@ -1,4 +1,4 @@
-<div th:fragment="card" class="feature-card" th:id="${id}">
+<div th:fragment="card" class="feature-card" th:id="${id}" th:if="${@endpointConfiguration.isEndpointEnabled(cardLink)}">
     <a th:href="${cardLink}">
         <div class="d-flex align-items-center"> <!-- Add a flex container to align the SVG and title -->
             <img th:if="${svgPath}"  id="card-icon" class="home-card-icon home-card-icon-colour" th:src="${svgPath}" alt="Icon" width="30" height="30">

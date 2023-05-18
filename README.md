@@ -10,6 +10,11 @@
 
 This is a powerful locally hosted web based PDF manipulation tool using docker that allows you to perform various operations on PDF files, such as splitting merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application started as a 100% ChatGPT-made application and has evolved to include a wide range of features to handle all your PDF needs.
 
+Stirling PDF makes no outbount calls for any record keeping or tracking.
+
+All files and PDFs are either purely client side, in server memory only during the execution of the task or within a temporay file only for execution of the task.
+Any file which has been downloaded by the user will have already been deleted from the server by that time.
+
 Feel free to request any features or bug fixes either in github issues or our [Discord](https://discord.gg/Cn8pWhQRxZ)
 
 
@@ -42,6 +47,7 @@ Feel free to request any features or bug fixes either in github issues or our [D
 - Parallel file processing and downloads
 - API for integration with external scripts 
 
+For a overview of the tasks and the technology each uses please view [groups.md](https://github.com/Frooodle/Stirling-PDF/blob/main/Groups.md)
 Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) hosted by the team at adminforge.de
 
 ## Technologies used
@@ -106,14 +112,16 @@ Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
 Stirling PDF currently supports
-- English
-- Arabic (العربية)
-- German (Deutsch)
-- French (Français)
-- Spanish (Español)
-- Chinese (简体中文)
-- Catalan (Català)
-- Italian (Italiano)
+- English (English) (en_GB)
+- Arabic (العربية) (ar_AR)
+- German (Deutsch) (de_DE)
+- French (Français) (fr_FR)
+- Spanish (Español) (es_ES)
+- Chinese (简体中文) (it_IT)
+- Catalan (Català) (zh_CN)
+- Italian (Italiano) (ca_CA)
+- Swedish (Svenska) (sv_SE)
+- Polish (Polski) (pl_PL)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
@@ -133,10 +141,34 @@ Simply use environment variables APP_HOME_NAME, APP_HOME_DESCRIPTION and APP_NAV
 If running Java directly, you can also pass these as properties using -D arguments.
 
 Using the same method you can also change 
-- The default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR to select your default language (Will always default to English on invalid locale)
-- Enable/Disable search engine visiblility with ALLOW_GOOGLE_VISIBILITY with true / false values. Default disable visibility.
+
+- The default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR (Note the - character not _ ) to select your default language (Will always default to English on invalid locale) Current accepted locales can be seen above in the Want to add your own language section
+- Enable/Disable search engine visiblility with ALLOW_GOOGLE_VISIBILITY with true / false values. Default disable visiblility.
 - Change root URI for Stirling-PDF ie change server.com/ to server.com/pdf-app by running APP_ROOT_PATH as pdf-app
+- Disable and remove endpoints and functionality from Stirling-PDF. Currently the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma seperated lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image to pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Frooodle/Stirling-PDF/blob/main/Groups.md) 
+
 
 ## API
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
 [here](https://app.swaggerhub.com/apis-docs/Frooodle/Stirling-PDF/) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation 
+
+
+## FAQ
+
+### Q1: Where is the authentication for Stirling PDF
+There is no Auth within Stirling PDF and there is none planned. This feature will not be added. Instead its recommended to use trusted and secure auth software like Authentik or Authelia.
+
+### Q2: What are your planned features
+- Crop
+- Progress bar/Tracking
+- Annotations (Sign/draw logic directly on page)
+- Full custom logic pipelines to combine multiple operations together.
+- Folder support with auto scanning to perform operations on
+- Redact text
+- Add page numbers
+- Auto rename (Renames file based on file title text)
+- URL to PDF
+- Change contrast
+
+### Q3: Why is my application download .htm files
+This is a issue caused commonly by your NGINX congifuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. client_max_body_size SIZE; Where "SIZE" is 50M for example for 50MB files.
