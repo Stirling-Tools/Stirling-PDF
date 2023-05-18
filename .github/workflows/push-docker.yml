@@ -50,13 +50,13 @@ jobs:
       id: meta
       uses: docker/metadata-action@v4.4.0
       with:
-      images: |
-        ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
-        ghcr.io/${{ github.repository_owner }}/s-pdf
-      tags: |
-        ${{ steps.versionNumber.outputs.versionNumber }}
-        type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
-        type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
+        images: |
+          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+          ghcr.io/${{ github.repository_owner }}/s-pdf
+        tags: |
+          ${{ steps.versionNumber.outputs.versionNumber }}
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2.1.0
