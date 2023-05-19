@@ -5,8 +5,8 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -45,55 +45,98 @@ public class CompressController {
     @PostMapping(consumes = "multipart/form-data", value = "/compress-pdf")
     @Operation(summary = "Optimize PDF file", description = "This endpoint accepts a PDF file and optimizes it based on the provided parameters.")
     public ResponseEntity<byte[]> optimizePdf(
-            @RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to be optimized.", required = true) MultipartFile inputFile,
-            @RequestParam("optimizeLevel") @Parameter(description = "The level of optimization to apply to the PDF file. Higher values indicate greater compression but may reduce quality.", schema = @Schema(allowableValues = {
-                    "0", "1", "2", "3" }), example = "1") int optimizeLevel,
-            @RequestParam("expectedOutputSize") @Parameter(description = "The expected output size in bytes.", required = false) Long expectedOutputSize)
-            throws IOException, InterruptedException {
+            @RequestPart(value = "fileInput") @Parameter(description = "The input PDF file to be optimized.", required = true) MultipartFile inputFile,
+            @RequestParam(required = false, value = "optimizeLevel") @Parameter(description = "The level of optimization to apply to the PDF file. Higher values indicate greater compression but may reduce quality.", schema = @Schema(allowableValues = {
+                    "1", "2", "3", "4", "5" })) Integer optimizeLevel,
+            @RequestParam(value = "expectedOutputSize", required = false) @Parameter(description = "The expected output size, e.g. '100MB', '25KB', etc.", required = false) String expectedOutputSizeString)
+            throws Exception {
+
+        if(expectedOutputSizeString == null && optimizeLevel == null) {
+            throw new Exception("Both expected output size and optimize level are not specified");
+        }
+
+        Long expectedOutputSize = 0L;
+        if (expectedOutputSizeString != null) {
+            expectedOutputSize = PdfUtils.convertSizeToBytes(expectedOutputSizeString);
+        }
 
         // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");
         inputFile.transferTo(tempInputFile.toFile());
 
+        long inputFileSize = Files.size(tempInputFile);
+
         // Prepare the output file path
         Path tempOutputFile = Files.createTempFile("output_", ".pdf");
 
-        // Prepare the Ghostscript command
-        List<String> command = new ArrayList<>();
-        command.add("gs");
-        command.add("-sDEVICE=pdfwrite");
-        command.add("-dCompatibilityLevel=1.4");
-
-        switch (optimizeLevel) {
-        case 0:
-            command.add("-dPDFSETTINGS=/default");
-            break;
-        case 1:
-            command.add("-dPDFSETTINGS=/ebook");
-            break;
-        case 2:
-            command.add("-dPDFSETTINGS=/printer");
-            break;
-        case 3:
-            command.add("-dPDFSETTINGS=/prepress");
-            break;
-        default:
-            command.add("-dPDFSETTINGS=/default");
+        // Determine initial optimization level based on expected size reduction, only if optimizeLevel is not provided
+        if(optimizeLevel == null) {
+            double sizeReductionRatio = expectedOutputSize / (double) inputFileSize;
+            if (sizeReductionRatio > 0.7) {
+                optimizeLevel = 1;
+            } else if (sizeReductionRatio > 0.5) {
+                optimizeLevel = 2;
+            } else if (sizeReductionRatio > 0.35) {
+                optimizeLevel = 3;
+            } else {
+                optimizeLevel = 4;
+            }
         }
 
-        command.add("-dNOPAUSE");
-        command.add("-dQUIET");
-        command.add("-dBATCH");
-        command.add("-sOutputFile=" + tempOutputFile.toString());
-        command.add(tempInputFile.toString());
+        boolean sizeMet = expectedOutputSize == 0L;
+        while (!sizeMet && optimizeLevel <= 5) {
+            // Prepare the Ghostscript command
+            List<String> command = new ArrayList<>();
+            command.add("gs");
+            command.add("-sDEVICE=pdfwrite");
+            command.add("-dCompatibilityLevel=1.4");
 
-        int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT).runCommandWithOutputHandling(command);
+            switch (optimizeLevel) {
+            case 1:
+                command.add("-dPDFSETTINGS=/prepress");
+                break;
+            case 2:
+                command.add("-dPDFSETTINGS=/printer");
+                break;    
+            case 3:
+                command.add("-dPDFSETTINGS=/default");
+                break;
+            case 4:
+                command.add("-dPDFSETTINGS=/ebook");
+                break;
+            case 5:
+                command.add("-dPDFSETTINGS=/screen");
+                break;
+            default:
+                command.add("-dPDFSETTINGS=/default");
+            }
+
+            command.add("-dNOPAUSE");
+            command.add("-dQUIET");
+            command.add("-dBATCH");
+            command.add("-sOutputFile=" + tempOutputFile.toString());
+            command.add(tempInputFile.toString());
+
+            int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT).runCommandWithOutputHandling(command);
+
+            // Check if file size is within expected size
+            long outputFileSize = Files.size(tempOutputFile);
+            if (outputFileSize <= expectedOutputSize) {
+                sizeMet = true;
+            } else {
+                // Increase optimization level for next iteration
+                optimizeLevel++;
+                System.out.println("Increasing ghostscript optimisation level to " + optimizeLevel);
+            }
+        }
+
+        
 
         if (expectedOutputSize != null) {
             long outputFileSize = Files.size(tempOutputFile);
             if (outputFileSize > expectedOutputSize) {
                 try (PDDocument doc = PDDocument.load(new File(tempOutputFile.toString()))) {
-                   
+                    long previousFileSize = 0;
                     double scaleFactor = 1.0;
                     while (true) {
                         for (PDPage page : doc.getPages()) {
@@ -142,14 +185,21 @@ public class CompressController {
                         // save the document to tempOutputFile again
                         doc.save(tempOutputFile.toString());
 
+                        long currentSize = Files.size(tempOutputFile);
                         // Check if the overall PDF size is still larger than expectedOutputSize
-                        if (Files.size(tempOutputFile) > expectedOutputSize) {
+                        if (currentSize > expectedOutputSize) {
+                         // Log the current file size and scaleFactor
+                            
+                            System.out.println("Current file size: " + FileUtils.byteCountToDisplaySize(currentSize));
+                            System.out.println("Current scale factor: " + scaleFactor);
+
                             // The file is still too large, reduce scaleFactor and try again
                             scaleFactor *= 0.9; // reduce scaleFactor by 10%
                             // Avoid scaleFactor being too small, causing the image to shrink to 0
-                            if(scaleFactor < 0.1){
-                                throw new RuntimeException("Could not reach the desired size without excessively degrading image quality");
+                            if(scaleFactor < 0.2 || previousFileSize == currentSize){
+                                throw new RuntimeException("Could not reach the desired size without excessively degrading image quality, lowest size recommended is " + FileUtils.byteCountToDisplaySize(currentSize) + ", " + currentSize + " bytes");
                             }
+                            previousFileSize = currentSize;
                         } else {
                             // The file is small enough, break the loop
                             break;

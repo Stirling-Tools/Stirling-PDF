@@ -5,6 +5,11 @@ body {
     background-color: rgb(var(--body-background-color)) !important;
     color: rgb(var(--base-font-color))  !important;
 }
+.card {
+  background-color: rgb(var(--body-background-color)) !important;
+  border: 1px solid #999;
+  color: rgb(var(--base-font-color)) !important;
+}
 
 .dark-card {
   background-color: rgb(var(--body-background-color)) !important;

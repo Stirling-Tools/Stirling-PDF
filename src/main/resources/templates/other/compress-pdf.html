@@ -17,24 +17,29 @@
                         <h2 th:text="#{compress.header}"></h2>
                         <form action="#" th:action="@{/compress-pdf}" method="post" enctype="multipart/form-data">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-                            <div>
-                                <label for="optimizeLevel" th:text="#{compress.selectText.1}"></label>
-                                <select name="optimizeLevel" id="optimizeLevel">
-                                    <option value="0" th:text="#{compress.selectText.2}"></option>
-                                    <option value="1" selected th:text="#{compress.selectText.3}"></option>
-                                    <option value="2" th:text="#{compress.selectText.4}"></option>
-                                    <option value="3" th:text="#{compress.selectText.5}"></option>
-                                </select>
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h4>Manual Mode - From 1 to 5</h4>
+                                    <label for="optimizeLevel" th:text="#{compress.selectText.1}"></label>
+                                    <select name="optimizeLevel" id="optimizeLevel" class="form-control">
+                                        <option value="1">1</option>
+                                        <option value="2" selected>2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div>
-                                <label for="expectedOutputSize" th:text="#{compress.selectText.8}"></label>
-                                <input type="number" name="expectedOutputSize" id="expectedOutputSize" min="1">
+                            
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h4>Auto mode - Auto adjusts quality to get PDF to exact size</h4>
+                                    <label for="expectedOutputSize" th:text="#{compress.selectText.2}"></label>
+                                    <input type="text" name="expectedOutputSize" id="expectedOutputSize" min="1" class="form-control">
+                                </div>
                             </div>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{compress.submit}"></button>
                         </form>
-
-             			<p class="mt-3" th:text="#{compress.credit}"></p>
-
                     </div>
                 </div>
             </div>

@@ -22,6 +22,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -287,4 +288,30 @@ public class PdfUtils {
 
         return PdfUtils.boasToWebResponse(baos, docName);
     }
+    
+    public static Long convertSizeToBytes(String sizeStr) {
+        if (sizeStr == null) {
+            return null;
+        }
+
+        sizeStr = sizeStr.trim().toUpperCase();
+        try {
+            if (sizeStr.endsWith("KB")) {
+                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024;
+            } else if (sizeStr.endsWith("MB")) {
+                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024 * 1024;
+            } else if (sizeStr.endsWith("GB")) {
+                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024 * 1024 * 1024;
+            } else if (sizeStr.endsWith("B")) {
+                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));
+            } else {
+                // Input string does not have a valid format, handle this case
+            }
+        } catch (NumberFormatException e) {
+            // The numeric part of the input string cannot be parsed, handle this case
+        }
+        
+        return null;
+    }
+    
 }
