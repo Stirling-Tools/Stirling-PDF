@@ -117,9 +117,9 @@ Stirling PDF currently supports
 - German (Deutsch) (de_DE)
 - French (Français) (fr_FR)
 - Spanish (Español) (es_ES)
-- Chinese (简体中文) (it_IT)
-- Catalan (Català) (zh_CN)
-- Italian (Italiano) (ca_CA)
+- Chinese (简体中文) (zh_CN)
+- Catalan (Català) (ca_CA)
+- Italian (Italiano) (it_IT)
 - Swedish (Svenska) (sv_SE)
 - Polish (Polski) (pl_PL)
 
