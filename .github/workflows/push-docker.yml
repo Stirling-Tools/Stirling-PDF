@@ -54,7 +54,7 @@ jobs:
           ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
           ghcr.io/${{ github.repository_owner }}/s-pdf
         tags: |
-          ${{ steps.versionNumber.outputs.versionNumber }}
+          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
           type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
           type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
@@ -76,20 +76,32 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         platforms: linux/amd64,linux/arm64/v8
 
+    - name: Generate tags
+      id: meta2
+      uses: docker/metadata-action@v4.4.0
+      with:
+        images: |
+          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+          ghcr.io/${{ github.repository_owner }}/s-pdf
+        tags: |
+          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-light,enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=latest-ultra-light,enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=alpha-ultra-light,enable=${{ github.ref == 'refs/heads/main' }}
+          
+    - name: Convert repository owner to lowercase
+      id: repoowner
+      run: echo "::set-output name=lowercase::$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')"
+
     - name: Build and push Dockerfile-ultralite
       uses: docker/build-push-action@v4.0.0
       with:
         context: .
-        dockerfile: ./Dockerfile-ultralite
+        file: ./Dockerfile-ultralite
         push: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        tags: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf:ultra-light-latest
-          ghcr.io/${{ github.repository_owner }}/s-pdf:ultra-light-latest
-        labels: |
-          ${{ steps.meta.outputs.labels }}
-          type=raw,value=ultra-light-latest,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=ultra-light-alpha,enable=${{ github.ref == 'refs/heads/main' }}
+        tags: ${{ steps.meta2.outputs.tags }}
+        labels: ${{ steps.meta2.outputs.labels }}
         platforms: linux/amd64,linux/arm64/v8
+
 
