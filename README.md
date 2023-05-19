@@ -155,7 +155,7 @@ For those wanting to use Stirling-PDFs backend API to link with their own custom
 
 ## FAQ
 
-### Q1: Where can you add authentication in Stirling PDF?
+### Q1: Can you add authentication in Stirling PDF?
 There is no Auth within Stirling PDF and there is none planned. This feature will not be added. Instead we recommended you use trusted and secure authentication software like Authentik or Authelia.
 
 ### Q2: What are your planned features?
