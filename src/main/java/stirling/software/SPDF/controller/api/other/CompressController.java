@@ -56,8 +56,10 @@ public class CompressController {
         }
 
         Long expectedOutputSize = 0L;
-        if (expectedOutputSizeString != null) {
+        boolean autoMode = false;
+        if (expectedOutputSizeString != null && expectedOutputSizeString.length() > 1 ) {
             expectedOutputSize = PdfUtils.convertSizeToBytes(expectedOutputSizeString);
+            autoMode = true;
         }
 
         // Save the uploaded file to a temporary location
@@ -69,8 +71,8 @@ public class CompressController {
         // Prepare the output file path
         Path tempOutputFile = Files.createTempFile("output_", ".pdf");
 
-        // Determine initial optimization level based on expected size reduction, only if optimizeLevel is not provided
-        if(optimizeLevel == null) {
+        // Determine initial optimization level based on expected size reduction, only if in autoMode
+        if(autoMode) {
             double sizeReductionRatio = expectedOutputSize / (double) inputFileSize;
             if (sizeReductionRatio > 0.7) {
                 optimizeLevel = 1;
@@ -79,12 +81,12 @@ public class CompressController {
             } else if (sizeReductionRatio > 0.35) {
                 optimizeLevel = 3;
             } else {
-                optimizeLevel = 4;
+                optimizeLevel = 3;
             }
         }
 
-        boolean sizeMet = expectedOutputSize == 0L;
-        while (!sizeMet && optimizeLevel <= 5) {
+        boolean sizeMet = false;
+        while (!sizeMet && optimizeLevel <= 4) {
             // Prepare the Ghostscript command
             List<String> command = new ArrayList<>();
             command.add("gs");
@@ -99,12 +101,9 @@ public class CompressController {
                 command.add("-dPDFSETTINGS=/printer");
                 break;    
             case 3:
-                command.add("-dPDFSETTINGS=/default");
-                break;
-            case 4:
                 command.add("-dPDFSETTINGS=/ebook");
                 break;
-            case 5:
+            case 4:
                 command.add("-dPDFSETTINGS=/screen");
                 break;
             default:
@@ -119,20 +118,27 @@ public class CompressController {
 
             int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT).runCommandWithOutputHandling(command);
 
-            // Check if file size is within expected size
+            // Check if file size is within expected size or not auto mode so instantly finish
             long outputFileSize = Files.size(tempOutputFile);
-            if (outputFileSize <= expectedOutputSize) {
+            if (outputFileSize <= expectedOutputSize || !autoMode) {
                 sizeMet = true;
             } else {
                 // Increase optimization level for next iteration
                 optimizeLevel++;
-                System.out.println("Increasing ghostscript optimisation level to " + optimizeLevel);
+                if(autoMode && optimizeLevel > 3) {
+                    System.out.println("Skipping level 4 due to bad results in auto mode");
+                    sizeMet = true;
+                } else if(optimizeLevel == 5) {
+                    
+                } else {
+                    System.out.println("Increasing ghostscript optimisation level to " + optimizeLevel);
+                }
             }
         }
 
         
 
-        if (expectedOutputSize != null) {
+        if (expectedOutputSize != null && autoMode) {
             long outputFileSize = Files.size(tempOutputFile);
             if (outputFileSize > expectedOutputSize) {
                 try (PDDocument doc = PDDocument.load(new File(tempOutputFile.toString()))) {

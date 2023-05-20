@@ -11,7 +11,7 @@
         <div id="content-wrap">
             <div th:insert="~{fragments/navbar.html :: navbar}"></div>
             <br> <br>
-            <div class="container">R
+            <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <h2 th:text="#{compress.header}"></h2>
@@ -19,22 +19,21 @@
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <div class="card mb-3">
                                 <div class="card-body">
-                                    <h4>Manual Mode - From 1 to 5</h4>
-                                    <label for="optimizeLevel" th:text="#{compress.selectText.1}"></label>
+                                    <h4 th:text="#{compress.selectText.1}"></h4>
+                                    <label for="optimizeLevel" th:text="#{compress.selectText.2}"></label>
                                     <select name="optimizeLevel" id="optimizeLevel" class="form-control">
                                         <option value="1">1</option>
                                         <option value="2" selected>2</option>
                                         <option value="3">3</option>
-                                        <option value="4">4</option>
-                                        <option value="5">5</option>
+                                        <option value="4" th:text="#{compress.selectText.3}"></option>
                                     </select>
                                 </div>
                             </div>
                             
                             <div class="card mb-3">
                                 <div class="card-body">
-                                    <h4>Auto mode - Auto adjusts quality to get PDF to exact size</h4>
-                                    <label for="expectedOutputSize" th:text="#{compress.selectText.2}"></label>
+                                    <h4 th:text="#{compress.selectText.4}"></h4>
+                                    <label for="expectedOutputSize" th:text="#{compress.selectText.5}"></label>
                                     <input type="text" name="expectedOutputSize" id="expectedOutputSize" min="1" class="form-control">
                                 </div>
                             </div>

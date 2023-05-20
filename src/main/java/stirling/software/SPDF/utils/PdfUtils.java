@@ -297,11 +297,11 @@ public class PdfUtils {
         sizeStr = sizeStr.trim().toUpperCase();
         try {
             if (sizeStr.endsWith("KB")) {
-                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024;
+                return (long) (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024);
             } else if (sizeStr.endsWith("MB")) {
-                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024 * 1024;
+                return (long) (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024 * 1024);
             } else if (sizeStr.endsWith("GB")) {
-                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024 * 1024 * 1024;
+                return (long) (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024 * 1024 * 1024);
             } else if (sizeStr.endsWith("B")) {
                 return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));
             } else {
@@ -313,5 +313,6 @@ public class PdfUtils {
         
         return null;
     }
+
     
 }
