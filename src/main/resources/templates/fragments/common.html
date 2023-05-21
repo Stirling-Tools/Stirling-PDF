@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
     </dialog>
 </th:block>
 
-<th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: 'true'">
+<th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: 'true', notRequired=${notRequired} ?: false">
     <script>
         $(document).ready(function() {
             $('form').submit(async function(event) {
@@ -486,7 +486,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     <div class="custom-file-chooser">
         <div class="custom-file">
-            <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple required>
+            <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:classappend="${notRequired ? '' : 'required'}">
             <label class="custom-file-label" th:for="${name}+'-input'" th:text="${inputText}"></label>
         </div>
         <div class="selected-files"></div>

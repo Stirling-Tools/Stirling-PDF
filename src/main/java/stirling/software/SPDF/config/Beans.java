@@ -52,15 +52,15 @@ public class Beans implements WebMvcConfigurer {
         return slr;
     }
 
-    @Bean
-    public MessageSource messageSource() {
-        ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
-        //messageSource.setBasename("classpath:messages");
-        messageSource.setDefaultEncoding("UTF-8");
-        messageSource.setUseCodeAsDefaultMessage(true);
-        messageSource.setDefaultLocale(Locale.UK); // setting default locale
-        return messageSource;
-    }
+//    @Bean
+//    public MessageSource messageSource() {
+//        ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
+//        //messageSource.setBasename("classpath:messages");
+//        messageSource.setDefaultEncoding("UTF-8");
+//        messageSource.setUseCodeAsDefaultMessage(true);
+//        messageSource.setDefaultLocale(Locale.UK); // setting default locale
+//        return messageSource;
+//    }
 
     
 }
