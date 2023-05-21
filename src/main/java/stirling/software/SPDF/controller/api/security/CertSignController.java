@@ -1,64 +1,53 @@
 package stirling.software.SPDF.controller.api.security;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.security.KeyFactory;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.Security;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import javax.naming.ldap.LdapName;
-import javax.naming.ldap.Rdn;
-
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
-import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
-import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
-import org.apache.pdfbox.pdmodel.interactive.digitalsignature.visible.PDVisibleSigProperties;
-import org.apache.pdfbox.pdmodel.interactive.digitalsignature.visible.PDVisibleSignDesigner;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.itextpdf.kernel.pdf.*;
-import com.itextpdf.signatures.*;
+import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.geom.Rectangle;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfPage;
+import com.itextpdf.kernel.pdf.PdfReader;
+import com.itextpdf.kernel.pdf.StampingProperties;
+import com.itextpdf.signatures.BouncyCastleDigest;
+import com.itextpdf.signatures.DigestAlgorithms;
+import com.itextpdf.signatures.IExternalDigest;
+import com.itextpdf.signatures.IExternalSignature;
+import com.itextpdf.signatures.PdfPKCS7;
+import com.itextpdf.signatures.PdfSignatureAppearance;
+import com.itextpdf.signatures.PdfSigner;
+import com.itextpdf.signatures.PrivateKeySignature;
+import com.itextpdf.signatures.SignatureUtil;
 
 import stirling.software.SPDF.utils.PdfUtils;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.*;
-import java.security.*;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-
-import com.itextpdf.kernel.geom.Rectangle;
 @RestController
 public class CertSignController {
 
@@ -121,6 +110,18 @@ public class CertSignController {
             }
         }
 
+        Principal principal = cert.getSubjectDN();
+        String dn = principal.getName();
+
+        // Extract the "CN" (Common Name) field from the distinguished name (if it's present)
+        String cn = null;
+        for (String part : dn.split(",")) {
+            if (part.trim().startsWith("CN=")) {
+                cn = part.trim().substring("CN=".length());
+                break;
+            }
+        }
+        
         // Set up the PDF reader and stamper
         PdfReader reader = new PdfReader(new ByteArrayInputStream(pdf.getBytes()));
         ByteArrayOutputStream signedPdf = new ByteArrayOutputStream();
@@ -132,36 +133,48 @@ public class CertSignController {
                 .setLocation("TestLocation");
 
         if (showSignature != null && showSignature) {
-        	// Get the page size
-        	PdfPage page = signer.getDocument().getPage(1);
-        	Rectangle pageSize = page.getPageSize();
+            float fontSize = 4;  // the font size of the signature
+            float marginRight = 36; // Margin from the right
+            float marginBottom = 36; // Margin from the bottom
+            String signingDate = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z").format(new Date());
 
-        	// Define the size of the signature rectangle
-        	float sigWidth = 200;  // adjust this as needed
-        	float sigHeight = 100; // adjust this as needed
+            // Prepare the text for the digital signature
+            String layer2Text = String.format("Digitally signed by: %s\nDate: %s\nReason: %s\nLocation: %s", name, signingDate, reason, location);
 
-        	// Define the margins from the page edges
-        	float marginRight = 36; // adjust this as needed
-        	float marginBottom = 36; // adjust this as needed
+            // Get the PDF font and measure the width and height of the text block
+            PdfFont font = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            float textWidth = Arrays.stream(layer2Text.split("\n"))
+                                    .map(line -> font.getWidth(line, fontSize))
+                                    .max(Float::compare)
+                                    .orElse(0f);
+            int numLines = layer2Text.split("\n").length;
+            float textHeight = numLines * fontSize;
 
-        	// Define the position and dimension of the signature field
-        	Rectangle rect = new Rectangle(
-        	    pageSize.getRight() - sigWidth - marginRight, 
-        	    pageSize.getBottom() + marginBottom, 
-        	    sigWidth, 
-        	    sigHeight
-        	);
-            
-            // Creating the appearance
-            appearance
-                .setPageRect(rect)
-                .setPageNumber(pageNumber)
-                .setReason(reason)
-                .setLocation(location)
-                .setLayer2Text(name) // Set the signer name to be displayed in the signature field
-                .setReuseAppearance(false);
-            signer.setFieldName("sig");
-                
+            // Calculate the signature rectangle size
+            float sigWidth = textWidth + marginRight * 2;
+            float sigHeight = textHeight + marginBottom * 2;
+
+            // Get the page size
+            PdfPage page = signer.getDocument().getPage(1);
+            Rectangle pageSize = page.getPageSize();
+
+            // Define the position and dimension of the signature field
+            Rectangle rect = new Rectangle(
+                pageSize.getRight() - sigWidth - marginRight,
+                pageSize.getBottom() + marginBottom,
+                sigWidth,
+                sigHeight
+            );
+
+            // Configure the appearance of the digital signature
+            appearance.setPageRect(rect)
+                      .setContact(name)
+                      .setPageNumber(pageNumber)
+                      .setReason(reason)
+                      .setLocation(location)
+                      .setReuseAppearance(false)
+                      .setLayer2Text(layer2Text);
+
             signer.setFieldName("sig");
         } else {
             appearance.setRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION);
