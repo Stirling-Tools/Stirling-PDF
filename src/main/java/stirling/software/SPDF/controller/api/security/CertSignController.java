@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.io.ByteArrayInputStream;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,6 +49,8 @@ import com.itextpdf.signatures.PdfSigner;
 import com.itextpdf.signatures.PrivateKeySignature;
 import com.itextpdf.signatures.SignatureUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
 @RestController
 public class CertSignController {
@@ -58,18 +62,52 @@ public class CertSignController {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/cert-sign")
+    @Operation(summary = "Sign PDF with a Digital Certificate",
+        description = "This endpoint accepts a PDF file, a digital certificate and related information to sign the PDF. It then returns the digitally signed PDF file.")
     public ResponseEntity<byte[]> signPDF(
-            @RequestParam("pdf") MultipartFile pdf,
-            @RequestParam(value = "certType", required = false) String certType,
-            @RequestParam(value = "key", required = false) MultipartFile privateKeyFile,
-            @RequestParam(value = "cert", required = false) MultipartFile certFile,
-            @RequestParam(value = "p12", required = false) MultipartFile p12File,
-            @RequestParam(value = "password", required = false) String password,
-            @RequestParam(value = "showSignature", required = false) Boolean showSignature,
-            @RequestParam(value = "reason", required = false) String reason,
-            @RequestParam(value = "location", required = false) String location,
-            @RequestParam(value = "name", required = false) String name,
-            @RequestParam(value = "pageNumber", required = false) Integer pageNumber) throws Exception {
+        @RequestPart(required = true, value = "fileInput")
+        @Parameter(description = "The input PDF file to be signed")
+                MultipartFile pdf,
+
+        @RequestParam(value = "certType", required = false)
+        @Parameter(description = "The type of the digital certificate", schema = @Schema(allowableValues = {"PKCS12", "PEM"}))
+                String certType,
+
+        @RequestParam(value = "key", required = false)
+        @Parameter(description = "The private key for the digital certificate (required for PEM type certificates)")
+                MultipartFile privateKeyFile,
+
+        @RequestParam(value = "cert", required = false)
+        @Parameter(description = "The digital certificate (required for PEM type certificates)")
+                MultipartFile certFile,
+
+        @RequestParam(value = "p12", required = false)
+        @Parameter(description = "The PKCS12 keystore file (required for PKCS12 type certificates)")
+                MultipartFile p12File,
+
+        @RequestParam(value = "password", required = false)
+        @Parameter(description = "The password for the keystore or the private key")
+                String password,
+
+        @RequestParam(value = "showSignature", required = false)
+        @Parameter(description = "Whether to visually show the signature in the PDF file")
+                Boolean showSignature,
+
+        @RequestParam(value = "reason", required = false)
+        @Parameter(description = "The reason for signing the PDF")
+                String reason,
+
+        @RequestParam(value = "location", required = false)
+        @Parameter(description = "The location where the PDF is signed")
+                String location,
+
+        @RequestParam(value = "name", required = false)
+        @Parameter(description = "The name of the signer")
+                String name,
+
+        @RequestParam(value = "pageNumber", required = false)
+        @Parameter(description = "The page number where the signature should be visible. This is required if showSignature is set to true")
+                Integer pageNumber) throws Exception {
         
         BouncyCastleProvider provider = new BouncyCastleProvider();
         Security.addProvider(provider);

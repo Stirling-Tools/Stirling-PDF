@@ -135,6 +135,8 @@ filter: invert(0.2) sepia(2) saturate(50) hue-rotate(190deg);
                 <div th:replace="~{fragments/card :: card(id='remove-blanks', cardTitle=#{home.removeBlanks.title}, cardText=#{home.removeBlanks.desc}, cardLink='remove-blanks', svgPath='images/blank-file.svg')}"></div>
                 <div th:replace="~{fragments/card :: card(id='compare', cardTitle=#{home.compare.title}, cardText=#{home.compare.desc}, cardLink='compare', svgPath='images/scales.svg')}"></div>
                 
+                <div th:replace="~{fragments/card :: card(id='cert-sign', cardTitle=#{home.certSign.title}, cardText=#{home.certSign.desc}, cardLink='cert-sign', svgPath='images/award.svg')}"></div>
+                
                 <script>
                 function toggleFavorite(element) {
                     var img = element.querySelector('img');
