@@ -34,4 +34,11 @@ public class SecurityWebController {
         model.addAttribute("currentPage", "add-watermark");
         return "security/add-watermark";
     }
+    
+    @GetMapping("/cert-sign")
+    @Hidden
+    public String certSignForm(Model model) {
+        model.addAttribute("currentPage", "cert-sign");
+        return "security/cert-sign";
+    }
 }

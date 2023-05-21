@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}"
+	th:lang-direction="#{language.direction}"
+	xmlns:th="http://www.thymeleaf.org">
+
+<th:block
+	th:insert="~{fragments/common :: head(title=#{certSign.title})}"></th:block>
+
+<body>
+	<div id="page-container">
+		<div id="content-wrap">
+			<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+			<br> <br>
+			<div class="container">
+				<div class="row justify-content-center">
+					<div class="col-md-6">
+						<h2 th:text="#{certSign.header}"></h2>
+
+						<form action="/cert-sign" method="post"
+							enctype="multipart/form-data">
+							<div class="form-group">
+								<label th:text="#{certSign.selectPDF}"></label>
+								<div
+									th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+							</div>
+							<div class="form-group">
+								<label for="certType" th:text="#{certSign.certType}"></label> <select
+									class="form-control" id="certType" name="certType">
+									<option value="" th:text="#{selectFillter}"></option>
+									<option value="PKCS12">PKCS12</option>
+									<option value="PEM">PEM</option>
+								</select>
+							</div>
+
+							<div class="form-group" id="p12Group" style="display: none;">
+								<label th:text="#{certSign.selectP12}"></label>
+								<div
+									th:replace="~{fragments/common :: fileSelector(name='p12', notRequired=true, multiple=false, accept='.p12,.pfx')}"></div>
+							</div>
+
+							<div id="pemGroup" style="display: none;">
+								<div class="form-group">
+									<label th:text="#{certSign.selectKey}"></label>
+									<div
+										th:replace="~{fragments/common :: fileSelector(name='key', multiple=false, notRequired=true, accept='.pem,.der')}"></div>
+								</div>
+								<div class="form-group">
+									<label th:text="#{certSign.selectCert}"></label>
+									<div
+										th:replace="~{fragments/common :: fileSelector(name='cert', multiple=false, notRequired=true, accept='.pem,.der')}"></div>
+								</div>
+							</div>
+
+							<div class="form-group">
+								<label th:text="#{certSign.password}"></label> <input
+									type="password" class="form-control" id="password"
+									name="password">
+							</div>
+                            
+							<div class="form-group">
+								<label><input type="checkbox" id="showSignature"
+									name="showSignature" th:text="#{signCert.showSig}"></label>
+							</div>
+
+							<div id="signatureDetails" style="display: none;">
+								<div class="form-group">
+									<label for="reason" th:text="#{signCert.reason}"></label> <input type="text"
+										class="form-control" id="reason" name="reason">
+								</div>
+								<div class="form-group">
+									<label for="location" th:text="#{signCert.location}"></label> <input type="text"
+										class="form-control" id="location" name="location">
+								</div>
+								<div class="form-group">
+									<label for="name" th:text="#{signCert.name}"></label> <input type="text"
+										class="form-control" id="name" name="name">
+								</div>
+								<div class="form-group">
+									<label for="pageNumber" th:text="#{pageNum}"></label> <input
+										type="number" class="form-control" id="pageNumber"
+										name="pageNumber" min="1">
+								</div>
+							</div>
+
+							<script type="text/javascript">
+								document
+										.getElementById('certType')
+										.addEventListener(
+												'change',
+												function() {
+													var p12Group = document
+															.getElementById('p12Group');
+													var pemGroup = document
+															.getElementById('pemGroup');
+													if (this.value === 'PKCS12') {
+														p12Group.style.display = 'block';
+														pemGroup.style.display = 'none';
+													} else if (this.value === 'PEM') {
+														p12Group.style.display = 'none';
+														pemGroup.style.display = 'block';
+													} else {
+														p12Group.style.display = 'none';
+														pemGroup.style.display = 'none';
+													}
+												});
+
+								document
+										.getElementById('showSignature')
+										.addEventListener(
+												'change',
+												function() {
+													var signatureDetails = document
+															.getElementById('signatureDetails');
+													if (this.checked) {
+														signatureDetails.style.display = 'block';
+													} else {
+														signatureDetails.style.display = 'none';
+													}
+												});
+							</script>
+
+
+							<div class="form-group text-center">
+								<button type="submit" id="submitBtn" class="btn btn-primary"
+									th:text="#{certSign.submit}"></button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
+</body>
+</html>

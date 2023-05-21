@@ -186,7 +186,7 @@ function compareVersions(version1, version2) {
 
 <li class="nav-item nav-item-separator"></li>
                    
-                  <li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='add-watermark' OR ${currentPage}=='remove-watermark' ? 'active' : ''">
+                  <li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='add-watermark' OR ${currentPage}=='cert-sign' ? 'active' : ''">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <img class="icon" src="images/shield-check.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{navbar.security}"></span>
                     </a>
@@ -195,12 +195,12 @@ function compareVersions(version1, version2) {
                         <div th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-password', 'images/unlock.svg', 'home.removePassword.title', 'home.removePassword.desc')}"></div>
                         <div th:replace="~{fragments/navbarEntry :: navbarEntry ('change-permissions', 'images/shield-lock.svg', 'home.permissions.title', 'home.permissions.desc')}"></div>
                         <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-watermark', 'images/droplet.svg', 'home.watermark.title', 'home.watermark.desc')}"></div>
-
+                        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('cert-sign', 'images/award.svg', 'home.certSign.title', 'home.certSign.desc')}"></div>
                     </div>
                 </li>
 
                   <li class="nav-item nav-item-separator"></li> 
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='sign' OR ${currentPage}=='flatten' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' ? 'active' : ''">
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='sign' OR ${currentPage}=='repair' OR ${currentPage}=='compare' OR ${currentPage}=='flatten' OR ${currentPage}=='remove-blanks' OR ${currentPage}=='extract-image-scans' OR ${currentPage}=='change-metadata' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' ? 'active' : ''">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <img class="icon" src="images/card-list.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> 
                         <span class="icon-text"  th:text="#{navbar.other}"></span>

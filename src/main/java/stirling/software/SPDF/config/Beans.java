@@ -49,5 +49,5 @@ public class Beans implements WebMvcConfigurer {
         slr.setDefaultLocale(defaultLocale);
         return slr;
     }
-
+    
 }
