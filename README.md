@@ -117,9 +117,9 @@ Stirling PDF currently supports
 - German (Deutsch) (de_DE)
 - French (Français) (fr_FR)
 - Spanish (Español) (es_ES)
-- Chinese (简体中文) (it_IT)
-- Catalan (Català) (zh_CN)
-- Italian (Italiano) (ca_CA)
+- Chinese (简体中文) (zh_CN)
+- Catalan (Català) (ca_CA)
+- Italian (Italiano) (it_IT)
 - Swedish (Svenska) (sv_SE)
 - Polish (Polski) (pl_PL)
 
@@ -145,7 +145,7 @@ Using the same method you can also change
 - The default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR (Note the - character not _ ) to select your default language (Will always default to English on invalid locale) Current accepted locales can be seen above in the Want to add your own language section
 - Enable/Disable search engine visiblility with ALLOW_GOOGLE_VISIBILITY with true / false values. Default disable visiblility.
 - Change root URI for Stirling-PDF ie change server.com/ to server.com/pdf-app by running APP_ROOT_PATH as pdf-app
-- Disable and remove endpoints and functionality from Stirling-PDF. Currently the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma seperated lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image to pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Frooodle/Stirling-PDF/blob/main/Groups.md) 
+- Disable and remove endpoints and functionality from Stirling-PDF. Currently the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma seperated lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image to pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Frooodle/Stirling-PDF/blob/main/groups.md) 
 
 
 ## API
@@ -155,20 +155,19 @@ For those wanting to use Stirling-PDFs backend API to link with their own custom
 
 ## FAQ
 
-### Q1: Where is the authentication for Stirling PDF
-There is no Auth within Stirling PDF and there is none planned. This feature will not be added. Instead its recommended to use trusted and secure auth software like Authentik or Authelia.
+### Q1: Can you add authentication in Stirling PDF?
+There is no Auth within Stirling PDF and there is none planned. This feature will not be added. Instead we recommended you use trusted and secure authentication software like Authentik or Authelia.
 
-### Q2: What are your planned features
+### Q2: What are your planned features?
 - Crop
 - Progress bar/Tracking
-- Annotations (Sign/draw logic directly on page)
 - Full custom logic pipelines to combine multiple operations together.
 - Folder support with auto scanning to perform operations on
-- Redact text
+- Redact sections of pages
 - Add page numbers
 - Auto rename (Renames file based on file title text)
 - URL to PDF
 - Change contrast
 
-### Q3: Why is my application download .htm files
+### Q3: Why is my application downloading .htm files?
 This is a issue caused commonly by your NGINX congifuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. client_max_body_size SIZE; Where "SIZE" is 50M for example for 50MB files.

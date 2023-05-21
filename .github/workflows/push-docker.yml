@@ -54,7 +54,7 @@ jobs:
           ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
           ghcr.io/${{ github.repository_owner }}/s-pdf
         tags: |
-          ${{ steps.versionNumber.outputs.versionNumber }}
+          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
           type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
           type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
@@ -84,9 +84,9 @@ jobs:
           ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
           ghcr.io/${{ github.repository_owner }}/s-pdf
         tags: |
-          ${{ steps.versionNumber.outputs.versionNumber }}-ultra-light
-          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
+          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-light,enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=latest-ultra-light,enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=alpha-ultra-light,enable=${{ github.ref == 'refs/heads/main' }}
           
     - name: Convert repository owner to lowercase
       id: repoowner
@@ -96,19 +96,12 @@ jobs:
       uses: docker/build-push-action@v4.0.0
       with:
         context: .
-        dockerfile: ./Dockerfile-ultralite
+        file: ./Dockerfile-ultralite
         push: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
         tags: ${{ steps.meta2.outputs.tags }}
         labels: ${{ steps.meta2.outputs.labels }}
-        tags: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf:ultra-light-latest
-          ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf:ultra-light-latest
-        labels: |
-          ${{ steps.meta2.outputs.labels }}
-          type=raw,value=ultra-light-latest,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=ultra-light-alpha,enable=${{ github.ref == 'refs/heads/main' }}
         platforms: linux/amd64,linux/arm64/v8
 
 
