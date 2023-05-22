@@ -81,7 +81,7 @@ public class BlankPageController {
                         BufferedImage image = pdfRenderer.renderImageWithDPI(pageIndex, 300);
                         ImageIO.write(image, "png", tempFile.toFile());
     
-                        List<String> command = new ArrayList<>(Arrays.asList("python3", System.getProperty("user.dir") + "scripts/detect-blank-pages.py", tempFile.toString() ,"--threshold", String.valueOf(threshold), "--white_percent", String.valueOf(whitePercent)));
+                        List<String> command = new ArrayList<>(Arrays.asList("python3", System.getProperty("user.dir") + "/scripts/detect-blank-pages.py", tempFile.toString() ,"--threshold", String.valueOf(threshold), "--white_percent", String.valueOf(whitePercent)));
     
                         // Run CLI command
                         int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV).runCommandWithOutputHandling(command);
