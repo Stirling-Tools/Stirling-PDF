@@ -122,6 +122,8 @@ Stirling PDF currently supports
 - Italian (Italiano) (it_IT)
 - Swedish (Svenska) (sv_SE)
 - Polish (Polski) (pl_PL)
+- Romanian (Română) (ro_RO)
+- Korean (한국어) (ko_KR)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
