@@ -10,7 +10,7 @@
 
 This is a powerful locally hosted web based PDF manipulation tool using docker that allows you to perform various operations on PDF files, such as splitting merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application started as a 100% ChatGPT-made application and has evolved to include a wide range of features to handle all your PDF needs.
 
-Stirling PDF makes no outbount calls for any record keeping or tracking.
+Stirling PDF makes no outbound calls for any record keeping or tracking.
 
 All files and PDFs are either purely client side, in server memory only during the execution of the task or within a temporay file only for execution of the task.
 Any file which has been downloaded by the user will have already been deleted from the server by that time.
