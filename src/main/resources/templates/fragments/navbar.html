@@ -63,10 +63,10 @@ function compareVersions(version1, version2) {
     console.log("currentVersion=" + currentVersion)
     console.log("compareVersions(latestVersion, currentVersion) > 0)=" + compareVersions(latestVersion, currentVersion))
     if (latestVersion != null && latestVersion != "" && compareVersions(latestVersion, currentVersion) > 0) {
-      document.getElementById("update-btn").style.visibility = "visible";
+      document.getElementById("update-btn").style.display = "block";
       console.log("visible")
     } else {
-      document.getElementById("update-btn").style.visibility = "hidden";
+      document.getElementById("update-btn").style.display = "none";
       console.log("hidden")
     }
   }
@@ -272,6 +272,9 @@ function compareVersions(version1, version2) {
                             </a>
                             <a class="dropdown-item lang_dropdown-item" href="" data-language-code="pl_PL">
                                 <img src="images/flags/pl.svg" alt="icon" width="20" height="15"> Polski
+                            </a>
+                            <a class="dropdown-item lang_dropdown-item" href="" data-language-code="ro_RO">
+                                <img src="images/flags/ro.svg" alt="icon" width="20" height="15"> Romanian
                             </a>
                             <a class="dropdown-item lang_dropdown-item" href="" data-language-code="sv_SE">
                                 <img src="images/flags/se.svg" alt="icon" width="20" height="15"> Svenska
