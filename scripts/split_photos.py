@@ -126,9 +126,9 @@ if __name__ == "__main__":
 
     input_file = sys.argv[1]
     output_directory = sys.argv[2]
-    tolerance = int(sys.argv[3]) if len(sys.argv) > 3 else 20
-    min_area = int(sys.argv[4]) if len(sys.argv) > 4 else 8000
-    min_contour_area = int(sys.argv[5]) if len(sys.argv) > 5 else 500
-    angle_threshold = int(sys.argv[6]) if len(sys.argv) > 6 else 60
-    border_size = int(sys.argv[7]) if len(sys.argv) > 7 else 0
+    tolerance = int(sys.argv[6]) if len(sys.argv) > 3 else 20
+    min_area = int(sys.argv[8]) if len(sys.argv) > 4 else 8000
+    min_contour_area = int(sys.argv[10]) if len(sys.argv) > 5 else 500
+    angle_threshold = int(sys.argv[4]) if len(sys.argv) > 6 else 60
+    border_size = int(sys.argv[12]) if len(sys.argv) > 7 else 0
     split_photos(input_file, output_directory, tolerance=tolerance, min_area=min_area, min_contour_area=min_contour_area, angle_threshold=angle_threshold, border_size=border_size)
