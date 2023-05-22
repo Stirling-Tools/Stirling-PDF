@@ -189,7 +189,7 @@ public class OCRController {
             Files.delete(sidecarTextPath);
 
             // Return the zip file containing both the PDF and the text file
-            return PdfUtils.bytesToWebResponse(pdfBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
+            return PdfUtils.bytesToWebResponse(zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
         } else {
             // Return the OCR processed PDF as a response
             Files.delete(tempOutputFile);
