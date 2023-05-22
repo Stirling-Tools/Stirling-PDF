@@ -3,7 +3,30 @@
 
 
 <th:block th:insert="~{fragments/common :: head(title=#{ocr.title})}"></th:block>
-
+<head>
+    <script>
+        function handleLangSelection() {
+            let checkboxes = document.getElementsByName("languages");
+            let selected = false;
+            for (let i = 0; i < checkboxes.length; i++) {
+                if (checkboxes[i].checked) {
+                    selected = true;
+                    checkboxes[i].setAttribute('required', 'false');
+                }
+            }
+            if (selected) {
+                for (let i = 0; i < checkboxes.length; i++) {
+                    checkboxes[i].removeAttribute('required');
+                }
+            }
+            else {
+                for (let i = 0; i < checkboxes.length; i++) {
+                    checkboxes[i].setAttribute('required', 'true');
+                }
+            }
+        }
+    </script>
+</head>
 
 <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
@@ -22,7 +45,7 @@
                                 <hr>
                                 <div id="languages">
                                     <div th:each="language, iterStat : ${languages}">
-                                        <input type="checkbox" th:name="languages" th:value="${language}" th:id="${'language-' + language}" />
+                                        <input type="checkbox" th:name="languages" th:value="${language}" required th:id="${'language-' + language}" onchange="handleLangSelection()" />
                                         <label class="form-check-label" th:for="${'language-' + language}" th:text="${(language == 'eng') ? 'English' : language}"></label>
                                     </div>
                                 </div>
