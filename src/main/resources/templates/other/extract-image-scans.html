@@ -18,7 +18,7 @@
               <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*, application/pdf')}"></div>
               <div class="form-group">
                 <label for="angleThreshold" th:text="#{ScannerImageSplit.selectText.1}"></label>
-                <input type="number" class="form-control" id="angleThreshold" name="angle_threshold" value="5">
+                <input type="number" class="form-control" id="angleThreshold" name="angle_threshold" value="10">
                 <small id="angleThresholdHelp" class="form-text text-muted" th:text="#{ScannerImageSplit.selectText.2}"></small>
               </div>
               <div class="form-group">
