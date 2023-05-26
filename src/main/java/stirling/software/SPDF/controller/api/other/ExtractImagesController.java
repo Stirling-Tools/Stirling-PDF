@@ -59,7 +59,7 @@ public class ExtractImagesController {
         zos.setLevel(Deflater.BEST_COMPRESSION);
 
         int imageIndex = 1;
-
+        String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
         int pageNum = 1;
         // Iterate over each page
         for (PDPage page : document.getPages()) {
@@ -81,7 +81,7 @@ public class ExtractImagesController {
                     }
 
                     // Write image to zip file
-                    String imageName = "Image " + imageIndex + " (Page " + pageNum + ")." + format;
+                    String imageName = filename + "_" + imageIndex + " (Page " + pageNum + ")." + format;
                     ZipEntry zipEntry = new ZipEntry(imageName);
                     zos.putNextEntry(zipEntry);
 
@@ -106,7 +106,7 @@ public class ExtractImagesController {
         // Create ByteArrayResource from byte array
         byte[] zipContents = baos.toByteArray();
 
-        return PdfUtils.boasToWebResponse(baos, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_extracted-images.zip", MediaType.APPLICATION_OCTET_STREAM);
+        return PdfUtils.boasToWebResponse(baos, filename + "_extracted-images.zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 
 }

@@ -56,8 +56,9 @@ public class ConvertImgPDFController {
         // returns bytes for image
         boolean singleImage = singleOrMultiple.equals("single");
         byte[] result = null;
+        String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
         try {
-            result = PdfUtils.convertFromPdf(pdfBytes, imageFormat.toUpperCase(), colorTypeResult, singleImage, Integer.valueOf(dpi));
+            result = PdfUtils.convertFromPdf(pdfBytes, imageFormat.toUpperCase(), colorTypeResult, singleImage, Integer.valueOf(dpi), filename);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -74,7 +75,7 @@ public class ConvertImgPDFController {
             ByteArrayResource resource = new ByteArrayResource(result);
             // return the Resource in the response
             return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_convertedToImages.zip")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename + "_convertedToImages.zip")
                     .contentType(MediaType.APPLICATION_OCTET_STREAM).contentLength(resource.contentLength()).body(resource);
         }
     }

@@ -69,7 +69,7 @@ public class PdfUtils {
         return bytesToWebResponse(bytes, docName, MediaType.APPLICATION_PDF);
     }
 
-    public static byte[] convertFromPdf(byte[] inputStream, String imageType, ImageType colorType, boolean singleImage, int DPI) throws IOException, Exception {
+    public static byte[] convertFromPdf(byte[] inputStream, String imageType, ImageType colorType, boolean singleImage, int DPI, String filename) throws IOException, Exception {
         try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputStream))) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             int pageCount = document.getNumberOfPages();
@@ -107,7 +107,7 @@ public class PdfUtils {
                             ImageIO.write(image, imageType, baosImage);
 
                             // Add the image to the zip file
-                            zos.putNextEntry(new ZipEntry(String.format("page_%d.%s", i + 1, imageType.toLowerCase())));
+                            zos.putNextEntry(new ZipEntry(String.format(filename + "_%d.%s", i + 1, imageType.toLowerCase())));
                             zos.write(baosImage.toByteArray());
                         }
                     }

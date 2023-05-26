@@ -400,14 +400,13 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
 
                         let contentDisposition = response.headers.get('content-disposition');
-                        let fileName = "file.pdf"
+                        let fileName = "file.pdf"                            
                         if (!contentDisposition) {
                             //throw new Error('Content-Disposition header not found for file ' + i);
                         } else {
-                            fileName = contentDisposition.split('filename=')[1].replace(/"/g, '');
+                            fileName = decodeURIComponent(contentDisposition.split('filename=')[1].replace(/"/g, ''));
                         }
                         console.log('Received response for file ' + i + ': ' + response);
-
 
 
                         let blob = await response.blob();
