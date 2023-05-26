@@ -30,6 +30,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
@@ -125,6 +126,7 @@ public class PdfUtils {
     public static byte[] imageToPdf(MultipartFile[] files, boolean stretchToFit, boolean autoRotate, String colorType) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             for (MultipartFile file : files) {
+            	String contentType = file.getContentType();
                 String originalFilename = file.getOriginalFilename();
                 if (originalFilename != null && (originalFilename.toLowerCase().endsWith(".tiff") || originalFilename.toLowerCase().endsWith(".tif")) ) {
                     ImageReader reader = ImageIO.getImageReadersByFormatName("tiff").next();
@@ -146,7 +148,12 @@ public class PdfUtils {
                         }
                         BufferedImage image = ImageIO.read(imageFile);
                         BufferedImage convertedImage = convertColorType(image, colorType);
-                        PDImageXObject pdImage = LosslessFactory.createFromImage(doc, convertedImage);
+                        PDImageXObject pdImage;
+                        if (contentType != null && (contentType.equals("image/jpeg"))) {
+                            pdImage = JPEGFactory.createFromImage(doc, convertedImage);
+                        } else {
+                            pdImage = LosslessFactory.createFromImage(doc, convertedImage);
+                        }
                         addImageToDocument(doc, pdImage, stretchToFit, autoRotate);
                     } catch (IOException e) {
                         logger.error("Error writing image to file: {}", imageFile.getAbsolutePath(), e);
