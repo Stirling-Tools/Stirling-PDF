@@ -108,4 +108,13 @@ public class OtherWebController {
         return "other/remove-blanks";
     }
     
+    @GetMapping("/multi-page-layout")
+    @Hidden
+    public String multiPageLayoutForm(Model model) {
+        model.addAttribute("currentPage", "multi-page-layout");
+        return "other/multi-page-layout";
+    }
+    
+    
+    
 }
