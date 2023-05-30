@@ -220,6 +220,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
 <th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: 'true', notRequired=${notRequired} ?: false">
     <script>
+	    function showErrorBanner(message, stackTrace) {
+	        const errorContainer = document.getElementById("errorContainer");
+	        errorContainer.style.display = "block"; // Display the banner
+	        document.querySelector("#errorContainer .alert-heading").textContent = "Error";
+	        document.querySelector("#errorContainer p").textContent = message;
+	        document.querySelector("#traceContent").textContent = stackTrace;
+	    }
+    
         $(document).ready(function() {
             $('form').submit(async function(event) {
                 const boredWaiting = localStorage.getItem('boredWaiting');
@@ -311,7 +319,11 @@ document.addEventListener("DOMContentLoaded", function () {
                                 // Format the error message
                                 const errorMessage = JSON.stringify(json, null, 2);
                                 // Display the error message in an alert
-                                alert(`An error occurred: ${errorMessage}`);
+                                if(errorMessage.toLowerCase().includes('the password is incorrect') ||  errorMessage.toLowerCase().includes('Password is not provided')){
+                                	alert('[[#{error.pdfPassword}]]');
+                                } else {
+                                	 showErrorBanner(json.error + ':' + json.message, json.trace);
+                                }
                             } else {
                                 const blob = await response.blob()
                                 console.log("else save 2 zip")
@@ -332,11 +344,16 @@ document.addEventListener("DOMContentLoaded", function () {
                             // Create an error message to display to the user
                             const message = `${errorMessage}\n\n${stackTrace}`;
                         
-                            $('#submitBtn').text(submitButtonText);
                             
+                            
+
                             // Display the error message to the user
-                            alert(message);
-                            
+                            if(errorMessage.toLowerCase().includes('the password is incorrect') ||  errorMessage.toLowerCase().includes('Password is not provided')){
+                                showErrorBanner('[[#{error.pdfPassword}]]', stackTrace);
+                            } else {
+                                showErrorBanner('[[#{error.generic}]]', stackTrace);
+                            }
+                            $('#submitBtn').text(submitButtonText);
                         };
                             
                     }
