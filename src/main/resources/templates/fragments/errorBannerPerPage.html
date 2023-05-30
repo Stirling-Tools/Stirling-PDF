@@ -1,6 +1,6 @@
 <th:block th:fragment="errorBannerPerPage">
 
-  <style>
+  <style scoped>
     #github-button,
     #discord-button {
       display: inline-block;
@@ -18,6 +18,7 @@
       background-color: #005b7f;
     }
   </style>
+  
   <div id="errorContainer" class="alert alert-danger alert-dismissible fade show" role="alert" style="display: none;">
   <h4 class="alert-heading">Error</h4>
   <p></p>
@@ -39,34 +40,34 @@
 </div>
 
 <!-- Help Modal -->
-   <style>
+   <style scoped>
 	#helpModalDialog {
         width: 90%;
         max-width: 800px;
     }
-      h1 {
+      #helpModal h1 {
         text-align: center;
         margin-top: 10%;
       }
 
-      p {
+      #helpModal p {
 
         text-align: center;
         margin-top: 2em;
       }
 
 
-        .button:hover {
+        #helpModal .button:hover {
           background-color: #005b7f;
         }
   
-      .features-container {
+      #helpModal .features-container {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(21rem, 3fr));
         gap: 25px 30px;
       }
 
-      .feature-card {
+      #helpModal .feature-card {
         border: 1px solid rgba(0, 0, 0, .125);
         border-radius: 0.25rem;
         padding: 1.25rem;
@@ -75,7 +76,7 @@
         align-items: flex-start;
       }
 
-      .feature-card .card-text {
+      #helpModal .feature-card .card-text {
         flex: 1;
       }
       
