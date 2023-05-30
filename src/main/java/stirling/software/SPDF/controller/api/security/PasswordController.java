@@ -50,8 +50,11 @@ public class PasswordController {
         @RequestPart(required = true, value = "fileInput")
         @Parameter(description = "The input PDF file to which the password should be added", required = true)
             MultipartFile fileInput,
+        @RequestParam(defaultValue = "", name = "ownerPassword")
+        @Parameter(description = "The owner password to be added to the PDF file (Restricts what can be done with the document once it is opened)")
+            String ownerPassword,
         @RequestParam(defaultValue = "", name = "password")
-        @Parameter(description = "The password to be added to the PDF file")
+        @Parameter(description = "The password to be added to the PDF file (Restricts the opening of the document itself.)")
             String password,
         @RequestParam(defaultValue = "128", name = "keyLength")
         @Parameter(description = "The length of the encryption key", schema = @Schema(allowableValues = {"40", "128", "256"}))
@@ -84,7 +87,6 @@ public class PasswordController {
 
         PDDocument document = PDDocument.load(fileInput.getBytes());
         AccessPermission ap = new AccessPermission();
-
         ap.setCanAssembleDocument(!canAssembleDocument);
         ap.setCanExtractContent(!canExtractContent);
         ap.setCanExtractForAccessibility(!canExtractForAccessibility);
@@ -93,7 +95,10 @@ public class PasswordController {
         ap.setCanModifyAnnotations(!canModifyAnnotations);
         ap.setCanPrint(!canPrint);
         ap.setCanPrintFaithful(!canPrintFaithful);
-        StandardProtectionPolicy spp = new StandardProtectionPolicy(password, password, ap);
+        StandardProtectionPolicy spp = new StandardProtectionPolicy(ownerPassword, password, ap);
+        
+     
+        
         spp.setEncryptionKeyLength(keyLength);
 
         spp.setPermissions(ap);
