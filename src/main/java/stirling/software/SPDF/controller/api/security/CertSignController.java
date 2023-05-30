@@ -177,8 +177,17 @@ public class CertSignController {
             String signingDate = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z").format(new Date());
 
             // Prepare the text for the digital signature
-            String layer2Text = String.format("Digitally signed by: %s\nDate: %s\nReason: %s\nLocation: %s", name, signingDate, reason, location);
+            StringBuilder layer2TextBuilder = new StringBuilder(String.format("Digitally signed by: %s\nDate: %s", 
+            	    name != null ? name : "Unknown", signingDate));
 
+        	if (reason != null && !reason.isEmpty()) {
+        		layer2TextBuilder.append("\nReason: ").append(reason);
+        	}
+
+        	if (location != null && !location.isEmpty()) {
+        		layer2TextBuilder.append("\nLocation: ").append(location);
+        	}
+            String 	layer2Text = layer2TextBuilder.toString();
             // Get the PDF font and measure the width and height of the text block
             PdfFont font = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
             float textWidth = Arrays.stream(layer2Text.split("\n"))
@@ -206,12 +215,12 @@ public class CertSignController {
 
             // Configure the appearance of the digital signature
             appearance.setPageRect(rect)
-                      .setContact(name)
-                      .setPageNumber(pageNumber)
-                      .setReason(reason)
-                      .setLocation(location)
-                      .setReuseAppearance(false)
-                      .setLayer2Text(layer2Text);
+	            .setContact(name != null ? name : "")
+	            .setPageNumber(pageNumber)
+	            .setReason(reason != null ? reason : "")
+	            .setLocation(location != null ? location : "")
+	            .setReuseAppearance(false)
+	            .setLayer2Text(layer2Text.toString());
 
             signer.setFieldName("sig");
         } else {

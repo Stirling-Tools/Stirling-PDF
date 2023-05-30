@@ -64,7 +64,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("PageOps", "split-pdfs");
         addEndpointToGroup("PageOps", "pdf-organizer");
         addEndpointToGroup("PageOps", "rotate-pdf");
-
+        addEndpointToGroup("PageOps", "multi-page-layout");
+        
         // Adding endpoints to "Convert" group
         addEndpointToGroup("Convert", "pdf-to-img");
         addEndpointToGroup("Convert", "img-to-pdf");
@@ -82,6 +83,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "remove-password");
         addEndpointToGroup("Security", "change-permissions");
         addEndpointToGroup("Security", "add-watermark");
+        addEndpointToGroup("Security", "cert-sign");
+        
+        
 
         // Adding endpoints to "Other" group
         addEndpointToGroup("Other", "ocr-pdf");
@@ -158,6 +162,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "add-image");
         addEndpointToGroup("Java", "extract-images");
         addEndpointToGroup("Java", "change-metadata");
+        addEndpointToGroup("Java", "cert-sign");
+        addEndpointToGroup("Java", "multi-page-layout");
+        
         
         
         //Javascript
