@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.other;
+package stirling.software.SPDF.controller.api;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

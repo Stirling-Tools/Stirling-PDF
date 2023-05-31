@@ -165,7 +165,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "change-metadata");
         addEndpointToGroup("Java", "cert-sign");
         addEndpointToGroup("Java", "multi-page-layout");
-        
+        addEndpointToGroup("Java", "scale-pages");
         
         
         //Javascript

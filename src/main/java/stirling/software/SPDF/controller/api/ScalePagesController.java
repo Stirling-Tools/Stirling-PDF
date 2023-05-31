@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.other;
+package stirling.software.SPDF.controller.api;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -25,6 +25,7 @@ import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 public class ScalePagesController {
@@ -81,8 +82,6 @@ public class ScalePagesController {
 		outputPdf.close();
 		byte[] pdfContent = baos.toByteArray();
 		pdfDoc.close();
-		return ResponseEntity.ok()
-				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_modified.pdf\"")
-				.body(pdfContent);
+		return WebResponseUtils.bytesToWebResponse(pdfContent, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_scaled.pdf");
 	}
 }
