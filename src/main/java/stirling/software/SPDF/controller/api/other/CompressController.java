@@ -31,7 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import stirling.software.SPDF.utils.GeneralFileUtils;
+import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -56,7 +56,7 @@ public class CompressController {
         Long expectedOutputSize = 0L;
         boolean autoMode = false;
         if (expectedOutputSizeString != null && expectedOutputSizeString.length() > 1 ) {
-            expectedOutputSize = GeneralFileUtils.convertSizeToBytes(expectedOutputSizeString);
+            expectedOutputSize = GeneralUtils.convertSizeToBytes(expectedOutputSizeString);
             autoMode = true;
         }
 

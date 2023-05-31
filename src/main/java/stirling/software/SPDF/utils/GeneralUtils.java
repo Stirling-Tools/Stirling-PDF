@@ -1,6 +1,6 @@
 package stirling.software.SPDF.utils;
 
-public class GeneralFileUtils {
+public class GeneralUtils {
 
 	public static Long convertSizeToBytes(String sizeStr) {
 	    if (sizeStr == null) {
