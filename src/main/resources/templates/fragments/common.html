@@ -227,277 +227,205 @@ document.addEventListener("DOMContentLoaded", function () {
 	        document.querySelector("#errorContainer p").textContent = message;
 	        document.querySelector("#traceContent").textContent = stackTrace;
 	    }
-    
-        $(document).ready(function() {
-            $('form').submit(async function(event) {
-                const boredWaiting = localStorage.getItem('boredWaiting');
-                if (boredWaiting === 'enabled') {
-                    $('#show-game-btn').show();
-                }
-                var processing = "Processing..."
-                var submitButtonText = $('#submitBtn').text()
-                    
-                $('#submitBtn').text('Processing...');
-                console.log("start download code")
-                var files = $('#fileInput-input')[0].files;
-                var url = this.action;
-                console.log(url)
-                event.preventDefault(); // Prevent the default form handling behavior
+    	
+	    $(document).ready(function () {
+	        $('form').submit(async function (event) {
+	            event.preventDefault();
+	            
+	            const url = this.action;
+	            const files = $('#fileInput-input')[0].files;
+	            const formData = new FormData(this);
+	            const override = $('#override').val() || '';
 
-                /* Check if ${multiple} is false */
-                var multiple = [[${multiple}]] || false;
-                var override = $('#override').val() || '';
-                console.log("override=" + override)
-                
-                if([[${remoteCall}]] === true) {
-                    if (override === 'multi' || (!multiple && files.length > 1) && override !== 'single' ) {
-                        console.log("multi parallel download")
-                        await submitMultiPdfForm(event,url);
-                    } else {
-                        console.log("start single download")
-    
-                        // Get the selected download option from localStorage
-                        const downloadOption = localStorage.getItem('downloadOption');
-    
-                        var formData = new FormData($('form')[0]);
-                        
-                        // Send the request to the server using the fetch() API
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            body: formData
-                        });
-                        try {
-                            if (!response) {
-                                throw new Error('Received null response for file ' + i);
-                            }
-                            console.log("load single download")
-    
-                                
-                            // Extract the filename from the Content-Disposition header, if present
-                            let filename = null;
-                            const contentDispositionHeader = response.headers.get('Content-Disposition');
-                            console.log(contentDispositionHeader)
-                            if (contentDispositionHeader && contentDispositionHeader.indexOf('attachment') !== -1) {
-                                filename = decodeURIComponent(contentDispositionHeader.split('filename=')[1].replace(/"/g, ''));
-                            } else {
-                                // If the Content-Disposition header is not present or does not contain the filename, use a default filename
-                                filename = 'download';
-                            }
-                            console.log("filename=" + filename)
-    
-                        
-                            const contentType = response.headers.get('Content-Type');
-                            console.log("contentType=" + contentType)
-                            // Check if the response is a PDF or an image
-                            if (contentType.includes('pdf') || contentType.includes('image')) {
-                                const blob = await response.blob();
-                                console.log("pdf/image")
-    
-                                // Perform the appropriate action based on the download option
-                                if (downloadOption === 'sameWindow') {
-                                    console.log("same window")
-    
-                                    // Open the file in the same window
-                                    window.location.href = URL.createObjectURL(blob);
-                                } else if (downloadOption === 'newWindow') {
-                                    console.log("new window")
-    
-                                    // Open the file in a new window
-                                    window.open(URL.createObjectURL(blob), '_blank');
-                                } else {
-                                    console.log("else save")
-    
-                                    // Download the file
-                                    const link = document.createElement('a');
-                                    link.href = URL.createObjectURL(blob);
-                                    link.download = filename;
-                                    link.click();
-                                }
-                            } else if (contentType.includes('json')) {
-                                // Handle the JSON response
-                                const json = await response.json();
-                                // Format the error message
-                                const errorMessage = JSON.stringify(json, null, 2);
-                                // Display the error message in an alert
-                                if(errorMessage.toLowerCase().includes('the password is incorrect') ||  errorMessage.toLowerCase().includes('Password is not provided')){
-                                	alert('[[#{error.pdfPassword}]]');
-                                } else {
-                                	 showErrorBanner(json.error + ':' + json.message, json.trace);
-                                }
-                            } else {
-                                const blob = await response.blob()
-                                console.log("else save 2 zip")
-                                
-                                // For ZIP files or other file types, just download the file
-                                const link = document.createElement('a');
-                                link.href = URL.createObjectURL(blob);
-                                link.download = filename;
-                                link.click();
-                            }
-                        } catch(error) {
-                            console.log("error listener")
-    
-                            // Extract the error message and stack trace from the response
-                            const errorMessage = error.message;
-                            const stackTrace = error.stack;
-    
-                            // Create an error message to display to the user
-                            const message = `${errorMessage}\n\n${stackTrace}`;
-                        
-                            
-                            
+	            $('#submitBtn').text('Processing...');
+	            
+	            try {
+	                if (override === 'multi' || files.length > 1 && override !== 'single') {
+	                    await submitMultiPdfForm(url, files);
+	                } else {
+	                    const downloadDetails = await handleSingleDownload(url, formData);
 
-                            // Display the error message to the user
-                            if(errorMessage.toLowerCase().includes('the password is incorrect') ||  errorMessage.toLowerCase().includes('Password is not provided')){
-                                showErrorBanner('[[#{error.pdfPassword}]]', stackTrace);
-                            } else {
-                                showErrorBanner('[[#{error.generic}]]', stackTrace);
-                            }
-                            $('#submitBtn').text(submitButtonText);
-                        };
-                            
-                    }
-                } else {
-                	//Offline do nothing and let other scripts handle everything
-                	
-                }
-                $('#submitBtn').text(submitButtonText);
-            });
-        });
-        async function submitMultiPdfForm(event, url) {
-            // Get the selected PDF files
-            let files = $('#fileInput-input')[0].files;
+	                    // Determine the download option from localStorage
+	                    const downloadOption = localStorage.getItem('downloadOption');
 
-            // Get the existing form data
-            let formData = new FormData($('form')[0]);
-            formData.delete('fileInput');
+	                    // Handle the download action according to the selected option
+	                    handleDownloadAction(downloadOption, downloadDetails.blob, downloadDetails.filename);
+	                }
 
-            // Show the progress bar
-            $('#progressBarContainer').show();
+	                $('#submitBtn').text('Submit');
+	            } catch (error) {
+	                handleDownloadError(error);
+	                $('#submitBtn').text('Submit');
+	            }
+	        });
+	    });
 
-            // Initialize the progress bar
-            let progressBar = $('#progressBar');
-            progressBar.css('width', '0%');
-            progressBar.attr('aria-valuenow', 0);
-            progressBar.attr('aria-valuemax', files.length);
+	    function handleDownloadAction(downloadOption, blob, filename) {
+	        const url = URL.createObjectURL(blob);
+	        
+	        switch (downloadOption) {
+	            case 'sameWindow':
+	                // Open the file in the same window
+	                window.location.href = url;
+	                break;
+	            case 'newWindow':
+	                // Open the file in a new window
+	                window.open(url, '_blank');
+	                break;
+	            default:
+	                // Download the file
+	                const link = document.createElement('a');
+	                link.href = url;
+	                link.download = filename;
+	                link.click();
+	                break;
+	        }
+	    }
 
-            // Check the flag in localStorage, default to 4
-            const zipThreshold = parseInt(localStorage.getItem('zipThreshold'), 10) || 4;
-            const zipFiles = files.length > zipThreshold;
+	    async function handleSingleDownload(url, formData) {
+	        const response = await fetch(url, {
+	            method: 'POST',
+	            body: formData
+	        });
 
-            // Initialize JSZip instance if needed
-            let jszip = null;
-            if (zipFiles) {
-                jszip = new JSZip();
-            }
+	        if (!response.ok) {
+	            throw new Error(`HTTP error! status: ${response.status}`);
+	        } else {
+	            const blob = await response.blob();
+	            const filename = getFilenameFromContentDisposition(response.headers.get('Content-Disposition'));
+	            return { blob, filename };
+	        }
+	    }
+	    function getFilenameFromContentDisposition(contentDisposition) {
+	        let filename;
 
-            // Submit each PDF file in parallel
-            let promises = [];
-            for (let i = 0; i < files.length; i++) {
-                let promise = new Promise(async function(resolve, reject) {
-                    let fileFormData = new FormData();
-                    fileFormData.append('fileInput', files[i]);
-                    for (let pair of formData.entries()) {
-                        fileFormData.append(pair[0], pair[1]);
-                    }
-                    console.log(fileFormData);
+	        if (contentDisposition && contentDisposition.indexOf('attachment') !== -1) {
+	            filename = decodeURIComponent(contentDisposition.split('filename=')[1].replace(/"/g, ''));
+	        } else {
+	            // If the Content-Disposition header is not present or does not contain the filename, use a default filename
+	            filename = 'download';
+	        }
 
-                    try {
-                        let response = await fetch(url, {
-                            method: 'POST',
-                            body: fileFormData
-                        });
-
-                        if (!response) {
-                            throw new Error('Received null response for file ' + i);
-                        }
-
-                        if (!response.ok) {
-                            throw new Error(`Error submitting request for file ${i}: ${response.status} ${response.statusText}`);
-                        }
-
-                        let contentDisposition = response.headers.get('content-disposition');
-                        let fileName = "file.pdf"                            
-                        if (!contentDisposition) {
-                            //throw new Error('Content-Disposition header not found for file ' + i);
-                        } else {
-                            fileName = decodeURIComponent(contentDisposition.split('filename=')[1].replace(/"/g, ''));
-                        }
-                        console.log('Received response for file ' + i + ': ' + response);
+	        return filename;
+	    }
 
 
-                        let blob = await response.blob();
-                        if (zipFiles) {
-                            // Add the file to the ZIP archive
-                            jszip.file(fileName, blob);
-                            resolve();
-                        } else {
-                            // Download the file directly
-                            let url = window.URL.createObjectURL(blob);
-                            let a = document.createElement('a');
-                            a.href = url;
-                            a.download = fileName;
-                            document.body.appendChild(a);
-                            a.click();
-                            a.remove();
-                            resolve();
-                        }
-                    } catch (error) {
-                        console.error('Error submitting request for file ' + i + ': ' + error);
+	    async function handlePdfOrImageResponse(response, filename) {
+	        const downloadOption = localStorage.getItem('downloadOption');
+	        const blob = await response.blob();
+	        const url = URL.createObjectURL(blob);
+	        if (downloadOption === 'sameWindow') {
+	            window.location.href = url;
+	        } else if (downloadOption === 'newWindow') {
+	            window.open(url, '_blank');
+	        } else {
+	            downloadFile(url, filename);
+	        }
+	    }
 
-                        // Set default values or fallbacks for error properties
-                        let status = error && error.status || 500;
-                        let statusText = error && error.statusText || 'Internal Server Error';
-                        let message = error && error.message || 'An error occurred while processing your request.';
+	    async function handleJsonResponse(response) {
+	        const json = await response.json();
+	        const errorMessage = JSON.stringify(json, null, 2);
+	        if(errorMessage.toLowerCase().includes('the password is incorrect') ||  errorMessage.toLowerCase().includes('Password is not provided')){
+	            alert('[[#{error.pdfPassword}]]');
+	        } else {
+	            showErrorBanner(json.error + ':' + json.message, json.trace);
+	        }
+	    }
 
-                        // Reject the Promise to signal that the request has failed
-                        reject();
-                        // Redirect to error page with Spring Boot error parameters
-                        let url = '/error?status=' + status + '&error=' + encodeURIComponent(statusText) + '&message=' + encodeURIComponent(message);
-                        window.location.href = url;
-                    }
-                });
+	    async function handleOtherResponse(response, filename) {
+	        const blob = await response.blob();
+	        const url = URL.createObjectURL(blob);
+	        downloadFile(url, filename);
+	    }
+	    function handleDownloadError(error) {
+	        const errorMessage = error.message;
+	        showErrorBanner(errorMessage);
+	    }
 
-                // Update the progress bar as each request finishes
-                promise.then(function() {
-                    updateProgressBar(progressBar, files);
-                });
+	    let urls = []; // An array to hold all the URLs
 
-                promises.push(promise);
-            }
+	    function downloadFile(blob, filename) {
+	        const url = URL.createObjectURL(blob);
+	        const a = document.createElement('a');
+	        a.href = url;
+	        a.download = filename;
+	        a.click();
+	        urls.push(url); // Store the URL so it doesn't get garbage collected too soon
+	    }
 
-            // Wait for all requests to finish
-            try {
-                await Promise.all(promises);
-            } catch (error) {
-                console.error('Error while uploading files: ' + error);
-            }
+	    
+	    async function submitMultiPdfForm(url, files) {
+	        const zipThreshold = parseInt(localStorage.getItem('zipThreshold'), 10) || 4;
+	        const zipFiles = files.length > zipThreshold;
+	        let jszip = null;
+	        let progressBar = $('#progressBar');
+	        progressBar.css('width', '0%');
+	        progressBar.attr('aria-valuenow', 0);
+	        progressBar.attr('aria-valuemax', Array.from(files).length);
+	        if (zipFiles) {
+	            jszip = new JSZip();
+	        }
 
-            // Update the progress bar
-            progressBar.css('width', '100%');
-            progressBar.attr('aria-valuenow', files.length);
+	     // Get existing form data
+	        let formData = new FormData($('form')[0]);
+	        formData.delete('fileInput');
 
-            // After all requests are finished, download the ZIP file if needed
-            if (zipFiles) {
-                try {
-                    let content = await jszip.generateAsync({ type: "blob" });
-                    let url = window.URL.createObjectURL(content);
-                    let a = document.createElement('a');
-                    a.href = url;
-                    a.download = "files.zip";
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                } catch (error) {
-                    console.error('Error generating ZIP file: ' + error);
-                }
-            }
-        }
+	        const CONCURRENCY_LIMIT = 8;
+	        const chunks = [];
+	        for (let i = 0; i < Array.from(files).length; i += CONCURRENCY_LIMIT) {
+	            chunks.push(Array.from(files).slice(i, i + CONCURRENCY_LIMIT));
+	        }
+
+	        for (const chunk of chunks) {
+	            const promises = chunk.map(async file => {
+	                let fileFormData = new FormData();
+	                fileFormData.append('fileInput', file);
+
+	                // Add other form data
+	                for (let pair of formData.entries()) {
+	                    fileFormData.append(pair[0], pair[1]);
+	                }
+
+	                try {
+	                    const downloadDetails = await handleSingleDownload(url, fileFormData);
+	                    if (zipFiles) {
+	                        jszip.file(downloadDetails.filename, downloadDetails.blob);
+	                    } else {
+	                        downloadFile(downloadDetails.blob, downloadDetails.filename);
+	                    }
+	                    updateProgressBar(progressBar, Array.from(files).length);
+	                } catch (error) {
+	                    handleDownloadError(error);
+	                }
+	            });
+	            await Promise.all(promises);
+	        }
+
+	        if (zipFiles) {
+	            try {
+	                const content = await jszip.generateAsync({ type: "blob" });
+	                downloadFile(content, "files.zip");
+	            } catch (error) {
+	                console.error('Error generating ZIP file: ' + error);
+	            }
+	        }
+	    }
+
+
+	    
         function updateProgressBar(progressBar, files) {
             let progress = ((progressBar.attr('aria-valuenow') / files.length) * 100) + (100 / files.length);
             progressBar.css('width', progress + '%');
             progressBar.attr('aria-valuenow', parseInt(progressBar.attr('aria-valuenow')) + 1);
         }
+        window.addEventListener('unload', () => {
+            for (const url of urls) {
+                URL.revokeObjectURL(url);
+            }
+        });
+
+        
     </script>
 
     <div class="custom-file-chooser">
