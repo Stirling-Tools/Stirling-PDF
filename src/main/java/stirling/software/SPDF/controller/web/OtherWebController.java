@@ -115,6 +115,11 @@ public class OtherWebController {
         return "other/multi-page-layout";
     }
     
-    
+    @GetMapping("/scale-pages")
+    @Hidden
+    public String scalePagesFrom(Model model) {
+        model.addAttribute("currentPage", "scale-pages");
+        return "other/scale-pages";
+    }
     
 }
