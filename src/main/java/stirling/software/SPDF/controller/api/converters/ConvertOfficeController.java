@@ -17,8 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 public class ConvertOfficeController {
@@ -72,7 +72,7 @@ public class ConvertOfficeController {
         // LibreOfficeListener.getInstance().start();
 
         byte[] pdfByteArray = convertToPdf(inputFile);
-        return PdfUtils.bytesToWebResponse(pdfByteArray, inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_convertedToPDF.pdf");
+        return WebResponseUtils.bytesToWebResponse(pdfByteArray, inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_convertedToPDF.pdf");
     }
 
 }

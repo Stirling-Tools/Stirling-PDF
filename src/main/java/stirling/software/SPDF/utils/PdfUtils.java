@@ -8,8 +8,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.KeyPair;
 import java.security.KeyStore;
@@ -37,38 +35,11 @@ import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 public class PdfUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
-
-    public static ResponseEntity<byte[]> boasToWebResponse(ByteArrayOutputStream baos, String docName) throws IOException {
-        return PdfUtils.bytesToWebResponse(baos.toByteArray(), docName);
-    }
-
-    public static ResponseEntity<byte[]> boasToWebResponse(ByteArrayOutputStream baos, String docName, MediaType mediaType) throws IOException {
-        return PdfUtils.bytesToWebResponse(baos.toByteArray(), docName, mediaType);
-    }
-
-    public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName, MediaType mediaType) throws IOException {
-
-        // Return the PDF as a response
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(mediaType);
-        headers.setContentLength(bytes.length);
-        String encodedDocName = URLEncoder.encode(docName, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20");
-        headers.setContentDispositionFormData("attachment", encodedDocName);
-        return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
-    }
-
-    public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName) throws IOException {
-        return bytesToWebResponse(bytes, docName, MediaType.APPLICATION_PDF);
-    }
 
     public static byte[] convertFromPdf(byte[] inputStream, String imageType, ImageType colorType, boolean singleImage, int DPI, String filename) throws IOException, Exception {
         try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputStream))) {
@@ -134,7 +105,7 @@ public class PdfUtils {
                     int numPages = reader.getNumImages(true);
                     for (int i = 0; i < numPages; i++) {
                         BufferedImage pageImage = reader.read(i);
-                        BufferedImage convertedImage = convertColorType(pageImage, colorType);
+                        BufferedImage convertedImage = ImageProcessingUtils.convertColorType(pageImage, colorType);
                         PDImageXObject pdImage = LosslessFactory.createFromImage(doc, convertedImage);
                         addImageToDocument(doc, pdImage, stretchToFit, autoRotate);
                     }
@@ -147,7 +118,7 @@ public class PdfUtils {
                             fos.write(buffer, 0, len);
                         }
                         BufferedImage image = ImageIO.read(imageFile);
-                        BufferedImage convertedImage = convertColorType(image, colorType);
+                        BufferedImage convertedImage = ImageProcessingUtils.convertColorType(image, colorType);
                         PDImageXObject pdImage;
                         if (contentType != null && (contentType.equals("image/jpeg"))) {
                             pdImage = JPEGFactory.createFromImage(doc, convertedImage);
@@ -170,24 +141,6 @@ public class PdfUtils {
         }
     }
 
-    private static BufferedImage convertColorType(BufferedImage sourceImage, String colorType) {
-        BufferedImage convertedImage;
-        switch (colorType) {
-            case "greyscale":
-                convertedImage = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
-                convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
-                break;
-            case "blackwhite":
-                convertedImage = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_BYTE_BINARY);
-                convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
-                break;
-            default:  // full color
-                convertedImage = sourceImage;
-                break;
-        }
-        return convertedImage;
-    }
-    
     private static void addImageToDocument(PDDocument doc, PDImageXObject image, boolean stretchToFit, boolean autoRotate) throws IOException {
         boolean imageIsLandscape = image.getWidth() > image.getHeight();
         PDRectangle pageSize = PDRectangle.A4;
@@ -224,33 +177,6 @@ public class PdfUtils {
         }
     }
 
-    public static X509Certificate[] loadCertificateChainFromKeystore(InputStream keystoreInputStream, String keystorePassword) throws Exception {
-        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-        keystore.load(keystoreInputStream, keystorePassword.toCharArray());
-
-        String alias = keystore.aliases().nextElement();
-        Certificate[] certChain = keystore.getCertificateChain(alias);
-        X509Certificate[] x509CertChain = new X509Certificate[certChain.length];
-
-        for (int i = 0; i < certChain.length; i++) {
-            x509CertChain[i] = (X509Certificate) certChain[i];
-        }
-
-        return x509CertChain;
-    }
-
-    public static KeyPair loadKeyPairFromKeystore(InputStream keystoreInputStream, String keystorePassword) throws Exception {
-        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-        keystore.load(keystoreInputStream, keystorePassword.toCharArray());
-
-        String alias = keystore.aliases().nextElement();
-        PrivateKey privateKey = (PrivateKey) keystore.getKey(alias, keystorePassword.toCharArray());
-        Certificate cert = keystore.getCertificate(alias);
-        PublicKey publicKey = cert.getPublicKey();
-
-        return new KeyPair(publicKey, privateKey);
-    }
-
     public static byte[] overlayImage(byte[] pdfBytes, byte[] imageBytes, float x, float y, boolean everyPage) throws IOException {
 
         PDDocument document = PDDocument.load(new ByteArrayInputStream(pdfBytes));
@@ -282,41 +208,7 @@ public class PdfUtils {
         return baos.toByteArray();
     }
 
-    public static ResponseEntity<byte[]> pdfDocToWebResponse(PDDocument document, String docName) throws IOException {
-
-        // Open Byte Array and save document to it
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        document.save(baos);
-        // Close the document
-        document.close();
-
-        return PdfUtils.boasToWebResponse(baos, docName);
-    }
-    
-    public static Long convertSizeToBytes(String sizeStr) {
-        if (sizeStr == null) {
-            return null;
-        }
-
-        sizeStr = sizeStr.trim().toUpperCase();
-        try {
-            if (sizeStr.endsWith("KB")) {
-                return (long) (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024);
-            } else if (sizeStr.endsWith("MB")) {
-                return (long) (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024 * 1024);
-            } else if (sizeStr.endsWith("GB")) {
-                return (long) (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024 * 1024 * 1024);
-            } else if (sizeStr.endsWith("B")) {
-                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));
-            } else {
-                // Input string does not have a valid format, handle this case
-            }
-        } catch (NumberFormatException e) {
-            // The numeric part of the input string cannot be parsed, handle this case
-        }
-        
-        return null;
-    }
+   
 
     
 }

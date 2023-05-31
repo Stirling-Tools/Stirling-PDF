@@ -29,7 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import stirling.software.SPDF.utils.PdfUtils;
+import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 public class ExtractImagesController {
 
@@ -106,7 +106,7 @@ public class ExtractImagesController {
         // Create ByteArrayResource from byte array
         byte[] zipContents = baos.toByteArray();
 
-        return PdfUtils.boasToWebResponse(baos, filename + "_extracted-images.zip", MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.boasToWebResponse(baos, filename + "_extracted-images.zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 
 }

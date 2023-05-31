@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import stirling.software.SPDF.utils.PdfUtils;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 public class MergeController {
@@ -65,7 +65,7 @@ public class MergeController {
 
         
         // Return the merged PDF as a response
-        ResponseEntity<byte[]> response = PdfUtils.pdfDocToWebResponse(mergedDoc, files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_merged.pdf");
+        ResponseEntity<byte[]> response = WebResponseUtils.pdfDocToWebResponse(mergedDoc, files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_merged.pdf");
         
         for (PDDocument doc : documents) {
             // Close the document after processing

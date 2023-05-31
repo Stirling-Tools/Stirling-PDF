@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import stirling.software.SPDF.utils.PdfUtils;
+import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 public class PasswordController {
 
@@ -38,7 +38,7 @@ public class PasswordController {
             String password) throws IOException {
         PDDocument document = PDDocument.load(fileInput.getBytes(), password);
         document.setAllSecurityToBeRemoved(true);
-        return PdfUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_password_removed.pdf");
+        return WebResponseUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_password_removed.pdf");
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-password")
@@ -105,7 +105,7 @@ public class PasswordController {
 
         document.protect(spp);
 
-        return PdfUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_passworded.pdf");
+        return WebResponseUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_passworded.pdf");
     }
 
 

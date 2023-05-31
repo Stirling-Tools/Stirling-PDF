@@ -27,8 +27,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 public class OCRController {
@@ -189,11 +189,11 @@ public class OCRController {
             Files.delete(sidecarTextPath);
 
             // Return the zip file containing both the PDF and the text file
-            return PdfUtils.bytesToWebResponse(zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
+            return WebResponseUtils.bytesToWebResponse(zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
         } else {
             // Return the OCR processed PDF as a response
             Files.delete(tempOutputFile);
-            return PdfUtils.bytesToWebResponse(pdfBytes, outputFilename);
+            return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
         }
 
     }

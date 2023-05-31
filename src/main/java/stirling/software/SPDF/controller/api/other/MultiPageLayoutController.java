@@ -24,7 +24,7 @@ import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import stirling.software.SPDF.utils.PdfUtils;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 public class MultiPageLayoutController {
@@ -93,7 +93,7 @@ public class MultiPageLayoutController {
 		byte[] pdfContent = baos.toByteArray();
 		pdfDoc.close();
 		
-		return PdfUtils.bytesToWebResponse(pdfContent, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_layoutChanged.pdf");
+		return WebResponseUtils.bytesToWebResponse(pdfContent, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_layoutChanged.pdf");
 	}
 
 }

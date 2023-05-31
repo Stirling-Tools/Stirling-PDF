@@ -31,8 +31,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 public class ExtractImageScansController {
@@ -147,11 +147,11 @@ public class ExtractImageScansController {
             // Clean up the temporary zip file
             Files.delete(tempZipFile);
 
-            return PdfUtils.bytesToWebResponse(zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
+            return WebResponseUtils.bytesToWebResponse(zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
         } else {
             // Return the processed image as a response
             byte[] imageBytes = processedImageBytes.get(0);
-            return PdfUtils.bytesToWebResponse(imageBytes, fileName.replaceFirst("[.][^.]+$", "") + ".png", MediaType.IMAGE_PNG);
+            return WebResponseUtils.bytesToWebResponse(imageBytes, fileName.replaceFirst("[.][^.]+$", "") + ".png", MediaType.IMAGE_PNG);
         }
 
     }

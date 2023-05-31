@@ -92,6 +92,6 @@ public class PDFToFile {
             if (tempOutputDir != null)
                 FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
-        return PdfUtils.bytesToWebResponse(fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.bytesToWebResponse(fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
     }
 }
