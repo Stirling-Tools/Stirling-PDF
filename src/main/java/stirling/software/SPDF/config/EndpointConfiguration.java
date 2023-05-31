@@ -65,6 +65,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("PageOps", "pdf-organizer");
         addEndpointToGroup("PageOps", "rotate-pdf");
         addEndpointToGroup("PageOps", "multi-page-layout");
+        addEndpointToGroup("PageOps", "scale-pages");
         
         // Adding endpoints to "Convert" group
         addEndpointToGroup("Convert", "pdf-to-img");
