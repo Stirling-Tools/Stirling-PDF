@@ -1,0 +1,225 @@
+<th:block th:fragment="errorBannerPerPage">
+
+  <style scoped>
+    #github-button,
+    #discord-button {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background-color: #008CBA;
+      color: #fff;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 3rem;
+      transition: all 0.3s ease-in-out;
+    }
+
+    #github-button:hover,
+    #discord-button:hover {
+      background-color: #005b7f;
+    }
+  </style>
+  
+  <div id="errorContainer" class="alert alert-danger alert-dismissible fade show" role="alert" style="display: none;">
+  <h4 class="alert-heading">Error</h4>
+  <p></p>
+  <button type="button" class="btn btn-danger" onclick="toggletrace()">Show Stack Trace</button>
+  <button type="button" class="btn btn-secondary" onclick="copytrace()">Copy Stack Trace</button>
+  <button type="button" class="btn btn-info" onclick="showHelp()">Help</button>
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="dismissError()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <!-- Stack trace section -->
+  <div id="trace" style="max-height: 0; overflow: hidden;">
+    <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; padding: 10px; margin-top: 5px;">
+      <pre id="traceContent"></pre>
+    </div>
+  </div>
+  
+
+  
+</div>
+
+<!-- Help Modal -->
+   <style scoped>
+   #errorContainer {
+      margin: 20px; /* adjust this value as needed */
+    }
+    
+	#helpModalDialog {
+        width: 90%;
+        max-width: 800px;
+    }
+      #helpModal h1 {
+        text-align: center;
+        margin-top: 10%;
+      }
+
+      #helpModal p {
+
+        text-align: center;
+        margin-top: 2em;
+      }
+
+
+        #helpModal .button:hover {
+          background-color: #005b7f;
+        }
+  
+      #helpModal .features-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(21rem, 3fr));
+        gap: 25px 30px;
+      }
+
+      #helpModal .feature-card {
+        border: 1px solid rgba(0, 0, 0, .125);
+        border-radius: 0.25rem;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      #helpModal .feature-card .card-text {
+        flex: 1;
+      }
+      
+#support-section {
+background-color: #f9f9f9;
+padding: 4rem;
+  margin-top: 1rem;
+text-align: center;
+}
+
+#support-section h1 {
+margin-top: 0;
+}
+
+#support-section p {
+margin-top: 0;
+}
+
+#button-group {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#github-button, #discord-button {
+  display: inline-block;
+  padding: 1rem 2rem;
+  margin: 1rem;
+  background-color: #008CBA;
+  color: #fff;
+  font-size: 1.2rem;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 3rem;
+  transition: all 0.3s ease-in-out;
+}
+
+#github-button:hover, #discord-button:hover, #home-button:hover {
+  background-color: #005b7f;
+}
+
+#home-button {
+  display: block;
+        width: 200px;
+        height: 50px;
+        margin: 2em auto;
+        background-color: #008CBA;
+        color: white;
+        text-align: center;
+        line-height: 50px;
+        text-decoration: none;
+        font-weight: bold;
+        border-radius: 25px;
+  transition: all 0.3s ease-in-out;
+}
+
+      
+    </style>
+    
+	<div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered" role="document" id="helpModalDialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="helpModalLabel">Help</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+
+	        <div class="container">
+	          <div id="support-section">
+	            <h1 class="display-2">Oops!</h1>
+	            <p class="lead">Sorry for the issue!.</p>
+	            <br>
+	            <h2>Need help / Found an issue?</h2>
+	            <p>If you're still having trouble, don't hesitate to reach out to us for help. You can submit a ticket on our GitHub page or contact us through Discord:</p>
+	            <div id="button-group">
+	              <a href="https://github.com/Frooodle/Stirling-PDF/issues" id="github-button" target="_blank">GitHub - Submit a ticket</a>
+	              <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" target="_blank">Discord - Submit Support post</a>
+	            </div>  
+	            <a href="/" id="home-button">Go to Homepage</a>
+	            <a data-dismiss="modal" id="home-button">Close</a>
+	          </div>
+	        </div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+  <script>
+    var traceVisible = false;
+
+    function toggletrace() {
+      var traceDiv = document.getElementById("trace");
+      if (!traceVisible) {
+        traceDiv.style.maxHeight = "500px";
+        traceVisible = true;
+      } else {
+        traceDiv.style.maxHeight = "0px";
+        traceVisible = false;
+      }
+      adjustContainerHeight();
+    }
+
+    function copytrace() {
+      var flip = false
+    	if(!traceVisible) {
+    		 toggletrace()
+    		 flip = true
+    	}
+      var traceContent = document.getElementById("traceContent");
+      var range = document.createRange();
+      range.selectNode(traceContent);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      document.execCommand("copy");
+      window.getSelection().removeAllRanges();
+      if(flip){
+    	  toggletrace()
+      }
+    }
+
+    function dismissError() {
+      var errorContainer = document.getElementById("errorContainer");
+      errorContainer.style.display = "none";
+      errorContainer.style.height ="0";
+    }
+
+    function adjustContainerHeight() {
+      var errorContainer = document.getElementById("errorContainer");
+      var traceDiv = document.getElementById("trace");
+      if (traceVisible) {
+        errorContainer.style.height = errorContainer.scrollHeight - traceDiv.scrollHeight + traceDiv.offsetHeight + "px";
+      } else {
+        errorContainer.style.height = "auto";
+      }
+    }
+    function showHelp() {
+        $('#helpModal').modal('show');
+      }
+  </script>
+</th:block>

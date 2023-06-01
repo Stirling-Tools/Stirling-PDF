@@ -2,6 +2,8 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.io.ByteArrayInputStream;
 import io.swagger.v3.oas.annotations.media.Schema;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,7 +53,6 @@ import com.itextpdf.signatures.SignatureUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import stirling.software.SPDF.utils.PdfUtils;
 @RestController
 public class CertSignController {
 
@@ -239,7 +240,7 @@ public class CertSignController {
         System.out.println("Signed PDF size: " + signedPdf.size());
 
         System.out.println("PDF signed = " + isPdfSigned(signedPdf.toByteArray()));
-        return PdfUtils.bytesToWebResponse(signedPdf.toByteArray(), "example.pdf");
+        return WebResponseUtils.bytesToWebResponse(signedPdf.toByteArray(), "example.pdf");
     }
 
 public boolean isPdfSigned(byte[] pdfData) throws IOException {

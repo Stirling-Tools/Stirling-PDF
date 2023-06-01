@@ -157,6 +157,7 @@ function compareVersions(version1, version2) {
         <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'rotate-pdf', 'images/arrow-clockwise.svg', 'home.rotate.title', 'home.rotate.desc')}"></div>
         <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'remove-pages', 'images/file-earmark-x.svg', 'home.removePages.title', 'home.removePages.desc')}"></div>
 		<div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'multi-page-layout', 'images/page-layout.svg', 'home.pageLayout.title', 'home.pageLayout.desc')}"></div>
+		<div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'scale-pages', 'images/scale-pages.svg', 'home.scalePages.title', 'home.scalePages.desc')}"></div>
 		
     </div>
 </li>
@@ -349,8 +350,8 @@ function compareVersions(version1, version2) {
         </script>
         
     </nav>
-    <div th:insert="~{fragments/errorBanner.html :: errorBanner}"></div>
-
+    
+	<div th:insert="~{fragments/errorBannerPerPage.html :: errorBannerPerPage}"></div>
     <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="settingsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content dark-card">

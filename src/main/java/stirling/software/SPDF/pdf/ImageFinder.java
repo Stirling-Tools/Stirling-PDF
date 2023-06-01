@@ -1,4 +1,4 @@
-package stirling.software.SPDF.utils;
+package stirling.software.SPDF.pdf;
 
 import java.awt.geom.Point2D;
 import java.io.IOException;

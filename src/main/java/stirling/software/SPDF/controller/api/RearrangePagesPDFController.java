@@ -2,6 +2,8 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 import io.swagger.v3.oas.annotations.media.Schema;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import stirling.software.SPDF.utils.PdfUtils;
 
 @RestController
 public class RearrangePagesPDFController {
@@ -48,7 +49,7 @@ public class RearrangePagesPDFController {
             int pageIndex = pagesToRemove.get(i);
             document.removePage(pageIndex);
         }
-        return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_removed_pages.pdf");
+        return WebResponseUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_removed_pages.pdf");
 
     }
 
@@ -239,7 +240,7 @@ public class RearrangePagesPDFController {
                 document.addPage(page);
             }
 
-            return PdfUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_rearranged.pdf");
+            return WebResponseUtils.pdfDocToWebResponse(document, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_rearranged.pdf");
         } catch (IOException e) {
             logger.error("Failed rearranging documents", e);
             return null;

@@ -14,8 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 public class ConvertPDFToPDFA {
@@ -58,7 +58,7 @@ public class ConvertPDFToPDFA {
 
         // Return the optimized PDF as a response
         String outputFilename = inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_PDFA.pdf";
-        return PdfUtils.bytesToWebResponse(pdfBytes, outputFilename);
+        return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
     }
 
 }

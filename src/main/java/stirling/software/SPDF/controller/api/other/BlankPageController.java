@@ -28,9 +28,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import stirling.software.SPDF.utils.ImageFinder;
-import stirling.software.SPDF.utils.PdfUtils;
+import stirling.software.SPDF.pdf.ImageFinder;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 public class BlankPageController {
@@ -109,7 +109,7 @@ public class BlankPageController {
                 }
             }
 
-            return PdfUtils.pdfDocToWebResponse(document, inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_blanksRemoved.pdf");
+            return WebResponseUtils.pdfDocToWebResponse(document, inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_blanksRemoved.pdf");
         } catch (IOException e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import stirling.software.SPDF.utils.PdfUtils;
+import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 public class ConvertImgPDFController {
 
@@ -98,7 +99,7 @@ public class ConvertImgPDFController {
                     boolean autoRotate) throws IOException {
         // Convert the file to PDF and get the resulting bytes
         byte[] bytes = PdfUtils.imageToPdf(file, stretchToFit, autoRotate, colorType);
-        return PdfUtils.bytesToWebResponse(bytes, file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_coverted.pdf");
+        return WebResponseUtils.bytesToWebResponse(bytes, file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_coverted.pdf");
     }
 
     private String getMediaType(String imageFormat) {

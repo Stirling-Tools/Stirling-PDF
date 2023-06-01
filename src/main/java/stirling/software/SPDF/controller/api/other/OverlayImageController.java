@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.PdfUtils;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 public class OverlayImageController {
@@ -47,7 +48,7 @@ public class OverlayImageController {
             byte[] imageBytes = imageFile.getBytes();
             byte[] result = PdfUtils.overlayImage(pdfBytes, imageBytes, x, y, everyPage);
 
-            return PdfUtils.bytesToWebResponse(result, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_overlayed.pdf");
+            return WebResponseUtils.bytesToWebResponse(result, pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_overlayed.pdf");
         } catch (IOException e) {
             logger.error("Failed to add image to PDF", e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

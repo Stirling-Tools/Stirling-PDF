@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.other;
+package stirling.software.SPDF.controller.api;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,6 +24,7 @@ import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 public class MultiPageLayoutController {
@@ -92,9 +92,8 @@ public class MultiPageLayoutController {
 		outputPdf.close();
 		byte[] pdfContent = baos.toByteArray();
 		pdfDoc.close();
-		return ResponseEntity.ok()
-				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"modifiedDocument.pdf\"")
-				.body(pdfContent);
+		
+		return WebResponseUtils.bytesToWebResponse(pdfContent, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_layoutChanged.pdf");
 	}
 
 }

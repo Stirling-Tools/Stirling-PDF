@@ -65,6 +65,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("PageOps", "pdf-organizer");
         addEndpointToGroup("PageOps", "rotate-pdf");
         addEndpointToGroup("PageOps", "multi-page-layout");
+        addEndpointToGroup("PageOps", "scale-pages");
         
         // Adding endpoints to "Convert" group
         addEndpointToGroup("Convert", "pdf-to-img");
@@ -164,7 +165,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "change-metadata");
         addEndpointToGroup("Java", "cert-sign");
         addEndpointToGroup("Java", "multi-page-layout");
-        
+        addEndpointToGroup("Java", "scale-pages");
         
         
         //Javascript
