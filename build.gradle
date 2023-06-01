@@ -14,7 +14,7 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web:3.1.0'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.0.6'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.1.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test:3.0.6'
 	// https://mvnrepository.com/artifact/org.apache.pdfbox/jbig2-imageio
 	implementation group: 'org.apache.pdfbox', name: 'jbig2-imageio', version: '3.0.4'
