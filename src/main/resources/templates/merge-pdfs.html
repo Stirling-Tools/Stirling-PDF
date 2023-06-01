@@ -26,38 +26,7 @@
                                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{merge.submit}"></button>
                             </div>
                         </form>
-                        <style>
-                         
-              .list-group-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.filename {
-  flex-grow: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-right: 10px;
-}
-
-.arrows {
-  flex-shrink: 0;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.move-up span,
-.move-down span {
-  font-weight: bold;
-  font-size: 1.2em;
-}
-
-
-
-
-                        </style>
+                        <link rel="stylesheet" href="css/merge.css">
                         <script>
                         document.getElementById("fileInput-input").addEventListener("change", function() {
                         	  var files = this.files;
