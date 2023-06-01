@@ -364,9 +364,13 @@ function compareVersions(version1, version2) {
             <div class="modal-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <p class="mb-0" th:utext="#{settings.appVersion} + ' ' + ${@appVersion}"></p>
-                    <a href="swagger-ui/index.html" target="_blank">
-                        <button type="button" class="btn btn-sm btn-outline-primary"> API </button>
+                    <a href="https://github.com/sponsors/Frooodle" target="_blank">
+                        <button type="button" class="btn btn-sm btn-outline-primary">Sponsor Stirling-PDF</button>
                     </a>
+                    <a href="swagger-ui/index.html" target="_blank">
+                        <button type="button" class="btn btn-sm btn-outline-primary">API</button>
+                    </a>
+                    
                     <a href="https://github.com/Frooodle/Stirling-PDF/releases" target="_blank">
 					    <button type="button" class="btn btn-sm btn-outline-primary" id="update-btn" th:utext="#{settings.update}"></button>
 					</a>
@@ -397,6 +401,7 @@ function compareVersions(version1, version2) {
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{close}"></button>
             </div>
+            
         </div>
     </div>
 </div>
