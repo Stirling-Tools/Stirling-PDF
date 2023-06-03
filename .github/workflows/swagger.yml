@@ -26,7 +26,6 @@ jobs:
       run: ./gradlew generateOpenApiDocs
 
     - name: Upload Swagger Documentation to SwaggerHub
-      run: |
-        curl -X PUT -H "Authorization: ${SWAGGERHUB_API_KEY}" -H "Content-Type: application/json" -d @./SwaggerDoc.json "https://api.swaggerhub.com/apis/Frooodle/Stirling-PDF/${{ steps.versionNumber.outputs.versionNumber }}?isPrivate=false&force=true"
+      run: ./gradlew swaggerhubUpload
       env:
         SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
