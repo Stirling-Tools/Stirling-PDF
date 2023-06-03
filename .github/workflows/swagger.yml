@@ -28,15 +28,6 @@ jobs:
     - name: Get version number
       id: versionNumber
       run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet | tail -1)"
-      
-    - name: Commit and push if it changed
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add -A
-        git diff --quiet && git diff --staged --quiet || git commit -m "Updated Swagger documentation"
-        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-        git push
 
     - name: Upload Swagger Documentation to SwaggerHub
       run: |
