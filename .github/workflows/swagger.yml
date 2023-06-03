@@ -29,3 +29,9 @@ jobs:
       run: ./gradlew swaggerhubUpload
       env:
         SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+
+    - name: Set API version as published and default on SwaggerHub
+      run: |
+        curl -X PUT -H "Authorization: ${SWAGGERHUB_API_KEY}" "https://api.swaggerhub.com/apis/Frooodle/Stirling-PDF/${{ steps.versionNumber.outputs.versionNumber }}/settings/lifecycle" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"published\":true,\"default\":true}"
+      env:
+        SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
