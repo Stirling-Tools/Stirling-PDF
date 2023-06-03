@@ -15,7 +15,7 @@ repositories {
 
 openApi {
     apiDocsUrl = "http://localhost:8080/v3/api-docs"
-    outputDir = file("/")
+    outputDir = file("$projectDir")
     outputFileName = "SwaggerDoc.json"
 }
 
