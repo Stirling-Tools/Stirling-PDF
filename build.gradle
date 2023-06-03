@@ -3,6 +3,7 @@ plugins {
 	id 'org.springframework.boot' version '3.1.0'
 	id 'io.spring.dependency-management' version '1.1.0'
 	id 'org.springdoc.openapi-gradle-plugin' version '1.6.0'
+	id "io.swagger.swaggerhub" version "1.1.0"
 }
 
 group = 'stirling.software'
@@ -48,9 +49,16 @@ task writeVersion {
     props.store(propsFile.newWriter(), null)
 }
 
-tasks.matching { it.name == 'generateOpenApiDocs' }.all {
-    dependsOn writeVersion
+swaggerhubUpload {
+    //dependsOn generateOpenApiDocs  // Depends on your task generating Swagger docs
+    api 'Stirling-PDF'  // The name of your API on SwaggerHub
+    owner 'Frooodle'  // Your SwaggerHub username (or organization name)
+    version project.version  // The version of your API
+    inputFile './SwaggerDoc.json'  // The path to your Swagger docs
+    token  "${System.getenv('SWAGGERHUB_API_KEY')}"  // Your SwaggerHub API key, passed as an environment variable
+    oas '3.0.0'  // The version of the OpenAPI Specification you're using
 }
+
 
 
 jar {

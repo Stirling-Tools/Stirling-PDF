@@ -25,12 +25,7 @@ jobs:
     - name: Generate Swagger documentation
       run: ./gradlew generateOpenApiDocs
 
-    - name: Get version number
-      id: versionNumber
-      run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet | tail -1)"
-
     - name: Upload Swagger Documentation to SwaggerHub
-      run: |
-        curl -X POST -H "Authorization: ${SWAGGERHUB_API_KEY}" -H "Content-Type: application/json" -d @./SwaggerDoc.json "https://api.swaggerhub.com/apis/Frooodle/Stirling-PDF/${{ steps.versionNumber.outputs.versionNumber }}?isPrivate=false&force=true"
+      run: ./gradlew swaggerhubUpload
       env:
         SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
