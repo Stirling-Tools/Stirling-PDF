@@ -1,9 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.io.ByteArrayInputStream;
-import io.swagger.v3.oas.annotations.media.Schema;
-import stirling.software.SPDF.utils.WebResponseUtils;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,6 +50,8 @@ import com.itextpdf.signatures.SignatureUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 public class CertSignController {
 

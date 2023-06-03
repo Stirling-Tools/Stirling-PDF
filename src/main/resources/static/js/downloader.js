@@ -14,7 +14,7 @@ $(document).ready(function() {
 		const files = $('#fileInput-input')[0].files;
 		const formData = new FormData(this);
 		const override = $('#override').val() || '';
-
+		const originalButtonText = $('#submitBtn').text();
 		$('#submitBtn').text('Processing...');
 
 		try {
@@ -24,10 +24,10 @@ $(document).ready(function() {
 				await handleSingleDownload(url, formData);
 			}
 
-			$('#submitBtn').text('Submit');
+			$('#submitBtn').text(originalButtonText);
 		} catch (error) {
 			handleDownloadError(error);
-			$('#submitBtn').text('Submit');
+			$('#submitBtn').text(originalButtonText);
 			console.error(error);
 		}
 	});
@@ -83,7 +83,7 @@ async function handleJsonResponse(response) {
 	const json = await response.json();
 	const errorMessage = JSON.stringify(json, null, 2);
 	if (errorMessage.toLowerCase().includes('the password is incorrect') || errorMessage.toLowerCase().includes('Password is not provided') || errorMessage.toLowerCase().includes('PDF contains an encryption dictionary')) {
-		alert('[[#{error.pdfPassword}]]');
+		alert(pdfPasswordPrompt);
 	} else {
 		showErrorBanner(json.error + ':' + json.message, json.trace);
 	}

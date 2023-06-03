@@ -3,10 +3,18 @@ package stirling.software.SPDF.controller.api;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,14 +28,17 @@ import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
+import com.itextpdf.kernel.pdf.canvas.parser.EventType;
+import com.itextpdf.kernel.pdf.canvas.parser.PdfCanvasProcessor;
+import com.itextpdf.kernel.pdf.canvas.parser.data.IEventData;
+import com.itextpdf.kernel.pdf.canvas.parser.data.TextRenderInfo;
+import com.itextpdf.kernel.pdf.canvas.parser.listener.IEventListener;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import stirling.software.SPDF.utils.WebResponseUtils;
-import java.util.HashMap;
-import java.util.Map;
 @RestController
 public class ScalePagesController {
 
@@ -119,4 +130,128 @@ public class ScalePagesController {
 		pdfDoc.close();
 		return WebResponseUtils.bytesToWebResponse(pdfContent, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_scaled.pdf");
 	}
+	
+	
+	
+	
+	
+	
+	
+
+@PostMapping(value = "/auto-crop", consumes = "multipart/form-data")
+public ResponseEntity<byte[]> cropPdf(@RequestParam("fileInput") MultipartFile file) throws IOException {
+    byte[] bytes = file.getBytes();
+    PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
+    PdfDocument pdfDoc = new PdfDocument(reader);
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PdfWriter writer = new PdfWriter(baos);
+    PdfDocument outputPdf = new PdfDocument(writer);
+    
+    int totalPages = pdfDoc.getNumberOfPages();
+    for (int i = 1; i <= totalPages; i++) {
+        PdfPage page = pdfDoc.getPage(i);
+        Rectangle originalMediaBox = page.getMediaBox();
+        
+        Rectangle contentBox = determineContentBox(page);
+        
+        // Make sure we don't go outside the original media box.
+        Rectangle intersection = originalMediaBox.getIntersection(contentBox);
+        page.setCropBox(intersection);
+
+        // Copy page to the new document
+        outputPdf.addPage(page.copyTo(outputPdf));
+    }
+
+    outputPdf.close();
+    byte[] pdfContent = baos.toByteArray();
+    pdfDoc.close();
+    return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_cropped.pdf\"")
+            .contentType(MediaType.APPLICATION_PDF)
+            .body(pdfContent);
+}
+
+private Rectangle determineContentBox(PdfPage page) {
+    // Extract the text from the page and find the bounding box.
+    TextBoundingRectangleFinder finder = new TextBoundingRectangleFinder();
+    PdfCanvasProcessor processor = new PdfCanvasProcessor(finder);
+    processor.processPageContent(page);
+    return finder.getBoundingBox();
+}
+private static class TextBoundingRectangleFinder implements IEventListener {
+    private List<Rectangle> allTextBoxes = new ArrayList<>();
+    
+    public Rectangle getBoundingBox() {
+        // Sort the text boxes based on their vertical position
+        allTextBoxes.sort(Comparator.comparingDouble(Rectangle::getTop));
+
+        // Consider a box an outlier if its top is more than 1.5 times the IQR above the third quartile.
+        int q1Index = allTextBoxes.size() / 4;
+        int q3Index = 3 * allTextBoxes.size() / 4;
+        double iqr = allTextBoxes.get(q3Index).getTop() - allTextBoxes.get(q1Index).getTop();
+        double threshold = allTextBoxes.get(q3Index).getTop() + 1.5 * iqr;
+
+        // Initialize boundingBox to the first non-outlier box
+        int i = 0;
+        while (i < allTextBoxes.size() && allTextBoxes.get(i).getTop() > threshold) {
+            i++;
+        }
+        if (i == allTextBoxes.size()) {
+            // If all boxes are outliers, just return the first one
+            return allTextBoxes.get(0);
+        }
+        Rectangle boundingBox = allTextBoxes.get(i);
+
+        // Extend the bounding box to include all non-outlier boxes
+        for (; i < allTextBoxes.size(); i++) {
+            Rectangle textBoundingBox = allTextBoxes.get(i);
+            if (textBoundingBox.getTop() > threshold) {
+                // This box is an outlier, skip it
+                continue;
+            }
+            float left = Math.min(boundingBox.getLeft(), textBoundingBox.getLeft());
+            float bottom = Math.min(boundingBox.getBottom(), textBoundingBox.getBottom());
+            float right = Math.max(boundingBox.getRight(), textBoundingBox.getRight());
+            float top = Math.max(boundingBox.getTop(), textBoundingBox.getTop());
+
+            // Add a small padding around the bounding box
+            float padding = 10;
+            boundingBox = new Rectangle(left - padding, bottom - padding, right - left + 2 * padding, top - bottom + 2 * padding);
+        }
+        return boundingBox;
+    }
+
+    @Override
+    public void eventOccurred(IEventData data, EventType type) {
+        if (type == EventType.RENDER_TEXT) {
+            TextRenderInfo renderInfo = (TextRenderInfo) data;
+            allTextBoxes.add(renderInfo.getBaseline().getBoundingRectangle());
+        }
+    }
+
+    @Override
+    public Set<EventType> getSupportedEvents() {
+        return Collections.singleton(EventType.RENDER_TEXT);
+    }
+}
+
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }

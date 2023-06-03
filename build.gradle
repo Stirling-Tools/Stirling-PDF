@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.1.0'
 	id 'io.spring.dependency-management' version '1.1.0'
+	id 'org.springdoc.openapi-gradle-plugin' version '1.6.0'
 }
 
 group = 'stirling.software'
@@ -10,6 +11,12 @@ sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
+}
+
+openApi {
+    apiDocsUrl = "http://localhost:8080/v3/api-docs"
+    outputDir = file("/")
+    outputFileName = "SwaggerDoc.json"
 }
 
 dependencies {
@@ -33,6 +40,18 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
 }
+
+task writeVersion {
+    def propsFile = file('src/main/resources/version.properties')
+    def props = new Properties()
+    props.setProperty('version', version)
+    props.store(propsFile.newWriter(), null)
+}
+
+tasks.matching { it.name == 'generateOpenApiDocs' }.all {
+    dependsOn writeVersion
+}
+
 
 jar {
     enabled = false

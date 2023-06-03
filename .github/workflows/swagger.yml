@@ -1,0 +1,45 @@
+name: Update Swagger
+
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+      - master
+jobs:
+  push:
+
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v3.5.2
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3.11.0
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Generate Swagger documentation
+      run: ./gradlew generateOpenApiDocs
+
+    - name: Get version number
+      id: versionNumber
+      run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet | tail -1)"
+      
+    - name: Commit and push if it changed
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git diff --quiet && git diff --staged --quiet || git commit -m "Updated Swagger documentation"
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+        git push
+
+    - name: Upload Swagger Documentation to SwaggerHub
+      run: |
+        curl -X POST -H "Authorization: ${SWAGGERHUB_API_KEY}" -H "Content-Type: application/json" -d @SwaggerDoc.json "https://api.swaggerhub.com/apis/Frooodle/Stirling-PDF/${{ steps.versionNumber.outputs.versionNumber }}?isPrivate=false&force=true"
+      env:
+        SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
