@@ -5,11 +5,12 @@ function showErrorBanner(message, stackTrace) {
 	document.querySelector("#errorContainer p").textContent = message;
 	document.querySelector("#traceContent").textContent = stackTrace;
 }
+let firstErrorOccurred = false; 
 
 $(document).ready(function() {
 	$('form').submit(async function(event) {
 		event.preventDefault();
-
+		firstErrorOccurred = false; 
 		const url = this.action;
 		const files = $('#fileInput-input')[0].files;
 		const formData = new FormData(this);
@@ -83,7 +84,10 @@ async function handleJsonResponse(response) {
 	const json = await response.json();
 	const errorMessage = JSON.stringify(json, null, 2);
 	if (errorMessage.toLowerCase().includes('the password is incorrect') || errorMessage.toLowerCase().includes('Password is not provided') || errorMessage.toLowerCase().includes('PDF contains an encryption dictionary')) {
-		alert(pdfPasswordPrompt);
+		if (!firstErrorOccurred) {
+			firstErrorOccurred = true;
+			alert(pdfPasswordPrompt);
+		}
 	} else {
 		showErrorBanner(json.error + ':' + json.message, json.trace);
 	}

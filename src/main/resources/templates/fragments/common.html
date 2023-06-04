@@ -92,7 +92,7 @@
 
 <th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: 'true', notRequired=${notRequired} ?: false">
     <script th:inline="javascript">
-		const pdfPasswordPrompt =  /*[[#{error.pdfPassword}]]]*/ '';
+		const pdfPasswordPrompt =/*[[#{error.pdfPassword}]]*/ '';
 	</script>
     <script src="js/downloader.js"></script>
 
