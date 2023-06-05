@@ -14,6 +14,7 @@ local.properties
 .recommenders
 .classpath
 .project
+version.properties
 
 # Gradle
 .gradle

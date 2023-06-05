@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
 	const fileInput = document.getElementById(elementID);
-
 	// Prevent default behavior for drag events
 	['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
 		fileInput.addEventListener(eventName, preventDefaults, false);
@@ -22,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 });
 
-$(elementID).on("change", function() {
+$("#"+elementID).on("change", function() {
 	handleFileInputChange(this);
 });
 
@@ -34,7 +33,6 @@ function handleFileInputChange(inputElement) {
 	fileNames.forEach(fileName => {
 		selectedFilesContainer.append("<div>" + fileName + "</div>");
 	});
-	console.log("fileNames.length=" + fileNames.length)
 	if (fileNames.length === 1) {
 		$(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
 	} else if (fileNames.length > 1) {

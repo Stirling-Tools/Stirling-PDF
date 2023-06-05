@@ -122,4 +122,11 @@ public class OtherWebController {
         return "other/scale-pages";
     }
     
+    @GetMapping("/auto-crop")
+    @Hidden
+    public String autoCropForm(Model model) {
+        model.addAttribute("currentPage", "auto-crop");
+        return "other/auto-crop";
+    }
+    
 }

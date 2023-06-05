@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -29,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import stirling.software.SPDF.utils.GeneralUtils;
 
 @RestController
 public class SplitPDFController {
@@ -58,39 +58,28 @@ public class SplitPDFController {
                 pageNumbers.add(i);
             }
         } else {
-            List<String> pageNumbersStr = new ArrayList<>(Arrays.asList(pages.split(",")));
-            if (!pageNumbersStr.contains(String.valueOf(document.getNumberOfPages()))) {
-                String lastpage = String.valueOf(document.getNumberOfPages());
-                pageNumbersStr.add(lastpage);
+            String[] splitPoints = pages.split(",");
+            for (String splitPoint : splitPoints) {
+                List<Integer> orderedPages = GeneralUtils.parsePageList(new String[] {splitPoint}, document.getNumberOfPages());
+                pageNumbers.addAll(orderedPages);
             }
-            for (String page : pageNumbersStr) {
-                if (page.contains("-")) {
-                    String[] range = page.split("-");
-                    int start = Integer.parseInt(range[0]);
-                    int end = Integer.parseInt(range[1]);
-                    for (int i = start; i <= end; i++) {
-                        pageNumbers.add(i);
-                    }
-                } else {
-                    pageNumbers.add(Integer.parseInt(page));
-                }
-            }
+            // Add the last page as a split point
+            pageNumbers.add(document.getNumberOfPages() - 1);
         }
 
         logger.info("Splitting PDF into pages: {}", pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
         // split the document
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
-        int currentPage = 0;
-        for (int pageNumber : pageNumbers) {
+        int previousPageNumber = 0;
+        for (int splitPoint : pageNumbers) {
             try (PDDocument splitDocument = new PDDocument()) {
-                for (int i = currentPage; i < pageNumber; i++) {
+                for (int i = previousPageNumber; i <= splitPoint; i++) {
                     PDPage page = document.getPage(i);
                     splitDocument.addPage(page);
                     logger.debug("Adding page {} to split document", i);
                 }
-                currentPage = pageNumber;
-                logger.debug("Setting current page to {}", currentPage);
+                previousPageNumber = splitPoint + 1;
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 splitDocument.save(baos);
@@ -101,6 +90,7 @@ public class SplitPDFController {
                 throw e;
             }
         }
+
 
         // closing the original document
         document.close();
