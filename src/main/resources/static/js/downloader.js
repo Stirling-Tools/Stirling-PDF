@@ -5,73 +5,38 @@ function showErrorBanner(message, stackTrace) {
 	document.querySelector("#errorContainer p").textContent = message;
 	document.querySelector("#traceContent").textContent = stackTrace;
 }
+let firstErrorOccurred = false; 
 
 $(document).ready(function() {
 	$('form').submit(async function(event) {
 		event.preventDefault();
-
+		firstErrorOccurred = false; 
 		const url = this.action;
 		const files = $('#fileInput-input')[0].files;
 		const formData = new FormData(this);
 		const override = $('#override').val() || '';
-
+		const originalButtonText = $('#submitBtn').text();
 		$('#submitBtn').text('Processing...');
 
 		try {
 			if (override === 'multi' || files.length > 1 && override !== 'single') {
-				// Show the progress bar
-				$('#progressBarContainer').show();
-				// Initialize the progress bar
-				//let progressBar = $('#progressBar');
-				//progressBar.css('width', '0%');
-				//progressBar.attr('aria-valuenow', 0);
-				//progressBar.attr('aria-valuemax', files.length);
-
 				await submitMultiPdfForm(url, files);
 			} else {
-				const downloadDetails = await handleSingleDownload(url, formData);
-				const downloadOption = localStorage.getItem('downloadOption');
-
-				// Handle the download action according to the selected option
-				//handleDownloadAction(downloadOption, downloadDetails.blob, downloadDetails.filename);
-
-				// Update the progress bar
-				//updateProgressBar(progressBar, 1);
-
+				await handleSingleDownload(url, formData);
 			}
 
-			$('#submitBtn').text('Submit');
+			$('#submitBtn').text(originalButtonText);
 		} catch (error) {
 			handleDownloadError(error);
-			$('#submitBtn').text('Submit');
+			$('#submitBtn').text(originalButtonText);
 			console.error(error);
 		}
 	});
 });
 
-function handleDownloadAction(downloadOption, blob, filename) {
-	const url = URL.createObjectURL(blob);
 
-	switch (downloadOption) {
-		case 'sameWindow':
-			// Open the file in the same window
-			window.location.href = url;
-			break;
-		case 'newWindow':
-			// Open the file in a new window
-			window.open(url, '_blank');
-			break;
-		default:
-			// Download the file
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = filename;
-			link.click();
-			break;
-	}
-}
 
-async function handleSingleDownload(url, formData) {
+async function handleSingleDownload(url, formData, isMulti = false) {
 	try {
 		const response = await fetch(url, { method: 'POST', body: formData });
 		const contentType = response.headers.get('content-type');
@@ -90,7 +55,7 @@ async function handleSingleDownload(url, formData) {
 		const blob = await response.blob();
 
 		if (contentType.includes('application/pdf') || contentType.includes('image/')) {
-			return handleResponse(blob, filename, true);
+			return handleResponse(blob, filename, !isMulti);
 		} else {
 			return handleResponse(blob, filename);
 		}
@@ -118,8 +83,11 @@ function getFilenameFromContentDisposition(contentDisposition) {
 async function handleJsonResponse(response) {
 	const json = await response.json();
 	const errorMessage = JSON.stringify(json, null, 2);
-	if (errorMessage.toLowerCase().includes('the password is incorrect') || errorMessage.toLowerCase().includes('Password is not provided')) {
-		alert('[[#{error.pdfPassword}]]');
+	if (errorMessage.toLowerCase().includes('the password is incorrect') || errorMessage.toLowerCase().includes('Password is not provided') || errorMessage.toLowerCase().includes('PDF contains an encryption dictionary')) {
+		if (!firstErrorOccurred) {
+			firstErrorOccurred = true;
+			alert(pdfPasswordPrompt);
+		}
 	} else {
 		showErrorBanner(json.error + ':' + json.message, json.trace);
 	}
@@ -173,10 +141,15 @@ async function submitMultiPdfForm(url, files) {
 	const zipThreshold = parseInt(localStorage.getItem('zipThreshold'), 10) || 4;
 	const zipFiles = files.length > zipThreshold;
 	let jszip = null;
-	//let progressBar = $('#progressBar');
-	//progressBar.css('width', '0%');
-	//progressBar.attr('aria-valuenow', 0);
-	//progressBar.attr('aria-valuemax', Array.from(files).length);
+	// Show the progress bar
+	$('#progressBarContainer').show();
+	// Initialize the progress bar
+	
+	let progressBar = $('#progressBar');
+	progressBar.css('width', '0%');
+	progressBar.attr('aria-valuenow', 0);
+	progressBar.attr('aria-valuemax', files.length);
+	
 	if (zipFiles) {
 		jszip = new JSZip();
 	}
@@ -202,20 +175,21 @@ async function submitMultiPdfForm(url, files) {
 			}
 
 			try {
-				const downloadDetails = await handleSingleDownload(url, fileFormData);
+				const downloadDetails = await handleSingleDownload(url, fileFormData, true);
 				console.log(downloadDetails);
 				if (zipFiles) {
 					jszip.file(downloadDetails.filename, downloadDetails.blob);
 				} else {
 					downloadFile(downloadDetails.blob, downloadDetails.filename);
 				}
-				//updateProgressBar(progressBar, Array.from(files).length);
+				updateProgressBar(progressBar, Array.from(files).length);
 			} catch (error) {
 				handleDownloadError(error);
 				console.error(error);
 			}
 		});
 		await Promise.all(promises);
+		
 	}
 
 	if (zipFiles) {
@@ -226,6 +200,8 @@ async function submitMultiPdfForm(url, files) {
 			console.error('Error generating ZIP file: ' + error);
 		}
 	}
+	progressBar.css('width',  '100%');
+	progressBar.attr('aria-valuenow', Array.from(files).length);
 }
 
 
