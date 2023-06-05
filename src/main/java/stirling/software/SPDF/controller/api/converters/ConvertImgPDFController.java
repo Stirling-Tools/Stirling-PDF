@@ -99,7 +99,7 @@ public class ConvertImgPDFController {
                     boolean autoRotate) throws IOException {
         // Convert the file to PDF and get the resulting bytes
         byte[] bytes = PdfUtils.imageToPdf(file, stretchToFit, autoRotate, colorType);
-        return WebResponseUtils.bytesToWebResponse(bytes, file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_coverted.pdf");
+        return WebResponseUtils.bytesToWebResponse(bytes, file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_converted.pdf");
     }
 
     private String getMediaType(String imageFormat) {
