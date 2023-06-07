@@ -62,7 +62,7 @@ class PdfContainer {
             const files = e.target.files;
             this.fileName = files[0].name;
             for (var i=0; i < files.length; i++) {
-                this.addPdfFile(files[i], nextSiblingElement);
+                await this.addPdfFile(files[i], nextSiblingElement);
             }
 
             document.querySelectorAll(".enable-on-file").forEach(element => {

@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 public class SplitPDFController {
@@ -38,7 +39,7 @@ public class SplitPDFController {
     @PostMapping(consumes = "multipart/form-data", value = "/split-pages")
     @Operation(summary = "Split a PDF file into separate documents",
             description = "This endpoint splits a given PDF file into separate documents based on the specified page numbers or ranges. Users can specify pages using individual numbers, ranges, or 'all' for every page.")
-    public ResponseEntity<Resource> splitPdf(
+    public ResponseEntity<byte[]> splitPdf(
             @RequestPart(required = true, value = "fileInput")
             @Parameter(description = "The input PDF file to be split")
                     MultipartFile file,
@@ -97,10 +98,11 @@ public class SplitPDFController {
 
         Path zipFile = Files.createTempFile("split_documents", ".zip");
 
+        String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
         try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
             // loop through the split documents and write them to the zip file
             for (int i = 0; i < splitDocumentsBoas.size(); i++) {
-                String fileName = "split_document_" + (i + 1) + ".pdf";
+                String fileName = filename + "_" + (i + 1) + ".pdf";
                 ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
                 byte[] pdf = baos.toByteArray();
 
@@ -119,12 +121,11 @@ public class SplitPDFController {
 
         logger.info("Successfully created zip file with split documents: {}", zipFile.toString());
         byte[] data = Files.readAllBytes(zipFile);
-        ByteArrayResource resource = new ByteArrayResource(data);
         Files.delete(zipFile);
 
         // return the Resource in the response
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_split.zip")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM).contentLength(resource.contentLength()).body(resource);
+        return WebResponseUtils.bytesToWebResponse(data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+        
     }
 
 }
