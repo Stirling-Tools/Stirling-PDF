@@ -5,6 +5,8 @@ merge-pdfs          |    X    |         |          |       |      |        |    
 split-pdfs          |    X    |         |          |       |      |        |        |             |          |    X     |
 pdf-organizer       |    X    |         |          |       |      |        |        |             |          |    X     |     X
 rotate-pdf          |    X    |         |          |       |      |        |        |             |          |    X     |
+multi-page-layout   |    X    |         |          |       |      |        |        |             |          |    X     |
+scale-pages         |    X    |         |          |       |      |        |        |             |          |    X     |
 pdf-to-img          |         |    X    |          |       |      |        |        |             |          |    X     |
 img-to-pdf          |         |    X    |          |       |      |        |        |             |          |    X     |
 pdf-to-pdfa         |         |    X    |          |       |  X   |        |        |             |    X     |          |
@@ -19,6 +21,7 @@ add-password        |         |         |    X     |       |      |        |    
 remove-password     |         |         |    X     |       |      |        |        |             |          |    X     |
 change-permissions  |         |         |    X     |       |      |        |        |             |          |    X     |
 add-watermark       |         |         |    X     |       |      |        |        |             |          |    X     |
+cert-sign           |         |         |    X     |       |      |        |        |             |          |    X     |
 ocr-pdf             |         |         |          |  X    |  X   |        |        |             |    X     |          |
 add-image           |         |         |          |  X    |      |        |        |             |          |    X     |
 compress-pdf        |         |         |          |  X    |  X   |        |        |             |    X    
@@ -30,3 +33,6 @@ flatten             |         |         |          |  X    |      |        |    
 repair              |         |         |          |  X    |  X   |        |        |     X       |          |          |
 remove-blanks       |         |         |          |  X    |  X   |   X    |   X    |             |          |          |
 compare             |         |         |          |  X    |      |        |        |             |          |          |    X
+
+
+
