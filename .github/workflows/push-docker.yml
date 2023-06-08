@@ -9,13 +9,6 @@ on:
 jobs:
   push:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        config: [
-          { dockerfile: "./Dockerfile", tagSuffix: "" },
-          { dockerfile: "./Dockerfile-ultra-lite", tagSuffix: "-ultra-lite" },
-          { dockerfile: "./Dockerfile-lite", tagSuffix: "-lite" }
-        ]
     steps:
 
     - uses: actions/checkout@v3.5.2
@@ -56,14 +49,6 @@ jobs:
       id: repoowner
       run: echo "::set-output name=lowercase::$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')"
       
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2.1.0
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2.5.0
-
-
     - name: Generate tags
       id: meta
       uses: docker/metadata-action@v4.4.0
@@ -72,19 +57,76 @@ jobs:
           ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
           ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
         tags: |
-          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}${{ matrix.config.tagSuffix }},enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=latest${{ matrix.config.tagSuffix }},enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
           type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
-    
-    - name: Build and push Dockerfile
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2.1.0
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2.5.0
+
+    - name: Build and push main Dockerfile
       uses: docker/build-push-action@v4.0.0
       with:
         context: .
-        dockerfile: ${{ matrix.config.dockerfile }}
+        dockerfile: ./Dockerfile
         push: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: linux/amd64,linux/arm64/v8
-    
+
+
+
+    - name: Generate tags ultra-lite
+      id: meta2
+      uses: docker/metadata-action@v4.4.0
+      with:
+        images: |
+          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+          ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
+        tags: |
+          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
+          
+
+    - name: Build and push Dockerfile-ultra-lite
+      uses: docker/build-push-action@v4.0.0
+      with:
+        context: .
+        file: ./Dockerfile-ultra-lite
+        push: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        tags: ${{ steps.meta2.outputs.tags }}
+        labels: ${{ steps.meta2.outputs.labels }}
+        platforms: linux/amd64,linux/arm64/v8
+
+
+
+    - name: Generate tags lite
+      id: meta3
+      uses: docker/metadata-action@v4.4.0
+      with:
+        images: |
+          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+          ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
+        tags: |
+          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-lite,enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=latest-lite,enable=${{ github.ref == 'refs/heads/master' }}
+          
+
+    - name: Build and push Dockerfile-lite
+      uses: docker/build-push-action@v4.0.0
+      with:
+        context: .
+        file: ./Dockerfile-lite
+        push: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        tags: ${{ steps.meta3.outputs.tags }}
+        labels: ${{ steps.meta3.outputs.labels }}
+        platforms: linux/amd64,linux/arm64/v8
