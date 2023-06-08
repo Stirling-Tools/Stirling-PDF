@@ -1,5 +1,5 @@
 # Build jbig2enc in a separate stage
-FROM openjdk:17-jdk-slim
+FROM bellsoft/liberica-openjdk-alpine:17
 
 # Copy the application JAR file
 COPY build/libs/*.jar app.jar

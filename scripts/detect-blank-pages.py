@@ -14,13 +14,21 @@ def is_blank_image(image_path, threshold=10, white_percent=99, white_value=255, 
     blurred_image = cv2.GaussianBlur(image, (blur_size, blur_size), 0)
 
     _, thresholded_image = cv2.threshold(blurred_image, white_value - threshold, white_value, cv2.THRESH_BINARY)
-    
+
     # Calculate the percentage of white pixels in the thresholded image
-    white_pixels = np.sum(thresholded_image == white_value)
+    white_pixels = 0
     total_pixels = thresholded_image.size
-    white_pixel_percentage = (white_pixels / total_pixels) * 100
+    for i in range(0, thresholded_image.shape[0], 2):
+        for j in range(0, thresholded_image.shape[1], 2):
+            if thresholded_image[i, j] == white_value:
+                white_pixels += 1
+            white_pixel_percentage = (white_pixels / (i * thresholded_image.shape[1] + j + 1)) * 100
+            if white_pixel_percentage < white_percent:
+                return False
+
     print(f"Page has white pixel percent of {white_pixel_percentage}")
-    return white_pixel_percentage > white_percent
+    return True
+
 
 
 if __name__ == "__main__":

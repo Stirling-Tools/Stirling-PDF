@@ -8,8 +8,14 @@ on:
       - main
 jobs:
   push:
-
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config: [
+          { dockerfile: "./Dockerfile", tagSuffix: "" },
+          { dockerfile: "./Dockerfile-ultra-lite", tagSuffix: "-ultra-lite" },
+          { dockerfile: "./Dockerfile-lite", tagSuffix: "-lite" }
+        ]
     steps:
 
     - uses: actions/checkout@v3.5.2
@@ -46,17 +52,10 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ github.token }}
 
-    - name: Generate tags
-      id: meta
-      uses: docker/metadata-action@v4.4.0
-      with:
-        images: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
-          ghcr.io/${{ github.repository_owner }}/s-pdf
-        tags: |
-          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
+    - name: Convert repository owner to lowercase
+      id: repoowner
+      run: echo "::set-output name=lowercase::$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')"
+      
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2.1.0
@@ -64,44 +63,28 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2.5.0
 
-    - name: Build and push main Dockerfile
+
+    - name: Generate tags
+      id: meta
+      uses: docker/metadata-action@v4.4.0
+      with:
+        images: |
+          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+          ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
+        tags: |
+          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}${{ matrix.config.tagSuffix }},enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=latest${{ matrix.config.tagSuffix }},enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
+    
+    - name: Build and push Dockerfile
       uses: docker/build-push-action@v4.0.0
       with:
         context: .
-        dockerfile: ./Dockerfile
+        dockerfile: ${{ matrix.config.dockerfile }}
         push: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: linux/amd64,linux/arm64/v8
-
-    - name: Generate tags
-      id: meta2
-      uses: docker/metadata-action@v4.4.0
-      with:
-        images: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
-          ghcr.io/${{ github.repository_owner }}/s-pdf
-        tags: |
-          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-light,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=latest-ultra-light,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=alpha-ultra-light,enable=${{ github.ref == 'refs/heads/main' }}
-          
-    - name: Convert repository owner to lowercase
-      id: repoowner
-      run: echo "::set-output name=lowercase::$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')"
-
-    - name: Build and push Dockerfile-ultralite
-      uses: docker/build-push-action@v4.0.0
-      with:
-        context: .
-        file: ./Dockerfile-ultralite
-        push: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        tags: ${{ steps.meta2.outputs.tags }}
-        labels: ${{ steps.meta2.outputs.labels }}
-        platforms: linux/amd64,linux/arm64/v8
-
-
+    

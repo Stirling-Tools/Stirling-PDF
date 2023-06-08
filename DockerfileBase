@@ -1,5 +1,5 @@
 # Main stage
-FROM openjdk:17-jdk-slim AS base
+FROM bellsoft/liberica-openjdk-debian:17 AS base
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libreoffice-core-nogui \

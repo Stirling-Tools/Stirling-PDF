@@ -19,12 +19,13 @@ $(document).ready(function() {
 		$('#submitBtn').text('Processing...');
 
 		try {
-			if (override === 'multi' || files.length > 1 && override !== 'single') {
-				await submitMultiPdfForm(url, files);
-			} else {
-				await handleSingleDownload(url, formData);
+			if(remoteCall === true) {
+				if (override === 'multi' || (!multiple && files.length > 1) && override !== 'single' ) {
+					await submitMultiPdfForm(url, files);
+				} else {
+					await handleSingleDownload(url, formData);
+				}
 			}
-
 			$('#submitBtn').text(originalButtonText);
 		} catch (error) {
 			handleDownloadError(error);

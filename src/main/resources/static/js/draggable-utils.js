@@ -25,33 +25,50 @@ const DraggableUtils = {
             },
         })
         .resizable({
-            edges: { left: true, right: true, bottom: true, top: true },
-            listeners: {
-                move: (event) => {
-                    var target = event.target
-                    var x = (parseFloat(target.getAttribute('data-x')) || 0)
-                    var y = (parseFloat(target.getAttribute('data-y')) || 0)
+    edges: { left: true, right: true, bottom: true, top: true },
+    listeners: {
+        move: (event) => {
+            var target = event.target
+            var x = (parseFloat(target.getAttribute('data-x')) || 0)
+            var y = (parseFloat(target.getAttribute('data-y')) || 0)
 
-                    // update the element's style
-                    target.style.width = event.rect.width + 'px'
-                    target.style.height = event.rect.height + 'px'
+            // check if control key is pressed
+            if (event.ctrlKey) {
+                const aspectRatio = target.offsetWidth / target.offsetHeight;
+                // preserve aspect ratio
+                let width = event.rect.width;
+                let height = event.rect.height;
 
-                    // translate when resizing from top or left edges
-                    x += event.deltaRect.left
-                    y += event.deltaRect.top
+                if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
+                    height = width / aspectRatio;
+                } else {
+                    width = height * aspectRatio;
+                }
 
-                    target.style.transform = 'translate(' + x + 'px,' + y + 'px)'
+                event.rect.width = width;
+                event.rect.height = height;
+            }
 
-                    target.setAttribute('data-x', x)
-                    target.setAttribute('data-y', y)
-                    target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
+            target.style.width = event.rect.width + 'px'
+            target.style.height = event.rect.height + 'px'
 
-                    this.onInteraction(target);
-                },
-            },
+            // translate when resizing from top or left edges
+            x += event.deltaRect.left
+            y += event.deltaRect.top
+
+            target.style.transform = 'translate(' + x + 'px,' + y + 'px)'
+
+            target.setAttribute('data-x', x)
+            target.setAttribute('data-y', y)
+            target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
+
+            this.onInteraction(target);
+        },
+    },
+
             modifiers: [
                 interact.modifiers.restrictSize({
-                    min: { width: 50, height: 50 },
+                    min: { width: 5, height: 5 },
                 }),
             ],
             inertia: true,

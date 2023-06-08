@@ -1,0 +1,23 @@
+# Build jbig2enc in a separate stage
+FROM bellsoft/liberica-openjdk-debian:17
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libreoffice-core-nogui \
+        libreoffice-common \
+        libreoffice-writer-nogui \
+        libreoffice-calc-nogui \
+        libreoffice-impress-nogui \
+        unoconv && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy the application JAR file
+COPY build/libs/*.jar app.jar
+
+# Expose the application port
+EXPOSE 8080
+
+# Set environment variables
+ENV GROUPS_TO_REMOVE=Python,OpenCV,OCRmyPDF
+
+# Run the application
+CMD ["java", "-jar", "/app.jar"]

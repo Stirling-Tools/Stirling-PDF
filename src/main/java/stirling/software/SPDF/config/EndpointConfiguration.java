@@ -20,12 +20,14 @@ public class EndpointConfiguration {
     }
     
     public void enableEndpoint(String endpoint) {
-        endpointStatuses.put(endpoint, true);
+    	endpointStatuses.put(endpoint, true);
     }
 
     public void disableEndpoint(String endpoint) {
-        logger.info("Disabling {}", endpoint);
-        endpointStatuses.put(endpoint, false);
+    	if(!endpointStatuses.containsKey(endpoint) || endpointStatuses.get(endpoint) !=  false) {
+	        logger.info("Disabling {}", endpoint);
+	        endpointStatuses.put(endpoint, false);
+    	}
     }
 
     public boolean isEndpointEnabled(String endpoint) {

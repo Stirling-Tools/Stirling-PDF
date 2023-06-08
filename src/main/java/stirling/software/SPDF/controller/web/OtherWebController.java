@@ -74,7 +74,9 @@ public class OtherWebController {
     @Hidden
     public ModelAndView ocrPdfPage() {
         ModelAndView modelAndView = new ModelAndView("other/ocr-pdf");
-        modelAndView.addObject("languages", getAvailableTesseractLanguages());
+        List<String> languages = getAvailableTesseractLanguages();
+        Collections.sort(languages);
+        modelAndView.addObject("languages", languages);
         modelAndView.addObject("currentPage", "ocr-pdf");
         return modelAndView;
     }
