@@ -8,7 +8,7 @@ COPY build/libs/*.jar app.jar
 EXPOSE 8080
 
 # Set environment variables
-ENV GROUPS_TO_REMOVE=LibreOffice,CLI
+ENV GROUPS_TO_REMOVE=CLI
 
 # Run the application
 CMD ["java", "-jar", "/app.jar"]

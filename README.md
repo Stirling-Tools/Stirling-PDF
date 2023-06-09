@@ -53,6 +53,7 @@ Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) h
 ## Technologies used
 - Spring Boot + Thymeleaf
 - PDFBox
+- IText7
 - [LibreOffice](https://www.libreoffice.org/discover/libreoffice/) for advanced conversions
 - [OcrMyPdf](https://github.com/ocrmypdf/OCRmyPDF)
 - HTML, CSS, JavaScript
@@ -68,13 +69,20 @@ Please view https://github.com/Frooodle/Stirling-PDF/blob/main/LocalRunGuide.md
 ### Docker
 https://hub.docker.com/r/frooodle/s-pdf
 
+Stirling PDF has 3 different versions, a Full version, Lite and ultra-Lite. Depending on the types of features you use you may want a smaller image to save on space.
+To see what the different versions offer please look at our [version mapping](https://github.com/Frooodle/Stirling-PDF/blob/main/Version-groups.md)
+For people that dont mind about space optimisation just use latest tag.
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest?label=Stirling-PDF%20Full)
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-lite?label=Stirling-PDF%20Lite)
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
+
 Docker Run
 ```
 docker run -d \
   -p 8080:8080 \
   -v /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata \
   --name stirling-pdf \
-  frooodle/s-pdf
+  frooodle/s-pdf:latest
   
   
   Can also add these for customisation but are not required
@@ -90,7 +98,7 @@ Docker Compose
 version: '3.3'
 services:
   stirling-pdf:
-    image: frooodle/s-pdf
+    image: frooodle/s-pdf:latest
     ports:
       - '8080:8080'
     volumes:

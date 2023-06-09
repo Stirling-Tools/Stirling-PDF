@@ -17,15 +17,20 @@ $(document).ready(function() {
 		const override = $('#override').val() || '';
 		const originalButtonText = $('#submitBtn').text();
 		$('#submitBtn').text('Processing...');
-
+		console.log(override);
 		try {
+			console.log("2");
 			if(remoteCall === true) {
+				console.log("3");
 				if (override === 'multi' || (!multiple && files.length > 1) && override !== 'single' ) {
+					console.log("3");
 					await submitMultiPdfForm(url, files);
 				} else {
+					console.log("4");
 					await handleSingleDownload(url, formData);
 				}
 			}
+			console.log("5");
 			$('#submitBtn').text(originalButtonText);
 		} catch (error) {
 			handleDownloadError(error);
@@ -37,7 +42,7 @@ $(document).ready(function() {
 
 
 
-async function handleSingleDownload(url, formData, isMulti = false) {
+async function handleSingleDownload(url, formData, isMulti = false , isZip = false) {
 	try {
 		const response = await fetch(url, { method: 'POST', body: formData });
 		const contentType = response.headers.get('content-type');
@@ -54,11 +59,10 @@ async function handleSingleDownload(url, formData, isMulti = false) {
 		let filename = getFilenameFromContentDisposition(contentDisposition);
 
 		const blob = await response.blob();
-
 		if (contentType.includes('application/pdf') || contentType.includes('image/')) {
-			return handleResponse(blob, filename, !isMulti);
+			return handleResponse(blob, filename, !isMulti, isZip);
 		} else {
-			return handleResponse(blob, filename);
+			return handleResponse(blob, filename, false, isZip);
 		}
 	} catch (error) {
 		console.error('Error in handleSingleDownload:', error);
@@ -95,21 +99,27 @@ async function handleJsonResponse(response) {
 }
 
 
-async function handleResponse(blob, filename, considerViewOptions = false) {
+async function handleResponse(blob, filename, considerViewOptions = false, isZip = false) {
 	if (!blob) return;
 	const downloadOption = localStorage.getItem('downloadOption');
+	console.log("handleResponse 1");
 	if (considerViewOptions) {
 		if (downloadOption === 'sameWindow') {
+			console.log("handleResponse 2");
 			const url = URL.createObjectURL(blob);
 			window.location.href = url;
 			return;
 		} else if (downloadOption === 'newWindow') {
+			console.log("handleResponse 3");
 			const url = URL.createObjectURL(blob);
 			window.open(url, '_blank');
 			return;
-		}
+		} 
 	}
-	downloadFile(blob, filename);
+	if(!isZip){
+		downloadFile(blob, filename);
+	}
+	console.log("handleResponse 5");
 	return { filename, blob };
 }
 
@@ -126,6 +136,7 @@ function downloadFile(blob, filename) {
 		return;
 	}
 
+	console.log("downloadFile 1");
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
 	a.href = url;
@@ -176,12 +187,13 @@ async function submitMultiPdfForm(url, files) {
 			}
 
 			try {
-				const downloadDetails = await handleSingleDownload(url, fileFormData, true);
+				const downloadDetails = await handleSingleDownload(url, fileFormData, true, zipFiles);
 				console.log(downloadDetails);
 				if (zipFiles) {
 					jszip.file(downloadDetails.filename, downloadDetails.blob);
 				} else {
-					downloadFile(downloadDetails.blob, downloadDetails.filename);
+					console.log("downloadFile 198");
+					//downloadFile(downloadDetails.blob, downloadDetails.filename);
 				}
 				updateProgressBar(progressBar, Array.from(files).length);
 			} catch (error) {
@@ -196,6 +208,7 @@ async function submitMultiPdfForm(url, files) {
 	if (zipFiles) {
 		try {
 			const content = await jszip.generateAsync({ type: "blob" });
+			console.log("downloadFile 213");
 			downloadFile(content, "files.zip");
 		} catch (error) {
 			console.error('Error generating ZIP file: ' + error);
