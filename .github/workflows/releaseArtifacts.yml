@@ -16,7 +16,7 @@ jobs:
       run: chmod +x gradlew
 
     - name: Generate jar
-      run: ./gradlew clean createJar 
+      run: ./gradlew clean createExe
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
