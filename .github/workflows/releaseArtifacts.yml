@@ -1,12 +1,10 @@
 name: Release Artifacts
-
-on: release
+on: 
+  release: [created]
 jobs:
   push:
-
     runs-on: ubuntu-latest
     steps:
-
     - uses: actions/checkout@v3.5.2
     
     - name: Set up JDK 17
