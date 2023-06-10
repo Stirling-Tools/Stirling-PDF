@@ -1,5 +1,8 @@
 name: Release Artifacts
-on: release
+on:
+  push:
+    tags:
+      - '*'
 jobs:
   push:
     runs-on: ubuntu-latest
@@ -25,13 +28,19 @@ jobs:
         file: ./build/launch4j/Stirling-PDF.exe
         asset_name: Stirling-PDF.exe
         tag: ${{ github.ref }}
-        
+        overwrite: true
+    
+    - name: Get version number
+      id: versionNumber
+      run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet | tail -1)"
+      
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./build/libs/S-PDF*.jar
+        file: ./build/libs/S-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar
         asset_name: S-PDF.jar
         tag: ${{ github.ref }}
+        overwrite: true
 
 
