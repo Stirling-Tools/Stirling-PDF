@@ -19,18 +19,13 @@ $(document).ready(function() {
 		$('#submitBtn').text('Processing...');
 		console.log(override);
 		try {
-			console.log("2");
 			if(remoteCall === true) {
-				console.log("3");
 				if (override === 'multi' || (!multiple && files.length > 1) && override !== 'single' ) {
-					console.log("3");
 					await submitMultiPdfForm(url, files);
 				} else {
-					console.log("4");
 					await handleSingleDownload(url, formData);
 				}
 			}
-			console.log("5");
 			$('#submitBtn').text(originalButtonText);
 		} catch (error) {
 			handleDownloadError(error);
@@ -102,15 +97,12 @@ async function handleJsonResponse(response) {
 async function handleResponse(blob, filename, considerViewOptions = false, isZip = false) {
 	if (!blob) return;
 	const downloadOption = localStorage.getItem('downloadOption');
-	console.log("handleResponse 1");
 	if (considerViewOptions) {
 		if (downloadOption === 'sameWindow') {
-			console.log("handleResponse 2");
 			const url = URL.createObjectURL(blob);
 			window.location.href = url;
 			return;
 		} else if (downloadOption === 'newWindow') {
-			console.log("handleResponse 3");
 			const url = URL.createObjectURL(blob);
 			window.open(url, '_blank');
 			return;
@@ -119,7 +111,6 @@ async function handleResponse(blob, filename, considerViewOptions = false, isZip
 	if(!isZip){
 		downloadFile(blob, filename);
 	}
-	console.log("handleResponse 5");
 	return { filename, blob };
 }
 
@@ -135,8 +126,6 @@ function downloadFile(blob, filename) {
 		console.error('Invalid blob passed to downloadFile function');
 		return;
 	}
-
-	console.log("downloadFile 1");
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
 	a.href = url;
@@ -192,7 +181,6 @@ async function submitMultiPdfForm(url, files) {
 				if (zipFiles) {
 					jszip.file(downloadDetails.filename, downloadDetails.blob);
 				} else {
-					console.log("downloadFile 198");
 					//downloadFile(downloadDetails.blob, downloadDetails.filename);
 				}
 				updateProgressBar(progressBar, Array.from(files).length);
@@ -208,7 +196,6 @@ async function submitMultiPdfForm(url, files) {
 	if (zipFiles) {
 		try {
 			const content = await jszip.generateAsync({ type: "blob" });
-			console.log("downloadFile 213");
 			downloadFile(content, "files.zip");
 		} catch (error) {
 			console.error('Error generating ZIP file: ' + error);
