@@ -1,8 +1,7 @@
 name: Release Artifacts
-on:
-  push:
-    tags:
-      - '*'
+on: 
+  release: 
+    types: [created]
 jobs:
   push:
     runs-on: ubuntu-latest
