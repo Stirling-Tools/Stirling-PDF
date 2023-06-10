@@ -123,7 +123,7 @@ This folder is required for the python scripts using OpenCV
 
 ```bash
 sudo mkdir /opt/Stirling-PDF &&\
-sudo mv ./build/libs/S-PDF-*.jar /opt/Stirling-PDF/ &&\
+sudo mv ./build/libs/Stirling-PDF-*.jar /opt/Stirling-PDF/ &&\
 sudo mv scripts /opt/Stirling-PDF/ &&\
 echo "Scripts installed."
 ```

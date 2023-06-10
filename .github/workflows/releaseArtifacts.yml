@@ -38,7 +38,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./build/libs/S-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar
+        file: ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar
         asset_name: S-PDF.jar
         tag: ${{ github.ref }}
         overwrite: true
