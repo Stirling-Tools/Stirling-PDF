@@ -1,0 +1,36 @@
+name: Release Artifacts
+
+on: release
+jobs:
+  push:
+
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v3.5.2
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3.11.0
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Generate jar
+      run: ./gradlew clean createJar 
+
+    - name: Upload jar to release
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: ./build/libs/S-PDF*.jar application/java-archive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload exe to release
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: ./build/launch4j/Stirling-PDF.exe application/vnd.microsoft.portable-executable
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
