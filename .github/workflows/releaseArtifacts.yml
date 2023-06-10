@@ -19,16 +19,16 @@ jobs:
     - name: Generate jar
       run: ./gradlew clean createJar 
 
-    - name: Upload jar to release
-      uses: JasonEtco/upload-to-release@master
+    - uses: Shopify/upload-to-release@v1
       with:
-        args: ./build/libs/S-PDF*.jar application/java-archive
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: Stirling-PDF.jar
+        path: ./build/libs/S-PDF*.jar
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        content-type: application/java-archive
 
-    - name: Upload exe to release
-      uses: JasonEtco/upload-to-release@master
+    - uses: Shopify/upload-to-release@v1
       with:
-        args: ./build/launch4j/Stirling-PDF.exe application/vnd.microsoft.portable-executable
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: Stirling-PDF.exe
+        path: ./build/launch4j/Stirling-PDF.exe
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        content-type: application/vnd.microsoft.portable-executable
