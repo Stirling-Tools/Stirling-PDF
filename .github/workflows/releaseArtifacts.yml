@@ -1,6 +1,5 @@
 name: Release Artifacts
-on: 
-  release: [created]
+on: release
 jobs:
   releaseJob:
     runs-on: ubuntu-latest
