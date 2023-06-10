@@ -1,7 +1,7 @@
 name: Release Artifacts
 on: release
 jobs:
-  releaseJob:
+  push:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3.5.2
@@ -18,16 +18,20 @@ jobs:
     - name: Generate jar
       run: ./gradlew clean createJar 
 
-    - uses: Shopify/upload-to-release@v1
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
       with:
-        name: Stirling-PDF.jar
-        path: ./build/libs/S-PDF*.jar
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        content-type: application/java-archive
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./build/launch4j/Stirling-PDF.exe
+        asset_name: Stirling-PDF.exe
+        tag: ${{ github.ref }}
+        
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./build/libs/S-PDF*.jar
+        asset_name: S-PDF.jar
+        tag: ${{ github.ref }}
 
-    - uses: Shopify/upload-to-release@v1
-      with:
-        name: Stirling-PDF.exe
-        path: ./build/launch4j/Stirling-PDF.exe
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        content-type: application/vnd.microsoft.portable-executable
+
