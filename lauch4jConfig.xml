@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch4jConfig>
+  <dontWrapJar>false</dontWrapJar>
+  <headerType>console</headerType>
+  <jar>.\build\libs\S-PDF-0.10.1.jar</jar>
+  <outfile>.\Stirling-PDF.exe</outfile>
+  <errTitle>Please download Java17</errTitle>
+  <cmdLine></cmdLine>
+  <chdir>.</chdir>
+  <priority>normal</priority>
+  <downloadUrl>https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.exe</downloadUrl>
+  <supportUrl></supportUrl>
+  <stayAlive>false</stayAlive>
+  <restartOnCrash>false</restartOnCrash>
+  <manifest></manifest>
+  <icon>./src/main/resources/static/favicon.ico</icon>
+  <var>BROWSER_OPEN=true</var>
+  <singleInstance>
+    <mutexName>Stirling-PDF</mutexName>
+    <windowTitle>Stirling-PDF</windowTitle>
+  </singleInstance>
+  <jre>
+    <path>%JAVA_HOME%;%PATH%</path>
+    <requiresJdk>false</requiresJdk>
+    <requires64Bit>false</requires64Bit>
+    <minVersion>17</minVersion>
+    <maxVersion></maxVersion>
+  </jre>
+  <messages>
+    <startupErr>An error occurred while starting Stirling-PDF</startupErr>
+    <jreNotFoundErr>This application requires a Java Runtime Environment, Please download Java 17.</jreNotFoundErr>
+    <jreVersionErr>You are running the wrong version of Java, Please download Java 17.</jreVersionErr>
+    <launcherErr>Java is corrupted. Please uninstall and then install  Java 17.</launcherErr>
+    <instanceAlreadyExistsMsg>Stirling-PDF is already running.</instanceAlreadyExistsMsg>
+  </messages>
+</launch4jConfig>
