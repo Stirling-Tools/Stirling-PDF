@@ -22,15 +22,15 @@ jobs:
       run: ./gradlew clean createJar 
 
     - name: Upload jar to release
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: ./build/libs/S-PDF*.jar application/java-archive
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: JasonEtco/upload-to-release@master
+      with:
+      args: ./build/libs/S-PDF*.jar application/java-archive
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Upload exe to release
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: ./build/launch4j/Stirling-PDF.exe application/vnd.microsoft.portable-executable
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: JasonEtco/upload-to-release@master
+      with:
+        args: ./build/launch4j/Stirling-PDF.exe application/vnd.microsoft.portable-executable
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
