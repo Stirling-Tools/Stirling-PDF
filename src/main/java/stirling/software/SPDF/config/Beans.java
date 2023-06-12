@@ -39,10 +39,17 @@ public class Beans implements WebMvcConfigurer {
             Locale tempLocale = Locale.forLanguageTag(appLocaleEnv);
             String tempLanguageTag = tempLocale.toLanguageTag();
 
-            if (appLocaleEnv.equalsIgnoreCase(tempLanguageTag)) {
+             if (appLocaleEnv.equalsIgnoreCase(tempLanguageTag)) {
                 defaultLocale = tempLocale;
             } else {
-                System.err.println("Invalid APP_LOCALE environment variable value. Falling back to default Locale.UK.");
+                tempLocale = Locale.forLanguageTag(appLocaleEnv.replace("_","-"));
+                tempLanguageTag = tempLocale.toLanguageTag();
+
+                if (appLocaleEnv.equalsIgnoreCase(tempLanguageTag)) {
+                    defaultLocale = tempLocale;
+                } else {
+                    System.err.println("Invalid APP_LOCALE environment variable value. Falling back to default Locale.UK.");
+                }
             }
         }
 
