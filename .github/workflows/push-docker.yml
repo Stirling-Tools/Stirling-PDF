@@ -84,6 +84,7 @@ jobs:
     - name: Generate tags ultra-lite
       id: meta2
       uses: docker/metadata-action@v4.4.0
+      if: github.ref != 'refs/heads/main'
       with:
         images: |
           ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -95,6 +96,7 @@ jobs:
 
     - name: Build and push Dockerfile-ultra-lite
       uses: docker/build-push-action@v4.0.0
+      if: github.ref != 'refs/heads/main'
       with:
         context: .
         file: ./Dockerfile-ultra-lite
@@ -110,6 +112,7 @@ jobs:
     - name: Generate tags lite
       id: meta3
       uses: docker/metadata-action@v4.4.0
+      if: github.ref != 'refs/heads/main'
       with:
         images: |
           ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -121,6 +124,7 @@ jobs:
 
     - name: Build and push Dockerfile-lite
       uses: docker/build-push-action@v4.0.0
+      if: github.ref != 'refs/heads/main'
       with:
         context: .
         file: ./Dockerfile-lite
