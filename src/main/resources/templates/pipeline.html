@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{merge.title})}"></th:block>
+
+
+<body>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container" id="dropContainer">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                       
+                       
+                       <div id="pipelineContainer">
+					        <select id="operationsDropdown">
+					            <!-- Options will be dynamically populated here -->
+					        </select>
+					        <button id="addOperationBtn">Add operation to pipeline</button>
+					        <h3>Pipeline:</h3>
+					        <ol id="pipelineList">
+					            <!-- Pipeline operations will be dynamically populated here -->
+					        </ol>
+					    </div>
+					
+					    <!-- pipelineSettings modal -->
+					    <div id="pipelineSettingsModal" class="modal">
+					        <div class="modal-content">
+					        <div class="modal-body">
+					            <span class="close">&times;</span>
+					            <h2>Operation Settings</h2>
+					            <div id="pipelineSettingsContent">
+					                <!-- pipelineSettings will be dynamically populated here -->
+					            </div>
+					            </div>
+					        </div>
+					    </div>
+				<style>
+				.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+}
+.btn-margin {
+            margin-right: 2px;
+        }
+        
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+ 
+}
+				
+				</style>
+				    <script>
+				    
+				    
+				    let apiDocs = {};
+				    
+				    fetch('v3/api-docs')
+		            .then(response => response.json())
+		            .then(data => {
+		            	apiDocs = data.paths;
+		                let operationsDropdown = document.getElementById('operationsDropdown');
+
+		                operationsDropdown.innerHTML = '';
+
+		                Object.keys(apiDocs).forEach(operation => {
+		                    let option = document.createElement('option');
+		                    option.textContent = operation;
+		                    operationsDropdown.appendChild(option);
+		                });
+		            });
+
+		        document.getElementById('addOperationBtn').addEventListener('click', function() {
+		            let selectedOperation = document.getElementById('operationsDropdown').value;
+		            let pipelineList = document.getElementById('pipelineList');
+
+		            // Add the selected operation to the pipeline list
+		            let listItem = document.createElement('li');
+		            listItem.className = "list-group-item";
+		            listItem.innerHTML = `
+		                <div class="d-flex justify-content-between align-items-center w-100">
+		                    <div class="operationName">${selectedOperation}</div>
+		                    <div class="arrows d-flex">
+		                        <button class="btn btn-secondary move-up btn-margin"><span>&uarr;</span></button>
+		                        <button class="btn btn-secondary move-down btn-margin"><span>&darr;</span></button>
+		                        <button class="btn btn-warning pipelineSettings btn-margin"><span>⚙️</span></button>
+		                        <button class="btn btn-danger remove"><span>X</span></button>
+		                    </div>
+		                </div>
+		            `;
+
+		            pipelineList.appendChild(listItem);
+
+		            listItem.querySelector('.move-up').addEventListener('click', function(event) {
+		                event.preventDefault();
+		                if (listItem.previousElementSibling) {
+		                    pipelineList.insertBefore(listItem, listItem.previousElementSibling);
+		                }
+		            });
+
+		            listItem.querySelector('.move-down').addEventListener('click', function(event) {
+		                event.preventDefault();
+		                if (listItem.nextElementSibling) {
+		                    pipelineList.insertBefore(listItem.nextElementSibling, listItem);
+		                }
+		            });
+
+		            listItem.querySelector('.remove').addEventListener('click', function(event) {
+		                event.preventDefault();
+		                pipelineList.removeChild(listItem);
+		            });
+		            
+		            listItem.querySelector('.pipelineSettings').addEventListener('click', function(event) {
+		                event.preventDefault();
+		                showpipelineSettingsModal(selectedOperation);
+		            });
+		            
+		            
+		            function showpipelineSettingsModal(operation) {
+		                let pipelineSettingsModal = document.getElementById('pipelineSettingsModal');
+		                let pipelineSettingsContent = document.getElementById('pipelineSettingsContent');
+		                let operationData = apiDocs[operation].post.parameters || [];
+
+		                // Clear the modal
+		                pipelineSettingsContent.innerHTML = '';
+
+		             	// Populate the modal with operation parameters
+		                operationData.forEach(parameter => {
+		                    let parameterDiv = document.createElement('div');
+		                    parameterDiv.className = "form-group";
+
+		                    let parameterLabel = document.createElement('label');
+		                    parameterLabel.textContent = `${parameter.name} (${parameter.schema.type}): `;
+		                    parameterLabel.title = parameter.description; // Add description as tooltip
+		                    parameterDiv.appendChild(parameterLabel);
+
+		                    let parameterInput;
+		                    switch(parameter.schema.type) {
+		                        case 'string':
+		                        case 'number':
+		                        case 'integer':
+		                            parameterInput = document.createElement('input');
+		                            parameterInput.type = parameter.schema.type === 'string' ? 'text' : 'number';
+		                            parameterInput.className = "form-control";
+		                            break;
+		                        case 'boolean':
+		                            parameterInput = document.createElement('input');
+		                            parameterInput.type = 'checkbox';
+		                            break;
+		                        case 'array':
+		                        case 'object':
+		                            parameterInput = document.createElement('textarea');
+		                            parameterInput.placeholder = `Enter a JSON formatted ${parameter.schema.type}`;
+		                            parameterInput.className = "form-control";
+		                            break;
+		                        case 'enum':
+		                            parameterInput = document.createElement('select');
+		                            parameterInput.className = "form-control";
+		                            parameter.schema.enum.forEach(option => {
+		                                let optionElement = document.createElement('option');
+		                                optionElement.value = option;
+		                                optionElement.text = option;
+		                                parameterInput.appendChild(optionElement);
+		                            });
+		                            break;
+		                        default:
+		                            parameterInput = document.createElement('input');
+		                            parameterInput.type = 'text';
+		                            parameterInput.className = "form-control";
+		                    }
+		                    parameterInput.id = parameter.name;
+		                    parameterDiv.appendChild(parameterInput);
+
+		                    pipelineSettingsContent.appendChild(parameterDiv);
+		                });
+
+		                // Add a save button
+		                let saveButton = document.createElement('button');
+		                saveButton.textContent = "Save Settings";
+		                saveButton.className = "btn btn-primary";
+		                saveButton.addEventListener('click', function(event) {
+		                    event.preventDefault();
+		                    let settings = {};
+		                    operationData.forEach(parameter => {
+		                        let value = document.getElementById(parameter.name).value;
+		                        switch(parameter.schema.type) {
+		                            case 'number':
+		                            case 'integer':
+		                                settings[parameter.name] = Number(value);
+		                                break;
+		                            case 'boolean':
+		                                settings[parameter.name] = document.getElementById(parameter.name).checked;
+		                                break;
+		                            case 'array':
+		                            case 'object':
+		                                try {
+		                                    settings[parameter.name] = JSON.parse(value);
+		                                } catch(err) {
+		                                    console.error(`Invalid JSON format for ${parameter.name}`);
+		                                }
+		                                break;
+		                            default:
+		                                settings[parameter.name] = value;
+		                        }
+		                    });
+		                    console.log(settings); // TODO: Save these settings in your desired format
+		                    pipelineSettingsModal.style.display = "none";
+		                });
+		                pipelineSettingsContent.appendChild(saveButton);
+
+		                // Show the modal
+		                pipelineSettingsModal.style.display = "block";
+
+		                // When the user clicks on <span> (x), close the modal
+		                pipelineSettingsModal.getElementsByClassName("close")[0].onclick = function() {
+		                    pipelineSettingsModal.style.display = "none";
+		                }
+
+		                // When the user clicks anywhere outside of the modal, close it
+		                window.onclick = function(event) {
+		                    if (event.target == pipelineSettingsModal) {
+		                        pipelineSettingsModal.style.display = "none";
+		                    }
+		                }
+		            }
+
+
+		        });
+				    </script>
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
+</body>
+</html>

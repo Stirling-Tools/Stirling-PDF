@@ -73,6 +73,7 @@ public class MetadataController {
             @RequestParam(value = "trapped", required = false)
             @Parameter(description = "The trapped status of the document")
                     String trapped,
+                    @Parameter(description = "Map list of key and value of custom parameters, note these must start with customKey and customValue if they are non standard")
             @RequestParam Map<String, String> allRequestParams)
             throws IOException {
 

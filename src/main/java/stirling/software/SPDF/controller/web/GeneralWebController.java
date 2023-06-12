@@ -10,6 +10,13 @@ import io.swagger.v3.oas.annotations.Hidden;
 
 @Controller
 public class GeneralWebController {
+	 @GetMapping("/pipeline")
+	    @Hidden
+	    public String pipelineForm(Model model) {
+	        model.addAttribute("currentPage", "pipeline");
+	        return "pipeline";
+	    }
+	 
     @GetMapping("/merge-pdfs")
     @Hidden
     public String mergePdfForm(Model model) {
