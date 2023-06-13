@@ -1,82 +1,109 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.toString()}"
+	th:lang-direction="#{language.direction}"
+	xmlns:th="http://www.thymeleaf.org">
 
 <th:block th:insert="~{fragments/common :: head(title=#{merge.title})}"></th:block>
 
 
 <body>
-    <div id="page-container">
-        <div id="content-wrap">
-            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-            <br> <br>
-            <div class="container" id="dropContainer">
-                <div class="row justify-content-center">
-                    <div class="col-md-6">
-                       
-                       
-                       <div id="pipelineContainer">
-					        <select id="operationsDropdown">
-					            <!-- Options will be dynamically populated here -->
-					        </select>
-					        <button id="addOperationBtn">Add operation to pipeline</button>
-					        <h3>Pipeline:</h3>
-					        <ol id="pipelineList">
-					            <!-- Pipeline operations will be dynamically populated here -->
-					        </ol>
-					    </div>
-					
-					    <!-- pipelineSettings modal -->
-					    <div id="pipelineSettingsModal" class="modal">
-					        <div class="modal-content">
-					        <div class="modal-body">
-					            <span class="close">&times;</span>
-					            <h2>Operation Settings</h2>
-					            <div id="pipelineSettingsContent">
-					                <!-- pipelineSettings will be dynamically populated here -->
-					            </div>
-					            </div>
-					        </div>
-					    </div>
-				<style>
-				.modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
-    padding-top: 100px; /* Location of the box */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgb(0,0,0); /* Fallback color */
-    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+	<div id="page-container">
+		<div id="content-wrap">
+			<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+			<br> <br>
+			<div class="container" id="dropContainer">
+				<div class="row justify-content-center">
+					<div class="col-md-6">
+
+						<div class="mb-3">
+							<button id="savePipelineBtn" class="btn btn-success">Save
+								Pipeline Configuration</button>
+							<div class="btn-group">
+								<button id="uploadPipelineBtn" class="btn btn-primary">Upload
+									Pipeline Configuration</button>
+								<input type="file" id="uploadPipelineInput" accept=".json"
+									style="display: none;">
+							</div>
+						</div>
+
+						<div id="pipelineContainer" class="card">
+
+							<!-- Pipeline Configuration Card Header -->
+							<div class="card-header">
+								<h2 class="card-title">Pipeline Configuration</h2>
+							</div>
+
+							<!-- Pipeline Configuration Body -->
+							<div class="card-body">
+								<div class="mb-3">
+									<select id="operationsDropdown" class="form-select">
+										<!-- Options will be dynamically populated here -->
+									</select>
+								</div>
+								<div class="mb-3">
+									<button id="addOperationBtn" class="btn btn-primary">Add
+										operation to pipeline</button>
+								</div>
+								<h3>Pipeline:</h3>
+								<ol id="pipelineList" class="list-group">
+									<!-- Pipeline operations will be dynamically populated here -->
+								</ol>
+							</div>
+
+						</div>
+
+						<!-- pipelineSettings modal -->
+						<div id="pipelineSettingsModal" class="modal">
+							<div class="modal-content">
+								<div class="modal-body">
+									<span class="close">&times;</span>
+									<h2>Operation Settings</h2>
+									<div id="pipelineSettingsContent">
+										<!-- pipelineSettings will be dynamically populated here -->
+									</div>
+								</div>
+							</div>
+						</div>
+						<style>
+.modal {
+	display: none; /* Hidden by default */
+	position: fixed; /* Stay in place */
+	z-index: 1; /* Sit on top */
+	padding-top: 100px; /* Location of the box */
+	left: 0;
+	top: 0;
+	width: 100%; /* Full width */
+	height: 100%; /* Full height */
+	overflow: auto; /* Enable scroll if needed */
+	background-color: rgb(0, 0, 0); /* Fallback color */
+	background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
 }
 
 /* Modal Content */
 .modal-content {
-    background-color: #fefefe;
-    margin: auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 50%;
+	background-color: #fefefe;
+	margin: auto;
+	padding: 20px;
+	border: 1px solid #888;
+	width: 50%;
 }
+
 .btn-margin {
-            margin-right: 2px;
-        }
-        
+	margin-right: 2px;
+}
 
 .modal-body {
-    display: flex;
-    flex-direction: column;
- 
+	display: flex;
+	flex-direction: column;
 }
-				
-				</style>
-				    <script>
+</style>
+						<script>
 				    
 				    
 				    let apiDocs = {};
 				    
+				    let operationSettings = {};
+
 				    fetch('v3/api-docs')
 		            .then(response => response.json())
 		            .then(data => {
@@ -191,6 +218,30 @@
 		                            parameterInput.className = "form-control";
 		                    }
 		                    parameterInput.id = parameter.name;
+		                    
+		                 // Check if there are saved settings for this operation and this parameter
+		                    if(operationSettings[operation] && operationSettings[operation][parameter.name] !== undefined) {
+		                        let savedValue = operationSettings[operation][parameter.name];
+
+		                        // Set the value in the input field according to the type of the parameter
+		                        switch(parameter.schema.type) {
+		                            case 'number':
+		                            case 'integer':
+		                                parameterInput.value = savedValue.toString();
+		                                break;
+		                            case 'boolean':
+		                                parameterInput.checked = savedValue;
+		                                break;
+		                            case 'array':
+		                            case 'object':
+		                                parameterInput.value = JSON.stringify(savedValue);
+		                                break;
+		                            default:
+		                                parameterInput.value = savedValue;
+		                        }
+		                    }
+		                 
+		                 
 		                    parameterDiv.appendChild(parameterInput);
 
 		                    pipelineSettingsContent.appendChild(parameterDiv);
@@ -225,6 +276,7 @@
 		                                settings[parameter.name] = value;
 		                        }
 		                    });
+		                    operationSettings[operation] = settings;
 		                    console.log(settings); // TODO: Save these settings in your desired format
 		                    pipelineSettingsModal.style.display = "none";
 		                });
@@ -245,36 +297,124 @@
 		                    }
 		                }
 		            }
+		            
+		            
+		            
+		            
+		            document.getElementById('savePipelineBtn').addEventListener('click', function() {
+		                let pipelineList = document.getElementById('pipelineList').children;
+		                let pipelineConfig = {
+		                    "name": "uniquePipelineName",
+		                    "pipeline": []
+		                };
+
+		                for(let i=0; i<pipelineList.length; i++) {
+		                	let operationName = pipelineList[i].querySelector('.operationName').textContent;
+		                	let parameters = operationSettings[operationName] || {}; // Retrieve saved parameters for this operation
+
+		                    pipelineConfig.pipeline.push({
+		                        "operation": operationName,
+		                        "parameters": parameters
+		                    });
+		                }
+
+		                let a = document.createElement('a');
+		                a.href = URL.createObjectURL(new Blob([JSON.stringify(pipelineConfig, null, 2)], {
+		                    type: 'application/json'
+		                }));
+		                a.download = 'pipelineConfig.json';
+		                a.style.display = 'none';
+
+		                document.body.appendChild(a);
+		                a.click();
+		                document.body.removeChild(a);
+		            });
+
+		            document.getElementById('uploadPipelineBtn').addEventListener('click', function() {
+		                document.getElementById('uploadPipelineInput').click();
+		            });
+
+		            document.getElementById('uploadPipelineInput').addEventListener('change', function(e) {
+		                let reader = new FileReader();
+		                reader.onload = function(event) {
+		                    let pipelineConfig = JSON.parse(event.target.result);
+		                    let pipelineList = document.getElementById('pipelineList');
+		                    
+		                    // clear the existing pipeline list
+		                    while(pipelineList.firstChild) {
+		                        pipelineList.removeChild(pipelineList.firstChild);
+		                    }
+		                    
+		                    // populate the pipeline list with operations from the uploaded configuration
+		                    pipelineConfig.pipeline.forEach(operationConfig => {
+		                        let operationsDropdown = document.getElementById('operationsDropdown');
+		                        operationsDropdown.value = operationConfig.operation;
+		                        operationSettings[operationConfig.operation] = operationConfig.parameters;
+		                        document.getElementById('addOperationBtn').click();
+
+		                        // get the last added operation
+		                        let lastOperation = pipelineList.lastChild;
+
+		                        // open the settings modal
+		                        lastOperation.querySelector('.pipelineSettings').click();
+
+		                        // set the parameters for the added operation
+		                        Object.keys(operationConfig.parameters).forEach(parameterName => {
+		                            let input = document.getElementById(parameterName);
+		                            if(input) {
+		                                switch(input.type) {
+		                                    case 'checkbox':
+		                                        input.checked = operationConfig.parameters[parameterName];
+		                                        break;
+		                                    case 'number':
+		                                        input.value = operationConfig.parameters[parameterName].toString();
+		                                        break;
+		                                    case 'text':
+		                                    case 'textarea':
+		                                    default:
+		                                        input.value = JSON.stringify(operationConfig.parameters[parameterName]);
+		                                }
+		                            }
+		                        });
+
+		                        // save the settings
+		                        document.querySelector('#pipelineSettingsModal .btn-primary').click();
+		                    });
+		                };
+		                reader.readAsText(e.target.files[0]);
+		            });
+
+
 
 
 		        });
 				    </script>
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div th:insert="~{fragments/footer.html :: footer}"></div>
-    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+					</div>
+				</div>
+			</div>
+		</div>
+		<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
 </body>
 </html>
