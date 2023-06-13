@@ -49,6 +49,11 @@
 									<!-- Pipeline operations will be dynamically populated here -->
 								</ol>
 							</div>
+							
+							<input type="file" id="fileInput" multiple>
+							
+							<button class="btn btn-primary" id="submitConfigBtn">Submit</button>
+							
 
 						</div>
 
@@ -99,7 +104,62 @@
 </style>
 						<script>
 				    
-				    
+						document.getElementById('submitConfigBtn').addEventListener('click', function() {
+						    // Get the selected configuration
+						    let selectedOperation = document.getElementById('operationsDropdown').value;
+						    let parameters = operationSettings[selectedOperation] || {};
+
+						    // Create the pipelineConfig object
+						    let pipelineConfig = {
+						        "name": "uniquePipelineName",
+						        "pipeline": [{
+						            "operation": selectedOperation,
+						            "parameters": parameters
+						        }]
+						    };
+
+						    let pipelineConfigJson = JSON.stringify(pipelineConfig, null, 2);
+
+						    // Create new FormData instance
+						    let formData = new FormData();
+
+						    // Get the selected files from the file input
+						    let fileInput = document.getElementById('fileInput');
+						    let files = fileInput.files;
+
+						    // Add files to formData
+						    for(let i = 0; i < files.length; i++) {
+						    	console.log("files[i]",files[i].name);
+						        formData.append('fileInput', files[i], files[i].name);
+						    }
+
+						    // Add the JSON string to formData
+						    console.log("pipelineConfigJson",pipelineConfigJson);
+						    formData.append('json', pipelineConfigJson);
+							console.log("formData",formData);
+						    // Make a POST request to the server
+							fetch('/handleData', {
+							    method: 'POST',
+							    body: formData
+							})
+							.then(response => response.blob())
+							.then(blob => {
+							    // Create a link element
+							    let url = window.URL.createObjectURL(blob);
+							    let a = document.createElement('a');
+							    a.href = url;
+							    a.download = 'outputfile';  // or you can name your output file here
+							    document.body.appendChild(a); // Required for Firefox
+							    a.click();
+							    a.remove(); // After triggering download we remove the element
+							})
+							.catch((error) => {
+							    console.error('Error:', error);
+							});
+						});
+
+
+						
 				    let apiDocs = {};
 				    
 				    let operationSettings = {};
@@ -308,6 +368,11 @@
 		                    "pipeline": []
 		                };
 
+		                if (pipelineList[pipelineList.length - 1].querySelector('.operationName').textContent !== '/add-password') {
+		                    alert('The "add-password" operation should be at the end of the operations sequence. Please adjust the operations order.');
+		                    return;  // Stop the function execution
+		                }
+		                
 		                for(let i=0; i<pipelineList.length; i++) {
 		                	let operationName = pipelineList[i].querySelector('.operationName').textContent;
 		                	let parameters = operationSettings[operationName] || {}; // Retrieve saved parameters for this operation
