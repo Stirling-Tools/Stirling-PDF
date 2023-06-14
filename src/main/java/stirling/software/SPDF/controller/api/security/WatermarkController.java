@@ -7,6 +7,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
@@ -20,6 +21,12 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.WebResponseUtils;
+import org.springframework.core.io.ClassPathResource;
+import org.apache.commons.io.IOUtils;
+
+import java.io.InputStream;
+import java.io.FileOutputStream;
+import java.io.File;
 
 @RestController
 public class WatermarkController {
@@ -65,7 +72,14 @@ public class WatermarkController {
             contentStream.setGraphicsStateParameters(graphicsState);
 
             // Set font of watermark
-            PDFont font = PDType1Font.HELVETICA_BOLD;
+         // Load NotoSans-Regular font from resources
+            ClassPathResource classPathResource = new ClassPathResource("static/fonts/NotoSans-Regular.ttf");
+            File tempFile = File.createTempFile("NotoSans-Regular", ".ttf");
+            try (InputStream is = classPathResource.getInputStream(); FileOutputStream os = new FileOutputStream(tempFile)) {
+                IOUtils.copy(is, os);
+            }
+            PDFont font = PDType0Font.load(document, tempFile);
+            
             contentStream.beginText();
             contentStream.setFont(font, fontSize);
             contentStream.setNonStrokingColor(Color.LIGHT_GRAY);
