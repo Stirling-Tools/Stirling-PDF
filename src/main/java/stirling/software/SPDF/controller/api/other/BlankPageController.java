@@ -38,7 +38,7 @@ public class BlankPageController {
 	@PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
 	@Operation(
 	    summary = "Remove blank pages from a PDF file",
-	    description = "This endpoint removes blank pages from a given PDF file. Users can specify the threshold and white percentage to tune the detection of blank pages."
+	    description = "This endpoint removes blank pages from a given PDF file. Users can specify the threshold and white percentage to tune the detection of blank pages. Input:PDF Output:PDF"
 	)
 	public ResponseEntity<byte[]> removeBlankPages(
 	    @RequestPart(required = true, value = "fileInput")

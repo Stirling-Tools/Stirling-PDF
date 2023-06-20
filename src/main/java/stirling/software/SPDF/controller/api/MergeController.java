@@ -47,7 +47,7 @@ public class MergeController {
     @PostMapping(consumes = "multipart/form-data", value = "/merge-pdfs")
     @Operation(
         summary = "Merge multiple PDF files into one",
-        description = "This endpoint merges multiple PDF files into a single PDF file. The merged file will contain all pages from the input files in the order they were provided."
+        description = "This endpoint merges multiple PDF files into a single PDF file. The merged file will contain all pages from the input files in the order they were provided. Input:PDF Output:PDF"
     )
     public ResponseEntity<byte[]> mergePdfs(
         @RequestPart(required = true, value = "fileInput")

@@ -63,7 +63,7 @@ public class CertSignController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/cert-sign")
     @Operation(summary = "Sign PDF with a Digital Certificate",
-        description = "This endpoint accepts a PDF file, a digital certificate and related information to sign the PDF. It then returns the digitally signed PDF file.")
+        description = "This endpoint accepts a PDF file, a digital certificate and related information to sign the PDF. It then returns the digitally signed PDF file. Input:PDF Output:PDF")
     public ResponseEntity<byte[]> signPDF(
         @RequestPart(required = true, value = "fileInput")
         @Parameter(description = "The input PDF file to be signed")

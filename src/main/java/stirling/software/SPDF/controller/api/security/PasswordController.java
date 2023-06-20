@@ -27,7 +27,7 @@ public class PasswordController {
     @PostMapping(consumes = "multipart/form-data", value = "/remove-password")
     @Operation(
         summary = "Remove password from a PDF file",
-        description = "This endpoint removes the password from a protected PDF file. Users need to provide the existing password."
+        description = "This endpoint removes the password from a protected PDF file. Users need to provide the existing password. Input:PDF Output:PDF"
     )
     public ResponseEntity<byte[]> removePassword(
         @RequestPart(required = true, value = "fileInput")

@@ -18,6 +18,8 @@
 						<div class="mb-3">
 							<button id="savePipelineBtn" class="btn btn-success">Save
 								Pipeline Configuration</button>
+								
+								<button id="validateButton" class="btn btn-success">Validate</button>
 							<div class="btn-group">
 								<button id="uploadPipelineBtn" class="btn btn-primary">Upload
 									Pipeline Configuration</button>
@@ -104,12 +106,54 @@
 </style>
 						<script>
 				    
+						
+						document.getElementById('validateButton').addEventListener('click', function(event) {
+						    event.preventDefault();
+						    validatePipeline();
+						});
+						function validatePipeline() {
+						    let pipelineListItems = document.getElementById('pipelineList').children;
+						    let isValid = true;
+
+						    for (let i = 0; i < pipelineListItems.length - 1; i++) {
+						        let currentOperation = pipelineListItems[i].querySelector('.operationName').textContent;
+						        let nextOperation = pipelineListItems[i + 1].querySelector('.operationName').textContent;
+
+						        let currentOperationOutputDescription = apiDocs[`/${currentOperation}`]?.post?.responses["200"]?.description || "";
+						        let nextOperationInputDescription = apiDocs[`/${nextOperation}`]?.post?.requestBody?.content["multipart/form-data"]?.schema?.properties?.fileInput?.description || "";
+
+						        let currentOperationOutputsPDF = currentOperationOutputDescription.toLowerCase().includes("pdf");
+						        let nextOperationExpectsPDF = nextOperationInputDescription.toLowerCase().includes("the pdf file");
+
+						        if (currentOperationOutputsPDF && !nextOperationExpectsPDF) {
+						            isValid = false;
+						            alert(`Incompatible operations: The output of operation '${currentOperation}' is a PDF file but the following operation '${nextOperation}' does not expect a PDF file as input.`);
+						            break;
+						        }
+						        else if (!currentOperationOutputsPDF && nextOperationExpectsPDF) {
+						            isValid = false;
+						            alert(`Incompatible operations: The operation '${currentOperation}' does not output a PDF file but the following operation '${nextOperation}' expects a PDF file as input.`);
+						            break;
+						        }
+						    }
+
+						    if (isValid) {
+						        console.log('Pipeline is valid');
+						        // Continue with the pipeline operation
+						    } else {
+						        console.error('Pipeline is not valid');
+						        // Stop operation, maybe display an error to the user
+						    }
+						}
+
+
+						
+						
 						document.getElementById('submitConfigBtn').addEventListener('click', function() {
-						    // Get the selected configuration
+
 						    let selectedOperation = document.getElementById('operationsDropdown').value;
 						    let parameters = operationSettings[selectedOperation] || {};
 
-						    // Create the pipelineConfig object
 						    let pipelineConfig = {
 						        "name": "uniquePipelineName",
 						        "pipeline": [{
@@ -120,48 +164,42 @@
 
 						    let pipelineConfigJson = JSON.stringify(pipelineConfig, null, 2);
 
-						    // Create new FormData instance
 						    let formData = new FormData();
 
-						    // Get the selected files from the file input
 						    let fileInput = document.getElementById('fileInput');
 						    let files = fileInput.files;
 
-						    // Add files to formData
 						    for(let i = 0; i < files.length; i++) {
 						    	console.log("files[i]",files[i].name);
 						        formData.append('fileInput', files[i], files[i].name);
 						    }
 
-						    // Add the JSON string to formData
 						    console.log("pipelineConfigJson",pipelineConfigJson);
 						    formData.append('json', pipelineConfigJson);
 							console.log("formData",formData);
-						    // Make a POST request to the server
+
 							fetch('/handleData', {
 							    method: 'POST',
 							    body: formData
 							})
 							.then(response => response.blob())
 							.then(blob => {
-							    // Create a link element
+
 							    let url = window.URL.createObjectURL(blob);
 							    let a = document.createElement('a');
 							    a.href = url;
-							    a.download = 'outputfile';  // or you can name your output file here
-							    document.body.appendChild(a); // Required for Firefox
+							    a.download = 'outputfile';  
+							    document.body.appendChild(a); 
 							    a.click();
-							    a.remove(); // After triggering download we remove the element
+							    a.remove(); 
 							})
 							.catch((error) => {
 							    console.error('Error:', error);
 							});
 						});
 
-
-						
 				    let apiDocs = {};
-				    
+
 				    let operationSettings = {};
 
 				    fetch('v3/api-docs')
@@ -183,7 +221,6 @@
 		            let selectedOperation = document.getElementById('operationsDropdown').value;
 		            let pipelineList = document.getElementById('pipelineList');
 
-		            // Add the selected operation to the pipeline list
 		            let listItem = document.createElement('li');
 		            listItem.className = "list-group-item";
 		            listItem.innerHTML = `
@@ -218,29 +255,26 @@
 		                event.preventDefault();
 		                pipelineList.removeChild(listItem);
 		            });
-		            
+
 		            listItem.querySelector('.pipelineSettings').addEventListener('click', function(event) {
 		                event.preventDefault();
 		                showpipelineSettingsModal(selectedOperation);
 		            });
-		            
-		            
+
 		            function showpipelineSettingsModal(operation) {
 		                let pipelineSettingsModal = document.getElementById('pipelineSettingsModal');
 		                let pipelineSettingsContent = document.getElementById('pipelineSettingsContent');
 		                let operationData = apiDocs[operation].post.parameters || [];
 
-		                // Clear the modal
 		                pipelineSettingsContent.innerHTML = '';
 
-		             	// Populate the modal with operation parameters
 		                operationData.forEach(parameter => {
 		                    let parameterDiv = document.createElement('div');
 		                    parameterDiv.className = "form-group";
 
 		                    let parameterLabel = document.createElement('label');
 		                    parameterLabel.textContent = `${parameter.name} (${parameter.schema.type}): `;
-		                    parameterLabel.title = parameter.description; // Add description as tooltip
+		                    parameterLabel.title = parameter.description; 
 		                    parameterDiv.appendChild(parameterLabel);
 
 		                    let parameterInput;
@@ -278,12 +312,10 @@
 		                            parameterInput.className = "form-control";
 		                    }
 		                    parameterInput.id = parameter.name;
-		                    
-		                 // Check if there are saved settings for this operation and this parameter
+
 		                    if(operationSettings[operation] && operationSettings[operation][parameter.name] !== undefined) {
 		                        let savedValue = operationSettings[operation][parameter.name];
 
-		                        // Set the value in the input field according to the type of the parameter
 		                        switch(parameter.schema.type) {
 		                            case 'number':
 		                            case 'integer':
@@ -300,14 +332,12 @@
 		                                parameterInput.value = savedValue;
 		                        }
 		                    }
-		                 
-		                 
+
 		                    parameterDiv.appendChild(parameterInput);
 
 		                    pipelineSettingsContent.appendChild(parameterDiv);
 		                });
 
-		                // Add a save button
 		                let saveButton = document.createElement('button');
 		                saveButton.textContent = "Save Settings";
 		                saveButton.className = "btn btn-primary";
@@ -337,30 +367,24 @@
 		                        }
 		                    });
 		                    operationSettings[operation] = settings;
-		                    console.log(settings); // TODO: Save these settings in your desired format
+		                    console.log(settings); 
 		                    pipelineSettingsModal.style.display = "none";
 		                });
 		                pipelineSettingsContent.appendChild(saveButton);
 
-		                // Show the modal
 		                pipelineSettingsModal.style.display = "block";
 
-		                // When the user clicks on <span> (x), close the modal
 		                pipelineSettingsModal.getElementsByClassName("close")[0].onclick = function() {
 		                    pipelineSettingsModal.style.display = "none";
 		                }
 
-		                // When the user clicks anywhere outside of the modal, close it
 		                window.onclick = function(event) {
 		                    if (event.target == pipelineSettingsModal) {
 		                        pipelineSettingsModal.style.display = "none";
 		                    }
 		                }
 		            }
-		            
-		            
-		            
-		            
+
 		            document.getElementById('savePipelineBtn').addEventListener('click', function() {
 		                let pipelineList = document.getElementById('pipelineList').children;
 		                let pipelineConfig = {
@@ -370,12 +394,12 @@
 
 		                if (pipelineList[pipelineList.length - 1].querySelector('.operationName').textContent !== '/add-password') {
 		                    alert('The "add-password" operation should be at the end of the operations sequence. Please adjust the operations order.');
-		                    return;  // Stop the function execution
+		                    return;  
 		                }
-		                
+
 		                for(let i=0; i<pipelineList.length; i++) {
 		                	let operationName = pipelineList[i].querySelector('.operationName').textContent;
-		                	let parameters = operationSettings[operationName] || {}; // Retrieve saved parameters for this operation
+		                	let parameters = operationSettings[operationName] || {}; 
 
 		                    pipelineConfig.pipeline.push({
 		                        "operation": operationName,
@@ -404,26 +428,21 @@
 		                reader.onload = function(event) {
 		                    let pipelineConfig = JSON.parse(event.target.result);
 		                    let pipelineList = document.getElementById('pipelineList');
-		                    
-		                    // clear the existing pipeline list
+
 		                    while(pipelineList.firstChild) {
 		                        pipelineList.removeChild(pipelineList.firstChild);
 		                    }
-		                    
-		                    // populate the pipeline list with operations from the uploaded configuration
+
 		                    pipelineConfig.pipeline.forEach(operationConfig => {
 		                        let operationsDropdown = document.getElementById('operationsDropdown');
 		                        operationsDropdown.value = operationConfig.operation;
 		                        operationSettings[operationConfig.operation] = operationConfig.parameters;
 		                        document.getElementById('addOperationBtn').click();
 
-		                        // get the last added operation
 		                        let lastOperation = pipelineList.lastChild;
 
-		                        // open the settings modal
 		                        lastOperation.querySelector('.pipelineSettings').click();
 
-		                        // set the parameters for the added operation
 		                        Object.keys(operationConfig.parameters).forEach(parameterName => {
 		                            let input = document.getElementById(parameterName);
 		                            if(input) {
@@ -442,15 +461,11 @@
 		                            }
 		                        });
 
-		                        // save the settings
 		                        document.querySelector('#pipelineSettingsModal .btn-primary').click();
 		                    });
 		                };
 		                reader.readAsText(e.target.files[0]);
 		            });
-
-
-
 
 		        });
 				    </script>

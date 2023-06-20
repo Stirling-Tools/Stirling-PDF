@@ -58,7 +58,7 @@ public class ConvertOfficeController {
     @PostMapping(consumes = "multipart/form-data", value = "/file-to-pdf")
     @Operation(
         summary = "Convert a file to a PDF using OCR",
-        description = "This endpoint converts a given file to a PDF using Optical Character Recognition (OCR). The filename of the resulting PDF will be the original filename with '_convertedToPDF.pdf' appended."
+        description = "This endpoint converts a given file to a PDF using LibreOffice API  Input:Any Output:PDF"
     )
     public ResponseEntity<byte[]> processPdfWithOCR(
         @RequestPart(required = true, value = "fileInput")

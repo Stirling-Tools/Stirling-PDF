@@ -32,7 +32,7 @@ public class MultiPageLayoutController {
 	private static final Logger logger = LoggerFactory.getLogger(MultiPageLayoutController.class);
 
 	@PostMapping(value = "/multi-page-layout", consumes = "multipart/form-data")
-	@Operation(summary = "Merge multiple pages of a PDF document into a single page", description = "This operation takes an input PDF file and the number of pages to merge into a single sheet in the output PDF file.")
+	@Operation(summary = "Merge multiple pages of a PDF document into a single page", description = "This operation takes an input PDF file and the number of pages to merge into a single sheet in the output PDF file. Input:PDF Output:PDF")
 	public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(
 			@Parameter(description = "The input PDF file", required = true) @RequestParam("fileInput") MultipartFile file,
 			@Parameter(description = "The number of pages to fit onto a single sheet in the output PDF. Acceptable values are 2, 3, 4, 9, 16.", required = true, schema = @Schema(type = "integer", allowableValues = {

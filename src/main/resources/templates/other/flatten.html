@@ -29,7 +29,7 @@
             const processFile = async (file) => {
                 const origFileUrl = URL.createObjectURL(file);
                 const formPdfBytes = await fetch(origFileUrl).then(res => res.arrayBuffer());
-                const pdfDoc = await PDFDocument.load(formPdfBytes);
+                const pdfDoc = await PDFDocument.load(formPdfBytes, { ignoreEncryption: true });
 
                 const form = pdfDoc.getForm();
                 form.flatten();

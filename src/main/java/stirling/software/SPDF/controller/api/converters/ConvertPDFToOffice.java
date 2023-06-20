@@ -18,7 +18,7 @@ import stirling.software.SPDF.utils.PDFToFile;
 public class ConvertPDFToOffice {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/pdf-to-html")
-	@Operation(summary = "Convert PDF to HTML", description = "This endpoint converts a PDF file to HTML format.")
+	@Operation(summary = "Convert PDF to HTML", description = "This endpoint converts a PDF file to HTML format. Input:PDF Output:HTML")
 	public ResponseEntity<byte[]> processPdfToHTML(
 			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to be converted to HTML format", required = true) MultipartFile inputFile)
 			throws IOException, InterruptedException {
@@ -27,7 +27,7 @@ public class ConvertPDFToOffice {
 	}
 
 	@PostMapping(consumes = "multipart/form-data", value = "/pdf-to-presentation")
-	@Operation(summary = "Convert PDF to Presentation format", description = "This endpoint converts a given PDF file to a Presentation format.")
+	@Operation(summary = "Convert PDF to Presentation format", description = "This endpoint converts a given PDF file to a Presentation format. Input:PDF Output:PPT")
 	public ResponseEntity<byte[]> processPdfToPresentation(
 			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file") MultipartFile inputFile,
 			@RequestParam("outputFormat") @Parameter(description = "The output Presentation format", schema = @Schema(allowableValues = {
@@ -38,7 +38,7 @@ public class ConvertPDFToOffice {
 	}
 
 	@PostMapping(consumes = "multipart/form-data", value = "/pdf-to-text")
-	@Operation(summary = "Convert PDF to Text or RTF format", description = "This endpoint converts a given PDF file to Text or RTF format.")
+	@Operation(summary = "Convert PDF to Text or RTF format", description = "This endpoint converts a given PDF file to Text or RTF format. Input:PDF Output:TXT")
 	public ResponseEntity<byte[]> processPdfToRTForTXT(
 			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file") MultipartFile inputFile,
 			@RequestParam("outputFormat") @Parameter(description = "The output Text or RTF format", schema = @Schema(allowableValues = {
@@ -49,7 +49,7 @@ public class ConvertPDFToOffice {
 	}
 
 	@PostMapping(consumes = "multipart/form-data", value = "/pdf-to-word")
-	@Operation(summary = "Convert PDF to Word document", description = "This endpoint converts a given PDF file to a Word document format.")
+	@Operation(summary = "Convert PDF to Word document", description = "This endpoint converts a given PDF file to a Word document format. Input:PDF Output:WORD")
 	public ResponseEntity<byte[]> processPdfToWord(
 			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file") MultipartFile inputFile,
 			@RequestParam("outputFormat") @Parameter(description = "The output Word document format", schema = @Schema(allowableValues = {
@@ -60,7 +60,7 @@ public class ConvertPDFToOffice {
 	}
 
 	@PostMapping(consumes = "multipart/form-data", value = "/pdf-to-xml")
-	@Operation(summary = "Convert PDF to XML", description = "This endpoint converts a PDF file to an XML file.")
+	@Operation(summary = "Convert PDF to XML", description = "This endpoint converts a PDF file to an XML file. Input:PDF Output:XML")
 	public ResponseEntity<byte[]> processPdfToXML(
 			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to be converted to an XML file", required = true) MultipartFile inputFile)
 			throws IOException, InterruptedException {
