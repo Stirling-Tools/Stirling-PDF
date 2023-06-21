@@ -151,7 +151,7 @@ public class RearrangePagesPDFController {
 	}
 
 	@PostMapping(consumes = "multipart/form-data", value = "/rearrange-pages")
-	@Operation(summary = "Rearrange pages in a PDF file", description = "This endpoint rearranges pages in a given PDF file based on the specified page order or custom mode. Users can provide a page order as a comma-separated list of page numbers or page ranges, or a custom mode.")
+	@Operation(summary = "Rearrange pages in a PDF file", description = "This endpoint rearranges pages in a given PDF file based on the specified page order or custom mode. Users can provide a page order as a comma-separated list of page numbers or page ranges, or a custom mode. Input:PDF Output:PDF")
 	public ResponseEntity<byte[]> rearrangePages(
 			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to rearrange pages") MultipartFile pdfFile,
 			@RequestParam(required = false, value = "pageOrder") @Parameter(description = "The new page order as a comma-separated list of page numbers, page ranges (e.g., '1,3,5-7'), or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')") String pageOrder,

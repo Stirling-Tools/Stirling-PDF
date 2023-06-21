@@ -43,7 +43,7 @@ public class PdfUtils {
 
             // Create images of all pages
             for (int i = 0; i < pageCount; i++) {
-                images.add(pdfRenderer.renderImageWithDPI(i, 300, colorType));
+                images.add(pdfRenderer.renderImageWithDPI(i, DPI, colorType));
             }
 
             if (singleImage) {

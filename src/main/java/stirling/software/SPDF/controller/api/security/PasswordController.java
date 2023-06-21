@@ -44,7 +44,7 @@ public class PasswordController {
     @PostMapping(consumes = "multipart/form-data", value = "/add-password")
     @Operation(
         summary = "Add password to a PDF file",
-        description = "This endpoint adds password protection to a PDF file. Users can specify a set of permissions that should be applied to the file."
+        description = "This endpoint adds password protection to a PDF file. Users can specify a set of permissions that should be applied to the file. Input:PDF Output:PDF"
     )
     public ResponseEntity<byte[]> addPassword(
         @RequestPart(required = true, value = "fileInput")

@@ -114,29 +114,47 @@
 						function validatePipeline() {
 						    let pipelineListItems = document.getElementById('pipelineList').children;
 						    let isValid = true;
-
+							let containsAddPassword = false;
 						    for (let i = 0; i < pipelineListItems.length - 1; i++) {
 						        let currentOperation = pipelineListItems[i].querySelector('.operationName').textContent;
 						        let nextOperation = pipelineListItems[i + 1].querySelector('.operationName').textContent;
-
-						        let currentOperationOutputDescription = apiDocs[`/${currentOperation}`]?.post?.responses["200"]?.description || "";
-						        let nextOperationInputDescription = apiDocs[`/${nextOperation}`]?.post?.requestBody?.content["multipart/form-data"]?.schema?.properties?.fileInput?.description || "";
-
-						        let currentOperationOutputsPDF = currentOperationOutputDescription.toLowerCase().includes("pdf");
-						        let nextOperationExpectsPDF = nextOperationInputDescription.toLowerCase().includes("the pdf file");
-
-						        if (currentOperationOutputsPDF && !nextOperationExpectsPDF) {
-						            isValid = false;
-						            alert(`Incompatible operations: The output of operation '${currentOperation}' is a PDF file but the following operation '${nextOperation}' does not expect a PDF file as input.`);
-						            break;
+						        if(currentOperation === '/add-password'){
+						        	containsAddPassword = true;
 						        }
-						        else if (!currentOperationOutputsPDF && nextOperationExpectsPDF) {
-						            isValid = false;
-						            alert(`Incompatible operations: The operation '${currentOperation}' does not output a PDF file but the following operation '${nextOperation}' expects a PDF file as input.`);
-						            break;
+						        console.log(currentOperation);
+						        console.log(apiDocs[currentOperation]);
+						        let currentOperationDescription = apiDocs[currentOperation]?.post?.description || "";
+						        let nextOperationDescription = apiDocs[nextOperation]?.post?.description || "";
+
+						        console.log("currentOperationDescription",currentOperationDescription);
+						        console.log("nextOperationDescription", nextOperationDescription);
+						        
+						        let currentOperationOutput = currentOperationDescription.match(/Output:([A-Z\/]*)/)?.[1] || "";
+						        let nextOperationInput = nextOperationDescription.match(/Input:([A-Z\/]*)/)?.[1] || "";
+
+						        console.log("Operation " + currentOperation + " Output: " + currentOperationOutput);
+						        console.log("Operation " + nextOperation + " Input: " + nextOperationInput);
+
+						        // Splitting in case of multiple possible output/input
+						        let currentOperationOutputArr = currentOperationOutput.split('/');
+						        let nextOperationInputArr = nextOperationInput.split('/');
+
+						        if (currentOperationOutput !== 'ANY' && nextOperationInput !== 'ANY') {
+						            let intersection = currentOperationOutputArr.filter(value => nextOperationInputArr.includes(value));
+						            console.log(`Intersection: ${intersection}`);
+
+						            if (intersection.length === 0) {
+						                isValid = false;
+						                console.log(`Incompatible operations: The output of operation '${currentOperation}' (${currentOperationOutput}) is not compatible with the input of the following operation '${nextOperation}' (${nextOperationInput}).`);
+						                alert(`Incompatible operations: The output of operation '${currentOperation}' (${currentOperationOutput}) is not compatible with the input of the following operation '${nextOperation}' (${nextOperationInput}).`);
+						                break;
+						            }
 						        }
 						    }
-
+						    if (containsAddPassword && pipelineListItems[pipelineListItems.length - 1].querySelector('.operationName').textContent !== '/add-password') {
+			                    alert('The "add-password" operation should be at the end of the operations sequence. Please adjust the operations order.');
+			                    return false;  
+			                }
 						    if (isValid) {
 						        console.log('Pipeline is valid');
 						        // Continue with the pipeline operation
@@ -144,13 +162,19 @@
 						        console.error('Pipeline is not valid');
 						        // Stop operation, maybe display an error to the user
 						    }
+						    
+						    return isValid;
 						}
+
 
 
 						
 						
 						document.getElementById('submitConfigBtn').addEventListener('click', function() {
-
+							
+							if(validatePipeline() === false){
+								return;
+							}
 						    let selectedOperation = document.getElementById('operationsDropdown').value;
 						    let parameters = operationSettings[selectedOperation] || {};
 
@@ -211,9 +235,11 @@
 		                operationsDropdown.innerHTML = '';
 
 		                Object.keys(apiDocs).forEach(operation => {
-		                    let option = document.createElement('option');
-		                    option.textContent = operation;
-		                    operationsDropdown.appendChild(option);
+		                	if(apiDocs[operation].hasOwnProperty('post')) {
+			                    let option = document.createElement('option');
+			                    option.textContent = operation;
+			                    operationsDropdown.appendChild(option);
+		                	}
 		                });
 		            });
 
@@ -386,16 +412,14 @@
 		            }
 
 		            document.getElementById('savePipelineBtn').addEventListener('click', function() {
+		            	if(validatePipeline() === false){
+							return;
+						}
 		                let pipelineList = document.getElementById('pipelineList').children;
 		                let pipelineConfig = {
 		                    "name": "uniquePipelineName",
 		                    "pipeline": []
 		                };
-
-		                if (pipelineList[pipelineList.length - 1].querySelector('.operationName').textContent !== '/add-password') {
-		                    alert('The "add-password" operation should be at the end of the operations sequence. Please adjust the operations order.');
-		                    return;  
-		                }
 
 		                for(let i=0; i<pipelineList.length; i++) {
 		                	let operationName = pipelineList[i].querySelector('.operationName').textContent;
