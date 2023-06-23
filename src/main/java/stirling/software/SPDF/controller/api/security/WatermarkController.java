@@ -33,7 +33,7 @@ public class WatermarkController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-watermark")
     @Operation(summary = "Add watermark to a PDF file",
-            description = "This endpoint adds a watermark to a given PDF file. Users can specify the watermark text, font size, rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF")
+            description = "This endpoint adds a watermark to a given PDF file. Users can specify the watermark text, font size, rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> addWatermark(
             @RequestPart(required = true, value = "fileInput")
             @Parameter(description = "The input PDF file to add a watermark")

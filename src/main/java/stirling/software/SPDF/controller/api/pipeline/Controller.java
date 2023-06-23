@@ -1,8 +1,10 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,15 +14,26 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import stirling.software.SPDF.model.PipelineConfig;
+import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.io.*;
@@ -32,97 +45,226 @@ import java.util.zip.ZipOutputStream;
 @RestController
 public class Controller {
 
+	@Autowired
+	private ObjectMapper objectMapper;
+	
+	
+	final String jsonFileName = "pipelineCofig.json";
+	final String watchedFoldersDir = "watchedFolders/";
+	@Scheduled(fixedRate = 5000)
+	public void scanFolders() {
+		try (Stream<Path> paths = Files.walk(Paths.get(watchedFoldersDir))) {
+	        paths.filter(Files::isDirectory).forEach(t -> {
+				try {
+					handleDirectory(t);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	private void handleDirectory(Path dir) throws Exception {
+	    Path jsonFile = dir.resolve(jsonFileName);
+	    if (Files.exists(jsonFile)) {
+	        // Read JSON file
+	        String jsonString;
+	        try {
+	            jsonString = new String(Files.readAllBytes(jsonFile));
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            return;
+	        }
+
+	        // Decode JSON to PipelineConfig
+	        PipelineConfig config;
+	        try {
+	            config = objectMapper.readValue(jsonString, PipelineConfig.class);
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            return;
+	        }
+
+	        // For each operation in the pipeline
+	        for (PipelineOperation operation : config.getOperations()) {
+	            // Collect all files based on fileInput
+	            File[] files;
+	            String fileInput = (String) operation.getParameters().get("fileInput");
+	            if ("automated".equals(fileInput)) {
+	                // If fileInput is "automated", process all files in the directory
+	                try (Stream<Path> paths = Files.list(dir)) {
+	                    files = paths.filter(path -> !path.equals(jsonFile))
+	                            .map(Path::toFile)
+	                            .toArray(File[]::new);
+	                } catch (IOException e) {
+	                    e.printStackTrace();
+	                    return;
+	                }
+	            } else {
+	                // If fileInput contains a path, process only this file
+	                files = new File[]{new File(fileInput)};
+	            }
+
+	            // Call handleData for each operation
+	            try {
+	                List<Resource> resources = handleFiles(files, jsonString);
+
+	                // Move resultant files and rename them as per config in JSON file
+	                for (Resource resource : resources) {
+	                    String outputFileName = config.getOutputPattern().replace("{filename}", resource.getFile().getName());
+	                    outputFileName = outputFileName.replace("{pipelineName}", config.getName());
+	                    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+	                    outputFileName = outputFileName.replace("{date}", LocalDate.now().format(dateFormatter));
+	                    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
+	                    outputFileName = outputFileName.replace("{time}", LocalTime.now().format(timeFormatter));
+	                    // ... Replace other placeholders
+
+	                    Files.move(resource.getFile().toPath(), Paths.get(config.getOutputDir(), outputFileName));
+	                }
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	            }
+	        }
+	    }
+	}
+
+
+
+List<Resource> processFiles(List<Resource> outputFiles, String jsonString) throws Exception{
+	ObjectMapper mapper = new ObjectMapper();
+	JsonNode jsonNode = mapper.readTree(jsonString);
+
+	JsonNode pipelineNode = jsonNode.get("pipeline");
+	ByteArrayOutputStream logStream = new ByteArrayOutputStream();
+	PrintStream logPrintStream = new PrintStream(logStream);
+	
+	boolean hasErrors = false;
+
+	for (JsonNode operationNode : pipelineNode) {
+		String operation = operationNode.get("operation").asText();
+		JsonNode parametersNode = operationNode.get("parameters");
+		String inputFileExtension = "";
+		if(operationNode.has("inputFileType")) {
+		 inputFileExtension = operationNode.get("inputFileType").asText();
+		} else {
+			inputFileExtension=".pdf";
+		}
+
+		List<Resource> newOutputFiles = new ArrayList<>();
+		boolean hasInputFileType = false;
+
+		for (Resource file : outputFiles) {
+			if (file.getFilename().endsWith(inputFileExtension)) {
+				hasInputFileType = true;
+				MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+				body.add("fileInput", file);
+
+				Iterator<Map.Entry<String, JsonNode>> parameters = parametersNode.fields();
+				while (parameters.hasNext()) {
+					Map.Entry<String, JsonNode> parameter = parameters.next();
+					body.add(parameter.getKey(), parameter.getValue().asText());
+				}
+
+				HttpHeaders headers = new HttpHeaders();
+				headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+				HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+
+				RestTemplate restTemplate = new RestTemplate();
+				String url = "http://localhost:8080/" + operation;
+
+				ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
+
+				if (!response.getStatusCode().equals(HttpStatus.OK)) {
+					logPrintStream.println("Error: " + response.getBody());
+					hasErrors = true;
+                    continue;
+				}
+
+				// Check if the response body is a zip file
+				if (isZip(response.getBody())) {
+					// Unzip the file and add all the files to the new output files
+					newOutputFiles.addAll(unzip(response.getBody()));
+				} else {
+					Resource outputResource = new ByteArrayResource(response.getBody()) {
+						@Override
+						public String getFilename() {
+							return file.getFilename(); // Preserving original filename
+						}
+					};
+					newOutputFiles.add(outputResource);
+				}
+			}
+
+			 if (!hasInputFileType) {
+                logPrintStream.println("No files with extension " + inputFileExtension + " found for operation " + operation);
+                hasErrors = true;
+            }
+			 
+			outputFiles = newOutputFiles;
+		}
+		logPrintStream.close();
+		
+	}
+	return outputFiles;
+}
+	
+
+List<Resource> handleFiles(File[] files, String jsonString) throws Exception{
+	ObjectMapper mapper = new ObjectMapper();
+	JsonNode jsonNode = mapper.readTree(jsonString);
+
+	JsonNode pipelineNode = jsonNode.get("pipeline");
+	ByteArrayOutputStream logStream = new ByteArrayOutputStream();
+	PrintStream logPrintStream = new PrintStream(logStream);
+	
+	boolean hasErrors = false;
+	List<Resource> outputFiles = new ArrayList<>();
+
+	for (File file : files) {
+		Path path = Paths.get(file.getAbsolutePath());
+        Resource fileResource = new ByteArrayResource(Files.readAllBytes(path)) {
+            @Override
+            public String getFilename() {
+                return file.getName();
+            }
+        };
+		outputFiles.add(fileResource);
+	}
+	return processFiles(outputFiles, jsonString);
+}
+
+	List<Resource> handleFiles(MultipartFile[] files, String jsonString) throws Exception{
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode jsonNode = mapper.readTree(jsonString);
+
+		JsonNode pipelineNode = jsonNode.get("pipeline");
+		ByteArrayOutputStream logStream = new ByteArrayOutputStream();
+		PrintStream logPrintStream = new PrintStream(logStream);
+		
+		boolean hasErrors = false;
+		List<Resource> outputFiles = new ArrayList<>();
+
+		for (MultipartFile file : files) {
+			Resource fileResource = new ByteArrayResource(file.getBytes()) {
+				@Override
+				public String getFilename() {
+					return file.getOriginalFilename();
+				}
+			};
+			outputFiles.add(fileResource);
+		}
+		return processFiles(outputFiles, jsonString);
+	}
+	
 	@PostMapping("/handleData")
 	public ResponseEntity<byte[]> handleData(@RequestPart("fileInput") MultipartFile[] files,
 			@RequestParam("json") String jsonString) {
 		try {
-			ObjectMapper mapper = new ObjectMapper();
-			JsonNode jsonNode = mapper.readTree(jsonString);
-
-			JsonNode pipelineNode = jsonNode.get("pipeline");
-			ByteArrayOutputStream logStream = new ByteArrayOutputStream();
-			PrintStream logPrintStream = new PrintStream(logStream);
 			
-			boolean hasErrors = false;
-			List<Resource> outputFiles = new ArrayList<>();
-
-			for (MultipartFile file : files) {
-				Resource fileResource = new ByteArrayResource(file.getBytes()) {
-					@Override
-					public String getFilename() {
-						return file.getOriginalFilename();
-					}
-				};
-				outputFiles.add(fileResource);
-			}
-
-			for (JsonNode operationNode : pipelineNode) {
-				String operation = operationNode.get("operation").asText();
-				JsonNode parametersNode = operationNode.get("parameters");
-				String inputFileExtension = "";
-				if(operationNode.has("inputFileType")) {
-				 inputFileExtension = operationNode.get("inputFileType").asText();
-				} else {
-					inputFileExtension=".pdf";
-				}
-
-				List<Resource> newOutputFiles = new ArrayList<>();
-				boolean hasInputFileType = false;
-
-				for (Resource file : outputFiles) {
-					if (file.getFilename().endsWith(inputFileExtension)) {
-						hasInputFileType = true;
-						MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-						body.add("fileInput", file);
-
-						Iterator<Map.Entry<String, JsonNode>> parameters = parametersNode.fields();
-						while (parameters.hasNext()) {
-							Map.Entry<String, JsonNode> parameter = parameters.next();
-							body.add(parameter.getKey(), parameter.getValue().asText());
-						}
-
-						HttpHeaders headers = new HttpHeaders();
-						headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-						HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
-
-						RestTemplate restTemplate = new RestTemplate();
-						String url = "http://localhost:8080/" + operation;
-
-						ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
-
-						if (!response.getStatusCode().equals(HttpStatus.OK)) {
-							logPrintStream.println("Error: " + response.getBody());
-							hasErrors = true;
-                            continue;
-						}
-
-						// Check if the response body is a zip file
-						if (isZip(response.getBody())) {
-							// Unzip the file and add all the files to the new output files
-							newOutputFiles.addAll(unzip(response.getBody()));
-						} else {
-							Resource outputResource = new ByteArrayResource(response.getBody()) {
-								@Override
-								public String getFilename() {
-									return file.getFilename(); // Preserving original filename
-								}
-							};
-							newOutputFiles.add(outputResource);
-						}
-					}
-
-					 if (!hasInputFileType) {
-	                    logPrintStream.println("No files with extension " + inputFileExtension + " found for operation " + operation);
-	                    hasErrors = true;
-	                }
-					 
-					outputFiles = newOutputFiles;
-				}
-				logPrintStream.close();
-				
-			}
-			
+		List<Resource> outputFiles = handleFiles(files, jsonString);
 
 		if (outputFiles.size() == 1) {
 		    // If there is only one file, return it directly

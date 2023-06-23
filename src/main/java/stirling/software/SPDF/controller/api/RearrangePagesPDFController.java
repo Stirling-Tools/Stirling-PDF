@@ -27,7 +27,7 @@ public class RearrangePagesPDFController {
 	private static final Logger logger = LoggerFactory.getLogger(RearrangePagesPDFController.class);
 
 	@PostMapping(consumes = "multipart/form-data", value = "/remove-pages")
-	@Operation(summary = "Remove pages from a PDF file", description = "This endpoint removes specified pages from a given PDF file. Users can provide a comma-separated list of page numbers or ranges to delete. Input:PDF Output:PDF")
+	@Operation(summary = "Remove pages from a PDF file", description = "This endpoint removes specified pages from a given PDF file. Users can provide a comma-separated list of page numbers or ranges to delete. Input:PDF Output:PDF Type:SISO")
 	public ResponseEntity<byte[]> deletePages(
 			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file from which pages will be removed") MultipartFile pdfFile,
 			@RequestParam("pagesToDelete") @Parameter(description = "Comma-separated list of pages or page ranges to delete, e.g., '1,3,5-8'") String pagesToDelete)

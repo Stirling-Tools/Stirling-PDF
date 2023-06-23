@@ -54,9 +54,9 @@ import java.util.Random;
 import io.swagger.v3.oas.annotations.Hidden;
 
 @RestController
-public class FakeScanController {
+public class FakeScanControllerWIP {
 
-    private static final Logger logger = LoggerFactory.getLogger(FakeScanController.class);
+    private static final Logger logger = LoggerFactory.getLogger(FakeScanControllerWIP.class);
 
     //TODO
     @Hidden

@@ -41,7 +41,7 @@ public class ExtractImageScansController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
     @Operation(summary = "Extract image scans from an input file",
-            description = "This endpoint extracts image scans from a given file based on certain parameters. Users can specify angle threshold, tolerance, minimum area, minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP")
+            description = "This endpoint extracts image scans from a given file based on certain parameters. Users can specify angle threshold, tolerance, minimum area, minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP Type:SIMO")
     public ResponseEntity<byte[]> extractImageScans(
             @RequestPart(required = true, value = "fileInput")
             @Parameter(description = "The input file containing image scans")

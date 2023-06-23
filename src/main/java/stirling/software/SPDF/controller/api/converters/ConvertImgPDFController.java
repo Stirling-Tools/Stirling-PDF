@@ -29,7 +29,7 @@ public class ConvertImgPDFController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf-to-img")
     @Operation(summary = "Convert PDF to image(s)",
-            description = "This endpoint converts a PDF file to image(s) with the specified image format, color type, and DPI. Users can choose to get a single image or multiple images.  Input:PDF Output:Image")
+            description = "This endpoint converts a PDF file to image(s) with the specified image format, color type, and DPI. Users can choose to get a single image or multiple images.  Input:PDF Output:Image Type:SI-Conditional")
     public ResponseEntity<Resource> convertToImage(
             @RequestPart(required = true, value = "fileInput")
             @Parameter(description = "The input PDF file to be converted")
@@ -83,7 +83,7 @@ public class ConvertImgPDFController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/img-to-pdf")
     @Operation(summary = "Convert images to a PDF file",
-            description = "This endpoint converts one or more images to a PDF file. Users can specify whether to stretch the images to fit the PDF page, and whether to automatically rotate the images. Input:Image Output:PDF")
+            description = "This endpoint converts one or more images to a PDF file. Users can specify whether to stretch the images to fit the PDF page, and whether to automatically rotate the images. Input:Image Output:PDF Type:MISO")
     public ResponseEntity<byte[]> convertToPdf(
             @RequestPart(required = true, value = "fileInput")
             @Parameter(description = "The input images to be converted to a PDF file")

@@ -41,7 +41,7 @@ public class CompressController {
     private static final Logger logger = LoggerFactory.getLogger(CompressController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/compress-pdf")
-    @Operation(summary = "Optimize PDF file", description = "This endpoint accepts a PDF file and optimizes it based on the provided parameters. Input:PDF Output:PDF")
+    @Operation(summary = "Optimize PDF file", description = "This endpoint accepts a PDF file and optimizes it based on the provided parameters. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> optimizePdf(
             @RequestPart(value = "fileInput") @Parameter(description = "The input PDF file to be optimized.", required = true) MultipartFile inputFile,
             @RequestParam(required = false, value = "optimizeLevel") @Parameter(description = "The level of optimization to apply to the PDF file. Higher values indicate greater compression but may reduce quality.", schema = @Schema(allowableValues = {
