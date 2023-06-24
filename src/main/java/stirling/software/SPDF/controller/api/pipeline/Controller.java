@@ -119,7 +119,7 @@ public class Controller {
 	                    outputFileName = outputFileName.replace("{date}", LocalDate.now().format(dateFormatter));
 	                    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
 	                    outputFileName = outputFileName.replace("{time}", LocalTime.now().format(timeFormatter));
-	                    // ... Replace other placeholders
+	                    // {filename} {folder} {date} {tmime} {pipeline}
 
 	                    Files.move(resource.getFile().toPath(), Paths.get(config.getOutputDir(), outputFileName));
 	                }
