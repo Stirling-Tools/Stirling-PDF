@@ -27,14 +27,38 @@ import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.itextpdf.kernel.pdf.PdfPage;
+import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
+import com.itextpdf.kernel.pdf.canvas.parser.listener.SimpleTextExtractionStrategy;
+
+import stirling.software.SPDF.pdf.ImageFinder;
 
 public class PdfUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
 
+    public static boolean hasImagesOnPage(PDPage page) throws IOException {
+        ImageFinder imageFinder = new ImageFinder(page);
+        imageFinder.processPage(page);
+        return imageFinder.hasImages();
+    }
+    
+    public static boolean hasTextOnPage(PdfPage page, String phrase) throws IOException {
+         String text = PdfTextExtractor.getTextFromPage(page, new SimpleTextExtractionStrategy());
+         return text.contains(phrase);
+    }
+    public static boolean hasText(PDDocument  document, String phrase) throws IOException {
+    	PDFTextStripper pdfStripper = new PDFTextStripper();
+        String text = pdfStripper.getText(document);
+        return text.contains(phrase);
+   }
+    
+    
     public static byte[] convertFromPdf(byte[] inputStream, String imageType, ImageType colorType, boolean singleImage, int DPI, String filename) throws IOException, Exception {
         try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputStream))) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
@@ -43,7 +67,7 @@ public class PdfUtils {
 
             // Create images of all pages
             for (int i = 0; i < pageCount; i++) {
-                images.add(pdfRenderer.renderImageWithDPI(i, 300, colorType));
+                images.add(pdfRenderer.renderImageWithDPI(i, DPI, colorType));
             }
 
             if (singleImage) {

@@ -25,7 +25,7 @@ public class OverlayImageController {
     @PostMapping(consumes = "multipart/form-data", value = "/add-image")
     @Operation(
         summary = "Overlay image onto a PDF file",
-        description = "This endpoint overlays an image onto a PDF file at the specified coordinates. The image can be overlaid on every page of the PDF if specified."
+        description = "This endpoint overlays an image onto a PDF file at the specified coordinates. The image can be overlaid on every page of the PDF if specified.  Input:PDF/IMAGE Output:PDF Type:MF-SISO"
     )
     public ResponseEntity<byte[]> overlayImage(
         @RequestPart(required = true, value = "fileInput")

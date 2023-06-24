@@ -47,7 +47,7 @@ public class OCRController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
     @Operation(summary = "Process a PDF file with OCR",
-            description = "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options.")
+            description = "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options. Input:PDF Output:PDF Type:SI-Conditional")
     public ResponseEntity<byte[]> processPdfWithOCR(
             @RequestPart(required = true, value = "fileInput")
             @Parameter(description = "The input PDF file to be processed with OCR")

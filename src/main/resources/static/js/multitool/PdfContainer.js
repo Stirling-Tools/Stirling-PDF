@@ -152,7 +152,7 @@ class PdfContainer {
 
     async toPdfLib(objectUrl) {
         const existingPdfBytes = await fetch(objectUrl).then(res => res.arrayBuffer());
-        const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+        const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes, { ignoreEncryption: true });
         return pdfDoc;
     }
 

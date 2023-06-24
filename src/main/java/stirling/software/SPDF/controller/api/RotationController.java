@@ -26,7 +26,7 @@ public class RotationController {
     @PostMapping(consumes = "multipart/form-data", value = "/rotate-pdf")
     @Operation(
         summary = "Rotate a PDF file",
-        description = "This endpoint rotates a given PDF file by a specified angle. The angle must be a multiple of 90."
+        description = "This endpoint rotates a given PDF file by a specified angle. The angle must be a multiple of 90. Input:PDF Output:PDF Type:SISO"
     )
     public ResponseEntity<byte[]> rotatePDF(
         @RequestPart(required = true, value = "fileInput")

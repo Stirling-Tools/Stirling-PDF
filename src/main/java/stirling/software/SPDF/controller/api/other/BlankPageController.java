@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.pdf.ImageFinder;
+import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -38,7 +39,7 @@ public class BlankPageController {
 	@PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
 	@Operation(
 	    summary = "Remove blank pages from a PDF file",
-	    description = "This endpoint removes blank pages from a given PDF file. Users can specify the threshold and white percentage to tune the detection of blank pages."
+	    description = "This endpoint removes blank pages from a given PDF file. Users can specify the threshold and white percentage to tune the detection of blank pages. Input:PDF Output:PDF Type:SISO"
 	)
 	public ResponseEntity<byte[]> removeBlankPages(
 	    @RequestPart(required = true, value = "fileInput")
@@ -71,7 +72,7 @@ public class BlankPageController {
                     pagesToKeepIndex.add(pageIndex);
                     System.out.println("page " + pageIndex + " has text");
                 } else {
-                    boolean hasImages = hasImagesOnPage(page);
+                    boolean hasImages = PdfUtils.hasImagesOnPage(page);
                     if (hasImages) {
                         System.out.println("page " + pageIndex + " has image");
     
@@ -120,9 +121,5 @@ public class BlankPageController {
     }
 
 
-    private static boolean hasImagesOnPage(PDPage page) throws IOException {
-        ImageFinder imageFinder = new ImageFinder(page);
-        imageFinder.processPage(page);
-        return imageFinder.hasImages();
-    }
+    
 }

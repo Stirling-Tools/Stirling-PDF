@@ -4,482 +4,126 @@
 	xmlns:th="http://www.thymeleaf.org">
 
 <th:block th:insert="~{fragments/common :: head(title=#{merge.title})}"></th:block>
-
-
 <body>
-	<div id="page-container">
-		<div id="content-wrap">
-			<div th:insert="~{fragments/navbar.html :: navbar}"></div>
-			<br> <br>
-			<div class="container" id="dropContainer">
-				<div class="row justify-content-center">
-					<div class="col-md-6">
+    <style>
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            padding-top: 100px; /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0); /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+        }
+
+        .btn-margin {
+            margin-right: 2px;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+
+    <div id="page-container">
+    <div id="content-wrap">
+        <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+        
+        <div class="container" id="dropContainer">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+
+                    <!-- Homepage -->
+                    <div class="mb-3">
+                        <div class="form-group">
+                            <label>Pipelines</label> 
+                            <select class="form-control" name="Pipelines">
+                                <option value="example">example</option>
+                                <option value="Pipelines2">example2</option>
+                            </select>
+                        </div>
+                        <button id="customizeBtn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#pipelineModal">Customize</button>
+                        <button id="addNewPipelineBtn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#pipelineModal">Add New Pipeline</button>
+                        <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                        <button class="btn btn-primary" id="submitBtn">Submit</button>
+                    </div>
+
+                    <!-- Pipeline Modal -->
+                    <div id="pipelineModal" class="modal fade" tabindex="-1" aria-labelledby="pipelineModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h2 class="modal-title">Pipeline Configuration</h2>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <!-- Buttons -->
+                                    <div class="mb-3">
+                                        <button id="savePipelineBtn" class="btn btn-success">Save Configuration</button>
+                                        <button id="validateButton" class="btn btn-success">Validate</button>
+                                        <div class="btn-group">
+                                            <button id="uploadPipelineBtn" class="btn btn-primary">Upload Configuration</button>
+                                            <input type="file" id="uploadPipelineInput" accept=".json" style="display: none;">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Operations dropdown and Add operation button -->
+                                    <div class="mb-3">
+                                        <select id="operationsDropdown" class="form-select">
+                                            <!-- Options will be dynamically populated here -->
+                                        </select>
+                                        <button id="addOperationBtn" class="btn btn-primary">Add operation to pipeline</button>
+                                    </div>
+
+                                    <!-- Pipeline operations list -->
+                                    <h3>Pipeline:</h3>
+                                    <ol id="pipelineList" class="list-group">
+                                        <!-- Pipeline operations will be dynamically populated here -->
+                                    </ol>
+                                </div>
+                                
+                                <div class="modal-footer">
+                                    <button class="btn btn-primary" id="submitConfigBtn">Submit</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- pipelineSettings modal -->
+                    <div id="pipelineSettingsModal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <span class="close">&times;</span>
+                                <h2>Operation Settings</h2>
+                                <div id="pipelineSettingsContent">
+                                    <!-- pipelineSettings will be dynamically populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script src="js/pipeline.js"></script>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:insert="~{fragments/footer.html :: footer}"></div>
+</div>
 
-						<div class="mb-3">
-							<button id="savePipelineBtn" class="btn btn-success">Save
-								Pipeline Configuration</button>
-							<div class="btn-group">
-								<button id="uploadPipelineBtn" class="btn btn-primary">Upload
-									Pipeline Configuration</button>
-								<input type="file" id="uploadPipelineInput" accept=".json"
-									style="display: none;">
-							</div>
-						</div>
-
-						<div id="pipelineContainer" class="card">
-
-							<!-- Pipeline Configuration Card Header -->
-							<div class="card-header">
-								<h2 class="card-title">Pipeline Configuration</h2>
-							</div>
-
-							<!-- Pipeline Configuration Body -->
-							<div class="card-body">
-								<div class="mb-3">
-									<select id="operationsDropdown" class="form-select">
-										<!-- Options will be dynamically populated here -->
-									</select>
-								</div>
-								<div class="mb-3">
-									<button id="addOperationBtn" class="btn btn-primary">Add
-										operation to pipeline</button>
-								</div>
-								<h3>Pipeline:</h3>
-								<ol id="pipelineList" class="list-group">
-									<!-- Pipeline operations will be dynamically populated here -->
-								</ol>
-							</div>
-							
-							<input type="file" id="fileInput" multiple>
-							
-							<button class="btn btn-primary" id="submitConfigBtn">Submit</button>
-							
-
-						</div>
-
-						<!-- pipelineSettings modal -->
-						<div id="pipelineSettingsModal" class="modal">
-							<div class="modal-content">
-								<div class="modal-body">
-									<span class="close">&times;</span>
-									<h2>Operation Settings</h2>
-									<div id="pipelineSettingsContent">
-										<!-- pipelineSettings will be dynamically populated here -->
-									</div>
-								</div>
-							</div>
-						</div>
-						<style>
-.modal {
-	display: none; /* Hidden by default */
-	position: fixed; /* Stay in place */
-	z-index: 1; /* Sit on top */
-	padding-top: 100px; /* Location of the box */
-	left: 0;
-	top: 0;
-	width: 100%; /* Full width */
-	height: 100%; /* Full height */
-	overflow: auto; /* Enable scroll if needed */
-	background-color: rgb(0, 0, 0); /* Fallback color */
-	background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
-}
-
-/* Modal Content */
-.modal-content {
-	background-color: #fefefe;
-	margin: auto;
-	padding: 20px;
-	border: 1px solid #888;
-	width: 50%;
-}
-
-.btn-margin {
-	margin-right: 2px;
-}
-
-.modal-body {
-	display: flex;
-	flex-direction: column;
-}
-</style>
-						<script>
-				    
-						document.getElementById('submitConfigBtn').addEventListener('click', function() {
-						    // Get the selected configuration
-						    let selectedOperation = document.getElementById('operationsDropdown').value;
-						    let parameters = operationSettings[selectedOperation] || {};
-
-						    // Create the pipelineConfig object
-						    let pipelineConfig = {
-						        "name": "uniquePipelineName",
-						        "pipeline": [{
-						            "operation": selectedOperation,
-						            "parameters": parameters
-						        }]
-						    };
-
-						    let pipelineConfigJson = JSON.stringify(pipelineConfig, null, 2);
-
-						    // Create new FormData instance
-						    let formData = new FormData();
-
-						    // Get the selected files from the file input
-						    let fileInput = document.getElementById('fileInput');
-						    let files = fileInput.files;
-
-						    // Add files to formData
-						    for(let i = 0; i < files.length; i++) {
-						    	console.log("files[i]",files[i].name);
-						        formData.append('fileInput', files[i], files[i].name);
-						    }
-
-						    // Add the JSON string to formData
-						    console.log("pipelineConfigJson",pipelineConfigJson);
-						    formData.append('json', pipelineConfigJson);
-							console.log("formData",formData);
-						    // Make a POST request to the server
-							fetch('/handleData', {
-							    method: 'POST',
-							    body: formData
-							})
-							.then(response => response.blob())
-							.then(blob => {
-							    // Create a link element
-							    let url = window.URL.createObjectURL(blob);
-							    let a = document.createElement('a');
-							    a.href = url;
-							    a.download = 'outputfile';  // or you can name your output file here
-							    document.body.appendChild(a); // Required for Firefox
-							    a.click();
-							    a.remove(); // After triggering download we remove the element
-							})
-							.catch((error) => {
-							    console.error('Error:', error);
-							});
-						});
-
-
-						
-				    let apiDocs = {};
-				    
-				    let operationSettings = {};
-
-				    fetch('v3/api-docs')
-		            .then(response => response.json())
-		            .then(data => {
-		            	apiDocs = data.paths;
-		                let operationsDropdown = document.getElementById('operationsDropdown');
-
-		                operationsDropdown.innerHTML = '';
-
-		                Object.keys(apiDocs).forEach(operation => {
-		                    let option = document.createElement('option');
-		                    option.textContent = operation;
-		                    operationsDropdown.appendChild(option);
-		                });
-		            });
-
-		        document.getElementById('addOperationBtn').addEventListener('click', function() {
-		            let selectedOperation = document.getElementById('operationsDropdown').value;
-		            let pipelineList = document.getElementById('pipelineList');
-
-		            // Add the selected operation to the pipeline list
-		            let listItem = document.createElement('li');
-		            listItem.className = "list-group-item";
-		            listItem.innerHTML = `
-		                <div class="d-flex justify-content-between align-items-center w-100">
-		                    <div class="operationName">${selectedOperation}</div>
-		                    <div class="arrows d-flex">
-		                        <button class="btn btn-secondary move-up btn-margin"><span>&uarr;</span></button>
-		                        <button class="btn btn-secondary move-down btn-margin"><span>&darr;</span></button>
-		                        <button class="btn btn-warning pipelineSettings btn-margin"><span>⚙️</span></button>
-		                        <button class="btn btn-danger remove"><span>X</span></button>
-		                    </div>
-		                </div>
-		            `;
-
-		            pipelineList.appendChild(listItem);
-
-		            listItem.querySelector('.move-up').addEventListener('click', function(event) {
-		                event.preventDefault();
-		                if (listItem.previousElementSibling) {
-		                    pipelineList.insertBefore(listItem, listItem.previousElementSibling);
-		                }
-		            });
-
-		            listItem.querySelector('.move-down').addEventListener('click', function(event) {
-		                event.preventDefault();
-		                if (listItem.nextElementSibling) {
-		                    pipelineList.insertBefore(listItem.nextElementSibling, listItem);
-		                }
-		            });
-
-		            listItem.querySelector('.remove').addEventListener('click', function(event) {
-		                event.preventDefault();
-		                pipelineList.removeChild(listItem);
-		            });
-		            
-		            listItem.querySelector('.pipelineSettings').addEventListener('click', function(event) {
-		                event.preventDefault();
-		                showpipelineSettingsModal(selectedOperation);
-		            });
-		            
-		            
-		            function showpipelineSettingsModal(operation) {
-		                let pipelineSettingsModal = document.getElementById('pipelineSettingsModal');
-		                let pipelineSettingsContent = document.getElementById('pipelineSettingsContent');
-		                let operationData = apiDocs[operation].post.parameters || [];
-
-		                // Clear the modal
-		                pipelineSettingsContent.innerHTML = '';
-
-		             	// Populate the modal with operation parameters
-		                operationData.forEach(parameter => {
-		                    let parameterDiv = document.createElement('div');
-		                    parameterDiv.className = "form-group";
-
-		                    let parameterLabel = document.createElement('label');
-		                    parameterLabel.textContent = `${parameter.name} (${parameter.schema.type}): `;
-		                    parameterLabel.title = parameter.description; // Add description as tooltip
-		                    parameterDiv.appendChild(parameterLabel);
-
-		                    let parameterInput;
-		                    switch(parameter.schema.type) {
-		                        case 'string':
-		                        case 'number':
-		                        case 'integer':
-		                            parameterInput = document.createElement('input');
-		                            parameterInput.type = parameter.schema.type === 'string' ? 'text' : 'number';
-		                            parameterInput.className = "form-control";
-		                            break;
-		                        case 'boolean':
-		                            parameterInput = document.createElement('input');
-		                            parameterInput.type = 'checkbox';
-		                            break;
-		                        case 'array':
-		                        case 'object':
-		                            parameterInput = document.createElement('textarea');
-		                            parameterInput.placeholder = `Enter a JSON formatted ${parameter.schema.type}`;
-		                            parameterInput.className = "form-control";
-		                            break;
-		                        case 'enum':
-		                            parameterInput = document.createElement('select');
-		                            parameterInput.className = "form-control";
-		                            parameter.schema.enum.forEach(option => {
-		                                let optionElement = document.createElement('option');
-		                                optionElement.value = option;
-		                                optionElement.text = option;
-		                                parameterInput.appendChild(optionElement);
-		                            });
-		                            break;
-		                        default:
-		                            parameterInput = document.createElement('input');
-		                            parameterInput.type = 'text';
-		                            parameterInput.className = "form-control";
-		                    }
-		                    parameterInput.id = parameter.name;
-		                    
-		                 // Check if there are saved settings for this operation and this parameter
-		                    if(operationSettings[operation] && operationSettings[operation][parameter.name] !== undefined) {
-		                        let savedValue = operationSettings[operation][parameter.name];
-
-		                        // Set the value in the input field according to the type of the parameter
-		                        switch(parameter.schema.type) {
-		                            case 'number':
-		                            case 'integer':
-		                                parameterInput.value = savedValue.toString();
-		                                break;
-		                            case 'boolean':
-		                                parameterInput.checked = savedValue;
-		                                break;
-		                            case 'array':
-		                            case 'object':
-		                                parameterInput.value = JSON.stringify(savedValue);
-		                                break;
-		                            default:
-		                                parameterInput.value = savedValue;
-		                        }
-		                    }
-		                 
-		                 
-		                    parameterDiv.appendChild(parameterInput);
-
-		                    pipelineSettingsContent.appendChild(parameterDiv);
-		                });
-
-		                // Add a save button
-		                let saveButton = document.createElement('button');
-		                saveButton.textContent = "Save Settings";
-		                saveButton.className = "btn btn-primary";
-		                saveButton.addEventListener('click', function(event) {
-		                    event.preventDefault();
-		                    let settings = {};
-		                    operationData.forEach(parameter => {
-		                        let value = document.getElementById(parameter.name).value;
-		                        switch(parameter.schema.type) {
-		                            case 'number':
-		                            case 'integer':
-		                                settings[parameter.name] = Number(value);
-		                                break;
-		                            case 'boolean':
-		                                settings[parameter.name] = document.getElementById(parameter.name).checked;
-		                                break;
-		                            case 'array':
-		                            case 'object':
-		                                try {
-		                                    settings[parameter.name] = JSON.parse(value);
-		                                } catch(err) {
-		                                    console.error(`Invalid JSON format for ${parameter.name}`);
-		                                }
-		                                break;
-		                            default:
-		                                settings[parameter.name] = value;
-		                        }
-		                    });
-		                    operationSettings[operation] = settings;
-		                    console.log(settings); // TODO: Save these settings in your desired format
-		                    pipelineSettingsModal.style.display = "none";
-		                });
-		                pipelineSettingsContent.appendChild(saveButton);
-
-		                // Show the modal
-		                pipelineSettingsModal.style.display = "block";
-
-		                // When the user clicks on <span> (x), close the modal
-		                pipelineSettingsModal.getElementsByClassName("close")[0].onclick = function() {
-		                    pipelineSettingsModal.style.display = "none";
-		                }
-
-		                // When the user clicks anywhere outside of the modal, close it
-		                window.onclick = function(event) {
-		                    if (event.target == pipelineSettingsModal) {
-		                        pipelineSettingsModal.style.display = "none";
-		                    }
-		                }
-		            }
-		            
-		            
-		            
-		            
-		            document.getElementById('savePipelineBtn').addEventListener('click', function() {
-		                let pipelineList = document.getElementById('pipelineList').children;
-		                let pipelineConfig = {
-		                    "name": "uniquePipelineName",
-		                    "pipeline": []
-		                };
-
-		                if (pipelineList[pipelineList.length - 1].querySelector('.operationName').textContent !== '/add-password') {
-		                    alert('The "add-password" operation should be at the end of the operations sequence. Please adjust the operations order.');
-		                    return;  // Stop the function execution
-		                }
-		                
-		                for(let i=0; i<pipelineList.length; i++) {
-		                	let operationName = pipelineList[i].querySelector('.operationName').textContent;
-		                	let parameters = operationSettings[operationName] || {}; // Retrieve saved parameters for this operation
-
-		                    pipelineConfig.pipeline.push({
-		                        "operation": operationName,
-		                        "parameters": parameters
-		                    });
-		                }
-
-		                let a = document.createElement('a');
-		                a.href = URL.createObjectURL(new Blob([JSON.stringify(pipelineConfig, null, 2)], {
-		                    type: 'application/json'
-		                }));
-		                a.download = 'pipelineConfig.json';
-		                a.style.display = 'none';
-
-		                document.body.appendChild(a);
-		                a.click();
-		                document.body.removeChild(a);
-		            });
-
-		            document.getElementById('uploadPipelineBtn').addEventListener('click', function() {
-		                document.getElementById('uploadPipelineInput').click();
-		            });
-
-		            document.getElementById('uploadPipelineInput').addEventListener('change', function(e) {
-		                let reader = new FileReader();
-		                reader.onload = function(event) {
-		                    let pipelineConfig = JSON.parse(event.target.result);
-		                    let pipelineList = document.getElementById('pipelineList');
-		                    
-		                    // clear the existing pipeline list
-		                    while(pipelineList.firstChild) {
-		                        pipelineList.removeChild(pipelineList.firstChild);
-		                    }
-		                    
-		                    // populate the pipeline list with operations from the uploaded configuration
-		                    pipelineConfig.pipeline.forEach(operationConfig => {
-		                        let operationsDropdown = document.getElementById('operationsDropdown');
-		                        operationsDropdown.value = operationConfig.operation;
-		                        operationSettings[operationConfig.operation] = operationConfig.parameters;
-		                        document.getElementById('addOperationBtn').click();
-
-		                        // get the last added operation
-		                        let lastOperation = pipelineList.lastChild;
-
-		                        // open the settings modal
-		                        lastOperation.querySelector('.pipelineSettings').click();
-
-		                        // set the parameters for the added operation
-		                        Object.keys(operationConfig.parameters).forEach(parameterName => {
-		                            let input = document.getElementById(parameterName);
-		                            if(input) {
-		                                switch(input.type) {
-		                                    case 'checkbox':
-		                                        input.checked = operationConfig.parameters[parameterName];
-		                                        break;
-		                                    case 'number':
-		                                        input.value = operationConfig.parameters[parameterName].toString();
-		                                        break;
-		                                    case 'text':
-		                                    case 'textarea':
-		                                    default:
-		                                        input.value = JSON.stringify(operationConfig.parameters[parameterName]);
-		                                }
-		                            }
-		                        });
-
-		                        // save the settings
-		                        document.querySelector('#pipelineSettingsModal .btn-primary').click();
-		                    });
-		                };
-		                reader.readAsText(e.target.files[0]);
-		            });
-
-
-
-
-		        });
-				    </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-					</div>
-				</div>
-			</div>
-		</div>
-		<div th:insert="~{fragments/footer.html :: footer}"></div>
-	</div>
 </body>
 </html>

@@ -38,7 +38,7 @@ public class MetadataController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/update-metadata")
     @Operation(summary = "Update metadata of a PDF file",
-            description = "This endpoint allows you to update the metadata of a given PDF file. You can add, modify, or delete standard and custom metadata fields.")
+            description = "This endpoint allows you to update the metadata of a given PDF file. You can add, modify, or delete standard and custom metadata fields. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> metadata(
             @RequestPart(required = true, value = "fileInput")
             @Parameter(description = "The input PDF file to update metadata")
