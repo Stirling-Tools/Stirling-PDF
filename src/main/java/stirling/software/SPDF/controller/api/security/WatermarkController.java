@@ -18,6 +18,10 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.cybozu.labs.langdetect.Detector;
+import com.cybozu.labs.langdetect.DetectorFactory;
+import com.cybozu.labs.langdetect.LangDetectException;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -55,7 +59,7 @@ public class WatermarkController {
                     int widthSpacer,
             @RequestParam(defaultValue = "50", name = "heightSpacer")
             @Parameter(description = "The height spacer between watermark texts", example = "50")
-                    int heightSpacer) throws IOException {
+                    int heightSpacer) throws IOException, Exception {
 
         // Load the input PDF
         PDDocument document = PDDocument.load(pdfFile.getInputStream());
@@ -71,15 +75,43 @@ public class WatermarkController {
             graphicsState.setNonStrokingAlphaConstant(opacity);
             contentStream.setGraphicsStateParameters(graphicsState);
 
+            DetectorFactory.loadProfile("profiles");
+            
+            Detector detector = DetectorFactory.create();
+            detector.append(watermarkText);
+            String lang = detector.detect();
+
+            System.out.println("Detected lang" + lang);
             // Set font of watermark
          // Load NotoSans-Regular font from resources
-            ClassPathResource classPathResource = new ClassPathResource("static/fonts/NotoSans-Regular.ttf");
-            File tempFile = File.createTempFile("NotoSans-Regular", ".ttf");
-            try (InputStream is = classPathResource.getInputStream(); FileOutputStream os = new FileOutputStream(tempFile)) {
-                IOUtils.copy(is, os);
+            String resourceDir = "";
+            PDFont font = PDType1Font.HELVETICA_BOLD;
+            switch (lang) {
+                case "ar":
+                    resourceDir = "src/main/resources/static/fonts/NotoSansArabic-Regular.ttf";
+                    break;
+                case "ja":
+                    resourceDir = "src/main/resources/static/fonts/NotoSansJP-Regular.otf";
+                    break;
+                case "ko":
+                    resourceDir = "src/main/resources/static/fonts/NotoSansKR-Regular.otf";
+                    break;
+                case "zh-cn":
+                    resourceDir = "src/main/resources/static/fonts/NotoSansSC-Regular.otf";
+                    break;
+                default:
+                    font = PDType1Font.HELVETICA_BOLD;
             }
-            PDFont font = PDType0Font.load(document, tempFile);
-            
+
+            if(!resourceDir.equals("")) {
+	            ClassPathResource classPathResource = new ClassPathResource("static/fonts/NotoSans-Regular.ttf");
+	            File tempFile = File.createTempFile("NotoSans-Regular", ".ttf");
+	            try (InputStream is = classPathResource.getInputStream(); FileOutputStream os = new FileOutputStream(tempFile)) {
+	                IOUtils.copy(is, os);
+	            }
+	            
+	            font = PDType0Font.load(document, tempFile);
+            }
             contentStream.beginText();
             contentStream.setFont(font, fontSize);
             contentStream.setNonStrokingColor(Color.LIGHT_GRAY);
