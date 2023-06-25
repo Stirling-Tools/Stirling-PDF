@@ -12,9 +12,11 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.PDFToFile;
 
 @RestController
+@Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToOffice {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/pdf-to-html")

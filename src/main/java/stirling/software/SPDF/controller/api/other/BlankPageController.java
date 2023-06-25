@@ -28,12 +28,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import stirling.software.SPDF.pdf.ImageFinder;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@Tag(name = "Other", description = "Other APIs")
 public class BlankPageController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")

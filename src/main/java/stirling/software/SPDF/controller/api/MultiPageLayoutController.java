@@ -24,9 +24,11 @@ import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@Tag(name = "General", description = "General APIs")
 public class MultiPageLayoutController {
 
 	private static final Logger logger = LoggerFactory.getLogger(MultiPageLayoutController.class);

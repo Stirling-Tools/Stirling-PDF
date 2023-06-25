@@ -51,8 +51,10 @@ import com.itextpdf.signatures.SignatureUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
+@Tag(name = "Security", description = "Security APIs")
 public class CertSignController {
 
     private static final Logger logger = LoggerFactory.getLogger(CertSignController.class);

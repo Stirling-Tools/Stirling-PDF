@@ -122,13 +122,17 @@ fetch('v3/api-docs')
 	.then(data => {
 		apiDocs = data.paths;
 		let operationsDropdown = document.getElementById('operationsDropdown');
-
+		const ignoreOperations = ["operationToIgnore", "operationToIgnore"]; // Add the operations you want to ignore here
+				
 		operationsDropdown.innerHTML = '';
 
 		Object.keys(apiDocs).forEach(operation => {
-			if (apiDocs[operation].hasOwnProperty('post')) {
+			if (apiDocs[operation].hasOwnProperty('post')&& !ignoreOperations.includes(operation)) {
+				
 				let option = document.createElement('option');
-				option.textContent = operation;
+				let operationWithoutSlash = operation.replace(/\//g, ''); // Remove slashes
+				option.textContent = operationWithoutSlash;
+				option.value = operation; // Keep the value with slashes for querying
 				operationsDropdown.appendChild(option);
 			}
 		});

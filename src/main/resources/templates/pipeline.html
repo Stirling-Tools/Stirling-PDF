@@ -14,13 +14,11 @@
 					<div class="col-md-6">
 
 						<div class="mb-3">
-							<button id="savePipelineBtn" class="btn btn-success">Save
-								Pipeline Configuration</button>
-								
-								<button id="validateButton" class="btn btn-success">Validate</button>
+							<button id="savePipelineBtn" class="btn btn-success">Download</button>
+
+							<button id="validateButton" class="btn btn-success">Validate</button>
 							<div class="btn-group">
-								<button id="uploadPipelineBtn" class="btn btn-primary">Upload
-									Pipeline Configuration</button>
+								<button id="uploadPipelineBtn" class="btn btn-primary">Upload</button>
 								<input type="file" id="uploadPipelineInput" accept=".json"
 									style="display: none;">
 							</div>
@@ -41,19 +39,18 @@
 									</select>
 								</div>
 								<div class="mb-3">
-									<button id="addOperationBtn" class="btn btn-primary">Add
-										operation to pipeline</button>
+									<button id="addOperationBtn" class="btn btn-primary">Add operation</button>
 								</div>
 								<h3>Pipeline:</h3>
 								<ol id="pipelineList" class="list-group">
 									<!-- Pipeline operations will be dynamically populated here -->
 								</ol>
 							</div>
-							
+
 							<input type="file" id="fileInput" multiple>
-							
+
 							<button class="btn btn-primary" id="submitConfigBtn">Submit</button>
-							
+
 
 						</div>
 
@@ -70,11 +67,11 @@
 							</div>
 							<script src="js/pipeline.js"></script>
 						</div>
-						</div>
-						</div>
-						</div>
-						</div>
-						<style>
+					</div>
+				</div>
+			</div>
+		</div>
+		<style>
 .modal {
 	display: none; /* Hidden by default */
 	position: fixed; /* Stay in place */
@@ -107,8 +104,8 @@
 	flex-direction: column;
 }
 </style>
-    <div th:insert="~{fragments/footer.html :: footer}"></div>
-</div>
+		<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
 
 </body>
 </html>

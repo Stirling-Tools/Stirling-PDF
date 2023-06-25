@@ -1,14 +1,11 @@
 package stirling.software.SPDF;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import java.awt.*;
-import java.net.URI;
+import org.springframework.core.env.Environment;
 
 import jakarta.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 
 @SpringBootApplication
 public class SPdfApplication {

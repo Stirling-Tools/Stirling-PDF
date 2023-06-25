@@ -1,12 +1,31 @@
 package stirling.software.SPDF.controller.api.other;
 
+import java.awt.Color;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+//Required for image manipulation
+import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
+import java.awt.image.RescaleOp;
+//Required for file input/output
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+//Other required classes
+import java.util.Random;
+
+//Required for image input/output
+import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -17,43 +36,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.itextpdf.io.source.ByteArrayOutputStream;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import stirling.software.SPDF.utils.ProcessExecutor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.WebResponseUtils;
-//Required for PDF manipulation
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
-
-
-//Required for image manipulation
-import java.awt.image.BufferedImage;
-import java.awt.image.BufferedImageOp;
-import java.awt.image.RescaleOp;
-import java.awt.image.AffineTransformOp;
-import java.awt.image.ConvolveOp;
-import java.awt.image.Kernel;
-import java.awt.Color;
-import java.awt.geom.AffineTransform;
-
-//Required for image input/output
-import javax.imageio.ImageIO;
-
-//Required for file input/output
-import java.io.File;
-
-//Other required classes
-import java.util.Random;
-
-import io.swagger.v3.oas.annotations.Hidden;
 
 @RestController
+@Tag(name = "Other", description = "Other APIs")
 public class FakeScanControllerWIP {
 
     private static final Logger logger = LoggerFactory.getLogger(FakeScanControllerWIP.class);
