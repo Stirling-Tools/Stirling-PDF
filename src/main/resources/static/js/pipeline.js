@@ -120,23 +120,47 @@ let operationSettings = {};
 fetch('v3/api-docs')
 	.then(response => response.json())
 	.then(data => {
-		apiDocs = data.paths;
 		let operationsDropdown = document.getElementById('operationsDropdown');
-		const ignoreOperations = ["operationToIgnore", "operationToIgnore"]; // Add the operations you want to ignore here
+		const ignoreOperations = ["/handleData", "operationToIgnore"]; // Add the operations you want to ignore here
 				
 		operationsDropdown.innerHTML = '';
 
-		Object.keys(apiDocs).forEach(operation => {
-			if (apiDocs[operation].hasOwnProperty('post')&& !ignoreOperations.includes(operation)) {
-				
-				let option = document.createElement('option');
-				let operationWithoutSlash = operation.replace(/\//g, ''); // Remove slashes
-				option.textContent = operationWithoutSlash;
-				option.value = operation; // Keep the value with slashes for querying
-				operationsDropdown.appendChild(option);
+		let operationsByTag = {};
+
+		// Group operations by tags
+		Object.keys(data.paths).forEach(operationPath => {
+			let operation = data.paths[operationPath].post;
+			if (operation && !ignoreOperations.includes(operationPath)) {
+				let operationTag = operation.tags[0]; // This assumes each operation has exactly one tag
+				if (!operationsByTag[operationTag]) {
+					operationsByTag[operationTag] = [];
+				}
+				operationsByTag[operationTag].push(operationPath);
 			}
 		});
+
+		// Specify the order of tags
+        let tagOrder = ["General", "Security", "Convert", "Other", "Filter"];
+
+        // Create dropdown options
+        tagOrder.forEach(tag => {
+            if (operationsByTag[tag]) {
+                let group = document.createElement('optgroup');
+                group.label = tag;
+
+                operationsByTag[tag].forEach(operationPath => {
+                    let option = document.createElement('option');
+                    let operationWithoutSlash = operationPath.replace(/\//g, ''); // Remove slashes
+                    option.textContent = operationWithoutSlash;
+                    option.value = operationPath; // Keep the value with slashes for querying
+                    group.appendChild(option);
+                });
+
+                operationsDropdown.appendChild(group);
+            }
+        });
 	});
+
 
 document.getElementById('addOperationBtn').addEventListener('click', function() {
 	let selectedOperation = document.getElementById('operationsDropdown').value;
