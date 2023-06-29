@@ -119,7 +119,7 @@ services:
 Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
-Stirling PDF currently supports
+Stirling PDF currently supports 16!
 - English (English) (en_GB)
 - Arabic (العربية) (ar_AR)
 - German (Deutsch) (de_DE)
