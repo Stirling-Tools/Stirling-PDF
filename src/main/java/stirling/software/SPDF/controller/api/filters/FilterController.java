@@ -37,12 +37,12 @@ public class FilterController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/contains-image")
 	@Operation(summary = "Checks if a PDF contains an image", description = "Input:PDF Output:Boolean Type:SISO")
-	public ResponseEntity<byte[]> containsImage(
+	public Boolean containsImage(
 			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to be converted to a PDF/A file", required = true) MultipartFile inputFile,
 			@Parameter(description = "The page number to check for image on accepts 'All', ranges like '1-4'", required = false) String pageNumber)
 			throws IOException, InterruptedException {
 		PDDocument pdfDocument = PDDocument.load(inputFile.getInputStream());
-		return PdfUtils.hasImagesOnPage(null)
+		return PdfUtils.hasImagesOnPage(null);
 	}
 
 	@PostMapping(consumes = "multipart/form-data", value = "/page-count")
