@@ -134,6 +134,8 @@ Stirling PDF currently supports
 - Korean (한국어) (ko_KR)
 - Portuguese Brazilian (Português) (pt_BR)
 - Russian (Русский) (ru_RU)
+- Basque (Euskara) (eu_ES)
+- Japanese (日本語) (ja_JP)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
