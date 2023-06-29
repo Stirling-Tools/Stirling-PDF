@@ -23,7 +23,7 @@ import org.springframework.web.servlet.ModelAndView;
 public class CleanUrlInterceptor implements HandlerInterceptor {
 
 
-    private static final List<String> ALLOWED_PARAMS = Arrays.asList("lang", "param2", "param3");
+    private static final List<String> ALLOWED_PARAMS = Arrays.asList("lang", "endpoint", "endpoints");
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
