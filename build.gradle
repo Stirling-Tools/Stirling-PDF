@@ -62,10 +62,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-core'
     
-    // https://mvnrepository.com/artifact/com.cybozu.labs/langdetect
-implementation group: 'com.cybozu.labs', name: 'langdetect', version: '1.1-20120112'
-    
-    
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
 }
