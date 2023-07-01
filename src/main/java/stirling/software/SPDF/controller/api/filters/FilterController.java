@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -47,27 +49,114 @@ public class FilterController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/page-count")
 	@Operation(summary = "Checks if a PDF is greater, less or equal to a setPageCount", description = "Input:PDF Output:Boolean Type:SISO")
-	public ResponseEntity<byte[]> pageCount(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to be converted to a PDF/A file", required = true) MultipartFile inputFile,
-			@Parameter(description = "Page COunt", required = true) String pageCount,
-			@Parameter(description = "Comparison type, accepts Greater, Equal, Less than", required = false) String comparitor)
+	public Boolean pageCount(
+			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file", required = true) MultipartFile inputFile,
+			@Parameter(description = "Page Count", required = true) String pageCount,
+			@Parameter(description = "Comparison type, accepts Greater, Equal, Less than", required = false) String comparator)
 			throws IOException, InterruptedException {
-		return null;
+		// Load the PDF
+		PDDocument document = PDDocument.load(inputFile.getInputStream());
+		int actualPageCount = document.getNumberOfPages();
+
+		// Perform the comparison
+		switch (comparator) {
+		case "Greater":
+			return actualPageCount > Integer.parseInt(pageCount);
+		case "Equal":
+			return actualPageCount == Integer.parseInt(pageCount);
+		case "Less":
+			return actualPageCount < Integer.parseInt(pageCount);
+		default:
+			throw new IllegalArgumentException("Invalid comparator: " + comparator);
+		}
 	}
 
 	@PostMapping(consumes = "multipart/form-data", value = "/page-size")
-	@Operation(summary = "Checks if a PDF is a set size", description = "Input:PDF Output:Boolean Type:SISO")
-	public ResponseEntity<byte[]> pageSize(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to be converted to a PDF/A file", required = true) MultipartFile inputFile)
-			throws IOException, InterruptedException {
-		return null;
+	@Operation(summary = "Checks if a PDF is of a certain size", description = "Input:PDF Output:Boolean Type:SISO")
+	public Boolean pageSize(
+		@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file", required = true) MultipartFile inputFile,
+		@Parameter(description = "Standard Page Size", required = true) String standardPageSize,
+		@Parameter(description = "Comparison type, accepts Greater, Equal, Less than", required = false) String comparator)
+		throws IOException, InterruptedException {
+		
+		// Load the PDF
+		PDDocument document = PDDocument.load(inputFile.getInputStream());
+
+		PDPage firstPage = document.getPage(0);
+		PDRectangle actualPageSize = firstPage.getMediaBox();
+
+		// Calculate the area of the actual page size
+		float actualArea = actualPageSize.getWidth() * actualPageSize.getHeight();
+
+		// Get the standard size and calculate its area
+		PDRectangle standardSize = PdfUtils.textToPageSize(standardPageSize);
+		float standardArea = standardSize.getWidth() * standardSize.getHeight();
+
+		// Perform the comparison
+		switch (comparator) {
+		case "Greater":
+			return actualArea > standardArea;
+		case "Equal":
+			return actualArea == standardArea;
+		case "Less":
+			return actualArea < standardArea;
+		default:
+			throw new IllegalArgumentException("Invalid comparator: " + comparator);
+		}
+	}
+	
+
+	@PostMapping(consumes = "multipart/form-data", value = "/file-size")
+	@Operation(summary = "Checks if a PDF is a set file size", description = "Input:PDF Output:Boolean Type:SISO")
+	public Boolean fileSize(
+		@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file", required = true) MultipartFile inputFile,
+		@Parameter(description = "File Size", required = true) String fileSize,
+		@Parameter(description = "Comparison type, accepts Greater, Equal, Less than", required = false) String comparator)
+		throws IOException, InterruptedException {
+		
+		// Get the file size
+		long actualFileSize = inputFile.getSize();
+
+		// Perform the comparison
+		switch (comparator) {
+		case "Greater":
+			return actualFileSize > Long.parseLong(fileSize);
+		case "Equal":
+			return actualFileSize == Long.parseLong(fileSize);
+		case "Less":
+			return actualFileSize < Long.parseLong(fileSize);
+		default:
+			throw new IllegalArgumentException("Invalid comparator: " + comparator);
+		}
 	}
 
+	
 	@PostMapping(consumes = "multipart/form-data", value = "/page-rotation")
-	@Operation(summary = "Checks if a PDF is a set rotation", description = "Input:PDF Output:Boolean Type:SISO")
-	public ResponseEntity<byte[]> pageRotation(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to be converted to a PDF/A file", required = true) MultipartFile inputFile)
-			throws IOException, InterruptedException {
-		return null;
+	@Operation(summary = "Checks if a PDF is of a certain rotation", description = "Input:PDF Output:Boolean Type:SISO")
+	public Boolean pageRotation(
+		@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file", required = true) MultipartFile inputFile,
+		@Parameter(description = "Rotation in degrees", required = true) int rotation,
+		@Parameter(description = "Comparison type, accepts Greater, Equal, Less than", required = false) String comparator)
+		throws IOException, InterruptedException {
+		
+		// Load the PDF
+		PDDocument document = PDDocument.load(inputFile.getInputStream());
+
+		// Get the rotation of the first page
+		PDPage firstPage = document.getPage(0);
+		int actualRotation = firstPage.getRotation();
+
+		// Perform the comparison
+		switch (comparator) {
+		case "Greater":
+			return actualRotation > rotation;
+		case "Equal":
+			return actualRotation == rotation;
+		case "Less":
+			return actualRotation < rotation;
+		default:
+			throw new IllegalArgumentException("Invalid comparator: " + comparator);
+		}
 	}
+
 }

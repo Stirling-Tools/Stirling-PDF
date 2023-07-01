@@ -42,6 +42,32 @@ public class PdfUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
 
+
+	public static PDRectangle textToPageSize(String size) {
+		switch (size) {
+		case "A0":
+			return PDRectangle.A0;
+		case "A1":
+			return PDRectangle.A1;
+		case "A2":
+			return PDRectangle.A2;
+		case "A3":
+			return PDRectangle.A3;
+		case "A4":
+			return PDRectangle.A4;
+		case "A5":
+			return PDRectangle.A5;
+		case "A6":
+			return PDRectangle.A6;
+		case "LETTER":
+			return PDRectangle.LETTER;
+		case "LEGAL":
+			return PDRectangle.LEGAL;
+		default:
+			throw new IllegalArgumentException("Invalid standard page size: " + size);
+		}
+	}
+
     public boolean hasImageInFile(PDDocument pdfDocument, String text, String pagesToCheck) throws IOException {
         PDFTextStripper textStripper = new PDFTextStripper();
         String pdfText = "";
