@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'stirling.software'
-version = '0.10.2'
+version = '0.10.3'
 sourceCompatibility = '17'
 
 repositories {

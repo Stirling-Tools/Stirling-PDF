@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import jakarta.annotation.PostConstruct;
 
 @SpringBootApplication
-@EnableScheduling
+//@EnableScheduling
 public class SPdfApplication {
 	
 	@Autowired
