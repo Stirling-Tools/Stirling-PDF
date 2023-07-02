@@ -120,6 +120,8 @@ let operationSettings = {};
 fetch('v3/api-docs')
 	.then(response => response.json())
 	.then(data => {
+		
+		apiDocs = data.paths;
 		let operationsDropdown = document.getElementById('operationsDropdown');
 		const ignoreOperations = ["/handleData", "operationToIgnore"]; // Add the operations you want to ignore here
 				
@@ -130,7 +132,7 @@ fetch('v3/api-docs')
 		// Group operations by tags
 		Object.keys(data.paths).forEach(operationPath => {
 			let operation = data.paths[operationPath].post;
-			if (operation && !ignoreOperations.includes(operationPath)) {
+			if (operation && !ignoreOperations.includes(operationPath) && !operation.description.includes("Type:MISO")) {
 				let operationTag = operation.tags[0]; // This assumes each operation has exactly one tag
 				if (!operationsByTag[operationTag]) {
 					operationsByTag[operationTag] = [];
@@ -168,17 +170,21 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 
 	let listItem = document.createElement('li');
 	listItem.className = "list-group-item";
+	let hasSettings = (apiDocs[selectedOperation] && apiDocs[selectedOperation].post &&
+	apiDocs[selectedOperation].post.parameters && apiDocs[selectedOperation].post.parameters.length > 0);
+
+
 	listItem.innerHTML = `
-		                <div class="d-flex justify-content-between align-items-center w-100">
-		                    <div class="operationName">${selectedOperation}</div>
-		                    <div class="arrows d-flex">
-		                        <button class="btn btn-secondary move-up btn-margin"><span>&uarr;</span></button>
-		                        <button class="btn btn-secondary move-down btn-margin"><span>&darr;</span></button>
-		                        <button class="btn btn-warning pipelineSettings btn-margin"><span>⚙️</span></button>
-		                        <button class="btn btn-danger remove"><span>X</span></button>
-		                    </div>
-		                </div>
-		            `;
+		<div class="d-flex justify-content-between align-items-center w-100">
+			<div class="operationName">${selectedOperation}</div>
+			<div class="arrows d-flex">
+				<button class="btn btn-secondary move-up btn-margin"><span>&uarr;</span></button>
+				<button class="btn btn-secondary move-down btn-margin"><span>&darr;</span></button>
+				<button class="btn btn-warning pipelineSettings btn-margin" ${hasSettings ? "" : "disabled"}><span style="color: ${hasSettings ? "black" : "grey"};">⚙️</span></button>
+				<button class="btn btn-danger remove"><span>X</span></button>
+			</div>
+		</div>
+	`;
 
 	pipelineList.appendChild(listItem);
 

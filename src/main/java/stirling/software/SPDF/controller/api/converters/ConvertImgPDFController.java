@@ -85,7 +85,7 @@ public class ConvertImgPDFController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/img-to-pdf")
     @Operation(summary = "Convert images to a PDF file",
-            description = "This endpoint converts one or more images to a PDF file. Users can specify whether to stretch the images to fit the PDF page, and whether to automatically rotate the images. Input:Image Output:PDF Type:MISO")
+            description = "This endpoint converts one or more images to a PDF file. Users can specify whether to stretch the images to fit the PDF page, and whether to automatically rotate the images. Input:Image Output:PDF Type:SISO?")
     public ResponseEntity<byte[]> convertToPdf(
             @RequestPart(required = true, value = "fileInput")
             @Parameter(description = "The input images to be converted to a PDF file")

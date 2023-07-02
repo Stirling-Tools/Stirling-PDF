@@ -61,10 +61,22 @@ public class Controller {
 	final String watchedFoldersDir = "watchedFolders/";
 	@Scheduled(fixedRate = 5000)
 	public void scanFolders() {
-		try (Stream<Path> paths = Files.walk(Paths.get(watchedFoldersDir))) {
+		Path watchedFolderPath = Paths.get(watchedFoldersDir);
+	    if (!Files.exists(watchedFolderPath)) {
+	        try {
+	            Files.createDirectories(watchedFolderPath);
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            return;
+	        }
+	    }
+	    
+		try (Stream<Path> paths = Files.walk(watchedFolderPath)) {
 	        paths.filter(Files::isDirectory).forEach(t -> {
 				try {
-					handleDirectory(t);
+					if (!t.equals(watchedFolderPath) && !t.endsWith("processing")) {
+						handleDirectory(t);
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -76,6 +88,11 @@ public class Controller {
 	
 	private void handleDirectory(Path dir) throws Exception {
 	    Path jsonFile = dir.resolve(jsonFileName);
+	    Path processingDir = dir.resolve("processing"); // Directory to move files during processing
+	    if (!Files.exists(processingDir)) {
+	        Files.createDirectory(processingDir);
+	    }
+
 	    if (Files.exists(jsonFile)) {
 	        // Read JSON file
 	        String jsonString;
@@ -90,6 +107,10 @@ public class Controller {
 	        PipelineConfig config;
 	        try {
 	            config = objectMapper.readValue(jsonString, PipelineConfig.class);
+	            // Assuming your PipelineConfig class has getters for all necessary fields, you can perform checks here
+	            if (config.getOperations() == null || config.getOutputDir() == null || config.getName() == null) {
+	                throw new IOException("Invalid JSON format");
+	            }
 	        } catch (IOException e) {
 	            e.printStackTrace();
 	            return;
@@ -114,10 +135,16 @@ public class Controller {
 	                // If fileInput contains a path, process only this file
 	                files = new File[]{new File(fileInput)};
 	            }
-
-	            // Call handleData for each operation
+	            
+	            // Prepare the files for processing
+	            File[] filesToProcess = files.clone();
+	            for (File file : filesToProcess) {
+	                Files.move(file.toPath(), processingDir.resolve(file.getName()));
+	            }
+	            
+	            // Process the files
 	            try {
-	                List<Resource> resources = handleFiles(files, jsonString);
+	                List<Resource> resources = handleFiles(filesToProcess, jsonString);
 
 	                // Move resultant files and rename them as per config in JSON file
 	                for (Resource resource : resources) {
@@ -131,12 +158,22 @@ public class Controller {
 
 	                    Files.move(resource.getFile().toPath(), Paths.get(config.getOutputDir(), outputFileName));
 	                }
-	            } catch (IOException e) {
-	                e.printStackTrace();
+	                
+	                // If successful, delete the original files
+	                for (File file : filesToProcess) {
+	                    Files.deleteIfExists(processingDir.resolve(file.getName()));
+	                }
+	            } catch (Exception e) {
+	                // If an error occurs, move the original files back
+	                for (File file : filesToProcess) {
+	                    Files.move(processingDir.resolve(file.getName()), file.toPath());
+	                }
+	                throw e;
 	            }
 	        }
 	    }
 	}
+
 
 
 
