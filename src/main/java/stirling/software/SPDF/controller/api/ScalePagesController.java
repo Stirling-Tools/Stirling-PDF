@@ -39,15 +39,17 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@Tag(name = "General", description = "General APIs")
 public class ScalePagesController {
 
 	private static final Logger logger = LoggerFactory.getLogger(ScalePagesController.class);
 
 	@PostMapping(value = "/scale-pages", consumes = "multipart/form-data")
-	@Operation(summary = "Change the size of a PDF page/document", description = "This operation takes an input PDF file and the size to scale the pages to in the output PDF file.")
+	@Operation(summary = "Change the size of a PDF page/document", description = "This operation takes an input PDF file and the size to scale the pages to in the output PDF file. Input:PDF Output:PDF Type:SISO")
 	public ResponseEntity<byte[]> scalePages(
 			@Parameter(description = "The input PDF file", required = true) @RequestParam("fileInput") MultipartFile file,
 			@Parameter(description = "The scale of pages in the output PDF. Acceptable values are A0-A10, B0-B9, LETTER, TABLOID, LEDGER, LEGAL, EXECUTIVE.", required = true, schema = @Schema(type = "String", allowableValues = {

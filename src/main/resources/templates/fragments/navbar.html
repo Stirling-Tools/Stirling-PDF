@@ -32,6 +32,13 @@
                             <span class="icon-text"  th:text="#{home.multiTool.title}"></span>
                         </a>
                     </li>
+                    <!--<li class="nav-item">
+                        <a class="nav-link" href="#" th:href="@{pipeline}" th:classappend="${currentPage}=='pipeline' ? 'active' : ''" th:title="#{home.pipeline.desc}">
+                            <img class="icon" src="images/pipeline.svg" alt="icon">
+                            <span class="icon-text"  th:text="#{home.pipeline.title}"></span>
+                        </a>
+                    </li>-->
+                    
 <li class="nav-item nav-item-separator"></li>
                     <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' ? 'active' : ''">
     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

@@ -16,9 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@Tag(name = "General", description = "General APIs")
 public class RotationController {
 
     private static final Logger logger = LoggerFactory.getLogger(RotationController.class);
@@ -26,7 +28,7 @@ public class RotationController {
     @PostMapping(consumes = "multipart/form-data", value = "/rotate-pdf")
     @Operation(
         summary = "Rotate a PDF file",
-        description = "This endpoint rotates a given PDF file by a specified angle. The angle must be a multiple of 90."
+        description = "This endpoint rotates a given PDF file by a specified angle. The angle must be a multiple of 90. Input:PDF Output:PDF Type:SISO"
     )
     public ResponseEntity<byte[]> rotatePDF(
         @RequestPart(required = true, value = "fileInput")

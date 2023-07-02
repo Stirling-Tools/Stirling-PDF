@@ -14,10 +14,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@Tag(name = "Other", description = "Other APIs")
 public class OverlayImageController {
 
     private static final Logger logger = LoggerFactory.getLogger(OverlayImageController.class);
@@ -25,7 +27,7 @@ public class OverlayImageController {
     @PostMapping(consumes = "multipart/form-data", value = "/add-image")
     @Operation(
         summary = "Overlay image onto a PDF file",
-        description = "This endpoint overlays an image onto a PDF file at the specified coordinates. The image can be overlaid on every page of the PDF if specified."
+        description = "This endpoint overlays an image onto a PDF file at the specified coordinates. The image can be overlaid on every page of the PDF if specified.  Input:PDF/IMAGE Output:PDF Type:MF-SISO"
     )
     public ResponseEntity<byte[]> overlayImage(
         @RequestPart(required = true, value = "fileInput")

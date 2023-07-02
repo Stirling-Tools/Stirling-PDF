@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}"
+	th:lang-direction="#{language.direction}"
+	xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{pipeline.title})}"></th:block>
+<body>
+	<div id="page-container">
+		<div id="content-wrap">
+			<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+			<br> <br>
+			<div class="container" id="dropContainer">
+				<div class="row justify-content-center">
+					<div class="col-md-6">
+
+						<div class="mb-3">
+							<button id="savePipelineBtn" class="btn btn-success">Download</button>
+
+							<button id="validateButton" class="btn btn-success">Validate</button>
+							<div class="btn-group">
+								<button id="uploadPipelineBtn" class="btn btn-primary">Upload</button>
+								<input type="file" id="uploadPipelineInput" accept=".json"
+									style="display: none;">
+							</div>
+						</div>
+
+						<div id="pipelineContainer" class="card">
+
+							<!-- Pipeline Configuration Card Header -->
+							<div class="card-header">
+								<h2 class="card-title">Pipeline Configuration</h2>
+							</div>
+
+							<!-- Pipeline Configuration Body -->
+							<div class="card-body">
+								<div class="mb-3">
+									<select id="operationsDropdown" class="form-select">
+										<!-- Options will be dynamically populated here -->
+									</select>
+								</div>
+								<div class="mb-3">
+									<button id="addOperationBtn" class="btn btn-primary">Add operation</button>
+								</div>
+								<h3>Pipeline:</h3>
+								<ol id="pipelineList" class="list-group">
+									<!-- Pipeline operations will be dynamically populated here -->
+								</ol>
+							</div>
+
+							<input type="file" id="fileInput" multiple>
+
+							<button class="btn btn-primary" id="submitConfigBtn">Submit</button>
+
+
+						</div>
+
+						<!-- pipelineSettings modal -->
+						<div id="pipelineSettingsModal" class="modal">
+							<div class="modal-content">
+								<div class="modal-body">
+									<span class="close">&times;</span>
+									<h2>Operation Settings</h2>
+									<div id="pipelineSettingsContent">
+										<!-- pipelineSettings will be dynamically populated here -->
+									</div>
+								</div>
+							</div>
+							<script src="js/pipeline.js"></script>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<style>
+.modal {
+	display: none; /* Hidden by default */
+	position: fixed; /* Stay in place */
+	z-index: 1; /* Sit on top */
+	padding-top: 100px; /* Location of the box */
+	left: 0;
+	top: 0;
+	width: 100%; /* Full width */
+	height: 100%; /* Full height */
+	overflow: auto; /* Enable scroll if needed */
+	background-color: rgb(0, 0, 0); /* Fallback color */
+	background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+	background-color: #fefefe;
+	margin: auto;
+	padding: 20px;
+	border: 1px solid #888;
+	width: 50%;
+}
+
+.btn-margin {
+	margin-right: 2px;
+}
+
+.modal-body {
+	display: flex;
+	flex-direction: column;
+}
+</style>
+		<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
+
+</body>
+</html>

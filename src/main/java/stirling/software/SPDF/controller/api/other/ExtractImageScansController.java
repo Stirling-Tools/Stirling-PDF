@@ -31,17 +31,19 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@Tag(name = "Other", description = "Other APIs")
 public class ExtractImageScansController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImageScansController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
     @Operation(summary = "Extract image scans from an input file",
-            description = "This endpoint extracts image scans from a given file based on certain parameters. Users can specify angle threshold, tolerance, minimum area, minimum contour area, and border size.")
+            description = "This endpoint extracts image scans from a given file based on certain parameters. Users can specify angle threshold, tolerance, minimum area, minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP Type:SIMO")
     public ResponseEntity<byte[]> extractImageScans(
             @RequestPart(required = true, value = "fileInput")
             @Parameter(description = "The input file containing image scans")

@@ -16,10 +16,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@Tag(name = "Other", description = "Other APIs")
 public class RepairController {
 
     private static final Logger logger = LoggerFactory.getLogger(RepairController.class);
@@ -27,7 +29,7 @@ public class RepairController {
     @PostMapping(consumes = "multipart/form-data", value = "/repair")
     @Operation(
         summary = "Repair a PDF file",
-        description = "This endpoint repairs a given PDF file by running Ghostscript command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response."
+        description = "This endpoint repairs a given PDF file by running Ghostscript command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response. Input:PDF Output:PDF Type:SISO"
     )
     public ResponseEntity<byte[]> repairPdf(
         @RequestPart(required = true, value = "fileInput")

@@ -19,9 +19,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@Tag(name = "Other", description = "Other APIs")
 public class MetadataController {
 
 
@@ -38,7 +40,7 @@ public class MetadataController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/update-metadata")
     @Operation(summary = "Update metadata of a PDF file",
-            description = "This endpoint allows you to update the metadata of a given PDF file. You can add, modify, or delete standard and custom metadata fields.")
+            description = "This endpoint allows you to update the metadata of a given PDF file. You can add, modify, or delete standard and custom metadata fields. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> metadata(
             @RequestPart(required = true, value = "fileInput")
             @Parameter(description = "The input PDF file to update metadata")
@@ -73,6 +75,7 @@ public class MetadataController {
             @RequestParam(value = "trapped", required = false)
             @Parameter(description = "The trapped status of the document")
                     String trapped,
+                    @Parameter(description = "Map list of key and value of custom parameters, note these must start with customKey and customValue if they are non standard")
             @RequestParam Map<String, String> allRequestParams)
             throws IOException {
 

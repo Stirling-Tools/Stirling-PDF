@@ -1,4 +1,6 @@
 package stirling.software.SPDF.config;
+
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -7,39 +9,71 @@ import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.Arrays;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
 
 public class CleanUrlInterceptor implements HandlerInterceptor {
 
-    private static final Pattern LANG_PATTERN = Pattern.compile("&?lang=([^&]+)");
+	private static final List<String> ALLOWED_PARAMS = Arrays.asList("lang", "endpoint", "endpoints");
 
-    @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String queryString = request.getQueryString();
-        if (queryString != null && !queryString.isEmpty()) {
-            String requestURI = request.getRequestURI();
+	@Override
+	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+			throws Exception {
+		String queryString = request.getQueryString();
+		if (queryString != null && !queryString.isEmpty()) {
+			String requestURI = request.getRequestURI();
 
-            // Keep the lang parameter if it exists
-            Matcher langMatcher = LANG_PATTERN.matcher(queryString);
-            String langQueryString = langMatcher.find() ? "lang=" + langMatcher.group(1) : "";
+			Map<String, String> parameters = new HashMap<>();
 
-            // Check if there are any other query parameters besides the lang parameter
-            String remainingQueryString = queryString.replaceAll(LANG_PATTERN.pattern(), "").replaceAll("&+", "&").replaceAll("^&|&$", "");
+			// Keep only the allowed parameters
+			String[] queryParameters = queryString.split("&");
+			for (String param : queryParameters) {
+				String[] keyValue = param.split("=");
+				if (keyValue.length != 2) {
+					continue;
+				}
+				if (ALLOWED_PARAMS.contains(keyValue[0])) {
+					parameters.put(keyValue[0], keyValue[1]);
+				}
+			}
 
-            if (!remainingQueryString.isEmpty()) {
-                // Redirect to the URL without other query parameters
-                String redirectUrl = requestURI + (langQueryString.isEmpty() ? "" : "?" + langQueryString);
-                response.sendRedirect(redirectUrl);
-                return false;
-            }
-        }
-        return true;
-    }
+			// If there are any parameters that are not allowed
+			if (parameters.size() != queryParameters.length) {
+				// Construct new query string
+				StringBuilder newQueryString = new StringBuilder();
+				for (Map.Entry<String, String> entry : parameters.entrySet()) {
+					if (newQueryString.length() > 0) {
+						newQueryString.append("&");
+					}
+					newQueryString.append(entry.getKey()).append("=").append(entry.getValue());
+				}
 
-    @Override
-    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) {
-    }
+				// Redirect to the URL with only allowed query parameters
+				String redirectUrl = requestURI + "?" + newQueryString;
+				response.sendRedirect(redirectUrl);
+				return false;
+			}
+		}
+		return true;
+	}
 
-    @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-    }
+	@Override
+	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
+			ModelAndView modelAndView) {
+	}
+
+	@Override
+	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
+			Exception ex) {
+	}
 }

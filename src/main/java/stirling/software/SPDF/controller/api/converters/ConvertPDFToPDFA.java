@@ -14,16 +14,18 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToPDFA {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/pdf-to-pdfa")
 	@Operation(
 	    summary = "Convert a PDF to a PDF/A",
-	    description = "This endpoint converts a PDF file to a PDF/A file. PDF/A is a format designed for long-term archiving of digital documents."
+	    description = "This endpoint converts a PDF file to a PDF/A file. PDF/A is a format designed for long-term archiving of digital documents. Input:PDF Output:PDF Type:SISO"
 	)
 	public ResponseEntity<byte[]> pdfToPdfA(
 	    @RequestPart(required = true, value = "fileInput")

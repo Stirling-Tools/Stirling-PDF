@@ -51,8 +51,10 @@ import com.itextpdf.signatures.SignatureUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
+@Tag(name = "Security", description = "Security APIs")
 public class CertSignController {
 
     private static final Logger logger = LoggerFactory.getLogger(CertSignController.class);
@@ -63,7 +65,7 @@ public class CertSignController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/cert-sign")
     @Operation(summary = "Sign PDF with a Digital Certificate",
-        description = "This endpoint accepts a PDF file, a digital certificate and related information to sign the PDF. It then returns the digitally signed PDF file.")
+        description = "This endpoint accepts a PDF file, a digital certificate and related information to sign the PDF. It then returns the digitally signed PDF file. Input:PDF Output:PDF Type:MF-SISO")
     public ResponseEntity<byte[]> signPDF(
         @RequestPart(required = true, value = "fileInput")
         @Parameter(description = "The input PDF file to be signed")

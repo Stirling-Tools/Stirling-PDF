@@ -27,10 +27,12 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@Tag(name = "Other", description = "Other APIs")
 public class OCRController {
 
     private static final Logger logger = LoggerFactory.getLogger(OCRController.class);
@@ -47,7 +49,7 @@ public class OCRController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
     @Operation(summary = "Process a PDF file with OCR",
-            description = "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options.")
+            description = "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options. Input:PDF Output:PDF Type:SI-Conditional")
     public ResponseEntity<byte[]> processPdfWithOCR(
             @RequestPart(required = true, value = "fileInput")
             @Parameter(description = "The input PDF file to be processed with OCR")

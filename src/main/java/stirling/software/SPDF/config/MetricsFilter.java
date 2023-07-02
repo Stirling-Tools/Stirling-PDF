@@ -27,7 +27,8 @@ public class MetricsFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String uri = request.getRequestURI();
-
+        
+        //System.out.println("uri="+uri + ", method=" + request.getMethod() );
         // Ignore static resources
         if (!(uri.startsWith("/js") || uri.startsWith("/images") || uri.endsWith(".ico") || uri.endsWith(".css") || uri.endsWith(".svg")|| uri.endsWith(".js") || uri.contains("swagger") || uri.startsWith("/api"))) {
             Counter counter = Counter.builder("http.requests")
@@ -36,6 +37,7 @@ public class MetricsFilter extends OncePerRequestFilter {
                     .register(meterRegistry);
 
             counter.increment();
+            //System.out.println("Counted");
         }
 
         filterChain.doFilter(request, response);

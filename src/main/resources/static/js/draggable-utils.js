@@ -218,7 +218,7 @@ const DraggableUtils = {
     },
     async getOverlayedPdfDocument() {
         const pdfBytes = await this.pdfDoc.getData();
-        const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes);
+        const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, { ignoreEncryption: true });
         this.storePageContents();
 
         const pagesMap = this.documentsMap.get(this.pdfDoc);
