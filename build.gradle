@@ -4,7 +4,7 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.0'
 	id 'org.springdoc.openapi-gradle-plugin' version '1.6.0'
 	id "io.swagger.swaggerhub" version "1.2.0"
-	id 'edu.sc.seis.launch4j' version '3.0.1'
+	id 'edu.sc.seis.launch4j' version '3.0.3'
 }
 
 group = 'stirling.software'
@@ -50,7 +50,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.0'
 	// https://mvnrepository.com/artifact/org.apache.pdfbox/jbig2-imageio
 	implementation group: 'org.apache.pdfbox', name: 'jbig2-imageio', version: '3.0.4'
-	implementation 'commons-io:commons-io:2.11.0'
+	implementation 'commons-io:commons-io:2.13.0'
 	
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
     
