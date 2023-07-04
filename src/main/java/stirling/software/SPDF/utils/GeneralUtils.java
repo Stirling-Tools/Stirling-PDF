@@ -1,5 +1,9 @@
 package stirling.software.SPDF.utils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,5 +91,17 @@ public class GeneralUtils {
 	    }
 
 	    return newPageOrder;
+	}
+	public static boolean createDir(String path) {
+		Path folder = Paths.get(path);
+	    if (!Files.exists(folder)) {
+	        try {
+	            Files.createDirectories(folder);
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            return false;
+	        }
+	    }
+	    return true;
 	}
 }

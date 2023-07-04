@@ -86,6 +86,8 @@ docker run -d \
   
   
   Can also add these for customisation but are not required
+  -v /location/of/extraConfigs:/configs \
+  -v /location/of/customFiles:/customFiles \
   -e APP_HOME_NAME="Stirling PDF" \
   -e APP_HOME_DESCRIPTION="Your locally hosted one-stop-shop for all your PDF needs." \
   -e APP_NAVBAR_NAME="Stirling PDF" \
@@ -104,6 +106,7 @@ services:
     volumes:
       - /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata #Required for extra OCR languages
 #      - /location/of/extraConfigs:/configs
+#      - /location/of/customFiles:/customFiles/
 #    environment:
 #      APP_LOCALE: en_GB
 #      APP_HOME_NAME: Stirling PDF
@@ -161,10 +164,11 @@ Using the same method you can also change
 - Change root URI for Stirling-PDF ie change server.com/ to server.com/pdf-app by running APP_ROOT_PATH as pdf-app
 - Disable and remove endpoints and functionality from Stirling-PDF. Currently the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma seperated lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image to pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Frooodle/Stirling-PDF/blob/main/groups.md) 
 - Change the max file size allowed through the server with the environment variable MAX_FILE_SIZE. default  2000MB
+- Customise static files such as app logo by placing files in the /customFiles/static/ directory. Example to customise app logo is placing a /customFiles/static/favicon.svg to override current SVG. This can be used to change any images/icons/css/fonts/js etc in Stirling-PDF
 
 ## API
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
-[here](https://app.swaggerhub.com/apis-docs/Frooodle/Stirling-PDF/) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation 
+[here](https://app.swaggerhub.com/apis-docs/Frooodle/Stirling-PDF/) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation (Or by following the API button in your settings of Stirling-PDF)
 
 
 ## FAQ

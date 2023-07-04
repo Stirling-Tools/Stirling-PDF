@@ -13,7 +13,7 @@
         <div class="container ">
 
             <a class="navbar-brand" href="#" th:href="@{/}" >
-                <img th:if="${@navBarText} == 'Stirling PDF'" class="main-icon" src="favicon.svg" alt="icon">
+                <img class="main-icon" src="favicon.svg" alt="icon">
                 <span class="icon-text"  th:text="${@navBarText}"></span>
             </a>
 
@@ -116,6 +116,7 @@
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('repair', 'images/wrench.svg', 'home.repair.title', 'home.repair.desc')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-blanks', 'images/blank-file.svg', 'home.removeBlanks.title', 'home.removeBlanks.desc')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('compare', 'images/scales.svg', 'home.compare.title', 'home.compare.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('compare', 'images/add-page-numbers.svg', 'home.add-page-numbers.title', 'home.add-page-numbers.desc')}"></div>
                         </div>
                     </li>
 

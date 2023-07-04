@@ -16,6 +16,12 @@ local.properties
 .project
 version.properties
 
+#### Stirling-PDF Files ###
+customFiles/
+config/
+watchedFolders/
+
+
 # Gradle
 .gradle
 .lock

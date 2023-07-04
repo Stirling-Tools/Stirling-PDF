@@ -32,6 +32,13 @@ public class OtherWebController {
         return modelAndView;
     }
 
+    @GetMapping("/add-page-numbers")
+    @Hidden
+    public String addPageNumbersForm(Model model) {
+        model.addAttribute("currentPage", "add-page-numbers");
+        return "other/add-page-numbers";
+    }
+    
     @GetMapping("/extract-images")
     @Hidden
     public String extractImagesForm(Model model) {

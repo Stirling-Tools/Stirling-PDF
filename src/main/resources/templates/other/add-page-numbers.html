@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{autoCrop.title})}"></th:block>
+
+
+<body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{addPageNumbers.header}"></h2>
+                        <form method="post" enctype="multipart/form-data" th:action="@{add-page-numbers}">
+						    <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+						    <br>
+						    <label for="customMargin">Margin Size</label>
+						    <select id="customMargin" name="customMargin" required>
+						        <option value="" disabled selected>Select a margin size</option>
+						        <option value="small">Small</option>
+						        <option value="medium">Medium</option>
+						        <option value="large">Large</option>
+						    </select>
+						    <br>
+						    <label for="position">Position</label>
+						    <input type="number" id="position" name="position" placeholder="Position: 1 of 9 positions" min="1" max="9" required/>
+						    <br>
+						    <label for="startingNumber">Starting Number</label>
+						    <input type="number" id="startingNumber" name="startingNumber" placeholder="Starting number" min="1" required/>
+						    <br>
+						    <label for="pagesToNumber">Pages to Number</label>
+						    <input type="text" id="pagesToNumber" name="pagesToNumber" placeholder="Which pages to number, default all"/>
+						    <br>
+						    <label for="customText">Custom Text</label>
+						    <input type="text" id="customText" name="customText" placeholder="Custom text: defaults to just number but can have things like 'Page {n} of {p}'"/>
+						    <br>
+						    <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{addPageNumbers.submit}"></button>
+						</form>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
+</body>
+</html>

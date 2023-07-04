@@ -221,6 +221,15 @@ public class CompressController {
         // Read the optimized PDF file
         byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
 
+        // Check if optimized file is larger than the original
+        if(pdfBytes.length > inputFileSize) {
+            // Log the occurrence
+            logger.warn("Optimized file is larger than the original. Returning the original file instead.");
+
+            // Read the original file again
+            pdfBytes = Files.readAllBytes(tempInputFile);
+        }
+
         // Clean up the temporary files
         Files.delete(tempInputFile);
         Files.delete(tempOutputFile);
