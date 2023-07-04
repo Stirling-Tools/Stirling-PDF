@@ -140,4 +140,11 @@ public class OtherWebController {
         return "other/auto-crop";
     }
     
+    @GetMapping("/auto-rename")
+    @Hidden
+    public String autoRenameForm(Model model) {
+        model.addAttribute("currentPage", "auto-rename");
+        return "other/auto-rename";
+    }
+    
 }
