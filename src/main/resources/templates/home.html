@@ -20,8 +20,13 @@
             </div>
 			<br class="d-md-none">
             <!-- Features -->
-            <div class="features-container container">
-            
+            <script src="js/homecard.js"></script>
+            	
+            <div class=" container">
+            <input type="text" id="searchBar" onkeyup="filterCards()" placeholder="Search for features...">
+            <div class="features-container ">
+            	
+            	
                  <div th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', svgPath='images/pipeline.svg')}"></div>
                 
                 <div th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', svgPath='images/tools.svg')}"></div>
@@ -70,13 +75,13 @@
                 
                 <div th:replace="~{fragments/card :: card(id='add-page-numbers', cardTitle=#{home.add-page-numbers.title}, cardText=#{home.add-page-numbers.desc}, cardLink='add-page-numbers', svgPath='images/add-page-numbers.svg')}"></div>
                 <div th:replace="~{fragments/card :: card(id='auto-rename', cardTitle=#{home.auto-rename.title}, cardText=#{home.auto-rename.desc}, cardLink='auto-rename', svgPath='images/fonts.svg')}"></div>
-                
+                <div th:replace="~{fragments/card :: card(id='adjust-contrast', cardTitle=#{home.adjust-contrast.title}, cardText=#{home.adjust-contrast.desc}, cardLink='adjust-contrast', svgPath='images/adjust-contrast.svg')}"></div>
 
                 
 		
-                <script src="js/homecard.js"></script>
+                
             </div>
-        </div>
+        </div> </div>
         <div th:insert="~{fragments/footer.html :: footer}"></div>
     </div>
 </body>

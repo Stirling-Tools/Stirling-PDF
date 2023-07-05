@@ -77,7 +77,7 @@ public class AutoRenameController {
     private static final Logger logger = LoggerFactory.getLogger(AutoRenameController.class);
 
     private static final float TITLE_FONT_SIZE_THRESHOLD = 20.0f;
-    private static final int LINE_LIMIT = 7;
+    private static final int LINE_LIMIT = 11;
 
     @PostMapping(consumes = "multipart/form-data", value = "/auto-rename")
     @Operation(summary = "Extract header from PDF file", description = "This endpoint accepts a PDF file and attempts to extract its title or header based on heuristics. Input:PDF Output:PDF Type:SISO")
@@ -136,12 +136,25 @@ public class AutoRenameController {
     	                super.getText(doc);
     	                processLine(); // Process the last line
 
-    	                // Sort lines by font size in descending order and get the first one
-    	                lineInfos.sort(Comparator.comparing((LineInfo li) -> li.fontSize).reversed());
-    	                String title = lineInfos.isEmpty() ? null : lineInfos.get(0).text;
+    	                // Merge lines with same font size
+    	                List<LineInfo> mergedLineInfos = new ArrayList<>();
+    	                for (int i = 0; i < lineInfos.size(); i++) {
+    	                    String mergedText = lineInfos.get(i).text;
+    	                    float fontSize = lineInfos.get(i).fontSize;
+    	                    while (i + 1 < lineInfos.size() && lineInfos.get(i + 1).fontSize == fontSize) {
+    	                        mergedText += " " + lineInfos.get(i + 1).text;
+    	                        i++;
+    	                    }
+    	                    mergedLineInfos.add(new LineInfo(mergedText, fontSize));
+    	                }
 
-    	                return title != null ? title : (useFirstTextAsFallback ? (lineInfos.isEmpty() ? null : lineInfos.get(lineInfos.size() - 1).text) : null);
+    	                // Sort lines by font size in descending order and get the first one
+    	                mergedLineInfos.sort(Comparator.comparing((LineInfo li) -> li.fontSize).reversed());
+    	                String title = mergedLineInfos.isEmpty() ? null : mergedLineInfos.get(0).text;
+
+    	                return title != null ? title : (useFirstTextAsFallback ? (mergedLineInfos.isEmpty() ? null : mergedLineInfos.get(mergedLineInfos.size() - 1).text) : null);
     	            }
+
     	        };
 
     	        String header = reader.getText(document);

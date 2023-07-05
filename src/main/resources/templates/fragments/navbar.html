@@ -205,6 +205,23 @@
                         </a>
 
                     </li>
+                    
+             <!-- Search Button and Search Bar -->
+<li class="nav-item position-relative">
+    <a href="#" class="nav-link" id="search-icon">
+        <img class="navbar-icon" src="images/search.svg" alt="icon" width="24" height="24">
+    </a>
+    <!-- Search Bar -->
+    <div class="collapse position-absolute" id="navbarSearch">
+        <form class="d-flex p-2 bg-white border" id="searchForm">
+            <input class="form-control" type="search" placeholder="Search" aria-label="Search" id="navbarSearchInput">
+        </form>
+        <!-- Search Results -->
+        <div id="searchResults" class="border p-2 bg-white"></div>
+    </div>
+</li>
+
+
                 </ul>
 
          
@@ -212,6 +229,7 @@
 
         </div>
         <script src="js/favourites.js"></script>
+        <script src="js/search.js"></script>
     </nav>
     
 	<div th:insert="~{fragments/errorBannerPerPage.html :: errorBannerPerPage}"></div>

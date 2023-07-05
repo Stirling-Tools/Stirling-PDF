@@ -1,3 +1,17 @@
+#searchBar { 
+	background-image: url('/images/search.svg'); 
+	background-position: 16px 16px; 
+	background-repeat: no-repeat; 
+	width: 100%; 
+	font-size: 16px; 
+	margin-bottom: 12px;
+	padding: 12px 20px 12px 40px; 
+	border: 1px solid #ddd;
+	
+	
+}
+
+
 .features-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(21rem, 3fr));
