@@ -1,64 +1,95 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.toString()}"
+	th:lang-direction="#{language.direction}"
+	xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{extractImages.title})}"></th:block>
+<th:block
+	th:insert="~{fragments/common :: head(title=#{extractImages.title})}"></th:block>
 
 
 <body>
-  <div id="page-container">
-    <div id="content-wrap">
-      <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-      <br> <br>
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-md-6">
-            <h2 th:text="#{extractImages.header}"></h2>
-			<input type="file" id="pdf-file" accept="application/pdf" />
-  <canvas id="pdf-canvas"></canvas>
+	<div id="page-container">
+		<div id="content-wrap">
+			<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+			<br> <br>
+			<div class="container">
+				<div class="row justify-content-center">
+					<div class="col-md-6">
+						<h2 th:text="#{extractImages.header}"></h2>
+						<input type="file" id="pdf-file" accept="application/pdf" />
+						<canvas id="pdf-canvas"></canvas>
 
-  <h4>Contrast: <span id="contrast-val">100</span>%</h4>
-  <input type="range" min="0" max="200" value="100" id="contrast-slider" />
+						<h4>
+							Contrast: <span id="contrast-val">100</span>%
+						</h4>
+						<input type="range" min="0" max="200" value="100"
+							id="contrast-slider" />
 
-  <h4>Brightness: <span id="brightness-val">100</span>%</h4>
-  <input type="range" min="0" max="200" value="100" id="brightness-slider" />
+						<h4>
+							Brightness: <span id="brightness-val">100</span>%
+						</h4>
+						<input type="range" min="0" max="200" value="100"
+							id="brightness-slider" />
 
-  <h4>Saturation: <span id="saturation-val">100</span>%</h4>
-  <input type="range" min="0" max="200" value="100" id="saturation-slider" />
-  
-  <button id="download-button">Download</button>
+						<h4>
+							Saturation: <span id="saturation-val">100</span>%
+						</h4>
+						<input type="range" min="0" max="200" value="100"
+							id="saturation-slider" />
 
-  <script src="pdfjs/pdf.js"></script>
-  <script>
-    var canvas = document.getElementById('pdf-canvas');
-    var context = canvas.getContext('2d');
-    var originalImageData = null;
+						<button id="download-button">Download</button>
 
-    function renderPDFAndSaveOriginalImageData(file) {
-      var fileReader = new FileReader();
-      fileReader.onload = function() {
-        var data = new Uint8Array(this.result);
-        pdfjsLib.getDocument({data: data}).promise.then(function(pdf) {
-          pdf.getPage(1).then(function(page) {
-            var scale = 1.5;
-            var viewport = page.getViewport({ scale: scale });
+						<script src="pdfjs/pdf.js"></script>
+						<script>
+  var canvas = document.getElementById('pdf-canvas');
+  var context = canvas.getContext('2d');
+  var originalImageData = null;
+  var allPages = [];
+  var pdfDoc = null;
+  var pdf = null; // This is the current PDF document
 
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+  async function renderPDFAndSaveOriginalImageData(file) {
+    var fileReader = new FileReader();
+    fileReader.onload = async function() {
+      var data = new Uint8Array(this.result);
+      pdf = await pdfjsLib.getDocument({data: data}).promise;
 
-            var renderContext = {
-              canvasContext: context,
-              viewport: viewport
-            };
+      // Get the number of pages in the PDF
+      var numPages = pdf.numPages;
+      allPages = Array.from({length: numPages}, (_, i) => i + 1);
+      
+      // Create a new PDF document
+      pdfDoc = await PDFLib.PDFDocument.create();
+      // Render the first page in the viewer
+      await renderPageAndAdjustImageProperties(1);
+    };
+    fileReader.readAsArrayBuffer(file);
+  }
 
-            var renderTask = page.render(renderContext);
-            renderTask.promise.then(function () {
-              originalImageData = context.getImageData(0, 0, canvas.width, canvas.height);
-            });
+  // This function is now async and returns a promise
+  function renderPageAndAdjustImageProperties(pageNum) {
+      return new Promise(async function(resolve, reject) {
+          var page = await pdf.getPage(pageNum);
+          var scale = 1.5;
+          var viewport = page.getViewport({ scale: scale });
+
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          var renderContext = {
+            canvasContext: context,
+            viewport: viewport
+          };
+
+          var renderTask = page.render(renderContext);
+          renderTask.promise.then(function () {
+            originalImageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            adjustImageProperties();
+            resolve();
           });
-        });
-      };
-      fileReader.readAsArrayBuffer(file);
-    }
+      });
+  }
+  
 
     function adjustImageProperties() {
         var contrast = parseFloat(document.getElementById('contrast-slider').value);
@@ -87,16 +118,7 @@
             g = adjustBrightnessForPixel(g, brightness);
             b = adjustBrightnessForPixel(b, brightness);
             // Adjust saturation
-            if(i==100){
-            console.log('r',r)
-            console.log('g',g)
-            console.log('b',b)
-            console.log('saturation',saturation)
-          }
             var rgb = adjustSaturationForPixel(r, g, b, saturation);
-            if(i==100){
-            console.log('rgb',rgb)
-            }
             newImageData.data[i] = rgb[0];
             newImageData.data[i+1] = rgb[1];
             newImageData.data[i+2] = rgb[2];
@@ -187,12 +209,50 @@
           return Math.max(0, Math.min(255, pixel * brightness));
         }  
       
-    function downloadImage() {
-      var downloadLink = document.createElement('a');
-      downloadLink.href = canvas.toDataURL('image/png');
-      downloadLink.download = 'download.png';
-      downloadLink.click();
-    }
+      async function downloadPDF() {
+    	  for (var i = 0; i < allPages.length; i++) {
+    	    await renderPageAndAdjustImageProperties(allPages[i]);
+    	    const pngImageBytes = canvas.toDataURL('image/png');
+    	    const pngImage = await pdfDoc.embedPng(pngImageBytes);
+    	    const pngDims = pngImage.scale(1);
+
+    	    // Create a blank page matching the dimensions of the image
+    	    const page = pdfDoc.addPage([pngDims.width, pngDims.height]);
+
+    	    // Draw the PNG image
+    	    page.drawImage(pngImage, {
+    	      x: 0,
+    	      y: 0,
+    	      width: pngDims.width,
+    	      height: pngDims.height
+    	    });
+    	  }
+
+    	  // Serialize the PDFDocument to bytes (a Uint8Array)
+    	  const pdfBytes = await pdfDoc.save();
+    	  
+    	  // Create a Blob
+    	  const blob = new Blob([pdfBytes.buffer], {type: "application/pdf"});
+    	  
+    	  // Create download link
+    	  const downloadLink = document.createElement('a');
+    	  downloadLink.href = URL.createObjectURL(blob);
+    	  downloadLink.download = "download.pdf";
+    	  downloadLink.click();
+    	  
+   		// After download, reset the viewer and clear stored data
+    	  allPages = [];  // Clear the pages
+    	  originalImageData = null;  // Clear the image data
+
+    	  // Go back to page 1 and render it in the viewer
+    	  if (pdf !== null) {
+    	    renderPageAndAdjustImageProperties(1);
+    	  }
+    	  
+    	}
+
+      
+
 
     // Event listeners
     document.getElementById('pdf-file').addEventListener('change', function(e) {
@@ -217,16 +277,16 @@
     });
 
     document.getElementById('download-button').addEventListener('click', function() {
-      downloadImage();
-    });
+        downloadPDF();
+      });
   </script>
-      
-      
-          </div>
-        </div>
-      </div>
-    </div>
-    <div th:insert="~{fragments/footer.html :: footer}"></div>
-  </div>
+
+
+					</div>
+				</div>
+			</div>
+		</div>
+		<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
 </body>
 </html>
