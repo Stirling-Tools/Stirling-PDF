@@ -68,4 +68,10 @@ public class GeneralWebController {
         return "sign";
     }
 
+    @GetMapping("/crop")
+    @Hidden
+    public String cropForm(Model model) {
+        model.addAttribute("currentPage", "crop");
+        return "crop";
+    }
 }

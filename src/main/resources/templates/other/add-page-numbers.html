@@ -15,30 +15,104 @@
                     <div class="col-md-6">
                         <h2 th:text="#{addPageNumbers.header}"></h2>
                         <form method="post" enctype="multipart/form-data" th:action="@{add-page-numbers}">
-						    <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-						    <br>
-						    <label for="customMargin">Margin Size</label>
-						    <select id="customMargin" name="customMargin" required>
-						        <option value="" disabled selected>Select a margin size</option>
-						        <option value="small">Small</option>
-						        <option value="medium">Medium</option>
-						        <option value="large">Large</option>
-						    </select>
-						    <br>
-						    <label for="position">Position</label>
-						    <input type="number" id="position" name="position" placeholder="Position: 1 of 9 positions" min="1" max="9" required/>
-						    <br>
-						    <label for="startingNumber">Starting Number</label>
-						    <input type="number" id="startingNumber" name="startingNumber" placeholder="Starting number" min="1" required/>
-						    <br>
-						    <label for="pagesToNumber">Pages to Number</label>
-						    <input type="text" id="pagesToNumber" name="pagesToNumber" placeholder="Which pages to number, default all"/>
-						    <br>
-						    <label for="customText">Custom Text</label>
-						    <input type="text" id="customText" name="customText" placeholder="Custom text: defaults to just number but can have things like 'Page {n} of {p}'"/>
-						    <br>
-						    <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{addPageNumbers.submit}"></button>
-						</form>
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                            <br>
+                            <div class="form-group">
+                                <label for="customMargin">Margin Size</label>
+                                <select class="form-control" id="customMargin" name="customMargin" required>
+                                    <option value="" disabled selected>Select a margin size</option>
+                                    <option value="small">Small</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="large">Large</option>
+                                    <option value="x-large">X-Large</option>
+                                </select>
+                            </div>
+   <style>
+.a4container {
+  
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 0; /* No gap between the cells */
+  width: 50%;
+  aspect-ratio: 0.707; /* this sets the width-height ratio approximately same as A4 paper */
+  justify-items: stretch; /* Stretch items to fill their cells */
+  align-items: stretch; /* Stretch items to fill their cells */
+  border: 1px solid #ddd;
+  box-sizing: border-box;
+}
+
+.cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1em;
+  color: #333;
+  cursor: pointer;
+  background-color: #ccc;
+  border: 1px solid #fff; /* Add a border to each cell */
+  box-sizing: border-box;
+}
+
+.cell:hover {
+  background-color: #eee;
+}
+
+#myForm {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+</style>
+
+
+<div class="form-group">
+    <label for="position">Position</label>
+    <div class="a4container">
+	  <div id="1" class="cell">1</div>
+	  <div id="2" class="cell">2</div>
+	  <div id="3" class="cell">3</div>
+	  <div id="4" class="cell">4</div>
+	  <div id="5" class="cell">5</div>
+	  <div id="6" class="cell">6</div>
+	  <div id="7" class="cell">7</div>
+	  <div id="8" class="cell">8</div>
+	  <div id="9" class="cell">9</div>
+	</div>
+    
+</div>
+<form id="myForm">
+  <input type="number" id="numberInput" name="number" min="1" max="9" required>
+</form>
+
+<script>
+let cells = document.querySelectorAll('.cell');
+let inputField = document.getElementById('numberInput');
+
+cells.forEach(cell => {
+  cell.addEventListener('click', function(e) {
+    let selectedLocation = e.target.id;
+    inputField.value = selectedLocation;  // Set input field's value
+  });
+});
+
+</script>
+
+                            <div class="form-group">
+                                <label for="startingNumber">Starting Number</label>
+                                <input type="number" class="form-control" id="startingNumber" name="startingNumber"  min="1" required value="1"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="pagesToNumber">Pages to Number</label>
+                                <input type="text" class="form-control" id="pagesToNumber" name="pagesToNumber" placeholder="Which pages to number, default 'all', also accepts 1-5 or 2,5,9 etc" />
+                            </div>
+                            <div class="form-group">
+                                <label for="customText">Custom Text</label>
+                                <input type="text" class="form-control" id="customText" name="customText" placeholder="Default just number, also accepts 'Page {n} of {total}', 'Tag-{n}' etc"/>
+                            </div>
+                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{addPageNumbers.submit}"></button>
+                        </form>
 
                     </div>
                 </div>
