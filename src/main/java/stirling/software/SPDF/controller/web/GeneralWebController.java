@@ -1,5 +1,12 @@
 package stirling.software.SPDF.controller.web;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -65,8 +72,22 @@ public class GeneralWebController {
     @Hidden
     public String signForm(Model model) {
         model.addAttribute("currentPage", "sign");
+        model.addAttribute("fonts", getFontNames());
         return "sign";
     }
+    private List<String> getFontNames() {
+        try {
+            return Files.list(Paths.get("src/main/resources/static/fonts"))
+                    .map(Path::getFileName)
+                    .map(Path::toString)
+                    .filter(name -> name.endsWith(".woff2"))
+                    .map(name -> name.substring(0, name.length() - 6)) // Remove .woff2 extension
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read font directory", e);
+        }
+    }
+    
 
     @GetMapping("/crop")
     @Hidden
