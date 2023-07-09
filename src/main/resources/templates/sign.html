@@ -19,6 +19,13 @@
         }
     </style>
 </th:block>
+<style>
+select#font-select, select#font-select option {
+        height: 60px;    /* Adjust as needed */
+        font-size: 30px; /* Adjust as needed */
+    }
+
+</style>
 
 
 <body>
@@ -200,6 +207,29 @@
                                         DraggableUtils.createDraggableCanvasFromUrl(dataURL);
                                     }
                                 </script>
+                <script>
+    const sigTextInput = document.getElementById('sigText');
+    const fontSelect = document.getElementById('font-select');
+
+    const updateOptionTexts = () => {
+        Array.from(fontSelect.options).forEach(option => {
+        	const fontName = option.value.replace(/-regular$/i, '');
+            option.text = sigTextInput.value || fontName;
+        });
+    }
+
+    sigTextInput.addEventListener('input', updateOptionTexts);
+
+    fontSelect.addEventListener('change', (e) => {
+        e.target.style.fontFamily = e.target.value;
+        updateOptionTexts();
+    });
+
+    // Manually trigger the change event
+    fontSelect.dispatchEvent(new Event('change'));
+</script>
+
+          
                                 <th:block th:each="font : ${fonts}">
     <style th:inline="text">
         #font-select option[value="/*[[${font}]]*/"] {
@@ -269,6 +299,7 @@
                         <div class="margin-auto-parent">
                             <button id="download-pdf" class="btn btn-primary mb-2 show-on-file-selected margin-center">Download PDF</button>
                         </div>
+                        
                         <script>
                             document.getElementById("download-pdf").addEventListener('click', async() => {
                                 const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
