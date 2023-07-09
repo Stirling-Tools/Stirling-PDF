@@ -74,7 +74,13 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 		"pipeline": [{
 			"operation": selectedOperation,
 			"parameters": parameters
-		}]
+		}],
+		  "_examples": {
+		    "outputDir" : "{outputFolder}/{folderName}",
+		    "outputFileName" : "{filename}-{pipelineName}-{date}-{time}"
+		  },
+		  "outputDir" : "httpWebRequest",
+		  "outputFileName" : "{filename}"
 	};
 
 	let pipelineConfigJson = JSON.stringify(pipelineConfig, null, 2);
@@ -340,10 +346,17 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 		if (validatePipeline() === false) {
 			return;
 		}
+		var pipelineName = document.getElementById('pipelineName').value;
 		let pipelineList = document.getElementById('pipelineList').children;
 		let pipelineConfig = {
-			"name": "uniquePipelineName",
-			"pipeline": []
+			"name": pipelineName,
+			"pipeline": [],
+			  "_examples": {
+			    "outputDir" : "{outputFolder}/{folderName}",
+			    "outputFileName" : "{filename}-{pipelineName}-{date}-{time}"
+			  },
+			  "outputDir" : "httpWebRequest",
+			  "outputFileName" : "{filename}"
 		};
 
 		for (let i = 0; i < pipelineList.length; i++) {
@@ -381,7 +394,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 			while (pipelineList.firstChild) {
 				pipelineList.removeChild(pipelineList.firstChild);
 			}
-
+			document.getElementById('pipelineName').value = pipelineConfig.name
 			pipelineConfig.pipeline.forEach(operationConfig => {
 				let operationsDropdown = document.getElementById('operationsDropdown');
 				operationsDropdown.value = operationConfig.operation;

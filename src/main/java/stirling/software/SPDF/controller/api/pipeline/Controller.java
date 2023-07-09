@@ -120,7 +120,6 @@ public class Controller {
 				if (config.getOperations() == null || config.getOutputDir() == null || config.getName() == null) {
 					throw new IOException("Invalid JSON format");
 				}
-				logger.info("Parsed PipelineConfig: {}", config);
 			} catch (IOException e) {
 				logger.error("Error parsing PipelineConfig: {}", jsonString, e);
 				return;
@@ -128,7 +127,6 @@ public class Controller {
 
 			// For each operation in the pipeline
 			for (PipelineOperation operation : config.getOperations()) {
-				logger.info("Processing operation: {}", operation.toString());
 				// Collect all files based on fileInput
 				File[] files;
 				String fileInput = (String) operation.getParameters().get("fileInput");
@@ -191,13 +189,18 @@ public class Controller {
 						    // If the environment variable is not set, use the default value
 						    outputFolder = finishedFoldersDir;
 						}
-
+						logger.info("outputDir 0={}", outputDir);
 						// Replace the placeholders in the outputDir string
 						outputDir = outputDir.replace("{outputFolder}", outputFolder);
 						outputDir = outputDir.replace("{folderName}", dir.toString());
+						logger.info("outputDir 1={}", outputDir);
 						outputDir = outputDir.replace("\\watchedFolders", "");
-						Path outputPath;
-
+						outputDir = outputDir.replace("//watchedFolders", "");
+						outputDir = outputDir.replace("\\\\watchedFolders", "");
+						outputDir = outputDir.replace("/watchedFolders", "");
+						
+						Path outputPath; 
+						logger.info("outputDir 2={}", outputDir);
 						if (Paths.get(outputDir).isAbsolute()) {
 						    // If it's an absolute path, use it directly
 						    outputPath = Paths.get(outputDir);
@@ -206,6 +209,7 @@ public class Controller {
 						    outputPath = Paths.get(".", outputDir);
 						}
 						
+						logger.info("outputPath={}", outputPath);
 						
 						if (!Files.exists(outputPath)) {
 							try {
