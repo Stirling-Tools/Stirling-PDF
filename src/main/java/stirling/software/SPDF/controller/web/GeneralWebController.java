@@ -1,28 +1,76 @@
 package stirling.software.SPDF.controller.web;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.HashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 @Controller
 @Tag(name = "General", description = "General APIs")
 public class GeneralWebController {
-	 @GetMapping("/pipeline")
-	    @Hidden
-	    public String pipelineForm(Model model) {
-	        model.addAttribute("currentPage", "pipeline");
-	        return "pipeline";
+	
+	@GetMapping("/pipeline")
+	@Hidden
+	public String pipelineForm(Model model) {
+	    model.addAttribute("currentPage", "pipeline");
+
+	    List<String> pipelineConfigs = new ArrayList<>();
+	    try (Stream<Path> paths = Files.walk(Paths.get("./pipeline/defaultWebUIConfigs/"))) {
+	        List<Path> jsonFiles = paths
+	            .filter(Files::isRegularFile)
+	            .filter(p -> p.toString().endsWith(".json"))
+	            .collect(Collectors.toList());
+
+	        for (Path jsonFile : jsonFiles) {
+	            String content = Files.readString(jsonFile, StandardCharsets.UTF_8);
+	            pipelineConfigs.add(content);
+	        }
+	        List<Map<String, String>> pipelineConfigsWithNames = new ArrayList<>();
+	        for (String config : pipelineConfigs) {
+	            Map<String, Object> jsonContent = new ObjectMapper().readValue(config, Map.class);
+	            String name = (String) jsonContent.get("name");
+	            Map<String, String> configWithName = new HashMap<>();
+	            configWithName.put("json", config);
+	            configWithName.put("name", name);
+	            pipelineConfigsWithNames.add(configWithName);
+	        }
+	        model.addAttribute("pipelineConfigsWithNames", pipelineConfigsWithNames);
+
+	    } catch (IOException e) {
+	        e.printStackTrace();
 	    }
+
+	    model.addAttribute("pipelineConfigs", pipelineConfigs);
+
+	    return "pipeline";
+	}
+
+	 
+	 
 	 
     @GetMapping("/merge-pdfs")
     @Hidden

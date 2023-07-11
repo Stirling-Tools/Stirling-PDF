@@ -60,8 +60,8 @@ public class Controller {
 	private ObjectMapper objectMapper;
 
 	final String jsonFileName = "pipelineConfig.json";
-	final String watchedFoldersDir = "watchedFolders/";
-	final String finishedFoldersDir = "finishedFolders/";
+	final String watchedFoldersDir = "./pipeline/watchedFolders/";
+	final String finishedFoldersDir = "./pipeline/finishedFolders/";
 	
 	@Scheduled(fixedRate = 25000)
 	public void scanFolders() {

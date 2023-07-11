@@ -59,6 +59,9 @@ public class SPdfApplication {
         GeneralUtils.createDir("customFiles/static/");
         GeneralUtils.createDir("customFiles/templates/");
         GeneralUtils.createDir("config");
+        
+        
+        
         System.out.println("Stirling-PDF Started.");
         
         String port = System.getProperty("local.server.port");

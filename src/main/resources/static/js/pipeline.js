@@ -381,52 +381,76 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 		document.body.removeChild(a);
 	});
 
+	async function processPipelineConfig(configString) {
+    let pipelineConfig = JSON.parse(configString);
+    let pipelineList = document.getElementById('pipelineList');
+    
+    while (pipelineList.firstChild) {
+        pipelineList.removeChild(pipelineList.firstChild);
+    }
+    document.getElementById('pipelineName').value = pipelineConfig.name
+    for (const operationConfig of pipelineConfig.pipeline) {
+        let operationsDropdown = document.getElementById('operationsDropdown');
+        operationsDropdown.value = operationConfig.operation;
+        operationSettings[operationConfig.operation] = operationConfig.parameters;
+
+        // assuming addOperation is async
+        await new Promise((resolve) => {
+            document.getElementById('addOperationBtn').addEventListener('click', resolve, { once: true });
+            document.getElementById('addOperationBtn').click();
+        });
+
+        let lastOperation = pipelineList.lastChild;
+    
+        Object.keys(operationConfig.parameters).forEach(parameterName => {
+	    let input = document.getElementById(parameterName);
+	    if (input) {
+	        switch (input.type) {
+	            case 'checkbox':
+	                input.checked = operationConfig.parameters[parameterName];
+	                break;
+	            case 'number':
+	                input.value = operationConfig.parameters[parameterName].toString();
+	                break;
+	            case 'file':
+                if (parameterName !== 'fileInput') {
+                    // Create a new file input element
+                    let newInput = document.createElement('input');
+                    newInput.type = 'file';
+                    newInput.id = parameterName;
+
+                    // Add the new file input to the main page (change the selector according to your needs)
+                    document.querySelector('#main').appendChild(newInput);
+                }
+                break;
+	            case 'text':
+	            case 'textarea':
+	            default:
+	                input.value = JSON.stringify(operationConfig.parameters[parameterName]);
+	        }
+	    }
+	});
+
+    }
+}
+
+	
 	document.getElementById('uploadPipelineBtn').addEventListener('click', function() {
-		document.getElementById('uploadPipelineInput').click();
+	    document.getElementById('uploadPipelineInput').click();
 	});
-
+	
 	document.getElementById('uploadPipelineInput').addEventListener('change', function(e) {
-		let reader = new FileReader();
-		reader.onload = function(event) {
-			let pipelineConfig = JSON.parse(event.target.result);
-			let pipelineList = document.getElementById('pipelineList');
-
-			while (pipelineList.firstChild) {
-				pipelineList.removeChild(pipelineList.firstChild);
-			}
-			document.getElementById('pipelineName').value = pipelineConfig.name
-			pipelineConfig.pipeline.forEach(operationConfig => {
-				let operationsDropdown = document.getElementById('operationsDropdown');
-				operationsDropdown.value = operationConfig.operation;
-				operationSettings[operationConfig.operation] = operationConfig.parameters;
-				document.getElementById('addOperationBtn').click();
-
-				let lastOperation = pipelineList.lastChild;
-
-				lastOperation.querySelector('.pipelineSettings').click();
-
-				Object.keys(operationConfig.parameters).forEach(parameterName => {
-					let input = document.getElementById(parameterName);
-					if (input) {
-						switch (input.type) {
-							case 'checkbox':
-								input.checked = operationConfig.parameters[parameterName];
-								break;
-							case 'number':
-								input.value = operationConfig.parameters[parameterName].toString();
-								break;
-							case 'text':
-							case 'textarea':
-							default:
-								input.value = JSON.stringify(operationConfig.parameters[parameterName]);
-						}
-					}
-				});
-
-				document.querySelector('#pipelineSettingsModal .btn-primary').click();
-			});
-		};
-		reader.readAsText(e.target.files[0]);
+	    let reader = new FileReader();
+	    reader.onload = function(event) {
+	        processPipelineConfig(event.target.result);
+	    };
+	    reader.readAsText(e.target.files[0]);
 	});
+	
+	document.getElementById('pipelineSelect').addEventListener('change', function(e) {
+	    let selectedPipelineJson = e.target.value;  // assuming the selected value is the JSON string of the pipeline config
+	    processPipelineConfig(selectedPipelineJson);
+	});
+
 
 });
