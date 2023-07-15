@@ -292,12 +292,18 @@ public class PipelineController {
 
 					ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
 
+					// If the operation is filter and the response body is null or empty, skip this file
+	                if (operation.startsWith("filter-") && (response.getBody() == null || response.getBody().length == 0)) {
+	                	logger.info("Skipping file due to failing {}", operation);
+	                    continue;
+	                }
+	                
 					if (!response.getStatusCode().equals(HttpStatus.OK)) {
 						logPrintStream.println("Error: " + response.getBody());
 						hasErrors = true;
 						continue;
 					}
-
+					
 					
 					// Define filename
 	                String filename;

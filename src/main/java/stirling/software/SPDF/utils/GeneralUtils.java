@@ -39,8 +39,14 @@ public class GeneralUtils {
 
 	    // loop through the page order array
 	    for (String element : pageOrderArr) {
-	        // check if the element contains a range of pages
-	        if (element.matches("\\d*n\\+?-?\\d*|\\d*\\+?n")) {
+	    	if (element.equalsIgnoreCase("all")) {
+	            for (int i = 0; i < totalPages; i++) {
+	                newPageOrder.add(i);
+	            }
+	            // As all pages are already added, no need to check further
+	            break;
+	        }
+	    	else if (element.matches("\\d*n\\+?-?\\d*|\\d*\\+?n")) {
 	            // Handle page order as a function
 	            int coefficient = 0;
 	            int constant = 0;
