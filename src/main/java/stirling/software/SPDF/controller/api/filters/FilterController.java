@@ -21,7 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.WebResponseUtils;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 @RestController
 @Tag(name = "Filter", description = "Filter APIs")
 public class FilterController {
@@ -37,6 +37,7 @@ public class FilterController {
 		return PdfUtils.hasText(pdfDocument, pageNumber);
 	}
 
+	//TODO
 	@PostMapping(consumes = "multipart/form-data", value = "/contains-image")
 	@Operation(summary = "Checks if a PDF contains an image", description = "Input:PDF Output:Boolean Type:SISO")
 	public Boolean containsImage(
@@ -52,7 +53,9 @@ public class FilterController {
 	public Boolean pageCount(
 			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file", required = true) MultipartFile inputFile,
 			@Parameter(description = "Page Count", required = true) String pageCount,
-			@Parameter(description = "Comparison type, accepts Greater, Equal, Less than", required = false) String comparator)
+			@Parameter(description = "Comparison type", 
+            schema = @Schema(description = "The comparison type, accepts Greater, Equal, Less than", 
+                            allowableValues = {"Greater", "Equal", "Less"})) String comparator)
 			throws IOException, InterruptedException {
 		// Load the PDF
 		PDDocument document = PDDocument.load(inputFile.getInputStream());
@@ -76,7 +79,9 @@ public class FilterController {
 	public Boolean pageSize(
 		@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file", required = true) MultipartFile inputFile,
 		@Parameter(description = "Standard Page Size", required = true) String standardPageSize,
-		@Parameter(description = "Comparison type, accepts Greater, Equal, Less than", required = false) String comparator)
+		@Parameter(description = "Comparison type", 
+        schema = @Schema(description = "The comparison type, accepts Greater, Equal, Less than", 
+                        allowableValues = {"Greater", "Equal", "Less"})) String comparator)
 		throws IOException, InterruptedException {
 		
 		// Load the PDF
@@ -111,7 +116,9 @@ public class FilterController {
 	public Boolean fileSize(
 		@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file", required = true) MultipartFile inputFile,
 		@Parameter(description = "File Size", required = true) String fileSize,
-		@Parameter(description = "Comparison type, accepts Greater, Equal, Less than", required = false) String comparator)
+		@Parameter(description = "Comparison type", 
+        schema = @Schema(description = "The comparison type, accepts Greater, Equal, Less than", 
+                        allowableValues = {"Greater", "Equal", "Less"})) String comparator)
 		throws IOException, InterruptedException {
 		
 		// Get the file size
@@ -136,7 +143,9 @@ public class FilterController {
 	public Boolean pageRotation(
 		@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file", required = true) MultipartFile inputFile,
 		@Parameter(description = "Rotation in degrees", required = true) int rotation,
-		@Parameter(description = "Comparison type, accepts Greater, Equal, Less than", required = false) String comparator)
+		@Parameter(description = "Comparison type", 
+        schema = @Schema(description = "The comparison type, accepts Greater, Equal, Less than", 
+                        allowableValues = {"Greater", "Equal", "Less"})) String comparator)
 		throws IOException, InterruptedException {
 		
 		// Load the PDF

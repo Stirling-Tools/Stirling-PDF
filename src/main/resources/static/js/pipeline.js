@@ -87,7 +87,7 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 
 	let formData = new FormData();
 
-	let fileInput = document.getElementById('fileInput');
+	let fileInput = document.getElementById('fileInput-input');
 	let files = fileInput.files;
 
 	for (let i = 0; i < files.length; i++) {
@@ -177,7 +177,11 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 	let listItem = document.createElement('li');
 	listItem.className = "list-group-item";
 	let hasSettings = (apiDocs[selectedOperation] && apiDocs[selectedOperation].post &&
-	apiDocs[selectedOperation].post.parameters && apiDocs[selectedOperation].post.parameters.length > 0);
+    ((apiDocs[selectedOperation].post.parameters && apiDocs[selectedOperation].post.parameters.length > 0) ||
+    (apiDocs[selectedOperation].post.requestBody && 
+    apiDocs[selectedOperation].post.requestBody.content['multipart/form-data'].schema.properties)));
+
+
 
 
 	listItem.innerHTML = `
@@ -222,52 +226,77 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 		let pipelineSettingsModal = document.getElementById('pipelineSettingsModal');
 		let pipelineSettingsContent = document.getElementById('pipelineSettingsContent');
 		let operationData = apiDocs[operation].post.parameters || [];
+	    let requestBodyData = apiDocs[operation].post.requestBody.content['multipart/form-data'].schema.properties || {};
+	
+	    // Combine operationData and requestBodyData into a single array
+	    operationData = operationData.concat(Object.keys(requestBodyData).map(key => ({
+	        name: key,
+	        schema: requestBodyData[key]
+	    })));
 
 		pipelineSettingsContent.innerHTML = '';
 
 		operationData.forEach(parameter => {
-			let parameterDiv = document.createElement('div');
-			parameterDiv.className = "form-group";
+        let parameterDiv = document.createElement('div');
+        parameterDiv.className = "form-group";
 
-			let parameterLabel = document.createElement('label');
-			parameterLabel.textContent = `${parameter.name} (${parameter.schema.type}): `;
-			parameterLabel.title = parameter.description;
-			parameterDiv.appendChild(parameterLabel);
+        let parameterLabel = document.createElement('label');
+        parameterLabel.textContent = `${parameter.name} (${parameter.schema.type}): `;
+        parameterLabel.title = parameter.description;
+        parameterDiv.appendChild(parameterLabel);
 
-			let parameterInput;
-			switch (parameter.schema.type) {
-				case 'string':
-				case 'number':
-				case 'integer':
-					parameterInput = document.createElement('input');
-					parameterInput.type = parameter.schema.type === 'string' ? 'text' : 'number';
-					parameterInput.className = "form-control";
-					break;
-				case 'boolean':
-					parameterInput = document.createElement('input');
-					parameterInput.type = 'checkbox';
-					break;
-				case 'array':
-				case 'object':
-					parameterInput = document.createElement('textarea');
-					parameterInput.placeholder = `Enter a JSON formatted ${parameter.schema.type}`;
-					parameterInput.className = "form-control";
-					break;
-				case 'enum':
-					parameterInput = document.createElement('select');
-					parameterInput.className = "form-control";
-					parameter.schema.enum.forEach(option => {
-						let optionElement = document.createElement('option');
-						optionElement.value = option;
-						optionElement.text = option;
-						parameterInput.appendChild(optionElement);
-					});
-					break;
-				default:
-					parameterInput = document.createElement('input');
-					parameterInput.type = 'text';
-					parameterInput.className = "form-control";
-			}
+        let parameterInput;
+
+        // check if enum exists in schema
+        if (parameter.schema.enum) {
+            // if enum exists, create a select element
+            parameterInput = document.createElement('select');
+            parameterInput.className = "form-control";
+
+            // iterate over each enum value and create an option for it
+            parameter.schema.enum.forEach(value => {
+                let option = document.createElement('option');
+                option.value = value;
+                option.text = value;
+                parameterInput.appendChild(option);
+            });
+        } else {
+            // switch-case statement for handling non-enum types
+            switch (parameter.schema.type) {
+                case 'string':
+                    if (parameter.schema.format === 'binary') {
+                        // This is a file input
+                        parameterInput = document.createElement('input');
+                        parameterInput.type = 'file';
+                        parameterInput.className = "form-control";
+                    } else {
+                        parameterInput = document.createElement('input');
+                        parameterInput.type = 'text';
+                        parameterInput.className = "form-control";
+                    }
+                    break;
+                case 'number':
+                case 'integer':
+                    parameterInput = document.createElement('input');
+                    parameterInput.type = 'number';
+                    parameterInput.className = "form-control";
+                    break;
+                case 'boolean':
+                    parameterInput = document.createElement('input');
+                    parameterInput.type = 'checkbox';
+                    break;
+                case 'array':
+                case 'object':
+                    parameterInput = document.createElement('textarea');
+                    parameterInput.placeholder = `Enter a JSON formatted ${parameter.schema.type}`;
+                    parameterInput.className = "form-control";
+                    break;
+                default:
+                    parameterInput = document.createElement('input');
+                    parameterInput.type = 'text';
+                    parameterInput.className = "form-control";
+            }
+        }
 			parameterInput.id = parameter.name;
 
 			if (operationSettings[operation] && operationSettings[operation][parameter.name] !== undefined) {

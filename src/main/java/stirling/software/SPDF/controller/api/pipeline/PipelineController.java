@@ -53,9 +53,9 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @Tag(name = "Pipeline", description = "Pipeline APIs")
-public class Controller {
+public class PipelineController {
 
-	private static final Logger logger = LoggerFactory.getLogger(Controller.class);
+	private static final Logger logger = LoggerFactory.getLogger(PipelineController.class);
 	@Autowired
 	private ObjectMapper objectMapper;
 
@@ -246,11 +246,11 @@ public class Controller {
 
 	List<Resource> processFiles(List<Resource> outputFiles, String jsonString) throws Exception {
 		
-		logger.info("Processing files... " + outputFiles);
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode jsonNode = mapper.readTree(jsonString);
 
 		JsonNode pipelineNode = jsonNode.get("pipeline");
+		logger.info("Running pipelineNode: {}", pipelineNode);
 		ByteArrayOutputStream logStream = new ByteArrayOutputStream();
 		PrintStream logPrintStream = new PrintStream(logStream);
 
@@ -298,19 +298,32 @@ public class Controller {
 						continue;
 					}
 
-					// Check if the response body is a zip file
-					if (isZip(response.getBody())) {
-						// Unzip the file and add all the files to the new output files
-						newOutputFiles.addAll(unzip(response.getBody()));
-					} else {
-						Resource outputResource = new ByteArrayResource(response.getBody()) {
-							@Override
-							public String getFilename() {
-								return file.getFilename(); // Preserving original filename
-							}
-						};
-						newOutputFiles.add(outputResource);
-					}
+					
+					// Define filename
+	                String filename;
+	                if ("auto-rename".equals(operation)) {
+	                    // If the operation is "auto-rename", generate a new filename.
+	                    // This is a simple example of generating a filename using current timestamp.
+	                    // Modify as per your needs.
+	                    filename = "file_" + System.currentTimeMillis();
+	                } else {
+	                    // Otherwise, keep the original filename.
+	                    filename = file.getFilename();
+	                }
+
+	                // Check if the response body is a zip file
+	                if (isZip(response.getBody())) {
+	                    // Unzip the file and add all the files to the new output files
+	                    newOutputFiles.addAll(unzip(response.getBody()));
+	                } else {
+	                    Resource outputResource = new ByteArrayResource(response.getBody()) {
+	                        @Override
+	                        public String getFilename() {
+	                            return filename;
+	                        }
+	                    };
+	                    newOutputFiles.add(outputResource);
+	                }
 				}
 
 				if (!hasInputFileType) {

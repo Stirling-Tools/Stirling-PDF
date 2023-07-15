@@ -47,6 +47,11 @@ public class WatermarkController {
 			@RequestPart(required = true) @Parameter(description = "The watermark type (text or image)") String watermarkType,
 			@RequestPart(required = false) @Parameter(description = "The watermark text") String watermarkText,
 			@RequestPart(required = false) @Parameter(description = "The watermark image") MultipartFile watermarkImage,
+			
+			@RequestParam(defaultValue = "roman", name = "alphabet") @Parameter(description = "The selected alphabet", 
+            schema = @Schema(type = "string", 
+                             allowableValues = {"roman","arabic","japanese","korean","chinese"}, 
+                             defaultValue = "roman")) String alphabet,
 			@RequestParam(defaultValue = "30", name = "fontSize") @Parameter(description = "The font size of the watermark text", example = "30") float fontSize,
 			@RequestParam(defaultValue = "0", name = "rotation") @Parameter(description = "The rotation of the watermark in degrees", example = "0") float rotation,
 			@RequestParam(defaultValue = "0.5", name = "opacity") @Parameter(description = "The opacity of the watermark (0.0 - 1.0)", example = "0.5") float opacity,
@@ -71,7 +76,7 @@ public class WatermarkController {
 
 			if (watermarkType.equalsIgnoreCase("text")) {
 				addTextWatermark(contentStream, watermarkText, document, page, rotation, widthSpacer, heightSpacer,
-						fontSize);
+						fontSize, alphabet);
 			} else if (watermarkType.equalsIgnoreCase("image")) {
 				addImageWatermark(contentStream, watermarkImage, document, page, rotation, widthSpacer, heightSpacer,
 						fontSize);
@@ -86,9 +91,41 @@ public class WatermarkController {
 	}
 
 	private void addTextWatermark(PDPageContentStream contentStream, String watermarkText, PDDocument document,
-			PDPage page, float rotation, int widthSpacer, int heightSpacer, float fontSize) throws IOException {
-		// Set font and other properties for text watermark
-		PDFont font = PDType1Font.HELVETICA_BOLD;
+			PDPage page, float rotation, int widthSpacer, int heightSpacer, float fontSize, String alphabet) throws IOException {
+		String resourceDir = "";
+	    PDFont font = PDType1Font.HELVETICA_BOLD;
+	    switch (alphabet) {
+	        case "arabic":
+	            resourceDir = "static/fonts/NotoSansArabic-Regular.ttf";
+	            break;
+	        case "japanese":
+	            resourceDir = "static/fonts/Meiryo.ttf";
+	            break;
+	        case "korean":
+	            resourceDir = "static/fonts/malgun.ttf";
+	            break;
+	        case "chinese":
+	            resourceDir = "static/fonts/SimSun.ttf";
+	            break;
+	        case "roman":
+	        default:
+	            resourceDir = "static/fonts/NotoSans-Regular.ttf";
+	            break;
+	    }
+
+        
+        if(!resourceDir.equals("")) {
+            ClassPathResource classPathResource = new ClassPathResource(resourceDir);
+            String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
+            File tempFile = File.createTempFile("NotoSansFont", fileExtension);
+            try (InputStream is = classPathResource.getInputStream(); FileOutputStream os = new FileOutputStream(tempFile)) {
+                IOUtils.copy(is, os);
+            }
+            
+            font = PDType0Font.load(document, tempFile);
+            tempFile.deleteOnExit();
+        }
+        
 		contentStream.setFont(font, fontSize);
 		contentStream.setNonStrokingColor(Color.LIGHT_GRAY);
 

@@ -30,6 +30,8 @@ import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 
 import stirling.software.SPDF.utils.WebResponseUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @RestController
 public class AutoSplitPdfController {
@@ -37,7 +39,10 @@ public class AutoSplitPdfController {
     private static final String QR_CONTENT = "https://github.com/Frooodle/Stirling-PDF";
 
     @PostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
-    public ResponseEntity<byte[]> autoSplitPdf(@RequestParam("fileInput") MultipartFile file) throws IOException {
+    @Operation(summary = "Auto split PDF pages into separate documents", description = "This endpoint accepts a PDF file, scans each page for a specific QR code, and splits the document at the QR code boundaries. The output is a zip file containing each separate PDF document. Input:PDF Output:ZIP Type:SISO")
+    public ResponseEntity<byte[]> autoSplitPdf(
+        @RequestParam("fileInput") @Parameter(description = "The input PDF file which needs to be split into separate documents based on QR code boundaries.", required = true) MultipartFile file)
+        throws IOException {
         InputStream inputStream = file.getInputStream();
         PDDocument document = PDDocument.load(inputStream);
         PDFRenderer pdfRenderer = new PDFRenderer(document);

@@ -44,7 +44,7 @@ public class PdfUtils {
 
 
 	public static PDRectangle textToPageSize(String size) {
-		switch (size) {
+		switch (size.toUpperCase()) {
 		case "A0":
 			return PDRectangle.A0;
 		case "A1":
