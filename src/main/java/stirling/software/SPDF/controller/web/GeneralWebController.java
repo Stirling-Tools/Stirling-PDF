@@ -143,4 +143,12 @@ public class GeneralWebController {
         model.addAttribute("currentPage", "crop");
         return "crop";
     }
+    
+
+    @GetMapping("/auto-split-pdf")
+    @Hidden
+    public String autoSPlitPDFForm(Model model) {
+        model.addAttribute("currentPage", "auto-split-pdf");
+        return "auto-split-pdf";
+    }
 }

@@ -62,6 +62,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-core'
     
+    implementation group: 'com.google.zxing', name: 'core', version: '3.5.1'
+    
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
 }
