@@ -14,12 +14,12 @@
           <div class="col-md-6">
             <h2 th:text="#{crop.header}"></h2>
              <form id="cropForm" action="/crop" method="post" enctype="multipart/form-data">
-              <input id="fileInput" type="file" name="file" required>
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
               <input id="x" type="hidden" name="x">
               <input id="y" type="hidden" name="y">
               <input id="width" type="hidden" name="width">
               <input id="height" type="hidden" name="height">
-              <button type="submit">Submit</button>
+              <button type="submit" class="btn btn-primary" th:text="#{crop.submit}"></button>
             </form>
             <canvas id="pdf-canvas"></canvas>
             <script>
@@ -28,7 +28,7 @@
             let context = canvas.getContext('2d');
 
             let cropForm = document.getElementById('cropForm');
-            let fileInput = document.getElementById('fileInput');
+            let fileInput = document.getElementById('fileInput-input');
             let xInput = document.getElementById('x');
             let yInput = document.getElementById('y');
             let widthInput = document.getElementById('width');
@@ -90,8 +90,6 @@
                 page.render(renderContext);
               });
             }
-
-            
             
             </script>
             

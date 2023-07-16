@@ -85,10 +85,10 @@ public class PageNumbersController {
         float marginFactor;
         switch (customMargin.toLowerCase()) {
             case "small":
-                marginFactor = 0.01f;
+                marginFactor = 0.02f;
                 break;
             case "medium":
-                marginFactor = 0.025f;
+                marginFactor = 0.035f;
                 break;
             case "large":
                 marginFactor = 0.05f;
@@ -97,7 +97,7 @@ public class PageNumbersController {
                 marginFactor = 0.1f;
                 break;
             default:
-                marginFactor = 0.01f;
+                marginFactor = 0.035f;
                 break;
         }
 

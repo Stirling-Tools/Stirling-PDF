@@ -43,4 +43,11 @@ public class SecurityWebController {
         model.addAttribute("currentPage", "cert-sign");
         return "security/cert-sign";
     }
+    
+    @GetMapping("/sanitize-pdf")
+    @Hidden
+    public String sanitizeForm(Model model) {
+        model.addAttribute("currentPage", "");
+        return "security/sanitize-pdf";
+    }
 }

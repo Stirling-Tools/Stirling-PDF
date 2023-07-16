@@ -23,15 +23,13 @@
 								th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
 							<br>
 							<div class="form-group">
-								<label for="customMargin">Margin Size</label> <select
+								<label for="customMargin" th:text="#{addPageNumbers.selectText.2}"></label> <select
 									class="form-control" id="customMargin" name="customMargin"
 									required>
-									<option value="" disabled selected>Select a margin
-										size</option>
-									<option value="small">Small</option>
-									<option value="medium">Medium</option>
-									<option value="large">Large</option>
-									<option value="x-large">X-Large</option>
+									<option value="small" th:text="#{sizes.small}"></option>
+									<option value="medium" selected th:text="#{sizes.medium}"></option>
+									<option value="large" th:text="#{sizes.large}"></option>
+									<option value="x-large" th:text="#{sizes.x-large}"></option>
 								</select>
 							</div>
 							<style>
@@ -80,7 +78,7 @@
 
 
 							<div class="form-group">
-								<label for="position">Position</label>
+								<label for="position" th:text="#{addPageNumbers.selectText.3}"></label>
 								<div class="a4container">
 									<div class="pageNumber" id="1" style="top: 10%; left: 10%;">1</div>
 									<div class="pageNumber" id="2" style="top: 10%; left: 50%;">2</div>
@@ -92,27 +90,23 @@
 									<div class="pageNumber" id="8" style="top: 90%; left: 50%;">8</div>
 									<div class="pageNumber" id="9" style="top: 90%; left: 90%;">9</div>
 								</div>
-
-
-
-
 							</div>
 
 							<input type="hidden" id="numberInput" name="position" min="1"
 								max="9" required>
 							<div class="form-group">
-								<label for="startingNumber">Starting Number</label> <input
+								<label for="startingNumber" th:text="#{addPageNumbers.selectText.4}"></label> <input
 									type="number" class="form-control" id="startingNumber"
 									name="startingNumber" min="1" required value="1" />
 							</div>
 							<div class="form-group">
-								<label for="pagesToNumber">Pages to Number</label> <input
+								<label for="pagesToNumber" th:text="#{addPageNumbers.selectText.5}"></label> <input
 									type="text" class="form-control" id="pagesToNumber"
 									name="pagesToNumber"
 									placeholder="Which pages to number, default 'all', also accepts 1-5 or 2,5,9 etc" />
 							</div>
 							<div class="form-group">
-								<label for="customText">Custom Text</label> <input type="text"
+								<label for="customText" th:text="#{addPageNumbers.selectText.6}"></label> <input type="text"
 									class="form-control" id="customText" name="customText"
 									placeholder="Default just number, also accepts 'Page {n} of {total}', 'Tag-{n}' etc" />
 							</div>
