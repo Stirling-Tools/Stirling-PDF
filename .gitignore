@@ -15,7 +15,6 @@ local.properties
 .classpath
 .project
 version.properties
-*.pdf
 pipeline/
 
 #### Stirling-PDF Files ###
