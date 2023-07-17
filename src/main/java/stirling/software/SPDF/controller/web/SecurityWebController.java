@@ -47,7 +47,7 @@ public class SecurityWebController {
     @GetMapping("/sanitize-pdf")
     @Hidden
     public String sanitizeForm(Model model) {
-        model.addAttribute("currentPage", "");
+        model.addAttribute("currentPage", "sanitize-pdf");
         return "security/sanitize-pdf";
     }
 }
