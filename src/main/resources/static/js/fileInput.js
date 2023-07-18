@@ -53,7 +53,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Reset drag counter
         dragCounter = 0;
 
-        handleFileInputChange(fileInput);
+        //handleFileInputChange(fileInput);
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
     };
 
     // Prevent default behavior for drag events

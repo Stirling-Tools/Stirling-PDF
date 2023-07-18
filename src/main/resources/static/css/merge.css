@@ -17,9 +17,13 @@
   display: flex;
   justify-content: flex-end;
 }
+.arrows .btn {
+  margin: 0 3px;
+}
 
 .move-up span,
 .move-down span {
   font-weight: bold;
   font-size: 1.2em;
+  
 }
