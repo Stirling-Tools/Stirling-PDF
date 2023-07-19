@@ -14,12 +14,21 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <h2 th:text="#{autoSplitPDF.header}"></h2>
-                        <form method="post" enctype="multipart/form-data" th:action="@{auto-split-pdf}">
-                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
-                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{autoSplitPDF.submit}"></button>
-
-                        </form>
-             
+                        <!-- Added a brief description -->
+                        <p th:text="#{autoSplitPDF.description}"></p>
+						<ul>
+						    <li th:text="#{autoSplitPDF.selectText.1}"></li>
+						    <li th:text="#{autoSplitPDF.selectText.2}"></li>
+						    <li th:text="#{autoSplitPDF.selectText.3}"></li>
+						    <li th:text="#{autoSplitPDF.selectText.4}"></li>
+						</ul>
+						<form method="post" enctype="multipart/form-data">
+						    <p th:text="#{autoSplitPDF.formPrompt}"></p>
+						    <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+						    <p><a th:href="@{files/Auto Splitter Divider (minimal).pdf}" download th:text="#{autoSplitPDF.dividerDownload1}"></a></p>
+						    <p><a th:href="@{files/Auto Splitter Divider (with instructions).pdf}" download th:text="#{autoSplitPDF.dividerDownload2}"></a></p>
+						    <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{autoSplitPDF.submit}"></button>
+						</form>
                     </div>
                 </div>
             </div>

@@ -21,12 +21,24 @@
               <input id="height" type="hidden" name="height">
               <button type="submit" class="btn btn-primary" th:text="#{crop.submit}"></button>
             </form>
-            <canvas id="pdf-canvas"></canvas>
+            <div style="position: relative; display: inline-block;">
+			    <canvas id="pdf-canvas" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
+			    <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2;"></canvas>
+			</div>
+
             <script>
             
-            let canvas = document.getElementById('pdf-canvas');
-            let context = canvas.getContext('2d');
+            let pdfCanvas  = document.getElementById('pdf-canvas');
+            let overlayCanvas = document.getElementById('overlayCanvas');
 
+            let context = pdfCanvas.getContext('2d');
+            let overlayContext = overlayCanvas.getContext('2d');
+            
+            overlayCanvas.width = pdfCanvas.width;
+            overlayCanvas.height = pdfCanvas.height;
+            
+            let isDrawing = false; // New flag to check if drawing is ongoing
+            
             let cropForm = document.getElementById('cropForm');
             let fileInput = document.getElementById('fileInput-input');
             let xInput = document.getElementById('x');
@@ -59,37 +71,67 @@
               }
             });
 
-            canvas.addEventListener('mousedown', function(e) {
-              startX = e.offsetX;
-              startY = e.offsetY;
+            overlayCanvas.addEventListener('mousedown', function(e) {
+                // Clear previously drawn rectangle on the main canvas
+                context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+                renderPage(currentPage); // Re-render the PDF
+
+                // Clear the overlay canvas to ensure old drawings are removed
+                overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+                startX = e.offsetX;
+                startY = e.offsetY;
+                isDrawing = true;
             });
 
-            canvas.addEventListener('mouseup', function(e) {
-            	  rectWidth = e.offsetX - startX;
-            	  rectHeight = e.offsetY - startY;
+            overlayCanvas.addEventListener('mousemove', function(e) {
+                if (!isDrawing) return;
+                overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); // Clear previous rectangle
+                
+                rectWidth = e.offsetX - startX;
+                rectHeight = e.offsetY - startY;
+                overlayContext.strokeStyle = 'red';
+                overlayContext.strokeRect(startX, startY, rectWidth, rectHeight);
+            });
 
-            	  // Flip the y-coordinate
-            	  let flippedY = canvas.height - e.offsetY;
+            overlayCanvas.addEventListener('mouseup', function(e) {
+                isDrawing = false;
+                
+                rectWidth = e.offsetX - startX;
+                rectHeight = e.offsetY - startY;
 
-            	  xInput.value = startX;
-            	  yInput.value = flippedY;
-            	  widthInput.value = rectWidth;
-            	  heightInput.value = rectHeight;
+                let flippedY = pdfCanvas.height - e.offsetY;
 
-            	  context.strokeStyle = 'red';
-            	  context.strokeRect(startX, startY, rectWidth, rectHeight);
-            	});
+                xInput.value = startX;
+                yInput.value = flippedY;
+                widthInput.value = rectWidth;
+                heightInput.value = rectHeight;
+                
+                // Draw the final rectangle on the main canvas
+                context.strokeStyle = 'red';
+                context.strokeRect(startX, startY, rectWidth, rectHeight);
+                
+                overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); // Clear the overlay
+            });
 
 
             function renderPage(pageNumber) {
-              pdfDoc.getPage(pageNumber).then(function(page) {
-                let viewport = page.getViewport({ scale: 1.0 });
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-                let renderContext = { canvasContext: context, viewport: viewport };
-                page.render(renderContext);
-              });
+                pdfDoc.getPage(pageNumber).then(function(page) {
+                    let viewport = page.getViewport({ scale: 1.0 });
+                    pdfCanvas.width = viewport.width;
+                    pdfCanvas.height = viewport.height;
+                    
+                    overlayCanvas.width = viewport.width;  // Match overlay canvas size with PDF canvas
+                    overlayCanvas.height = viewport.height;
+                    
+                    let renderContext = { canvasContext: context, viewport: viewport };
+                    page.render(renderContext);
+                });
             }
+           
+
+
+
             
             </script>
             
