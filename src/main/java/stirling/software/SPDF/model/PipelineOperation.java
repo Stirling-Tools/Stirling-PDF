@@ -22,4 +22,11 @@ public class PipelineOperation {
         public void setParameters(Map<String, Object> parameters) {
             this.parameters = parameters;
         }
+
+		@Override
+		public String toString() {
+			return "PipelineOperation [operation=" + operation + ", parameters=" + parameters + "]";
+		}
+        
+        
     }

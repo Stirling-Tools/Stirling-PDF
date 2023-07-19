@@ -1,5 +1,8 @@
 | Operation           | PageOps | Convert | Security | Other | CLI  | Python | OpenCV | LibreOffice | OCRmyPDF | Java     | Javascript |
 |---------------------|---------|---------|----------|-------|------|--------|--------|-------------|----------|----------|------------|
+| adjust-contrast     |    ✔️    |         |          |       |      |        |        |             |          |           |    ✔️      |
+| auto-split-pdf      |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
+| crop                |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
 | merge-pdfs          |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
 | multi-page-layout   |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
 | pdf-organizer       |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |    ✔️       |
@@ -22,7 +25,10 @@
 | cert-sign           |         |         |    ✔️     |       |      |        |        |             |          |    ✔️     |            |
 | change-permissions  |         |         |    ✔️     |       |      |        |        |             |          |    ✔️     |            |
 | remove-password     |         |         |    ✔️     |       |      |        |        |             |          |    ✔️     |            |
+| sanitize-pdf        |         |         |    ✔️     |       |      |        |        |             |          |    ✔️     |            |
 | add-image           |         |         |          |  ✔️    |      |        |        |             |          |    ✔️     |            |
+| add-page-numbers    |         |         |          |  ✔️    |      |        |        |             |          |    ✔️     |            |
+| auto-rename         |         |         |          |  ✔️    |      |        |        |             |          |    ✔️     |            |
 | change-metadata     |         |         |          |  ✔️    |      |        |        |             |          |    ✔️     |            |
 | compare             |         |         |          |  ✔️    |      |        |        |             |          |          |    ✔️       |
 | compress-pdf        |         |         |          |  ✔️    |  ✔️   |        |        |             |    ✔️     |          |            |

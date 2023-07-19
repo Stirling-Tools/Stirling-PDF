@@ -3,7 +3,7 @@
 
 <th:block th:insert="~{fragments/common :: head(title=#{watermark.title})}"></th:block>
 
-<body>
+<body onload="toggleFileOption()">
     <div id="page-container">
         <div id="content-wrap">
             <div th:insert="~{fragments/navbar.html :: navbar}"></div>
@@ -16,30 +16,36 @@
                         <form method="post" enctype="multipart/form-data" action="add-watermark">
                             <div class="form-group">
                                 <label th:text="#{watermark.selectText.1}"></label>
-                                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}">
+                                    <input type="file" id="fileInput" name="fileInput" class="form-control-file" accept="application/pdf" required />
+                                </div>
                             </div>
-
+                            
                             <div class="form-group">
-	                            <label for="fontSize" th:text="#{alphabet} + ':'"></label> 
-	                            <select class="form-control" name="alphabet" id="alphabet-select">
-	                                <option value="romain">Roman</option>
-	                                <option value="arabic">العربية</option>
-	                                <option value="japanese">日本語</option>
-	                                <option value="korean">한국어</option>
-	                                <option value="chinese">简体中文</option>
-	                            </select>
+                                <label th:text="#{watermark.selectText.8}"></label> 
+                                <select class="form-control" id="watermarkType" name="watermarkType" onchange="toggleFileOption()">
+                                    <option value="text">Text</option>
+                                    <option value="image">Image</option>
+                                </select>
                             </div>
-                            <div class="form-group">
+                            
+                            <div id="watermarkTextGroup" class="form-group">
                                 <label for="watermarkText" th:text="#{watermark.selectText.2}"></label> 
                                 <input type="text" id="watermarkText" name="watermarkText" class="form-control" placeholder="Stirling-PDF" required />
                             </div>
+                            
+                            <div id="watermarkImageGroup" class="form-group" style="display: none;">
+                                <label for="watermarkImage" th:text="#{watermark.selectText.9}"></label> 
+                                <input type="file" id="watermarkImage" name="watermarkImage" class="form-control-file" accept="image/*" />
+                            </div>
+                            
                             <div class="form-group">
                                 <label for="fontSize" th:text="#{watermark.selectText.3}"></label> 
                                 <input type="text" id="fontSize" name="fontSize" class="form-control" value="30" />
                             </div>
                             <div class="form-group">
 							    <label for="opacity" th:text="#{watermark.selectText.7}"></label> 
-							    <input type="text" id="opacity" name="opacityText" class="form-control" value="50" onblur="updateopacityValue()" />
+							    <input type="text" id="opacity" name="opacityText" class="form-control" value="50" onblur="updateOpacityValue()" />
 							    <input type="hidden" id="opacityReal" name="opacity" value="0.5">
 							</div>
 
@@ -48,7 +54,7 @@
 							    const opacityInput = document.getElementById('opacity');
 							    const opacityRealInput = document.getElementById('opacityReal');
 							
-							    const updateopacityValue = () => {
+							    const updateOpacityValue = () => {
 							        let percentageValue = parseFloat(opacityInput.value.replace('%', ''));
 							        if (isNaN(percentageValue)) {
 							            percentageValue = 0;
@@ -68,14 +74,15 @@
 							        opacityInput.value = opacityInput.value.replace('%', '');
 							    });
 							    opacityInput.addEventListener('blur', () => {
-							        updateopacityValue();
+							        updateOpacityValue();
 							        appendPercentageSymbol();
 							    });
 							
 							    // Set initial values
-							    updateopacityValue();
+							    updateOpacityValue();
 							    appendPercentageSymbol();
 							</script>
+                            
                             <div class="form-group">
                                 <label for="rotation" th:text="#{watermark.selectText.4}"></label> 
                                 <input type="text" id="rotation" name="rotation" class="form-control" value="45" />
@@ -92,6 +99,29 @@
                                 <input type="submit" id="submitBtn" th:value="#{watermark.submit}" class="btn btn-primary" />
                             </div>
                         </form>
+                        
+                        <script>
+						    function toggleFileOption() {
+						        const watermarkType = document.getElementById('watermarkType').value;
+						        const watermarkTextGroup = document.getElementById('watermarkTextGroup');
+						        const watermarkImageGroup = document.getElementById('watermarkImageGroup');
+						        const watermarkText = document.getElementById('watermarkText');
+						        const watermarkImage = document.getElementById('watermarkImage');
+						
+						        if (watermarkType === 'text') {
+						            watermarkTextGroup.style.display = 'block';
+						            watermarkText.required = true;
+						            watermarkImageGroup.style.display = 'none';
+						            watermarkImage.required = false;
+						        } else if (watermarkType === 'image') {
+						            watermarkTextGroup.style.display = 'none';
+						            watermarkText.required = false;
+						            watermarkImageGroup.style.display = 'block';
+						            watermarkImage.required = true;
+						        }
+						    }
+						</script>
+
                     </div>
                 </div>
             </div>

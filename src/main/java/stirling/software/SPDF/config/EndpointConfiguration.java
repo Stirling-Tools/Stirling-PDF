@@ -68,6 +68,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("PageOps", "rotate-pdf");
         addEndpointToGroup("PageOps", "multi-page-layout");
         addEndpointToGroup("PageOps", "scale-pages");
+        addEndpointToGroup("PageOps", "adjust-contrast");
+        addEndpointToGroup("PageOps", "crop");
+        addEndpointToGroup("PageOps", "auto-split-pdf");
         
         // Adding endpoints to "Convert" group
         addEndpointToGroup("Convert", "pdf-to-img");
@@ -87,7 +90,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "change-permissions");
         addEndpointToGroup("Security", "add-watermark");
         addEndpointToGroup("Security", "cert-sign");
-        
+        addEndpointToGroup("Security", "sanitize-pdf");
         
 
         // Adding endpoints to "Other" group
@@ -102,9 +105,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "repair");
         addEndpointToGroup("Other", "remove-blanks");
         addEndpointToGroup("Other", "compare");
-        
-        
-        
+        addEndpointToGroup("Other", "add-page-numbers");
+        addEndpointToGroup("Other", "auto-rename");
         
         
         
@@ -168,12 +170,18 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "cert-sign");
         addEndpointToGroup("Java", "multi-page-layout");
         addEndpointToGroup("Java", "scale-pages");
-        
+        addEndpointToGroup("Java", "add-page-numbers");
+        addEndpointToGroup("Java", "auto-rename");
+        addEndpointToGroup("Java", "auto-split-pdf");
+        addEndpointToGroup("Java", "sanitize-pdf");
+        addEndpointToGroup("Java", "crop");
         
         //Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
         addEndpointToGroup("Javascript", "sign");
         addEndpointToGroup("Javascript", "compare");
+        addEndpointToGroup("Javascript", "adjust-contrast");
+        
         
     }
                 
