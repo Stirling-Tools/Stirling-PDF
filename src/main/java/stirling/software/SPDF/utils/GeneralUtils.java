@@ -1,5 +1,9 @@
 package stirling.software.SPDF.utils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,8 +39,14 @@ public class GeneralUtils {
 
 	    // loop through the page order array
 	    for (String element : pageOrderArr) {
-	        // check if the element contains a range of pages
-	        if (element.matches("\\d*n\\+?-?\\d*|\\d*\\+?n")) {
+	    	if (element.equalsIgnoreCase("all")) {
+	            for (int i = 0; i < totalPages; i++) {
+	                newPageOrder.add(i);
+	            }
+	            // As all pages are already added, no need to check further
+	            break;
+	        }
+	    	else if (element.matches("\\d*n\\+?-?\\d*|\\d*\\+?n")) {
 	            // Handle page order as a function
 	            int coefficient = 0;
 	            int constant = 0;
@@ -87,5 +97,17 @@ public class GeneralUtils {
 	    }
 
 	    return newPageOrder;
+	}
+	public static boolean createDir(String path) {
+		Path folder = Paths.get(path);
+	    if (!Files.exists(folder)) {
+	        try {
+	            Files.createDirectories(folder);
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            return false;
+	        }
+	    }
+	    return true;
 	}
 }

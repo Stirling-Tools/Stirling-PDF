@@ -74,14 +74,20 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 		"pipeline": [{
 			"operation": selectedOperation,
 			"parameters": parameters
-		}]
+		}],
+		"_examples": {
+			"outputDir": "{outputFolder}/{folderName}",
+			"outputFileName": "{filename}-{pipelineName}-{date}-{time}"
+		},
+		"outputDir": "httpWebRequest",
+		"outputFileName": "{filename}"
 	};
 
 	let pipelineConfigJson = JSON.stringify(pipelineConfig, null, 2);
 
 	let formData = new FormData();
 
-	let fileInput = document.getElementById('fileInput');
+	let fileInput = document.getElementById('fileInput-input');
 	let files = fileInput.files;
 
 	for (let i = 0; i < files.length; i++) {
@@ -120,11 +126,11 @@ let operationSettings = {};
 fetch('v3/api-docs')
 	.then(response => response.json())
 	.then(data => {
-		
+
 		apiDocs = data.paths;
 		let operationsDropdown = document.getElementById('operationsDropdown');
 		const ignoreOperations = ["/handleData", "operationToIgnore"]; // Add the operations you want to ignore here
-				
+
 		operationsDropdown.innerHTML = '';
 
 		let operationsByTag = {};
@@ -142,25 +148,25 @@ fetch('v3/api-docs')
 		});
 
 		// Specify the order of tags
-        let tagOrder = ["General", "Security", "Convert", "Other", "Filter"];
+		let tagOrder = ["General", "Security", "Convert", "Other", "Filter"];
 
-        // Create dropdown options
-        tagOrder.forEach(tag => {
-            if (operationsByTag[tag]) {
-                let group = document.createElement('optgroup');
-                group.label = tag;
+		// Create dropdown options
+		tagOrder.forEach(tag => {
+			if (operationsByTag[tag]) {
+				let group = document.createElement('optgroup');
+				group.label = tag;
 
-                operationsByTag[tag].forEach(operationPath => {
-                    let option = document.createElement('option');
-                    let operationWithoutSlash = operationPath.replace(/\//g, ''); // Remove slashes
-                    option.textContent = operationWithoutSlash;
-                    option.value = operationPath; // Keep the value with slashes for querying
-                    group.appendChild(option);
-                });
+				operationsByTag[tag].forEach(operationPath => {
+					let option = document.createElement('option');
+					let operationWithoutSlash = operationPath.replace(/\//g, ''); // Remove slashes
+					option.textContent = operationWithoutSlash;
+					option.value = operationPath; // Keep the value with slashes for querying
+					group.appendChild(option);
+				});
 
-                operationsDropdown.appendChild(group);
-            }
-        });
+				operationsDropdown.appendChild(group);
+			}
+		});
 	});
 
 
@@ -171,7 +177,11 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 	let listItem = document.createElement('li');
 	listItem.className = "list-group-item";
 	let hasSettings = (apiDocs[selectedOperation] && apiDocs[selectedOperation].post &&
-	apiDocs[selectedOperation].post.parameters && apiDocs[selectedOperation].post.parameters.length > 0);
+		((apiDocs[selectedOperation].post.parameters && apiDocs[selectedOperation].post.parameters.length > 0) ||
+			(apiDocs[selectedOperation].post.requestBody &&
+				apiDocs[selectedOperation].post.requestBody.content['multipart/form-data'].schema.properties)));
+
+
 
 
 	listItem.innerHTML = `
@@ -216,10 +226,20 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 		let pipelineSettingsModal = document.getElementById('pipelineSettingsModal');
 		let pipelineSettingsContent = document.getElementById('pipelineSettingsContent');
 		let operationData = apiDocs[operation].post.parameters || [];
+		let requestBodyData = apiDocs[operation].post.requestBody.content['multipart/form-data'].schema.properties || {};
+
+		// Combine operationData and requestBodyData into a single array
+		operationData = operationData.concat(Object.keys(requestBodyData).map(key => ({
+			name: key,
+			schema: requestBodyData[key]
+		})));
 
 		pipelineSettingsContent.innerHTML = '';
 
 		operationData.forEach(parameter => {
+			// If the parameter name is 'fileInput', return early to skip the rest of this iteration
+    		if (parameter.name === 'fileInput') return;
+    
 			let parameterDiv = document.createElement('div');
 			parameterDiv.className = "form-group";
 
@@ -229,38 +249,62 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 			parameterDiv.appendChild(parameterLabel);
 
 			let parameterInput;
-			switch (parameter.schema.type) {
-				case 'string':
-				case 'number':
-				case 'integer':
-					parameterInput = document.createElement('input');
-					parameterInput.type = parameter.schema.type === 'string' ? 'text' : 'number';
-					parameterInput.className = "form-control";
-					break;
-				case 'boolean':
-					parameterInput = document.createElement('input');
-					parameterInput.type = 'checkbox';
-					break;
-				case 'array':
-				case 'object':
-					parameterInput = document.createElement('textarea');
-					parameterInput.placeholder = `Enter a JSON formatted ${parameter.schema.type}`;
-					parameterInput.className = "form-control";
-					break;
-				case 'enum':
-					parameterInput = document.createElement('select');
-					parameterInput.className = "form-control";
-					parameter.schema.enum.forEach(option => {
-						let optionElement = document.createElement('option');
-						optionElement.value = option;
-						optionElement.text = option;
-						parameterInput.appendChild(optionElement);
-					});
-					break;
-				default:
-					parameterInput = document.createElement('input');
-					parameterInput.type = 'text';
-					parameterInput.className = "form-control";
+
+			// check if enum exists in schema
+			if (parameter.schema.enum) {
+				// if enum exists, create a select element
+				parameterInput = document.createElement('select');
+				parameterInput.className = "form-control";
+
+				// iterate over each enum value and create an option for it
+				parameter.schema.enum.forEach(value => {
+					let option = document.createElement('option');
+					option.value = value;
+					option.text = value;
+					parameterInput.appendChild(option);
+				});
+			} else {
+				// switch-case statement for handling non-enum types
+				switch (parameter.schema.type) {
+					case 'string':
+						if (parameter.schema.format === 'binary') {
+							// This is a file input
+							
+							//parameterInput = document.createElement('input');
+							//parameterInput.type = 'file';
+							//parameterInput.className = "form-control";
+							
+							parameterInput = document.createElement('input');
+							parameterInput.type = 'text';
+							parameterInput.className = "form-control";
+							parameterInput.value = "automatedFileInput";
+						} else {
+							parameterInput = document.createElement('input');
+							parameterInput.type = 'text';
+							parameterInput.className = "form-control";
+						}
+						break;
+					case 'number':
+					case 'integer':
+						parameterInput = document.createElement('input');
+						parameterInput.type = 'number';
+						parameterInput.className = "form-control";
+						break;
+					case 'boolean':
+						parameterInput = document.createElement('input');
+						parameterInput.type = 'checkbox';
+						break;
+					case 'array':
+					case 'object':
+						parameterInput = document.createElement('textarea');
+						parameterInput.placeholder = `Enter a JSON formatted ${parameter.schema.type}`;
+						parameterInput.className = "form-control";
+						break;
+					default:
+						parameterInput = document.createElement('input');
+						parameterInput.type = 'text';
+						parameterInput.className = "form-control";
+				}
 			}
 			parameterInput.id = parameter.name;
 
@@ -340,10 +384,17 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 		if (validatePipeline() === false) {
 			return;
 		}
+		var pipelineName = document.getElementById('pipelineName').value;
 		let pipelineList = document.getElementById('pipelineList').children;
 		let pipelineConfig = {
-			"name": "uniquePipelineName",
-			"pipeline": []
+			"name": pipelineName,
+			"pipeline": [],
+			"_examples": {
+				"outputDir": "{outputFolder}/{folderName}",
+				"outputFileName": "{filename}-{pipelineName}-{date}-{time}"
+			},
+			"outputDir": "httpWebRequest",
+			"outputFileName": "{filename}"
 		};
 
 		for (let i = 0; i < pipelineList.length; i++) {
@@ -368,6 +419,60 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 		document.body.removeChild(a);
 	});
 
+	async function processPipelineConfig(configString) {
+		let pipelineConfig = JSON.parse(configString);
+		let pipelineList = document.getElementById('pipelineList');
+
+		while (pipelineList.firstChild) {
+			pipelineList.removeChild(pipelineList.firstChild);
+		}
+		document.getElementById('pipelineName').value = pipelineConfig.name
+		for (const operationConfig of pipelineConfig.pipeline) {
+			let operationsDropdown = document.getElementById('operationsDropdown');
+			operationsDropdown.value = operationConfig.operation;
+			operationSettings[operationConfig.operation] = operationConfig.parameters;
+
+			// assuming addOperation is async
+			await new Promise((resolve) => {
+				document.getElementById('addOperationBtn').addEventListener('click', resolve, { once: true });
+				document.getElementById('addOperationBtn').click();
+			});
+
+			let lastOperation = pipelineList.lastChild;
+
+			Object.keys(operationConfig.parameters).forEach(parameterName => {
+				let input = document.getElementById(parameterName);
+				if (input) {
+					switch (input.type) {
+						case 'checkbox':
+							input.checked = operationConfig.parameters[parameterName];
+							break;
+						case 'number':
+							input.value = operationConfig.parameters[parameterName].toString();
+							break;
+						case 'file':
+							if (parameterName !== 'fileInput') {
+								// Create a new file input element
+								let newInput = document.createElement('input');
+								newInput.type = 'file';
+								newInput.id = parameterName;
+
+								// Add the new file input to the main page (change the selector according to your needs)
+								document.querySelector('#main').appendChild(newInput);
+							}
+							break;
+						case 'text':
+						case 'textarea':
+						default:
+							input.value = JSON.stringify(operationConfig.parameters[parameterName]);
+					}
+				}
+			});
+
+		}
+	}
+
+
 	document.getElementById('uploadPipelineBtn').addEventListener('click', function() {
 		document.getElementById('uploadPipelineInput').click();
 	});
@@ -375,45 +480,15 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 	document.getElementById('uploadPipelineInput').addEventListener('change', function(e) {
 		let reader = new FileReader();
 		reader.onload = function(event) {
-			let pipelineConfig = JSON.parse(event.target.result);
-			let pipelineList = document.getElementById('pipelineList');
-
-			while (pipelineList.firstChild) {
-				pipelineList.removeChild(pipelineList.firstChild);
-			}
-
-			pipelineConfig.pipeline.forEach(operationConfig => {
-				let operationsDropdown = document.getElementById('operationsDropdown');
-				operationsDropdown.value = operationConfig.operation;
-				operationSettings[operationConfig.operation] = operationConfig.parameters;
-				document.getElementById('addOperationBtn').click();
-
-				let lastOperation = pipelineList.lastChild;
-
-				lastOperation.querySelector('.pipelineSettings').click();
-
-				Object.keys(operationConfig.parameters).forEach(parameterName => {
-					let input = document.getElementById(parameterName);
-					if (input) {
-						switch (input.type) {
-							case 'checkbox':
-								input.checked = operationConfig.parameters[parameterName];
-								break;
-							case 'number':
-								input.value = operationConfig.parameters[parameterName].toString();
-								break;
-							case 'text':
-							case 'textarea':
-							default:
-								input.value = JSON.stringify(operationConfig.parameters[parameterName]);
-						}
-					}
-				});
-
-				document.querySelector('#pipelineSettingsModal .btn-primary').click();
-			});
+			processPipelineConfig(event.target.result);
 		};
 		reader.readAsText(e.target.files[0]);
 	});
+
+	document.getElementById('pipelineSelect').addEventListener('change', function(e) {
+		let selectedPipelineJson = e.target.value;  // assuming the selected value is the JSON string of the pipeline config
+		processPipelineConfig(selectedPipelineJson);
+	});
+
 
 });

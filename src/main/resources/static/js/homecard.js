@@ -1,3 +1,24 @@
+function filterCards() {
+    var input = document.getElementById('searchBar');
+    var filter = input.value.toUpperCase();
+    var cards = document.querySelectorAll('.feature-card');
+
+    for (var i = 0; i < cards.length; i++) {
+        var card = cards[i];
+        var title = card.querySelector('h5.card-title').innerText;
+        var text = card.querySelector('p.card-text').innerText;
+        var tags = card.getAttribute('data-tags');
+        var content = title + ' ' + text + ' ' + tags;
+
+        if (content.toUpperCase().indexOf(filter) > -1) {
+            card.style.display = "";
+        } else {
+            card.style.display = "none";
+        }
+    }
+}
+
+
 function toggleFavorite(element) {
 	var img = element.querySelector('img');
 	var card = element.closest('.feature-card');
@@ -13,6 +34,7 @@ function toggleFavorite(element) {
 	}
 	reorderCards();
 	updateFavoritesDropdown();
+	filterCards();
 }
 
 function reorderCards() {
@@ -45,5 +67,7 @@ function initializeCards() {
 	});
 	reorderCards();
 	updateFavoritesDropdown();
+	filterCards();
 }
+
 window.onload = initializeCards;

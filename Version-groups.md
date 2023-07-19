@@ -13,9 +13,14 @@
 
 Operation           | Ultra-Lite | Lite | Full
 --------------------|------------|------|-----
+add-page-numbers    |     ✔️      |  ✔️   |  ✔️
 add-password        |     ✔️      |  ✔️   |  ✔️
 add-watermark       |     ✔️      |  ✔️   |  ✔️
+adjust-contrast     |     ✔️      |  ✔️   |  ✔️
+auto-split-pdf      |     ✔️      |  ✔️   |  ✔️
+auto-rename         |     ✔️      |  ✔️   |  ✔️
 cert-sign           |     ✔️      |  ✔️   |  ✔️
+crop                |     ✔️      |  ✔️   |  ✔️
 change-metadata     |     ✔️      |  ✔️   |  ✔️
 change-permissions  |     ✔️      |  ✔️   |  ✔️
 compare             |     ✔️      |  ✔️   |  ✔️
@@ -29,6 +34,7 @@ pdf-to-img          |     ✔️      |  ✔️   |  ✔️
 remove-pages        |     ✔️      |  ✔️   |  ✔️
 remove-password     |     ✔️      |  ✔️   |  ✔️
 rotate-pdf          |     ✔️      |  ✔️   |  ✔️
+sanitize-pdf        |     ✔️      |  ✔️   |  ✔️
 scale-pages         |     ✔️      |  ✔️   |  ✔️
 sign                |     ✔️      |  ✔️   |  ✔️
 split-pdfs          |     ✔️      |  ✔️   |  ✔️

@@ -66,3 +66,7 @@ html[lang-direction="rtl"] label.form-check-label {
 .margin-center {
     margin: 0 auto;
 }
+#pdf-canvas {
+    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+    width: 100%;
+}

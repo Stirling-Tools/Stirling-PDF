@@ -1,3 +1,41 @@
+
+
+#navbarSearch {
+    top: 100%;
+    right: 0;
+}
+
+#searchForm {
+    width: 200px;  /* Adjust this value as needed */
+}
+
+/* Style the search results to match the navbar */
+#searchResults {
+    max-height: 200px;  /* Adjust this value as needed */
+    overflow-y: auto;
+    width: 100%;
+}
+
+#searchResults .dropdown-item {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    height: 50px;  /* Fixed height */
+    overflow: hidden;  /* Hide overflow */
+}
+
+#searchResults .icon {
+    margin-right: 10px;
+}
+
+#searchResults .icon-text {
+    display: inline;
+    overflow: hidden;  /* Hide overflow */
+    text-overflow: ellipsis;  /* Add ellipsis for long text */
+}
+
+
+
 .main-icon {
 	width: 36px;
 	height: 36px;

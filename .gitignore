@@ -15,6 +15,13 @@ local.properties
 .classpath
 .project
 version.properties
+pipeline/
+
+#### Stirling-PDF Files ###
+customFiles/
+config/
+watchedFolders/
+
 
 # Gradle
 .gradle

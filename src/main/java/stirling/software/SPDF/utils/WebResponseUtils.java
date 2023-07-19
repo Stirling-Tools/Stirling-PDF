@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 public class WebResponseUtils {
 
@@ -19,6 +20,16 @@ public class WebResponseUtils {
 
 	public static ResponseEntity<byte[]> boasToWebResponse(ByteArrayOutputStream baos, String docName, MediaType mediaType) throws IOException {
 	    return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), docName, mediaType);
+	}
+
+
+	public static ResponseEntity<byte[]> multiPartFileToWebResponse(MultipartFile file) throws IOException {
+	    String fileName = file.getOriginalFilename();
+	    MediaType mediaType = MediaType.parseMediaType(file.getContentType());
+
+	    byte[] bytes = file.getBytes();
+	
+	    return bytesToWebResponse(bytes, fileName, mediaType);
 	}
 
 	public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName, MediaType mediaType) throws IOException {

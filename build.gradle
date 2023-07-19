@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'stirling.software'
-version = '0.10.3'
+version = '0.11.0'
 sourceCompatibility = '17'
 
 repositories {
@@ -61,6 +61,8 @@ dependencies {
     implementation 'com.itextpdf:itext7-core:7.2.5'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-core'
+    
+    implementation group: 'com.google.zxing', name: 'core', version: '3.5.1'
     
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 

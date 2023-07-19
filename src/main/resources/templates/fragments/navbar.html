@@ -13,7 +13,7 @@
         <div class="container ">
 
             <a class="navbar-brand" href="#" th:href="@{/}" >
-                <img th:if="${@navBarText} == 'Stirling PDF'" class="main-icon" src="favicon.svg" alt="icon">
+                <img class="main-icon" src="favicon.svg" alt="icon">
                 <span class="icon-text"  th:text="${@navBarText}"></span>
             </a>
 
@@ -40,7 +40,7 @@
                     </li>-->
                     
 <li class="nav-item nav-item-separator"></li>
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' ? 'active' : ''">
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='crop' OR ${currentPage}=='adjust-contrast' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' OR ${currentPage}=='multi-page-layout' OR ${currentPage}=='scale-pages' ? 'active' : ''">
     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <img class="icon" src="images/file-earmark-pdf.svg" alt="icon">
         <span class="icon-text"  th:text="#{navbar.pageOps}"></span>
@@ -54,6 +54,10 @@
         <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'remove-pages', 'images/file-earmark-x.svg', 'home.removePages.title', 'home.removePages.desc')}"></div>
 		<div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'multi-page-layout', 'images/page-layout.svg', 'home.pageLayout.title', 'home.pageLayout.desc')}"></div>
 		<div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'scale-pages', 'images/scale-pages.svg', 'home.scalePages.title', 'home.scalePages.desc')}"></div>
+		<div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'auto-split-pdf', 'images/layout-split.svg', 'home.autoSplitPDF.title', 'home.autoSplitPDF.desc')}"></div>
+        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('adjust-contrast', 'images/adjust-contrast.svg', 'home.adjust-contrast.title', 'home.adjust-contrast.desc')}"></div>
+        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('crop', 'images/crop.svg', 'home.crop.title', 'home.crop.desc')}"></div>
+		
 		
     </div>
 </li>
@@ -94,17 +98,19 @@
                         <div th:replace="~{fragments/navbarEntry :: navbarEntry ('change-permissions', 'images/shield-lock.svg', 'home.permissions.title', 'home.permissions.desc')}"></div>
                         <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-watermark', 'images/droplet.svg', 'home.watermark.title', 'home.watermark.desc')}"></div>
                         <div th:replace="~{fragments/navbarEntry :: navbarEntry ('cert-sign', 'images/award.svg', 'home.certSign.title', 'home.certSign.desc')}"></div>
+                        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('sanitize-pdf', 'images/sanitize.svg', 'home.sanitizePdf.title', 'home.sanitizePdf.desc')}"></div>
                     </div>
                 </li>
 
                   <li class="nav-item nav-item-separator"></li> 
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='sign' OR ${currentPage}=='repair' OR ${currentPage}=='compare' OR ${currentPage}=='flatten' OR ${currentPage}=='remove-blanks' OR ${currentPage}=='extract-image-scans' OR ${currentPage}=='change-metadata' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' ? 'active' : ''">
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='sign' OR ${currentPage}=='repair' OR ${currentPage}=='compare' OR ${currentPage}=='flatten' OR ${currentPage}=='remove-blanks' OR ${currentPage}=='extract-image-scans' OR ${currentPage}=='change-metadata' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' OR ${currentPage}=='add-page-numbers' OR ${currentPage}=='auto-rename' ? 'active' : ''">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <img class="icon" src="images/card-list.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> 
                         <span class="icon-text"  th:text="#{navbar.other}"></span>
                         
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        	<!--<div th:replace="~{fragments/navbarEntry :: navbarEntry ('pipeline', 'images/pipeline.svg', 'home.pipeline.title', 'home.pipeline.desc')}"></div> -->
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('ocr-pdf', 'images/search.svg', 'home.ocr.title', 'home.ocr.desc')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-image', 'images/file-earmark-richtext.svg', 'home.addImage.title', 'home.addImage.desc')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('compress-pdf', 'images/file-zip.svg', 'home.compressPdfs.title', 'home.compressPdfs.desc')}"></div>
@@ -116,6 +122,8 @@
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('repair', 'images/wrench.svg', 'home.repair.title', 'home.repair.desc')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-blanks', 'images/blank-file.svg', 'home.removeBlanks.title', 'home.removeBlanks.desc')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('compare', 'images/scales.svg', 'home.compare.title', 'home.compare.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-page-numbers', 'images/add-page-numbers.svg', 'home.add-page-numbers.title', 'home.add-page-numbers.desc')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('auto-rename', 'images/fonts.svg', 'home.auto-rename.title', 'home.auto-rename.desc')}"></div>
                         </div>
                     </li>
 
@@ -203,6 +211,70 @@
                         </a>
 
                     </li>
+                    
+             <!-- Search Button and Search Bar -->
+<li class="nav-item position-relative">
+    <a href="#" class="nav-link" id="search-icon">
+        <img class="navbar-icon" src="images/search.svg" alt="icon" width="24" height="24">
+    </a>
+    <!-- Search Bar -->
+    <div class="collapse position-absolute" id="navbarSearch">
+        <form class="d-flex p-2 bg-white border search-form" id="searchForm">
+            <input class="form-control search-input" type="search" placeholder="Search" aria-label="Search" id="navbarSearchInput">
+        </form>
+        <!-- Search Results -->
+        <div id="searchResults" class="border p-2 bg-white search-results"></div>
+    </div>
+</li>
+<style>
+#search-icon i {
+    font-size: 24px; /* Adjust this to your desired size */
+    transition: color 0.3s;
+}
+
+#search-icon:hover i {
+    color: #666; /* Adjust this to your hover color */
+}
+
+#navbarSearch {
+    transition: all 0.3s;
+    max-height: 0;
+    overflow: hidden;
+    
+}
+
+#navbarSearch.show {
+    max-height: 300px; /* Adjust this to your desired max height */
+}
+
+.search-input {
+    transition: border 0.3s, box-shadow 0.3s;
+    
+}
+
+.search-input:focus {
+    border-color: #666; /* Adjust this to your focus color */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Adjust this to your desired shadow */
+}
+
+#searchResults {
+    max-width: 300px; /* Adjust to your preferred width */
+    transition: height 0.3s ease; /* Smooth height transition */
+}
+
+/* Set a fixed height and styling for each search result item */
+.search-results a {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* space between icon and text */
+    height: 40px; /* Adjust based on your design */
+    overflow: hidden; /* Prevent content from overflowing */
+    white-space: nowrap; /* Prevent text from wrapping to next line */
+    text-overflow: ellipsis; /* Truncate text if it's too long */
+}
+
+</style>
+
                 </ul>
 
          
@@ -210,6 +282,7 @@
 
         </div>
         <script src="js/favourites.js"></script>
+        <script src="js/search.js"></script>
     </nav>
     
 	<div th:insert="~{fragments/errorBannerPerPage.html :: errorBannerPerPage}"></div>

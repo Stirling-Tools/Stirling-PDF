@@ -44,7 +44,7 @@ public class PdfUtils {
 
 
 	public static PDRectangle textToPageSize(String size) {
-		switch (size) {
+		switch (size.toUpperCase()) {
 		case "A0":
 			return PDRectangle.A0;
 		case "A1":
@@ -68,43 +68,37 @@ public class PdfUtils {
 		}
 	}
 
-    public boolean hasImageInFile(PDDocument pdfDocument, String text, String pagesToCheck) throws IOException {
-        PDFTextStripper textStripper = new PDFTextStripper();
-        String pdfText = "";
 
-        if(pagesToCheck == null || pagesToCheck.equals("all")) {
-            pdfText = textStripper.getText(pdfDocument);
-        } else {
-            // remove whitespaces
-            pagesToCheck = pagesToCheck.replaceAll("\\s+", "");
+    
+    
+    public static boolean hasImages(PDDocument document, String pagesToCheck) throws IOException {
+        String[] pageOrderArr = pagesToCheck.split(",");
+        List<Integer> pageList = GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
 
-            String[] splitPoints = pagesToCheck.split(",");
-            for (String splitPoint : splitPoints) {
-                if (splitPoint.contains("-")) {
-                    // Handle page ranges
-                    String[] range = splitPoint.split("-");
-                    int startPage = Integer.parseInt(range[0]);
-                    int endPage = Integer.parseInt(range[1]);
-
-                    for (int i = startPage; i <= endPage; i++) {
-                        textStripper.setStartPage(i);
-                        textStripper.setEndPage(i);
-                        pdfText += textStripper.getText(pdfDocument);
-                    }
-                } else {
-                    // Handle individual page
-                    int page = Integer.parseInt(splitPoint);
-                    textStripper.setStartPage(page);
-                    textStripper.setEndPage(page);
-                    pdfText += textStripper.getText(pdfDocument);
-                }
+        for (int pageNumber : pageList) {
+            PDPage page = document.getPage(pageNumber);
+            if (hasImagesOnPage(page)) {
+                return true;
             }
         }
 
-        pdfDocument.close();
-
-        return pdfText.contains(text);
+        return false;
     }
+
+    public static boolean hasText(PDDocument document, String pageNumbersToCheck, String phrase) throws IOException {
+        String[] pageOrderArr = pageNumbersToCheck.split(",");
+        List<Integer> pageList = GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
+
+        for (int pageNumber : pageList) {
+            PDPage page = document.getPage(pageNumber);
+            if (hasTextOnPage(page, phrase)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     
     public static boolean hasImagesOnPage(PDPage page) throws IOException {
         ImageFinder imageFinder = new ImageFinder(page);
@@ -113,12 +107,17 @@ public class PdfUtils {
     }
     
     
-    public static boolean hasText(PDDocument  document, String phrase) throws IOException {
-    	PDFTextStripper pdfStripper = new PDFTextStripper();
-        String text = pdfStripper.getText(document);
-        return text.contains(phrase);
-   }
     
+
+    public static boolean hasTextOnPage(PDPage page, String phrase) throws IOException {
+        PDFTextStripper textStripper = new PDFTextStripper();
+        PDDocument tempDoc = new PDDocument();
+        tempDoc.addPage(page);
+        String pageText = textStripper.getText(tempDoc);
+        tempDoc.close();
+        return pageText.contains(phrase);
+    }
+
     
     public boolean containsTextInFile(PDDocument pdfDocument, String text, String pagesToCheck) throws IOException {
         PDFTextStripper textStripper = new PDFTextStripper();

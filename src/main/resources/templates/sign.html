@@ -7,16 +7,27 @@
     <script src="js/thirdParty/interact.min.js"></script>
 
 </head>
+<th:block th:each="font : ${fonts}">
+    <style th:inline="text">
+        @font-face {
+            font-family: "[[${font}]]";
+            src: url('fonts/[[${font}]].woff2') format('woff2');
+        }
+
+        #font-select option[value="[[${font}]]"] {
+            font-family: "[[${font}]]", cursive;
+        }
+    </style>
+</th:block>
 <style>
-@font-face {
-  font-family: 'Estonia';
-  src: url(fonts/Estonia.woff2) format('woff2');
-}
-@font-face {
-  font-family: 'Tangerine';
-  src: url(fonts/Tangerine.woff2) format('woff2');
-}
+select#font-select, select#font-select option {
+        height: 60px;    /* Adjust as needed */
+        font-size: 30px; /* Adjust as needed */
+    }
+
 </style>
+
+
 <body>
     <div id="page-container">
         <div id="content-wrap">
@@ -169,9 +180,9 @@
                                 <input type="text" class="form-control" id="sigText" name="sigText">
                                 <label th:text="#{font}"></label> 
                                 <select class="form-control" name="font" id="font-select">
-                                    <option value="Estonia" class="estonia-font">Estonia</option>
-                                    <option value="Tangerine" class="tangerine-font">Tangerine</option>
-                                </select>
+								    <option th:each="font : ${fonts}" th:value="${font}" th:text="${font}" th:class="${font.toLowerCase()+'-font'}"></option>
+
+								</select>
                                 <div class="margin-auto-parent">
                                     <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
                                 </div>
@@ -196,20 +207,37 @@
                                         DraggableUtils.createDraggableCanvasFromUrl(dataURL);
                                     }
                                 </script>
-                                <style>
-                                    #font-select option {
-                                        font-size: 30px;
-                                    }
-                                    #font-select option[value="Estonia"] {
-                                        font-family: 'Estonia', sans-serif;
-                                    }
-                                    #font-select option[value="Tangerine"] {
-                                        font-family: 'Tangerine', cursive;
-                                    }
-                                    #font-select option[value="Windsong"] {
-                                        font-family: 'Windsong', cursive;
-                                    }
-                                </style>
+                <script>
+    const sigTextInput = document.getElementById('sigText');
+    const fontSelect = document.getElementById('font-select');
+
+    const updateOptionTexts = () => {
+        Array.from(fontSelect.options).forEach(option => {
+        	const fontName = option.value.replace(/-regular$/i, '');
+            option.text = sigTextInput.value || fontName;
+        });
+    }
+
+    sigTextInput.addEventListener('input', updateOptionTexts);
+
+    fontSelect.addEventListener('change', (e) => {
+        e.target.style.fontFamily = e.target.value;
+        updateOptionTexts();
+    });
+
+    // Manually trigger the change event
+    fontSelect.dispatchEvent(new Event('change'));
+</script>
+
+          
+                                <th:block th:each="font : ${fonts}">
+    <style th:inline="text">
+        #font-select option[value="/*[[${font}]]*/"] {
+            font-family: '/*[[${font}]]*/', cursive;
+        }
+    </style>
+</th:block>
+
                             </div>
                         </div>
 
@@ -240,10 +268,6 @@
                                     position: relative;
                                     margin: 20px 0;
                                 }
-                                #pdf-canvas {
-                                    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
-                                    width: 100%;
-                                }
                                 .draggable-buttons-box {
                                     position: absolute;
                                     top: 0;
@@ -271,6 +295,7 @@
                         <div class="margin-auto-parent">
                             <button id="download-pdf" class="btn btn-primary mb-2 show-on-file-selected margin-center">Download PDF</button>
                         </div>
+                        
                         <script>
                             document.getElementById("download-pdf").addEventListener('click', async() => {
                                 const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
