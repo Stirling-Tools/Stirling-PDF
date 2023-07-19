@@ -3,7 +3,7 @@
 This document provides instructions on how to add additional language packs for the OCR tab in Stirling-PDF, both inside and outside of Docker.
 
 ## How does the OCR Work
-Stirling-PDF uses OCRmyPDF which in turn uses tesseract for its text recognition.
+Stirling-PDF uses [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF) which in turn uses tesseract for its text recognition.
 All credit goes to them for this awesome work! 
 
 ## Language Packs
