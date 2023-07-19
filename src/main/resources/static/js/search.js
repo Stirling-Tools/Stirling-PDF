@@ -44,8 +44,8 @@ document.querySelector('#navbarSearchInput').addEventListener('input', function(
         var iconElement = item.querySelector('.icon');
         var itemHref = item.getAttribute('href');
         if (titleElement && iconElement && itemHref !== '#') {
-            var title = titleElement.innerText.toLowerCase();
-            if (title.indexOf(searchText) !== -1 && !resultsBox.querySelector(`a[href="${item.getAttribute('href')}"]`)) {
+            var title = titleElement.innerText;
+            if (title.toLowerCase().indexOf(searchText) !== -1 && !resultsBox.querySelector(`a[href="${item.getAttribute('href')}"]`)) {
                 var result = document.createElement('a');
                 result.href = itemHref;
                 result.classList.add('dropdown-item');

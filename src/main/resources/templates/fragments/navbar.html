@@ -219,14 +219,61 @@
     </a>
     <!-- Search Bar -->
     <div class="collapse position-absolute" id="navbarSearch">
-        <form class="d-flex p-2 bg-white border" id="searchForm">
-            <input class="form-control" type="search" placeholder="Search" aria-label="Search" id="navbarSearchInput">
+        <form class="d-flex p-2 bg-white border search-form" id="searchForm">
+            <input class="form-control search-input" type="search" placeholder="Search" aria-label="Search" id="navbarSearchInput">
         </form>
         <!-- Search Results -->
-        <div id="searchResults" class="border p-2 bg-white"></div>
+        <div id="searchResults" class="border p-2 bg-white search-results"></div>
     </div>
 </li>
+<style>
+#search-icon i {
+    font-size: 24px; /* Adjust this to your desired size */
+    transition: color 0.3s;
+}
 
+#search-icon:hover i {
+    color: #666; /* Adjust this to your hover color */
+}
+
+#navbarSearch {
+    transition: all 0.3s;
+    max-height: 0;
+    overflow: hidden;
+    
+}
+
+#navbarSearch.show {
+    max-height: 300px; /* Adjust this to your desired max height */
+}
+
+.search-input {
+    transition: border 0.3s, box-shadow 0.3s;
+    
+}
+
+.search-input:focus {
+    border-color: #666; /* Adjust this to your focus color */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Adjust this to your desired shadow */
+}
+
+#searchResults {
+    max-width: 300px; /* Adjust to your preferred width */
+    transition: height 0.3s ease; /* Smooth height transition */
+}
+
+/* Set a fixed height and styling for each search result item */
+.search-results a {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* space between icon and text */
+    height: 40px; /* Adjust based on your design */
+    overflow: hidden; /* Prevent content from overflowing */
+    white-space: nowrap; /* Prevent text from wrapping to next line */
+    text-overflow: ellipsis; /* Truncate text if it's too long */
+}
+
+</style>
 
                 </ul>
 
