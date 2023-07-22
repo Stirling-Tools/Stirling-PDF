@@ -13,7 +13,7 @@
                     <div class="col-md-6">
                         <h2 th:text="#{HTMLToPDF.header}"></h2>
                         <form method="post" enctype="multipart/form-data" th:action="@{html-to-pdf}">
-                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
                             <br>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{HTMLToPDF.submit}"></button>
 

@@ -24,7 +24,7 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertHtmlToPDF {
 
 
-	 @PostMapping(consumes = "multipart/form-data", value = "/convert-to-pdf")
+	 @PostMapping(consumes = "multipart/form-data", value = "/html-to-pdf")
 	    @Operation(
 	        summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
 	        description = "This endpoint takes an HTML or ZIP file input and converts it to a PDF format."
