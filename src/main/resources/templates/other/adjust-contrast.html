@@ -14,37 +14,50 @@
 			<br> <br>
 			<div class="container">
 				<div class="row justify-content-center">
-					<div class="col-md-6">
-						<h2 th:text="#{adjustContrast.header}"></h2>
-						<div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
-						<h4>
-							<span th:text="#{adjustContrast.contrast}"></span> <span id="contrast-val">100</span>%
-						</h4>
-						<input type="range" min="0" max="200" value="100"
-							id="contrast-slider" />
+					<div class="col-md-12">
+                        <div class="row justify-content-center">
+                            <div class="col-md-3">
+                                <div id="sliders-container" style="display:none;">
+                                    <h4>
+                                        <span th:text="#{adjustContrast.contrast}"></span> <span id="contrast-val">100</span>%
+                                    </h4>
+                                    <input type="range" min="0" max="200" value="100" id="contrast-slider" />
 
-						<h4>
-							<span th:text="#{adjustContrast.brightness}"></span> <span id="brightness-val">100</span>%
-						</h4>
-						<input type="range" min="0" max="200" value="100"
-							id="brightness-slider" />
+                                    <h4>
+                                        <span th:text="#{adjustContrast.brightness}"></span> <span id="brightness-val">100</span>%
+                                    </h4>
+                                    <input type="range" min="0" max="200" value="100" id="brightness-slider" />
 
-						<h4>
-							<span th:text="#{adjustContrast.saturation}"></span> <span id="saturation-val">100</span>%
-						</h4>
-						<input type="range" min="0" max="200" value="100"
-							id="saturation-slider" />
-							
-							</br>
-						<canvas id="pdf-canvas"></canvas>
+                                    <h4>
+                                        <span th:text="#{adjustContrast.saturation}"></span> <span id="saturation-val">100</span>%
+                                    </h4>
+                                    <input type="range" min="0" max="200" value="100" id="saturation-slider" />
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <h2 th:text="#{adjustContrast.header}"></h2>
+                                <div class="col-md-8">
+                                    <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
+                                </div>
+                                <br>
+                                <canvas id="contrast-pdf-canvas"></canvas>
+                                <button id="download-button" class="btn btn-primary" th:text="#{adjustContrast.download}"></button>
+                            </div>
+                        </div>
+                        <style>
+                            #flex-container {
+					            display: flex;
+					            align-items: center;
+					        }
+					        #sliders-container {
+					            padding: 0 20px;  /* Add some padding to separate sliders from canvas */
+					        }
+                        </style>
 
-						
-
-						<button id="download-button" class="btn btn-primary" th:text="#{adjustContrast.download}"></button>
 
 						<script src="pdfjs/pdf.js"></script>
 						<script>
-						  var canvas = document.getElementById('pdf-canvas');
+						  var canvas = document.getElementById('contrast-pdf-canvas');
 						  var context = canvas.getContext('2d');
 						  var originalImageData = null;
 						  var allPages = [];
@@ -55,6 +68,7 @@
 						    var fileReader = new FileReader();
 						    fileReader.onload = async function() {
 						      var data = new Uint8Array(this.result);
+						      pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
 						      pdf = await pdfjsLib.getDocument({data: data}).promise;
 						
 						      // Get the number of pages in the PDF
@@ -65,6 +79,8 @@
 						      pdfDoc = await PDFLib.PDFDocument.create();
 						      // Render the first page in the viewer
 						      await renderPageAndAdjustImageProperties(1);
+						      document.getElementById("sliders-container").style.display = "block";
+						      
 						    };
 						    fileReader.readAsArrayBuffer(file);
 						  }
@@ -90,6 +106,7 @@
 						            adjustImageProperties();
 						            resolve();
 						          });
+						          canvas.classList.add("fixed-shadow-canvas");
 						      });
 						  }
 						  

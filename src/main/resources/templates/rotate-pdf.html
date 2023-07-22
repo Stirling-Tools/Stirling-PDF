@@ -59,7 +59,7 @@
 			document.querySelector("#editSection").style.display = "";
 
 			var url = URL.createObjectURL(fileInput.files[0])
-
+			pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
 			const pdf = await pdfjsLib.getDocument(url).promise;
 			const page = await pdf.getPage(1);
 

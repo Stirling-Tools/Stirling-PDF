@@ -90,7 +90,7 @@ public class CropController {
 	@PostMapping(value = "/crop", consumes = "multipart/form-data")
 	@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")
 	public ResponseEntity<byte[]> cropPdf(
-	        @Parameter(description = "The input PDF file", required = true) @RequestParam("file") MultipartFile file,
+	        @Parameter(description = "The input PDF file", required = true) @RequestParam("fileInput") MultipartFile file,
 	        @Parameter(description = "The x-coordinate of the top-left corner of the crop area", required = true, schema = @Schema(type = "number")) @RequestParam("x") float x,
 	        @Parameter(description = "The y-coordinate of the top-left corner of the crop area", required = true, schema = @Schema(type = "number")) @RequestParam("y") float y,
 	        @Parameter(description = "The width of the crop area", required = true, schema = @Schema(type = "number")) @RequestParam("width") float width,

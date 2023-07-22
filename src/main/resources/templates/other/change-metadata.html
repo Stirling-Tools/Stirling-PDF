@@ -145,7 +145,7 @@
 	  
     const file = this.files[0];
     var url = URL.createObjectURL(file)
-
+	pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
     const pdf = await pdfjsLib.getDocument(url).promise;
     const pdfMetadata = await pdf.getMetadata();
     lastPDFFile = pdfMetadata?.info

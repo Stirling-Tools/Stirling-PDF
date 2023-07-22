@@ -120,6 +120,7 @@ class PdfContainer {
     }
 
     async toRenderer(objectUrl) {
+		pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
         const pdf = await pdfjsLib.getDocument(objectUrl).promise;
         return {
             document: pdf,
