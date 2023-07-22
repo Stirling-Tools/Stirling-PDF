@@ -1,14 +1,54 @@
 package stirling.software.SPDF.utils;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GeneralUtils {
 
+	public static void deleteDirectory(Path path) throws IOException {
+        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+	public static String convertToFileName(String name) {
+        String safeName = name.replaceAll("[^a-zA-Z0-9]", "_");
+        if (safeName.length() > 50) {
+            safeName = safeName.substring(0, 50);
+        }
+        return safeName;
+    }
+	
+	
+	public static boolean isValidURL(String urlStr) {
+	    try {
+	        new URL(urlStr);
+	        return true;
+	    } catch (MalformedURLException e) {
+	        return false;
+	    }
+	}
+
+	
 	public static Long convertSizeToBytes(String sizeStr) {
 	    if (sizeStr == null) {
 	        return null;

@@ -29,7 +29,7 @@ RUN apt-get update && \
         libjpeg-dev && \
     pip install --upgrade pip && \
     pip install --no-cache-dir \
-        opencv-python-headless && \
+        opencv-python-headless WeasyPrint && \
     rm -rf /var/lib/apt/lists/*
 
 # Final stage: Copy necessary files from the previous stage

@@ -1,6 +1,7 @@
 package stirling.software.SPDF.utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -13,7 +14,7 @@ import java.util.concurrent.Semaphore;
 public class ProcessExecutor {
 
     public enum Processes {
-        LIBRE_OFFICE, OCR_MY_PDF, PYTHON_OPENCV, GHOSTSCRIPT
+        LIBRE_OFFICE, OCR_MY_PDF, PYTHON_OPENCV, GHOSTSCRIPT, WEASYPRINT
     }
 
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
@@ -25,6 +26,7 @@ public class ProcessExecutor {
             case OCR_MY_PDF -> 2;
             case PYTHON_OPENCV -> 8;
             case GHOSTSCRIPT -> 16;
+            case WEASYPRINT -> 16;
             };
             return new ProcessExecutor(semaphoreLimit);
         });
@@ -35,14 +37,21 @@ public class ProcessExecutor {
     private ProcessExecutor(int semaphoreLimit) {
         this.semaphore = new Semaphore(semaphoreLimit);
     }
-
     public int runCommandWithOutputHandling(List<String> command) throws IOException, InterruptedException {
+    	return runCommandWithOutputHandling(command, null);
+    }
+    public int runCommandWithOutputHandling(List<String> command, File workingDirectory) throws IOException, InterruptedException {
         int exitCode = 1;
         semaphore.acquire();
         try {
 
             System.out.print("Running command: " + String.join(" ", command));
             ProcessBuilder processBuilder = new ProcessBuilder(command);
+            
+            // Use the working directory if it's set
+            if (workingDirectory != null) {
+                processBuilder.directory(workingDirectory);
+            }
             Process process = processBuilder.start();
 
             // Read the error stream and standard output stream concurrently
