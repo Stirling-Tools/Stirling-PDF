@@ -34,27 +34,30 @@ public class ConvertWebsiteToPDF {
 	        String URL) throws IOException, InterruptedException {
 
 	    // Validate the URL format
-	    if(!URL.matches("^https?://.*") && GeneralUtils.isValidURL(URL)) {
+	    if(!URL.matches("^https?://.*") || !GeneralUtils.isValidURL(URL)) {
 	        throw new IllegalArgumentException("Invalid URL format provided.");
 	    }
-
-	    // Prepare the output file path
-	    Path tempOutputFile = Files.createTempFile("output_", ".pdf");
-
-	    // Prepare the OCRmyPDF command
-	    List<String> command = new ArrayList<>();
-	    command.add("weasyprint");
-	    command.add(URL);
-	    command.add(tempOutputFile.toString());
-
-	    int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT).runCommandWithOutputHandling(command);
-
-	    // Read the optimized PDF file
-	    byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
-
-	    // Clean up the temporary files
-	    Files.delete(tempOutputFile);
-
+	    Path tempOutputFile = null;
+	    byte[] pdfBytes;
+	    try {
+		    // Prepare the output file path
+		    tempOutputFile = Files.createTempFile("output_", ".pdf");
+	
+		    // Prepare the OCRmyPDF command
+		    List<String> command = new ArrayList<>();
+		    command.add("weasyprint");
+		    command.add(URL);
+		    command.add(tempOutputFile.toString());
+	
+		    int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT).runCommandWithOutputHandling(command);
+	
+		    // Read the optimized PDF file
+		    pdfBytes = Files.readAllBytes(tempOutputFile);
+	    }
+	    finally {
+		    // Clean up the temporary files
+		    Files.delete(tempOutputFile);
+	    }
 	    // Convert URL to a safe filename
 	    String outputFilename = convertURLToFileName(URL);
 	    

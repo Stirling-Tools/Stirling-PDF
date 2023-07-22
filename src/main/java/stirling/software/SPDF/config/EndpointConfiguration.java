@@ -83,7 +83,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-text");
         addEndpointToGroup("Convert", "pdf-to-html");
         addEndpointToGroup("Convert", "pdf-to-xml");
-
+        addEndpointToGroup("Convert", "html-to-pdf");
+        addEndpointToGroup("Convert", "url-to-pdf");
+        
         // Adding endpoints to "Security" group
         addEndpointToGroup("Security", "add-password");
         addEndpointToGroup("Security", "remove-password");
@@ -125,12 +127,15 @@ public class EndpointConfiguration {
         addEndpointToGroup("CLI", "pdf-to-html");
         addEndpointToGroup("CLI", "pdf-to-xml");
         addEndpointToGroup("CLI", "ocr-pdf");
+        addEndpointToGroup("CLI", "html-to-pdf");
+        addEndpointToGroup("CLI", "url-to-pdf");
+        
         
         //python
         addEndpointToGroup("Python", "extract-image-scans");
         addEndpointToGroup("Python", "remove-blanks");
-        
-  
+        addEndpointToGroup("Python", "html-to-pdf");
+        addEndpointToGroup("Python", "url-to-pdf");
         
         //openCV
         addEndpointToGroup("OpenCV", "extract-image-scans");

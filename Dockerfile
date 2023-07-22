@@ -1,5 +1,5 @@
 # Build jbig2enc in a separate stage
-FROM frooodle/stirling-pdf-base:latest
+FROM frooodle/stirling-pdf-base:beta4
 
 # Create scripts folder and copy local scripts
 RUN mkdir /scripts
