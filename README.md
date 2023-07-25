@@ -27,6 +27,11 @@ Feel free to request any features or bug fixes either in github issues or our [D
 - Convert PDFs to and from images
 - Reorganize PDF pages into different orders.
 - Add/Generate signatures
+- Format PDFs into a multi-paged page
+- Scale page contents size by set % 
+- Adjust Contrast
+- Crop PDF
+- Auto Split PDF (With physically scanned page dividers)
 - Flatten PDFs
 - Repair PDFs
 - Detect and remove blank pages
@@ -39,8 +44,14 @@ Feel free to request any features or bug fixes either in github issues or our [D
 - Add watermark(s)
 - Convert Any common file to PDF (using LibreOffice)
 - Convert PDF to Word/Powerpoint/Others (using LibreOffice)
+- Convert HTML to PDF
+- URL to PDF
 - Extract images from PDF
+- Extract images from Scans
+- Add page numbers
+- Auto rename file by detecting PDF header text
 - OCR on PDF (Using OCRMyPDF)
+- PDF/A conversion (Using OCRMyPDF)
 - Edit metadata
 - Dark mode support.
 - Custom download options (see [here](https://github.com/Frooodle/Stirling-PDF/blob/main/images/settings.png) for example)
