@@ -1,34 +1,24 @@
 package stirling.software.SPDF.controller.web;
-
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -128,45 +118,28 @@ public class GeneralWebController {
         model.addAttribute("fonts", getFontNames());
         return "sign";
     }
+    
+    @Autowired
+    private ResourceLoader resourceLoader;
+    
     private List<String> getFontNames() {
-        List<String> fontNames = new ArrayList<>();
-
         try {
-            // Get the directory URL from classpath
-            URL dirURL = getClass().getClassLoader().getResource("static/fonts");
-
-            if (dirURL != null && dirURL.getProtocol().equals("file")) {
-                // If running from the file system (e.g., IDE)
-                fontNames.addAll(
-                        Files.list(Paths.get(dirURL.toURI()))
-                                .map(java.nio.file.Path::getFileName)
-                                .map(java.nio.file.Path::toString)
-                                .filter(name -> name.endsWith(".woff2"))
-                                .map(name -> name.substring(0, name.length() - 6)) // Remove .woff2 extension
-                                .collect(Collectors.toList())
-                );
-            } else {
-                // If running from a JAR file
-                // Resources in JAR go through a different URL protocol.
-                // In this case, we'll use a different approach to list them.
-
-                // Create a link to the resource. This assumes resources are at the root of the JAR.
-                URI uri = getClass().getResource("/").toURI();
-                FileSystem fileSystem = FileSystems.newFileSystem(uri, new HashMap<>());
-                Path myPath = fileSystem.getPath("/static/fonts/");
-                Files.walk(myPath, 1)
-                    .filter(path -> !Files.isDirectory(path))
-                    .map(path -> path.getFileName().toString())
-                    .filter(name -> name.endsWith(".woff2"))
-                    .map(name -> name.substring(0, name.length() - 6)) // Remove .woff2 extension
-                    .forEach(fontNames::add);
-                fileSystem.close();
-            }
-        } catch (IOException | URISyntaxException e) {
+            Resource[] resources = ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
+                    .getResources("classpath:static/fonts/*.woff2");
+            
+            return Arrays.stream(resources)
+                    .map(resource -> {
+                        try {
+                            String filename = resource.getFilename();
+                            return filename.substring(0, filename.length() - 6); // Remove .woff2 extension
+                        } catch (Exception e) {
+                            throw new RuntimeException("Error processing filename", e);
+                        }
+                    })
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
             throw new RuntimeException("Failed to read font directory", e);
         }
-
-        return fontNames;
     }
 
     
