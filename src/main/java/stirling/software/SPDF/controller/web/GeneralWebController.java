@@ -2,7 +2,12 @@ package stirling.software.SPDF.controller.web;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -124,17 +129,46 @@ public class GeneralWebController {
         return "sign";
     }
     private List<String> getFontNames() {
+        List<String> fontNames = new ArrayList<>();
+
         try {
-            return Files.list(Paths.get("src/main/resources/static/fonts"))
-                    .map(Path::getFileName)
-                    .map(Path::toString)
+            // Get the directory URL from classpath
+            URL dirURL = getClass().getClassLoader().getResource("static/fonts");
+
+            if (dirURL != null && dirURL.getProtocol().equals("file")) {
+                // If running from the file system (e.g., IDE)
+                fontNames.addAll(
+                        Files.list(Paths.get(dirURL.toURI()))
+                                .map(java.nio.file.Path::getFileName)
+                                .map(java.nio.file.Path::toString)
+                                .filter(name -> name.endsWith(".woff2"))
+                                .map(name -> name.substring(0, name.length() - 6)) // Remove .woff2 extension
+                                .collect(Collectors.toList())
+                );
+            } else {
+                // If running from a JAR file
+                // Resources in JAR go through a different URL protocol.
+                // In this case, we'll use a different approach to list them.
+
+                // Create a link to the resource. This assumes resources are at the root of the JAR.
+                URI uri = getClass().getResource("/").toURI();
+                FileSystem fileSystem = FileSystems.newFileSystem(uri, new HashMap<>());
+                Path myPath = fileSystem.getPath("/static/fonts/");
+                Files.walk(myPath, 1)
+                    .filter(path -> !Files.isDirectory(path))
+                    .map(path -> path.getFileName().toString())
                     .filter(name -> name.endsWith(".woff2"))
                     .map(name -> name.substring(0, name.length() - 6)) // Remove .woff2 extension
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
+                    .forEach(fontNames::add);
+                fileSystem.close();
+            }
+        } catch (IOException | URISyntaxException e) {
             throw new RuntimeException("Failed to read font directory", e);
         }
+
+        return fontNames;
     }
+
     
 
     @GetMapping("/crop")
