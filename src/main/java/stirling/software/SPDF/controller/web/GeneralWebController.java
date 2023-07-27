@@ -1,29 +1,24 @@
 package stirling.software.SPDF.controller.web;
-
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -123,18 +118,30 @@ public class GeneralWebController {
         model.addAttribute("fonts", getFontNames());
         return "sign";
     }
+    
+    @Autowired
+    private ResourceLoader resourceLoader;
+    
     private List<String> getFontNames() {
         try {
-            return Files.list(Paths.get("src/main/resources/static/fonts"))
-                    .map(Path::getFileName)
-                    .map(Path::toString)
-                    .filter(name -> name.endsWith(".woff2"))
-                    .map(name -> name.substring(0, name.length() - 6)) // Remove .woff2 extension
+            Resource[] resources = ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
+                    .getResources("classpath:static/fonts/*.woff2");
+            
+            return Arrays.stream(resources)
+                    .map(resource -> {
+                        try {
+                            String filename = resource.getFilename();
+                            return filename.substring(0, filename.length() - 6); // Remove .woff2 extension
+                        } catch (Exception e) {
+                            throw new RuntimeException("Error processing filename", e);
+                        }
+                    })
                     .collect(Collectors.toList());
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Failed to read font directory", e);
         }
     }
+
     
 
     @GetMapping("/crop")

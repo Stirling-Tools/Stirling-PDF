@@ -43,7 +43,7 @@ public class ConvertImgPDFController {
             @Parameter(description = "Choose between a single image containing all pages or separate images for each page", schema = @Schema(allowableValues = {"single", "multiple"}))
                     String singleOrMultiple,
             @RequestParam("colorType")
-            @Parameter(description = "The color type of the output image(s)", schema = @Schema(allowableValues = {"rgb", "greyscale", "blackwhite"}))
+            @Parameter(description = "The color type of the output image(s)", schema = @Schema(allowableValues = {"color", "greyscale", "blackwhite"}))
                     String colorType,
             @RequestParam("dpi")
             @Parameter(description = "The DPI (dots per inch) for the output image(s)")
@@ -94,7 +94,7 @@ public class ConvertImgPDFController {
             @Parameter(description = "Whether to stretch the images to fit the PDF page or maintain the aspect ratio", example = "false")
                     boolean stretchToFit,
             @RequestParam("colorType")
-            @Parameter(description = "The color type of the output image(s)", schema = @Schema(allowableValues = {"rgb", "greyscale", "blackwhite"}))
+            @Parameter(description = "The color type of the output image(s)", schema = @Schema(allowableValues = {"color", "greyscale", "blackwhite"}))
                     String colorType,
             @RequestParam(defaultValue = "false", name = "autoRotate")
             @Parameter(description = "Whether to automatically rotate the images to better fit the PDF page", example = "true")
