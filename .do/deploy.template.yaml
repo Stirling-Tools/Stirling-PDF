@@ -19,7 +19,7 @@ spec:
           value: "/"
         - key: APP_LOCALE
           value: "en_GB"
-		- key: TESSERACT_LANGS
+        - key: TESSERACT_LANGS
           value: "eng"   
       routes:
         - path: /
