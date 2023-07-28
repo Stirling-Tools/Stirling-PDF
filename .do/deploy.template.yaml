@@ -1,0 +1,29 @@
+spec:
+  name: stirling-pdf
+  services:
+    - name: stirling-pdf
+      git:
+        branch: main
+        repo_clone_url: https://github.com/Frooodle/Stirling-PDF.git
+      dockerfile_path: Dockerfile
+      envs:
+	    - key: APP_HOME_NAME
+          value: "Stirling PDF"
+        - key: APP_HOME_DESCRIPTION
+          value: "Your locally hosted one-stop-shop for all your PDF needs."
+        - key: APP_NAVBAR_NAME
+          value: "Stirling PDF"
+        - key: ALLOW_GOOGLE_VISIBILITY
+          value: "false"
+        - key: APP_ROOT_PATH
+          value: "/"
+        - key: APP_LOCALE
+          value: "en_GB"
+		- key: TESSERACT_LANGS
+          value: "eng"   
+      routes:
+        - path: /
+      http_port: 8080
+      instance_count: 1
+      instance_size_slug: basic-xxs
+      source_dir: "/"
