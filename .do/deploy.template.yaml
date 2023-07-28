@@ -3,9 +3,9 @@ spec:
   services:
     - name: stirling-pdf
       git:
-        branch: main
+        branch: deployScripts
         repo_clone_url: https://github.com/Frooodle/Stirling-PDF.git
-      dockerfile_path: Dockerfile
+      dockerfile_path: Dockerfile-do
       envs:
         - key: APP_HOME_NAME
           value: "Stirling PDF"
