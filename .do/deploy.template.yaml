@@ -7,7 +7,7 @@ spec:
         repo_clone_url: https://github.com/Frooodle/Stirling-PDF.git
       dockerfile_path: Dockerfile
       envs:
-	- key: APP_HOME_NAME
+        - key: APP_HOME_NAME
           value: "Stirling PDF"
         - key: APP_HOME_DESCRIPTION
           value: "Your locally hosted one-stop-shop for all your PDF needs."
