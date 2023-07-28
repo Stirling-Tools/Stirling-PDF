@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy everything into the current directory in the image
 COPY . .
 
+# Give execution permissions to gradlew
+RUN chmod +x ./gradlew
+
 # Run the build
 RUN ./gradlew build
 
