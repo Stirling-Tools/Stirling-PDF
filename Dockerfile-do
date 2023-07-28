@@ -1,0 +1,35 @@
+# Build stage
+FROM openjdk:17-jdk-slim AS build
+
+# Set the current working directory
+WORKDIR /app
+
+# Copy everything into the current directory in the image
+COPY . .
+
+# Run the build
+RUN ./gradlew build
+
+# Production stage
+FROM frooodle/stirling-pdf-base:beta4
+
+# Create scripts folder and copy local scripts
+RUN mkdir /scripts
+COPY ./scripts/* /scripts/
+
+# Install fonts
+RUN mkdir /usr/share/fonts/opentype/noto/
+COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
+COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
+RUN fc-cache -f -v
+
+# Copy the application JAR file from the build stage
+COPY --from=build /app/build/libs/*.jar app.jar
+
+# Expose the application port
+EXPOSE 8080
+
+# Run the application
+RUN chmod +x /scripts/init.sh
+ENTRYPOINT ["/scripts/init.sh"]
+CMD ["java", "-jar", "/app.jar"]
