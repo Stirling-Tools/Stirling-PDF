@@ -16,7 +16,6 @@ All files and PDFs are either purely client side, in server memory only during t
 Any file which has been downloaded by the user will have already been deleted from the server by that time.
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Frooodle/Stirling-PDF/tree/deployScripts&refcode=c3210994b1af)
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/_ceI2A)
 
 Feel free to request any features or bug fixes either in github issues or our [Discord](https://discord.gg/Cn8pWhQRxZ)
 
