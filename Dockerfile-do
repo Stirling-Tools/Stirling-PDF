@@ -1,17 +1,17 @@
 # Build stage
-FROM openjdk:17-jdk-slim AS build
+FROM alpine:3.14 AS downloader
 
-# Set the current working directory
-WORKDIR /app
+# Install necessary utilities
+RUN apk add --no-cache curl jq
 
-# Copy everything into the current directory in the image
-COPY . .
+# Set work directory
+WORKDIR /downloader
 
-# Give execution permissions to gradlew
-RUN chmod +x ./gradlew
+# Fetch the latest release jar from GitHub
+RUN curl -s https://api.github.com/repos/Frooodle/Stirling-PDF/releases/latest \
+    | jq -r ".assets[] | select(.name == \"Stirling-PDF.jar\") | .browser_download_url" \
+    | xargs curl -L -o Stirling-PDF.jar
 
-# Run the build
-RUN ./gradlew build
 
 # Production stage
 FROM frooodle/stirling-pdf-base:beta4
@@ -25,8 +25,8 @@ RUN mkdir /usr/share/fonts/opentype/noto/
 COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
 RUN fc-cache -f -v
 
-# Copy the application JAR file from the build stage
-COPY --from=build /app/build/libs/*.jar app.jar
+# Copy the application JAR file from the download stage
+COPY --from=downloader /downloader/Stirling-PDF.jar /app.jar
 
 # Expose the application port
 EXPOSE 8080
