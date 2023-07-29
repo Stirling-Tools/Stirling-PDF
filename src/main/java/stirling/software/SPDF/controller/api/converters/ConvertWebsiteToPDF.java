@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -49,7 +50,7 @@ public class ConvertWebsiteToPDF {
 		    command.add(URL);
 		    command.add(tempOutputFile.toString());
 	
-		    int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT).runCommandWithOutputHandling(command);
+		    ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT).runCommandWithOutputHandling(command);
 	
 		    // Read the optimized PDF file
 		    pdfBytes = Files.readAllBytes(tempOutputFile);

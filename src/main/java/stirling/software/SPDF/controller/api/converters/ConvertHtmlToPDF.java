@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -59,7 +60,7 @@ public class ConvertHtmlToPDF {
 		        command.add("weasyprint");
 		        command.add(tempInputFile.toString()); 
 		        command.add(tempOutputFile.toString());
-		        int returnCode = 0;
+		        ProcessExecutorResult returnCode;
 		        if (originalFilename.endsWith(".zip")) {	        	
 		        	returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
 	                .runCommandWithOutputHandling(command, tempInputFile.getParent().toFile());

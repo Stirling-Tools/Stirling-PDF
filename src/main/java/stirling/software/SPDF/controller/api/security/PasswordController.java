@@ -35,7 +35,7 @@ public class PasswordController {
         @RequestPart(required = true, value = "fileInput")
         @Parameter(description = "The input PDF file from which the password should be removed", required = true)
             MultipartFile fileInput,
-        @RequestParam(name = "password")
+        @RequestPart(name = "password")
         @Parameter(description = "The password of the PDF file", required = true)
             String password) throws IOException {
         PDDocument document = PDDocument.load(fileInput.getBytes(), password);
@@ -52,37 +52,37 @@ public class PasswordController {
         @RequestPart(required = true, value = "fileInput")
         @Parameter(description = "The input PDF file to which the password should be added", required = true)
             MultipartFile fileInput,
-        @RequestParam(defaultValue = "", name = "ownerPassword")
+        @RequestPart(value = "", name = "ownerPassword")
         @Parameter(description = "The owner password to be added to the PDF file (Restricts what can be done with the document once it is opened)")
             String ownerPassword,
-        @RequestParam(defaultValue = "", name = "password")
+        @RequestPart( name = "password")
         @Parameter(description = "The password to be added to the PDF file (Restricts the opening of the document itself.)")
             String password,
-        @RequestParam(defaultValue = "128", name = "keyLength")
+        @RequestPart( name = "keyLength")
         @Parameter(description = "The length of the encryption key", schema = @Schema(allowableValues = {"40", "128", "256"}))
             int keyLength,
-        @RequestParam(defaultValue = "false", name = "canAssembleDocument")
+        @RequestPart( name = "canAssembleDocument")
         @Parameter(description = "Whether the document assembly is allowed", example = "false")
             boolean canAssembleDocument,
-        @RequestParam(defaultValue = "false", name = "canExtractContent")
+        @RequestPart( name = "canExtractContent")
         @Parameter(description = "Whether content extraction for accessibility is allowed", example = "false")
             boolean canExtractContent,
-        @RequestParam(defaultValue = "false", name = "canExtractForAccessibility")
+        @RequestPart( name = "canExtractForAccessibility")
         @Parameter(description = "Whether content extraction for accessibility is allowed", example = "false")
             boolean canExtractForAccessibility,
-        @RequestParam(defaultValue = "false", name = "canFillInForm")
+        @RequestPart( name = "canFillInForm")
         @Parameter(description = "Whether form filling is allowed", example = "false")
             boolean canFillInForm,
-        @RequestParam(defaultValue = "false", name = "canModify")
+        @RequestPart( name = "canModify")
         @Parameter(description = "Whether the document modification is allowed", example = "false")
             boolean canModify,
-        @RequestParam(defaultValue = "false", name = "canModifyAnnotations")
+        @RequestPart( name = "canModifyAnnotations")
         @Parameter(description = "Whether modification of annotations is allowed", example = "false")
             boolean canModifyAnnotations,
-        @RequestParam(defaultValue = "false", name = "canPrint")
+        @RequestPart(name = "canPrint")
         @Parameter(description = "Whether printing of the document is allowed", example = "false")
             boolean canPrint,
-        @RequestParam(defaultValue = "false", name = "canPrintFaithful")
+        @RequestPart( name = "canPrintFaithful")
         @Parameter(description = "Whether faithful printing is allowed", example = "false")
             boolean canPrintFaithful
     ) throws IOException {

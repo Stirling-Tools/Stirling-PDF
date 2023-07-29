@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @Tag(name = "Security", description = "Security APIs")
 public class SecurityWebController {
+	
+	
     @GetMapping("/add-password")
     @Hidden
     public String addPasswordForm(Model model) {
