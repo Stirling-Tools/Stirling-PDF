@@ -15,7 +15,7 @@ Stirling PDF makes no outbound calls for any record keeping or tracking.
 All files and PDFs are either purely client side, in server memory only during the execution of the task or within a temporay file only for execution of the task.
 Any file which has been downloaded by the user will have already been deleted from the server by that time.
 
-[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Frooodle/Stirling-PDF/tree/deployScripts&refcode=c3210994b1af)
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Frooodle/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
 
 Feel free to request any features or bug fixes either in github issues or our [Discord](https://discord.gg/Cn8pWhQRxZ)
 
