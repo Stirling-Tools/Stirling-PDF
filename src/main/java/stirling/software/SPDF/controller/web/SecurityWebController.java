@@ -52,4 +52,11 @@ public class SecurityWebController {
         model.addAttribute("currentPage", "sanitize-pdf");
         return "security/sanitize-pdf";
     }
+    
+    @GetMapping("/get-info-on-pdf")
+    @Hidden
+    public String getInfo(Model model) {
+        model.addAttribute("currentPage", "get-info-on-pdf");
+        return "security/get-info-on-pdf";
+    }
 }
