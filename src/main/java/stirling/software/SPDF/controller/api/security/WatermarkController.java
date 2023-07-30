@@ -44,8 +44,8 @@ public class WatermarkController {
 	@Operation(summary = "Add watermark to a PDF file", description = "This endpoint adds a watermark to a given PDF file. Users can specify the watermark type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO")
 	public ResponseEntity<byte[]> addWatermark(
 			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to add a watermark") MultipartFile pdfFile,
-			@RequestPart(required = true) @Parameter(description = "The watermark type (text or image)") String watermarkType,
-			@RequestPart(required = false) @Parameter(description = "The watermark text") String watermarkText,
+			@RequestParam(required = true) @Parameter(description = "The watermark type (text or image)") String watermarkType,
+			@RequestParam(required = false) @Parameter(description = "The watermark text") String watermarkText,
 			@RequestPart(required = false) @Parameter(description = "The watermark image") MultipartFile watermarkImage,
 			
 			@RequestParam(defaultValue = "roman", name = "alphabet") @Parameter(description = "The selected alphabet", 

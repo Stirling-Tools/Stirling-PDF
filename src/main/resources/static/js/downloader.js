@@ -14,6 +14,13 @@ $(document).ready(function() {
 		const url = this.action;
 		const files = $('#fileInput-input')[0].files;
 		const formData = new FormData(this);
+        
+        // Remove empty file entries
+        for (let [key, value] of formData.entries()) {
+            if (value instanceof File && !value.name) {
+                formData.delete(key);
+            }
+        }
 		const override = $('#override').val() || '';
 		const originalButtonText = $('#submitBtn').text();
 		$('#submitBtn').text('Processing...');
@@ -159,6 +166,21 @@ async function submitMultiPdfForm(url, files) {
 	let formData = new FormData($('form')[0]);
 	formData.delete('fileInput');
 
+	for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+        
+        // Remove empty file entries
+        for (let [key, value] of formData.entries()) {
+            if (value instanceof File && !value.name) {
+                formData.delete(key);
+            }
+        }
+        console.log("## AFTER ## ")
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+        
 	const CONCURRENCY_LIMIT = 8;
 	const chunks = [];
 	for (let i = 0; i < Array.from(files).length; i += CONCURRENCY_LIMIT) {
