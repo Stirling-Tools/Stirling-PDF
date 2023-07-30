@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -29,32 +31,35 @@ public class ConvertWebsiteToPDF {
 	    description = "This endpoint fetches content from a URL and converts it to a PDF format."
 	)
 	public ResponseEntity<byte[]> urlToPdf(
-	    @RequestPart(required = true, value = "urlInput")
+	    @RequestParam(required = true, value = "urlInput")
 	    @Parameter(description = "The input URL to be converted to a PDF file", required = true)
 	        String URL) throws IOException, InterruptedException {
 
 	    // Validate the URL format
-	    if(!URL.matches("^https?://.*") && GeneralUtils.isValidURL(URL)) {
+	    if(!URL.matches("^https?://.*") || !GeneralUtils.isValidURL(URL)) {
 	        throw new IllegalArgumentException("Invalid URL format provided.");
 	    }
-
-	    // Prepare the output file path
-	    Path tempOutputFile = Files.createTempFile("output_", ".pdf");
-
-	    // Prepare the OCRmyPDF command
-	    List<String> command = new ArrayList<>();
-	    command.add("weasyprint");
-	    command.add(URL);
-	    command.add(tempOutputFile.toString());
-
-	    int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT).runCommandWithOutputHandling(command);
-
-	    // Read the optimized PDF file
-	    byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
-
-	    // Clean up the temporary files
-	    Files.delete(tempOutputFile);
-
+	    Path tempOutputFile = null;
+	    byte[] pdfBytes;
+	    try {
+		    // Prepare the output file path
+		    tempOutputFile = Files.createTempFile("output_", ".pdf");
+	
+		    // Prepare the OCRmyPDF command
+		    List<String> command = new ArrayList<>();
+		    command.add("weasyprint");
+		    command.add(URL);
+		    command.add(tempOutputFile.toString());
+	
+		    ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT).runCommandWithOutputHandling(command);
+	
+		    // Read the optimized PDF file
+		    pdfBytes = Files.readAllBytes(tempOutputFile);
+	    }
+	    finally {
+		    // Clean up the temporary files
+		    Files.delete(tempOutputFile);
+	    }
 	    // Convert URL to a safe filename
 	    String outputFilename = convertURLToFileName(URL);
 	    

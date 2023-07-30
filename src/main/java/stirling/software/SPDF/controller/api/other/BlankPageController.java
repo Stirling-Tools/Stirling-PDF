@@ -31,6 +31,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -86,10 +87,10 @@ public class BlankPageController {
                         List<String> command = new ArrayList<>(Arrays.asList("python3", System.getProperty("user.dir") + "/scripts/detect-blank-pages.py", tempFile.toString() ,"--threshold", String.valueOf(threshold), "--white_percent", String.valueOf(whitePercent)));
     
                         // Run CLI command
-                        int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV).runCommandWithOutputHandling(command);
+                        ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV).runCommandWithOutputHandling(command);
     
                         // does contain data
-                        if (returnCode == 0) {
+                        if (returnCode.getRc() == 0) {
                             System.out.println("page " + pageIndex + " has image which is not blank");
                             pagesToKeepIndex.add(pageIndex);
                         } else {

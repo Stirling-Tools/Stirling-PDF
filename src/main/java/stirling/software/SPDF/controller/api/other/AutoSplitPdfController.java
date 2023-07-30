@@ -41,20 +41,22 @@ public class AutoSplitPdfController {
     @PostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
     @Operation(summary = "Auto split PDF pages into separate documents", description = "This endpoint accepts a PDF file, scans each page for a specific QR code, and splits the document at the QR code boundaries. The output is a zip file containing each separate PDF document. Input:PDF Output:ZIP Type:SISO")
     public ResponseEntity<byte[]> autoSplitPdf(
-        @RequestParam("fileInput") @Parameter(description = "The input PDF file which needs to be split into separate documents based on QR code boundaries.", required = true) MultipartFile file)
+        @RequestParam("fileInput") @Parameter(description = "The input PDF file which needs to be split into separate documents based on QR code boundaries.", required = true) MultipartFile file,
+        @RequestParam(value ="duplexMode",defaultValue = "false") @Parameter(description = "Flag indicating if the duplex mode is active, where the page after the divider also gets removed.", required = false) boolean duplexMode)
         throws IOException {
+
         InputStream inputStream = file.getInputStream();
         PDDocument document = PDDocument.load(inputStream);
         PDFRenderer pdfRenderer = new PDFRenderer(document);
 
         List<PDDocument> splitDocuments = new ArrayList<>();
-        List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();  // create this list to store ByteArrayOutputStreams for zipping
+        List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
 
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 150);
             String result = decodeQRCode(bim);
-            
-            if(QR_CONTENT.equals(result) && page != 0) {
+
+            if (QR_CONTENT.equals(result) && page != 0) {
                 splitDocuments.add(new PDDocument());
             }
 
@@ -65,9 +67,16 @@ public class AutoSplitPdfController {
                 firstDocument.addPage(document.getPage(page));
                 splitDocuments.add(firstDocument);
             }
+
+            // If duplexMode is true and current page is a divider, then skip next page
+            if (duplexMode && QR_CONTENT.equals(result)) {
+                page++;
+            }
         }
 
-        // After all pages are added to splitDocuments, convert each to ByteArrayOutputStream and add to splitDocumentsBoas
+        // Remove split documents that have no pages
+        splitDocuments.removeIf(pdDocument -> pdDocument.getNumberOfPages() == 0);
+
         for (PDDocument splitDocument : splitDocuments) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             splitDocument.save(baos);
@@ -77,18 +86,16 @@ public class AutoSplitPdfController {
 
         document.close();
 
-        // After this line, you can find your zip logic integrated
         Path zipFile = Files.createTempFile("split_documents", ".zip");
         String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
         byte[] data;
+
         try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
-            // loop through the split documents and write them to the zip file
             for (int i = 0; i < splitDocumentsBoas.size(); i++) {
-                String fileName = filename + "_" + (i + 1) + ".pdf"; // You should replace "originalFileName" with the real file name
+                String fileName = filename + "_" + (i + 1) + ".pdf";
                 ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
                 byte[] pdf = baos.toByteArray();
 
-                // Add PDF file to the zip
                 ZipEntry pdfEntry = new ZipEntry(fileName);
                 zipOut.putNextEntry(pdfEntry);
                 zipOut.write(pdf);
@@ -101,9 +108,6 @@ public class AutoSplitPdfController {
             Files.delete(zipFile);
         }
 
-        
-
-        // return the Resource in the response
         return WebResponseUtils.bytesToWebResponse(data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 

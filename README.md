@@ -8,6 +8,8 @@
 [![Paypal Donate](https://img.shields.io/badge/Paypal%20Donate-yellow?style=flat&logo=paypal)](https://www.paypal.com/paypalme/froodleplex)
 [![Github Sponser](https://img.shields.io/badge/Github%20Sponsor-yellow?style=flat&logo=github)](https://github.com/sponsors/Frooodle)
 
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Frooodle/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
+
 This is a powerful locally hosted web based PDF manipulation tool using docker that allows you to perform various operations on PDF files, such as splitting merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application started as a 100% ChatGPT-made application and has evolved to include a wide range of features to handle all your PDF needs.
 
 Stirling PDF makes no outbound calls for any record keeping or tracking.
@@ -27,6 +29,11 @@ Feel free to request any features or bug fixes either in github issues or our [D
 - Convert PDFs to and from images
 - Reorganize PDF pages into different orders.
 - Add/Generate signatures
+- Format PDFs into a multi-paged page
+- Scale page contents size by set % 
+- Adjust Contrast
+- Crop PDF
+- Auto Split PDF (With physically scanned page dividers)
 - Flatten PDFs
 - Repair PDFs
 - Detect and remove blank pages
@@ -39,8 +46,14 @@ Feel free to request any features or bug fixes either in github issues or our [D
 - Add watermark(s)
 - Convert Any common file to PDF (using LibreOffice)
 - Convert PDF to Word/Powerpoint/Others (using LibreOffice)
+- Convert HTML to PDF
+- URL to PDF
 - Extract images from PDF
+- Extract images from Scans
+- Add page numbers
+- Auto rename file by detecting PDF header text
 - OCR on PDF (Using OCRMyPDF)
+- PDF/A conversion (Using OCRMyPDF)
 - Edit metadata
 - Dark mode support.
 - Custom download options (see [here](https://github.com/Frooodle/Stirling-PDF/blob/main/images/settings.png) for example)

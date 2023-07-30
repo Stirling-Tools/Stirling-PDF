@@ -25,6 +25,10 @@
 						<form method="post" enctype="multipart/form-data">
 						    <p th:text="#{autoSplitPDF.formPrompt}"></p>
 						    <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+						    <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="duplexMode" id="duplexMode"> 
+                                <label class="ml-3" for="duplexMode" th:text=#{autoSplitPDF.duplexMode}></label>
+                            </div>
 						    <p><a th:href="@{files/Auto Splitter Divider (minimal).pdf}" download th:text="#{autoSplitPDF.dividerDownload1}"></a></p>
 						    <p><a th:href="@{files/Auto Splitter Divider (with instructions).pdf}" download th:text="#{autoSplitPDF.dividerDownload2}"></a></p>
 						    <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{autoSplitPDF.submit}"></button>

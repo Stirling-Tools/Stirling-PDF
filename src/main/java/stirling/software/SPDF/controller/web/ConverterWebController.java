@@ -19,7 +19,21 @@ public class ConverterWebController {
         return "convert/img-to-pdf";
     }
 
+    @GetMapping("/html-to-pdf")
+    @Hidden
+    public String convertHTMLToPdfForm(Model model) {
+        model.addAttribute("currentPage", "html-to-pdf");
+        return "convert/html-to-pdf";
+    }
 
+    @GetMapping("/url-to-pdf")
+    @Hidden
+    public String convertURLToPdfForm(Model model) {
+        model.addAttribute("currentPage", "url-to-pdf");
+        return "convert/url-to-pdf";
+    }
+
+    
     @GetMapping("/pdf-to-img")
     @Hidden
     public String pdfToimgForm(Model model) {

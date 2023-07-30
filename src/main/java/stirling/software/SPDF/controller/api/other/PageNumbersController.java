@@ -165,10 +165,8 @@ public class PageNumbersController {
         pdfDoc.close();
         byte[] resultBytes = baos.toByteArray();
 
-        return ResponseEntity.ok()
-                .header("Content-Type", "application/pdf; charset=UTF-8")
-                .header("Content-Disposition", "inline; filename=" + URLEncoder.encode(file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_numbersAdded.pdf", "UTF-8"))
-                .body(resultBytes);
+        return WebResponseUtils.bytesToWebResponse(resultBytes, URLEncoder.encode(file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_numbersAdded.pdf", "UTF-8"), MediaType.APPLICATION_PDF);
+
     }
 
 

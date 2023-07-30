@@ -52,37 +52,37 @@ public class PasswordController {
         @RequestPart(required = true, value = "fileInput")
         @Parameter(description = "The input PDF file to which the password should be added", required = true)
             MultipartFile fileInput,
-        @RequestParam(defaultValue = "", name = "ownerPassword")
+            @RequestParam(value = "", name = "ownerPassword")
         @Parameter(description = "The owner password to be added to the PDF file (Restricts what can be done with the document once it is opened)")
             String ownerPassword,
-        @RequestParam(defaultValue = "", name = "password")
+            @RequestParam( name = "password", required = false)
         @Parameter(description = "The password to be added to the PDF file (Restricts the opening of the document itself.)")
             String password,
-        @RequestParam(defaultValue = "128", name = "keyLength")
+            @RequestParam( name = "keyLength", required = false)
         @Parameter(description = "The length of the encryption key", schema = @Schema(allowableValues = {"40", "128", "256"}))
             int keyLength,
-        @RequestParam(defaultValue = "false", name = "canAssembleDocument")
+            @RequestParam( name = "canAssembleDocument", required = false)
         @Parameter(description = "Whether the document assembly is allowed", example = "false")
             boolean canAssembleDocument,
-        @RequestParam(defaultValue = "false", name = "canExtractContent")
+            @RequestParam( name = "canExtractContent", required = false)
         @Parameter(description = "Whether content extraction for accessibility is allowed", example = "false")
             boolean canExtractContent,
-        @RequestParam(defaultValue = "false", name = "canExtractForAccessibility")
+            @RequestParam( name = "canExtractForAccessibility", required = false)
         @Parameter(description = "Whether content extraction for accessibility is allowed", example = "false")
             boolean canExtractForAccessibility,
-        @RequestParam(defaultValue = "false", name = "canFillInForm")
+            @RequestParam( name = "canFillInForm", required = false)
         @Parameter(description = "Whether form filling is allowed", example = "false")
             boolean canFillInForm,
-        @RequestParam(defaultValue = "false", name = "canModify")
+            @RequestParam( name = "canModify", required = false)
         @Parameter(description = "Whether the document modification is allowed", example = "false")
             boolean canModify,
-        @RequestParam(defaultValue = "false", name = "canModifyAnnotations")
+            @RequestParam( name = "canModifyAnnotations", required = false)
         @Parameter(description = "Whether modification of annotations is allowed", example = "false")
             boolean canModifyAnnotations,
-        @RequestParam(defaultValue = "false", name = "canPrint")
+            @RequestParam(name = "canPrint", required = false)
         @Parameter(description = "Whether printing of the document is allowed", example = "false")
             boolean canPrint,
-        @RequestParam(defaultValue = "false", name = "canPrintFaithful")
+            @RequestParam( name = "canPrintFaithful", required = false)
         @Parameter(description = "Whether faithful printing is allowed", example = "false")
             boolean canPrintFaithful
     ) throws IOException {

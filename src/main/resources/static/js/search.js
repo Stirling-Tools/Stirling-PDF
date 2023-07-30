@@ -43,9 +43,11 @@ document.querySelector('#navbarSearchInput').addEventListener('input', function(
         var titleElement = item.querySelector('.icon-text');
         var iconElement = item.querySelector('.icon');
         var itemHref = item.getAttribute('href');
+        var tags = item.getAttribute('data-tags') || ""; // If no tags, default to empty string
+        
         if (titleElement && iconElement && itemHref !== '#') {
             var title = titleElement.innerText;
-            if (title.toLowerCase().indexOf(searchText) !== -1 && !resultsBox.querySelector(`a[href="${item.getAttribute('href')}"]`)) {
+            if ((title.toLowerCase().indexOf(searchText) !== -1 || tags.toLowerCase().indexOf(searchText) !== -1) && !resultsBox.querySelector(`a[href="${item.getAttribute('href')}"]`)) {
                 var result = document.createElement('a');
                 result.href = itemHref;
                 result.classList.add('dropdown-item');
@@ -69,4 +71,5 @@ document.querySelector('#navbarSearchInput').addEventListener('input', function(
     // Set the width of the search results box to the maximum width
     resultsBox.style.width = window.navItemMaxWidth + 'px';
 });
+
 
