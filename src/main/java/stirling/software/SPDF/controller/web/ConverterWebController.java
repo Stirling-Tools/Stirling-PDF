@@ -25,7 +25,14 @@ public class ConverterWebController {
         model.addAttribute("currentPage", "html-to-pdf");
         return "convert/html-to-pdf";
     }
-
+    @GetMapping("/markdown-to-pdf")
+    @Hidden
+    public String convertMarkdownToPdfForm(Model model) {
+        model.addAttribute("currentPage", "markdown-to-pdf");
+        return "convert/markdown-to-pdf";
+    }
+    
+    
     @GetMapping("/url-to-pdf")
     @Hidden
     public String convertURLToPdfForm(Model model) {
