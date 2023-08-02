@@ -5,7 +5,6 @@
 
 
 <body>
-    <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
         <div id="content-wrap">
             <div th:insert="~{fragments/navbar.html :: navbar}"></div>
@@ -71,14 +70,17 @@
                     	
                     	
                        function renderJsonSection(key, value, depth = 0) {
+                    	    // Replace spaces and other non-alphanumeric characters with underscores for valid IDs
+                    	    let safeKey = (typeof key === "string") ? key.replace(/[^a-zA-Z0-9]/g, '_') : key;
+
                     	    let output = `<div class="card mb-3">
-                    	        <div class="card-header" id="${key}-heading-${depth}">
+                    	        <div class="card-header" id="${safeKey}-heading-${depth}">
                     	            <h5 class="mb-0">`;
 
                     	    // Check if the value is an object and has children
-                    	    if (value && typeof value === 'object' && Object.keys(value).length) {
+                    	    if (value && typeof value === 'object' && (Object.keys(value).length || Array.isArray(value))) {
                     	        output += `
-                    	            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#${key}-content-${depth}" aria-expanded="true" aria-controls="${key}-content-${depth}">
+                    	            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#${safeKey}-content-${depth}" aria-expanded="true" aria-controls="${safeKey}-content-${depth}">
                     	                ${key}
                     	            </button>`;
                     	    } else {
@@ -89,7 +91,7 @@
                     	    output += `
                     	            </h5>
                     	        </div>
-                    	        <div id="${key}-content-${depth}" class="collapse" aria-labelledby="${key}-heading-${depth}">`;
+                    	        <div id="${safeKey}-content-${depth}" class="collapse" aria-labelledby="${safeKey}-heading-${depth}">`;
 
                     	    // Check if the value is a nested object
                     	    if (typeof value === 'object' && !Array.isArray(value)) {
@@ -99,15 +101,21 @@
                     	        }
                     	        output += '</div>';
                     	    } else if (typeof value === 'object' && Array.isArray(value) && value.length) { // Array values
+                    	        output += '<div class="card-body">';
                     	        value.forEach((val, index) => {
-                    	            output += renderJsonSection(index, val, depth + 1);
+                    	            // For arrays, we're going to make the displayed key more descriptive.
+                    	            const arrayKey = `${key}[${index}]`;
+                    	            output += renderJsonSection(arrayKey, val, depth + 1);
                     	        });
+                    	        output += '</div>';
                     	    }
 
                     	    output += '</div></div>';
 
                     	    return output;
                     	}
+
+
 
                     
 

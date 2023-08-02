@@ -260,23 +260,7 @@ public class GetInfoOnPDF {
             
             // Digital Signatures using iText7 TODO
             
-            
-            
-            
-            PDAcroForm pdAcroForm = pdfBoxDoc.getDocumentCatalog().getAcroForm();
-            ArrayNode formFieldsArray2 = objectMapper.createArrayNode();
-            if (pdAcroForm != null) {
-               
-                for (PDField field : pdAcroForm.getFields()) {
-                    ObjectNode fieldNode = objectMapper.createObjectNode();
-                    fieldNode.put("FieldName", field.getFullyQualifiedName());
-                    fieldNode.put("FieldType", field.getFieldType());
-                    // Add more attributes as needed...
-                    formFieldsArray2.add(fieldNode);
-                }
-                
-            }
-            jsonOutput.set("FormFields2", formFieldsArray2);
+
             
             
             PDStructureTreeRoot structureTreeRoot = pdfBoxDoc.getDocumentCatalog().getStructureTreeRoot();
