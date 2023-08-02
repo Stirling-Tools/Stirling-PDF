@@ -73,7 +73,7 @@ import java.util.Set;
 import java.util.HashSet;
 @RestController
 @Tag(name = "Security", description = "Security APIs")
-public class PDFExtractor {
+public class GetInfoOnPDF {
 	
 	static ObjectMapper objectMapper = new ObjectMapper();
 
@@ -94,6 +94,13 @@ public class PDFExtractor {
             // Metadata using PDFBox
             PDDocumentInformation info = pdfBoxDoc.getDocumentInformation();
             ObjectNode metadata = objectMapper.createObjectNode();
+            ObjectNode basicInfo = objectMapper.createObjectNode();
+            ObjectNode docInfoNode = objectMapper.createObjectNode();
+            ObjectNode compliancy = objectMapper.createObjectNode();
+            ObjectNode encryption = objectMapper.createObjectNode();
+            ObjectNode other = objectMapper.createObjectNode();
+            
+            
             metadata.put("Title", info.getTitle());
             metadata.put("Author", info.getAuthor());
             metadata.put("Subject", info.getSubject());
@@ -102,25 +109,25 @@ public class PDFExtractor {
             metadata.put("Creator", info.getCreator());
             metadata.put("CreationDate", formatDate(info.getCreationDate()));
             metadata.put("ModificationDate", formatDate(info.getModificationDate()));
-            metadata.put("Trapped", info.getTrapped());
             jsonOutput.set("Metadata", metadata);
-
+            
+            
             
             
             // Total file size of the PDF
             long fileSizeInBytes = inputFile.getSize();
-            jsonOutput.put("FileSizeInBytes", fileSizeInBytes);
+            basicInfo.put("FileSizeInBytes", fileSizeInBytes);
             
             // Number of words, paragraphs, and images in the entire document
             String fullText = new PDFTextStripper().getText(pdfBoxDoc);
             String[] words = fullText.split("\\s+");
             int wordCount = words.length;
             int paragraphCount = fullText.split("\r\n|\r|\n").length;
-            jsonOutput.put("WordCount", wordCount);
-            jsonOutput.put("ParagraphCount", paragraphCount);
+            basicInfo.put("WordCount", wordCount);
+            basicInfo.put("ParagraphCount", paragraphCount);
             // Number of characters in the entire document (including spaces and special characters)
             int charCount = fullText.length();
-            jsonOutput.put("CharacterCount", charCount);
+            basicInfo.put("CharacterCount", charCount);
             
             
             // Initialize the flags and types
@@ -142,22 +149,24 @@ public class PDFExtractor {
                 hasCompression = true;
                 compressionType = "Compressed Xref or Rebuilt Xref";
             }
-            jsonOutput.put("Compression", hasCompression);
+            basicInfo.put("Compression", hasCompression);
             if(hasCompression)
-            	jsonOutput.put("CompressionType", compressionType);
+            	basicInfo.put("CompressionType", compressionType);
             
             String language = pdfBoxDoc.getDocumentCatalog().getLanguage();
-            jsonOutput.put("Language", language);
+            basicInfo.put("Language", language);
+            basicInfo.put("Number of pages", pdfBoxDoc.getNumberOfPages());
             
-            // Document Information using PDFBox
-            ObjectNode docInfoNode = objectMapper.createObjectNode();
-            docInfoNode.put("Number of pages", pdfBoxDoc.getNumberOfPages());
-            docInfoNode.put("PDF version", pdfBoxDoc.getVersion());
             
-
             // Page Mode using iText7
             PdfCatalog catalog = itextDoc.getCatalog();
             PdfName pageMode = catalog.getPdfObject().getAsName(PdfName.PageMode);
+            
+            // Document Information using PDFBox
+            docInfoNode.put("PDF version", pdfBoxDoc.getVersion());
+            docInfoNode.put("Trapped", info.getTrapped());
+            docInfoNode.put("Page Mode", getPageModeDescription(pageMode));;
+            
 
             
             
@@ -193,7 +202,7 @@ public class PDFExtractor {
                 
             }
             }
-            jsonOutput.set("EmbeddedFiles", embeddedFilesArray);
+            other.set("EmbeddedFiles", embeddedFilesArray);
             
             //attachments TODO size
             ArrayNode attachmentsArray = objectMapper.createArrayNode();
@@ -207,7 +216,7 @@ public class PDFExtractor {
                     }
                 }
             }
-            jsonOutput.set("Attachments", attachmentsArray);
+            other.set("Attachments", attachmentsArray);
 
             //Javascript
             PdfDictionary namesDict = itextDoc.getCatalog().getPdfObject().getAsDictionary(PdfName.Names);
@@ -226,7 +235,7 @@ public class PDFExtractor {
                 
                 }
             }
-            jsonOutput.set("JavaScript", javascriptArray);
+            other.set("JavaScript", javascriptArray);
             
             //TODO size
             PdfOCProperties ocProperties = itextDoc.getCatalog().getOCProperties(false);
@@ -240,7 +249,7 @@ public class PDFExtractor {
                 }
                 
             }
-            jsonOutput.set("Layers", layersArray);
+            other.set("Layers", layersArray);
             
             //TODO Security
             
@@ -267,7 +276,7 @@ public class PDFExtractor {
                 }
                 
             }
-            jsonOutput.set("FormFields", formFieldsArray2);
+            jsonOutput.set("FormFields2", formFieldsArray2);
             
             
             PDStructureTreeRoot structureTreeRoot = pdfBoxDoc.getDocumentCatalog().getStructureTreeRoot();
@@ -275,18 +284,12 @@ public class PDFExtractor {
 			try {
 				if(structureTreeRoot != null) {
 					structureTreeArray = exploreStructureTree(structureTreeRoot.getKids());
-					jsonOutput.set("StructureTree", structureTreeArray);
+					other.set("StructureTree", structureTreeArray);
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-            
-
-            
-            
-            
-            
             
             
             boolean isPdfACompliant = checkOutputIntent(itextDoc, "PDF/A");
@@ -297,7 +300,6 @@ public class PDFExtractor {
             boolean isPdfBCompliant = checkForStandard(itextDoc, "PDF/B"); // If you want to check for PDF/Broadcast, though this isn't an official ISO standard.
             boolean isPdfSECCompliant = checkForStandard(itextDoc, "PDF/SEC"); // This might not be effective since PDF/SEC was under development in 2021.
             
-            ObjectNode compliancy = objectMapper.createObjectNode();
             compliancy.put("IsPDF/ACompliant", isPdfACompliant);
             compliancy.put("IsPDF/XCompliant", isPdfXCompliant);
             compliancy.put("IsPDF/ECompliant", isPdfECompliant);
@@ -306,7 +308,6 @@ public class PDFExtractor {
             compliancy.put("IsPDF/BCompliant", isPdfBCompliant);
             compliancy.put("IsPDF/SECCompliant", isPdfSECCompliant);
 
-            jsonOutput.set("Compliancy", compliancy);
      
             
            
@@ -318,7 +319,7 @@ public class PDFExtractor {
                     addOutlinesToArray(child, bookmarksArray);
                 }
             }
-            jsonOutput.set("Bookmarks/Outline/TOC", bookmarksArray);
+            other.set("Bookmarks/Outline/TOC", bookmarksArray);
             
             String xmpString = null;
             try {
@@ -331,29 +332,27 @@ public class PDFExtractor {
             } catch (XMPException e) {
                 e.printStackTrace();
             }
-            jsonOutput.put("XMPMetadata", xmpString);
+            other.put("XMPMetadata", xmpString);
             
             
             
-            ObjectNode encryptionNode = objectMapper.createObjectNode();
             if (pdfBoxDoc.isEncrypted()) {
-                encryptionNode.put("IsEncrypted", true);
+            	encryption.put("IsEncrypted", true);
 
                 // Retrieve encryption details using getEncryption()
-                PDEncryption encryption = pdfBoxDoc.getEncryption();
-                encryptionNode.put("EncryptionAlgorithm", encryption.getFilter());
-                encryptionNode.put("KeyLength", encryption.getLength());
-                encryptionNode.put("Permissions", pdfBoxDoc.getCurrentAccessPermission().toString());
+                PDEncryption pdfEncryption = pdfBoxDoc.getEncryption();
+                encryption.put("EncryptionAlgorithm", pdfEncryption.getFilter());
+                encryption.put("KeyLength", pdfEncryption.getLength());
+                encryption.put("Permissions", pdfBoxDoc.getCurrentAccessPermission().toString());
                 
                 // Add other encryption-related properties as needed
             } else {
-                encryptionNode.put("IsEncrypted", false);
+            	encryption.put("IsEncrypted", false);
             }
-            jsonOutput.set("Encryption", encryptionNode);
             
-            docInfoNode.put("Page Mode", getPageModeDescription(pageMode));;
+            
+            
 
-            jsonOutput.set("Document Information", docInfoNode);
             ObjectNode pageInfoParent = objectMapper.createObjectNode();
             for (int pageNum = 1; pageNum <= itextDoc.getNumberOfPages(); pageNum++) {
                 ObjectNode pageInfo = objectMapper.createObjectNode();
@@ -382,7 +381,6 @@ public class PDFExtractor {
                 pageInfo.put("Text Characters Count", pageText.length()); //
 
              // Annotations
-                ArrayNode annotationsArray = objectMapper.createArrayNode();
                 List<PdfAnnotation> annotations = itextDoc.getPage(pageNum).getAnnotations();
 
                 int subtypeCount = 0;
@@ -447,61 +445,57 @@ public class PDFExtractor {
                 }
                 pageInfo.set("Links", linksArray);
                 
-                //Fonts
+             // Fonts
                 ArrayNode fontsArray = objectMapper.createArrayNode();
                 PdfDictionary fontDicts = resources.getResource(PdfName.Font);
-                Set<String> uniqueSubtypes = new HashSet<>();  // To store unique subtypes
+                Set<String> uniqueSubtypes = new HashSet<>(); // To store unique subtypes
 
-                
+                // Map to store unique fonts and their counts
+                Map<String, ObjectNode> uniqueFontsMap = new HashMap<>();
+
                 if (fontDicts != null) {
                     for (PdfName key : fontDicts.keySet()) {
-                        ObjectNode fontNode = objectMapper.createObjectNode();  // Create a new font node for each font
+                        ObjectNode fontNode = objectMapper.createObjectNode(); // Create a new font node for each font
                         PdfDictionary font = fontDicts.getAsDictionary(key);
-                        
-                        boolean isEmbedded = font.containsKey(PdfName.FontFile) || 
-                                font.containsKey(PdfName.FontFile2) || 
+
+                        boolean isEmbedded = font.containsKey(PdfName.FontFile) ||
+                                font.containsKey(PdfName.FontFile2) ||
                                 font.containsKey(PdfName.FontFile3);
-                    	fontNode.put("IsEmbedded", isEmbedded);
-                    	
-                    	
-                    	if (font.containsKey(PdfName.Encoding)) {
-                    	    String encoding = font.getAsName(PdfName.Encoding).toString();
-                    	    fontNode.put("Encoding", encoding);
-                    	}
-                    	
-                    	
-                    	
-                        if(font.getAsString(PdfName.BaseFont) != null)
+                        fontNode.put("IsEmbedded", isEmbedded);
+
+                        if (font.containsKey(PdfName.Encoding)) {
+                            String encoding = font.getAsName(PdfName.Encoding).toString();
+                            fontNode.put("Encoding", encoding);
+                        }
+
+                        if (font.getAsString(PdfName.BaseFont) != null) {
                             fontNode.put("Name", font.getAsString(PdfName.BaseFont).toString());
-                        
+                        }
+
                         String subtype = null;
-                        // Font Subtype (e.g., Type1, TrueType)
                         if (font.containsKey(PdfName.Subtype)) {
                             subtype = font.getAsName(PdfName.Subtype).toString();
                             uniqueSubtypes.add(subtype);  // Add to set to ensure uniqueness
                         }
                         fontNode.put("Subtype", subtype);
-                        
-                        // Font Descriptor
+
                         PdfDictionary fontDescriptor = font.getAsDictionary(PdfName.FontDescriptor);
                         if (fontDescriptor != null) {
-                            // Italic Angle
                             if (fontDescriptor.containsKey(PdfName.ItalicAngle)) {
                                 fontNode.put("ItalicAngle", fontDescriptor.getAsNumber(PdfName.ItalicAngle).floatValue());
                             }
-                            
-                            // Flags (e.g., italic, bold)
+
                             if (fontDescriptor.containsKey(PdfName.Flags)) {
                                 int flags = fontDescriptor.getAsNumber(PdfName.Flags).intValue();
-                                fontNode.put("IsItalic", (flags & 64) != 0);  // Existing italic flag
-                                fontNode.put("IsBold", (flags & 1 << 16) != 0);  // Existing bold flag
+                                fontNode.put("IsItalic", (flags & 64) != 0);
+                                fontNode.put("IsBold", (flags & 1 << 16) != 0);
                                 fontNode.put("IsFixedPitch", (flags & 1) != 0);
                                 fontNode.put("IsSerif", (flags & 2) != 0);
                                 fontNode.put("IsSymbolic", (flags & 4) != 0);
                                 fontNode.put("IsScript", (flags & 8) != 0);
                                 fontNode.put("IsNonsymbolic", (flags & 16) != 0);
                             }
-                            
+
                             if (fontDescriptor.containsKey(PdfName.FontFamily)) {
                                 String fontFamily = fontDescriptor.getAsString(PdfName.FontFamily).toString();
                                 fontNode.put("FontFamily", fontFamily);
@@ -511,34 +505,43 @@ public class PDFExtractor {
                                 String fontStretch = fontDescriptor.getAsName(PdfName.FontStretch).toString();
                                 fontNode.put("FontStretch", fontStretch);
                             }
-                            
-                            if (fontDescriptor != null && fontDescriptor.containsKey(PdfName.FontBBox)) {
+
+                            if (fontDescriptor.containsKey(PdfName.FontBBox)) {
                                 PdfArray bbox = fontDescriptor.getAsArray(PdfName.FontBBox);
                                 fontNode.put("FontBoundingBox", bbox.toString());
                             }
-                            if (fontDescriptor != null && fontDescriptor.containsKey(PdfName.FontWeight)) {
+
+                            if (fontDescriptor.containsKey(PdfName.FontWeight)) {
                                 float fontWeight = fontDescriptor.getAsNumber(PdfName.FontWeight).floatValue();
                                 fontNode.put("FontWeight", fontWeight);
                             }
-                            
                         }
+
                         if (font.containsKey(PdfName.ToUnicode)) {
-                            PdfStream toUnicodeStream = font.getAsStream(PdfName.ToUnicode);
-                            // Handle the stream as needed, maybe extract some details or just note its existence
                             fontNode.put("HasToUnicodeMap", true);
                         }
+
                         if (fontNode.size() > 0) {
-                        	fontsArray.add(fontNode);  // Add each font node to fontsArray
+                            // Create a unique key for this font node based on its attributes
+                            String uniqueKey = fontNode.toString(); 
+
+                            // Increment count if this font exists, or initialize it if new
+                            if (uniqueFontsMap.containsKey(uniqueKey)) {
+                                ObjectNode existingFontNode = uniqueFontsMap.get(uniqueKey);
+                                int count = existingFontNode.get("Count").asInt() + 1;
+                                existingFontNode.put("Count", count);
+                            } else {
+                                fontNode.put("Count", 1);
+                                uniqueFontsMap.put(uniqueKey, fontNode);
+                            }
                         }
                     }
                 }
 
-                // Add unique subtypes to fontsArray
-                ArrayNode subtypesArray = objectMapper.createArrayNode();
-                for (String subtype : uniqueSubtypes) {
-                    subtypesArray.add(subtype);
+                // Add unique font entries to fontsArray
+                for (ObjectNode uniqueFontNode : uniqueFontsMap.values()) {
+                    fontsArray.add(uniqueFontNode);
                 }
-                pageInfo.set("FontSubtypes", subtypesArray); // Changed from Fonts to FontSubtypes
 
                 pageInfo.set("Fonts", fontsArray);
                 
@@ -605,8 +608,14 @@ public class PDFExtractor {
 
                 pageInfoParent.set("Page " + pageNum, pageInfo);
             }
+
             
-            jsonOutput.set("Per Page Info", pageInfoParent);
+            jsonOutput.set("BasicInfo", basicInfo);
+            jsonOutput.set("DocumentInfo", docInfoNode);
+            jsonOutput.set("Compliancy", compliancy);
+            jsonOutput.set("Encryption", encryption);
+            jsonOutput.set("Other", other);
+            jsonOutput.set("PerPageInfo", pageInfoParent);
             
             
             

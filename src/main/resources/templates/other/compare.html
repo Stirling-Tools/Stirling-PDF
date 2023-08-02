@@ -15,8 +15,8 @@
                     <div class="col-md-9">
                         <h2 th:text="#{compare.header}"></h2>
                          
-                        <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-                        <div th:replace="~{fragments/common :: fileSelector(name='fileInput2', multiple=false, accept='application/pdf')}"></div>
+                        <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
+                        <div th:replace="~{fragments/common :: fileSelector(name='fileInput2', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
                         <button class="btn btn-primary"  onclick="comparePDFs()" th:text="#{compare.submit}"></button>
 
             

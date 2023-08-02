@@ -15,13 +15,109 @@
                     <div class="col-md-6">
                         <h2 th:text="#{getPdfInfo.header}"></h2>
 						<p th:text="#{processTimeWarning}">
-                        <form method="post" enctype="multipart/form-data" th:action="@{get-info-on-pdf}">
-                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                        <form id="pdfInfoForm" method="post" enctype="multipart/form-data" th:action="@{get-info-on-pdf}">
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false')}"></div>
                             <br>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{getPdfInfo.submit}"></button>
 
                         </form>
+                       <div class="container mt-5">
+						    <!-- Iterate over each main section in the JSON -->
+						    <div id="json-content">
+						        <!-- JavaScript will populate this section -->
+						    </div>
+						
+						    <!-- Button to download the JSON -->
+						    <a href="#" id="downloadJson" class="btn btn-primary mt-3">Download JSON</a>
+						</div>
+                       <script>
                        
+
+                    // Prevent the form from submitting the traditional way
+                       document.getElementById("pdfInfoForm").addEventListener("submit", function(event) {
+                           event.preventDefault();
+
+                           // Fetch the formData
+                           const formData = new FormData(event.target);
+                           
+                           fetch('get-info-on-pdf', { 
+                               method: 'POST',
+                               body: formData
+                           })
+                           .then(response => response.json())
+                           .then(data => {
+                               displayJsonData(data); // Display the data
+                               setDownloadLink(data); // Set download link
+                           })
+                           .catch(error => console.error('Error:', error));
+                       });
+
+                       function displayJsonData(jsonData) {
+                           let content = '';
+                           for (const key in jsonData) {
+                               content += renderJsonSection(key, jsonData[key]);
+                           }
+                           document.getElementById('json-content').innerHTML = content;
+                       }
+
+                       function setDownloadLink(jsonData) {
+                           const downloadLink = document.getElementById('downloadJson');
+                           const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(jsonData, null, 4));
+                           downloadLink.setAttribute("href", dataStr);
+                           downloadLink.setAttribute("download", "data.json");
+                       }
+
+
+                    	
+                    	
+                       function renderJsonSection(key, value, depth = 0) {
+                    	    let output = `<div class="card mb-3">
+                    	        <div class="card-header" id="${key}-heading-${depth}">
+                    	            <h5 class="mb-0">`;
+
+                    	    // Check if the value is an object and has children
+                    	    if (value && typeof value === 'object' && Object.keys(value).length) {
+                    	        output += `
+                    	            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#${key}-content-${depth}" aria-expanded="true" aria-controls="${key}-content-${depth}">
+                    	                ${key}
+                    	            </button>`;
+                    	    } else {
+                    	        // Display both key and value for simple entries
+                    	        output += `${key}: ${value}`;
+                    	    }
+
+                    	    output += `
+                    	            </h5>
+                    	        </div>
+                    	        <div id="${key}-content-${depth}" class="collapse" aria-labelledby="${key}-heading-${depth}">`;
+
+                    	    // Check if the value is a nested object
+                    	    if (typeof value === 'object' && !Array.isArray(value)) {
+                    	        output += '<div class="card-body">';
+                    	        for (const subKey in value) {
+                    	            output += renderJsonSection(subKey, value[subKey], depth + 1);
+                    	        }
+                    	        output += '</div>';
+                    	    } else if (typeof value === 'object' && Array.isArray(value) && value.length) { // Array values
+                    	        value.forEach((val, index) => {
+                    	            output += renderJsonSection(index, val, depth + 1);
+                    	        });
+                    	    }
+
+                    	    output += '</div></div>';
+
+                    	    return output;
+                    	}
+
+                    
+
+                   
+
+                   
+
+
+                       
+                       </script>
                     </div>
                 </div>
             </div>
