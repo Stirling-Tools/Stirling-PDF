@@ -1,35 +1,39 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
-
-<th:block th:insert="~{fragments/common :: head(title=#{getPdfInfo.title})}"></th:block>
-
-
+<html th:lang="${#locale.toString()}"
+	th:lang-direction="#{language.direction}"
+	xmlns:th="http://www.thymeleaf.org">
+<th:block
+	th:insert="~{fragments/common :: head(title=#{getPdfInfo.title})}"></th:block>
 <body>
-    <div id="page-container">
-        <div id="content-wrap">
-            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-            <br> <br>
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-md-6">
-                        <h2 th:text="#{getPdfInfo.header}"></h2>
-						<p th:text="#{processTimeWarning}">
-                        <form id="pdfInfoForm" method="post" enctype="multipart/form-data" th:action="@{get-info-on-pdf}">
-                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false')}"></div>
-                            <br>
-                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{getPdfInfo.submit}"></button>
+	<div id="page-container">
+		<div id="content-wrap">
+			<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+			<br> <br>
+			<div class="container">
+				<div class="row justify-content-center">
+					<div class="col-md-6">
+						<h2 th:text="#{getPdfInfo.header}"></h2>
+						<form id="pdfInfoForm" method="post" enctype="multipart/form-data"
+							th:action="@{get-info-on-pdf}">
+							<div
+								th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false')}"></div>
+							<br>
+							<button type="submit" id="submitBtn" class="btn btn-primary"
+								th:text="#{getPdfInfo.submit}"></button>
 
-                        </form>
-                       <div class="container mt-5">
-						    <!-- Iterate over each main section in the JSON -->
-						    <div id="json-content">
-						        <!-- JavaScript will populate this section -->
-						    </div>
-						
-						    <!-- Button to download the JSON -->
-						    <a href="#" id="downloadJson" class="btn btn-primary mt-3">Download JSON</a>
+						</form>
+						<div class="container mt-5">
+							<!-- Iterate over each main section in the JSON -->
+							<div id="json-content">
+								<!-- JavaScript will populate this section -->
+							</div>
+
+							<!-- Button to download the JSON -->
+							<a href="#" id="downloadJson" class="btn btn-primary mt-3"
+								style="display: none;" th:text="#{getPdfInfo.downloadJson}">Download
+								JSON</a>
 						</div>
-                       <script>
+						<script>
                        
 
                     // Prevent the form from submitting the traditional way
@@ -47,6 +51,7 @@
                            .then(data => {
                                displayJsonData(data); // Display the data
                                setDownloadLink(data); // Set download link
+                               document.getElementById("downloadJson").style.display = "block";
                            })
                            .catch(error => console.error('Error:', error));
                        });
@@ -67,8 +72,6 @@
                        }
 
 
-                    	
-                    	
                        function renderJsonSection(key, value, depth = 0) {
                     	    // Replace spaces and other non-alphanumeric characters with underscores for valid IDs
                     	    let safeKey = (typeof key === "string") ? key.replace(/[^a-zA-Z0-9]/g, '_') : key;
@@ -77,36 +80,51 @@
                     	        <div class="card-header" id="${safeKey}-heading-${depth}">
                     	            <h5 class="mb-0">`;
 
-                    	    // Check if the value is an object and has children
-                    	    if (value && typeof value === 'object' && (Object.keys(value).length || Array.isArray(value))) {
-                    	        output += `
-                    	            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#${safeKey}-content-${depth}" aria-expanded="true" aria-controls="${safeKey}-content-${depth}">
-                    	                ${key}
-                    	            </button>`;
-                    	    } else {
-                    	        // Display both key and value for simple entries
-                    	        output += `${key}: ${value}`;
-                    	    }
+                    	         // Check if the value is an object and has children
+                    	            if (value && typeof value === 'object') {
+                    	                // For arrays and non-array objects
+                    	                if (Array.isArray(value) && value.length === 0) {
+                    	                    output += `${key}: Empty array`;
+                    	                } else if (!Array.isArray(value) && Object.keys(value).length === 0) {
+                    	                    output += `${key}: Empty object`;
+                    	                } else {
+                    	                    output += `
+                    	                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#${safeKey}-content-${depth}" aria-expanded="true" aria-controls="${safeKey}-content-${depth}">
+                    	                            ${key}
+                    	                        </button>`;
+                    	                }
+                    	            } else {
+                    	                // For simple key-value pairs
+                    	                output += `${key}: ${value}`;
+                    	            }
+
 
                     	    output += `
-                    	            </h5>
-                    	        </div>
-                    	        <div id="${safeKey}-content-${depth}" class="collapse" aria-labelledby="${safeKey}-heading-${depth}">`;
+                    	        </h5>
+                    	    </div>
+                    	    <div id="${safeKey}-content-${depth}" class="collapse" aria-labelledby="${safeKey}-heading-${depth}">`;
 
                     	    // Check if the value is a nested object
-                    	    if (typeof value === 'object' && !Array.isArray(value)) {
+                    	    if (value && typeof value === 'object' && !Array.isArray(value)) {
                     	        output += '<div class="card-body">';
-                    	        for (const subKey in value) {
-                    	            output += renderJsonSection(subKey, value[subKey], depth + 1);
+                    	        if (Object.keys(value).length) {
+                    	            for (const subKey in value) {
+                    	                output += renderJsonSection(subKey, value[subKey], depth + 1);
+                    	            }
+                    	        } else {
+                    	            output += '<p class="text-muted">Empty object</p>';
                     	        }
                     	        output += '</div>';
-                    	    } else if (typeof value === 'object' && Array.isArray(value) && value.length) { // Array values
+                    	    } else if (value && typeof value === 'object' && Array.isArray(value)) {
                     	        output += '<div class="card-body">';
-                    	        value.forEach((val, index) => {
-                    	            // For arrays, we're going to make the displayed key more descriptive.
-                    	            const arrayKey = `${key}[${index}]`;
-                    	            output += renderJsonSection(arrayKey, val, depth + 1);
-                    	        });
+                    	        if (value.length) {
+                    	            value.forEach((val, index) => {
+                    	                const arrayKey = `${key}[${index}]`;
+                    	                output += renderJsonSection(arrayKey, val, depth + 1);
+                    	            });
+                    	        } else {
+                    	            output += '<p class="text-muted">Empty array</p>';
+                    	        }
                     	        output += '</div>';
                     	    }
 
@@ -114,24 +132,13 @@
 
                     	    return output;
                     	}
-
-
-
-                    
-
-                   
-
-                   
-
-
-                       
                        </script>
-                    </div>
-                </div>
-            </div>
+					</div>
+				</div>
+			</div>
 
-        </div>
-        <div th:insert="~{fragments/footer.html :: footer}"></div>
-    </div>
+		</div>
+		<div th:insert="~{fragments/footer.html :: footer}"></div>
+	</div>
 </body>
 </html>
