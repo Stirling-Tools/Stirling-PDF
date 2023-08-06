@@ -97,6 +97,20 @@ public class GeneralWebController {
         return "pdf-organizer";
     }
     
+    @GetMapping("/extract-page")
+    @Hidden
+    public String extractPages(Model model) {
+        model.addAttribute("currentPage", "extract-page");
+        return "extract-page";
+    }
+    
+    @GetMapping("/pdf-to-single-page")
+    @Hidden
+    public String pdfToSinglePage(Model model) {
+        model.addAttribute("currentPage", "pdf-to-single-page");
+        return "pdf-to-single-page";
+    }
+    
     @GetMapping("/rotate-pdf")
     @Hidden
     public String rotatePdfForm(Model model) {

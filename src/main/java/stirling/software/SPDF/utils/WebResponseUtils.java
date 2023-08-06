@@ -12,6 +12,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+
 public class WebResponseUtils {
 
 	public static ResponseEntity<byte[]> boasToWebResponse(ByteArrayOutputStream baos, String docName) throws IOException {
@@ -57,5 +60,19 @@ public class WebResponseUtils {
 	
 	    return boasToWebResponse(baos, docName);
 	}
+	
+	public static ResponseEntity<byte[]> pdfDocToWebResponse(PdfDocument document, String docName) throws IOException {
+	    
+	    // Open Byte Array and save document to it
+	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	    PdfWriter writer = new PdfWriter(baos);
+	    PdfDocument newDocument = new PdfDocument(writer);
+	    
+	    document.copyPagesTo(1, document.getNumberOfPages(), newDocument);
+	    newDocument.close();
+	    
+	    return boasToWebResponse(baos, docName);
+	}
+	
 
 }

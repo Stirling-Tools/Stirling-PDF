@@ -1,12 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.custom-file-chooser').forEach(setupFileInput);
+});
 
+function setupFileInput(chooser) {
+    const elementId = chooser.getAttribute('data-element-id');
+    const filesSelected = chooser.getAttribute('data-files-selected');
+    const pdfPrompt = chooser.getAttribute('data-pdf-prompt');
+
+    let allFiles = [];
     let overlay;
     let dragCounter = 0;
 
     const dragenterListener = function() {
         dragCounter++;
         if (!overlay) {
-            // Create and show the overlay
             overlay = document.createElement('div');
             overlay.style.position = 'fixed';
             overlay.style.top = 0;
@@ -28,7 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const dragleaveListener = function() {
         dragCounter--;
         if (dragCounter === 0) {
-            // Hide and remove the overlay
             if (overlay) {
                 overlay.remove();
                 overlay = null;
@@ -37,27 +43,30 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const dropListener = function(e) {
+        e.preventDefault();
         const dt = e.dataTransfer;
         const files = dt.files;
 
-        // Access the file input element and assign dropped files
-        const fileInput = document.getElementById(elementID);
-        fileInput.files = files;
+        for (let i = 0; i < files.length; i++) {
+            allFiles.push(files[i]);
+        }
 
-        // Hide and remove the overlay
+        const dataTransfer = new DataTransfer();
+        allFiles.forEach(file => dataTransfer.items.add(file));
+
+        const fileInput = document.getElementById(elementId);
+        fileInput.files = dataTransfer.files;
+
         if (overlay) {
             overlay.remove();
             overlay = null;
         }
 
-        // Reset drag counter
         dragCounter = 0;
 
-        //handleFileInputChange(fileInput);
         fileInput.dispatchEvent(new Event('change', { bubbles: true }));
     };
 
-    // Prevent default behavior for drag events
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         document.body.addEventListener(eventName, preventDefaults, false);
     });
@@ -69,29 +78,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.body.addEventListener('dragenter', dragenterListener);
     document.body.addEventListener('dragleave', dragleaveListener);
-    // Add drop event listener
     document.body.addEventListener('drop', dropListener);
 
-});
+    $("#" + elementId).on("change", function() {
+        handleFileInputChange(this);
+    });
 
-$("#"+elementID).on("change", function() {
-    handleFileInputChange(this);
-});
-
-
-function handleFileInputChange(inputElement) {
-	const files = $(inputElement).get(0).files;
-	const fileNames = Array.from(files).map(f => f.name);
-	const selectedFilesContainer = $(inputElement).siblings(".selected-files");
-	selectedFilesContainer.empty();
-	fileNames.forEach(fileName => {
-		selectedFilesContainer.append("<div>" + fileName + "</div>");
-	});
-	if (fileNames.length === 1) {
-		$(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
-	} else if (fileNames.length > 1) {
-		$(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames.length + " " + filesSelected);
-	} else {
-		$(inputElement).siblings(".custom-file-label").addClass("selected").html(pdfPrompt);
-	}
+    function handleFileInputChange(inputElement) {
+        const files = allFiles;
+        const fileNames = files.map(f => f.name);
+        const selectedFilesContainer = $(inputElement).siblings(".selected-files");
+        selectedFilesContainer.empty();
+        fileNames.forEach(fileName => {
+            selectedFilesContainer.append("<div>" + fileName + "</div>");
+        });
+        if (fileNames.length === 1) {
+            $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
+        } else if (fileNames.length > 1) {
+            $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames.length + " " + filesSelected);
+        } else {
+            $(inputElement).siblings(".custom-file-label").addClass("selected").html(pdfPrompt);
+        }
+    }
 }
