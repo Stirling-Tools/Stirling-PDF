@@ -73,46 +73,45 @@
 
 
                        function renderJsonSection(key, value, depth = 0) {
-                    	    // Replace spaces and other non-alphanumeric characters with underscores for valid IDs
                     	    let safeKey = (typeof key === "string") ? key.replace(/[^a-zA-Z0-9]/g, '_') : key;
 
                     	    let output = `<div class="card mb-3">
                     	        <div class="card-header" id="${safeKey}-heading-${depth}">
                     	            <h5 class="mb-0">`;
 
-                    	         // Check if the value is an object and has children
-                    	            if (value && typeof value === 'object') {
-                    	                // For arrays and non-array objects
-                    	                if (Array.isArray(value) && value.length === 0) {
-                    	                    output += `${key}: Empty array`;
-                    	                } else if (!Array.isArray(value) && Object.keys(value).length === 0) {
-                    	                    output += `${key}: Empty object`;
-                    	                } else {
-                    	                    output += `
-                    	                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#${safeKey}-content-${depth}" aria-expanded="true" aria-controls="${safeKey}-content-${depth}">
-                    	                            ${key}
-                    	                        </button>`;
-                    	                }
-                    	            } else {
-                    	                // For simple key-value pairs
-                    	                output += `${key}: ${value}`;
-                    	            }
-
+                    	    if (key === 'XMPMetadata' && typeof value === "string") {
+                    	        output += `<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#${safeKey}-content-${depth}" aria-expanded="true" aria-controls="${safeKey}-content-${depth}">
+                    	            ${key}
+                    	        </button>`;
+                    	    } else if (value && typeof value === 'object') {
+                    	        if (Array.isArray(value) && value.length === 0) {
+                    	            output += `${key}: Empty array`;
+                    	        } else if (!Array.isArray(value) && Object.keys(value).length === 0) {
+                    	            output += `${key}: Empty object`;
+                    	        } else {
+                    	            output += `<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#${safeKey}-content-${depth}" aria-expanded="true" aria-controls="${safeKey}-content-${depth}">
+                    	                ${key}
+                    	            </button>`;
+                    	        }
+                    	    } else {
+                    	        output += `${key}: ${value}`;
+                    	    }
 
                     	    output += `
-                    	        </h5>
-                    	    </div>
-                    	    <div id="${safeKey}-content-${depth}" class="collapse" aria-labelledby="${safeKey}-heading-${depth}">`;
+                    	            </h5>
+                    	        </div>
+                    	        <div id="${safeKey}-content-${depth}" class="collapse" aria-labelledby="${safeKey}-heading-${depth}">`;
 
-                    	    // Check if the value is a nested object
-                    	    if (value && typeof value === 'object' && !Array.isArray(value)) {
+                    	    if (key === 'XMPMetadata' && typeof value === "string") {
+                    	        output += `<div class="card-body"><pre>${escapeHTML(value)}</pre></div>`;
+                    	    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
                     	        output += '<div class="card-body">';
                     	        if (Object.keys(value).length) {
                     	            for (const subKey in value) {
                     	                output += renderJsonSection(subKey, value[subKey], depth + 1);
                     	            }
                     	        } else {
-                    	            output += '<p class="text-muted">Empty object</p>';
+                    	            output += '<p class="text-muted">Empty</p>';
                     	        }
                     	        output += '</div>';
                     	    } else if (value && typeof value === 'object' && Array.isArray(value)) {
@@ -123,7 +122,7 @@
                     	                output += renderJsonSection(arrayKey, val, depth + 1);
                     	            });
                     	        } else {
-                    	            output += '<p class="text-muted">Empty array</p>';
+                    	            output += '<p class="text-muted">Empty</p>';
                     	        }
                     	        output += '</div>';
                     	    }
@@ -132,6 +131,14 @@
 
                     	    return output;
                     	}
+
+
+                       function escapeHTML(s) {
+                    	   if(s)
+                           return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    	   
+                    	   return null;
+                       }
                        </script>
 					</div>
 				</div>

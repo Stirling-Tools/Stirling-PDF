@@ -109,7 +109,7 @@
                 </li>
 
                   <li class="nav-item nav-item-separator"></li> 
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='sign' OR ${currentPage}=='repair' OR ${currentPage}=='compare' OR ${currentPage}=='flatten' OR ${currentPage}=='remove-blanks' OR ${currentPage}=='extract-image-scans' OR ${currentPage}=='change-metadata' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' OR ${currentPage}=='add-page-numbers' OR ${currentPage}=='auto-rename' OR ${currentPage}=='get-info-on-pdf' ? 'active' : ''">
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='sign' OR ${currentPage}=='repair' OR ${currentPage}=='compare' OR ${currentPage}=='show-javascript' OR ${currentPage}=='flatten' OR ${currentPage}=='remove-blanks' OR ${currentPage}=='extract-image-scans' OR ${currentPage}=='change-metadata' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' OR ${currentPage}=='add-page-numbers' OR ${currentPage}=='auto-rename' OR ${currentPage}=='get-info-on-pdf' ? 'active' : ''">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <img class="icon" src="images/card-list.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> 
                         <span class="icon-text"  th:text="#{navbar.other}"></span>
@@ -131,6 +131,7 @@
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-page-numbers', 'images/add-page-numbers.svg', 'home.add-page-numbers.title', 'home.add-page-numbers.desc', 'add-page-numbers.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('auto-rename', 'images/fonts.svg', 'home.auto-rename.title', 'home.auto-rename.desc', 'auto-rename.tags')}"></div>
                         	<div th:replace="~{fragments/navbarEntry :: navbarEntry ('get-info-on-pdf', 'images/info.svg', 'home.getPdfInfo.title', 'home.getPdfInfo.desc', 'getPdfInfo.tags')}"></div>
+                        	<div th:replace="~{fragments/navbarEntry :: navbarEntry ('show-javascript', 'images/js.svg', 'home.showJS.title', 'home.showJS.desc', 'showJS.tags')}"></div>
                         </div>
                     </li>
 

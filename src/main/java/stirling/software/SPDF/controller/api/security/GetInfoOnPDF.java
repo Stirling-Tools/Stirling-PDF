@@ -43,6 +43,7 @@ import com.itextpdf.kernel.pdf.layer.PdfOCProperties;
 import com.itextpdf.kernel.xmp.XMPException;
 import com.itextpdf.kernel.xmp.XMPMeta;
 import com.itextpdf.kernel.xmp.XMPMetaFactory;
+import com.itextpdf.kernel.xmp.options.SerializeOptions;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -193,11 +194,13 @@ public class GetInfoOnPDF {
             if (embeddedFiles != null) {
                 
                 PdfArray namesArray = embeddedFiles.getAsArray(PdfName.Names);
-                for (int i = 0; i < namesArray.size(); i += 2) {
-                    ObjectNode embeddedFileNode = objectMapper.createObjectNode();
-                    embeddedFileNode.put("Name", namesArray.getAsString(i).toString());
-                    // Add other details if required
-                    embeddedFilesArray.add(embeddedFileNode);
+                if(namesArray != null) {
+	                for (int i = 0; i < namesArray.size(); i += 2) {
+	                    ObjectNode embeddedFileNode = objectMapper.createObjectNode();
+	                    embeddedFileNode.put("Name", namesArray.getAsString(i).toString());
+	                    // Add other details if required
+	                    embeddedFilesArray.add(embeddedFileNode);
+	                }
                 }
                 
             }
@@ -224,15 +227,33 @@ public class GetInfoOnPDF {
             if (namesDict != null) {
                 PdfDictionary javascriptDict = namesDict.getAsDictionary(PdfName.JavaScript);
                 if (javascriptDict != null) {
-                    
+
                     PdfArray namesArray = javascriptDict.getAsArray(PdfName.Names);
                     for (int i = 0; i < namesArray.size(); i += 2) {
                         ObjectNode jsNode = objectMapper.createObjectNode();
-                        jsNode.put("JS Name", namesArray.getAsString(i).toString());
-                        jsNode.put("JS Code", namesArray.getAsString(i + 1).toString());
+                        if(namesArray.getAsString(i) != null)
+                            jsNode.put("JS Name", namesArray.getAsString(i).toString());
+
+                        // Here we check for a PdfStream object and retrieve the JS code from it
+                        PdfObject jsCode = namesArray.get(i+1);
+                        if (jsCode instanceof PdfStream) {
+                            byte[] jsCodeBytes = ((PdfStream)jsCode).getBytes();
+                            String jsCodeStr = new String(jsCodeBytes, StandardCharsets.UTF_8);
+                            jsNode.put("JS Script Length", jsCodeStr.length());
+                        } else if (jsCode instanceof PdfDictionary) {
+                            // If the JS code is in a dictionary, you'll need to know the key to use.
+                            // Assuming the key is PdfName.JS:
+                            PdfStream jsCodeStream = ((PdfDictionary)jsCode).getAsStream(PdfName.JS);
+                            if (jsCodeStream != null) {
+                                byte[] jsCodeBytes = jsCodeStream.getBytes();
+                                String jsCodeStr = new String(jsCodeBytes, StandardCharsets.UTF_8);
+                                jsNode.put("JS Script Character Length", jsCodeStr.length());
+                            }
+                        }
+
                         javascriptArray.add(jsNode);
                     }
-                
+
                 }
             }
             other.set("JavaScript", javascriptArray);
@@ -305,16 +326,15 @@ public class GetInfoOnPDF {
             }
             other.set("Bookmarks/Outline/TOC", bookmarksArray);
             
+            byte[] xmpBytes = itextDoc.getXmpMetadata();
             String xmpString = null;
-            try {
-                byte[] xmpBytes = itextDoc.getXmpMetadata();
-                if (xmpBytes != null) {
+            if (xmpBytes != null) {
+                try {
                     XMPMeta xmpMeta = XMPMetaFactory.parseFromBuffer(xmpBytes);
-                    xmpString = xmpMeta.dumpObject();
-                    
+                    xmpString = new String(XMPMetaFactory.serializeToBuffer(xmpMeta, new SerializeOptions()));
+                } catch (XMPException e) {
+                    e.printStackTrace();
                 }
-            } catch (XMPException e) {
-                e.printStackTrace();
             }
             other.put("XMPMetadata", xmpString);
             
@@ -416,8 +436,10 @@ public class GetInfoOnPDF {
                 for (PdfAnnotation annotation : annotations) {
                     if (annotation instanceof PdfLinkAnnotation) {
                         PdfLinkAnnotation linkAnnotation = (PdfLinkAnnotation) annotation;
-                        String uri = linkAnnotation.getAction().toString();
-                        uniqueURIs.add(uri);  // Add to set to ensure uniqueness
+                        if(linkAnnotation != null && linkAnnotation.getAction() != null) {
+	                        String uri = linkAnnotation.getAction().toString();
+	                        uniqueURIs.add(uri);  // Add to set to ensure uniqueness
+                        }
                     }
                 }
 

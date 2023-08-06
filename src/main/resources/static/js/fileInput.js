@@ -80,9 +80,13 @@ function setupFileInput(chooser) {
     document.body.addEventListener('dragleave', dragleaveListener);
     document.body.addEventListener('drop', dropListener);
 
-    $("#" + elementId).on("change", function() {
-        handleFileInputChange(this);
-    });
+    console.log("Element Id: ", elementId);
+
+	$("#" + elementId).on("change", function(e) {
+	    allFiles = Array.from(e.target.files); 
+	    handleFileInputChange(this);
+	});
+
 
     function handleFileInputChange(inputElement) {
         const files = allFiles;
@@ -92,6 +96,7 @@ function setupFileInput(chooser) {
         fileNames.forEach(fileName => {
             selectedFilesContainer.append("<div>" + fileName + "</div>");
         });
+        
         if (fileNames.length === 1) {
             $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
         } else if (fileNames.length > 1) {
