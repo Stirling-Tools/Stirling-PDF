@@ -3,9 +3,11 @@
 | adjust-contrast     |    ✔️    |         |          |       |      |        |        |             |          |           |    ✔️      |
 | auto-split-pdf      |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
 | crop                |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
+| extract-page        |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
 | merge-pdfs          |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
 | multi-page-layout   |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
 | pdf-organizer       |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |    ✔️       |
+| pdf-to-single-page  |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
 | remove-pages        |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
 | rotate-pdf          |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
 | scale-pages         |    ✔️    |         |          |       |      |        |        |             |          |    ✔️     |            |
@@ -15,6 +17,7 @@
 | pdf-to-html         |         |    ✔️    |          |       |  ✔️   |        |        |     ✔️       |          |          |            |
 | pdf-to-img          |         |    ✔️    |          |       |      |        |        |             |          |    ✔️     |            |
 | pdf-to-pdfa         |         |    ✔️    |          |       |  ✔️   |        |        |             |    ✔️     |          |            |
+| pdf-to-markdown     |         |    ✔️    |          |       |      |        |        |             |            |    ✔️      |            |
 | pdf-to-presentation |         |    ✔️    |          |       |  ✔️   |        |        |     ✔️       |          |          |            |
 | pdf-to-text         |         |    ✔️    |          |       |  ✔️   |        |        |     ✔️       |          |          |            |
 | pdf-to-word         |         |    ✔️    |          |       |  ✔️   |        |        |     ✔️       |          |          |            |
@@ -34,8 +37,10 @@
 | compress-pdf        |         |         |          |  ✔️    |  ✔️   |        |        |             |    ✔️     |          |            |
 | extract-image-scans |         |         |          |  ✔️    |  ✔️   |   ✔️    |   ✔️    |             |          |          |            |
 | extract-images      |         |         |          |  ✔️    |      |        |        |             |          |    ✔️     |            |
-| flatten             |         |         |          |  ✔️    |      |        |        |             |          |          |            |
+| flatten             |         |         |          |  ✔️    |      |        |        |             |          |          |      ✔️      |
+| get-info-on-pdf     |         |         |          |  ✔️    |      |        |        |             |          |    ✔️      |            |
 | ocr-pdf             |         |         |          |  ✔️    |  ✔️   |        |        |             |    ✔️     |          |            |
 | remove-blanks       |         |         |          |  ✔️    |  ✔️   |   ✔️    |   ✔️    |             |          |          |            |
 | repair              |         |         |          |  ✔️    |  ✔️   |        |        |     ✔️       |          |          |            |
+| show-javascript     |         |         |          |  ✔️    |      |        |        |             |          |          |    ✔️       |
 | sign                |         |         |          |  ✔️    |      |        |        |             |          |          |    ✔️       |
