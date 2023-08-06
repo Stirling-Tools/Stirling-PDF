@@ -6,7 +6,8 @@ function setupFileInput(chooser) {
     const elementId = chooser.getAttribute('data-element-id');
     const filesSelected = chooser.getAttribute('data-files-selected');
     const pdfPrompt = chooser.getAttribute('data-pdf-prompt');
-    
+
+    let allFiles = [];
     let overlay;
     let dragCounter = 0;
 
@@ -42,11 +43,19 @@ function setupFileInput(chooser) {
     };
 
     const dropListener = function(e) {
+        e.preventDefault();
         const dt = e.dataTransfer;
         const files = dt.files;
 
+        for (let i = 0; i < files.length; i++) {
+            allFiles.push(files[i]);
+        }
+
+        const dataTransfer = new DataTransfer();
+        allFiles.forEach(file => dataTransfer.items.add(file));
+
         const fileInput = document.getElementById(elementId);
-        fileInput.files = files;
+        fileInput.files = dataTransfer.files;
 
         if (overlay) {
             overlay.remove();
@@ -76,8 +85,8 @@ function setupFileInput(chooser) {
     });
 
     function handleFileInputChange(inputElement) {
-        const files = $(inputElement).get(0).files;
-        const fileNames = Array.from(files).map(f => f.name);
+        const files = allFiles;
+        const fileNames = files.map(f => f.name);
         const selectedFilesContainer = $(inputElement).siblings(".selected-files");
         selectedFilesContainer.empty();
         fileNames.forEach(fileName => {
