@@ -80,9 +80,10 @@ function setupFileInput(chooser) {
     document.body.addEventListener('dragleave', dragleaveListener);
     document.body.addEventListener('drop', dropListener);
 
-    $("#" + elementId).on("change", function() {
-        handleFileInputChange(this);
-    });
+    $("#" + elementId).on("change", function(e) {
+	    allFiles = Array.from(e.target.files); 
+	    handleFileInputChange(this);
+	});
 
     function handleFileInputChange(inputElement) {
         const files = allFiles;
