@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -116,7 +117,7 @@ public class CompressController {
             command.add("-sOutputFile=" + tempOutputFile.toString());
             command.add(tempInputFile.toString());
 
-            int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT).runCommandWithOutputHandling(command);
+            ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT).runCommandWithOutputHandling(command);
 
             // Check if file size is within expected size or not auto mode so instantly finish
             long outputFileSize = Files.size(tempOutputFile);

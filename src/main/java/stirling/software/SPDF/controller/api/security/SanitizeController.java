@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.PDPageTree;
@@ -21,7 +22,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import stirling.software.SPDF.utils.WebResponseUtils;
-
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSString;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -75,8 +78,24 @@ public class SanitizeController {
 	        return WebResponseUtils.pdfDocToWebResponse(document, inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_sanitized.pdf");
 	    }
 	}
-    private void sanitizeJavaScript(PDDocument document) throws IOException {
-    	for (PDPage page : document.getPages()) {
+	private void sanitizeJavaScript(PDDocument document) throws IOException {
+		// Get the root dictionary (catalog) of the PDF
+	    PDDocumentCatalog catalog = document.getDocumentCatalog();
+
+	    // Get the Names dictionary
+	    COSDictionary namesDict = (COSDictionary) catalog.getCOSObject().getDictionaryObject(COSName.NAMES);
+
+	    if (namesDict != null) {
+	        // Get the JavaScript dictionary
+	        COSDictionary javaScriptDict = (COSDictionary) namesDict.getDictionaryObject(COSName.getPDFName("JavaScript"));
+
+	        if (javaScriptDict != null) {
+	            // Remove the JavaScript dictionary
+	            namesDict.removeItem(COSName.getPDFName("JavaScript"));
+	        }
+	    }
+	    
+	    for (PDPage page : document.getPages()) {
             for (PDAnnotation annotation : page.getAnnotations()) {
                 if (annotation instanceof PDAnnotationWidget) {
                     PDAnnotationWidget widget = (PDAnnotationWidget) annotation;
@@ -89,13 +108,28 @@ public class SanitizeController {
 	        PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
 	        if (acroForm != null) {
 	            for (PDField field : acroForm.getFields()) {
-	                if (field.getActions().getF() instanceof PDActionJavaScript) {
-	                    field.getActions().setF(null);
-	                }
+	            	PDFormFieldAdditionalActions actions = field.getActions();
+	            	if(actions != null) {
+	            		if (actions.getC() instanceof PDActionJavaScript) {
+	                        actions.setC(null);
+	                    }
+	                    if (actions.getF() instanceof PDActionJavaScript) {
+	                        actions.setF(null);
+	                    }
+	                    if (actions.getK() instanceof PDActionJavaScript) {
+	                        actions.setK(null);
+	                    }
+	                    if (actions.getV() instanceof PDActionJavaScript) {
+	                        actions.setV(null);
+	                    }
+	            	}
 	            }
 	        }
 	    }
-    }
+	}
+
+
+
 
     private void sanitizeEmbeddedFiles(PDDocument document) {
         PDPageTree allPages = document.getPages();

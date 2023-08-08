@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -51,7 +52,7 @@ public class RepairController {
         command.add(tempInputFile.toString());
 
 
-        int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT).runCommandWithOutputHandling(command);
+        ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT).runCommandWithOutputHandling(command);
 
         // Read the optimized PDF file
         byte[] pdfBytes = Files.readAllBytes(tempOutputFile);

@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -49,7 +50,7 @@ public class ConvertPDFToPDFA {
         command.add(tempInputFile.toString());
         command.add(tempOutputFile.toString());
 
-        int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
+        ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
 
         // Read the optimized PDF file
         byte[] pdfBytes = Files.readAllBytes(tempOutputFile);

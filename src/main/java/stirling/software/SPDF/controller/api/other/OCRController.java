@@ -29,6 +29,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -141,8 +142,12 @@ public class OCRController {
         command.addAll(Arrays.asList("--language", languageOption, tempInputFile.toString(), tempOutputFile.toString()));
 
         // Run CLI command
-        int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
-
+        ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
+        if(result.getRc() != 0 && result.getMessages().contains("multiprocessing/synchronize.py") && result.getMessages().contains("OSError: [Errno 38] Function not implemented")) {
+        	command.add("--jobs");
+        	command.add("1");
+        	result = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
+        }
         
 
         
@@ -153,7 +158,7 @@ public class OCRController {
 
             List<String> gsCommand = Arrays.asList("gs", "-sDEVICE=pdfwrite", "-dFILTERIMAGE", "-o", tempPdfWithoutImages.toString(), tempOutputFile.toString());
 
-            int gsReturnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT).runCommandWithOutputHandling(gsCommand);
+            ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT).runCommandWithOutputHandling(gsCommand);
             tempOutputFile = tempPdfWithoutImages;
         }
         // Read the OCR processed PDF file

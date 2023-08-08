@@ -10,6 +10,7 @@ class PdfContainer {
         this.pagesContainerWrapper = document.getElementById(wrapperId);
         this.movePageTo = this.movePageTo.bind(this);
         this.addPdfs = this.addPdfs.bind(this);
+        this.addPdfsFromFiles = this.addPdfsFromFiles.bind(this);
         this.rotateElement = this.rotateElement.bind(this);
         this.rotateAll = this.rotateAll.bind(this);
         this.exportPdf = this.exportPdf.bind(this);
@@ -57,20 +58,23 @@ class PdfContainer {
         input.type = 'file';
         input.multiple = true;
         input.setAttribute("accept", "application/pdf");
-
         input.onchange = async(e) => {
             const files = e.target.files;
-            this.fileName = files[0].name;
-            for (var i=0; i < files.length; i++) {
-                await this.addPdfFile(files[i], nextSiblingElement);
-            }
-
-            document.querySelectorAll(".enable-on-file").forEach(element => {
-                element.disabled = false;
-            });
+            this.addPdfsFromFiles(files, nextSiblingElement);
         }
 
         input.click();
+    }
+
+    async addPdfsFromFiles(files, nextSiblingElement) {
+        this.fileName = files[0].name;
+        for (var i=0; i < files.length; i++) {
+            await this.addPdfFile(files[i], nextSiblingElement);
+        }
+
+        document.querySelectorAll(".enable-on-file").forEach(element => {
+            element.disabled = false;
+        });
     }
 
     rotateElement(element, deg) {

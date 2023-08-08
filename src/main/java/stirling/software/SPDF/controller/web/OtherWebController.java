@@ -31,7 +31,15 @@ public class OtherWebController {
         modelAndView.addObject("currentPage", "extract-image-scans");
         return modelAndView;
     }
-
+    
+    @GetMapping("/show-javascript")
+    @Hidden
+    public String extractJavascriptForm(Model model) {
+        model.addAttribute("currentPage", "show-javascript");
+        return "other/show-javascript";
+    }
+    
+    
     @GetMapping("/add-page-numbers")
     @Hidden
     public String addPageNumbersForm(Model model) {

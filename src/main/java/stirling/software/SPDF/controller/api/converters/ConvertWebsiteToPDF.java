@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -29,7 +31,7 @@ public class ConvertWebsiteToPDF {
 	    description = "This endpoint fetches content from a URL and converts it to a PDF format."
 	)
 	public ResponseEntity<byte[]> urlToPdf(
-	    @RequestPart(required = true, value = "urlInput")
+	    @RequestParam(required = true, value = "urlInput")
 	    @Parameter(description = "The input URL to be converted to a PDF file", required = true)
 	        String URL) throws IOException, InterruptedException {
 
@@ -49,7 +51,7 @@ public class ConvertWebsiteToPDF {
 		    command.add(URL);
 		    command.add(tempOutputFile.toString());
 	
-		    int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT).runCommandWithOutputHandling(command);
+		    ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT).runCommandWithOutputHandling(command);
 	
 		    // Read the optimized PDF file
 		    pdfBytes = Files.readAllBytes(tempOutputFile);

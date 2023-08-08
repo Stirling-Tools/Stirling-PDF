@@ -15,6 +15,7 @@ Operation           | Ultra-Lite | Lite | Full
 --------------------|------------|------|-----
 add-page-numbers    |     ✔️      |  ✔️   |  ✔️
 add-password        |     ✔️      |  ✔️   |  ✔️
+add-image           |     ✔️      |  ✔️   |  ✔️
 add-watermark       |     ✔️      |  ✔️   |  ✔️
 adjust-contrast     |     ✔️      |  ✔️   |  ✔️
 auto-split-pdf      |     ✔️      |  ✔️   |  ✔️
@@ -24,21 +25,25 @@ crop                |     ✔️      |  ✔️   |  ✔️
 change-metadata     |     ✔️      |  ✔️   |  ✔️
 change-permissions  |     ✔️      |  ✔️   |  ✔️
 compare             |     ✔️      |  ✔️   |  ✔️
+extract-page        |     ✔️      |  ✔️   |  ✔️
 extract-images      |     ✔️      |  ✔️   |  ✔️
 flatten             |     ✔️      |  ✔️   |  ✔️
+get-info-on-pdf     |     ✔️      |  ✔️   |  ✔️
 img-to-pdf          |     ✔️      |  ✔️   |  ✔️
+markdown-to-pdf     |     ✔️      |  ✔️   |  ✔️
 merge-pdfs          |     ✔️      |  ✔️   |  ✔️
 multi-page-layout   |     ✔️      |  ✔️   |  ✔️
 pdf-organizer       |     ✔️      |  ✔️   |  ✔️
 pdf-to-img          |     ✔️      |  ✔️   |  ✔️
+pdf-to-single-page  |     ✔️      |  ✔️   |  ✔️
 remove-pages        |     ✔️      |  ✔️   |  ✔️
 remove-password     |     ✔️      |  ✔️   |  ✔️
 rotate-pdf          |     ✔️      |  ✔️   |  ✔️
 sanitize-pdf        |     ✔️      |  ✔️   |  ✔️
 scale-pages         |     ✔️      |  ✔️   |  ✔️
 sign                |     ✔️      |  ✔️   |  ✔️
+show-javascript     |     ✔️      |  ✔️   |  ✔️
 split-pdfs          |     ✔️      |  ✔️   |  ✔️
-add-image           |     ✔️      |  ✔️   |  ✔️
 file-to-pdf         |             |  ✔️   |  ✔️
 pdf-to-html         |             |  ✔️   |  ✔️
 pdf-to-presentation |             |  ✔️   |  ✔️

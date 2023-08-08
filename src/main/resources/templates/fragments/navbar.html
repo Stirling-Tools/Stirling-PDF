@@ -40,7 +40,7 @@
                     </li>-->
                     
 <li class="nav-item nav-item-separator"></li>
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='crop' OR ${currentPage}=='adjust-contrast' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' OR ${currentPage}=='multi-page-layout' OR ${currentPage}=='scale-pages' ? 'active' : ''">
+    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='crop' OR ${currentPage}=='adjust-contrast' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' OR ${currentPage}=='multi-page-layout' OR ${currentPage}=='scale-pages' OR ${currentPage}=='auto-split-pdf' OR ${currentPage}=='extract-page' OR ${currentPage}=='pdf-to-single-page' ? 'active' : ''">
     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <img class="icon" src="images/file-earmark-pdf.svg" alt="icon">
         <span class="icon-text"  th:text="#{navbar.pageOps}"></span>
@@ -57,6 +57,8 @@
 		<div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'auto-split-pdf', 'images/layout-split.svg', 'home.autoSplitPDF.title', 'home.autoSplitPDF.desc', 'autoSplitPDF.tags')}"></div>
         <div th:replace="~{fragments/navbarEntry :: navbarEntry ('adjust-contrast', 'images/adjust-contrast.svg', 'home.adjust-contrast.title', 'home.adjust-contrast.desc', 'adjust-contrast.tags')}"></div>
         <div th:replace="~{fragments/navbarEntry :: navbarEntry ('crop', 'images/crop.svg', 'home.crop.title', 'home.crop.desc', 'crop.tags')}"></div>
+        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('extract-page', 'images/extract.svg', 'home.extractPage.title', 'home.extractPage.desc', 'extractPage.tags')}"></div>
+        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-single-page', 'images/single-page.svg', 'home.PdfToSinglePage.title', 'home.PdfToSinglePage.desc', 'PdfToSinglePage.tags')}"></div>
 		
 		
     </div>
@@ -73,7 +75,7 @@
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('file-to-pdf', 'images/file.svg', 'home.fileToPDF.title', 'home.fileToPDF.desc', 'fileToPDF.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('html-to-pdf', 'images/html.svg', 'home.HTMLToPDF.title', 'home.HTMLToPDF.desc', 'HTMLToPDF.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('url-to-pdf', 'images/url.svg', 'home.URLToPDF.title', 'home.URLToPDF.desc', 'URLToPDF.tags')}"></div>
-				
+							<div th:replace="~{fragments/navbarEntry :: navbarEntry ('markdown-to-pdf', 'images/markdown.svg', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags')}"></div>
                             <hr class="dropdown-divider">
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-img', 'images/image.svg', 'home.pdfToImage.title', 'home.pdfToImage.desc', 'pdfToImage.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-word', 'images/file-earmark-word.svg', 'home.PDFToWord.title', 'home.PDFToWord.desc', 'PDFToWord.tags')}"></div>
@@ -91,7 +93,7 @@
 
 <li class="nav-item nav-item-separator"></li>
                    
-                  <li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='add-watermark' OR ${currentPage}=='cert-sign' ? 'active' : ''">
+                  <li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='add-watermark' OR ${currentPage}=='cert-sign' OR ${currentPage}=='sanitize-pdf' ? 'active' : ''">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <img class="icon" src="images/shield-check.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{navbar.security}"></span>
                     </a>
@@ -102,11 +104,12 @@
                         <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-watermark', 'images/droplet.svg', 'home.watermark.title', 'home.watermark.desc', 'watermark.tags')}"></div>
                         <div th:replace="~{fragments/navbarEntry :: navbarEntry ('cert-sign', 'images/award.svg', 'home.certSign.title', 'home.certSign.desc', 'certSign.tags')}"></div>
                         <div th:replace="~{fragments/navbarEntry :: navbarEntry ('sanitize-pdf', 'images/sanitize.svg', 'home.sanitizePdf.title', 'home.sanitizePdf.desc', 'sanitizePdf.tags')}"></div>
+                        
                     </div>
                 </li>
 
                   <li class="nav-item nav-item-separator"></li> 
-                    <li class="nav-item dropdown" th:classappend="${currentPage}=='sign' OR ${currentPage}=='repair' OR ${currentPage}=='compare' OR ${currentPage}=='flatten' OR ${currentPage}=='remove-blanks' OR ${currentPage}=='extract-image-scans' OR ${currentPage}=='change-metadata' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' OR ${currentPage}=='add-page-numbers' OR ${currentPage}=='auto-rename' ? 'active' : ''">
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='sign' OR ${currentPage}=='repair' OR ${currentPage}=='compare' OR ${currentPage}=='show-javascript' OR ${currentPage}=='flatten' OR ${currentPage}=='remove-blanks' OR ${currentPage}=='extract-image-scans' OR ${currentPage}=='change-metadata' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' OR ${currentPage}=='add-page-numbers' OR ${currentPage}=='auto-rename' OR ${currentPage}=='get-info-on-pdf' ? 'active' : ''">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <img class="icon" src="images/card-list.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> 
                         <span class="icon-text"  th:text="#{navbar.other}"></span>
@@ -127,6 +130,8 @@
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('compare', 'images/scales.svg', 'home.compare.title', 'home.compare.desc', 'compare.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-page-numbers', 'images/add-page-numbers.svg', 'home.add-page-numbers.title', 'home.add-page-numbers.desc', 'add-page-numbers.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('auto-rename', 'images/fonts.svg', 'home.auto-rename.title', 'home.auto-rename.desc', 'auto-rename.tags')}"></div>
+                        	<div th:replace="~{fragments/navbarEntry :: navbarEntry ('get-info-on-pdf', 'images/info.svg', 'home.getPdfInfo.title', 'home.getPdfInfo.desc', 'getPdfInfo.tags')}"></div>
+                        	<div th:replace="~{fragments/navbarEntry :: navbarEntry ('show-javascript', 'images/js.svg', 'home.showJS.title', 'home.showJS.desc', 'showJS.tags')}"></div>
                         </div>
                     </li>
 

@@ -71,6 +71,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("PageOps", "adjust-contrast");
         addEndpointToGroup("PageOps", "crop");
         addEndpointToGroup("PageOps", "auto-split-pdf");
+        addEndpointToGroup("PageOps", "extract-page");
+        addEndpointToGroup("PageOps", "pdf-to-single-page");
         
         // Adding endpoints to "Convert" group
         addEndpointToGroup("Convert", "pdf-to-img");
@@ -85,6 +87,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "pdf-to-xml");
         addEndpointToGroup("Convert", "html-to-pdf");
         addEndpointToGroup("Convert", "url-to-pdf");
+        addEndpointToGroup("Convert", "markdown-to-pdf");
         
         // Adding endpoints to "Security" group
         addEndpointToGroup("Security", "add-password");
@@ -94,7 +97,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "cert-sign");
         addEndpointToGroup("Security", "sanitize-pdf");
         
-
+        
         // Adding endpoints to "Other" group
         addEndpointToGroup("Other", "ocr-pdf");
         addEndpointToGroup("Other", "add-image");
@@ -109,7 +112,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "compare");
         addEndpointToGroup("Other", "add-page-numbers");
         addEndpointToGroup("Other", "auto-rename");
-        
+        addEndpointToGroup("Other", "get-info-on-pdf");
+        addEndpointToGroup("Other", "show-javascript");
         
         
         
@@ -180,6 +184,11 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "auto-split-pdf");
         addEndpointToGroup("Java", "sanitize-pdf");
         addEndpointToGroup("Java", "crop");
+        addEndpointToGroup("Java", "get-info-on-pdf");
+        addEndpointToGroup("Java", "extract-page");
+        addEndpointToGroup("Java", "pdf-to-single-page");
+        addEndpointToGroup("Java", "markdown-to-pdf");
+        addEndpointToGroup("Java", "show-javascript");
         
         //Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");

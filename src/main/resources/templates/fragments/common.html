@@ -98,7 +98,10 @@
 	</script>
     <script src="js/downloader.js"></script>
 
-    <div class="custom-file-chooser">
+    <div class="custom-file-chooser" th:attr="data-unique-id=${name}, 
+              data-element-id=${name+'-input'}, 
+              data-files-selected=#{filesSelected}, 
+              data-pdf-prompt=#{pdfPrompt}">
         <div class="custom-file">
             <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:classappend="${notRequired ? '' : 'required'}">
             <label class="custom-file-label" th:for="${name}+'-input'" th:text="${inputText}"></label>
@@ -114,12 +117,7 @@
     </div>
     <button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">Bored waiting?</button>
 
-    
-	<script th:inline="javascript">
-		const elementID =  /*[[${name+"-input"}]]*/ '';
-		const filesSelected =  /*[[#{filesSelected}]]*/ '';
-		const pdfPrompt =  /*[[#{pdfPrompt}]]*/ '';
-	</script>
+
 	
     <script src="js/fileInput.js"></script>
     <link rel="stylesheet" href="css/fileSelect.css">

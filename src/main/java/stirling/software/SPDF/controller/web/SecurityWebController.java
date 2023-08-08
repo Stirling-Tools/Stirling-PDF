@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @Tag(name = "Security", description = "Security APIs")
 public class SecurityWebController {
+	
+	
     @GetMapping("/add-password")
     @Hidden
     public String addPasswordForm(Model model) {
@@ -49,5 +51,12 @@ public class SecurityWebController {
     public String sanitizeForm(Model model) {
         model.addAttribute("currentPage", "sanitize-pdf");
         return "security/sanitize-pdf";
+    }
+    
+    @GetMapping("/get-info-on-pdf")
+    @Hidden
+    public String getInfo(Model model) {
+        model.addAttribute("currentPage", "get-info-on-pdf");
+        return "security/get-info-on-pdf";
     }
 }

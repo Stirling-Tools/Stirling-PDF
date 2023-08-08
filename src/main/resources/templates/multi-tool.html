@@ -65,7 +65,7 @@
         import scrollDivHorizontally from "./js/multitool/horizontalScroll.js";
         import ImageHighlighter from "./js/multitool/ImageHighlighter.js";
         import PdfActionsManager from './js/multitool/PdfActionsManager.js';
-
+        import addFileInputListener from './js/multitool/fileInput.js';
         // enables drag and drop
         const dragDropManager = new DragDropManager('drag-container', 'pages-container');
         // enables image highlight on click
@@ -86,6 +86,9 @@
                 pdfActionsManager,
             ]
         )
+        addFileInputListener(async (files) => {
+            pdfContainer.addPdfsFromFiles(files);
+        });
     </script>
 
     <style>
