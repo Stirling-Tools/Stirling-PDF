@@ -178,6 +178,7 @@ Using the same method you can also change
 - Disable and remove endpoints and functionality from Stirling-PDF. Currently the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma seperated lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image to pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Frooodle/Stirling-PDF/blob/main/groups.md) 
 - Change the max file size allowed through the server with the environment variable MAX_FILE_SIZE. default  2000MB
 - Customise static files such as app logo by placing files in the /customFiles/static/ directory. Example to customise app logo is placing a /customFiles/static/favicon.svg to override current SVG. This can be used to change any images/icons/css/fonts/js etc in Stirling-PDF
+- Enable/Disable metric api endpoints with ENABLE_API_METRICS. Default enabled
 
 ## API
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
