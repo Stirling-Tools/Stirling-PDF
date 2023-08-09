@@ -54,11 +54,22 @@
             body: formData
         }).then(response => response.text())
         .then(data => {
-            // Escape < and > characters
+        	 // Escape < and > characters
             let escapedData = data.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-            // Wrap the JavaScript content in a pre and code tag and add it to the div
-            document.querySelector('#script-content').innerHTML = '<pre><code class="language-javascript">' + escapedData + '</code></pre>';
+            // Create the elements manually
+            let preElement = document.createElement('pre');
+            let codeElement = document.createElement('code');
+            codeElement.classList.add('language-javascript');
+            codeElement.textContent = escapedData;  // Use textContent instead of innerHTML
+            preElement.appendChild(codeElement);
+
+            let scriptContent = document.querySelector('#script-content');
+            // Clear existing content, if any
+            while (scriptContent.firstChild) {
+                scriptContent.removeChild(scriptContent.firstChild);
+            }
+            scriptContent.appendChild(preElement);
 
             // Highlight the code using Prism.js
             Prism.highlightAll();

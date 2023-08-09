@@ -35,110 +35,120 @@
 						</div>
 						<script>
                        
+						document.getElementById("pdfInfoForm").addEventListener("submit", function(event) {
+						    event.preventDefault();
 
-                    // Prevent the form from submitting the traditional way
-                       document.getElementById("pdfInfoForm").addEventListener("submit", function(event) {
-                           event.preventDefault();
+						    const formData = new FormData(event.target);
+						    
+						    fetch('get-info-on-pdf', { 
+						        method: 'POST',
+						        body: formData
+						    })
+						    .then(response => response.json())
+						    .then(data => {
+						        displayJsonData(data);
+						        setDownloadLink(data);
+						        document.getElementById("downloadJson").style.display = "block";
+						    })
+						    .catch(error => console.error('Error:', error));
+						});
 
-                           // Fetch the formData
-                           const formData = new FormData(event.target);
-                           
-                           fetch('get-info-on-pdf', { 
-                               method: 'POST',
-                               body: formData
-                           })
-                           .then(response => response.json())
-                           .then(data => {
-                               displayJsonData(data); // Display the data
-                               setDownloadLink(data); // Set download link
-                               document.getElementById("downloadJson").style.display = "block";
-                           })
-                           .catch(error => console.error('Error:', error));
-                       });
+						function displayJsonData(jsonData) {
+						    const jsonContent = document.getElementById('json-content');
+						    
+						    while (jsonContent.firstChild) {
+						        jsonContent.removeChild(jsonContent.firstChild);
+						    }
 
-                       function displayJsonData(jsonData) {
-                           let content = '';
-                           for (const key in jsonData) {
-                               content += renderJsonSection(key, jsonData[key]);
-                           }
-                           document.getElementById('json-content').innerHTML = content;
-                       }
+						    for (const key in jsonData) {
+						        const sectionElem = createJsonSection(key, jsonData[key]);
+						        jsonContent.appendChild(sectionElem);
+						    }
+						}
 
-                       function setDownloadLink(jsonData) {
-                           const downloadLink = document.getElementById('downloadJson');
-                           const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(jsonData, null, 4));
-                           downloadLink.setAttribute("href", dataStr);
-                           downloadLink.setAttribute("download", "data.json");
-                       }
+						function setDownloadLink(jsonData) {
+						    const downloadLink = document.getElementById('downloadJson');
+						    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(jsonData, null, 4));
+						    downloadLink.setAttribute("href", dataStr);
+						    downloadLink.setAttribute("download", "data.json");
+						}
 
+						function createJsonSection(key, value, depth = 0) {
+						    let safeKey = (typeof key === "string") ? key.replace(/[^a-zA-Z0-9]/g, '_') : key;
+						    const card = document.createElement('div');
+						    card.className = 'card mb-3';
 
-                       function renderJsonSection(key, value, depth = 0) {
-                    	    let safeKey = (typeof key === "string") ? key.replace(/[^a-zA-Z0-9]/g, '_') : key;
+						    const header = document.createElement('div');
+						    header.className = 'card-header';
+						    header.id = `${safeKey}-heading-${depth}`;
+						    const h5Elem = document.createElement('h5');
+						    h5Elem.className = 'mb-0';
 
-                    	    let output = `<div class="card mb-3">
-                    	        <div class="card-header" id="${safeKey}-heading-${depth}">
-                    	            <h5 class="mb-0">`;
+						    if (key === 'XMPMetadata' && typeof value === "string") {
+						        const buttonElem = createButtonElement(key, safeKey, depth);
+						        h5Elem.appendChild(buttonElem);
+						    } else if (value && typeof value === 'object') {
+						        if (Array.isArray(value) && value.length === 0) {
+						            h5Elem.textContent = `${key}: Empty array`;
+						        } else if (!Array.isArray(value) && Object.keys(value).length === 0) {
+						            h5Elem.textContent = `${key}: Empty object`;
+						        } else {
+						            const buttonElem = createButtonElement(key, safeKey, depth);
+						            h5Elem.appendChild(buttonElem);
+						        }
+						    } else {
+						        h5Elem.textContent = `${key}: ${String(value)}`;
+						    }
 
-                    	    if (key === 'XMPMetadata' && typeof value === "string") {
-                    	        output += `<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#${safeKey}-content-${depth}" aria-expanded="true" aria-controls="${safeKey}-content-${depth}">
-                    	            ${key}
-                    	        </button>`;
-                    	    } else if (value && typeof value === 'object') {
-                    	        if (Array.isArray(value) && value.length === 0) {
-                    	            output += `${key}: Empty array`;
-                    	        } else if (!Array.isArray(value) && Object.keys(value).length === 0) {
-                    	            output += `${key}: Empty object`;
-                    	        } else {
-                    	            output += `<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#${safeKey}-content-${depth}" aria-expanded="true" aria-controls="${safeKey}-content-${depth}">
-                    	                ${key}
-                    	            </button>`;
-                    	        }
-                    	    } else {
-                    	        output += `${key}: ${value}`;
-                    	    }
+						    header.appendChild(h5Elem);
+						    card.appendChild(header);
 
-                    	    output += `
-                    	            </h5>
-                    	        </div>
-                    	        <div id="${safeKey}-content-${depth}" class="collapse" aria-labelledby="${safeKey}-heading-${depth}">`;
+						    const content = document.createElement('div');
+						    content.id = `${safeKey}-content-${depth}`;
+						    content.className = 'collapse';
+						    content.setAttribute('aria-labelledby', `${safeKey}-heading-${depth}`);
 
-                    	    if (key === 'XMPMetadata' && typeof value === "string") {
-                    	        output += `<div class="card-body"><pre>${escapeHTML(value)}</pre></div>`;
-                    	    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-                    	        output += '<div class="card-body">';
-                    	        if (Object.keys(value).length) {
-                    	            for (const subKey in value) {
-                    	                output += renderJsonSection(subKey, value[subKey], depth + 1);
-                    	            }
-                    	        } else {
-                    	            output += '<p class="text-muted">Empty</p>';
-                    	        }
-                    	        output += '</div>';
-                    	    } else if (value && typeof value === 'object' && Array.isArray(value)) {
-                    	        output += '<div class="card-body">';
-                    	        if (value.length) {
-                    	            value.forEach((val, index) => {
-                    	                const arrayKey = `${key}[${index}]`;
-                    	                output += renderJsonSection(arrayKey, val, depth + 1);
-                    	            });
-                    	        } else {
-                    	            output += '<p class="text-muted">Empty</p>';
-                    	        }
-                    	        output += '</div>';
-                    	    }
+						    if (key === 'XMPMetadata' && typeof value === "string") {
+						        const body = document.createElement('div');
+						        body.className = 'card-body';
+						        const preElem = document.createElement('pre');
+						        preElem.textContent = value;  // Not escaping since we're using textContent
+						        body.appendChild(preElem);
+						        content.appendChild(body);
+						    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+						        const body = document.createElement('div');
+						        body.className = 'card-body';
+						        for (const subKey in value) {
+						            const subElem = createJsonSection(subKey, value[subKey], depth + 1);
+						            body.appendChild(subElem);
+						        }
+						        content.appendChild(body);
+						    } else if (value && typeof value === 'object' && Array.isArray(value)) {
+						        const body = document.createElement('div');
+						        body.className = 'card-body';
+						        value.forEach((val, index) => {
+						            const subElem = createJsonSection(`${key}[${index}]`, val, depth + 1);
+						            body.appendChild(subElem);
+						        });
+						        content.appendChild(body);
+						    }
 
-                    	    output += '</div></div>';
-
-                    	    return output;
-                    	}
+						    card.appendChild(content);
+						    return card;
+						}
 
 
-                       function escapeHTML(s) {
-                    	   if(s)
-                           return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    	   
-                    	   return null;
-                       }
+						function createButtonElement(key, safeKey, depth) {
+						    const buttonElem = document.createElement('button');
+						    buttonElem.className = 'btn btn-link';
+						    buttonElem.type = 'button';
+						    buttonElem.dataset.toggle = "collapse";
+						    buttonElem.dataset.target = `#${safeKey}-content-${depth}`;
+						    buttonElem.setAttribute('aria-expanded', 'true');
+						    buttonElem.setAttribute('aria-controls', `${safeKey}-content-${depth}`);
+						    buttonElem.textContent = key;
+						    return buttonElem;
+						}
                        </script>
 					</div>
 				</div>
