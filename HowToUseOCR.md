@@ -3,8 +3,8 @@
 This document provides instructions on how to add additional language packs for the OCR tab in Stirling-PDF, both inside and outside of Docker.
 
 ## How does the OCR Work
-Stirling-PDF uses [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF) which in turn uses tesseract for its text recognition.
-All credit goes to them for this awesome work! 
+
+Stirling-PDF uses [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF) which in turn uses tesseract for its text recognition. All credit goes to them for this awesome work! 
 
 ## Language Packs
 
@@ -24,8 +24,14 @@ Depending on your requirements, you can choose the appropriate language pack for
 
 #### Docker
 
-If you are using Docker, you need to expose the Tesseract tessdata directory as a volume in order to use the additional language packs. 
-#### Docker Compose
+You need to expose the existing Tesseract tessdata directory as a volume in order to use the additional language packs:
+
+    docker run --rm -it --name stirling-pdf-1 frooodle/s-pdf:0.12.2
+    docker cp stirling-pdf-1:/usr/share/tesseract-ocr/4.00/tessdata /location/of/trainingData
+    docker stop stirling-pdf-1
+
+##### Docker Compose
+
 Modify your `docker-compose.yml` file to include the following volume configuration:
 
 
@@ -34,17 +40,19 @@ services:
   your_service_name:
     image: your_docker_image_name
     volumes:
-      - /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata
+      - /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata:ro
 ```
 
+##### Docker run
 
-#### Docker run
 Add the following to your existing docker run command
+
 ```bash
 -v /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata
 ```
 
 #### Non-Docker
+
 If you are not using Docker, you need to install the OCR components, including the ocrmypdf app.
 You can see [OCRmyPDF install guide](https://ocrmypdf.readthedocs.io/en/latest/installation.html)
 
