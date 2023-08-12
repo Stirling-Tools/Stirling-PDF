@@ -48,7 +48,12 @@ dependencies {
 	implementation 'org.yaml:snakeyaml:2.1'
 	implementation 'org.springframework.boot:spring-boot-starter-web:3.1.2'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.1.2'
+	implementation 'org.springframework.boot:spring-boot-starter-security:3.1.2'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.2'
+	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
+	implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+	implementation "com.h2database:h2"
+
 	// https://mvnrepository.com/artifact/org.apache.pdfbox/jbig2-imageio
 	implementation group: 'org.apache.pdfbox', name: 'jbig2-imageio', version: '3.0.4'
 	implementation 'commons-io:commons-io:2.13.0'

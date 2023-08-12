@@ -5,6 +5,17 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AppConfig {
+	
+	
+	@Bean(name = "loginEnabled")
+    public boolean loginEnabled() {
+        String appName = System.getProperty("login.enabled");
+        if (appName == null) 
+            appName = System.getenv("login.enabled");
+        
+        return (appName != null) ? Boolean.valueOf(appName) : false;
+    }
+	
     @Bean(name = "appName")
     public String appName() {
         String appName = System.getProperty("APP_HOME_NAME");

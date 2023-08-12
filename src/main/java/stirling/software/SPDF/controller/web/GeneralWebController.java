@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternUtils;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,10 +25,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 @Controller
 @Tag(name = "General", description = "General APIs")
 public class GeneralWebController {
 	
+
+	@GetMapping("/login")
+	public String login(HttpServletRequest request, Model model, Authentication authentication) {
+		if (authentication != null && authentication.isAuthenticated()) {
+            return "redirect:/";
+        }
+		
+		if (request.getParameter("error") != null) {
+
+	        model.addAttribute("error", request.getParameter("error"));
+	    }
+	    if (request.getParameter("logout") != null) {
+
+	        model.addAttribute("logoutMessage", "You have been logged out.");
+	    }
+	    
+	    return "login";
+	}
+	 
 	@GetMapping("/pipeline")
 	@Hidden
 	public String pipelineForm(Model model) {

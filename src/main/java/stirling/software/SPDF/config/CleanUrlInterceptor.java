@@ -24,8 +24,9 @@ import org.springframework.web.servlet.ModelAndView;
 
 public class CleanUrlInterceptor implements HandlerInterceptor {
 
-	private static final List<String> ALLOWED_PARAMS = Arrays.asList("lang", "endpoint", "endpoints");
+	private static final List<String> ALLOWED_PARAMS = Arrays.asList("lang", "endpoint", "endpoints", "logout", "error");
 
+	
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
@@ -39,9 +40,12 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
 			String[] queryParameters = queryString.split("&");
 			for (String param : queryParameters) {
 				String[] keyValue = param.split("=");
+				System.out.print("astirli " + keyValue[0]);
 				if (keyValue.length != 2) {
 					continue;
 				}
+				System.out.print("astirli2 " + keyValue[0]);
+
 				if (ALLOWED_PARAMS.contains(keyValue[0])) {
 					parameters.put(keyValue[0], keyValue[1]);
 				}
