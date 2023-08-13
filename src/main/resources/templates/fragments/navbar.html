@@ -339,49 +339,11 @@
                   </div>
                 </div>
                 
-                <hr>
-                <h5 th:text="#{settings.userSettings}">User Settings</h5>
-
-                <form action="/change-username" method="post">
-			        <div class="form-group">
-			            <label for="newUsername" th:text="#{settings.changeUsername}">Change Username</label>
-			            <input type="text" class="form-control" name="newUsername" id="newUsername" placeholder="New Username">
-			        </div>
-			        <div class="form-group">
-			            <label for="password" th:text="#{settings.password}">Password</label>
-			            <input type="password" class="form-control" name="password" id="password" placeholder="Password">
-			        </div>
-			        <div class="form-group">
-			            <button type="submit" class="btn btn-primary" th:text="#{settings.changeUsernameButton}">Change Username</button>
-			        </div>
-			    </form>
-			
-			    <!-- Change Password Form -->
-			    <form action="/change-password" method="post">
-			        <div class="form-group">
-			            <label for="oldPassword" th:text="#{settings.oldPassword}">Old Password</label>
-			            <input type="password" class="form-control" name="oldPassword" id="oldPassword" placeholder="Old Password">
-			        </div>
-			        <div class="form-group">
-			            <label for="newPassword" th:text="#{settings.newPassword}">New Password</label>
-			            <input type="password" class="form-control" name="newPassword" id="newPassword" placeholder="New Password">
-			        </div>
-			        <div class="form-group">
-			            <label for="confirmNewPassword" th:text="#{settings.confirmNewPassword}">Confirm New Password</label>
-			            <input type="password" class="form-control" name="confirmNewPassword" id="confirmNewPassword" placeholder="Confirm New Password">
-			        </div>
-			        <div class="form-group">
-			            <button type="submit" class="btn btn-primary" th:text="#{settings.changePasswordButton}">Change Password</button>
-			        </div>
-			    </form>
-
-                <!-- Sign Out Button -->
-                <div class="form-group">
-                    <a href="/logout">
-                        <button type="button" class="btn btn-danger" th:text="#{settings.signOut}">Sign Out</button>
-                    </a>
-                </div>
- 
+                <a href="account" target="_blank">
+                    <button type="button" class="btn btn-sm btn-outline-primary" th:text="#{settings.accountSettings}">Account Settings</button>
+                </a>
+               
+                    
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{close}"></button>

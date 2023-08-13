@@ -14,9 +14,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 
 import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.utils.GeneralUtils;
-
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 @SpringBootApplication
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity()
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 //@EnableScheduling
 public class SPdfApplication {
 	

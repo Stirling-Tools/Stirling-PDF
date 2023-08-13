@@ -23,9 +23,6 @@
             <script src="js/homecard.js"></script>
             	
             <div class=" container">
-            <form th:if="${@loginEnabled == true}" action="#" th:action="@{/logout}" method="post">
-			    <input type="submit" value="Logout" />
-			</form>
             <input type="text" id="searchBar" onkeyup="filterCards()" placeholder="Search for features...">
             <div class="features-container ">
             	

@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import java.time.Duration;
 import java.util.Locale;
 
 import org.springframework.context.annotation.Bean;
@@ -10,9 +11,22 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bucket4j;
+import io.github.bucket4j.Refill;
+
 @Configuration
 public class Beans implements WebMvcConfigurer {
 
+	@Bean
+	public Bucket createRateLimitBucket() {
+	    Refill refill = Refill.of(1000, Duration.ofDays(1));
+	    Bandwidth limit = Bandwidth.classic(1000, refill).withInitialTokens(1000);
+	    return Bucket4j.builder().addLimit(limit).build();
+	}
+
+	
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(localeChangeInterceptor());

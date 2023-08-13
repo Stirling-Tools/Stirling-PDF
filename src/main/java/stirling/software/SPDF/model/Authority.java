@@ -13,7 +13,19 @@ import jakarta.persistence.Table;
 @Table(name = "authorities")
 public class Authority {
 
-    @Id
+	public Authority() {
+
+	}
+	
+	
+	public Authority(String authority, User user) {
+	    this.authority = authority;
+	    this.user = user;
+	    user.getAuthorities().add(this);
+	}
+
+	
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

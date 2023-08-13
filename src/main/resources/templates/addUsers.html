@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{settings.userSettings})}"></th:block>
+
+<body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+
+                        <!-- User Settings Title -->
+                        <h2 class="text-center" th:text="#{settings.accountSettings}">User Settings</h2>
+                        <hr>
+
+						<!-- At the top of the user settings -->
+						<h3 class="text-center">Welcome <span th:text="${username}">User</span>!</h3>
+
+						
+						
+						<table class="table">
+						    <thead>
+						        <tr>
+						            <th>Username</th>
+						            <th>Roles</th>
+						            <th>Actions</th>
+						        </tr>
+						    </thead>
+						    <tbody>
+						        <tr th:each="user : ${users}">
+						            <td th:text="${user.username}"></td>
+						            <td th:text="${user.getRolesAsString()}"></td>
+						            <td>
+						                <a th:href="@{'/admin/deleteUser/' + ${user.username}}">Delete</a>
+						            </td>
+						        </tr>
+						    </tbody>
+						</table>
+						
+
+						<h2>Add New User</h2>
+					    <form action="/admin/saveUser" method="post">
+					        <div class="form-group">
+					            <label for="username">Username</label>
+					            <input type="text" class="form-control" name="username" required>
+					        </div>
+					        <div class="form-group">
+					            <label for="password">Password</label>
+					            <input type="password" class="form-control" name="password" required>
+					        </div>
+					        <div class="form-group">
+						        <label for="role">Role</label>
+						        <select name="role" class="form-control" required>
+						            <option value="ROLE_ADMIN">Admin</option>
+						            <option value="ROLE_USER">User</option>
+						            <option value="ROLE_LIMITED_API_USER">Limited API User</option>
+						            <option value="ROLE_WEB_ONLY_USER">Web Only User</option>
+						        </select>
+						    </div>
+					        
+					        <!-- Add other fields as required -->
+					        <button type="submit" class="btn btn-primary">Save User</button>
+					    </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
+</body>
+</html>
