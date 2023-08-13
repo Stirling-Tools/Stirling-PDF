@@ -38,6 +38,13 @@ public enum Role {
         return webCallsPerDay;
     }
 	    
-	    
+    public static Role fromString(String roleId) {
+        for (Role role : Role.values()) {
+            if (role.getRoleId().equalsIgnoreCase(roleId)) {
+                return role;
+            }
+        }
+        throw new IllegalArgumentException("No Role defined for id: " + roleId);
+    }
 	
 }

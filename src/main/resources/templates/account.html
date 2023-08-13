@@ -68,21 +68,34 @@
 					            <div class="input-group mb-3">
 					                <input type="password" class="form-control" id="apiKey" placeholder="Your API Key" readonly>
 					                <div class="input-group-append">
+					                	<button class="btn btn-outline-secondary" id="copyBtn" type="button" onclick="copyToClipboard()"> 
+					                    	<img src="images/clipboard.svg" alt="Copy" style="height:20px;">
+					                	</button>
 					                    <button class="btn btn-outline-secondary" id="showBtn" type="button" onclick="showApiKey()">👁️ Show</button>
 					                    <button class="btn btn-outline-secondary" id="refreshBtn" type="button" onclick="refreshApiKey()">🔄 Refresh</button>
+					                    
 					                </div>
 					            </div>
 					        </div>
 					    </div>
 					    
 					    <script>
+					    function copyToClipboard() {
+					        const apiKeyElement = document.getElementById("apiKey");
+					        apiKeyElement.select();
+					        document.execCommand("copy");
+					    }
+
 					    
 					    function showApiKey() {
 					        const apiKeyElement = document.getElementById("apiKey");
+					        const copyBtn = document.getElementById("copyBtn");
 					        if (apiKeyElement.type === "password") {
-					            apiKeyElement.type = "text";
+					        	apiKeyElement.type = "text";
+					        	copyBtn.disabled = false;  // Enable copy button when API key is visible
 					        } else {
 					            apiKeyElement.type = "password";
+					            copyBtn.disabled = true;  // Disable copy button when API key is hidden
 					        }
 					    }
 
@@ -107,6 +120,7 @@
 					                let apiKey = await response.text();
 					                manageUIState(apiKey);
 					                document.getElementById("apiKey").type = 'text';
+					                document.getElementById("copyBtn").disabled = false;
 					            } else {
 					                alert('Error refreshing API key.');
 					            }
@@ -118,13 +132,16 @@
 					    function manageUIState(apiKey) {
 					        const apiKeyElement = document.getElementById("apiKey");
 					        const showBtn = document.getElementById("showBtn");
+					        const copyBtn = document.getElementById("copyBtn");
 
 					        if (apiKey && apiKey.trim().length > 0) {
 					            apiKeyElement.value = apiKey;
 					            showBtn.disabled = false;
+					            copyBtn.disabled = true;  
 					        } else {
 					            apiKeyElement.value = "";
 					            showBtn.disabled = true;
+					            copyBtn.disabled = true;
 					        }
 					    }
 
