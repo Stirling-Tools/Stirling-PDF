@@ -28,6 +28,9 @@ public class User {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "apiKey")
+    private String apiKey;
+    
     @Column(name = "enabled")
     private boolean enabled;
 
@@ -42,6 +45,14 @@ public class User {
 
     
     
+	public String getApiKey() {
+		return apiKey;
+	}
+
+	public void setApiKey(String apiKey) {
+		this.apiKey = apiKey;
+	}
+
 	public Map<String, String> getSettings() {
 		return settings;
 	}

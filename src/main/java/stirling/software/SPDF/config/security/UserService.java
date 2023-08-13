@@ -1,10 +1,20 @@
 package stirling.software.SPDF.config.security;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.Collection;
 import java.util.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +31,68 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    public Authentication getAuthentication(String apiKey) {
+        User user = getUserByApiKey(apiKey);
+        if (user == null) {
+            throw new UsernameNotFoundException("API key is not valid");
+        }
+        
+        // Convert the user into an Authentication object
+        return new UsernamePasswordAuthenticationToken(
+            user,                       // principal (typically the user)
+            null,                       // credentials (we don't expose the password or API key here)
+            getAuthorities(user)        // user's authorities (roles/permissions)
+        );
+    }
+    
+    private Collection<? extends GrantedAuthority> getAuthorities(User user) {
+        // Convert each Authority object into a SimpleGrantedAuthority object.
+    	return user.getAuthorities().stream()
+    		    .map((Authority authority) -> new SimpleGrantedAuthority(authority.getAuthority()))
+    		    .collect(Collectors.toList());
+
+
+    }
+    
+    private String generateApiKey() {
+        String apiKey;
+        do {
+            apiKey = UUID.randomUUID().toString();
+        } while (userRepository.findByApiKey(apiKey) != null); // Ensure uniqueness
+        return apiKey;
+    }
+
+    public User addApiKeyToUser(String username) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        
+        user.setApiKey(generateApiKey());
+        return userRepository.save(user);
+    }
+
+    public User refreshApiKeyForUser(String username) {
+        return addApiKeyToUser(username); // reuse the add API key method for refreshing
+    }
+
+    public String getApiKeyForUser(String username) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return user.getApiKey();
+    }
+
+    public boolean isValidApiKey(String apiKey) {
+        return userRepository.findByApiKey(apiKey) != null;
+    }
+
+    public User getUserByApiKey(String apiKey) {
+        return userRepository.findByApiKey(apiKey);
+    }
+
+    public boolean validateApiKeyForUser(String username, String apiKey) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        return userOpt.isPresent() && userOpt.get().getApiKey().equals(apiKey);
+    }
+    
     public void saveUser(String username, String password) {
         User user = new User();
         user.setUsername(username);

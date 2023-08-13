@@ -1,10 +1,42 @@
 package stirling.software.SPDF.model;
-public final class Role {
+public enum Role {
 	
-	    public static final String ADMIN = "ROLE_ADMIN";
-	    public static final String USER = "ROLE_USER";
-	    public static final String LIMITED_API_USER = "ROLE_LIMITED_API_USER";
-	    public static final String WEB_ONLY_USER = "ROLE_WEB_ONLY_USER";
+	// Unlimited access
+    ADMIN("ROLE_ADMIN", Integer.MAX_VALUE, Integer.MAX_VALUE),
+
+    // Unlimited access
+    USER("ROLE_USER", Integer.MAX_VALUE, Integer.MAX_VALUE),
+
+    // 40 API calls Per Day, 40 web calls
+    LIMITED_API_USER("ROLE_LIMITED_API_USER", 40, 40),
+
+    // 20 API calls Per Day, 20 web calls
+    EXTRA_LIMITED_API_USER("ROLE_EXTRA_LIMITED_API_USER", 20, 20),
+
+    // 0 API calls per day and 20 web calls
+    WEB_ONLY_USER("ROLE_WEB_ONLY_USER", 0, 20);
+
+    private final String roleId;
+    private final int apiCallsPerDay;
+    private final int webCallsPerDay;
+
+    Role(String roleId, int apiCallsPerDay, int webCallsPerDay) {
+        this.roleId = roleId;
+        this.apiCallsPerDay = apiCallsPerDay;
+        this.webCallsPerDay = webCallsPerDay;
+    }
+
+    public String getRoleId() {
+        return roleId;
+    }
+
+    public int getApiCallsPerDay() {
+        return apiCallsPerDay;
+    }
+
+    public int getWebCallsPerDay() {
+        return webCallsPerDay;
+    }
 	    
 	    
 	

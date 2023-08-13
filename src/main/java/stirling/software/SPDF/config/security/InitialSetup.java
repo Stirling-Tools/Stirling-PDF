@@ -18,9 +18,9 @@ public class InitialSetup {
             String initialUsername = System.getenv("INITIAL_USERNAME");
             String initialPassword = System.getenv("INITIAL_PASSWORD");
             if(initialUsername != null && initialPassword != null) {
-                userService.saveUser(initialUsername, initialPassword, Role.ADMIN);
+                userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
             } else {
-            	userService.saveUser("admin", "password", Role.ADMIN);
+            	userService.saveUser("admin", "password", Role.ADMIN.getRoleId());
             }
         }
     }
