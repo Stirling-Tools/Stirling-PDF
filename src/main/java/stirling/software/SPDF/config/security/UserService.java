@@ -14,6 +14,7 @@ import java.util.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -87,6 +88,21 @@ public class UserService {
     public User getUserByApiKey(String apiKey) {
         return userRepository.findByApiKey(apiKey);
     }
+    
+    public UserDetails loadUserByApiKey(String apiKey) {
+        User userOptional = userRepository.findByApiKey(apiKey);
+        if (userOptional != null) {
+            User user = userOptional;
+            // Convert your User entity to a UserDetails object with authorities
+            return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(), // you might not need this for API key auth
+                getAuthorities(user)
+            );
+        }
+        return null;  // or throw an exception
+    }
+    
 
     public boolean validateApiKeyForUser(String username, String apiKey) {
         Optional<User> userOpt = userRepository.findByUsername(username);

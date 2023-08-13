@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,7 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 @Configuration
 public class SecurityConfiguration {
 
@@ -25,14 +26,23 @@ public class SecurityConfiguration {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
+    @Autowired
+    @Lazy
+    private UserService userService;
+    
     @Autowired
     @Qualifier("loginEnabled")
     public boolean loginEnabledValue;
     
+    @Autowired
+    private UserAuthenticationFilter userAuthenticationFilter;
+    
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception  {
+    	http.addFilterBefore(userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        
     	if(loginEnabledValue) {
+    		
 	    	http.csrf().disable();
 	        http
 	            .formLogin(formLogin -> formLogin
@@ -73,6 +83,8 @@ public class SecurityConfiguration {
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
+    
+    
     
 }
 

@@ -11,7 +11,7 @@
             <br> <br>
             <div class="container">
                 <div class="row justify-content-center">
-                    <div class="col-md-8">
+                    <div class="col-md-9">
 
                         <!-- User Settings Title -->
                         <h2 class="text-center" th:text="#{settings.accountSettings}">User Settings</h2>
@@ -58,6 +58,81 @@
                             </div>
                         </form>
 
+						<hr>
+						
+						<div class="card">
+					        <div class="card-header">
+					            Your API Key
+					        </div>
+					        <div class="card-body">
+					            <div class="input-group mb-3">
+					                <input type="password" class="form-control" id="apiKey" placeholder="Your API Key" readonly>
+					                <div class="input-group-append">
+					                    <button class="btn btn-outline-secondary" id="showBtn" type="button" onclick="showApiKey()">👁️ Show</button>
+					                    <button class="btn btn-outline-secondary" id="refreshBtn" type="button" onclick="refreshApiKey()">🔄 Refresh</button>
+					                </div>
+					            </div>
+					        </div>
+					    </div>
+					    
+					    <script>
+					    
+					    function showApiKey() {
+					        const apiKeyElement = document.getElementById("apiKey");
+					        if (apiKeyElement.type === "password") {
+					            apiKeyElement.type = "text";
+					        } else {
+					            apiKeyElement.type = "password";
+					        }
+					    }
+
+					    document.addEventListener("DOMContentLoaded", async function() {
+					        try {
+					            let response = await fetch('/get-api-key', { method: 'POST' });
+					            if (response.status === 200) {
+					                let apiKey = await response.text();
+					                manageUIState(apiKey);
+					            } else {
+					                manageUIState(null);
+					            }
+					        } catch (error) {
+					            console.error('There was an error:', error);
+					        }
+					    });
+
+					    async function refreshApiKey() {
+					        try {
+					            let response = await fetch('/update-api-key', { method: 'POST' });
+					            if (response.status === 200) {
+					                let apiKey = await response.text();
+					                manageUIState(apiKey);
+					                document.getElementById("apiKey").type = 'text';
+					            } else {
+					                alert('Error refreshing API key.');
+					            }
+					        } catch (error) {
+					            console.error('There was an error:', error);
+					        }
+					    }
+					    
+					    function manageUIState(apiKey) {
+					        const apiKeyElement = document.getElementById("apiKey");
+					        const showBtn = document.getElementById("showBtn");
+
+					        if (apiKey && apiKey.trim().length > 0) {
+					            apiKeyElement.value = apiKey;
+					            showBtn.disabled = false;
+					        } else {
+					            apiKeyElement.value = "";
+					            showBtn.disabled = true;
+					        }
+					    }
+
+					    
+					    
+					    </script>
+    
+    
                         <hr> <!-- Separator Line -->
                         
                         <h4>Sync browser settings with Account</h4>

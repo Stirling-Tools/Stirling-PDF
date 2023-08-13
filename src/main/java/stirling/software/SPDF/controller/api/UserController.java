@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpServletRequest;
 import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.model.User;
 
 @Controller
 public class UserController {
@@ -68,6 +71,33 @@ public class UserController {
     	userService.deleteUser(username); 
         return "redirect:/addUsers";
     }
+    
+    @PostMapping("/get-api-key")
+    public ResponseEntity<String> getApiKey(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated.");
+        }
+        String username = principal.getName();
+        String apiKey = userService.getApiKeyForUser(username);
+        if (apiKey == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("API key not found for user.");
+        }
+        return ResponseEntity.ok(apiKey);
+    }
 
+    @PostMapping("/update-api-key")
+    public ResponseEntity<String> updateApiKey(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated.");
+        }
+        String username = principal.getName();
+        User user = userService.refreshApiKeyForUser(username);
+        String apiKey = user.getApiKey();
+        if (apiKey == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("API key not found for user.");
+        }
+        return ResponseEntity.ok(apiKey);
+    }
+    
     
 }

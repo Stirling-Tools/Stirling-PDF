@@ -7,12 +7,22 @@ import org.springframework.context.annotation.Configuration;
 public class AppConfig {
 	
 	
+	
+	@Bean(name = "rateLimit")
+    public boolean rateLimit() {
+        String appName = System.getProperty("rateLimit");
+        if (appName == null) 
+            appName = System.getenv("rateLimit");
+        System.out.println("rateLimit=" + appName);
+        return (appName != null) ? Boolean.valueOf(appName) : false;
+    }
+	
 	@Bean(name = "loginEnabled")
     public boolean loginEnabled() {
         String appName = System.getProperty("login.enabled");
         if (appName == null) 
             appName = System.getenv("login.enabled");
-        
+        System.out.println("loginEnabled=" + appName);
         return (appName != null) ? Boolean.valueOf(appName) : false;
     }
 	
