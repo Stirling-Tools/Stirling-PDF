@@ -21,7 +21,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Handler for external static resources
         registry.addResourceHandler("/**")
-                .addResourceLocations("file:customFiles/static/", "classpath:/static/")
-                .setCachePeriod(0); // Optional: disable caching
+                .addResourceLocations("file:customFiles/static/", "classpath:/static/");
+                //.setCachePeriod(0); // Optional: disable caching
     }
 }
