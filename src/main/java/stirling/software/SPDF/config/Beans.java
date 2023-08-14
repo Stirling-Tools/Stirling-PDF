@@ -18,14 +18,6 @@ import io.github.bucket4j.Refill;
 
 @Configuration
 public class Beans implements WebMvcConfigurer {
-
-	@Bean
-	public Bucket createRateLimitBucket() {
-	    Refill refill = Refill.of(1000, Duration.ofDays(1));
-	    Bandwidth limit = Bandwidth.classic(1000, refill).withInitialTokens(1000);
-	    return Bucket4j.builder().addLimit(limit).build();
-	}
-
 	
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
