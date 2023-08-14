@@ -71,9 +71,14 @@
 					                	<button class="btn btn-outline-secondary" id="copyBtn" type="button" onclick="copyToClipboard()"> 
 					                    	<img src="images/clipboard.svg" alt="Copy" style="height:20px;">
 					                	</button>
-					                    <button class="btn btn-outline-secondary" id="showBtn" type="button" onclick="showApiKey()">👁️ Show</button>
-					                    <button class="btn btn-outline-secondary" id="refreshBtn" type="button" onclick="refreshApiKey()">🔄 Refresh</button>
-					                    
+					                    <button class="btn btn-outline-secondary" id="showBtn" type="button" onclick="showApiKey()">
+										    <img id="eyeIcon" src="images/eye.svg" alt="Toggle API Key Visibility" style="height:20px;">
+										</button>
+										<button class="btn btn-outline-secondary" id="refreshBtn" type="button" onclick="refreshApiKey()">
+										    <img id="eyeIcon" src="images/arrow-clockwise.svg" alt="Refresh API-Key" style="height:20px;">
+										</button>
+										
+					                  
 					                </div>
 					            </div>
 					        </div>
@@ -90,11 +95,14 @@
 					    function showApiKey() {
 					        const apiKeyElement = document.getElementById("apiKey");
 					        const copyBtn = document.getElementById("copyBtn");
+					        const eyeIcon = document.getElementById("eyeIcon");
 					        if (apiKeyElement.type === "password") {
 					        	apiKeyElement.type = "text";
+					        	eyeIcon.src = "images/eye-slash.svg";
 					        	copyBtn.disabled = false;  // Enable copy button when API key is visible
 					        } else {
 					            apiKeyElement.type = "password";
+					            eyeIcon.src = "images/eye.svg";
 					            copyBtn.disabled = true;  // Disable copy button when API key is hidden
 					        }
 					    }
