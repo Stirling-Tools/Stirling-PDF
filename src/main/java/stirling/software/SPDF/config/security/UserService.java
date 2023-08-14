@@ -134,7 +134,7 @@ public class UserService {
     }
     
     public boolean usernameExists(String username) {
-        return userRepository.findByUsername(username) != null;
+        return userRepository.findByUsername(username).isPresent();
     }
     
     public boolean hasUsers() {
@@ -158,5 +158,21 @@ public class UserService {
         } 
     }
 
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    public void changeUsername(User user, String newUsername) {
+        user.setUsername(newUsername);
+        userRepository.save(user);
+    }
+
+    public void changePassword(User user, String newPassword) {
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
     
+    public boolean isPasswordCorrect(User user, String currentPassword) {
+        return passwordEncoder.matches(currentPassword, user.getPassword());
+    }
 }

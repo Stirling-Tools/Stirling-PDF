@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -17,8 +18,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.User;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 
 @Controller
 public class UserController {
@@ -26,6 +30,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
     @PostMapping("/register")
     public String register(@RequestParam String username, @RequestParam String password, Model model) {
         if(userService.usernameExists(username)) {
@@ -37,6 +44,59 @@ public class UserController {
         return "redirect:/login?registered=true";
     }
     
+    @PostMapping("/change-username")
+    public ResponseEntity<String> changeUsername(Principal principal, @RequestParam String currentPassword, @RequestParam String newUsername, HttpServletRequest request, HttpServletResponse response) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated.");
+        }
+        
+        Optional<User> userOpt = userService.findByUsername(principal.getName());
+        
+        if(userOpt == null || userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
+        User user = userOpt.get();
+        
+        if(!userService.isPasswordCorrect(user, currentPassword)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Current password is incorrect.");
+        }
+        
+        if(userService.usernameExists(newUsername)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("New username already exists.");
+        }
+
+        userService.changeUsername(user, newUsername);
+
+        // Logout using Spring's utility
+        new SecurityContextLogoutHandler().logout(request, response, null);
+
+        
+        return ResponseEntity.ok("Username updated successfully.");
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(Principal principal, @RequestParam String currentPassword, @RequestParam String newPassword, HttpServletRequest request, HttpServletResponse response) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated.");
+        }
+
+        Optional<User> userOpt = userService.findByUsername(principal.getName());
+        
+        if(userOpt == null || userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
+        User user = userOpt.get();
+        if(!userService.isPasswordCorrect(user, currentPassword)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Current password is incorrect.");
+        }
+
+        userService.changePassword(user, passwordEncoder.encode(newPassword));
+
+        // Logout using Spring's utility
+        new SecurityContextLogoutHandler().logout(request, response, null);
+        
+        return ResponseEntity.ok("Password updated successfully.");
+    }
     
     @PostMapping("/updateUserSettings")
 	public String updateUserSettings(HttpServletRequest request, Principal principal) {

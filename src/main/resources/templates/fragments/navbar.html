@@ -339,11 +339,14 @@
                   </div>
                 </div>
                 
-                <a href="account" target="_blank">
-                    <button type="button" class="btn btn-sm btn-outline-primary" th:text="#{settings.accountSettings}">Account Settings</button>
-                </a>
-               
-                    
+                <div th:if="${@loginEnabled}">
+	                <a href="account" target="_blank">
+	                    <button type="button" class="btn btn-sm btn-outline-primary" th:text="#{settings.accountSettings}">Account Settings</button>
+	                </a>
+	               <a href="/logout">
+	                  <button type="button" class="btn btn-danger" th:text="#{settings.signOut}">Sign Out</button>
+	              </a>
+               </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{close}"></button>

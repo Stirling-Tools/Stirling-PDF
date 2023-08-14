@@ -20,6 +20,7 @@
 						<!-- At the top of the user settings -->
 						<h3 class="text-center">Welcome <span th:text="${username}">User</span>!</h3>
 
+						
                         <!-- Change Username Form -->
                         <h4>Change username?</h4>
                         <form action="/change-username" method="post">
@@ -28,8 +29,8 @@
                                 <input type="text" class="form-control" name="newUsername" id="newUsername" placeholder="New Username">
                             </div>
                             <div class="form-group">
-                                <label for="password" th:text="#{settings.password}">Password</label>
-                                <input type="password" class="form-control" name="password" id="password" placeholder="Password">
+                                <label for="currentPassword" th:text="#{settings.password}">Password</label>
+                                <input type="password" class="form-control" name="currentPassword" id="currentPassword" placeholder="Password">
                             </div>
                             <div class="form-group">
                                 <button type="submit" class="btn btn-primary" th:text="#{settings.changeUsernameButton}">Change Username</button>
@@ -42,8 +43,8 @@
                         <h4>Change Password?</h4>
                         <form action="/change-password" method="post">
                             <div class="form-group">
-                                <label for="oldPassword" th:text="#{settings.oldPassword}">Old Password</label>
-                                <input type="password" class="form-control" name="oldPassword" id="oldPassword" placeholder="Old Password">
+                                <label for="currentPassword" th:text="#{settings.oldPassword}">Old Password</label>
+                                <input type="password" class="form-control" name="currentPassword" id="currentPassword" placeholder="Old Password">
                             </div>
                             <div class="form-group">
                                 <label for="newPassword" th:text="#{settings.newPassword}">New Password</label>
@@ -177,13 +178,9 @@
     </table>
 
     <div class="buttons-container mt-3 text-center">
-        <button id="syncToBrowser" class="btn btn-primary btn-sm">Sync Account to Web Browser</button>
-        <button id="syncToAccount" class="btn btn-secondary btn-sm">Sync Web Browser to Account</button>
+        <button id="syncToBrowser" class="btn btn-primary btn-sm">Sync Account -> Browser</button>
+        <button id="syncToAccount" class="btn btn-secondary btn-sm">Sync Account <- Browser</button>
     </div>
-    
-    <a th:if="${role == 'ROLE_ADMIN'}" href="addUsers" target="_blank">
-        <button type="button" class="btn btn-sm btn-outline-primary" th:text="#{settings.adminSettings}">Admin Settings</button>
-    </a>    
 </div>
 
 
@@ -276,11 +273,15 @@
 	                      
 	                    
                         
-                        <!-- Sign Out Button -->
+                        
                         <div class="form-group mt-4">
                             <a href="/logout">
                                 <button type="button" class="btn btn-danger" th:text="#{settings.signOut}">Sign Out</button>
                             </a>
+                            <a th:if="${role == 'ROLE_ADMIN'}" href="addUsers" target="_blank">
+						        <button type="button" class="btn btn-info"  th:text="#{settings.adminSettings}">Admin Settings</button>
+						    </a>
+
                         </div>
 
                     </div>

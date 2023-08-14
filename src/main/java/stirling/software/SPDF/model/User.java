@@ -9,6 +9,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
@@ -21,8 +23,12 @@ import java.util.HashSet;
 @Table(name = "users")
 public class User {
 
-    @Id
-    @Column(name = "username")
+	@Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
+    private Long id;
+	
+    @Column(name = "username", unique = true)
     private String username;
 
     @Column(name = "password")
@@ -40,11 +46,19 @@ public class User {
     @ElementCollection
     @MapKeyColumn(name = "setting_key")
     @Column(name = "setting_value")
-    @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "username"))
+    @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "user_id"))
     private Map<String, String> settings = new HashMap<>();  // Key-value pairs of settings.
 
     
     
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
 	public String getApiKey() {
 		return apiKey;
 	}

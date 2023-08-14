@@ -33,7 +33,7 @@ public class Authority {
     private String authority;
 
     @ManyToOne
-    @JoinColumn(name = "username")
+    @JoinColumn(name = "user_id")
     private User user;
 
 	public Long getId() {
