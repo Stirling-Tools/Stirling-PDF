@@ -20,9 +20,7 @@ public class InitialSetup {
             if(initialUsername != null && initialPassword != null) {
                 userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
             }
-             else {
-            	userService.saveUser("admin", "password", Role.ADMIN.getRoleId());
-            }
+             
         }
     }
 }
