@@ -186,15 +186,19 @@ For those wanting to use Stirling-PDFs backend API to link with their own custom
 
 
 ## Login authentication (CURRENTLY ALPHA TAG ONLY)
-###Prerequisites: 
+### Prerequisites: 
 - User must have the folder ./configs volumed within docker so that it is retained during updates.
 - The environment variable 'login.enabled' must be set to true
 - The environment variables "INITIAL_USERNAME" and "INITIAL_PASSWORD" must also be populated (only required on first boot to create initial user, ignored after.)
 
 One the above has been done on restart a new stirling-pdf-DB.mv.db will show if everything worked.
+
 When you login to stirling PDF you will be redirected to /login page to login. After that everything should function as normal
+
 To access login settings go to Account settings in the settings cog (top right in navbar) this is also where you find your API key.
-To add new users go to bottom of Account settings and hit 'Admin Settings', here you can add new users.
+
+To add new users go to bottom of Account settings and hit 'Admin Settings', here you can add new users. The different roles mentioned within this are for rate limiting. This is a Work in progress which will be expanding on more in future
+
 For API usage you must provide a header with 'X-API-Key' and the associated API key for that user.
 
 
