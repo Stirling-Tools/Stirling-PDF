@@ -341,9 +341,18 @@
                     <label class="custom-control-label" for="boredWaiting" th:text="#{bored}"></label>
                   </div>
                 </div>
- 
+                <a th:if="${@loginEnabled}" href="account" target="_blank">
+                    <button type="button" class="btn btn-sm btn-outline-primary" th:text="#{settings.accountSettings}">Account Settings</button>
+                </a>
+	              
+
             </div>
+            
+             
             <div class="modal-footer">
+            	<a th:if="${@loginEnabled}" href="/logout">
+	                  <button type="button" class="btn btn-danger" th:text="#{settings.signOut}">Sign Out</button>
+	              </a>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{close}"></button>
             </div>
             

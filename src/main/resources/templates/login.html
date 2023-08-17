@@ -1,0 +1,59 @@
+<!--   Hi if you have been redirected here when using API then you might need to supply a X-API-KEY key in header to authenticate! -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+
+    <div id="page-container">
+        <div id="content-wrap">
+        <div class="container">
+    <div class="row justify-content-center align-items-center" style="height:100vh;">
+        <div class="col-md-4">
+            <div class="login-container card">
+            	<div class="card-header text-center">
+                    <img src="favicon.svg" alt="Logo" class="img-fluid" style="max-width: 100px;"> <!-- Adjust path and style as needed -->
+                    <h4>Stirling-PDF Login</h4>
+                </div>
+                
+                
+                <div th:if="${logoutMessage}" class="alert alert-success" th:text="${logoutMessage}"></div>
+        
+
+                
+                <div class="card-body">
+                    <form th:action="@{/login}" method="post">
+                        <div class="form-group">
+                            <label for="username">Username:</label>
+                            <input type="text" id="username" name="username" class="form-control" required="required" />
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password:</label>
+                            <input type="password" id="password" name="password" class="form-control" required="required" />
+                        </div>
+                        <div class="form-group text-center">
+                            <input type="submit" value="Login" class="btn btn-primary" />
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-danger text-center">
+                   <div th:if="${error == 'badcredentials'}">
+					    Invalid username or password.
+					</div>
+					<div th:if="${error == 'locked'}">
+					    Your account has been locked.
+					</div>
+                </div>
+            </div>
+        </div>
+    </div>
+            </div>
+             </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
+
+</body>
+</html>

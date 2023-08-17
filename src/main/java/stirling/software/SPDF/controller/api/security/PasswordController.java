@@ -52,13 +52,13 @@ public class PasswordController {
         @RequestPart(required = true, value = "fileInput")
         @Parameter(description = "The input PDF file to which the password should be added", required = true)
             MultipartFile fileInput,
-            @RequestParam(value = "", name = "ownerPassword")
+            @RequestParam(value = "", name = "ownerPassword", required = false, defaultValue = "")
         @Parameter(description = "The owner password to be added to the PDF file (Restricts what can be done with the document once it is opened)")
             String ownerPassword,
-            @RequestParam( name = "password", required = false)
+            @RequestParam( name = "password", required = false, defaultValue = "")
         @Parameter(description = "The password to be added to the PDF file (Restricts the opening of the document itself.)")
             String password,
-            @RequestParam( name = "keyLength", required = false)
+            @RequestParam( name = "keyLength", required = false, defaultValue = "256")
         @Parameter(description = "The length of the encryption key", schema = @Schema(allowableValues = {"40", "128", "256"}))
             int keyLength,
             @RequestParam( name = "canAssembleDocument", required = false)
@@ -98,15 +98,15 @@ public class PasswordController {
         ap.setCanPrint(!canPrint);
         ap.setCanPrintFaithful(!canPrintFaithful);
         StandardProtectionPolicy spp = new StandardProtectionPolicy(ownerPassword, password, ap);
-        
-     
-        
-        spp.setEncryptionKeyLength(keyLength);
 
+        if(!"".equals(ownerPassword) || !"".equals(password)) {
+        	spp.setEncryptionKeyLength(keyLength);
+        }
         spp.setPermissions(ap);
-
         document.protect(spp);
 
+        if("".equals(ownerPassword) && "".equals(password))
+        	return WebResponseUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_permissions.pdf");
         return WebResponseUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_passworded.pdf");
     }
 

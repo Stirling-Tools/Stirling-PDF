@@ -185,21 +185,30 @@ For those wanting to use Stirling-PDFs backend API to link with their own custom
 [here](https://app.swaggerhub.com/apis-docs/Frooodle/Stirling-PDF/) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation (Or by following the API button in your settings of Stirling-PDF)
 
 
+## Login authentication (CURRENTLY ALPHA TAG ONLY)
+### Prerequisites: 
+- User must have the folder ./configs volumed within docker so that it is retained during updates.
+- The environment variable 'login.enabled' must be set to true
+- The environment variables "INITIAL_USERNAME" and "INITIAL_PASSWORD" must also be populated (only required on first boot to create initial user, ignored after.)
+
+Once the above has been done, on restart a new stirling-pdf-DB.mv.db will show if everything worked.
+
+When you login to Stirling PDF you will be redirected to /login page to login with those credentials. After login everything should function as normal
+
+To access your account settings go to Account settings in the settings cog menu (top right in navbar) this Account settings menu is also where you find your API key.
+
+To add new users go to bottom of Account settings and hit 'Admin Settings', here you can add new users. The different roles mentioned within this are for rate limiting. This is a Work in progress which will be expanding on more in future
+
+For API usage you must provide a header with 'X-API-Key' and the associated API key for that user.
+
+
 ## FAQ
 
-### Q1: Can you add authentication in Stirling PDF?
-There is no Auth within Stirling PDF and there is none planned. This feature will not be added. Instead we recommended you use trusted and secure authentication software like Authentik or Authelia.
-
-### Q2: What are your planned features?
-- Crop
+### Q1: What are your planned features?
 - Progress bar/Tracking
 - Full custom logic pipelines to combine multiple operations together.
 - Folder support with auto scanning to perform operations on
 - Redact sections of pages
-- Add page numbers
-- Auto rename (Renames file based on file title text)
-- URL to PDF
-- Change contrast
 
-### Q3: Why is my application downloading .htm files?
+### Q2: Why is my application downloading .htm files?
 This is a issue caused commonly by your NGINX congifuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. client_max_body_size SIZE; Where "SIZE" is 50M for example for 50MB files.
