@@ -205,15 +205,10 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 ## FAQ
 
 ### Q1: What are your planned features?
-- Crop
 - Progress bar/Tracking
 - Full custom logic pipelines to combine multiple operations together.
 - Folder support with auto scanning to perform operations on
 - Redact sections of pages
-- Add page numbers
-- Auto rename (Renames file based on file title text)
-- URL to PDF
-- Change contrast
 
 ### Q2: Why is my application downloading .htm files?
 This is a issue caused commonly by your NGINX congifuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. client_max_body_size SIZE; Where "SIZE" is 50M for example for 50MB files.
