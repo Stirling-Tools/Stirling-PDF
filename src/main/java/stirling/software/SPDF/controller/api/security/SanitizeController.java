@@ -38,19 +38,19 @@ public class SanitizeController {
 	        @RequestPart(required = true, value = "fileInput")
 	        @Parameter(description = "The input PDF file to be sanitized")
 	                MultipartFile inputFile,
-	        @RequestParam(name = "removeJavaScript", required = false, defaultValue = "true")
+	        @RequestParam(name = "removeJavaScript", required = false, defaultValue = "false")
 	        @Parameter(description = "Remove JavaScript actions from the PDF if set to true")
 	                Boolean removeJavaScript,
-	        @RequestParam(name = "removeEmbeddedFiles", required = false, defaultValue = "true")
+	        @RequestParam(name = "removeEmbeddedFiles", required = false, defaultValue = "false")
 	        @Parameter(description = "Remove embedded files from the PDF if set to true")
 	                Boolean removeEmbeddedFiles,
-	        @RequestParam(name = "removeMetadata", required = false, defaultValue = "true")
+	        @RequestParam(name = "removeMetadata", required = false, defaultValue = "false")
 	        @Parameter(description = "Remove metadata from the PDF if set to true")
 	                Boolean removeMetadata,
-	        @RequestParam(name = "removeLinks", required = false, defaultValue = "true")
+	        @RequestParam(name = "removeLinks", required = false, defaultValue = "false")
 	        @Parameter(description = "Remove links from the PDF if set to true")
 	                Boolean removeLinks,
-	        @RequestParam(name = "removeFonts", required = false, defaultValue = "true")
+	        @RequestParam(name = "removeFonts", required = false, defaultValue = "false")
 	        @Parameter(description = "Remove fonts from the PDF if set to true")
 	                Boolean removeFonts) throws IOException {
 
