@@ -29,9 +29,6 @@ public class UserController {
     
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
     
     @PostMapping("/register")
     public String register(@RequestParam String username, @RequestParam String password, Model model) {
@@ -90,7 +87,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Current password is incorrect.");
         }
 
-        userService.changePassword(user, passwordEncoder.encode(newPassword));
+        userService.changePassword(user, newPassword);
 
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);

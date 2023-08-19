@@ -155,7 +155,19 @@
 					    }
 
 					    
-					    
+					    document.addEventListener("DOMContentLoaded", function() {
+					        const form = document.querySelector('form[action="/change-password"]');
+					        
+					        form.addEventListener('submit', function(event) {
+					            const newPassword = document.getElementById('newPassword').value;
+					            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+					            if (newPassword !== confirmNewPassword) {
+					                alert('New Password and Confirm New Password must match.');
+					                event.preventDefault(); // Prevent form submission
+					            }
+					        });
+					    });
 					    </script>
     
     
