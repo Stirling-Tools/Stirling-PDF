@@ -103,12 +103,12 @@
 								<label for="pagesToNumber" th:text="#{addPageNumbers.selectText.5}"></label> <input
 									type="text" class="form-control" id="pagesToNumber"
 									name="pagesToNumber"
-									placeholder="Which pages to number, default 'all', also accepts 1-5 or 2,5,9 etc" />
+									th:placeholder="#{addPageNumbers.numberPagesDesc}" />
 							</div>
 							<div class="form-group">
 								<label for="customText" th:text="#{addPageNumbers.selectText.6}"></label> <input type="text"
 									class="form-control" id="customText" name="customText"
-									placeholder="Default just number, also accepts 'Page {n} of {total}', 'Tag-{n}' etc" />
+									th:placeholder="#{addPageNumbers.customNumberDesc}" />
 							</div>
 							<button type="submit" id="submitBtn" class="btn btn-primary"
 								th:text="#{addPageNumbers.submit}"></button>

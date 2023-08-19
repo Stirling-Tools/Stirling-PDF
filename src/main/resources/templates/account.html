@@ -30,7 +30,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="currentPassword" th:text="#{password}">Password</label>
-                                <input type="password" class="form-control" name="currentPassword" id="currentPassword" placeholder="Password">
+                                <input type="password" class="form-control" name="currentPassword" id="currentPasswordUsername" placeholder="Password">
                             </div>
                             <div class="form-group">
                                 <button type="submit" class="btn btn-primary" th:text="#{account.changeUsername}">Change Username</button>
@@ -44,7 +44,7 @@
                         <form action="/change-password" method="post">
                             <div class="form-group">
                                 <label for="currentPassword" th:text="#{account.oldPassword}">Old Password</label>
-                                <input type="password" class="form-control" name="currentPassword" id="currentPassword"  th:placeholder="#{account.oldPassword}">
+                                <input type="password" class="form-control" name="currentPassword" id="currentPasswordPassword"  th:placeholder="#{account.oldPassword}">
                             </div>
                             <div class="form-group">
                                 <label for="newPassword" th:text="#{account.newPassword}">New Password</label>
@@ -70,13 +70,13 @@
 					                <input type="password" class="form-control" id="apiKey" th:placeholder="#{account.yourApiKey}" readonly>
 					                <div class="input-group-append">
 					                	<button class="btn btn-outline-secondary" id="copyBtn" type="button" onclick="copyToClipboard()"> 
-					                    	<img src="images/clipboard.svg" alt="Copy" style="height:20px;">
+					                    	<img class="blackwhite-icon" src="images/clipboard.svg" alt="Copy" style="height:20px;">
 					                	</button>
 					                    <button class="btn btn-outline-secondary" id="showBtn" type="button" onclick="showApiKey()">
-										    <img id="eyeIcon" src="images/eye.svg" alt="Toggle API Key Visibility" style="height:20px;">
+										    <img class="blackwhite-icon" id="eyeIcon" src="images/eye.svg" alt="Toggle API Key Visibility" style="height:20px;">
 										</button>
 										<button class="btn btn-outline-secondary" id="refreshBtn" type="button" onclick="refreshApiKey()">
-										    <img id="eyeIcon" src="images/arrow-clockwise.svg" alt="Refresh API-Key" style="height:20px;">
+										    <img class="blackwhite-icon" id="eyeIcon" src="images/arrow-clockwise.svg" alt="Refresh API-Key" style="height:20px;">
 										</button>
 										
 					                  

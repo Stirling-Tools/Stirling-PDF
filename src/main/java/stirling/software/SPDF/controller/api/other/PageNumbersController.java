@@ -116,7 +116,7 @@ public class PageNumbersController {
             Rectangle pageSize = page.getPageSize();
             PdfCanvas pdfCanvas = new PdfCanvas(page.newContentStreamAfter(), page.getResources(), pdfDoc);
 
-            String text = customText != null ? customText.replace("{n}", String.valueOf(pageNumber)).replace("{total}", String.valueOf(pdfDoc.getNumberOfPages())) : String.valueOf(pageNumber);
+            String text = customText != null ? customText.replace("{n}", String.valueOf(pageNumber)).replace("{total}", String.valueOf(pdfDoc.getNumberOfPages())).replace("{filename}", file.getOriginalFilename().replaceFirst("[.][^.]+$", "")) : String.valueOf(pageNumber);
 
             PdfFont font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
             float textWidth = font.getWidth(text, fontSize);
