@@ -16,12 +16,12 @@
 
             <form id="multiPdfForm" th:action="@{remove-blanks}" method="post" enctype="multipart/form-data">
               <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-               <div class="form-group">
+               <div class="mb-3">
                 <label for="threshold" th:text="#{removeBlanks.threshold}"></label>
                 <input type="number" class="form-control" id="threshold" name="threshold" value="10">
                 <small id="thresholdHelp" class="form-text text-muted" th:text="#{removeBlanks.thresholdDesc}"></small>
               </div>
-               <div class="form-group">
+               <div class="mb-3">
                 <label for="whitePercent" th:text="#{removeBlanks.whitePercent}"></label>
                 <input type="number" class="form-control" id="whitePercent" name="whitePercent" value="99.9" step="0.1">
                 <small id="whitePercentHelp" class="form-text text-muted" th:text="#{removeBlanks.whitePercentDesc}"></small>

@@ -16,7 +16,7 @@
                         <form th:action="@{rearrange-pages}" method="post" enctype="multipart/form-data">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <input type="hidden" id="customMode" name="customMode" value="">
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label for="pageOrder" th:text="#{pageOrderPrompt}"></label> 
                                 <input type="text" class="form-control" id="pageOrder" name="pageOrder" placeholder="(e.g. 1,2,8 or 4,7,12-16 or 2n-1)" required>
                             </div>

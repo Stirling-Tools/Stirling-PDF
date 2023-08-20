@@ -14,7 +14,7 @@
 
 .features-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(21rem, 3fr));
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 3fr));
     gap: 25px 30px;
 }
 

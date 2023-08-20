@@ -32,10 +32,11 @@
 <script src="js/thirdParty/jszip.min.js"></script>
 
 <!-- Bootstrap -->
-<script src="js/thirdParty/popper.min.js"></script>
-<script src="js/thirdParty/bootstrap.min.js"></script>
-<link rel="stylesheet" href="css/bootstrap.min.css">
-<link rel="stylesheet" href="css/bootstrap-icons.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+
+
 
 <!-- PDF.js -->
 <script src="pdfjs/pdf.js"></script>
@@ -57,7 +58,7 @@
 </head>
 
 <th:block th:fragment="game">
-    <dialog id="game-container-wrapper" class="game-container-wrapper" data-modal>
+    <dialog id="game-container-wrapper" class="game-container-wrapper" data-bs-modal>
         <script>
             console.log("loaded game")
             $(document).ready(function() {
@@ -116,20 +117,20 @@
 	</script>
     <script src="js/downloader.js"></script>
 
-    <div class="custom-file-chooser" th:attr="data-unique-id=${name}, 
-              data-element-id=${name+'-input'}, 
-              data-files-selected=#{filesSelected}, 
-              data-pdf-prompt=#{pdfPrompt}">
-        <div class="custom-file">
-            <input type="file" class="custom-file-input" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:classappend="${notRequired ? '' : 'required'}">
-            <label class="custom-file-label" th:for="${name}+'-input'" th:text="${inputText}"></label>
-        </div>
-        <div class="selected-files"></div>
-    </div>
+    <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, 
+	          data-bs-element-id=${name+'-input'}, 
+	          data-bs-files-selected=#{filesSelected}, 
+	          data-bs-pdf-prompt=#{pdfPrompt}">
+	    <div class="mb-3">
+	        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:classappend="${notRequired ? '' : 'required'}">
+	    </div>
+	    <div class="selected-files"></div>
+	</div>
+
     <div id="progressBarContainer" style="display: none; position: relative;">
         <div class="progress" style="height: 1rem;">
             <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                <span class="sr-only">Loading...</span>
+                <span class="visually-hidden">Loading...</span>
             </div>
         </div>
     </div>

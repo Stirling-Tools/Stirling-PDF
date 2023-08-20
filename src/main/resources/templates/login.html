@@ -1,6 +1,6 @@
-<!--   Hi if you have been redirected here when using API then you might need to supply a X-API-KEY key in header to authenticate! -->
-<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
+<!--   Hi if you have been redirected here when using API then you might need to supply a X-API-KEY key in header to authenticate! -->
 <head>
     <title>Login</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -26,15 +26,15 @@
                 
                 <div class="card-body">
                     <form th:action="@{/login}" method="post">
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="username">Username:</label>
                             <input type="text" id="username" name="username" class="form-control" required="required" />
                         </div>
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="password">Password:</label>
                             <input type="password" id="password" name="password" class="form-control" required="required" />
                         </div>
-                        <div class="form-group text-center">
+                        <div class="mb-3 text-center">
                             <input type="submit" value="Login" class="btn btn-primary" />
                         </div>
                     </form>

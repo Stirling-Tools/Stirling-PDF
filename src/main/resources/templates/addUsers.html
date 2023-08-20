@@ -41,15 +41,15 @@
 
 						<h2 th:text="#{adminUserSettings.addUser}">Add New User</h2>
 					    <form action="/admin/saveUser" method="post">
-					        <div class="form-group">
+					        <div class="mb-3">
 					            <label for="username" th:text="#{username}">Username</label>
 					            <input type="text" class="form-control" name="username" required>
 					        </div>
-					        <div class="form-group">
+					        <div class="mb-3">
 					            <label for="password" th:text="#{password}">Password</label>
 					            <input type="password" class="form-control" name="password" required>
 					        </div>
-					        <div class="form-group">
+					        <div class="mb-3">
 						        <label for="role" th:text="#{adminUserSettings.role}">Role</label>
 						        <select name="role" class="form-control" required>
 						            <option value="ROLE_ADMIN"  th:text="#{adminUserSettings.admin}">Admin</option>

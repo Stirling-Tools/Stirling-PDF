@@ -40,7 +40,7 @@
                         <h2 th:text="#{ocr.header}"></h2>
                          <form th:if="${#lists.size(languages) > 0}" action="#" th:action="@{/ocr-pdf}" method="post" enctype="multipart/form-data" class="mb-3">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label for="languages" class="form-label" th:text="#{ocr.selectText.1}"></label>
                                 <hr>
                                 <div id="languages">
@@ -51,7 +51,7 @@
                                 </div>
                                 <hr>
                             </div>
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label th:text="#{ocr.selectText.10}"></label> 
                                 <select class="form-control" name="ocrType">
                                     <option value="skip-text" th:text="#{ocr.selectText.6}"></option>
@@ -83,7 +83,7 @@
                             </div>
                             
                             
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label th:text="#{ocr.selectText.12}"></label> 
                                 <select class="form-control" name="ocrRenderType">
                                     <option value="hocr">HOCR (Latin/Roman alphabet only)</option>

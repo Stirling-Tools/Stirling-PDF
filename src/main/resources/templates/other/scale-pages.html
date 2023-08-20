@@ -16,7 +16,7 @@
                         <h2 th:text="#{scalePages.header}"></h2>
                          <form id="scalePagesFrom" th:action="@{scale-pages}" method="post" enctype="multipart/form-data">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-                            <div class="form-group">
+                            <div class="mb-3">
 	                            <label for="pageSize" th:text="#{scalePages.pageSize}"></label>
 							    <select id="pageSize" name="pageSize" required>
 							        
@@ -48,7 +48,7 @@
 							        <option value="LEDGER">Ledger</option>
 							    </select>
 						    </div>
-                            <div class="form-group">
+                            <div class="mb-3">
 	                            <label for="scaleFactor" th:text="#{scalePages.scaleFactor}"></label>
                                 <input type="number" id="scaleFactor" name="scaleFactor" step="any" min="0" value="1">
 						    </div>

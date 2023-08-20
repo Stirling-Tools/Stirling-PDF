@@ -17,57 +17,57 @@
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <p class="text-muted" th:text="#{changeMetadata.selectText.1}"></p>
 
-                            <div class="form-group-inline form-check">
+                            <div class="mb-3-inline form-check">
                                 <input type="checkbox" class="form-check-input" id="deleteAll" name="deleteAll"> 
-                                <label class="ml-3" for="deleteAll"  th:text="#{changeMetadata.selectText.2}" ></label>
+                                <label class="ms-3" for="deleteAll"  th:text="#{changeMetadata.selectText.2}" ></label>
                             </div>
 
-                            <div class="form-group-inline form-check">
+                            <div class="mb-3-inline form-check">
                                 <input type="checkbox" class="form-check-input" id="customModeCheckbox"> 
-                                <label class="ml-3" for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
+                                <label class="ms-3" for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
                             </div>
 
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label class="form-check-label" for="author" th:text="#{changeMetadata.author}"></label> 
                                 <input type="text" class="form-control" id="author" name="author">
                             </div>
 
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label class="form-check-label" for="creationDate" th:text="#{changeMetadata.creationDate}"></label> 
                                 <input type="text" class="form-control" id="creationDate" name="creationDate" placeholder="2020/12/25 18:30:59">
                             </div>
 
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label class="form-check-label" for="creator" th:text="#{changeMetadata.creator}"></label> 
                                 <input type="text" class="form-control" id="creator" name="creator">
                             </div>
 
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label class="form-check-label" for="keywords" th:text="#{changeMetadata.keywords}"></label> 
                                 <input type="text" class="form-control" id="keywords" name="keywords">
                             </div>
 
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label class="form-check-label" for="modificationDate" th:text="#{changeMetadata.modDate}"></label> 
                                 <input type="text" class="form-control" id="modificationDate" name="modificationDate" placeholder="2020/12/25 18:30:59">
                             </div>
 
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label class="form-check-label" for="producer" th:text="#{changeMetadata.producer}"></label> 
                                 <input type="text" class="form-control" id="producer" name="producer">
                             </div>
 
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label class="form-check-label" for="subject" th:text="#{changeMetadata.subject}"></label> 
                                 <input type="text" class="form-control" id="subject" name="subject">
                             </div>
 
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label class="form-check-label" for="title" th:text="#{changeMetadata.title}"></label> 
                                 <input type="text" class="form-control" id="title" name="title">
                             </div>
 
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label class="form-check-label" for="trapped" th:text="#{changeMetadata.trapped}"></label> 
                                 <select class="form-control" id="trapped" name="trapped">
                                     <option value="True" th:text="#{true}"></option>
@@ -77,7 +77,7 @@
                             </div>
                             <div id="customMetadata" style="display: none;">
                                 <h3 th:text="#{changeMetadata.selectText.4}"></h3>
-                                <div class="form-group" id="otherMetadataEntries"></div>
+                                <div class="mb-3" id="otherMetadataEntries"></div>
                             </div>
                             <div id="customMetadataEntries"></div>
                             <button type="button" class="btn btn-secondary" id="addMetadataBtn" th:text="#{changeMetadata.selectText.5}"></button>
@@ -194,7 +194,7 @@
 	    count = count + 1;
 	    
 	    const formGroup = document.createElement("div");
-	    formGroup.className = "form-group";
+	    formGroup.className = "mb-3";
 	    formGroup.appendChild(keyInput);
 	    formGroup.appendChild(valueInput);
 	    
@@ -227,11 +227,11 @@
               continue;
             }
             const entryDiv = document.createElement('div');
-            entryDiv.className = 'form-group';
+            entryDiv.className = 'mb-3';
             
             
           
-            entryDiv.innerHTML = `<div class="form-group"><label class="form-check-label" for="${key}">${key}:</label><input name="${key}" value="${value}" type="text" class="form-control" id="${key}"></div>`;
+            entryDiv.innerHTML = `<div class="mb-3"><label class="form-check-label" for="${key}">${key}:</label><input name="${key}" value="${value}" type="text" class="form-control" id="${key}"></div>`;
             otherMetadataEntriesDiv.appendChild(entryDiv);
           }
         } else {
