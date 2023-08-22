@@ -34,7 +34,7 @@ function handleDropdownItemClick(event) {
 document.addEventListener('DOMContentLoaded', function() {
 		document.querySelectorAll('.nav-item.dropdown').forEach((element) => {
 	    const dropdownMenu = element.querySelector(".dropdown-menu");
-	    if (dropdownMenu.children.length <= 2 && dropdownMenu.querySelectorAll("hr.dropdown-divider").length === dropdownMenu.children.length) {
+	    if (dropdownMenu.id !== 'favoritesDropdown' &&  dropdownMenu.children.length <= 2 && dropdownMenu.querySelectorAll("hr.dropdown-divider").length === dropdownMenu.children.length) {
 	        if (element.previousElementSibling && element.previousElementSibling.classList.contains('nav-item') && element.previousElementSibling.classList.contains('nav-item-separator')) {
 	            element.previousElementSibling.remove();
 	        }
