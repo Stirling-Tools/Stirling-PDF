@@ -27,6 +27,8 @@
     align-items: flex-start;
     background: rgba(13, 110, 253, 0.05); 
     transition: transform 0.3s, border 0.3s;
+    transform-origin: center center;
+    outline: 2px solid transparent; 
 }
 
 .feature-card a {
@@ -43,7 +45,7 @@
 }
 
 .feature-card:hover {
-    border: 1px solid rgba(0, 0, 0, .5);
+    outline: 1px solid rgba(0, 0, 0, .5);
     cursor: pointer;
     transform: scale(1.1);
 }
