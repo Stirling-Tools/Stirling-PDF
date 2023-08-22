@@ -142,13 +142,17 @@
 						    const buttonElem = document.createElement('button');
 						    buttonElem.className = 'btn btn-link';
 						    buttonElem.type = 'button';
-						    buttonElem.dataset.toggle = "collapse";
-						    buttonElem.dataset.target = `#${safeKey}-content-${depth}`;
+						    buttonElem.dataset.bsToggle = "collapse";
+						    buttonElem.dataset.bsTarget = `#${safeKey}-content-${depth}`;
 						    buttonElem.setAttribute('aria-expanded', 'true');
 						    buttonElem.setAttribute('aria-controls', `${safeKey}-content-${depth}`);
 						    buttonElem.textContent = key;
 						    return buttonElem;
 						}
+						const collapsibleElems = document.querySelectorAll('[data-bs-toggle="collapse"]');
+						collapsibleElems.forEach(elem => {
+						    new bootstrap.Collapse(elem);
+						});
                        </script>
 					</div>
 				</div>

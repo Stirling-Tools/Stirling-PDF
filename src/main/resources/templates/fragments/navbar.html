@@ -305,9 +305,7 @@
         <div class="modal-content dark-card">
             <div class="modal-header">
                 <h5 class="modal-title" id="settingsModalLabel" th:text="#{settings.title}"></h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -318,12 +316,9 @@
                     <a href="swagger-ui/index.html" target="_blank">
                         <button type="button" class="btn btn-sm btn-outline-primary">API</button>
                     </a>
-
                     <a href="https://github.com/Frooodle/Stirling-PDF/releases" target="_blank">
 					    <button type="button" class="btn btn-sm btn-outline-primary" id="update-btn" th:utext="#{settings.update}"></button>
 					</a>
-
-
                 </div>
                 <div class="mb-3">
                     <label for="downloadOption" th:utext="#{settings.downloadOption.title}"></label>
@@ -335,33 +330,27 @@
                 </div>
                 <div class="mb-3">
                     <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label>
-                    <input type="range" class="custom-range" min="1" max="9" step="1" id="zipThreshold" value="4">
+                    <input type="range" class="form-range" min="1" max="9" step="1" id="zipThreshold" value="4">
                     <span id="zipThresholdValue" class="ms-2"></span>
                 </div>
-                <div class="mb-3">
-                  <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" id="boredWaiting">
-                    <label class="custom-control-label" for="boredWaiting" th:text="#{bored}"></label>
-                  </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="boredWaiting">
+                    <label class="form-check-label" for="boredWaiting" th:text="#{bored}"></label>
                 </div>
                 <a th:if="${@loginEnabled}" href="account" target="_blank">
                     <button type="button" class="btn btn-sm btn-outline-primary" th:text="#{settings.accountSettings}">Account Settings</button>
                 </a>
-
-
             </div>
-
-
             <div class="modal-footer">
             	<a th:if="${@loginEnabled}" href="/logout">
-	                  <button type="button" class="btn btn-danger" th:text="#{settings.signOut}">Sign Out</button>
-	              </a>
+	                <button type="button" class="btn btn-danger" th:text="#{settings.signOut}">Sign Out</button>
+	            </a>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
             </div>
-
         </div>
     </div>
 </div>
+
 
 
 <script src="js/settings.js"></script>
