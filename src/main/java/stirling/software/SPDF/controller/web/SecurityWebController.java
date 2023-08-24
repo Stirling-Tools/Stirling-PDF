@@ -11,6 +11,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Security", description = "Security APIs")
 public class SecurityWebController {
 	
+	@GetMapping("/auto-redact")
+    @Hidden
+    public String autoRedactForm(Model model) {
+        model.addAttribute("currentPage", "auto-redact");
+        return "security/auto-redact";
+    }
 	
     @GetMapping("/add-password")
     @Hidden
