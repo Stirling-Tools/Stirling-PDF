@@ -2,8 +2,6 @@
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
 <th:block th:insert="~{fragments/common :: head(title=#{autoRedact.title})}"></th:block>
-
-
 <body>
   <div id="page-container">
     <div id="content-wrap">
@@ -13,38 +11,37 @@
         <div class="row justify-content-center">
           <div class="col-md-6">
             <h2 th:text="#{autoRedact.header}"></h2>
-
             <form action="/auto-redact" method="post" enctype="multipart/form-data">
 		        <div class="mb-3">
 		            <input type="file" class="form-control" id="fileInput" name="fileInput" required accept="application/pdf">
 		        </div>
 		        
 		        <div class="mb-3">
-		            <label for="listOfText" class="form-label">Texts to Redact (line-separated)</label>
-		            <textarea class="form-control" id="listOfText" name="listOfText" rows="4" required placeholder="e.g. Confidential,Top-Secret"></textarea>
+		            <label for="listOfText" class="form-label" th:text="#{autoRedact.textsToRedactLabel}"></label>
+		            <textarea class="form-control" id="listOfText" name="listOfText" rows="4" required th:placeholder="#{autoRedact.textsToRedactPlaceholder}"></textarea>
 		        </div>
 		        
 		        <div class="mb-3 form-check">
 		            <input type="checkbox" class="form-check-input" id="useRegex" name="useRegex">
-		            <label class="form-check-label" for="useRegex">Use Regex</label>
+		            <label class="form-check-label" for="useRegex" th:text="#{autoRedact.useRegexLabel}"></label>
 		        </div>
 		
 		        <div class="mb-3 form-check">
 		            <input type="checkbox" class="form-check-input" id="wholeWordSearch" name="wholeWordSearch">
-		            <label class="form-check-label" for="wholeWordSearch">Whole Word Search</label>
+		            <label class="form-check-label" for="wholeWordSearch" th:text="#{autoRedact.wholeWordSearchLabel}"></label>
 		        </div>
 		        
 		        <div class="mb-3">
-		            <label for="customPadding" class="form-label">Custom Padding</label>
-		            <input type="number" step="0.1" class="form-control" id="customPadding" name="customPadding" placeholder="0.0" value="0.1">
+		            <label for="customPadding" class="form-label" th:text="#{autoRedact.customPaddingLabel}"></label>
+		            <input type="number" step="0.1" class="form-control" id="customPadding" name="customPadding" value="0.1">
 		        </div>
 		
 		        <div class="mb-3 form-check">
 		            <input type="checkbox" class="form-check-input" id="convertPDFToImage" name="convertPDFToImage" checked>
-		            <label class="form-check-label" for="convertPDFToImage">Convert PDF to Image</label>
+		            <label class="form-check-label" for="convertPDFToImage" th:text="#{autoRedact.convertPDFToImageLabel}"></label>
 		        </div>
 		        
-		        <button type="submit" class="btn btn-primary">Submit</button>
+		        <button type="submit" class="btn btn-primary" th:text="#{autoRedact.submitButton}"></button>
 		    </form>
           </div>
         </div>

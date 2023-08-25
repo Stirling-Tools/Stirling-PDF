@@ -1,59 +1,99 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
-<!--   Hi if you have been redirected here when using API then you might need to supply a X-API-KEY key in header to authenticate! -->
-<head>
-    <title>Login</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-</head>
+<th:block th:insert="~{fragments/common :: head(title=#{login.title})}"></th:block>
+<style>
+html, body {
+	height: 100%;
+}
+
+body {
+	display: flex;
+	align-items: center;
+	padding-top: 40px;
+	padding-bottom: 40px;
+	background-color: #f5f5f5;
+	
+}
+
+.form-signin {
+	width: 100%;
+	max-width: 330px;
+	padding: 15px;
+	margin: auto;
+}
+
+.form-signin .checkbox {
+	font-weight: 400;
+}
+
+.form-signin .form-floating:focus-within {
+	z-index: 2;
+}
+
+.form-signin input[type="text"] {
+	margin-bottom: -1px;
+	border-bottom-right-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
+.form-signin input[type="password"] {
+	margin-bottom: 10px;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+}
+.container-flex {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;      /* Set width to 100% */
+    align-items: center;  /* Center its children horizontally */
+}
+.footer-bottom {
+    margin-top: auto;
+}
+</style>
 <body>
+<div class="container-flex">
+<main class="form-signin text-center">
 
+		<div th:if="${logoutMessage}" class="alert alert-success"
+			th:text="${logoutMessage}"></div>
 
-    <div id="page-container">
-        <div id="content-wrap">
-        <div class="container">
-    <div class="row justify-content-center align-items-center" style="height:100vh;">
-        <div class="col-md-4">
-            <div class="login-container card">
-            	<div class="card-header text-center">
-                    <img src="favicon.svg" alt="Logo" class="img-fluid" style="max-width: 100px;"> <!-- Adjust path and style as needed -->
-                    <h4>Stirling-PDF Login</h4>
-                </div>
-                
-                
-                <div th:if="${logoutMessage}" class="alert alert-success" th:text="${logoutMessage}"></div>
-        
+		<form th:action="@{/login}" method="post">
+			<img class="mb-4" src="favicon.svg" alt="" width="144" height="144">
+			<h1 class="h1 mb-3 fw-normal">Stirling-PDF</h1>
+			<h2 class="h5 mb-3 fw-normal">Please sign in</h2>
 
-                
-                <div class="card-body">
-                    <form th:action="@{/login}" method="post">
-                        <div class="mb-3">
-                            <label for="username">Username:</label>
-                            <input type="text" id="username" name="username" class="form-control" required="required" />
-                        </div>
-                        <div class="mb-3">
-                            <label for="password">Password:</label>
-                            <input type="password" id="password" name="password" class="form-control" required="required" />
-                        </div>
-                        <div class="mb-3 text-center">
-                            <input type="submit" value="Login" class="btn btn-primary" />
-                        </div>
-                    </form>
-                </div>
-                <div class="card-footer text-danger text-center">
-                   <div th:if="${error == 'badcredentials'}">
-					    Invalid username or password.
-					</div>
-					<div th:if="${error == 'locked'}">
-					    Your account has been locked.
-					</div>
-                </div>
-            </div>
-        </div>
-    </div>
-            </div>
-             </div>
-        <div th:insert="~{fragments/footer.html :: footer}"></div>
-    </div>
+			<div class="form-floating">
+				<input type="text" class="form-control" id="username"
+					placeholder="admin"> <label for="username">Username</label>
+			</div>
+			<div class="form-floating">
+				<input type="password" class="form-control" id="password"
+					placeholder="Password"> <label for="password">Password</label>
+			</div>
 
+			<div class="checkbox mb-3">
+				<label> <input type="checkbox" value="remember-me">
+					Remember me
+				</label>
+			</div>
+			<button class="w-100 btn btn-lg btn-primary" type="submit">Sign
+				in</button>
+		</form>
+		<div class="text-danger text-center">
+			<div th:if="${error == 'badcredentials'}">Invalid username or
+				password.</div>
+			<div th:if="${error == 'locked'}">Your account has been locked.
+			</div>
+		</div>
+	
+	</main>
+    
+       
+        <div  th:insert="~{fragments/footer.html :: footer}"></div>
+ </div>
+    
+    
 </body>
 </html>

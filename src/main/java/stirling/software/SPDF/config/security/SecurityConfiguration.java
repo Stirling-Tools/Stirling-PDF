@@ -15,7 +15,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
+
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 @Configuration
 public class SecurityConfiguration {
 
@@ -43,7 +47,7 @@ public class SecurityConfiguration {
         
     	if(loginEnabledValue) {
     		
-	    	http.csrf().disable();
+    		http.csrf(csrf -> csrf.disable());
 	        http
 	            .formLogin(formLogin -> formLogin
 	                .loginPage("/login")
@@ -55,8 +59,12 @@ public class SecurityConfiguration {
 	            		.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
 	                    .logoutSuccessUrl("/login?logout=true")
 	                    .invalidateHttpSession(true)        // Invalidate session
-	                    .deleteCookies("JSESSIONID") 
-	            )
+	                    .deleteCookies("JSESSIONID", "remember-me") 
+	            ).rememberMe(rememberMeConfigurer -> rememberMeConfigurer // Use the configurator directly
+                    .key("uniqueAndSecret")
+                    .tokenRepository(persistentTokenRepository())
+                    .tokenValiditySeconds(1209600) // 2 weeks
+                )
 	            .authorizeHttpRequests(authz -> authz
 	                    .requestMatchers(req -> req.getRequestURI().startsWith("/login") || req.getRequestURI().endsWith(".svg") || req.getRequestURI().startsWith("/register") || req.getRequestURI().startsWith("/error") || req.getRequestURI().startsWith("/images/") ||  req.getRequestURI().startsWith("/public/") || req.getRequestURI().startsWith("/css/") || req.getRequestURI().startsWith("/js/"))
 	                    .permitAll()
@@ -65,8 +73,7 @@ public class SecurityConfiguration {
 	            .userDetailsService(userDetailsService)
 	            .authenticationProvider(authenticationProvider());
     	} else {
-    		 http
-             .csrf().disable()
+    		 http.csrf(csrf -> csrf.disable())
              .authorizeHttpRequests(authz -> authz
                  .anyRequest().permitAll()
              );
@@ -84,7 +91,12 @@ public class SecurityConfiguration {
         return authProvider;
     }
     
+    @Bean
+    public PersistentTokenRepository persistentTokenRepository() {
+        return new JPATokenRepositoryImpl();
+    }
     
+
     
 }
 
