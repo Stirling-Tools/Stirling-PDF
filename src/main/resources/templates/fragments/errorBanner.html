@@ -24,9 +24,7 @@
     <p th:text="${message} + ' for path: ' + ${path}"></p>
     <button type="button" class="btn btn-danger" th:if="${trace}" onclick="toggletrace()">Show Stack Trace</button>
     <button type="button" class="btn btn-secondary" th:if="${trace}" onclick="copytrace()">Copy Stack Trace</button>
-    <button type="button" class="close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
-      <span aria-hidden="true">&times;</span>
-    </button>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()"></button>
     <!-- Stack trace section -->
     <div id="trace" th:if="${trace}" style="max-height: 0; overflow: hidden;">
       <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; padding: 10px; margin-top: 5px;">

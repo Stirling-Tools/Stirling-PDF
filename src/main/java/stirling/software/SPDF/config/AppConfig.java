@@ -1,14 +1,12 @@
 package stirling.software.SPDF.config;
 
-import java.util.Arrays;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
-import stirling.software.SPDF.utils.PropertyConfigs;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 @Configuration
 public class AppConfig {
@@ -24,7 +22,7 @@ public class AppConfig {
 
     @Bean(name = "appName")
     public String appName() {
-        String homeTitle =  applicationProperties.getUi().getHomeName();
+        String homeTitle =  applicationProperties.getUi().getAppName();
         return (homeTitle != null) ? homeTitle : "Stirling PDF";
     }
 
@@ -42,7 +40,7 @@ public class AppConfig {
 
     @Bean(name = "navBarText")
     public String navBarText() {
-        String defaultNavBar = applicationProperties.getUi().getNavbarName() != null ? applicationProperties.getUi().getNavbarName() : applicationProperties.getUi().getHomeName();
+        String defaultNavBar = applicationProperties.getUi().getAppNameNavbar() != null ? applicationProperties.getUi().getAppNameNavbar() : applicationProperties.getUi().getAppName();
         return (defaultNavBar != null) ? defaultNavBar : "Stirling PDF";
     }
 	

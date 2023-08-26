@@ -1,3 +1,7 @@
+# Welcome to settings file
+# Remove comment marker # if on start of line to enable the configuration
+# If you want to override with environment parameter follow parameter naming SECURITY_INITIALLOGIN_USERNAME
+
 security:
   enableLogin: false # set to 'true' to enable login
   initialLogin:
@@ -8,14 +12,16 @@ security:
 system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility, 'false' to disallow
-  rootPath: / # Set the application's root URI (e.g. /pdf-app)
-  customstaticFilePath: '/customFiles/static/' # Directory path for custom static files
+  rootURIPath: / # Set the application's root URI (e.g. /pdf-app)
+  customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
   maxFileSize: 2000 # Set the maximum file size in MB
-
-ui:
-  homeName:  # Application's visible name
-  homeDescription:  # Short description or tagline.
-  navbarName:  # Name displayed on the navigation bar
+  connectionTimeoutMinutes: 5m
+  connectionTimeoutMilliSeconds: 300000
+  
+#ui:
+#  appName: exampleAppName # Application's visible name
+#  homeDescription: I am a description # Short description or tagline shown on homepage.
+#  appNameNavbar: navbarName # Name displayed on the navigation bar
 
 endpoints:
   toRemove: [] # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
@@ -23,4 +29,3 @@ endpoints:
 
 metrics:
   enabled: true # 'true' to enable metric API endpoints, 'false' to disable
-

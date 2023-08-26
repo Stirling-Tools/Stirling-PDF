@@ -174,8 +174,8 @@ public class ApplicationProperties {
 	public static class System {
 		private String defaultLocale;
 		private Boolean googlevisibility;
-		private String rootPath;
-		private String customstaticFilePath;
+		private String rootURIPath;
+		private String customStaticFilePath;
 		private Integer maxFileSize;
 
 		public String getDefaultLocale() {
@@ -194,20 +194,20 @@ public class ApplicationProperties {
 			this.googlevisibility = googlevisibility;
 		}
 
-		public String getRootPath() {
-			return rootPath;
+		public String getRootURIPath() {
+			return rootURIPath;
 		}
 
-		public void setRootPath(String rootPath) {
-			this.rootPath = rootPath;
+		public void setRootURIPath(String rootURIPath) {
+			this.rootURIPath = rootURIPath;
 		}
 
-		public String getCustomstaticFilePath() {
-			return customstaticFilePath;
+		public String getCustomStaticFilePath() {
+			return customStaticFilePath;
 		}
 
-		public void setCustomstaticFilePath(String customstaticFilePath) {
-			this.customstaticFilePath = customstaticFilePath;
+		public void setCustomStaticFilePath(String customStaticFilePath) {
+			this.customStaticFilePath = customStaticFilePath;
 		}
 
 		public Integer getMaxFileSize() {
@@ -220,8 +220,8 @@ public class ApplicationProperties {
 
 		@Override
 		public String toString() {
-			return "System [defaultLocale=" + defaultLocale + ", googlevisibility=" + googlevisibility + ", rootPath="
-					+ rootPath + ", customstaticFilePath=" + customstaticFilePath + ", maxFileSize=" + maxFileSize
+			return "System [defaultLocale=" + defaultLocale + ", googlevisibility=" + googlevisibility + ", rootURIPath="
+					+ rootURIPath + ", customStaticFilePath=" + customStaticFilePath + ", maxFileSize=" + maxFileSize
 					+ "]";
 		}
 
@@ -229,42 +229,40 @@ public class ApplicationProperties {
 	}
 
 	public static class Ui {
-		private String homeName;
-		private String homeDescription;
-		private String navbarName;
+	    private String appName;
+	    private String homeDescription;
+	    private String appNameNavbar;
 
-		public String getHomeName() {
-			return homeName;
-		}
+	    public String getAppName() {
+	        return appName;
+	    }
 
-		public void setHomeName(String homeName) {
-			this.homeName = homeName;
-		}
+	    public void setAppName(String appName) {
+	        this.appName = appName;
+	    }
 
-		public String getHomeDescription() {
-			return homeDescription;
-		}
+	    public String getHomeDescription() {
+	        return homeDescription;
+	    }
 
-		public void setHomeDescription(String homeDescription) {
-			this.homeDescription = homeDescription;
-		}
+	    public void setHomeDescription(String homeDescription) {
+	        this.homeDescription = homeDescription;
+	    }
 
-		public String getNavbarName() {
-			return navbarName;
-		}
+	    public String getAppNameNavbar() {
+	        return appNameNavbar;
+	    }
 
-		public void setNavbarName(String navbarName) {
-			this.navbarName = navbarName;
-		}
+	    public void setAppNameNavbar(String appNameNavbar) {
+	        this.appNameNavbar = appNameNavbar;
+	    }
 
-		@Override
-		public String toString() {
-			return "Ui [homeName=" + homeName + ", homeDescription=" + homeDescription + ", navbarName=" + navbarName
-					+ "]";
-		}
-
-		
+	    @Override
+	    public String toString() {
+	        return "UserInterface [appName=" + appName + ", homeDescription=" + homeDescription + ", appNameNavbar=" + appNameNavbar + "]";
+	    }
 	}
+
 
 	public static class Endpoints {
 		private List<String> toRemove;
