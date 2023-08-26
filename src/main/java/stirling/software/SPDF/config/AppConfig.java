@@ -36,7 +36,7 @@ public class AppConfig {
 
     @Bean(name = "homeText")
     public String homeText() {
-        return applicationProperties.getUi().getHomeDescription();
+    	return (applicationProperties.getUi().getHomeDescription() != null) ? applicationProperties.getUi().getHomeDescription() : "null";
     }
 
 
