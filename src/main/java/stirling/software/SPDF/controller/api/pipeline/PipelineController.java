@@ -47,6 +47,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -90,6 +91,10 @@ public class PipelineController {
 			logger.error("Error walking through directory: {}", watchedFolderPath, e);
 		}
 	}
+
+	@Autowired
+	ApplicationProperties applicationProperties;
+	
 
 	private void handleDirectory(Path dir) throws Exception {
 		logger.info("Handling directory: {}", dir);
@@ -182,8 +187,7 @@ public class PipelineController {
 						// {filename} {folder} {date} {tmime} {pipeline}
 						String outputDir = config.getOutputDir();
 
-						// Check if the environment variable 'automatedOutputFolder' is set
-						String outputFolder = System.getenv("automatedOutputFolder");
+						String outputFolder = applicationProperties.getAutoPipeline().getOutputFolder();
 
 						if (outputFolder == null || outputFolder.isEmpty()) {
 						    // If the environment variable is not set, use the default value

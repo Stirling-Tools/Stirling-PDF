@@ -22,7 +22,7 @@ public class ConfigInitializer implements ApplicationContextInitializer<Configur
 
 	public void ensureConfigExists() throws IOException {
 		// Define the path to the external config directory
-		Path destPath = Paths.get("configs", "application.yml");
+		Path destPath = Paths.get("configs", "settings.yml");
 
 		// Check if the file already exists
 		if (Files.notExists(destPath)) {
@@ -30,11 +30,11 @@ public class ConfigInitializer implements ApplicationContextInitializer<Configur
 			Files.createDirectories(destPath.getParent());
 
 			// Copy the resource from classpath to the external directory
-			try (InputStream in = getClass().getClassLoader().getResourceAsStream("application.yml.template")) {
+			try (InputStream in = getClass().getClassLoader().getResourceAsStream("settings.yml.template")) {
 				if (in != null) {
 					Files.copy(in, destPath);
 				} else {
-					throw new FileNotFoundException("Resource file not found: application.yml.template");
+					throw new FileNotFoundException("Resource file not found: settings.yml.template");
 				}
 			}
 		}

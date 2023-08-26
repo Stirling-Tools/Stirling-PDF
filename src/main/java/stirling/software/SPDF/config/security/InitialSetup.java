@@ -24,11 +24,14 @@ public class InitialSetup {
 	@Autowired
 	private UserService userService;
 
+	@Autowired
+	ApplicationProperties applicationProperties;
+	
 	@PostConstruct
 	public void init() {
 		if (!userService.hasUsers()) {
-			String initialUsername = System.getenv("INITIAL_USERNAME");
-			String initialPassword = System.getenv("INITIAL_PASSWORD");
+			String initialUsername = applicationProperties.getSecurity().getInitialLogin().getUsername();
+			String initialPassword = applicationProperties.getSecurity().getInitialLogin().getPassword();
 			if (initialUsername != null && initialPassword != null) {
 				userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
 			}
@@ -36,8 +39,7 @@ public class InitialSetup {
 		}
 	}
 
-	@Autowired
-	ApplicationProperties applicationProperties;
+
 
 	@PostConstruct
 	public void initSecretKey() throws IOException {
@@ -49,7 +51,7 @@ public class InitialSetup {
 	}
 
 	private void saveKeyToConfig(String key) throws IOException {
-		Path path = Paths.get("configs", "application.yml"); // Target the configs/application.yml
+		Path path = Paths.get("configs", "settings.yml"); // Target the configs/settings.yml
 		List<String> lines = Files.readAllLines(path);
 		boolean keyFound = false;
 

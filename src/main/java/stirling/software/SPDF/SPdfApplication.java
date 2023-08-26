@@ -55,10 +55,10 @@ public class SPdfApplication {
     public static void main(String[] args) {
     	SpringApplication app = new SpringApplication(SPdfApplication.class);
     	app.addInitializers(new ConfigInitializer());
-    	if (Files.exists(Paths.get("configs/application.yml"))) {
-            app.setDefaultProperties(Collections.singletonMap("spring.config.location", "file:configs/application.yml"));
+    	if (Files.exists(Paths.get("configs/settings.yml"))) {
+            app.setDefaultProperties(Collections.singletonMap("spring.config.location", "file:configs/settings.yml"));
         } else {
-            System.out.println("External configuration file 'configs/application.yml' does not exist. Using default configuration and environment configuration instead.");
+            System.out.println("External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
         }
         app.run(args);
         

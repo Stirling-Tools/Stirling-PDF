@@ -11,7 +11,7 @@ import stirling.software.SPDF.config.YamlPropertySourceFactory;
 
 @Configuration
 @ConfigurationProperties(prefix = "")
-@PropertySource(value = "file:./configs/application.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "file:./configs/settings.yml", factory = YamlPropertySourceFactory.class)
 public class ApplicationProperties {
 	private Security security;
 	private System system;
@@ -19,6 +19,15 @@ public class ApplicationProperties {
 	private Endpoints endpoints;
 	private Metrics metrics;
 	private AutomaticallyGenerated automaticallyGenerated;
+	private AutoPipeline autoPipeline;
+
+	public AutoPipeline getAutoPipeline() {
+		return autoPipeline != null ? autoPipeline : new AutoPipeline();
+	}
+
+	public void setAutoPipeline(AutoPipeline autoPipeline) {
+		this.autoPipeline = autoPipeline;
+	}
 
 	public Security getSecurity() {
 		return security != null ? security : new Security();
@@ -67,16 +76,33 @@ public class ApplicationProperties {
 	public void setAutomaticallyGenerated(AutomaticallyGenerated automaticallyGenerated) {
 		this.automaticallyGenerated = automaticallyGenerated;
 	}
-	
-	
+
 	@Override
 	public String toString() {
 		return "ApplicationProperties [security=" + security + ", system=" + system + ", ui=" + ui + ", endpoints="
-				+ endpoints + ", metrics=" + metrics + ", automaticallyGenerated="
-				+ automaticallyGenerated + "]";
+				+ endpoints + ", metrics=" + metrics + ", automaticallyGenerated=" + automaticallyGenerated
+				+ ", autoPipeline=" + autoPipeline + "]";
 	}
 
+	public static class AutoPipeline {
+		private String outputFolder;
 
+		public String getOutputFolder() {
+			return outputFolder;
+		}
+
+		public void setOutputFolder(String outputFolder) {
+			this.outputFolder = outputFolder;
+		}
+
+		@Override
+		public String toString() {
+			return "AutoPipeline [outputFolder=" + outputFolder + "]";
+		}
+		
+		
+		
+	}
 	public static class Security {
 		private Boolean enableLogin;
 		private InitialLogin initialLogin;
