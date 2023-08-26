@@ -24,7 +24,8 @@ public class AppConfig {
 
     @Bean(name = "appName")
     public String appName() {
-        return applicationProperties.getUi().getHomeName();
+        String homeTitle =  applicationProperties.getUi().getHomeName();
+        return (homeTitle != null) ? homeTitle : "Stirling PDF";
     }
 
     @Bean(name = "appVersion")
@@ -42,7 +43,7 @@ public class AppConfig {
     @Bean(name = "navBarText")
     public String navBarText() {
         String defaultNavBar = applicationProperties.getUi().getNavbarName() != null ? applicationProperties.getUi().getNavbarName() : applicationProperties.getUi().getHomeName();
-        return defaultNavBar;
+        return (defaultNavBar != null) ? defaultNavBar : "Stirling PDF";
     }
 	
 	@Bean(name = "rateLimit")
