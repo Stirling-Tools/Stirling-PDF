@@ -208,7 +208,7 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 - Progress bar/Tracking
 - Full custom logic pipelines to combine multiple operations together.
 - Folder support with auto scanning to perform operations on
-- Redact text (not au
+- Redact text (Via UI)
 - Add Forms
 - Annotations
 - Multi page layout (Stich PDF pages together) support x rows y columns and custom page sizing 
