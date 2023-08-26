@@ -1,0 +1,27 @@
+security:
+  enableLogin: false # set to 'true' to enable login
+  initialLogin:
+    username: 'username' # Specify the initial username for first boot (e.g. 'admin')
+    password: 'password'# Specify the initial password for first boot (e.g. 'password123')
+  csrfDisabled: true
+
+system:
+  defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
+  googlevisibility: false # 'true' to allow Google visibility, 'false' to disallow
+  rootPath: / # Set the application's root URI (e.g. /pdf-app)
+  customstaticFilePath: '/customFiles/static/' # Directory path for custom static files
+  maxFileSize: 2000 # Set the maximum file size in MB
+
+ui:
+  #homeName: 'Stirling PDF Application' # Application's visible name
+  #homeDescription: "The best PDF tool. Short description or tagline."
+  #navbarName: 'Stirling Navbar' # Name displayed on the navigation bar
+
+endpoints:
+  toRemove: [] # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
+  groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
+
+metrics:
+  enabled: true # 'true' to enable metric API endpoints, 'false' to disable
+
+

@@ -1,37 +1,34 @@
 package stirling.software.SPDF.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 @Configuration
 public class AppConfig {
 	
-	
-	
-	@Bean(name = "rateLimit")
-    public boolean rateLimit() {
-        String appName = System.getProperty("rateLimit");
-        if (appName == null) 
-            appName = System.getenv("rateLimit");
-        System.out.println("rateLimit=" + appName);
-        return (appName != null) ? Boolean.valueOf(appName) : false;
-    }
-	
-	@Bean(name = "loginEnabled")
+	@Value("${login.enabled:false}")
+    private boolean defaultLoginEnabled;
+
+    @Value("${ui.homeName:Stirling PDF}")
+    private String defaultAppName;
+
+    @Value("${ui.homeDescription:null}")
+    private String defaultHomeText;
+
+    @Value("${ui.navbarName:Stirling PDF}")
+    private String defaultNavBarText;
+
+    @Bean(name = "loginEnabled")
     public boolean loginEnabled() {
-        String appName = System.getProperty("login.enabled");
-        if (appName == null) 
-            appName = System.getenv("login.enabled");
-        System.out.println("loginEnabled=" + appName);
-        return (appName != null) ? Boolean.valueOf(appName) : false;
+        return getBooleanValue("login.enabled", defaultLoginEnabled);
     }
-	
+
     @Bean(name = "appName")
     public String appName() {
-        String appName = System.getProperty("APP_HOME_NAME");
-        if (appName == null)
-            appName = System.getenv("APP_HOME_NAME");
-        return (appName != null) ? appName : "Stirling PDF";
+        return getStringValue("APP_HOME_NAME", defaultAppName);
     }
 
     @Bean(name = "appVersion")
@@ -42,22 +39,40 @@ public class AppConfig {
 
     @Bean(name = "homeText")
     public String homeText() {
-        String homeText = System.getProperty("APP_HOME_DESCRIPTION");
-        if (homeText == null)
-            homeText = System.getenv("APP_HOME_DESCRIPTION");
-        return (homeText != null) ? homeText : "null";
+        return getStringValue("APP_HOME_DESCRIPTION", defaultHomeText);
     }
 
     @Bean(name = "navBarText")
     public String navBarText() {
-        String navBarText = System.getProperty("APP_NAVBAR_NAME");
-        if (navBarText == null)
-            navBarText = System.getenv("APP_NAVBAR_NAME");
-        if (navBarText == null)
-            navBarText = System.getProperty("APP_HOME_NAME");
-        if (navBarText == null)
-            navBarText = System.getenv("APP_HOME_NAME");
-
-        return (navBarText != null) ? navBarText : "Stirling PDF";
+        String navBarText = getStringValue("APP_NAVBAR_NAME", null);
+        if (navBarText == null) {
+            navBarText = getStringValue("APP_HOME_NAME", defaultNavBarText);
+        }
+        return navBarText;
     }
+
+    private boolean getBooleanValue(String key, boolean defaultValue) {
+        String value = System.getProperty(key);
+        if (value == null) 
+            value = System.getenv(key);
+        return (value != null) ? Boolean.valueOf(value) : defaultValue;
+    }
+
+    private String getStringValue(String key, String defaultValue) {
+        String value = System.getProperty(key);
+        if (value == null)
+            value = System.getenv(key);
+        return (value != null) ? value : defaultValue;
+    }
+	
+	@Bean(name = "rateLimit")
+    public boolean rateLimit() {
+        String appName = System.getProperty("rateLimit");
+        if (appName == null) 
+            appName = System.getenv("rateLimit");
+        System.out.println("rateLimit=" + appName);
+        return (appName != null) ? Boolean.valueOf(appName) : false;
+    }
+	
+	
 }

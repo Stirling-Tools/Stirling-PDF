@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -51,7 +52,14 @@ public class SPdfApplication {
     }
 	
     public static void main(String[] args) {
-        SpringApplication.run(SPdfApplication.class, args);
+    	SpringApplication app = new SpringApplication(SPdfApplication.class);
+    	if (Files.exists(Paths.get("configs/application.yml"))) {
+            app.setDefaultProperties(Collections.singletonMap("spring.config.location", "file:configs/application.yml"));
+        } else {
+            System.out.println("External configuration file 'configs/application.yml' does not exist. Using default configuration and environment configuration instead.");
+        }
+        app.run(args);
+        
         try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
