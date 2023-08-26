@@ -1,34 +1,30 @@
 package stirling.software.SPDF.config;
 
+import java.util.Arrays;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
+import stirling.software.SPDF.utils.PropertyConfigs;
+import stirling.software.SPDF.model.ApplicationProperties;
 @Configuration
 public class AppConfig {
-	
-	@Value("${login.enabled:false}")
-    private boolean defaultLoginEnabled;
 
-    @Value("${ui.homeName:Stirling PDF}")
-    private String defaultAppName;
-
-    @Value("${ui.homeDescription:null}")
-    private String defaultHomeText;
-
-    @Value("${ui.navbarName:Stirling PDF}")
-    private String defaultNavBarText;
-
+    @Autowired
+    ApplicationProperties applicationProperties;
+    
     @Bean(name = "loginEnabled")
     public boolean loginEnabled() {
-        return getBooleanValue("login.enabled", defaultLoginEnabled);
+        System.out.println(applicationProperties.toString());
+        return applicationProperties.getSecurity().getEnableLogin();
     }
 
     @Bean(name = "appName")
     public String appName() {
-        return getStringValue("APP_HOME_NAME", defaultAppName);
+        return applicationProperties.getUi().getHomeName();
     }
 
     @Bean(name = "appVersion")
@@ -39,30 +35,14 @@ public class AppConfig {
 
     @Bean(name = "homeText")
     public String homeText() {
-        return getStringValue("APP_HOME_DESCRIPTION", defaultHomeText);
+        return applicationProperties.getUi().getHomeDescription();
     }
+
 
     @Bean(name = "navBarText")
     public String navBarText() {
-        String navBarText = getStringValue("APP_NAVBAR_NAME", null);
-        if (navBarText == null) {
-            navBarText = getStringValue("APP_HOME_NAME", defaultNavBarText);
-        }
-        return navBarText;
-    }
-
-    private boolean getBooleanValue(String key, boolean defaultValue) {
-        String value = System.getProperty(key);
-        if (value == null) 
-            value = System.getenv(key);
-        return (value != null) ? Boolean.valueOf(value) : defaultValue;
-    }
-
-    private String getStringValue(String key, String defaultValue) {
-        String value = System.getProperty(key);
-        if (value == null)
-            value = System.getenv(key);
-        return (value != null) ? value : defaultValue;
+        String defaultNavBar = applicationProperties.getUi().getNavbarName() != null ? applicationProperties.getUi().getNavbarName() : applicationProperties.getUi().getHomeName();
+        return defaultNavBar;
     }
 	
 	@Bean(name = "rateLimit")

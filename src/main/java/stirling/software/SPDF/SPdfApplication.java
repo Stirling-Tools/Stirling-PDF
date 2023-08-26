@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 
 import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.SPDF.config.ConfigInitializer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 @SpringBootApplication
 @EnableWebSecurity()
@@ -53,6 +54,7 @@ public class SPdfApplication {
 	
     public static void main(String[] args) {
     	SpringApplication app = new SpringApplication(SPdfApplication.class);
+    	app.addInitializers(new ConfigInitializer());
     	if (Files.exists(Paths.get("configs/application.yml"))) {
             app.setDefaultProperties(Collections.singletonMap("spring.config.location", "file:configs/application.yml"));
         } else {
