@@ -1,12 +1,12 @@
 package stirling.software.SPDF.repository;
 
+import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
-import stirling.software.SPDF.model.PersistentLogin;
-import stirling.software.SPDF.repository.PersistentLoginRepository;
 
-import java.util.Date;
+import stirling.software.SPDF.model.PersistentLogin;
 
 public class JPATokenRepositoryImpl implements PersistentTokenRepository {
 

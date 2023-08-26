@@ -1,8 +1,6 @@
 package stirling.software.SPDF;
 
-import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 
@@ -10,13 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 import jakarta.annotation.PostConstruct;
-import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.config.ConfigInitializer;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import stirling.software.SPDF.utils.GeneralUtils;
 @SpringBootApplication
 @EnableWebSecurity()
 @EnableGlobalMethodSecurity(prePostEnabled = true)

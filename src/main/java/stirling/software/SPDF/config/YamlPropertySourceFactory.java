@@ -3,11 +3,11 @@ package stirling.software.SPDF.config;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
+import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.core.io.support.PropertySourceFactory;
-import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
-import org.springframework.core.env.PropertiesPropertySource;
 public class YamlPropertySourceFactory implements PropertySourceFactory {
 
     @Override

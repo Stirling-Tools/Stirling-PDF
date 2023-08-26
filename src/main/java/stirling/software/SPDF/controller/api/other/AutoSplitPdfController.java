@@ -29,9 +29,9 @@ import com.google.zxing.PlanarYUVLuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 
-import stirling.software.SPDF.utils.WebResponseUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 public class AutoSplitPdfController {

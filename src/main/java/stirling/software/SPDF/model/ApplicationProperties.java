@@ -1,11 +1,10 @@
 package stirling.software.SPDF.model;
 
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-
-import java.util.List;
-import java.util.Optional;
 
 import stirling.software.SPDF.config.YamlPropertySourceFactory;
 
