@@ -43,7 +43,7 @@ document.querySelector('#navbarSearchInput').addEventListener('input', function(
         var titleElement = item.querySelector('.icon-text');
         var iconElement = item.querySelector('.icon');
         var itemHref = item.getAttribute('href');
-        var tags = item.getAttribute('data-tags') || ""; // If no tags, default to empty string
+        var tags = item.getAttribute('data-bs-tags') || ""; // If no tags, default to empty string
         
         if (titleElement && iconElement && itemHref !== '#') {
             var title = titleElement.innerText;

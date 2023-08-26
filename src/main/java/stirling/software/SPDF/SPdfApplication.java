@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -14,6 +15,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 
 import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.SPDF.config.ConfigInitializer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 @SpringBootApplication
 @EnableWebSecurity()
@@ -51,7 +53,15 @@ public class SPdfApplication {
     }
 	
     public static void main(String[] args) {
-        SpringApplication.run(SPdfApplication.class, args);
+    	SpringApplication app = new SpringApplication(SPdfApplication.class);
+    	app.addInitializers(new ConfigInitializer());
+    	if (Files.exists(Paths.get("configs/settings.yml"))) {
+            app.setDefaultProperties(Collections.singletonMap("spring.config.location", "file:configs/settings.yml"));
+        } else {
+            System.out.println("External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
+        }
+        app.run(args);
+        
         try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {

@@ -10,7 +10,7 @@ function filterCards() {
         
         // Get the navbar tags associated with the card
         var navbarItem = document.querySelector(`a.dropdown-item[href="${card.id}"]`);
-        var navbarTags = navbarItem ? navbarItem.getAttribute('data-tags') : '';
+        var navbarTags = navbarItem ? navbarItem.getAttribute('data-bs-tags') : '';
 
         var content = title + ' ' + text + ' ' + navbarTags;
 

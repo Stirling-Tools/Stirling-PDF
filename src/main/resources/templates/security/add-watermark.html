@@ -14,14 +14,14 @@
                         <h2 th:text="#{watermark.header}"></h2>
 
                         <form method="post" enctype="multipart/form-data" action="add-watermark">
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label th:text="#{watermark.selectText.1}"></label>
                                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}">
                                     <input type="file" id="fileInput" name="fileInput" class="form-control-file" accept="application/pdf" required />
                                 </div>
                             </div>
                             
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label th:text="#{watermark.selectText.8}"></label> 
                                 <select class="form-control" id="watermarkType" name="watermarkType" onchange="toggleFileOption()">
                                     <option value="text">Text</option>
@@ -29,21 +29,21 @@
                                 </select>
                             </div>
                             
-                            <div id="watermarkTextGroup" class="form-group">
+                            <div id="watermarkTextGroup" class="mb-3">
                                 <label for="watermarkText" th:text="#{watermark.selectText.2}"></label> 
                                 <input type="text" id="watermarkText" name="watermarkText" class="form-control" placeholder="Stirling-PDF" required />
                             </div>
                             
-                            <div id="watermarkImageGroup" class="form-group" style="display: none;">
+                            <div id="watermarkImageGroup" class="mb-3" style="display: none;">
                                 <label for="watermarkImage" th:text="#{watermark.selectText.9}"></label> 
                                 <input type="file" id="watermarkImage" name="watermarkImage" class="form-control-file" accept="image/*" />
                             </div>
                             
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label for="fontSize" th:text="#{watermark.selectText.3}"></label> 
                                 <input type="text" id="fontSize" name="fontSize" class="form-control" value="30" />
                             </div>
-                            <div class="form-group">
+                            <div class="mb-3">
 							    <label for="opacity" th:text="#{watermark.selectText.7}"></label> 
 							    <input type="text" id="opacity" name="opacityText" class="form-control" value="50" onblur="updateOpacityValue()" />
 							    <input type="hidden" id="opacityReal" name="opacity" value="0.5">
@@ -83,19 +83,19 @@
 							    appendPercentageSymbol();
 							</script>
                             
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label for="rotation" th:text="#{watermark.selectText.4}"></label> 
                                 <input type="text" id="rotation" name="rotation" class="form-control" value="45" />
                             </div>
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label for="widthSpacer" th:text="#{watermark.selectText.5}"></label> 
                                 <input type="text" id="widthSpacer" name="widthSpacer" class="form-control" value="50" />
                             </div>
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label for="heightSpacer" th:text="#{watermark.selectText.6}"></label> 
                                 <input type="text" id="heightSpacer" name="heightSpacer" class="form-control" value="50" />
                             </div>
-                            <div class="form-group text-center">
+                            <div class="mb-3 text-center">
                                 <input type="submit" id="submitBtn" th:value="#{watermark.submit}" class="btn btn-primary" />
                             </div>
                         </form>

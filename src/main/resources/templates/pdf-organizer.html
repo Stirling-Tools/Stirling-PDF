@@ -16,7 +16,7 @@
 
                         <form th:action="@{rearrange-pages}" method="post" enctype="multipart/form-data">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-                            <div class="form-group">
+                            <div class="mb-3">
 						        <label for="customMode">Mode</label>
 						        <select class="form-control" id="customMode" name="customMode">
 						            <option value="">Custom Page Order</option>
@@ -29,7 +29,7 @@
 						            <option value="REMOVE_FIRST_AND_LAST">Remove First and Last</option>
 						        </select>
 						    </div>
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <label for="pageOrder" th:text="#{pageOrderPrompt}"></label> 
                                 <input type="text" class="form-control" id="pageOrder" name="pageOrder" placeholder="(e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)" required>
                             </div>

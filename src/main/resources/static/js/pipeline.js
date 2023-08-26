@@ -241,7 +241,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
     		if (parameter.name === 'fileInput') return;
     
 			let parameterDiv = document.createElement('div');
-			parameterDiv.className = "form-group";
+			parameterDiv.className = "mb-3";
 
 			let parameterLabel = document.createElement('label');
 			parameterLabel.textContent = `${parameter.name} (${parameter.schema.type}): `;

@@ -3,6 +3,7 @@ package stirling.software.SPDF.config;
 import java.time.Duration;
 import java.util.Locale;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
@@ -15,9 +16,13 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
 import io.github.bucket4j.Refill;
+import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
 public class Beans implements WebMvcConfigurer {
+	
+	@Autowired
+    ApplicationProperties applicationProperties;
 	
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -35,10 +40,9 @@ public class Beans implements WebMvcConfigurer {
     @Bean
     public LocaleResolver localeResolver() {
         SessionLocaleResolver slr = new SessionLocaleResolver();
-
-        String appLocaleEnv = System.getProperty("APP_LOCALE");
-        if (appLocaleEnv == null)
-            appLocaleEnv = System.getenv("APP_LOCALE");
+        
+        
+        String appLocaleEnv = applicationProperties.getSystem().getDefaultLocale();
         Locale defaultLocale = Locale.UK; // Fallback to UK locale if environment variable is not set
 
         if (appLocaleEnv != null && !appLocaleEnv.isEmpty()) {

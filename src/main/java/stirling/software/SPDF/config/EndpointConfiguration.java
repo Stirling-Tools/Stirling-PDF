@@ -1,20 +1,28 @@
 package stirling.software.SPDF.config;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import stirling.software.SPDF.model.ApplicationProperties;
 @Service
 public class EndpointConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(EndpointConfiguration.class);
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
 
-    public EndpointConfiguration() {
+    private final ApplicationProperties applicationProperties;
+
+    @Autowired
+    public EndpointConfiguration(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
         init();
         processEnvironmentConfigs();
     }
@@ -198,21 +206,19 @@ public class EndpointConfiguration {
         
         
     }
-                
+    
     private void processEnvironmentConfigs() {
-        String endpointsToRemove = System.getenv("ENDPOINTS_TO_REMOVE");
-        String groupsToRemove = System.getenv("GROUPS_TO_REMOVE");
+        List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
+        List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
 
         if (endpointsToRemove != null) {
-            String[] endpoints = endpointsToRemove.split(",");
-            for (String endpoint : endpoints) {
+            for (String endpoint : endpointsToRemove) {
                 disableEndpoint(endpoint.trim());
             }
         }
 
         if (groupsToRemove != null) {
-            String[] groups = groupsToRemove.split(",");
-            for (String group : groups) {
+            for (String group : groupsToRemove) {
                 disableGroup(group.trim());
             }
         }

@@ -22,7 +22,7 @@
 							<div
 								th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
 							<br>
-							<div class="form-group">
+							<div class="mb-3">
 								<label for="customMargin" th:text="#{addPageNumbers.selectText.2}"></label> <select
 									class="form-control" id="customMargin" name="customMargin"
 									required>
@@ -77,7 +77,7 @@
 </style>
 
 
-							<div class="form-group">
+							<div class="mb-3">
 								<label for="position" th:text="#{addPageNumbers.selectText.3}"></label>
 								<div class="a4container">
 									<div class="pageNumber" id="1" style="top: 10%; left: 10%;">1</div>
@@ -94,18 +94,18 @@
 
 							<input type="hidden" id="numberInput" name="position" min="1"
 								max="9" required>
-							<div class="form-group">
+							<div class="mb-3">
 								<label for="startingNumber" th:text="#{addPageNumbers.selectText.4}"></label> <input
 									type="number" class="form-control" id="startingNumber"
 									name="startingNumber" min="1" required value="1" />
 							</div>
-							<div class="form-group">
+							<div class="mb-3">
 								<label for="pagesToNumber" th:text="#{addPageNumbers.selectText.5}"></label> <input
 									type="text" class="form-control" id="pagesToNumber"
 									name="pagesToNumber"
 									th:placeholder="#{addPageNumbers.numberPagesDesc}" />
 							</div>
-							<div class="form-group">
+							<div class="mb-3">
 								<label for="customText" th:text="#{addPageNumbers.selectText.6}"></label> <input type="text"
 									class="form-control" id="customText" name="customText"
 									th:placeholder="#{addPageNumbers.customNumberDesc}" />

@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function setupFileInput(chooser) {
-    const elementId = chooser.getAttribute('data-element-id');
-    const filesSelected = chooser.getAttribute('data-files-selected');
-    const pdfPrompt = chooser.getAttribute('data-pdf-prompt');
+    const elementId = chooser.getAttribute('data-bs-element-id');
+    const filesSelected = chooser.getAttribute('data-bs-files-selected');
+    const pdfPrompt = chooser.getAttribute('data-bs-pdf-prompt');
 
     let allFiles = [];
     let overlay;

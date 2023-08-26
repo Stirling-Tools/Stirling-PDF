@@ -19,7 +19,7 @@ pipeline/
 
 #### Stirling-PDF Files ###
 customFiles/
-config/
+configs/
 watchedFolders/
 
 
