@@ -4,7 +4,7 @@ FROM frooodle/stirling-pdf-base:beta4
 ARG VERSION_TAG
 ENV VERSION_TAG=$VERSION_TAG
 
-ENV ENABLE_SECURITY=false
+ENV DOCKER_ENABLE_SECURITY=false
 
 # Create scripts folder and copy local scripts
 RUN mkdir /scripts

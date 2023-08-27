@@ -30,7 +30,7 @@ jobs:
     - name: Generate jar (With Security=${{ matrix.enable_security }})
       run: ./gradlew clean createExe
       env:
-        ENABLE_SECURITY: ${{ matrix.enable_security }}
+        DOCKER_ENABLE_SECURITY: ${{ matrix.enable_security }}
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2

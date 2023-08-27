@@ -19,7 +19,7 @@ function setMode(mode) {
 	elements.lightModeStyles.disabled = mode !== "off";
 	elements.darkModeStyles.disabled = mode !== "on";
 	elements.rainbowModeStyles.disabled = mode !== "rainbow";
-	
+	var jumbotron = document.getElementById('jumbotron');
 	if (mode === "on") {
         elements.darkModeIcon.src = "moon.svg";
         // Add the table-dark class to tables for dark mode
@@ -27,6 +27,10 @@ function setMode(mode) {
         tables.forEach(table => {
             table.classList.add('table-dark');
         });
+        if(jumbotron) {
+        	jumbotron.classList.add('bg-dark');
+        	jumbotron.classList.remove('bg-light');
+    	}
     } else if (mode === "off") {
         elements.darkModeIcon.src = "sun.svg";
         // Remove the table-dark class for light mode
@@ -34,6 +38,11 @@ function setMode(mode) {
         tables.forEach(table => {
             table.classList.remove('table-dark');
         });
+        if(jumbotron){
+			console.log(mode)
+         	jumbotron.classList.remove('bg-dark');
+         	jumbotron.classList.add('bg-light');
+     	}
     } else if (mode === "rainbow") {
 		elements.darkModeIcon.src = "rainbow.svg";
 	}
@@ -71,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	} else {
 		setMode("off");
 	}
-
+	
 	document.getElementById("dark-mode-toggle").addEventListener("click", function(event) {
 		event.preventDefault();
 		toggleDarkMode();

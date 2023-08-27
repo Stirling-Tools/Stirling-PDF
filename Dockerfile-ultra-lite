@@ -11,7 +11,7 @@ EXPOSE 8080
 
 # Set environment variables
 ENV GROUPS_TO_REMOVE=CLI
-ENV ENABLE_SECURITY=false
+ENV DOCKER_ENABLE_SECURITY=false
 
 # Run the application
 CMD ["java", "-jar", "/app.jar"]

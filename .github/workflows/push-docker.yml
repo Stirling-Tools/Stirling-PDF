@@ -22,7 +22,7 @@ jobs:
 
     - uses: gradle/gradle-build-action@v2.4.2
       env:
-        ENABLE_SECURITY: false
+        DOCKER_ENABLE_SECURITY: false
       with:
         gradle-version: 7.6
         arguments: clean build

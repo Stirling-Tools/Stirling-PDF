@@ -59,17 +59,17 @@ body {
 		<div th:if="${logoutMessage}" class="alert alert-success"
 			th:text="${logoutMessage}"></div>
 
-		<form th:action="@{/login}" method="post">
+		<form th:action="@{login}" method="post">
 			<img class="mb-4" src="favicon.svg" alt="" width="144" height="144">
 			<h1 class="h1 mb-3 fw-normal">Stirling-PDF</h1>
 			<h2 class="h5 mb-3 fw-normal">Please sign in</h2>
 
 			<div class="form-floating">
-				<input type="text" class="form-control" id="username"
+				<input type="text" class="form-control" id="username" name="username"
 					placeholder="admin"> <label for="username">Username</label>
 			</div>
 			<div class="form-floating">
-				<input type="password" class="form-control" id="password"
+				<input type="password" class="form-control" id="password" name="password"
 					placeholder="Password"> <label for="password">Password</label>
 			</div>
 
