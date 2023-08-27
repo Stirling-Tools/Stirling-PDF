@@ -36,8 +36,8 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./build/launch4j/Stirling-PDF${{ matrix.file_suffix }}.exe
-        asset_name: Stirling-PDF${{ matrix.file_suffix }}.exe
+        file: ./build/launch4j/Stirling-PDF.exe
+        asset_name: Stirling-PDF-${{ matrix.file_suffix }}.exe
         tag: ${{ github.ref }}
         overwrite: true
     
@@ -49,7 +49,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./build/libs/Stirling-PDF-${{ matrix.file_suffix }}-${{ steps.versionNumber.outputs.versionNumber }}.jar
-        asset_name: Stirling-PDF${{ matrix.file_suffix }}.jar
+        file: ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar
+        asset_name: Stirling-PDF-${{ matrix.file_suffix }}.jar
         tag: ${{ github.ref }}
         overwrite: true
