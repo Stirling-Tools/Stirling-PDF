@@ -16,6 +16,16 @@ if [[ -n "$TESSERACT_LANGS" ]]; then
   done
 fi
 
+# Check for ENABLE_SECURITY and download the appropriate JAR if required
+if [ "$ENABLE_SECURITY" = "true" ] && [ "$VERSION_TAG" != "alpha" ]; then
+	echo "Downloading from: https://github.com/Frooodle/Stirling-PDF/releases/download/$VERSION_TAG/Stirling-PDF-with-login.jar"
+    curl -L -o new-app.jar https://github.com/Frooodle/Stirling-PDF/releases/download/$VERSION_TAG/Stirling-PDF-with-login.jar
+    if [ $? -eq 0 ]; then  # checks if curl was successful
+        rm -f app.jar
+        mv new-app.jar app.jar
+    fi
+fi
+
 
 # Run the main command
 exec "$@"
