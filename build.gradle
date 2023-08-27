@@ -15,6 +15,24 @@ repositories {
 	mavenCentral()
 }
 
+sourceSets {
+    main {
+        java {
+            if (System.getenv('ENABLE_SECURITY') == 'false') {
+                exclude 'stirling/software/SPDF/config/security/**'
+                exclude 'stirling/software/SPDF/controller/api/UserController.java'
+                exclude 'stirling/software/SPDF/controller/web/AccountWebController.java'
+                exclude 'stirling/software/SPDF/model/ApiKeyAuthenticationToken.java'
+                exclude 'stirling/software/SPDF/model/Authority.java'
+                exclude 'stirling/software/SPDF/model/PersistentLogin.java'
+                exclude 'stirling/software/SPDF/model/User.java'
+                exclude 'stirling/software/SPDF/repository/**'
+            }
+        }
+    }
+}
+
+
 openApi {
     apiDocsUrl = "http://localhost:8080/v3/api-docs"
     outputDir = file("$projectDir")
@@ -48,11 +66,17 @@ dependencies {
 	implementation 'org.yaml:snakeyaml:2.1'
 	implementation 'org.springframework.boot:spring-boot-starter-web:3.1.2'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.1.2'
-	implementation 'org.springframework.boot:spring-boot-starter-security:3.1.2'
+	
+	if (System.getenv('ENABLE_SECURITY') != 'false') {
+        implementation 'org.springframework.boot:spring-boot-starter-security:3.1.2'
+        implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
+        implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+		implementation "com.h2database:h2"
+    }
+	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.2'
-	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
-	implementation "org.springframework.boot:spring-boot-starter-data-jpa"
-	implementation "com.h2database:h2"
+	
+	
 
 	// https://mvnrepository.com/artifact/org.apache.pdfbox/jbig2-imageio
 	implementation group: 'org.apache.pdfbox', name: 'jbig2-imageio', version: '3.0.4'
