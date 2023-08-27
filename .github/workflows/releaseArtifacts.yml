@@ -1,10 +1,20 @@
 name: Release Artifacts
+
 on: 
   release: 
     types: [created]
+
 jobs:
   push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        enable_security: [true, false]
+        include:
+          - enable_security: true
+            file_suffix: '-with-login'
+          - enable_security: false
+            file_suffix: ''
     steps:
     - uses: actions/checkout@v3.5.2
     
@@ -17,15 +27,17 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Generate jar
+    - name: Generate jar (With Security=${{ matrix.enable_security }})
       run: ./gradlew clean createExe
+      env:
+        ENABLE_SECURITY: ${{ matrix.enable_security }}
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./build/launch4j/Stirling-PDF.exe
-        asset_name: Stirling-PDF.exe
+        file: ./build/launch4j/Stirling-PDF${{ matrix.file_suffix }}.exe
+        asset_name: Stirling-PDF${{ matrix.file_suffix }}.exe
         tag: ${{ github.ref }}
         overwrite: true
     
@@ -33,13 +45,11 @@ jobs:
       id: versionNumber
       run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet | tail -1)"
       
-    - name: Upload binaries to release
+    - name: Upload jar binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar
-        asset_name: Stirling-PDF.jar
+        file: ./build/libs/Stirling-PDF-${{ matrix.file_suffix }}-${{ steps.versionNumber.outputs.versionNumber }}.jar
+        asset_name: Stirling-PDF${{ matrix.file_suffix }}.jar
         tag: ${{ github.ref }}
         overwrite: true
-
-

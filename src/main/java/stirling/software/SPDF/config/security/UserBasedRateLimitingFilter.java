@@ -1,4 +1,4 @@
-package stirling.software.SPDF.config;
+package stirling.software.SPDF.config.security;
 
 import java.io.IOException;
 import java.time.Duration;
