@@ -13,11 +13,14 @@ RUN apt-get update && \
 # Copy the application JAR file
 COPY build/libs/*.jar app.jar
 
+
+
 # Expose the application port
 EXPOSE 8080
 
 # Set environment variables
 ENV GROUPS_TO_REMOVE=Python,OpenCV,OCRmyPDF
+ENV ENABLE_SECURITY=false
 
 # Run the application
 CMD ["java", "-jar", "/app.jar"]
