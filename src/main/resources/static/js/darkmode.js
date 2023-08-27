@@ -16,6 +16,8 @@ function getElements() {
 }
 
 function setMode(mode) {
+	var event = new CustomEvent('modeChanged', { detail: mode });
+    document.dispatchEvent(event);
 	elements.lightModeStyles.disabled = mode !== "off";
 	elements.darkModeStyles.disabled = mode !== "on";
 	elements.rainbowModeStyles.disabled = mode !== "rainbow";
