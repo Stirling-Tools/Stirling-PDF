@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+	setLanguageForDropdown('.lang_dropdown-item');
 	const defaultLocale = document.documentElement.lang || 'en_GB';
 	const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
 	const dropdownItems = document.querySelectorAll('.lang_dropdown-item');
@@ -12,6 +13,21 @@ document.addEventListener('DOMContentLoaded', function() {
 		item.addEventListener('click', handleDropdownItemClick);
 	}
 });
+
+function setLanguageForDropdown(dropdownClass) {
+    const defaultLocale = document.documentElement.lang || 'en_GB';
+    const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
+    const dropdownItems = document.querySelectorAll(dropdownClass);
+
+    for (let i = 0; i < dropdownItems.length; i++) {
+        const item = dropdownItems[i];
+        item.classList.remove('active');
+        if (item.dataset.languageCode === storedLocale) {
+            item.classList.add('active');
+        }
+        item.addEventListener('click', handleDropdownItemClick);
+    }
+}
 
 function handleDropdownItemClick(event) {
     event.preventDefault();

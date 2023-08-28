@@ -1,4 +1,5 @@
-<html xmlns:th="http://www.thymeleaf.org">
+<!doctype html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
 <th:block th:insert="~{fragments/common :: head(title=#{login.title})}"></th:block>
 <script src="js/darkmode.js"></script>
@@ -170,9 +171,28 @@ document.addEventListener('modeChanged', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    const dropdown = document.getElementById('languageDropdown');
-    const defaultLocale = document.documentElement.lang || 'en_GB';
+	
+	const defaultLocale = document.documentElement.lang || 'en_GB';
     const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
+
+    const currentURL = new URL(window.location.href);
+    const urlParams = currentURL.searchParams;
+    const currentLangParam = urlParams.get('lang') || defaultLocale;
+
+    console.log("defaultLocale", defaultLocale)
+    console.log("storedLocale", storedLocale)
+    console.log("currentLangParam", currentLangParam)
+
+    if (currentLangParam !== storedLocale) {
+        urlParams.set('lang', storedLocale);
+        currentURL.search = urlParams.toString();
+
+        console.log("redirecting to", currentURL.toString());
+        window.location.href = currentURL.toString();
+        return;
+    }
+    
+    const dropdown = document.getElementById('languageDropdown');
     const dropdownItems = document.querySelectorAll('.lang_dropdown-item');
 
     let activeItem;
@@ -241,7 +261,7 @@ function handleDropdownItemClick(event) {
 		<form th:action="@{login}" method="post">
 			<img class="mb-4" src="favicon.svg" alt="" width="144" height="144">
 			<h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
-			<h2 class="h5 mb-3 fw-normal" th:text="#{login.signin}">Please sign in</h2>
+			<h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
 
 			<div class="form-floating">
 				<input type="text" class="form-control bg-dark text-light" id="username" name="username"
