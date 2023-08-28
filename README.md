@@ -156,14 +156,17 @@ Stirling PDF allows easy customization of the app.
 Includes things like
 - Custom application name
 - Custom slogans, icons, images, and even custom HTML (via file overrides)
+
 There are two options for this, either using the generated settings file ``settings.yml``
 This file is located in the ``/configs`` directory and follows standard YAML formatting
+
 Environment variables are also supported and would override the settings file
 For example in the settings.yml you have
 ```
 system:
   defaultLocale: 'en-US'
 ```
+
 To have this via an environment variable you would have ``SYSTEM_DEFAULTLOCALE``
 
 The Current list of settings is
