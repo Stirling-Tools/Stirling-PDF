@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.io.IOException;
+import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -331,8 +332,21 @@ public class GetInfoOnPDF {
                 PDEncryption pdfEncryption = pdfBoxDoc.getEncryption();
                 encryption.put("EncryptionAlgorithm", pdfEncryption.getFilter());
                 encryption.put("KeyLength", pdfEncryption.getLength());
-                encryption.put("Permissions", pdfBoxDoc.getCurrentAccessPermission().toString());
-                
+                AccessPermission ap = pdfBoxDoc.getCurrentAccessPermission();
+                if (ap != null) {
+                    ObjectNode permissionsNode = objectMapper.createObjectNode();
+                    
+                    permissionsNode.put("CanAssembleDocument", ap.canAssembleDocument());
+                    permissionsNode.put("CanExtractContent", ap.canExtractContent());
+                    permissionsNode.put("CanExtractForAccessibility", ap.canExtractForAccessibility());
+                    permissionsNode.put("CanFillInForm", ap.canFillInForm());
+                    permissionsNode.put("CanModify", ap.canModify());
+                    permissionsNode.put("CanModifyAnnotations", ap.canModifyAnnotations());
+                    permissionsNode.put("CanPrint", ap.canPrint());
+                    permissionsNode.put("CanPrintDegraded", ap.canPrintDegraded());
+
+                    encryption.set("Permissions", permissionsNode);  // set the node under "Permissions"
+                } 
                 // Add other encryption-related properties as needed
             } else {
             	encryption.put("IsEncrypted", false);
