@@ -45,6 +45,7 @@ public class RedactController {
             @Parameter(description = "List of listOfText to redact from the PDF", required = true, schema = @Schema(type = "string")) @RequestParam("listOfText") String listOfTextString,
             @RequestParam(value = "useRegex", required = false) boolean useRegex,
             @RequestParam(value = "wholeWordSearch", required = false) boolean wholeWordSearchBool,
+            @RequestParam(value = "redactColor", required = false, defaultValue = "#000000") String colorString,
             @RequestParam(value = "customPadding", required = false) float customPadding,
             @RequestParam(value = "convertPDFToImage", required = false) boolean convertPDFToImage) throws Exception {
         
@@ -52,12 +53,26 @@ public class RedactController {
     	String[] listOfText = listOfTextString.split("\n");
         byte[] bytes = file.getBytes();
         PDDocument document = PDDocument.load(new ByteArrayInputStream(bytes));
+        
+        Color redactColor;
+        try {
+        	if (!colorString.startsWith("#")) {
+                colorString = "#" + colorString;
+            }
+            redactColor = Color.decode(colorString);
+        } catch (NumberFormatException e) {
+            logger.warn("Invalid color string provided. Using default color BLACK for redaction.");
+            redactColor = Color.BLACK;
+        }
+
+
+        
         for (String text : listOfText) {
         	text = text.trim();
         	System.out.println(text);
         	TextFinder textFinder = new TextFinder(text, useRegex, wholeWordSearchBool);
             List<PDFText> foundTexts = textFinder.getTextLocations(document);
-            redactFoundText(document, foundTexts, customPadding);
+            redactFoundText(document, foundTexts, customPadding,redactColor);
         }
         
         
@@ -88,13 +103,13 @@ public class RedactController {
     }
 
     
-    private void redactFoundText(PDDocument document, List<PDFText> blocks, float customPadding) throws IOException {
+    private void redactFoundText(PDDocument document, List<PDFText> blocks, float customPadding, Color redactColor) throws IOException {
         var allPages = document.getDocumentCatalog().getPages();
 
         for (PDFText block : blocks) {
             var page = allPages.get(block.getPageIndex());
             PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true);
-            contentStream.setNonStrokingColor(Color.BLACK);
+            contentStream.setNonStrokingColor(redactColor);
             float padding = (block.getY2() - block.getY1()) * 0.3f + customPadding;
             PDRectangle pageBox = page.getBBox();
             contentStream.addRect(block.getX1(), pageBox.getHeight() - block.getY1() - padding, block.getX2() - block.getX1(), block.getY2() - block.getY1() + 2 * padding);
@@ -102,5 +117,6 @@ public class RedactController {
             contentStream.close();
         }
     }
+
 
 }

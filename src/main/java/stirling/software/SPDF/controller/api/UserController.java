@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -121,8 +122,17 @@ public class UserController {
 
     
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping("/admin/deleteUser/{username}")
-    public String deleteUser(@PathVariable String username) {
+    @PostMapping("/admin/deleteUser/{username}")
+    public String deleteUser(@PathVariable String username,  Authentication authentication) {
+    	
+    	// Get the currently authenticated username
+        String currentUsername = authentication.getName();
+
+        // Check if the provided username matches the current session's username
+        if (currentUsername.equals(username)) {
+            throw new IllegalArgumentException("Cannot delete currently logined in user.");
+        }
+        
     	userService.deleteUser(username); 
         return "redirect:/addUsers";
     }

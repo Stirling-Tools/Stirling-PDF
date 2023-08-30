@@ -21,6 +21,37 @@
 		            <textarea class="form-control" id="listOfText" name="listOfText" rows="4" required th:placeholder="#{autoRedact.textsToRedactPlaceholder}"></textarea>
 		        </div>
 		        
+		        <div class="mb-3">
+				    <label for="defaultColor" class="form-label" th:text="#{autoRedact.colorLabel}">Color</label>
+				    <select class="form-control" id="defaultColor" name="defaultColor" onchange="handleColorChange(this.value)">
+				        <option value="#000000" th:text="#{black}">Black</option>
+				        <option value="#FFFFFF" th:text="#{white}">White</option>
+				        <option value="#FF0000" th:text="#{red}">Red</option>
+				        <option value="#00FF00" th:text="#{green}">Green</option>
+				        <option value="#0000FF" th:text="#{blue}">Blue</option>
+				        <option value="custom" th:text="#{custom}">Custom...</option>
+				    </select>
+				</div>
+				
+				<!-- Custom Color Input -->
+				<div class="mb-3" id="customColorContainer" style="display: none;">
+				    <label for="customColor" class="form-label" th:text="#{autoRedact.colorLabel}">Custom Color</label>
+				    <input type="text" class="form-control" id="customColor" name="redactColor" placeholder="#FF00FF">
+				</div>
+				
+				<script>
+				    function handleColorChange(selectedValue) {
+				        if (selectedValue === "custom") {
+				            document.getElementById('customColorContainer').style.display = 'block';
+				        } else {
+				            document.getElementById('customColorContainer').style.display = 'none';
+				            document.getElementById('customColor').value = selectedValue; 
+				        }
+				    }
+				</script>
+
+        
+		        
 		        <div class="mb-3 form-check">
 		            <input type="checkbox" class="form-check-input" id="useRegex" name="useRegex">
 		            <label class="form-check-label" for="useRegex" th:text="#{autoRedact.useRegexLabel}"></label>

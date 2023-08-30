@@ -20,23 +20,26 @@
 						
 						
 						<table class="table">
-						    <thead>
-						        <tr>
-						            <th th:text="#{username}">Username</th>
-						            <th th:text="#{adminUserSettings.roles}">Roles</th>
-						            <th th:text="#{adminUserSettings.actions}">Actions</th>
-						        </tr>
-						    </thead>
-						    <tbody>
-						        <tr th:each="user : ${users}">
-						            <td th:text="${user.username}"></td>
-						            <td th:text="${user.getRolesAsString()}"></td>
-						            <td>
-						                <a th:href="@{'/admin/deleteUser/' + ${user.username}}" th:text="#{delete}">Delete</a>
-						            </td>
-						        </tr>
-						    </tbody>
-						</table>
+					    <thead>
+					        <tr>
+					            <th th:text="#{username}">Username</th>
+					            <th th:text="#{adminUserSettings.roles}">Roles</th>
+					            <th th:text="#{adminUserSettings.actions}">Actions</th>
+					        </tr>
+					    </thead>
+					    <tbody>
+					        <tr th:each="user : ${users}">
+					            <td th:text="${user.username}"></td>
+					            <td th:text="${user.getRolesAsString()}"></td>
+					            <td>
+					                <form th:if="${user.username != currentUsername}" th:action="@{'/admin/deleteUser/' + ${user.username}}" method="post">
+					                    <button type="submit" th:text="#{delete}">Delete</button>
+					                </form>
+					            </td>
+					        </tr>
+					    </tbody>
+					</table>
+
 						
 
 						<h2 th:text="#{adminUserSettings.addUser}">Add New User</h2>

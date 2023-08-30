@@ -58,14 +58,13 @@ public class AccountWebController {
 	@Autowired
 	private UserRepository userRepository;  // Assuming you have a repository for user operations
 
-	@Autowired
-	private UserService userService;  // Assuming you have a repository for user operations
 
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@GetMapping("/addUsers")
-	public String showAddUserForm(Model model) {
+	public String showAddUserForm(Model model,  Authentication authentication) {
 	    List<User> allUsers = userRepository.findAll();
 	    model.addAttribute("users", allUsers);
+	    model.addAttribute("currentUsername", authentication.getName());
 	    return "addUsers";
 	}
 

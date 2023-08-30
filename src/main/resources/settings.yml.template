@@ -6,7 +6,7 @@ security:
   enableLogin: false # set to 'true' to enable login
   initialLogin:
     username: 'username' # Specify the initial username for first boot (e.g. 'admin')
-    password: 'password'# Specify the initial password for first boot (e.g. 'password123')
+    password: 'password' # Specify the initial password for first boot (e.g. 'password123')
   csrfDisabled: true
 
 system:
