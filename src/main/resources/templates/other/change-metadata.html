@@ -87,20 +87,18 @@
                             <script>
   
     const deleteAllCheckbox = document.querySelector("#deleteAll");
-    const inputs = document.querySelectorAll(".form-control");
+    let inputs = document.querySelectorAll("input");
     const customMetadataDiv = document.getElementById('customMetadata');
     const otherMetadataEntriesDiv = document.getElementById('otherMetadataEntries');
     
     deleteAllCheckbox.addEventListener("change", function(event) {
-      if (event.target !== deleteAllCheckbox) {
-        return;
-      }
-
       inputs.forEach(input => {
-        if (input === deleteAllCheckbox) {
-          return;
-        }
-        input.disabled = deleteAllCheckbox.checked;
+          // If it's the deleteAllCheckbox or any file input, skip
+          if (input === deleteAllCheckbox || input.type === "file") {
+              return;
+          }
+          // Disable or enable based on the checkbox state
+          input.disabled = deleteAllCheckbox.checked;
       });
     });
                             
