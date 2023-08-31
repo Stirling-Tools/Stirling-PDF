@@ -173,30 +173,36 @@ To have this via an environment variable you would have ``SYSTEM_DEFAULTLOCALE``
 The Current list of settings is
 ```
 security:
-  enableLogin: true # set to 'true' to enable login
-  csrfDisabled: true #enables/disables csrf protection 
+  enableLogin: false # set to 'true' to enable login
+  initialLogin:
+    username: 'username' # Specify the initial username for first boot (e.g. 'admin')
+    password: 'password' # Specify the initial password for first boot (e.g. 'password123')
+  csrfDisabled: true
 
 system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility, 'false' to disallow
-  rootPath: / # Set the application's root URI (e.g. pdf-app for  http://localhost/pdf-app)
-  customstaticFilePath: '/customFiles/static/' # Directory path for custom static files
+  customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
 
-ui:
-  homeName:  # Application's visible name
-  homeDescription:  # Short description or tagline.
-  navbarName:  # Name displayed on the navigation bar
+#ui:
+#  appName: exampleAppName # Application's visible name
+#  homeDescription: I am a description # Short description or tagline shown on homepage.
+#  appNameNavbar: navbarName # Name displayed on the navigation bar
 
 endpoints:
-  toRemove: [] # List individual endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
-  groupsToRemove: [] # List groups of endpoints to disable (e.g. ['LibreOffice']) view groups.md for more info
+  toRemove: [] # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
+  groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
 
 metrics:
-  enabled: true 
+  enabled: true # 'true' to enable metric API endpoints, 'false' to disable
 ```
 ### Extra notes
 - Endpoints. Currently, the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma separate lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image-to-pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Frooodle/Stirling-PDF/blob/main/groups.md) 
 - customStaticFilePath. Customise static files such as the app logo by placing files in the /customFiles/static/ directory. An example of customising app logo is placing a /customFiles/static/favicon.svg to override current SVG. This can be used to change any images/icons/css/fonts/js etc in Stirling-PDF
+
+### Environment only parameters
+- ``SYSTEM_ROOTURIPATH`` ie set to ``pdf-app`` to Set the application's root URI tp ``localhost:8080/pdf-app``
+- ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
 
 
 ## API
