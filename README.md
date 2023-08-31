@@ -181,7 +181,6 @@ system:
   googlevisibility: false # 'true' to allow Google visibility, 'false' to disallow
   rootPath: / # Set the application's root URI (e.g. pdf-app for  http://localhost/pdf-app)
   customstaticFilePath: '/customFiles/static/' # Directory path for custom static files
-  maxFileSize: 2000 # Set the maximum file size in MB
 
 ui:
   homeName:  # Application's visible name
