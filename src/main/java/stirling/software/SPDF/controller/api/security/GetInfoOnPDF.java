@@ -10,14 +10,52 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import java.io.ByteArrayOutputStream;
+import org.apache.xmpbox.xml.DomXmpParser;
+import org.apache.commons.io.IOUtils;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSDocument;
+import org.apache.pdfbox.cos.COSInputStream;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSObject;
+import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
+import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
+import org.apache.pdfbox.pdmodel.PDJavascriptNameTreeNode;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.COSObjectable;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.PDStream;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureNode;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
+import org.apache.pdfbox.pdmodel.graphics.color.PDICCBased;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentGroup;
+import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentProperties;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineNode;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,33 +63,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.xml.XmpParsingException;
+import org.apache.xmpbox.xml.XmpSerializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.itextpdf.forms.PdfAcroForm;
-import com.itextpdf.forms.fields.PdfFormField;
-import com.itextpdf.kernel.geom.Rectangle;
-import com.itextpdf.kernel.pdf.PdfArray;
-import com.itextpdf.kernel.pdf.PdfCatalog;
-import com.itextpdf.kernel.pdf.PdfDictionary;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfName;
-import com.itextpdf.kernel.pdf.PdfObject;
-import com.itextpdf.kernel.pdf.PdfOutline;
-import com.itextpdf.kernel.pdf.PdfReader;
-import com.itextpdf.kernel.pdf.PdfResources;
-import com.itextpdf.kernel.pdf.PdfStream;
-import com.itextpdf.kernel.pdf.PdfString;
-import com.itextpdf.kernel.pdf.annot.PdfAnnotation;
-import com.itextpdf.kernel.pdf.annot.PdfFileAttachmentAnnotation;
-import com.itextpdf.kernel.pdf.annot.PdfLinkAnnotation;
-import com.itextpdf.kernel.pdf.layer.PdfLayer;
-import com.itextpdf.kernel.pdf.layer.PdfOCProperties;
-import com.itextpdf.kernel.xmp.XMPException;
-import com.itextpdf.kernel.xmp.XMPMeta;
-import com.itextpdf.kernel.xmp.XMPMetaFactory;
-import com.itextpdf.kernel.xmp.options.SerializeOptions;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -72,7 +90,6 @@ public class GetInfoOnPDF {
 		
 		try (
 			    PDDocument pdfBoxDoc = PDDocument.load(inputFile.getInputStream());
-			    PdfDocument itextDoc = new PdfDocument(new PdfReader(inputFile.getInputStream()))
 			) {
             ObjectMapper objectMapper = new ObjectMapper();
             ObjectNode jsonOutput = objectMapper.createObjectNode();
@@ -120,20 +137,16 @@ public class GetInfoOnPDF {
             boolean hasCompression = false;
             String compressionType = "None";
 
-            // Check for object streams
-            for (int i = 1; i <= itextDoc.getNumberOfPdfObjects(); i++) {
-                PdfObject obj = itextDoc.getPdfObject(i);
-                if (obj != null && obj.isStream() && ((PdfStream) obj).get(PdfName.Type) == PdfName.ObjStm) {
-                    hasCompression = true;
-                    compressionType = "Object Streams";
-                    break;
+            COSDocument cosDoc = pdfBoxDoc.getDocument();
+            for (COSObject cosObject : cosDoc.getObjects()) {
+                if (cosObject.getObject() instanceof COSStream) {
+                    COSStream cosStream = (COSStream) cosObject.getObject();
+                    if (COSName.OBJ_STM.equals(cosStream.getItem(COSName.TYPE))) {
+                        hasCompression = true;
+                        compressionType = "Object Streams";
+                        break;
+                    }
                 }
-            }
-
-            // If not compressed using object streams, check for compressed Xref tables
-            if (!hasCompression && itextDoc.getReader().hasRebuiltXref()) {
-                hasCompression = true;
-                compressionType = "Compressed Xref or Rebuilt Xref";
             }
             basicInfo.put("Compression", hasCompression);
             if(hasCompression)
@@ -144,9 +157,8 @@ public class GetInfoOnPDF {
             basicInfo.put("Number of pages", pdfBoxDoc.getNumberOfPages());
             
             
-            // Page Mode using iText7
-            PdfCatalog catalog = itextDoc.getCatalog();
-            PdfName pageMode = catalog.getPdfObject().getAsName(PdfName.PageMode);
+            PDDocumentCatalog catalog = pdfBoxDoc.getDocumentCatalog();
+            String pageMode = catalog.getPageMode().name();
             
             // Document Information using PDFBox
             docInfoNode.put("PDF version", pdfBoxDoc.getVersion());
@@ -157,49 +169,54 @@ public class GetInfoOnPDF {
             
             
             
-            PdfAcroForm acroForm = PdfAcroForm.getAcroForm(itextDoc, false);
+            PDAcroForm acroForm = pdfBoxDoc.getDocumentCatalog().getAcroForm();
+
             ObjectNode formFieldsNode = objectMapper.createObjectNode();
             if (acroForm != null) {
-                for (Map.Entry<String, PdfFormField> entry : acroForm.getFormFields().entrySet()) {
-                    formFieldsNode.put(entry.getKey(), entry.getValue().getValueAsString());
+                for (PDField field : acroForm.getFieldTree()) {
+                    formFieldsNode.put(field.getFullyQualifiedName(), field.getValueAsString());
                 }
             }
             jsonOutput.set("FormFields", formFieldsNode);
+
            
             
             
             
             
             //embeed files TODO size
+            PDEmbeddedFilesNameTreeNode efTree = catalog.getNames().getEmbeddedFiles();
+
             ArrayNode embeddedFilesArray = objectMapper.createArrayNode();
-            if(itextDoc.getCatalog().getPdfObject().getAsDictionary(PdfName.Names) != null)
-            {
-            PdfDictionary embeddedFiles = itextDoc.getCatalog().getPdfObject().getAsDictionary(PdfName.Names)
-                    .getAsDictionary(PdfName.EmbeddedFiles);
-            if (embeddedFiles != null) {
-                
-                PdfArray namesArray = embeddedFiles.getAsArray(PdfName.Names);
-                if(namesArray != null) {
-	                for (int i = 0; i < namesArray.size(); i += 2) {
-	                    ObjectNode embeddedFileNode = objectMapper.createObjectNode();
-	                    embeddedFileNode.put("Name", namesArray.getAsString(i).toString());
-	                    // Add other details if required
-	                    embeddedFilesArray.add(embeddedFileNode);
-	                }
+            if (efTree != null) {
+                Map<String, PDComplexFileSpecification> efMap = efTree.getNames();
+                if (efMap != null) {
+                    for (Map.Entry<String, PDComplexFileSpecification> entry : efMap.entrySet()) {
+                        ObjectNode embeddedFileNode = objectMapper.createObjectNode();
+                        embeddedFileNode.put("Name", entry.getKey());
+                        PDEmbeddedFile embeddedFile = entry.getValue().getEmbeddedFile();
+                        if (embeddedFile != null) {
+                            embeddedFileNode.put("FileSize", embeddedFile.getLength()); // size in bytes
+                        }
+                        embeddedFilesArray.add(embeddedFileNode);
+                    }
                 }
-                
-            }
             }
             other.set("EmbeddedFiles", embeddedFilesArray);
+
+
             
             //attachments TODO size
             ArrayNode attachmentsArray = objectMapper.createArrayNode();
-            for (int pageNum = 1; pageNum <= itextDoc.getNumberOfPages(); pageNum++) {
-                for (PdfAnnotation annotation : itextDoc.getPage(pageNum).getAnnotations()) {
-                    if (annotation instanceof PdfFileAttachmentAnnotation) {
+            for (PDPage page : pdfBoxDoc.getPages()) {
+                for (PDAnnotation annotation : page.getAnnotations()) {
+                    if (annotation instanceof PDAnnotationFileAttachment) {
+                        PDAnnotationFileAttachment fileAttachmentAnnotation = (PDAnnotationFileAttachment) annotation;
+
                         ObjectNode attachmentNode = objectMapper.createObjectNode();
-                        attachmentNode.put("Name", ((PdfFileAttachmentAnnotation) annotation).getName().toString());
-                        attachmentNode.put("Description", annotation.getContents().getValue());
+                        attachmentNode.put("Name", fileAttachmentAnnotation.getAttachmentName());
+                        attachmentNode.put("Description", fileAttachmentAnnotation.getContents());
+
                         attachmentsArray.add(attachmentNode);
                     }
                 }
@@ -207,65 +224,54 @@ public class GetInfoOnPDF {
             other.set("Attachments", attachmentsArray);
 
             //Javascript
-            PdfDictionary namesDict = itextDoc.getCatalog().getPdfObject().getAsDictionary(PdfName.Names);
+            PDDocumentNameDictionary namesDict = catalog.getNames();
             ArrayNode javascriptArray = objectMapper.createArrayNode();
+
             if (namesDict != null) {
-                PdfDictionary javascriptDict = namesDict.getAsDictionary(PdfName.JavaScript);
+                PDJavascriptNameTreeNode javascriptDict = namesDict.getJavaScript();
                 if (javascriptDict != null) {
+                    try {
+                        Map<String, PDActionJavaScript> jsEntries = javascriptDict.getNames();
 
-                    PdfArray namesArray = javascriptDict.getAsArray(PdfName.Names);
-                    for (int i = 0; i < namesArray.size(); i += 2) {
-                        ObjectNode jsNode = objectMapper.createObjectNode();
-                        if(namesArray.getAsString(i) != null)
-                            jsNode.put("JS Name", namesArray.getAsString(i).toString());
+                        for (Map.Entry<String, PDActionJavaScript> entry : jsEntries.entrySet()) {
+                            ObjectNode jsNode = objectMapper.createObjectNode();
+                            jsNode.put("JS Name", entry.getKey());
 
-                        // Here we check for a PdfStream object and retrieve the JS code from it
-                        PdfObject jsCode = namesArray.get(i+1);
-                        if (jsCode instanceof PdfStream) {
-                            byte[] jsCodeBytes = ((PdfStream)jsCode).getBytes();
-                            String jsCodeStr = new String(jsCodeBytes, StandardCharsets.UTF_8);
-                            jsNode.put("JS Script Length", jsCodeStr.length());
-                        } else if (jsCode instanceof PdfDictionary) {
-                            // If the JS code is in a dictionary, you'll need to know the key to use.
-                            // Assuming the key is PdfName.JS:
-                            PdfStream jsCodeStream = ((PdfDictionary)jsCode).getAsStream(PdfName.JS);
-                            if (jsCodeStream != null) {
-                                byte[] jsCodeBytes = jsCodeStream.getBytes();
-                                String jsCodeStr = new String(jsCodeBytes, StandardCharsets.UTF_8);
-                                jsNode.put("JS Script Character Length", jsCodeStr.length());
+                            PDActionJavaScript jsAction = entry.getValue();
+                            if (jsAction != null) {
+                                String jsCodeStr = jsAction.getAction();
+                                if (jsCodeStr != null) {
+                                    jsNode.put("JS Script Length", jsCodeStr.length());
+                                }
                             }
+
+                            javascriptArray.add(jsNode);
                         }
-
-                        javascriptArray.add(jsNode);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-
                 }
             }
             other.set("JavaScript", javascriptArray);
+
             
             //TODO size
-            PdfOCProperties ocProperties = itextDoc.getCatalog().getOCProperties(false);
+            PDOptionalContentProperties ocProperties = pdfBoxDoc.getDocumentCatalog().getOCProperties();
             ArrayNode layersArray = objectMapper.createArrayNode();
+
             if (ocProperties != null) {
-               
-                for (PdfLayer layer : ocProperties.getLayers()) {
+                for (PDOptionalContentGroup ocg : ocProperties.getOptionalContentGroups()) {
                     ObjectNode layerNode = objectMapper.createObjectNode();
-                    layerNode.put("Name", layer.getPdfObject().getAsString(PdfName.Name).toString());
+                    layerNode.put("Name", ocg.getName());
                     layersArray.add(layerNode);
                 }
-                
             }
+
             other.set("Layers", layersArray);
             
             //TODO Security
             
 
-            
-            
-            
-            
-            // Digital Signatures using iText7 TODO
-            
 
             
             
@@ -282,13 +288,13 @@ public class GetInfoOnPDF {
 			}
             
             
-            boolean isPdfACompliant = checkOutputIntent(itextDoc, "PDF/A");
-            boolean isPdfXCompliant = checkOutputIntent(itextDoc, "PDF/X");
-            boolean isPdfECompliant = checkForStandard(itextDoc, "PDF/E");
-            boolean isPdfVTCompliant = checkForStandard(itextDoc, "PDF/VT");
-            boolean isPdfUACompliant = checkForStandard(itextDoc, "PDF/UA");
-            boolean isPdfBCompliant = checkForStandard(itextDoc, "PDF/B"); // If you want to check for PDF/Broadcast, though this isn't an official ISO standard.
-            boolean isPdfSECCompliant = checkForStandard(itextDoc, "PDF/SEC"); // This might not be effective since PDF/SEC was under development in 2021.
+            boolean isPdfACompliant = checkForStandard(pdfBoxDoc, "PDF/A");
+            boolean isPdfXCompliant = checkForStandard(pdfBoxDoc, "PDF/X");
+            boolean isPdfECompliant = checkForStandard(pdfBoxDoc, "PDF/E");
+            boolean isPdfVTCompliant = checkForStandard(pdfBoxDoc, "PDF/VT");
+            boolean isPdfUACompliant = checkForStandard(pdfBoxDoc, "PDF/UA");
+            boolean isPdfBCompliant = checkForStandard(pdfBoxDoc, "PDF/B"); // If you want to check for PDF/Broadcast, though this isn't an official ISO standard.
+            boolean isPdfSECCompliant = checkForStandard(pdfBoxDoc, "PDF/SEC"); // This might not be effective since PDF/SEC was under development in 2021.
             
             compliancy.put("IsPDF/ACompliant", isPdfACompliant);
             compliancy.put("IsPDF/XCompliant", isPdfXCompliant);
@@ -302,27 +308,39 @@ public class GetInfoOnPDF {
             
            
             
+            PDOutlineNode root = pdfBoxDoc.getDocumentCatalog().getDocumentOutline();
             ArrayNode bookmarksArray = objectMapper.createArrayNode();
-            PdfOutline root = itextDoc.getOutlines(false);
+
             if (root != null) {
-                for (PdfOutline child : root.getAllChildren()) {
+                for (PDOutlineItem child : root.children()) {
                     addOutlinesToArray(child, bookmarksArray);
                 }
             }
+
             other.set("Bookmarks/Outline/TOC", bookmarksArray);
             
-            byte[] xmpBytes = itextDoc.getXmpMetadata();
-            String xmpString = null;
-            if (xmpBytes != null) {
-                try {
-                    XMPMeta xmpMeta = XMPMetaFactory.parseFromBuffer(xmpBytes);
-                    xmpString = new String(XMPMetaFactory.serializeToBuffer(xmpMeta, new SerializeOptions()));
-                } catch (XMPException e) {
-                    e.printStackTrace();
-                }
-            }
-            other.put("XMPMetadata", xmpString);
-            
+     
+
+			PDMetadata pdMetadata = pdfBoxDoc.getDocumentCatalog().getMetadata();
+			
+			String xmpString = null;
+			
+			if (pdMetadata != null) {
+			    try {
+			        COSInputStream is = pdMetadata.createInputStream();
+			        DomXmpParser domXmpParser = new DomXmpParser();
+			        XMPMetadata xmpMeta = domXmpParser.parse(is);
+			        
+			        ByteArrayOutputStream os = new ByteArrayOutputStream();
+			        new XmpSerializer().serialize(xmpMeta, os, true);
+			        xmpString = new String(os.toByteArray(), StandardCharsets.UTF_8);
+			    } catch (XmpParsingException | IOException e) {
+			        e.printStackTrace();
+			    }
+			}
+			
+			other.put("XMPMetadata", xmpString);
+
             
             
             if (pdfBoxDoc.isEncrypted()) {
@@ -356,23 +374,40 @@ public class GetInfoOnPDF {
             
 
             ObjectNode pageInfoParent = objectMapper.createObjectNode();
-            for (int pageNum = 1; pageNum <= itextDoc.getNumberOfPages(); pageNum++) {
+            for (int pageNum = 1; pageNum <= pdfBoxDoc.getNumberOfPages(); pageNum++) {
                 ObjectNode pageInfo = objectMapper.createObjectNode();
 
+             // Retrieve the page
+                PDPage page = pdfBoxDoc.getPage(pageNum);
+
                 // Page-level Information
-                Rectangle pageSize = itextDoc.getPage(pageNum).getPageSize();
-                pageInfo.put("Width", pageSize.getWidth());
-                pageInfo.put("Height", pageSize.getHeight());
-                pageInfo.put("Rotation", itextDoc.getPage(pageNum).getRotation());
-                pageInfo.put("Page Orientation", getPageOrientation(pageSize.getWidth(),pageSize.getHeight())); 
-                pageInfo.put("Standard Size", getPageSize(pageSize.getWidth(),pageSize.getHeight())); 
-                
+                PDRectangle mediaBox = page.getMediaBox();
+
+                float width = mediaBox.getWidth();
+                float height = mediaBox.getHeight();
+
+                pageInfo.put("Width", width);
+                pageInfo.put("Height", height);
+                pageInfo.put("Rotation", page.getRotation());
+
+                pageInfo.put("Page Orientation", getPageOrientation(width, height));
+                pageInfo.put("Standard Size", getPageSize(width, height));
+
                 // Boxes
-                pageInfo.put("MediaBox", itextDoc.getPage(pageNum).getMediaBox().toString());
-                pageInfo.put("CropBox", itextDoc.getPage(pageNum).getCropBox().toString());
-                pageInfo.put("BleedBox", itextDoc.getPage(pageNum).getBleedBox().toString());
-                pageInfo.put("TrimBox", itextDoc.getPage(pageNum).getTrimBox().toString());
-                pageInfo.put("ArtBox", itextDoc.getPage(pageNum).getArtBox().toString());
+                pageInfo.put("MediaBox", mediaBox.toString());
+
+                // Assuming the following boxes are defined for your document; if not, you may get null values.
+                PDRectangle cropBox = page.getCropBox();
+                pageInfo.put("CropBox", cropBox == null ? "Undefined" : cropBox.toString());
+
+                PDRectangle bleedBox = page.getBleedBox();
+                pageInfo.put("BleedBox", bleedBox == null ? "Undefined" : bleedBox.toString());
+
+                PDRectangle trimBox = page.getTrimBox();
+                pageInfo.put("TrimBox", trimBox == null ? "Undefined" : trimBox.toString());
+
+                PDRectangle artBox = page.getArtBox();
+                pageInfo.put("ArtBox", artBox == null ? "Undefined" : artBox.toString());
 
                 // Content Extraction
                 PDFTextStripper textStripper = new PDFTextStripper();
@@ -382,17 +417,18 @@ public class GetInfoOnPDF {
                 
                 pageInfo.put("Text Characters Count", pageText.length()); //
 
-             // Annotations
-                List<PdfAnnotation> annotations = itextDoc.getPage(pageNum).getAnnotations();
+                // Annotations
+            
+                List<PDAnnotation> annotations = page.getAnnotations();
 
                 int subtypeCount = 0;
                 int contentsCount = 0;
 
-                for (PdfAnnotation annotation : annotations) {
-                    if(annotation.getSubtype() != null) {
+                for (PDAnnotation annotation : annotations) {
+                    if (annotation.getSubtype() != null) {
                         subtypeCount++;  // Increase subtype count
                     }
-                    if(annotation.getContents() != null) {
+                    if (annotation.getContents() != null) {
                         contentsCount++;  // Increase contents count
                     }
                 }
@@ -403,25 +439,31 @@ public class GetInfoOnPDF {
                 annotationsObject.put("ContentsCount", contentsCount);
                 pageInfo.set("Annotations", annotationsObject);
                 
+                
+                
                 // Images (simplified)
                 // This part is non-trivial as images can be embedded in multiple ways in a PDF.
                 // Here is a basic structure to recognize image XObjects on a page.
                 ArrayNode imagesArray = objectMapper.createArrayNode();
-                PdfResources resources = itextDoc.getPage(pageNum).getResources();
-                for (PdfName name : resources.getResourceNames()) {
-                    PdfObject obj = resources.getResource(name);
-                    if (obj instanceof PdfStream) {
-                        PdfStream stream = (PdfStream) obj;
-                        if (PdfName.Image.equals(stream.getAsName(PdfName.Subtype))) {
-                            ObjectNode imageNode = objectMapper.createObjectNode();
-                            imageNode.put("Width", stream.getAsNumber(PdfName.Width).intValue());
-                            imageNode.put("Height", stream.getAsNumber(PdfName.Height).intValue());
-                            PdfObject colorSpace = stream.get(PdfName.ColorSpace);
-                            if (colorSpace != null) {
-                                imageNode.put("ColorSpace", colorSpace.toString());
-                            }
-                            imagesArray.add(imageNode);
+                PDResources resources = page.getResources();
+
+
+                for (COSName name : resources.getXObjectNames()) {
+                    PDXObject xObject = resources.getXObject(name);
+                    if (xObject instanceof PDImageXObject) {
+                        PDImageXObject image = (PDImageXObject) xObject;
+                        
+                        ObjectNode imageNode = objectMapper.createObjectNode();
+                        imageNode.put("Width", image.getWidth());
+                        imageNode.put("Height", image.getHeight());
+                        if(image.getMetadata() != null && image.getMetadata().getFile() != null &&   image.getMetadata().getFile().getFile() != null) {
+                        	 imageNode.put("Name", image.getMetadata().getFile().getFile());
                         }
+                        if (image.getColorSpace() != null) {
+                            imageNode.put("ColorSpace", image.getColorSpace().getName());
+                        }
+
+                        imagesArray.add(imageNode);
                     }
                 }
                 pageInfo.set("Images", imagesArray);
@@ -431,12 +473,13 @@ public class GetInfoOnPDF {
                 ArrayNode linksArray = objectMapper.createArrayNode();
                 Set<String> uniqueURIs = new HashSet<>();  // To store unique URIs
 
-                for (PdfAnnotation annotation : annotations) {
-                    if (annotation instanceof PdfLinkAnnotation) {
-                        PdfLinkAnnotation linkAnnotation = (PdfLinkAnnotation) annotation;
-                        if(linkAnnotation != null && linkAnnotation.getAction() != null) {
-	                        String uri = linkAnnotation.getAction().toString();
-	                        uniqueURIs.add(uri);  // Add to set to ensure uniqueness
+                for (PDAnnotation annotation : annotations) {
+                    if (annotation instanceof PDAnnotationLink) {
+                        PDAnnotationLink linkAnnotation = (PDAnnotationLink) annotation;
+                        if (linkAnnotation.getAction() instanceof PDActionURI) {
+                            PDActionURI uriAction = (PDActionURI) linkAnnotation.getAction();
+                            String uri = uriAction.getURI();
+                            uniqueURIs.add(uri);  // Add to set to ensure uniqueness
                         }
                     }
                 }
@@ -449,96 +492,52 @@ public class GetInfoOnPDF {
                 }
                 pageInfo.set("Links", linksArray);
                 
-             // Fonts
+                
+                // Fonts
                 ArrayNode fontsArray = objectMapper.createArrayNode();
-                PdfDictionary fontDicts = resources.getResource(PdfName.Font);
-                Set<String> uniqueSubtypes = new HashSet<>(); // To store unique subtypes
-
-                // Map to store unique fonts and their counts
                 Map<String, ObjectNode> uniqueFontsMap = new HashMap<>();
 
-                if (fontDicts != null) {
-                    for (PdfName key : fontDicts.keySet()) {
-                        ObjectNode fontNode = objectMapper.createObjectNode(); // Create a new font node for each font
-                        PdfDictionary font = fontDicts.getAsDictionary(key);
+                for (COSName fontName : resources.getFontNames()) {
+                    PDFont font = resources.getFont(fontName);
+                    ObjectNode fontNode = objectMapper.createObjectNode();
 
-                        boolean isEmbedded = font.containsKey(PdfName.FontFile) ||
-                                font.containsKey(PdfName.FontFile2) ||
-                                font.containsKey(PdfName.FontFile3);
-                        fontNode.put("IsEmbedded", isEmbedded);
+                    fontNode.put("IsEmbedded", font.isEmbedded());
 
-                        if (font.containsKey(PdfName.Encoding)) {
-                            String encoding = font.getAsName(PdfName.Encoding).toString();
-                            fontNode.put("Encoding", encoding);
-                        }
+                    // PDFBox provides Font's BaseFont (i.e., the font name) directly
+                    fontNode.put("Name", font.getName());
 
-                        if (font.getAsString(PdfName.BaseFont) != null) {
-                            fontNode.put("Name", font.getAsString(PdfName.BaseFont).toString());
-                        }
+                    fontNode.put("Subtype", font.getType());
 
-                        String subtype = null;
-                        if (font.containsKey(PdfName.Subtype)) {
-                            subtype = font.getAsName(PdfName.Subtype).toString();
-                            uniqueSubtypes.add(subtype);  // Add to set to ensure uniqueness
-                        }
-                        fontNode.put("Subtype", subtype);
+                    PDFontDescriptor fontDescriptor = font.getFontDescriptor();
 
-                        PdfDictionary fontDescriptor = font.getAsDictionary(PdfName.FontDescriptor);
-                        if (fontDescriptor != null) {
-                            if (fontDescriptor.containsKey(PdfName.ItalicAngle)) {
-                                fontNode.put("ItalicAngle", fontDescriptor.getAsNumber(PdfName.ItalicAngle).floatValue());
-                            }
+                    if (fontDescriptor != null) {
+                        fontNode.put("ItalicAngle", fontDescriptor.getItalicAngle());
+                        int flags = fontDescriptor.getFlags();
+                        fontNode.put("IsItalic", (flags & 1) != 0);
+                        fontNode.put("IsBold", (flags & 64) != 0);
+                        fontNode.put("IsFixedPitch", (flags & 2) != 0);
+                        fontNode.put("IsSerif", (flags & 4) != 0);
+                        fontNode.put("IsSymbolic", (flags & 8) != 0);
+                        fontNode.put("IsScript", (flags & 16) != 0);
+                        fontNode.put("IsNonsymbolic", (flags & 32) != 0);
 
-                            if (fontDescriptor.containsKey(PdfName.Flags)) {
-                                int flags = fontDescriptor.getAsNumber(PdfName.Flags).intValue();
-                                fontNode.put("IsItalic", (flags & 64) != 0);
-                                fontNode.put("IsBold", (flags & 1 << 16) != 0);
-                                fontNode.put("IsFixedPitch", (flags & 1) != 0);
-                                fontNode.put("IsSerif", (flags & 2) != 0);
-                                fontNode.put("IsSymbolic", (flags & 4) != 0);
-                                fontNode.put("IsScript", (flags & 8) != 0);
-                                fontNode.put("IsNonsymbolic", (flags & 16) != 0);
-                            }
+                        fontNode.put("FontFamily", fontDescriptor.getFontFamily());
+                        // Font stretch and BBox are not directly available in PDFBox's API, so these are omitted for simplicity
+                        fontNode.put("FontWeight", fontDescriptor.getFontWeight());
+                    }
 
-                            if (fontDescriptor.containsKey(PdfName.FontFamily)) {
-                                String fontFamily = fontDescriptor.getAsString(PdfName.FontFamily).toString();
-                                fontNode.put("FontFamily", fontFamily);
-                            }
 
-                            if (fontDescriptor.containsKey(PdfName.FontStretch)) {
-                                String fontStretch = fontDescriptor.getAsName(PdfName.FontStretch).toString();
-                                fontNode.put("FontStretch", fontStretch);
-                            }
+                    // Create a unique key for this font node based on its attributes
+                    String uniqueKey = fontNode.toString(); 
 
-                            if (fontDescriptor.containsKey(PdfName.FontBBox)) {
-                                PdfArray bbox = fontDescriptor.getAsArray(PdfName.FontBBox);
-                                fontNode.put("FontBoundingBox", bbox.toString());
-                            }
-
-                            if (fontDescriptor.containsKey(PdfName.FontWeight)) {
-                                float fontWeight = fontDescriptor.getAsNumber(PdfName.FontWeight).floatValue();
-                                fontNode.put("FontWeight", fontWeight);
-                            }
-                        }
-
-                        if (font.containsKey(PdfName.ToUnicode)) {
-                            fontNode.put("HasToUnicodeMap", true);
-                        }
-
-                        if (fontNode.size() > 0) {
-                            // Create a unique key for this font node based on its attributes
-                            String uniqueKey = fontNode.toString(); 
-
-                            // Increment count if this font exists, or initialize it if new
-                            if (uniqueFontsMap.containsKey(uniqueKey)) {
-                                ObjectNode existingFontNode = uniqueFontsMap.get(uniqueKey);
-                                int count = existingFontNode.get("Count").asInt() + 1;
-                                existingFontNode.put("Count", count);
-                            } else {
-                                fontNode.put("Count", 1);
-                                uniqueFontsMap.put(uniqueKey, fontNode);
-                            }
-                        }
+                    // Increment count if this font exists, or initialize it if new
+                    if (uniqueFontsMap.containsKey(uniqueKey)) {
+                        ObjectNode existingFontNode = uniqueFontsMap.get(uniqueKey);
+                        int count = existingFontNode.get("Count").asInt() + 1;
+                        existingFontNode.put("Count", count);
+                    } else {
+                        fontNode.put("Count", 1);
+                        uniqueFontsMap.put(uniqueKey, fontNode);
                     }
                 }
 
@@ -552,41 +551,49 @@ public class GetInfoOnPDF {
                 
                 
                 
-             // Access resources dictionary
-                PdfDictionary resourcesDict = itextDoc.getPage(pageNum).getResources().getPdfObject();
-
-                // Color Spaces & ICC Profiles
+                
+                
+                
+                
+                
+                
+                
+                // Access resources dictionary
                 ArrayNode colorSpacesArray = objectMapper.createArrayNode();
-                PdfDictionary colorSpaces = resourcesDict.getAsDictionary(PdfName.ColorSpace);
-                if (colorSpaces != null) {
-                    for (PdfName name : colorSpaces.keySet()) {
-                        PdfObject colorSpaceObject = colorSpaces.get(name);
-                        if (colorSpaceObject instanceof PdfArray) {
-                            PdfArray colorSpaceArray = (PdfArray) colorSpaceObject;
-                            if (colorSpaceArray.size() > 1 && colorSpaceArray.get(0) instanceof PdfName && PdfName.ICCBased.equals(colorSpaceArray.get(0))) {
-                                ObjectNode iccProfileNode = objectMapper.createObjectNode();
-                                PdfStream iccStream = (PdfStream) colorSpaceArray.get(1);
-                                byte[] iccData = iccStream.getBytes();
-                                // TODO: Further decode and analyze the ICC data if needed
-                                iccProfileNode.put("ICC Profile Length", iccData.length);
-                                colorSpacesArray.add(iccProfileNode);
-                            }
-                        }
+
+                Iterable<COSName> colorSpaceNames = resources.getColorSpaceNames();
+                for (COSName name : colorSpaceNames) {
+                    PDColorSpace colorSpace = resources.getColorSpace(name);
+                    if (colorSpace instanceof PDICCBased) {
+                        PDICCBased iccBased = (PDICCBased) colorSpace;
+                        PDStream iccData = iccBased.getPDStream();
+                        byte[] iccBytes = iccData.toByteArray();
+                        
+                        // TODO: Further decode and analyze the ICC data if needed
+                        ObjectNode iccProfileNode = objectMapper.createObjectNode();
+                        iccProfileNode.put("ICC Profile Length", iccBytes.length);
+                        colorSpacesArray.add(iccProfileNode);
                     }
                 }
                 pageInfo.set("Color Spaces & ICC Profiles", colorSpacesArray);
+                
 
                 // Other XObjects
                 Map<String, Integer> xObjectCountMap = new HashMap<>();  // To store the count for each type
-                PdfDictionary xObjects = resourcesDict.getAsDictionary(PdfName.XObject);
-                if (xObjects != null) {
-                    for (PdfName name : xObjects.keySet()) {
-                        PdfStream xObjectStream = xObjects.getAsStream(name);
-                        String xObjectType = xObjectStream.getAsName(PdfName.Subtype).toString();
-
-                        // Increment the count for this type in the map
-                        xObjectCountMap.put(xObjectType, xObjectCountMap.getOrDefault(xObjectType, 0) + 1);
+                for (COSName name : resources.getXObjectNames()) {
+                    PDXObject xObject = resources.getXObject(name);
+                    String xObjectType;
+                    
+                    if (xObject instanceof PDImageXObject) {
+                        xObjectType = "Image";
+                    } else if (xObject instanceof PDFormXObject) {
+                        xObjectType = "Form";
+                    } else {
+                        xObjectType = "Other";
                     }
+
+                    // Increment the count for this type in the map
+                    xObjectCountMap.put(xObjectType, xObjectCountMap.getOrDefault(xObjectType, 0) + 1);
                 }
 
                 // Add the count map to pageInfo (or wherever you want to store it)
@@ -598,14 +605,17 @@ public class GetInfoOnPDF {
                 
          
 
+
                 ArrayNode multimediaArray = objectMapper.createArrayNode();
-                for (PdfAnnotation annotation : annotations) {
-                    if (PdfName.RichMedia.equals(annotation.getSubtype())) {
+
+                for (PDAnnotation annotation : annotations) {
+                	if ("RichMedia".equals(annotation.getSubtype())) {
                         ObjectNode multimediaNode = objectMapper.createObjectNode();
-                        // Extract details from the dictionary as needed
+                        // Extract details from the annotation as needed
                         multimediaArray.add(multimediaNode);
                     }
                 }
+
                 pageInfo.set("Multimedia", multimediaArray);
 
                 
@@ -636,17 +646,21 @@ public class GetInfoOnPDF {
 		return null;
     }
 
-    private static void addOutlinesToArray(PdfOutline outline, ArrayNode arrayNode) {
+    private static void addOutlinesToArray(PDOutlineItem outline, ArrayNode arrayNode) {
         if (outline == null) return;
+
         ObjectNode outlineNode = objectMapper.createObjectNode();
         outlineNode.put("Title", outline.getTitle());
         // You can add other properties if needed
         arrayNode.add(outlineNode);
-        
-        for (PdfOutline child : outline.getAllChildren()) {
+
+        PDOutlineItem child = outline.getFirstChild();
+        while (child != null) {
             addOutlinesToArray(child, arrayNode);
+            child = child.getNextSibling();
         }
     }
+
     public String getPageOrientation(double width, double height) {        
         if (width > height) {
             return "Landscape";
@@ -678,44 +692,32 @@ public class GetInfoOnPDF {
         return Math.abs(pageAspectRatio - aspectRatio) <= 0.05;
     }
     
-    public boolean checkForStandard(PdfDocument document, String standardKeyword) {
-        // Check Output Intents
-        boolean foundInOutputIntents = checkOutputIntent(document, standardKeyword);
-        if (foundInOutputIntents) return true;
-
-        // Check XMP Metadata (rudimentary)
-        try {
-            byte[] metadataBytes = document.getXmpMetadata();
-            if (metadataBytes != null) {
-                XMPMeta xmpMeta = XMPMetaFactory.parseFromBuffer(metadataBytes);
-                String xmpString = xmpMeta.dumpObject();
-                if (xmpString.contains(standardKeyword)) {
-                    return true;
-                }
-            }
-        } catch (XMPException e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
 
 
-    public boolean checkOutputIntent(PdfDocument document, String standard) {
-        PdfArray outputIntents = document.getCatalog().getPdfObject().getAsArray(PdfName.OutputIntents);
-        if (outputIntents != null && !outputIntents.isEmpty()) {
-            for (int i = 0; i < outputIntents.size(); i++) {
-                PdfDictionary outputIntentDict = outputIntents.getAsDictionary(i);
-                if (outputIntentDict != null) {
-                    PdfString s = outputIntentDict.getAsString(PdfName.S);
-                    if (s != null && s.toString().contains(standard)) {
-                        return true;
-                    }
-                }
+public static boolean checkForStandard(PDDocument document, String standardKeyword) {
+    // Check XMP Metadata
+    try {
+        PDMetadata pdMetadata = document.getDocumentCatalog().getMetadata();
+        if (pdMetadata != null) {
+            COSInputStream metaStream = pdMetadata.createInputStream();
+            DomXmpParser domXmpParser = new DomXmpParser();
+            XMPMetadata xmpMeta = domXmpParser.parse(metaStream);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            new XmpSerializer().serialize(xmpMeta, baos, true);
+            String xmpString = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+            
+            if (xmpString.contains(standardKeyword)) {
+                return true;
             }
         }
-        return false;
+    } catch (Exception e) { // Catching general exception for brevity, ideally you'd catch specific exceptions.
+        e.printStackTrace();
     }
+    
+    return false;
+}
+
     
     public ArrayNode exploreStructureTree(List<Object> nodes) {
         ArrayNode elementsArray = objectMapper.createArrayNode();
@@ -771,7 +773,7 @@ public class GetInfoOnPDF {
         }
     }
 
-    private String getPageModeDescription(PdfName pageMode) {
+    private String getPageModeDescription(String pageMode) {
         return pageMode != null ? pageMode.toString().replaceFirst("/", "") : "Unknown";
     }
 }

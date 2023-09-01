@@ -1,8 +1,14 @@
 package stirling.software.SPDF.controller.api;
 
+import java.awt.geom.AffineTransform;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +30,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.WebResponseUtils;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.multipdf.LayerUtility;
 @RestController
 @Tag(name = "General", description = "General APIs")
 public class ToSinglePageController {
@@ -41,37 +49,34 @@ public class ToSinglePageController {
         @Parameter(description = "The input multi-page PDF file to be converted into a single page", required = true)
             MultipartFile file) throws IOException {
 
-        PdfReader reader = new PdfReader(file.getInputStream());
-        PdfDocument sourceDocument = new PdfDocument(reader);
-        
+    	PDDocument sourceDocument = PDDocument.load(file.getInputStream());
         float totalHeight = 0;
         float width = 0;
 
-        for (int i = 1; i <= sourceDocument.getNumberOfPages(); i++) {
-            Rectangle pageSize = sourceDocument.getPage(i).getPageSize();
+        for (PDPage page : sourceDocument.getPages()) {
+            PDRectangle pageSize = page.getMediaBox();
             totalHeight += pageSize.getHeight();
             if(width < pageSize.getWidth())
-            	width = pageSize.getWidth();
+                width = pageSize.getWidth();
+        }
+
+        PDDocument newDocument = new PDDocument();
+        PDPage newPage = new PDPage(new PDRectangle(width, totalHeight));
+        newDocument.addPage(newPage);
+
+        LayerUtility layerUtility = new LayerUtility(newDocument);
+        float yOffset = totalHeight;
+
+        for (PDPage page : sourceDocument.getPages()) {
+            PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, sourceDocument.getPages().indexOf(page));
+            AffineTransform af = AffineTransform.getTranslateInstance(0, yOffset - page.getMediaBox().getHeight());
+            layerUtility.appendFormAsLayer(newDocument.getPage(0), form, af, page.getResources().getCOSObject().toString());
+            yOffset -= page.getMediaBox().getHeight();
         }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PdfWriter writer = new PdfWriter(baos);
-        PdfDocument newDocument = new PdfDocument(writer);
-        PageSize newPageSize = new PageSize(width, totalHeight);
-        newDocument.addNewPage(newPageSize);
-
-        Document layoutDoc = new Document(newDocument);
-        float yOffset = totalHeight;
-
-        for (int i = 1; i <= sourceDocument.getNumberOfPages(); i++) {
-            PdfFormXObject pageCopy = sourceDocument.getPage(i).copyAsFormXObject(newDocument);
-            Image copiedPage = new Image(pageCopy);
-            copiedPage.setFixedPosition(0, yOffset - sourceDocument.getPage(i).getPageSize().getHeight());
-            yOffset -= sourceDocument.getPage(i).getPageSize().getHeight();
-            layoutDoc.add(copiedPage);
-        }
-
-        layoutDoc.close();
+        newDocument.save(baos);
+        newDocument.close();
         sourceDocument.close();
 
         byte[] result = baos.toByteArray();

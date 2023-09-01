@@ -14,12 +14,13 @@ import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Role;
-
+import stirling.software.SPDF.model.*;
 @Component
 public class InitialSecuritySetup {
 
 	@Autowired
 	private UserService userService;
+
 
 	@Autowired
 	ApplicationProperties applicationProperties;
@@ -27,12 +28,12 @@ public class InitialSecuritySetup {
 	@PostConstruct
 	public void init() {
 		if (!userService.hasUsers()) {
-			String initialUsername = applicationProperties.getSecurity().getInitialLogin().getUsername();
-			String initialPassword = applicationProperties.getSecurity().getInitialLogin().getPassword();
-			if (initialUsername != null && initialPassword != null) {
-				userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
-			}
-
+			String initialUsername = "admin";
+			String initialPassword = "stirling";
+			userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
+			
+			
+	        
 		}
 	}
 

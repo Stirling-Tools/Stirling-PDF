@@ -66,7 +66,6 @@ public class SPdfApplication {
         
         GeneralUtils.createDir("customFiles/static/");
         GeneralUtils.createDir("customFiles/templates/");
-        GeneralUtils.createDir("config");
         
         
         
