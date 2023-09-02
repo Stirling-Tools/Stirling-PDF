@@ -185,24 +185,26 @@ public class GetInfoOnPDF {
             
             
             //embeed files TODO size
-            PDEmbeddedFilesNameTreeNode efTree = catalog.getNames().getEmbeddedFiles();
-
-            ArrayNode embeddedFilesArray = objectMapper.createArrayNode();
-            if (efTree != null) {
-                Map<String, PDComplexFileSpecification> efMap = efTree.getNames();
-                if (efMap != null) {
-                    for (Map.Entry<String, PDComplexFileSpecification> entry : efMap.entrySet()) {
-                        ObjectNode embeddedFileNode = objectMapper.createObjectNode();
-                        embeddedFileNode.put("Name", entry.getKey());
-                        PDEmbeddedFile embeddedFile = entry.getValue().getEmbeddedFile();
-                        if (embeddedFile != null) {
-                            embeddedFileNode.put("FileSize", embeddedFile.getLength()); // size in bytes
-                        }
-                        embeddedFilesArray.add(embeddedFileNode);
-                    }
-                }
+            if(catalog.getNames() != null) {
+	            PDEmbeddedFilesNameTreeNode efTree = catalog.getNames().getEmbeddedFiles();
+	
+	            ArrayNode embeddedFilesArray = objectMapper.createArrayNode();
+	            if (efTree != null) {
+	                Map<String, PDComplexFileSpecification> efMap = efTree.getNames();
+	                if (efMap != null) {
+	                    for (Map.Entry<String, PDComplexFileSpecification> entry : efMap.entrySet()) {
+	                        ObjectNode embeddedFileNode = objectMapper.createObjectNode();
+	                        embeddedFileNode.put("Name", entry.getKey());
+	                        PDEmbeddedFile embeddedFile = entry.getValue().getEmbeddedFile();
+	                        if (embeddedFile != null) {
+	                            embeddedFileNode.put("FileSize", embeddedFile.getLength()); // size in bytes
+	                        }
+	                        embeddedFilesArray.add(embeddedFileNode);
+	                    }
+	                }
+	            }
+	            other.set("EmbeddedFiles", embeddedFilesArray);
             }
-            other.set("EmbeddedFiles", embeddedFilesArray);
 
 
             
@@ -374,7 +376,7 @@ public class GetInfoOnPDF {
             
 
             ObjectNode pageInfoParent = objectMapper.createObjectNode();
-            for (int pageNum = 1; pageNum <= pdfBoxDoc.getNumberOfPages(); pageNum++) {
+            for (int pageNum = 0; pageNum < pdfBoxDoc.getNumberOfPages(); pageNum++) {
                 ObjectNode pageInfo = objectMapper.createObjectNode();
 
              // Retrieve the page
@@ -411,8 +413,8 @@ public class GetInfoOnPDF {
 
                 // Content Extraction
                 PDFTextStripper textStripper = new PDFTextStripper();
-                textStripper.setStartPage(pageNum -1);
-                textStripper.setEndPage(pageNum - 1);
+                textStripper.setStartPage(pageNum + 1);
+                textStripper.setEndPage(pageNum +1);
                 String pageText = textStripper.getText(pdfBoxDoc);
                 
                 pageInfo.put("Text Characters Count", pageText.length()); //

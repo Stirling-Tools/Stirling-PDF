@@ -1,12 +1,15 @@
 package stirling.software.SPDF.controller.api;
 
 import java.awt.geom.AffineTransform;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.slf4j.Logger;
@@ -49,37 +52,50 @@ public class ToSinglePageController {
         @Parameter(description = "The input multi-page PDF file to be converted into a single page", required = true)
             MultipartFile file) throws IOException {
 
+    	// Load the source document
     	PDDocument sourceDocument = PDDocument.load(file.getInputStream());
-        float totalHeight = 0;
-        float width = 0;
 
-        for (PDPage page : sourceDocument.getPages()) {
-            PDRectangle pageSize = page.getMediaBox();
-            totalHeight += pageSize.getHeight();
-            if(width < pageSize.getWidth())
-                width = pageSize.getWidth();
-        }
+    	// Calculate total height and max width
+    	float totalHeight = 0;
+    	float maxWidth = 0;
+    	for (PDPage page : sourceDocument.getPages()) {
+    	    PDRectangle pageSize = page.getMediaBox();
+    	    totalHeight += pageSize.getHeight();
+    	    maxWidth = Math.max(maxWidth, pageSize.getWidth());
+    	}
 
-        PDDocument newDocument = new PDDocument();
-        PDPage newPage = new PDPage(new PDRectangle(width, totalHeight));
-        newDocument.addPage(newPage);
+    	// Create new document and page with calculated dimensions
+    	PDDocument newDocument = new PDDocument();
+    	PDPage newPage = new PDPage(new PDRectangle(maxWidth, totalHeight));
+    	newDocument.addPage(newPage);
 
-        LayerUtility layerUtility = new LayerUtility(newDocument);
-        float yOffset = totalHeight;
+    	// Initialize the content stream of the new page
+    	PDPageContentStream contentStream = new PDPageContentStream(newDocument, newPage);
+    	contentStream.close();
+    	
+    	LayerUtility layerUtility = new LayerUtility(newDocument);
+    	float yOffset = totalHeight;
 
-        for (PDPage page : sourceDocument.getPages()) {
-            PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, sourceDocument.getPages().indexOf(page));
-            AffineTransform af = AffineTransform.getTranslateInstance(0, yOffset - page.getMediaBox().getHeight());
-            layerUtility.appendFormAsLayer(newDocument.getPage(0), form, af, page.getResources().getCOSObject().toString());
-            yOffset -= page.getMediaBox().getHeight();
-        }
+    	// For each page, copy its content to the new page at the correct offset
+    	for (PDPage page : sourceDocument.getPages()) {
+    	    PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, sourceDocument.getPages().indexOf(page));
+    	    AffineTransform af = AffineTransform.getTranslateInstance(0, yOffset - page.getMediaBox().getHeight());
+    	    layerUtility.wrapInSaveRestore(newPage);
+    	    String defaultLayerName = "Layer" + sourceDocument.getPages().indexOf(page);
+    	    layerUtility.appendFormAsLayer(newPage, form, af, defaultLayerName);
+    	    yOffset -= page.getMediaBox().getHeight();
+    	}
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        newDocument.save(baos);
-        newDocument.close();
-        sourceDocument.close();
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	newDocument.save(baos);
+    	newDocument.close();
+    	sourceDocument.close();
 
-        byte[] result = baos.toByteArray();
-        return WebResponseUtils.bytesToWebResponse(result, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_singlePage.pdf");
+    	byte[] result = baos.toByteArray();
+    	return WebResponseUtils.bytesToWebResponse(result, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_singlePage.pdf");
+
+
+
+       
     }
 }

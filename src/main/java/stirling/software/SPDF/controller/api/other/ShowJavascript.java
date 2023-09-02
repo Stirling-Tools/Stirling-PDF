@@ -28,20 +28,22 @@ public class ShowJavascript {
         String script = "";
 
         try (PDDocument document = PDDocument.load(inputFile.getInputStream())) {
-
-            PDNameTreeNode<PDActionJavaScript> jsTree = document.getDocumentCatalog().getNames().getJavaScript();
-
-            if (jsTree != null) {
-                Map<String, PDActionJavaScript> jsEntries = jsTree.getNames();
-
-                for (Map.Entry<String, PDActionJavaScript> entry : jsEntries.entrySet()) {
-                    String name = entry.getKey();
-                    PDActionJavaScript jsAction = entry.getValue();
-                    String jsCodeStr = jsAction.getAction();
-
-                    script += "// File: " + inputFile.getOriginalFilename() + ", Script: " + name + "\n" + jsCodeStr + "\n";
-                }
-            }
+        	
+        	if(document.getDocumentCatalog() != null && document.getDocumentCatalog().getNames() != null) {
+	            PDNameTreeNode<PDActionJavaScript> jsTree = document.getDocumentCatalog().getNames().getJavaScript();
+	
+	            if (jsTree != null) {
+	                Map<String, PDActionJavaScript> jsEntries = jsTree.getNames();
+	
+	                for (Map.Entry<String, PDActionJavaScript> entry : jsEntries.entrySet()) {
+	                    String name = entry.getKey();
+	                    PDActionJavaScript jsAction = entry.getValue();
+	                    String jsCodeStr = jsAction.getAction();
+	
+	                    script += "// File: " + inputFile.getOriginalFilename() + ", Script: " + name + "\n" + jsCodeStr + "\n";
+	                }
+	            }
+        	}
 
             if (script.isEmpty()) {
                 script = "PDF '" + inputFile.getOriginalFilename() + "' does not contain Javascript";

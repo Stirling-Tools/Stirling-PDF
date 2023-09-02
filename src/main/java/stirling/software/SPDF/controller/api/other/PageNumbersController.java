@@ -60,6 +60,11 @@ public class PageNumbersController {
             case "large":
                 marginFactor = 0.05f;
                 break;
+            case "x-large":
+                marginFactor = 0.075f;
+                break;   
+                
+                
             default:
                 marginFactor = 0.035f;
                 break;
@@ -67,7 +72,12 @@ public class PageNumbersController {
 
         float fontSize = 12.0f;
         PDType1Font font = PDType1Font.HELVETICA;
-
+        if(pagesToNumber == null || pagesToNumber.length() == 0) {
+        	pagesToNumber = "all";
+        }
+        if(customText == null || customText.length() == 0) {
+        	customText = "{n}";
+        }
         List<Integer> pagesToNumberList = GeneralUtils.parsePageList(pagesToNumber.split(","), document.getNumberOfPages());
 
         for (int i : pagesToNumberList) {
@@ -120,7 +130,7 @@ public class PageNumbersController {
         document.save(baos);
         document.close();
 
-        return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), URLEncoder.encode(file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_numbersAdded.pdf", "UTF-8"), MediaType.APPLICATION_PDF);
+        return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_numbersAdded.pdf", MediaType.APPLICATION_PDF);
 
     }
 
