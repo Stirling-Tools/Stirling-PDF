@@ -11,7 +11,7 @@ security:
 
 system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
-  googlevisibility: false # 'true' to allow Google visibility, 'false' to disallow
+  googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   rootURIPath: / # Set the application's root URI (e.g. /pdf-app)
   customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
 
@@ -25,4 +25,4 @@ endpoints:
   groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
 
 metrics:
-  enabled: true # 'true' to enable metric API endpoints, 'false' to disable
+  enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
