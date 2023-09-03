@@ -203,7 +203,7 @@ metrics:
 ### Environment only parameters
 - ``SYSTEM_ROOTURIPATH`` ie set to ``pdf-app`` to Set the application's root URI tp ``localhost:8080/pdf-app``
 - ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
-
+- ``DOCKER_ENABLE_SECURITY`` to tell docker to download security jar (required as true for auth login)
 
 ## API
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
