@@ -39,5 +39,4 @@ public class ConfigInitializer implements ApplicationContextInitializer<Configur
 			}
 		}
 	}
-
 }

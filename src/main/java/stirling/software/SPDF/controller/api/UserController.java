@@ -49,28 +49,26 @@ public class UserController {
                                                  HttpServletRequest request, 
                                                  HttpServletResponse response,
                                                  RedirectAttributes redirectAttributes) {
-        if (principal == null) {
-        	redirectAttributes.addFlashAttribute("notAuthenticated", true);
-            return new RedirectView("/change-creds");
-        }
+    	if (principal == null) {
+    	    return new RedirectView("/change-creds?messageType=notAuthenticated");
+    	}
 
-        Optional<User> userOpt = userService.findByUsername(principal.getName());
+    	Optional<User> userOpt = userService.findByUsername(principal.getName());
 
-        if (userOpt == null || userOpt.isEmpty()) {
-        	redirectAttributes.addFlashAttribute("userNotFound", true);
-            return new RedirectView("/change-creds");
-        }
-        User user = userOpt.get();
+    	if (userOpt == null || userOpt.isEmpty()) {
+    	    return new RedirectView("/change-creds?messageType=userNotFound");
+    	}
 
-        if (!userService.isPasswordCorrect(user, currentPassword)) {
-        	redirectAttributes.addFlashAttribute("incorrectPassword", true);
-            return new RedirectView("/change-creds");
-        }
+    	User user = userOpt.get();
 
-        if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
-        	redirectAttributes.addFlashAttribute("usernameExists", true);
-            return new RedirectView("/change-creds");
-        }
+    	if (!userService.isPasswordCorrect(user, currentPassword)) {
+    	    return new RedirectView("/change-creds?messageType=incorrectPassword");
+    	}
+
+    	if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
+    	    return new RedirectView("/change-creds?messageType=usernameExists");
+    	}
+
 
         userService.changePassword(user, newPassword);
         if(!user.getUsername().equals(newUsername)) {
@@ -81,8 +79,7 @@ public class UserController {
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
 
-        redirectAttributes.addFlashAttribute("credsUpdated", true);
-        return new RedirectView("/login");
+        return new RedirectView("/login?messageType=credsUpdated");
     }
 
 
@@ -94,36 +91,33 @@ public class UserController {
                                        HttpServletRequest request, 
                                        HttpServletResponse response,
                                        RedirectAttributes redirectAttributes) {
-        if (principal == null) {
-        	redirectAttributes.addFlashAttribute("notAuthenticated", true);
-            return new RedirectView("/account");
-        }
+    	if (principal == null) {
+    	    return new RedirectView("/account?messageType=notAuthenticated");
+    	}
 
-        Optional<User> userOpt = userService.findByUsername(principal.getName());
+    	Optional<User> userOpt = userService.findByUsername(principal.getName());
 
-        if (userOpt == null || userOpt.isEmpty()) {
-        	redirectAttributes.addFlashAttribute("userNotFound", true);
-            return new RedirectView("/account");
-        }
-        User user = userOpt.get();
+    	if (userOpt == null || userOpt.isEmpty()) {
+    	    return new RedirectView("/account?messageType=userNotFound");
+    	}
 
-        if (!userService.isPasswordCorrect(user, currentPassword)) {
-        	redirectAttributes.addFlashAttribute("incorrectPassword", true);
-            return new RedirectView("/account");
-        }
+    	User user = userOpt.get();
 
-        if (userService.usernameExists(newUsername)) {
-        	redirectAttributes.addFlashAttribute("usernameExists", true);
-            return new RedirectView("/account");
-        }
+    	if (!userService.isPasswordCorrect(user, currentPassword)) {
+    	    return new RedirectView("/account?messageType=incorrectPassword");
+    	}
+
+    	if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
+    	    return new RedirectView("/account?messageType=usernameExists");
+    	}
+
 
         userService.changeUsername(user, newUsername);
 
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
 
-        redirectAttributes.addFlashAttribute("message", "Username updated successfully.");
-        return new RedirectView("/login");
+        return new RedirectView("/login?messageType=credsUpdated");
     }
 
     @PostMapping("/change-password")
@@ -133,31 +127,28 @@ public class UserController {
                                        HttpServletRequest request, 
                                        HttpServletResponse response,
                                        RedirectAttributes redirectAttributes) {
-        if (principal == null) {
-        	redirectAttributes.addFlashAttribute("notAuthenticated", true);
-            return new RedirectView("/account");
-        }
+    	if (principal == null) {
+    	    return new RedirectView("/account?messageType=notAuthenticated");
+    	}
 
-        Optional<User> userOpt = userService.findByUsername(principal.getName());
+    	Optional<User> userOpt = userService.findByUsername(principal.getName());
 
-        if (userOpt == null || userOpt.isEmpty()) {
-        	redirectAttributes.addFlashAttribute("userNotFound", true);
-            return new RedirectView("/account");
-        }
-        User user = userOpt.get();
+    	if (userOpt == null || userOpt.isEmpty()) {
+    	    return new RedirectView("/account?messageType=userNotFound");
+    	}
 
-        if (!userService.isPasswordCorrect(user, currentPassword)) {
-        	redirectAttributes.addFlashAttribute("incorrectPassword", true);
-            return new RedirectView("/account");
-        }
+    	User user = userOpt.get();
+
+    	if (!userService.isPasswordCorrect(user, currentPassword)) {
+    	    return new RedirectView("/account?messageType=incorrectPassword");
+    	}
 
         userService.changePassword(user, newPassword);
 
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
 
-        redirectAttributes.addFlashAttribute("message", "Password updated successfully.");
-        return new RedirectView("/login");
+        return new RedirectView("/login?messageType=credsUpdated");
     }
 
     

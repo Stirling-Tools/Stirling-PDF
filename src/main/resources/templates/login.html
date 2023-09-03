@@ -179,17 +179,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlParams = currentURL.searchParams;
     const currentLangParam = urlParams.get('lang') || defaultLocale;
 
-    console.log("defaultLocale", defaultLocale);
-    console.log("storedLocale", storedLocale);
-    console.log("currentLangParam", currentLangParam);
 
     if (defaultLocale !== storedLocale && currentLangParam !== storedLocale) {
-    	console.log("currentLangParam", currentLangParam)
-		console.log("storedLocale", storedLocale)
         urlParams.set('lang', storedLocale);
         currentURL.search = urlParams.toString();
-
-        console.log("redirecting to", currentURL.toString());
         window.location.href = currentURL.toString();
         return;
     }
@@ -263,8 +256,9 @@ function handleDropdownItemClick(event) {
 		<div th:if="${logoutMessage}" class="alert alert-success"
 			th:text="${logoutMessage}"></div>
 
-
-
+		<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'credsUpdated'}" class="alert alert-success">
+		    <span th:text="#{changedCredsMessage}">Default message if not found</span>
+		</div>
 		<form th:action="@{login}" method="post">
 			<img class="mb-4" src="favicon.svg" alt="" width="144" height="144">
 			<h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
