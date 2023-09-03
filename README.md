@@ -180,7 +180,7 @@ security:
 
 system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
-  googlevisibility: false # 'true' to allow Google visibility, 'false' to disallow
+  googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
 
 #ui:
@@ -193,7 +193,7 @@ endpoints:
   groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
 
 metrics:
-  enabled: true # 'true' to enable metric API endpoints, 'false' to disable
+  enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
 ```
 ### Extra notes
 - Endpoints. Currently, the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma separate lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image-to-pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Frooodle/Stirling-PDF/blob/main/groups.md) 
