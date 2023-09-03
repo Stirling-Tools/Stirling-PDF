@@ -50,26 +50,26 @@ public class UserController {
                                                  HttpServletResponse response,
                                                  RedirectAttributes redirectAttributes) {
         if (principal == null) {
-            redirectAttributes.addFlashAttribute("error", "User not authenticated.");
-            return new RedirectView("/error");
+        	redirectAttributes.addFlashAttribute("notAuthenticated", true);
+            return new RedirectView("/change-creds");
         }
 
         Optional<User> userOpt = userService.findByUsername(principal.getName());
 
         if (userOpt == null || userOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "User not found.");
-            return new RedirectView("/error");
+        	redirectAttributes.addFlashAttribute("userNotFound", true);
+            return new RedirectView("/change-creds");
         }
         User user = userOpt.get();
 
         if (!userService.isPasswordCorrect(user, currentPassword)) {
-            redirectAttributes.addFlashAttribute("error", "Current password is incorrect.");
-            return new RedirectView("/error");
+        	redirectAttributes.addFlashAttribute("incorrectPassword", true);
+            return new RedirectView("/change-creds");
         }
 
         if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
-            redirectAttributes.addFlashAttribute("error", "New username already exists.");
-            return new RedirectView("/error");
+        	redirectAttributes.addFlashAttribute("usernameExists", true);
+            return new RedirectView("/change-creds");
         }
 
         userService.changePassword(user, newPassword);
@@ -95,25 +95,25 @@ public class UserController {
                                        HttpServletResponse response,
                                        RedirectAttributes redirectAttributes) {
         if (principal == null) {
-            redirectAttributes.addFlashAttribute("error", "User not authenticated.");
+        	redirectAttributes.addFlashAttribute("notAuthenticated", true);
             return new RedirectView("/account");
         }
 
         Optional<User> userOpt = userService.findByUsername(principal.getName());
 
         if (userOpt == null || userOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "User not found.");
+        	redirectAttributes.addFlashAttribute("userNotFound", true);
             return new RedirectView("/account");
         }
         User user = userOpt.get();
 
         if (!userService.isPasswordCorrect(user, currentPassword)) {
-            redirectAttributes.addFlashAttribute("error", "Current password is incorrect.");
+        	redirectAttributes.addFlashAttribute("incorrectPassword", true);
             return new RedirectView("/account");
         }
 
         if (userService.usernameExists(newUsername)) {
-            redirectAttributes.addFlashAttribute("error", "New username already exists.");
+        	redirectAttributes.addFlashAttribute("usernameExists", true);
             return new RedirectView("/account");
         }
 
@@ -134,20 +134,20 @@ public class UserController {
                                        HttpServletResponse response,
                                        RedirectAttributes redirectAttributes) {
         if (principal == null) {
-            redirectAttributes.addFlashAttribute("error", "User not authenticated.");
+        	redirectAttributes.addFlashAttribute("notAuthenticated", true);
             return new RedirectView("/account");
         }
 
         Optional<User> userOpt = userService.findByUsername(principal.getName());
 
         if (userOpt == null || userOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "User not found.");
+        	redirectAttributes.addFlashAttribute("userNotFound", true);
             return new RedirectView("/account");
         }
         User user = userOpt.get();
 
         if (!userService.isPasswordCorrect(user, currentPassword)) {
-            redirectAttributes.addFlashAttribute("error", "Current password is incorrect.");
+        	redirectAttributes.addFlashAttribute("incorrectPassword", true);
             return new RedirectView("/account");
         }
 

@@ -16,6 +16,18 @@
                         <!-- User Settings Title -->
                         <h2 class="text-center" th:text="#{changeCreds.header}">User Settings</h2>
                         <hr>
+                        <div th:if="${notAuthenticated}" class="alert alert-danger" role="alert">
+						    User not authenticated.
+						</div>
+								<div th:if="${userNotFound}" class="alert alert-danger" role="alert">
+						    User not found.
+						</div>
+								<div th:if="${incorrectPassword}" class="alert alert-danger" role="alert">
+						    Current password is incorrect.
+						</div>
+						<div th:if="${usernameExists}" class="alert alert-danger" role="alert">
+						    New username already exists.
+						</div>
 						<div th:if="${changeCredsFlag}" class="alert alert-success" th:text="#{changeCredsMessage}"></div>
 						
 						<!-- At the top of the user settings -->
