@@ -1,0 +1,60 @@
+<!doctype html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{changeCreds.title})}"></th:block>
+
+<body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-9">
+
+                        <!-- User Settings Title -->
+                        <h2 class="text-center" th:text="#{changeCreds.header}">User Settings</h2>
+                        <hr>
+						<div th:if="${changeCredsFlag}" class="alert alert-success" th:text="#{changeCredsMessage}"></div>
+						
+						<!-- At the top of the user settings -->
+						<h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>
+
+						
+                        <!-- Change Username Form -->
+                        <h4></h4>
+                        <h4 th:text="#{changeCreds.changeUserAndPassword}">Change Username and password</h4>
+                        <form action="/change-username-and-password" method="post">
+                            <div class="mb-3">
+                                <label for="newUsername" th:text="#{changeCreds.newUsername}">New Username</label>
+                                <input type="text" class="form-control" name="newUsername" id="newUsername" placeholder="New Username">
+                            </div>
+                            <div class="mb-3">
+                                <label for="currentPassword" th:text="#{changeCreds.oldPassword}">Old Password</label>
+                                <input type="password" class="form-control" name="currentPassword" id="currentPasswordPassword"  th:placeholder="#{changeCreds.oldPassword}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="newPassword" th:text="#{changeCreds.newPassword}">New Password</label>
+                                <input type="password" class="form-control" name="newPassword" id="newPassword" th:placeholder="#{changeCreds.newPassword}">
+                            </div>
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-primary" th:text="#{changeCreds.submit}">Change credentials!</button>
+                            </div>
+                        </form>
+						
+			
+</div>
+
+
+
+
+
+                </div>
+            </div>
+
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
+</body>
+</html>

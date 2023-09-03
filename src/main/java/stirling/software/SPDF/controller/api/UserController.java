@@ -16,6 +16,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,25 +41,80 @@ public class UserController {
         return "redirect:/login?registered=true";
     }
     
-    @PostMapping("/change-username")
-    public ResponseEntity<String> changeUsername(Principal principal, @RequestParam String currentPassword, @RequestParam String newUsername, HttpServletRequest request, HttpServletResponse response) {
+    @PostMapping("/change-username-and-password")
+    public RedirectView changeUsernameAndPassword(Principal principal,
+                                                 @RequestParam String currentPassword, 
+                                                 @RequestParam String newUsername, 
+                                                 @RequestParam String newPassword, 
+                                                 HttpServletRequest request, 
+                                                 HttpServletResponse response,
+                                                 RedirectAttributes redirectAttributes) {
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated.");
+            redirectAttributes.addFlashAttribute("error", "User not authenticated.");
+            return new RedirectView("/error");
         }
-        
+
         Optional<User> userOpt = userService.findByUsername(principal.getName());
-        
-        if(userOpt == null || userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+
+        if (userOpt == null || userOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "User not found.");
+            return new RedirectView("/error");
         }
         User user = userOpt.get();
-        
-        if(!userService.isPasswordCorrect(user, currentPassword)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Current password is incorrect.");
+
+        if (!userService.isPasswordCorrect(user, currentPassword)) {
+            redirectAttributes.addFlashAttribute("error", "Current password is incorrect.");
+            return new RedirectView("/error");
         }
-        
-        if(userService.usernameExists(newUsername)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("New username already exists.");
+
+        if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
+            redirectAttributes.addFlashAttribute("error", "New username already exists.");
+            return new RedirectView("/error");
+        }
+
+        userService.changePassword(user, newPassword);
+        if(!user.getUsername().equals(newUsername)) {
+            userService.changeUsername(user, newUsername);
+        }
+        userService.changeFirstUse(user, false);
+
+        // Logout using Spring's utility
+        new SecurityContextLogoutHandler().logout(request, response, null);
+
+        redirectAttributes.addFlashAttribute("credsUpdated", true);
+        return new RedirectView("/login");
+    }
+
+
+    
+    @PostMapping("/change-username")
+    public RedirectView changeUsername(Principal principal,
+                                       @RequestParam String currentPassword, 
+                                       @RequestParam String newUsername, 
+                                       HttpServletRequest request, 
+                                       HttpServletResponse response,
+                                       RedirectAttributes redirectAttributes) {
+        if (principal == null) {
+            redirectAttributes.addFlashAttribute("error", "User not authenticated.");
+            return new RedirectView("/account");
+        }
+
+        Optional<User> userOpt = userService.findByUsername(principal.getName());
+
+        if (userOpt == null || userOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "User not found.");
+            return new RedirectView("/account");
+        }
+        User user = userOpt.get();
+
+        if (!userService.isPasswordCorrect(user, currentPassword)) {
+            redirectAttributes.addFlashAttribute("error", "Current password is incorrect.");
+            return new RedirectView("/account");
+        }
+
+        if (userService.usernameExists(newUsername)) {
+            redirectAttributes.addFlashAttribute("error", "New username already exists.");
+            return new RedirectView("/account");
         }
 
         userService.changeUsername(user, newUsername);
@@ -65,33 +122,44 @@ public class UserController {
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
 
-        
-        return ResponseEntity.ok("Username updated successfully.");
+        redirectAttributes.addFlashAttribute("message", "Username updated successfully.");
+        return new RedirectView("/login");
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<String> changePassword(Principal principal, @RequestParam String currentPassword, @RequestParam String newPassword, HttpServletRequest request, HttpServletResponse response) {
+    public RedirectView changePassword(Principal principal, 
+                                       @RequestParam String currentPassword, 
+                                       @RequestParam String newPassword, 
+                                       HttpServletRequest request, 
+                                       HttpServletResponse response,
+                                       RedirectAttributes redirectAttributes) {
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated.");
+            redirectAttributes.addFlashAttribute("error", "User not authenticated.");
+            return new RedirectView("/account");
         }
 
         Optional<User> userOpt = userService.findByUsername(principal.getName());
-        
-        if(userOpt == null || userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+
+        if (userOpt == null || userOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "User not found.");
+            return new RedirectView("/account");
         }
         User user = userOpt.get();
-        if(!userService.isPasswordCorrect(user, currentPassword)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Current password is incorrect.");
+
+        if (!userService.isPasswordCorrect(user, currentPassword)) {
+            redirectAttributes.addFlashAttribute("error", "Current password is incorrect.");
+            return new RedirectView("/account");
         }
 
         userService.changePassword(user, newPassword);
 
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
-        
-        return ResponseEntity.ok("Password updated successfully.");
+
+        redirectAttributes.addFlashAttribute("message", "Password updated successfully.");
+        return new RedirectView("/login");
     }
+
     
     @PostMapping("/updateUserSettings")
 	public String updateUserSettings(HttpServletRequest request, Principal principal) {

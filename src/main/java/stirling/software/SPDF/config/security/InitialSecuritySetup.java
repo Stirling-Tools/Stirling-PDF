@@ -28,7 +28,7 @@ public class InitialSecuritySetup {
 		if (!userService.hasUsers()) {
 			String initialUsername = "admin";
 			String initialPassword = "stirling";
-			userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
+			userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId(), true);
 			
 			
 	        

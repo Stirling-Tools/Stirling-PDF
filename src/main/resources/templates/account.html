@@ -16,11 +16,14 @@
                         <!-- User Settings Title -->
                         <h2 class="text-center" th:text="#{account.accountSettings}">User Settings</h2>
                         <hr>
-
+						<div th:if="${changeCredsFlag}" class="alert alert-success" th:text="#{changeCredsMessage}"></div>
+						
 						<!-- At the top of the user settings -->
 						<h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>
 
-						
+						<div th:if="${error}" class="alert alert-danger" role="alert">
+						    <span th:text="${error}">Error Message</span>
+						</div>
                         <!-- Change Username Form -->
                         <h4></h4>
                         <form action="/change-username" method="post">

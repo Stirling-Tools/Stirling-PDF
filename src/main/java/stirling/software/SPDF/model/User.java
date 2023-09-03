@@ -40,6 +40,9 @@ public class User {
     @Column(name = "enabled")
     private boolean enabled;
 
+    @Column(name = "isFirstLogin")
+    private Boolean isFirstLogin = false;
+    
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> authorities = new HashSet<>();
 
@@ -50,7 +53,14 @@ public class User {
     private Map<String, String> settings = new HashMap<>();  // Key-value pairs of settings.
 
     
-    
+	public boolean isFirstLogin() {
+		return isFirstLogin != null && isFirstLogin;
+	}
+
+	public void setFirstLogin(boolean isFirstLogin) {
+		this.isFirstLogin = isFirstLogin;
+	}
+
 	public Long getId() {
 		return id;
 	}

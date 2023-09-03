@@ -91,6 +91,7 @@ public class AccountWebController {
 	            model.addAttribute("username", username);
 	            model.addAttribute("role", user.get().getRolesAsString());
 	            model.addAttribute("settings", settingsJson);
+	            model.addAttribute("changeCredsFlag", user.get().isFirstLogin());
 	        }
 		} else {
 	        	return "redirect:/";
@@ -99,6 +100,36 @@ public class AccountWebController {
 	}
 	 
 	
+	
+	@GetMapping("/change-creds")
+	public String changeCreds(HttpServletRequest request, Model model, Authentication authentication) {
+		if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/";
+        }
+		if (authentication != null && authentication.isAuthenticated()) {
+	        Object principal = authentication.getPrincipal();
+
+	        if (principal instanceof UserDetails) {
+	            // Cast the principal object to UserDetails
+	            UserDetails userDetails = (UserDetails) principal;
+
+	            // Retrieve username and other attributes
+	            String username = userDetails.getUsername();
+
+	            // Fetch user details from the database
+	            Optional<User> user = userRepository.findByUsername(username);  // Assuming findByUsername method exists
+	            if (!user.isPresent()) {
+	                // Handle error appropriately
+	                return "redirect:/error";  // Example redirection in case of error
+	            }
+	            // Add attributes to the model
+	            model.addAttribute("username", username);
+	        }
+		} else {
+	        	return "redirect:/";
+	        }
+	    return "change-creds";
+	}
 	
 	
 }
