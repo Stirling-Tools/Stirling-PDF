@@ -71,7 +71,7 @@ public class UserController {
 
 
         userService.changePassword(user, newPassword);
-        if(!user.getUsername().equals(newUsername)) {
+        if(newUsername != null && newUsername.length() > 0 && !user.getUsername().equals(newUsername)) {
             userService.changeUsername(user, newUsername);
         }
         userService.changeFirstUse(user, false);
@@ -111,8 +111,9 @@ public class UserController {
     	    return new RedirectView("/account?messageType=usernameExists");
     	}
 
-
-        userService.changeUsername(user, newUsername);
+    	if(newUsername != null && newUsername.length() > 0) {
+            userService.changeUsername(user, newUsername);
+        }
 
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
@@ -173,9 +174,14 @@ public class UserController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/saveUser")
-    public String saveUser(@RequestParam String username, @RequestParam String password, @RequestParam String role) {
-        userService.saveUser(username, password, role);
-        return "redirect:/addUsers";  // Redirect to account page after adding the user
+    public RedirectView saveUser(@RequestParam String username, @RequestParam String password, @RequestParam String role, 
+    		@RequestParam(name = "forceChange", required = false, defaultValue = "false") boolean forceChange) {
+    	
+    	if(userService.usernameExists(username)) {
+    		return new RedirectView("/addUsers?messageType=usernameExists");
+    	}
+        userService.saveUser(username, password, role, forceChange);
+        return new RedirectView("/addUsers");  // Redirect to account page after adding the user
     }
 
     

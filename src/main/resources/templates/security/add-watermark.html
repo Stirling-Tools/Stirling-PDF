@@ -28,7 +28,16 @@
                                     <option value="image">Image</option>
                                 </select>
                             </div>
-                            
+                            <div id="alphabetGroup" class="mb-3">
+	                            <label for="fontSize" th:text="#{alphabet} + ':'"></label> 
+	                            <select class="form-control" name="alphabet" id="alphabet-select">
+	                                <option value="roman">Roman</option>
+	                                <option value="arabic">العربية</option>
+	                                <option value="japanese">日本語</option>
+	                                <option value="korean">한국어</option>
+	                                <option value="chinese">简体中文</option>
+	                            </select>
+                            </div>
                             <div id="watermarkTextGroup" class="mb-3">
                                 <label for="watermarkText" th:text="#{watermark.selectText.2}"></label> 
                                 <input type="text" id="watermarkText" name="watermarkText" class="form-control" placeholder="Stirling-PDF" required />
@@ -101,25 +110,28 @@
                         </form>
                         
                         <script>
-						    function toggleFileOption() {
-						        const watermarkType = document.getElementById('watermarkType').value;
-						        const watermarkTextGroup = document.getElementById('watermarkTextGroup');
-						        const watermarkImageGroup = document.getElementById('watermarkImageGroup');
-						        const watermarkText = document.getElementById('watermarkText');
-						        const watermarkImage = document.getElementById('watermarkImage');
-						
-						        if (watermarkType === 'text') {
-						            watermarkTextGroup.style.display = 'block';
-						            watermarkText.required = true;
-						            watermarkImageGroup.style.display = 'none';
-						            watermarkImage.required = false;
-						        } else if (watermarkType === 'image') {
-						            watermarkTextGroup.style.display = 'none';
-						            watermarkText.required = false;
-						            watermarkImageGroup.style.display = 'block';
-						            watermarkImage.required = true;
-						        }
-						    }
+                        function toggleFileOption() {
+                            const watermarkType = document.getElementById('watermarkType').value;
+                            const watermarkTextGroup = document.getElementById('watermarkTextGroup');
+                            const watermarkImageGroup = document.getElementById('watermarkImageGroup');
+                            const alphabetGroup = document.getElementById('alphabetGroup'); // This is the new addition
+                            const watermarkText = document.getElementById('watermarkText');
+                            const watermarkImage = document.getElementById('watermarkImage');
+
+                            if (watermarkType === 'text') {
+                                watermarkTextGroup.style.display = 'block';
+                                watermarkText.required = true;
+                                watermarkImageGroup.style.display = 'none';
+                                watermarkImage.required = false;
+                                alphabetGroup.style.display = 'block';
+                            } else if (watermarkType === 'image') {
+                                watermarkTextGroup.style.display = 'none';
+                                watermarkText.required = false;
+                                watermarkImageGroup.style.display = 'block';
+                                watermarkImage.required = true;
+                                alphabetGroup.style.display = 'none';
+                            }
+                        }
 						</script>
 
                     </div>

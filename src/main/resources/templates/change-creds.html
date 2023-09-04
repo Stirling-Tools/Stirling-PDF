@@ -40,7 +40,7 @@
                         <form action="/change-username-and-password" method="post">
                             <div class="mb-3">
                                 <label for="newUsername" th:text="#{changeCreds.newUsername}">New Username</label>
-                                <input type="text" class="form-control" name="newUsername" id="newUsername" placeholder="New Username">
+                                <input type="text" class="form-control" name="newUsername" id="newUsername" th:placeholder="${username}">
                             </div>
                             <div class="mb-3">
                                 <label for="currentPassword" th:text="#{changeCreds.oldPassword}">Old Password</label>
