@@ -114,16 +114,16 @@ public class RearrangePagesPDFController {
 		return newPageOrder;
 	}
 
-    private List<Integer> sideStitchBooklet(int totalPages) {
-        List<Integer> newPageOrder = new ArrayList<>();
-        for (int i = 0; i < (totalPages + 3) / 4; i++) {
-            int begin = i * 4;
-            newPageOrder.add(Math.min(begin + 3, totalPages - 1));
-            newPageOrder.add(Math.min(begin, totalPages - 1));
-            newPageOrder.add(Math.min(begin + 1, totalPages - 1));
-            newPageOrder.add(Math.min(begin + 2, totalPages - 1));
-        }
-        return newPageOrder;
+	private List<Integer> sideStitchBooklet(int totalPages) {
+		List<Integer> newPageOrder = new ArrayList<>();
+		for (int i = 0; i < (totalPages + 3) / 4; i++) {
+			int begin = i * 4;
+			newPageOrder.add(Math.min(begin + 3, totalPages - 1));
+			newPageOrder.add(Math.min(begin, totalPages - 1));
+			newPageOrder.add(Math.min(begin + 1, totalPages - 1));
+			newPageOrder.add(Math.min(begin + 2, totalPages - 1));
+		}
+		return newPageOrder;
     }
 
 	private List<Integer> oddEvenSplit(int totalPages) {
@@ -147,8 +147,8 @@ public class RearrangePagesPDFController {
 				return duplexSort(totalPages);
 			case BOOKLET_SORT:
 				return bookletSort(totalPages);
-            case SIDE_STITCH_BOOKLET_SORT:
-                return sideStitchBooklet(totalPages);
+			case SIDE_STITCH_BOOKLET_SORT:
+				return sideStitchBooklet(totalPages);
 			case ODD_EVEN_SPLIT:
 				return oddEvenSplit(totalPages);
 			case REMOVE_FIRST:
