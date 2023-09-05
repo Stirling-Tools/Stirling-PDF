@@ -1,3 +1,4 @@
+
 const DraggableUtils = {
 
     boxDragContainer: document.getElementById('box-drag-container'),
@@ -5,83 +6,50 @@ const DraggableUtils = {
     nextId: 0,
     pdfDoc: null,
     pageIndex: 0,
-    documentsMap: new Map(),
+    documentsMap: new Map(), // {pdfDoc: {0: [addedElement, ...], 0-offsetWidth: 1920, 0-offsetHeight: 1080, ... }, ...}
 
     init() {
-        interact('.draggable-canvas')
-        .draggable({
-            listeners: {
-                move: (event) => {
-                    const target = event.target;
-                    const x = (parseFloat(target.getAttribute('data-bs-x')) || 0) + event.dx;
-                    const y = (parseFloat(target.getAttribute('data-bs-y')) || 0) + event.dy;
-
-                    target.style.transform = `translate(${x}px, ${y}px)`;
-                    target.setAttribute('data-bs-x', x);
-                    target.setAttribute('data-bs-y', y);
-
-                    this.onInteraction(target);
-                },
-            },
-        })
-        .resizable({
-    edges: { left: true, right: true, bottom: true, top: true },
-    listeners: {
-        move: (event) => {
-            var target = event.target
-            var x = (parseFloat(target.getAttribute('data-bs-x')) || 0)
-            var y = (parseFloat(target.getAttribute('data-bs-y')) || 0)
-
-            // check if control key is pressed
-            if (event.ctrlKey) {
-                const aspectRatio = target.offsetWidth / target.offsetHeight;
-                // preserve aspect ratio
-                let width = event.rect.width;
-                let height = event.rect.height;
-
-                if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
-                    height = width / aspectRatio;
-                } else {
-                    width = height * aspectRatio;
-                }
-
-                event.rect.width = width;
-                event.rect.height = height;
-            }
-
-            target.style.width = event.rect.width + 'px'
-            target.style.height = event.rect.height + 'px'
-
-            // translate when resizing from top or left edges
-            x += event.deltaRect.left
-            y += event.deltaRect.top
-
-            target.style.transform = 'translate(' + x + 'px,' + y + 'px)'
-
-            target.setAttribute('data-bs-x', x)
-            target.setAttribute('data-bs-y', y)
-            target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
-
-            this.onInteraction(target);
-        },
-    },
-
-            modifiers: [
-                interact.modifiers.restrictSize({
-                    min: { width: 5, height: 5 },
-                }),
-            ],
-            inertia: true,
-        });
+        interact('.draggable-canvas.resizeable')
+            .draggable(this.draggableConfig)
+            .resizable(this.resizableConfig);
+        interact('.draggable-canvas:not(.resizeable)')
+            .draggable(this.draggableConfig);
     },
     onInteraction(target) {
+        if (!target.classList.contains("draggable-canvas")) {
+            return;
+        }
         this.boxDragContainer.appendChild(target);
     },
 
+    addDraggableElement(element, resizable) {
+        const createdWrapper = document.createElement('div');
+        createdWrapper.id = `draggable-canvas-${this.nextId++}`;
+        createdWrapper.appendChild(element);
+        createdWrapper.classList.add("draggable-canvas");
+        if (resizable) {
+            createdWrapper.classList.add("resizeable");
+        }
+
+        const x = 0;
+        const y = 50;
+        createdWrapper.style.transform = `translate(${x}px, ${y}px)`;
+        createdWrapper.style.lineHeight = "0";
+        createdWrapper.setAttribute('data-bs-x', x);
+        createdWrapper.setAttribute('data-bs-y', y);
+
+        createdWrapper.onclick = e => {
+            e.stopPropagation();
+            this.onInteraction(e.target);
+        }
+
+        this.boxDragContainer.appendChild(createdWrapper);
+        return createdWrapper;
+    },
     createDraggableCanvas() {
         const createdCanvas = document.createElement('canvas');
         createdCanvas.id = `draggable-canvas-${this.nextId++}`;
-        createdCanvas.classList.add("draggable-canvas");
+        createdCanvas.classList.add("draggable-canvas", "resizeable");
 
         const x = 0;
         const y = 20;
@@ -234,47 +202,133 @@ const DraggableUtils = {
             const offsetHeight = pagesMap[pageIdx+"-offsetHeight"];
 
             for (const draggableData of draggablesData) {
-                // embed the draggable canvas
                 const draggableElement = draggableData.element;
-                const response = await fetch(draggableElement.toDataURL());
-                const draggableImgBytes = await response.arrayBuffer();
-                const pdfImageObject = await pdfDocModified.embedPng(draggableImgBytes);
-    
-                // calculate the position in the pdf document
-                const tansform = draggableElement.style.transform.replace(/[^.,-\d]/g, '');
-                const transformComponents = tansform.split(",");
-                const draggablePositionPixels = {
-                    x: parseFloat(transformComponents[0]),
-                    y: parseFloat(transformComponents[1]),
-                    width: draggableData.offsetWidth,
-                    height: draggableData.offsetHeight,
-                };
-                const draggablePositionRelative = {
-                    x: draggablePositionPixels.x / offsetWidth,
-                    y: draggablePositionPixels.y / offsetHeight,
-                    width: draggablePositionPixels.width / offsetWidth,
-                    height: draggablePositionPixels.height / offsetHeight,
+                if (draggableElement.nodeName == "CANVAS") {
+                    // embed the draggable canvas
+                    const response = await fetch(draggableElement.toDataURL());
+                    const draggableImgBytes = await response.arrayBuffer();
+                    const pdfImageObject = await pdfDocModified.embedPng(draggableImgBytes);
+
+                    const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight);
+
+                    // draw the image
+                    page.drawImage(pdfImageObject, translatedPositions);
+                } else if (draggableElement.firstChild.nodeName == "INPUT" && draggableElement.firstChild.getAttribute("type") == "textarea") {
+                    const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight);
+                    const fieldKey = draggableElement.firstChild.getAttribute("name");
+                    const form = pdfDocModified.getForm();
+                    const field = form.createTextField(fieldKey);
+                    field.addToPage(page, translatedPositions);
+                } else if (draggableElement.firstChild.nodeName == "INPUT" && draggableElement.firstChild.getAttribute("type") == "checkbox") {
+                    const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight);
+                    const fieldKey = draggableElement.firstChild.getAttribute("name");
+                    const form = pdfDocModified.getForm();
+                    const field = form.createCheckBox(fieldKey);
+                    field.addToPage(page, translatedPositions);
                 }
-                const draggablePositionPdf = {
-                    x: draggablePositionRelative.x * page.getWidth(),
-                    y: draggablePositionRelative.y * page.getHeight(),
-                    width: draggablePositionRelative.width * page.getWidth(),
-                    height: draggablePositionRelative.height * page.getHeight(),
-                }
-    
-                // draw the image
-                page.drawImage(pdfImageObject, {
-                    x: draggablePositionPdf.x,
-                    y: page.getHeight() - draggablePositionPdf.y - draggablePositionPdf.height,
-                    width: draggablePositionPdf.width,
-                    height: draggablePositionPdf.height,
-                });
             }
         }
 
         this.loadPageContents();
         return pdfDocModified;
     },
+}
+
+DraggableUtils.draggableConfig = {
+    listeners: {
+        move: (event) => {
+            const target = event.target;
+            const x = (parseFloat(target.getAttribute('data-bs-x')) || 0) + event.dx;
+            const y = (parseFloat(target.getAttribute('data-bs-y')) || 0) + event.dy;
+
+            target.style.transform = `translate(${x}px, ${y}px)`;
+            target.setAttribute('data-bs-x', x);
+            target.setAttribute('data-bs-y', y);
+
+            DraggableUtils.onInteraction(target);
+        },
+    },
+},
+DraggableUtils.resizableConfig = {
+        edges: { left: true, right: true, bottom: true, top: true },
+        listeners: {
+            move: (event) => {
+                var target = event.target
+                var x = (parseFloat(target.getAttribute('data-bs-x')) || 0)
+                var y = (parseFloat(target.getAttribute('data-bs-y')) || 0)
+
+                // check if control key is pressed
+                if (event.ctrlKey) {
+                    const aspectRatio = target.offsetWidth / target.offsetHeight;
+                    // preserve aspect ratio
+                    let width = event.rect.width;
+                    let height = event.rect.height;
+
+                    if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
+                        height = width / aspectRatio;
+                    } else {
+                        width = height * aspectRatio;
+                    }
+
+                    event.rect.width = width;
+                    event.rect.height = height;
+                }
+
+                target.style.width = event.rect.width + 'px'
+                target.style.height = event.rect.height + 'px'
+
+                // translate when resizing from top or left edges
+                x += event.deltaRect.left
+                y += event.deltaRect.top
+
+                target.style.transform = 'translate(' + x + 'px,' + y + 'px)'
+
+                target.setAttribute('data-bs-x', x)
+                target.setAttribute('data-bs-y', y)
+                //target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
+
+                DraggableUtils.onInteraction(target);
+            },
+        },
+
+        modifiers: [
+            interact.modifiers.restrictSize({
+                min: { width: 5, height: 5 },
+            }),
+        ],
+        inertia: true,
+    },
+DraggableUtils.rescaleForPage = (page, draggableData, pageOffsetWidth, pageOffsetHeight) => {
+    const draggableElement = draggableData.element;
+
+    // calculate the position in the pdf document
+    const tansform = draggableElement.style.transform.replace(/[^.,-\d]/g, '');
+    const transformComponents = tansform.split(",");
+    const draggablePositionPixels = {
+        x: parseFloat(transformComponents[0]),
+        y: parseFloat(transformComponents[1]),
+        width: draggableData.offsetWidth,
+        height: draggableData.offsetHeight,
+    };
+    const draggablePositionRelative = {
+        x: draggablePositionPixels.x / pageOffsetWidth,
+        y: draggablePositionPixels.y / pageOffsetHeight,
+        width: draggablePositionPixels.width / pageOffsetWidth,
+        height: draggablePositionPixels.height / pageOffsetHeight,
+    };
+    const draggablePositionPdf = {
+        x: draggablePositionRelative.x * page.getWidth(),
+        y: draggablePositionRelative.y * page.getHeight(),
+        width: draggablePositionRelative.width * page.getWidth(),
+        height: draggablePositionRelative.height * page.getHeight(),
+    };
+    const translatedPositions = {
+        x: draggablePositionPdf.x,
+        y: page.getHeight() - draggablePositionPdf.y - draggablePositionPdf.height,
+        width: draggablePositionPdf.width,
+        height: draggablePositionPdf.width,
+    }
+    return translatedPositions;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
