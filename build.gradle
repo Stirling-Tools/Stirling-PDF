@@ -63,6 +63,7 @@ launch4j {
 }
 
 dependencies {
+	implementation 'org.yaml:snakeyaml:2.1'
 	implementation 'org.springframework.boot:spring-boot-starter-web:3.1.2'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.1.2'
 	
