@@ -44,7 +44,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
+        String requestURI = request.getRequestURI(); 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         // Check for API key in the request headers if no authentication exists
@@ -74,13 +74,14 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         // If we still don't have any authentication, deny the request
         if (authentication == null || !authentication.isAuthenticated()) {
         	String method = request.getMethod();
-        	if ("GET".equalsIgnoreCase(method)) {
+        	if ("GET".equalsIgnoreCase(method) && !"/login".equals(requestURI)) {
         		 response.sendRedirect("/login");  // redirect to the login page
         	     return;
+            } else {
+	            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+	            response.getWriter().write("Authentication required. Please provide a X-API-KEY in request header.\nThis is found in Settings -> Account Settings -> API Key\nAlternativly you can disable authentication if this is unexpected");
+	            return;
             }
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.getWriter().write("Authentication required. Please provide a X-API-KEY in request header.\nThis is found in Settings -> Account Settings -> API Key\nAlternativly you can disable authentication if this is unexpected");
-            return;
         }
 
         filterChain.doFilter(request, response);

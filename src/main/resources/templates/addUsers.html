@@ -12,7 +12,7 @@
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-md-8">
-
+			
                         <!-- User Settings Title -->
                         <h2 class="text-center" th:text="#{adminUserSettings.header}">Admin User Control Settings</h2>
                       
@@ -43,6 +43,9 @@
 						
 
 						<h2 th:text="#{adminUserSettings.addUser}">Add New User</h2>
+						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
+						    <span th:text="#{usernameExistsMessage}">Default message if not found</span>
+						</div>
 					    <form action="/admin/saveUser" method="post">
 					        <div class="mb-3">
 					            <label for="username" th:text="#{username}">Username</label>
@@ -61,6 +64,10 @@
 						            <option value="ROLE_WEB_ONLY_USER" th:text="#{adminUserSettings.webOnlyUser}">Web Only User</option>
 						        </select>
 						    </div>
+					        <div class="mb-3">
+							    <input type="checkbox" class="form-check-input" id="forceChange" name="forceChange">
+							    <label class="form-check-label" for="forceChange" th:text="#{adminUserSettings.forceChange}">Force user to change username/password on login</label>
+							</div>
 					        
 					        <!-- Add other fields as required -->
 					        <button type="submit" class="btn btn-primary"  th:text="#{adminUserSettings.submit}">Save User</button>

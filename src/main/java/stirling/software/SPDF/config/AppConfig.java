@@ -13,7 +13,6 @@ public class AppConfig {
     
     @Bean(name = "loginEnabled")
     public boolean loginEnabled() {
-        System.out.println(applicationProperties.toString());
         return applicationProperties.getSecurity().getEnableLogin();
     }
 

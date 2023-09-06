@@ -13,10 +13,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,59 +41,117 @@ public class UserController {
         return "redirect:/login?registered=true";
     }
     
-    @PostMapping("/change-username")
-    public ResponseEntity<String> changeUsername(Principal principal, @RequestParam String currentPassword, @RequestParam String newUsername, HttpServletRequest request, HttpServletResponse response) {
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated.");
-        }
-        
-        Optional<User> userOpt = userService.findByUsername(principal.getName());
-        
-        if(userOpt == null || userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
-        }
-        User user = userOpt.get();
-        
-        if(!userService.isPasswordCorrect(user, currentPassword)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Current password is incorrect.");
-        }
-        
-        if(userService.usernameExists(newUsername)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("New username already exists.");
-        }
+    @PostMapping("/change-username-and-password")
+    public RedirectView changeUsernameAndPassword(Principal principal,
+                                                 @RequestParam String currentPassword, 
+                                                 @RequestParam String newUsername, 
+                                                 @RequestParam String newPassword, 
+                                                 HttpServletRequest request, 
+                                                 HttpServletResponse response,
+                                                 RedirectAttributes redirectAttributes) {
+    	if (principal == null) {
+    	    return new RedirectView("/change-creds?messageType=notAuthenticated");
+    	}
 
-        userService.changeUsername(user, newUsername);
+    	Optional<User> userOpt = userService.findByUsername(principal.getName());
+
+    	if (userOpt == null || userOpt.isEmpty()) {
+    	    return new RedirectView("/change-creds?messageType=userNotFound");
+    	}
+
+    	User user = userOpt.get();
+
+    	if (!userService.isPasswordCorrect(user, currentPassword)) {
+    	    return new RedirectView("/change-creds?messageType=incorrectPassword");
+    	}
+
+    	if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
+    	    return new RedirectView("/change-creds?messageType=usernameExists");
+    	}
+
+
+        userService.changePassword(user, newPassword);
+        if(newUsername != null && newUsername.length() > 0 && !user.getUsername().equals(newUsername)) {
+            userService.changeUsername(user, newUsername);
+        }
+        userService.changeFirstUse(user, false);
 
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
 
-        
-        return ResponseEntity.ok("Username updated successfully.");
+        return new RedirectView("/login?messageType=credsUpdated");
+    }
+
+
+    
+    @PostMapping("/change-username")
+    public RedirectView changeUsername(Principal principal,
+                                       @RequestParam String currentPassword, 
+                                       @RequestParam String newUsername, 
+                                       HttpServletRequest request, 
+                                       HttpServletResponse response,
+                                       RedirectAttributes redirectAttributes) {
+    	if (principal == null) {
+    	    return new RedirectView("/account?messageType=notAuthenticated");
+    	}
+
+    	Optional<User> userOpt = userService.findByUsername(principal.getName());
+
+    	if (userOpt == null || userOpt.isEmpty()) {
+    	    return new RedirectView("/account?messageType=userNotFound");
+    	}
+
+    	User user = userOpt.get();
+
+    	if (!userService.isPasswordCorrect(user, currentPassword)) {
+    	    return new RedirectView("/account?messageType=incorrectPassword");
+    	}
+
+    	if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
+    	    return new RedirectView("/account?messageType=usernameExists");
+    	}
+
+    	if(newUsername != null && newUsername.length() > 0) {
+            userService.changeUsername(user, newUsername);
+        }
+
+        // Logout using Spring's utility
+        new SecurityContextLogoutHandler().logout(request, response, null);
+
+        return new RedirectView("/login?messageType=credsUpdated");
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<String> changePassword(Principal principal, @RequestParam String currentPassword, @RequestParam String newPassword, HttpServletRequest request, HttpServletResponse response) {
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authenticated.");
-        }
+    public RedirectView changePassword(Principal principal, 
+                                       @RequestParam String currentPassword, 
+                                       @RequestParam String newPassword, 
+                                       HttpServletRequest request, 
+                                       HttpServletResponse response,
+                                       RedirectAttributes redirectAttributes) {
+    	if (principal == null) {
+    	    return new RedirectView("/account?messageType=notAuthenticated");
+    	}
 
-        Optional<User> userOpt = userService.findByUsername(principal.getName());
-        
-        if(userOpt == null || userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
-        }
-        User user = userOpt.get();
-        if(!userService.isPasswordCorrect(user, currentPassword)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Current password is incorrect.");
-        }
+    	Optional<User> userOpt = userService.findByUsername(principal.getName());
+
+    	if (userOpt == null || userOpt.isEmpty()) {
+    	    return new RedirectView("/account?messageType=userNotFound");
+    	}
+
+    	User user = userOpt.get();
+
+    	if (!userService.isPasswordCorrect(user, currentPassword)) {
+    	    return new RedirectView("/account?messageType=incorrectPassword");
+    	}
 
         userService.changePassword(user, newPassword);
 
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
-        
-        return ResponseEntity.ok("Password updated successfully.");
+
+        return new RedirectView("/login?messageType=credsUpdated");
     }
+
     
     @PostMapping("/updateUserSettings")
 	public String updateUserSettings(HttpServletRequest request, Principal principal) {
@@ -115,9 +174,14 @@ public class UserController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/saveUser")
-    public String saveUser(@RequestParam String username, @RequestParam String password, @RequestParam String role) {
-        userService.saveUser(username, password, role);
-        return "redirect:/addUsers";  // Redirect to account page after adding the user
+    public RedirectView saveUser(@RequestParam String username, @RequestParam String password, @RequestParam String role, 
+    		@RequestParam(name = "forceChange", required = false, defaultValue = "false") boolean forceChange) {
+    	
+    	if(userService.usernameExists(username)) {
+    		return new RedirectView("/addUsers?messageType=usernameExists");
+    	}
+        userService.saveUser(username, password, role, forceChange);
+        return new RedirectView("/addUsers");  // Redirect to account page after adding the user
     }
 
     

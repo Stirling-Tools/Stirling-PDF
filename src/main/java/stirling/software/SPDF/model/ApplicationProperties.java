@@ -104,7 +104,6 @@ public class ApplicationProperties {
 	}
 	public static class Security {
 		private Boolean enableLogin;
-		private InitialLogin initialLogin;
 		private Boolean csrfDisabled;
 
 		public Boolean getEnableLogin() {
@@ -113,14 +112,6 @@ public class ApplicationProperties {
 
 		public void setEnableLogin(Boolean enableLogin) {
 			this.enableLogin = enableLogin;
-		}
-
-		public InitialLogin getInitialLogin() {
-			return initialLogin != null ? initialLogin : new InitialLogin();
-		}
-
-		public void setInitialLogin(InitialLogin initialLogin) {
-			this.initialLogin = initialLogin;
 		}
 
 		public Boolean getCsrfDisabled() {
@@ -134,39 +125,8 @@ public class ApplicationProperties {
 		
 		@Override
 		public String toString() {
-			return "Security [enableLogin=" + enableLogin + ", initialLogin=" + initialLogin + ", csrfDisabled="
+			return "Security [enableLogin=" + enableLogin + ", csrfDisabled="
 					+ csrfDisabled + "]";
-		}
-
-
-		public static class InitialLogin {
-
-			private String username;
-			private String password;
-			
-			public String getUsername() {
-				return username;
-			}
-
-			public void setUsername(String username) {
-				this.username = username;
-			}
-
-			public String getPassword() {
-				return password;
-			}
-
-			public void setPassword(String password) {
-				this.password = password;
-			}
-
-			@Override
-			public String toString() {
-				return "InitialLogin [username=" + username + ", password=" + (password != null && !password.isEmpty() ? "MASKED" : "NULL") + "]";
-			}
-
-
-			
 		}
 	}
 

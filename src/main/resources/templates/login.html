@@ -179,15 +179,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlParams = currentURL.searchParams;
     const currentLangParam = urlParams.get('lang') || defaultLocale;
 
-    console.log("defaultLocale", defaultLocale)
-    console.log("storedLocale", storedLocale)
-    console.log("currentLangParam", currentLangParam)
 
-    if (currentLangParam !== storedLocale) {
+    if (defaultLocale !== storedLocale && currentLangParam !== storedLocale) {
         urlParams.set('lang', storedLocale);
         currentURL.search = urlParams.toString();
-
-        console.log("redirecting to", currentURL.toString());
         window.location.href = currentURL.toString();
         return;
     }
@@ -235,17 +230,20 @@ function handleDropdownItemClick(event) {
     event.preventDefault();
     const languageCode = event.currentTarget.dataset.bsLanguageCode;
     const dropdown = document.getElementById('languageDropdown');
-
+    
     if (languageCode) {
-        localStorage.setItem('languageCode', languageCode);
-
-        const currentUrl = window.location.href;
-        if (currentUrl.indexOf('?lang=') === -1) {
-            window.location.href = currentUrl + '?lang=' + languageCode;
-        } else {
-            window.location.href = currentUrl.replace(/\?lang=\w{2,}/, '?lang=' + languageCode);
-        }
-
+    	localStorage.setItem('languageCode', languageCode);
+    	const currentLang = document.documentElement.getAttribute('lang');
+    	if (currentLang !== languageCode) {
+    		console.log("currentLang", currentLang)
+    		console.log("languageCode", languageCode)
+	        const currentUrl = window.location.href;
+	        if (currentUrl.indexOf('?lang=') === -1) {
+	            window.location.href = currentUrl + '?lang=' + languageCode;
+	        } else {
+	            window.location.href = currentUrl.replace(/\?lang=\w{2,}/, '?lang=' + languageCode);
+	        }
+    	}
         dropdown.innerHTML = event.currentTarget.innerHTML;  // Update the dropdown button's content
     } else {
         console.error("Language code is not set for this item.");
@@ -258,6 +256,9 @@ function handleDropdownItemClick(event) {
 		<div th:if="${logoutMessage}" class="alert alert-success"
 			th:text="${logoutMessage}"></div>
 
+		<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'credsUpdated'}" class="alert alert-success">
+		    <span th:text="#{changedCredsMessage}">Default message if not found</span>
+		</div>
 		<form th:action="@{login}" method="post">
 			<img class="mb-4" src="favicon.svg" alt="" width="144" height="144">
 			<h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>

@@ -66,7 +66,6 @@ Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) h
 ## Technologies used
 - Spring Boot + Thymeleaf
 - PDFBox
-- IText7
 - [LibreOffice](https://www.libreoffice.org/discover/libreoffice/) for advanced conversions
 - [OcrMyPdf](https://github.com/ocrmypdf/OCRmyPDF)
 - HTML, CSS, JavaScript

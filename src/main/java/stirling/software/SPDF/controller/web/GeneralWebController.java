@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -140,27 +141,96 @@ public class GeneralWebController {
     @Autowired
     private ResourceLoader resourceLoader;
     
-    private List<String> getFontNames() {
+    private List<FontResource> getFontNames() {
+        List<FontResource> fontNames = new ArrayList<>();
+
+        // Extract font names from classpath
+        fontNames.addAll(getFontNamesFromLocation("classpath:static/fonts/*.woff2"));
+
+        // Extract font names from external directory
+        fontNames.addAll(getFontNamesFromLocation("file:customFiles/static/fonts/*"));
+
+        return fontNames;
+    }
+
+    private List<FontResource> getFontNamesFromLocation(String locationPattern) {
         try {
             Resource[] resources = ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
-                    .getResources("classpath:static/fonts/*.woff2");
-            
+                    .getResources(locationPattern);
             return Arrays.stream(resources)
                     .map(resource -> {
                         try {
                             String filename = resource.getFilename();
-                            return filename.substring(0, filename.length() - 6); // Remove .woff2 extension
+                            if (filename != null) {
+                                int lastDotIndex = filename.lastIndexOf('.');
+                                if (lastDotIndex != -1) {
+                                    String name = filename.substring(0, lastDotIndex);
+                                    String extension = filename.substring(lastDotIndex + 1);
+                                    return new FontResource(name, extension);
+                                }
+                            }
+                            return null;
                         } catch (Exception e) {
                             throw new RuntimeException("Error processing filename", e);
                         }
                     })
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to read font directory", e);
+            throw new RuntimeException("Failed to read font directory from " + locationPattern, e);
+        }
+    }
+
+
+    public String getFormatFromExtension(String extension) {
+        switch (extension) {
+            case "ttf": return "truetype";
+            case "woff": return "woff";
+            case "woff2": return "woff2";
+            case "eot": return "embedded-opentype";
+            case "svg": return "svg";
+            default: return ""; // or throw an exception if an unexpected extension is encountered
         }
     }
 
     
+    public class FontResource {
+        private String name;
+        private String extension;
+        private String type;
+        public FontResource(String name, String extension) {
+            this.name = name;
+            this.extension = extension;
+            this.type = getFormatFromExtension(extension);
+        }
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getExtension() {
+			return extension;
+		}
+
+		public void setExtension(String extension) {
+			this.extension = extension;
+		}
+
+		public String getType() {
+			return type;
+		}
+
+		public void setType(String type) {
+			this.type = type;
+		}
+        
+        
+    }
+
 
     @GetMapping("/crop")
     @Hidden

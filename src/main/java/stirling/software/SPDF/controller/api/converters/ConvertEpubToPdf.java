@@ -71,7 +71,7 @@ public class ConvertEpubToPdf {
 
 	// Assuming a pseudo-code function that merges multiple PDFs into one.
 	private byte[] mergeMultiplePdfsIntoOne(List<byte[]> individualPdfs) {
-	    // You can use a library such as iText or PDFBox to perform the merging here.
+	    // You can use a library such as  PDFBox to perform the merging here.
 	    // Return the byte[] of the merged PDF.
 		return null;
 	}

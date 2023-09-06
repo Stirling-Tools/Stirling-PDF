@@ -86,9 +86,9 @@ dependencies {
     
 	//general PDF
     implementation 'org.apache.pdfbox:pdfbox:2.0.29'
+    implementation 'org.apache.pdfbox:xmpbox:2.0.29'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.70' 
-    implementation 'com.itextpdf:itext7-core:7.2.5'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-core'
     implementation group: 'com.google.zxing', name: 'core', version: '3.5.1'

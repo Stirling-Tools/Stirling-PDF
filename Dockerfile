@@ -1,31 +1,39 @@
-# Build jbig2enc in a separate stage
+# Use the base image
 FROM frooodle/stirling-pdf-base:beta4
 
-ARG VERSION_TAG
-ENV VERSION_TAG=$VERSION_TAG
+# Set Environment Variables
+ENV PUID=1000 \
+    PGID=1000 \
+    UMASK=022 \
+    DOCKER_ENABLE_SECURITY=false \
+    HOME=/home/stirlingpdfuser \
+    VERSION_TAG=$VERSION_TAG
 
-ENV DOCKER_ENABLE_SECURITY=false
+# Create user and group
+RUN groupadd -g $PGID stirlingpdfgroup && \
+    useradd -u $PUID -g stirlingpdfgroup -s /bin/sh stirlingpdfuser && \
+    mkdir -p $HOME && chown stirlingpdfuser:stirlingpdfgroup $HOME
 
-# Create scripts folder and copy local scripts
-RUN mkdir /scripts
+# Set up necessary directories and permissions
+RUN mkdir -p /scripts /usr/share/fonts/opentype/noto /usr/share/tesseract-ocr /configs /customFiles && \
+    chown -R stirlingpdfuser:stirlingpdfgroup /scripts /usr/share/fonts/opentype/noto /usr/share/tesseract-ocr /configs /customFiles && \
+    chown -R stirlingpdfuser:stirlingpdfgroup /usr/share/tesseract-ocr-original
+
+# Copy necessary files
 COPY ./scripts/* /scripts/
-
-#Install fonts
-RUN mkdir /usr/share/fonts/opentype/noto/
 COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
 COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
-RUN fc-cache -f -v
-
-# Always copy the JAR 
 COPY build/libs/*.jar app.jar
 
-# Expose the application port
+# Set font cache and permissions
+RUN fc-cache -f -v && \
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
+    chmod +x /scripts/init.sh
+
+# Expose necessary ports
 EXPOSE 8080
 
-# Set environment variables
-ENV APP_HOME_NAME="Stirling PDF"
-
-# Run the application
-RUN chmod +x /scripts/init.sh
+# Set user and run command
+USER stirlingpdfuser
 ENTRYPOINT ["/scripts/init.sh"]
 CMD ["java", "-jar", "/app.jar"]

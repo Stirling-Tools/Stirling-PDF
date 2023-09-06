@@ -16,11 +16,30 @@
                         <!-- User Settings Title -->
                         <h2 class="text-center" th:text="#{account.accountSettings}">User Settings</h2>
                         <hr>
-
+						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'notAuthenticated'}" class="alert alert-danger">
+						    <span th:text="#{notAuthenticatedMessage}">Default message if not found</span>
+						</div>
+						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'userNotFound'}" class="alert alert-danger">
+						    <span th:text="#{userNotFoundMessage}">Default message if not found</span>
+						</div>
+						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'incorrectPassword'}" class="alert alert-danger">
+						    <span th:text="#{incorrectPasswordMessage}">Default message if not found</span>
+						</div>
+						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
+						    <span th:text="#{usernameExistsMessage}">Default message if not found</span>
+						</div>
+						
+				
+						
+						
+						
+						
 						<!-- At the top of the user settings -->
 						<h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>
 
-						
+						<div th:if="${error}" class="alert alert-danger" role="alert">
+						    <span th:text="${error}">Error Message</span>
+						</div>
                         <!-- Change Username Form -->
                         <h4></h4>
                         <form action="/change-username" method="post">

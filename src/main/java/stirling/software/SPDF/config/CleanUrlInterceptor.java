@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public class CleanUrlInterceptor implements HandlerInterceptor {
 
-	private static final List<String> ALLOWED_PARAMS = Arrays.asList("lang", "endpoint", "endpoints", "logout", "error", "file");
+	private static final List<String> ALLOWED_PARAMS = Arrays.asList("lang", "endpoint", "endpoints", "logout", "error", "file", "messageType");
 
 	
 	@Override
@@ -32,7 +32,6 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
 				if (keyValue.length != 2) {
 					continue;
 				}
-
 				if (ALLOWED_PARAMS.contains(keyValue[0])) {
 					parameters.put(keyValue[0], keyValue[1]);
 				}

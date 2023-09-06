@@ -10,15 +10,16 @@
 <th:block th:each="font : ${fonts}">
     <style th:inline="text">
         @font-face {
-            font-family: "[[${font}]]";
-            src: url('fonts/[[${font}]].woff2') format('woff2');
+            font-family: "[[${font.name}]]";
+            src: url('fonts/[[${font.name}]].[[${font.extension}]]') format('[[${font.type}]]');
         }
 
-        #font-select option[value="[[${font}]]"] {
-            font-family: "[[${font}]]", cursive;
+        #font-select option[value="[[${font.name}]]"] {
+            font-family: "[[${font.name}]]", cursive;
         }
     </style>
 </th:block>
+
 <style>
 select#font-select, select#font-select option {
         height: 60px;    /* Adjust as needed */
@@ -181,9 +182,13 @@ select#font-select, select#font-select option {
                                 <input type="text" class="form-control" id="sigText" name="sigText">
                                 <label th:text="#{font}"></label> 
                                 <select class="form-control" name="font" id="font-select">
-								    <option th:each="font : ${fonts}" th:value="${font}" th:text="${font}" th:class="${font.toLowerCase()+'-font'}"></option>
-
+								    <option th:each="font : ${fonts}" 
+								            th:value="${font.name}" 
+								            th:text="${font.name}" 
+								            th:class="${font.name.toLowerCase()+'-font'}">
+								    </option>
 								</select>
+
                                 <div class="margin-auto-parent">
                                     <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
                                 </div>
@@ -231,13 +236,14 @@ select#font-select, select#font-select option {
 </script>
 
           
-                                <th:block th:each="font : ${fonts}">
+<th:block th:each="font : ${fonts}">
     <style th:inline="text">
-        #font-select option[value="/*[[${font}]]*/"] {
-            font-family: '/*[[${font}]]*/', cursive;
+        #font-select option[value='/*[[${font.name}]]*/'] {
+            font-family: '/*[[${font.name}]]*/', cursive;
         }
     </style>
 </th:block>
+
 
                             </div>
                         </div>
