@@ -14,6 +14,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,6 +27,8 @@ import org.xml.sax.InputSource;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.GeneralFile;
+import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.utils.FileToPdf;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -40,9 +43,9 @@ public class ConvertEpubToPdf {
 	    description = "This endpoint takes an EPUB file input and converts it to a single PDF."
 	)
 	public ResponseEntity<byte[]> epubToSinglePdf(
-	        @RequestPart(required = true, value = "fileInput") MultipartFile fileInput) 
+			@ModelAttribute GeneralFile request) 
 	        throws Exception {
-
+		MultipartFile fileInput = request.getFileInput();
 	    if (fileInput == null) {
 	        throw new IllegalArgumentException("Please provide an EPUB file for conversion.");
 	    }

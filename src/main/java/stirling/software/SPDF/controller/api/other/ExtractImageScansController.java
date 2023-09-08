@@ -30,12 +30,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
-
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 @RestController
 @Tag(name = "Other", description = "Other APIs")
 public class ExtractImageScansController {
@@ -46,26 +48,16 @@ public class ExtractImageScansController {
     @Operation(summary = "Extract image scans from an input file",
             description = "This endpoint extracts image scans from a given file based on certain parameters. Users can specify angle threshold, tolerance, minimum area, minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP Type:SIMO")
     public ResponseEntity<byte[]> extractImageScans(
-            @RequestPart(required = true, value = "fileInput")
-            @Parameter(description = "The input file containing image scans")
-                    MultipartFile inputFile,
-            @RequestParam(name = "angle_threshold", defaultValue = "5")
-            @Parameter(description = "The angle threshold for the image scan extraction", example = "5")
-                    int angleThreshold,
-            @RequestParam(name = "tolerance", defaultValue = "20")
-            @Parameter(description = "The tolerance for the image scan extraction", example = "20")
-                    int tolerance,
-            @RequestParam(name = "min_area", defaultValue = "8000")
-            @Parameter(description = "The minimum area for the image scan extraction", example = "8000")
-                    int minArea,
-            @RequestParam(name = "min_contour_area", defaultValue = "500")
-            @Parameter(description = "The minimum contour area for the image scan extraction", example = "500")
-                    int minContourArea,
-            @RequestParam(name = "border_size", defaultValue = "1")
-            @Parameter(description = "The border size for the image scan extraction", example = "1")
-                    int borderSize) throws IOException, InterruptedException {
-
-        String fileName = inputFile.getOriginalFilename();
+    		@RequestBody(
+    	            description = "Form data containing file and extraction parameters",
+    	            required = true,
+    	            content = @Content(
+    	                mediaType = "multipart/form-data",
+    	                schema = @Schema(implementation = MyForm.class) // This should represent your form's structure
+    	            )
+    	        )
+    	        MyForm form) throws IOException, InterruptedException {
+        String fileName = form.getFileInput().getOriginalFilename();
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
 
         List<String> images = new ArrayList<>();
@@ -73,7 +65,7 @@ public class ExtractImageScansController {
         // Check if input file is a PDF
         if (extension.equalsIgnoreCase("pdf")) {
             // Load PDF document
-            try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputFile.getBytes()))) {
+            try (PDDocument document = PDDocument.load(new ByteArrayInputStream(form.getFileInput().getBytes()))) {
                 PDFRenderer pdfRenderer = new PDFRenderer(document);
                 int pageCount = document.getNumberOfPages();
                 images = new ArrayList<>();
@@ -93,7 +85,7 @@ public class ExtractImageScansController {
             }
         } else {
             Path tempInputFile = Files.createTempFile("input_", "." + extension);
-            Files.copy(inputFile.getInputStream(), tempInputFile, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(form.getFileInput().getInputStream(), tempInputFile, StandardCopyOption.REPLACE_EXISTING);
             // Add input file path to images list
             images.add(tempInputFile.toString());
         }
@@ -109,11 +101,11 @@ public class ExtractImageScansController {
                     "./scripts/split_photos.py", 
                     images.get(i), 
                     tempDir.toString(), 
-                    "--angle_threshold", String.valueOf(angleThreshold),
-                    "--tolerance", String.valueOf(tolerance),
-                    "--min_area", String.valueOf(minArea),
-                    "--min_contour_area", String.valueOf(minContourArea),
-                    "--border_size", String.valueOf(borderSize)
+                    "--angle_threshold", String.valueOf(form.getAngleThreshold()),
+                    "--tolerance", String.valueOf(form.getTolerance()),
+                    "--min_area", String.valueOf(form.getMinArea()),
+                    "--min_contour_area", String.valueOf(form.getMinContourArea()),
+                    "--border_size", String.valueOf(form.getBorderSize())
                 ));
 
 

@@ -6,6 +6,7 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.GeneralFile;
 import stirling.software.SPDF.utils.FileToPdf;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -26,8 +28,9 @@ public class ConvertMarkdownToPdf {
         description = "This endpoint takes a Markdown file input, converts it to HTML, and then to PDF format."
     )
     public ResponseEntity<byte[]> markdownToPdf(
-            @RequestPart(required = true, value = "fileInput") MultipartFile fileInput) 
-            throws IOException, InterruptedException {
+    		@ModelAttribute GeneralFile request) 
+    		        throws Exception {
+    			MultipartFile fileInput = request.getFileInput();
         
         if (fileInput == null) {
             throw new IllegalArgumentException("Please provide a Markdown file for conversion.");

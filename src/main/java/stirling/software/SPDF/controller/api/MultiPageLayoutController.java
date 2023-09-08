@@ -14,6 +14,7 @@ import org.apache.pdfbox.util.Matrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,6 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -36,12 +38,11 @@ public class MultiPageLayoutController {
 	    summary = "Merge multiple pages of a PDF document into a single page",
 	    description = "This operation takes an input PDF file and the number of pages to merge into a single sheet in the output PDF file. Input:PDF Output:PDF Type:SISO"
 	)
-	public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(
-	        @Parameter(description = "The input PDF file", required = true) @RequestParam("fileInput") MultipartFile file,
-	        @Parameter(description = "The number of pages to fit onto a single sheet in the output PDF. Acceptable values are 2, 3, 4, 9, 16.", required = true, schema = @Schema(type = "integer", allowableValues = {
-	                "2", "3", "4", "9", "16" })) @RequestParam("pagesPerSheet") int pagesPerSheet)
+	public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(@ModelAttribute MergeMultiplePagesRequest request)
 	        throws IOException {
-
+		
+			int pagesPerSheet = request.getPagesPerSheet();
+			MultipartFile file = request.getFileInput();
 		 if (pagesPerSheet != 2 && pagesPerSheet != 3 && pagesPerSheet != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
 		        throw new IllegalArgumentException("pagesPerSheet must be 2, 3 or a perfect square");
 		    }

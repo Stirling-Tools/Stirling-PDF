@@ -13,6 +13,7 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 @Tag(name = "General", description = "General APIs")
@@ -34,13 +36,10 @@ public class ToSinglePageController {
         summary = "Convert a multi-page PDF into a single long page PDF",
         description = "This endpoint converts a multi-page PDF document into a single paged PDF document. The width of the single page will be same as the input's width, but the height will be the sum of all the pages' heights. Input:PDF Output:PDF Type:SISO"
     )
-    public ResponseEntity<byte[]> pdfToSinglePage(
-        @RequestPart(required = true, value = "fileInput")
-        @Parameter(description = "The input multi-page PDF file to be converted into a single page", required = true)
-            MultipartFile file) throws IOException {
+    public ResponseEntity<byte[]> pdfToSinglePage(@ModelAttribute PDFFile request) throws IOException {
 
     	// Load the source document
-    	PDDocument sourceDocument = PDDocument.load(file.getInputStream());
+    	PDDocument sourceDocument = PDDocument.load(request.getFileInput().getInputStream());
 
     	// Calculate total height and max width
     	float totalHeight = 0;
@@ -79,7 +78,7 @@ public class ToSinglePageController {
     	sourceDocument.close();
 
     	byte[] result = baos.toByteArray();
-    	return WebResponseUtils.bytesToWebResponse(result, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_singlePage.pdf");
+    	return WebResponseUtils.bytesToWebResponse(result, request.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_singlePage.pdf");
 
 
 

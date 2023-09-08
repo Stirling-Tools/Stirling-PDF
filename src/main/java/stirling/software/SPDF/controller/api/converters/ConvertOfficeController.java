@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.GeneralFile;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -63,14 +65,9 @@ public class ConvertOfficeController {
         summary = "Convert a file to a PDF using LibreOffice",
         description = "This endpoint converts a given file to a PDF using LibreOffice API  Input:Any Output:PDF Type:SISO"
     )
-    public ResponseEntity<byte[]> processFileToPDF(
-        @RequestPart(required = true, value = "fileInput")
-        @Parameter(
-            description = "The input file to be converted to a PDF file using LibreOffice",
-            required = true
-        )
-            MultipartFile inputFile
-    ) throws IOException, InterruptedException {
+    public ResponseEntity<byte[]> processFileToPDF(@ModelAttribute GeneralFile request) 
+	        throws Exception {
+		MultipartFile inputFile = request.getFileInput();
         // unused but can start server instance if startup time is to long
         // LibreOfficeListener.getInstance().start();
 
