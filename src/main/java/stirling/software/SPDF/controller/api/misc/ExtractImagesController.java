@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -30,6 +31,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.PDFWithImageFormatRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 @Tag(name = "Other", description = "Other APIs")
@@ -40,13 +42,9 @@ public class ExtractImagesController {
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
     @Operation(summary = "Extract images from a PDF file",
             description = "This endpoint extracts images from a given PDF file and returns them in a zip file. Users can specify the output image format. Input:PDF Output:IMAGE/ZIP Type:SIMO")
-    public ResponseEntity<byte[]> extractImages(
-            @RequestPart(required = true, value = "fileInput")
-            @Parameter(description = "The input PDF file containing images")
-                    MultipartFile file,
-            @RequestParam("format")
-            @Parameter(description = "The output image format e.g., 'png', 'jpeg', or 'gif'", schema = @Schema(allowableValues = {"png", "jpeg", "gif"}))
-                    String format) throws IOException {
+    public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request) throws IOException {
+        MultipartFile file = request.getFileInput();
+        String format = request.getFormat();
 
         System.out.println(System.currentTimeMillis() + "file=" + file.getName() + ", format=" + format);
         PDDocument document = PDDocument.load(file.getBytes());

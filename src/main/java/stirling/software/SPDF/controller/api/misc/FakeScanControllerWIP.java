@@ -30,6 +30,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,6 +40,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -54,10 +56,8 @@ public class FakeScanControllerWIP {
         summary = "Repair a PDF file",
         description = "This endpoint repairs a given PDF file by running Ghostscript command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response."
     )
-    public ResponseEntity<byte[]> repairPdf(
-        @RequestPart(required = true, value = "fileInput")
-        @Parameter(description = "The input PDF file to be repaired", required = true)
-            MultipartFile inputFile) throws IOException, InterruptedException {
+    public ResponseEntity<byte[]> repairPdf(@ModelAttribute PDFFile request) throws IOException {
+        MultipartFile inputFile = request.getFileInput();
 
     	PDDocument document = PDDocument.load(inputFile.getBytes());
     	PDFRenderer pdfRenderer = new PDFRenderer(document);
