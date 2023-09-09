@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.other;
+package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;

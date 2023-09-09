@@ -6,6 +6,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +16,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.PDFComparisonAndCount;
+import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.SPDF.model.api.filter.ContainsTextRequest;
+import stirling.software.SPDF.model.api.filter.FileSizeRequest;
+import stirling.software.SPDF.model.api.filter.PageRotationRequest;
+import stirling.software.SPDF.model.api.filter.PageSizeRequest;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -24,11 +31,11 @@ public class FilterController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/filter-contains-text")
 	@Operation(summary = "Checks if a PDF contains set text, returns true if does", description = "Input:PDF Output:Boolean Type:SISO")
-	public ResponseEntity<byte[]> containsText(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to be converted to a PDF/A file", required = true) MultipartFile inputFile,
-			@Parameter(description = "The text to check for", required = true) String text,
-			@Parameter(description = "The page number to check for text on accepts 'All', ranges like '1-4'", required = false) String pageNumber)
-			throws IOException, InterruptedException {
+	public ResponseEntity<byte[]> containsText(@ModelAttribute ContainsTextRequest request) throws IOException, InterruptedException {
+	    MultipartFile inputFile = request.getFileInput();
+	    String text = request.getText();
+	    String pageNumber = request.getPageNumbers();
+	    
 		PDDocument pdfDocument = PDDocument.load(inputFile.getInputStream());
 		if (PdfUtils.hasText(pdfDocument, pageNumber, text))
 			return WebResponseUtils.pdfDocToWebResponse(pdfDocument, inputFile.getOriginalFilename());
@@ -38,10 +45,11 @@ public class FilterController {
 	// TODO
 	@PostMapping(consumes = "multipart/form-data", value = "/filter-contains-image")
 	@Operation(summary = "Checks if a PDF contains an image", description = "Input:PDF Output:Boolean Type:SISO")
-	public ResponseEntity<byte[]> containsImage(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to be converted to a PDF/A file", required = true) MultipartFile inputFile,
-			@Parameter(description = "The page number to check for image on accepts 'All', ranges like '1-4'", required = false) String pageNumber)
+	public ResponseEntity<byte[]> containsImage(@ModelAttribute PDFWithPageNums request)
 			throws IOException, InterruptedException {
+		MultipartFile inputFile = request.getFileInput();
+	    String pageNumber = request.getPageNumbers();
+	    
 		PDDocument pdfDocument = PDDocument.load(inputFile.getInputStream());
 		if (PdfUtils.hasImages(pdfDocument, pageNumber))
 			return WebResponseUtils.pdfDocToWebResponse(pdfDocument, inputFile.getOriginalFilename());
@@ -50,12 +58,10 @@ public class FilterController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/filter-page-count")
 	@Operation(summary = "Checks if a PDF is greater, less or equal to a setPageCount", description = "Input:PDF Output:Boolean Type:SISO")
-	public ResponseEntity<byte[]> pageCount(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file", required = true) MultipartFile inputFile,
-			@Parameter(description = "Page Count", required = true) String pageCount,
-			@Parameter(description = "Comparison type", schema = @Schema(description = "The comparison type, accepts Greater, Equal, Less than", allowableValues = {
-					"Greater", "Equal", "Less" })) String comparator)
-			throws IOException, InterruptedException {
+	public ResponseEntity<byte[]> pageCount(@ModelAttribute PDFComparisonAndCount request) throws IOException, InterruptedException {
+	    MultipartFile inputFile = request.getFileInput();
+	    String pageCount = request.getPageCount();
+	    String comparator = request.getComparator();
 		// Load the PDF
 		PDDocument document = PDDocument.load(inputFile.getInputStream());
 		int actualPageCount = document.getNumberOfPages();
@@ -83,12 +89,10 @@ public class FilterController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/filter-page-size")
 	@Operation(summary = "Checks if a PDF is of a certain size", description = "Input:PDF Output:Boolean Type:SISO")
-	public ResponseEntity<byte[]> pageSize(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file", required = true) MultipartFile inputFile,
-			@Parameter(description = "Standard Page Size", required = true) String standardPageSize,
-			@Parameter(description = "Comparison type", schema = @Schema(description = "The comparison type, accepts Greater, Equal, Less than", allowableValues = {
-					"Greater", "Equal", "Less" })) String comparator)
-			throws IOException, InterruptedException {
+	public ResponseEntity<byte[]> pageSize(@ModelAttribute PageSizeRequest request) throws IOException, InterruptedException {
+	    MultipartFile inputFile = request.getFileInput();
+	    String standardPageSize = request.getStandardPageSize();
+	    String comparator = request.getComparator();
 
 		// Load the PDF
 		PDDocument document = PDDocument.load(inputFile.getInputStream());
@@ -126,12 +130,10 @@ public class FilterController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/filter-file-size")
 	@Operation(summary = "Checks if a PDF is a set file size", description = "Input:PDF Output:Boolean Type:SISO")
-	public ResponseEntity<byte[]> fileSize(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file", required = true) MultipartFile inputFile,
-			@Parameter(description = "File Size", required = true) String fileSize,
-			@Parameter(description = "Comparison type", schema = @Schema(description = "The comparison type, accepts Greater, Equal, Less than", allowableValues = {
-					"Greater", "Equal", "Less" })) String comparator)
-			throws IOException, InterruptedException {
+	public ResponseEntity<byte[]> fileSize(@ModelAttribute FileSizeRequest request) throws IOException, InterruptedException {
+	    MultipartFile inputFile = request.getFileInput();
+	    String fileSize = request.getFileSize();
+	    String comparator = request.getComparator();
 
 		// Get the file size
 		long actualFileSize = inputFile.getSize();
@@ -159,12 +161,10 @@ public class FilterController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/filter-page-rotation")
 	@Operation(summary = "Checks if a PDF is of a certain rotation", description = "Input:PDF Output:Boolean Type:SISO")
-	public ResponseEntity<byte[]> pageRotation(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file", required = true) MultipartFile inputFile,
-			@Parameter(description = "Rotation in degrees", required = true) int rotation,
-			@Parameter(description = "Comparison type", schema = @Schema(description = "The comparison type, accepts Greater, Equal, Less than", allowableValues = {
-					"Greater", "Equal", "Less" })) String comparator)
-			throws IOException, InterruptedException {
+	public ResponseEntity<byte[]> pageRotation(@ModelAttribute PageRotationRequest request) throws IOException, InterruptedException {
+	    MultipartFile inputFile = request.getFileInput();
+	    int rotation = request.getRotation();
+	    String comparator = request.getComparator();
 
 		// Load the PDF
 		PDDocument document = PDDocument.load(inputFile.getInputStream());

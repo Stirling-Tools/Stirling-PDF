@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.other;
+package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.Graphics2D;
 import java.awt.Image;

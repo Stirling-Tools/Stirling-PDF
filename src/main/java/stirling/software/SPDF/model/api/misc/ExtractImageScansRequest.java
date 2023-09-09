@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.other;
+package stirling.software.SPDF.model.api.misc;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
-public class MyForm {
+public class ExtractImageScansRequest {
     @Schema(description = "The input file containing image scans", required = true)
     private MultipartFile fileInput;
 

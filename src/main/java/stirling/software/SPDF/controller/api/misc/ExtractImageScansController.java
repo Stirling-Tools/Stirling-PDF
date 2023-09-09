@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.other;
+package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -33,6 +33,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -53,10 +54,10 @@ public class ExtractImageScansController {
     	            required = true,
     	            content = @Content(
     	                mediaType = "multipart/form-data",
-    	                schema = @Schema(implementation = MyForm.class) // This should represent your form's structure
+    	                schema = @Schema(implementation = ExtractImageScansRequest.class) // This should represent your form's structure
     	            )
     	        )
-    	        MyForm form) throws IOException, InterruptedException {
+    	        ExtractImageScansRequest form) throws IOException, InterruptedException {
         String fileName = form.getFileInput().getOriginalFilename();
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
 

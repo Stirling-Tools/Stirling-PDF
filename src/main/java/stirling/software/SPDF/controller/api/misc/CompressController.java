@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.other;
+package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -22,6 +22,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -32,6 +33,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
@@ -45,12 +47,11 @@ public class CompressController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/compress-pdf")
     @Operation(summary = "Optimize PDF file", description = "This endpoint accepts a PDF file and optimizes it based on the provided parameters. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> optimizePdf(
-            @RequestPart(value = "fileInput") @Parameter(description = "The input PDF file to be optimized.", required = true) MultipartFile inputFile,
-            @RequestParam(required = false, value = "optimizeLevel") @Parameter(description = "The level of optimization to apply to the PDF file. Higher values indicate greater compression but may reduce quality.", schema = @Schema(allowableValues = {
-                    "1", "2", "3", "4", "5" })) Integer optimizeLevel,
-            @RequestParam(value = "expectedOutputSize", required = false) @Parameter(description = "The expected output size, e.g. '100MB', '25KB', etc.", required = false) String expectedOutputSizeString)
-            throws Exception {
+    public ResponseEntity<byte[]> optimizePdf(@ModelAttribute OptimizePdfRequest request) throws Exception {
+        MultipartFile inputFile = request.getFileInput();
+        Integer optimizeLevel = request.getOptimizeLevel();
+        String expectedOutputSizeString = request.getExpectedOutputSizeString();
+
 
         if(expectedOutputSizeString == null && optimizeLevel == null) {
             throw new Exception("Both expected output size and optimize level are not specified");

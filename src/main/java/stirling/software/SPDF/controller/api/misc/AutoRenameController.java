@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.other;
+package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,6 +11,7 @@ import org.apache.pdfbox.text.TextPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 @Tag(name = "Other", description = "Other APIs")
@@ -32,10 +34,9 @@ public class AutoRenameController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/auto-rename")
     @Operation(summary = "Extract header from PDF file", description = "This endpoint accepts a PDF file and attempts to extract its title or header based on heuristics. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> extractHeader(
-    	            @RequestPart(value = "fileInput") @Parameter(description = "The input PDF file from which the header is to be extracted.", required = true) MultipartFile file,
-    	            @RequestParam(required = false, defaultValue = "false") @Parameter(description = "Flag indicating whether to use the first text as a fallback if no suitable title is found. Defaults to false.", required = false) Boolean useFirstTextAsFallback)
-    	            throws Exception {
+    public ResponseEntity<byte[]> extractHeader(@ModelAttribute ExtractHeaderRequest request) throws Exception {
+        MultipartFile file = request.getFileInput();
+        Boolean useFirstTextAsFallback = request.getUseFirstTextAsFallback();
 
     	        PDDocument document = PDDocument.load(file.getInputStream());
     	        PDFTextStripper reader = new PDFTextStripper() {

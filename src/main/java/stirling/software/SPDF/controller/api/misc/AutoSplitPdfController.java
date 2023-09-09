@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.other;
+package stirling.software.SPDF.controller.api.misc;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
@@ -16,6 +16,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +32,7 @@ import com.google.zxing.common.HybridBinarizer;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -40,10 +42,9 @@ public class AutoSplitPdfController {
 
     @PostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
     @Operation(summary = "Auto split PDF pages into separate documents", description = "This endpoint accepts a PDF file, scans each page for a specific QR code, and splits the document at the QR code boundaries. The output is a zip file containing each separate PDF document. Input:PDF Output:ZIP Type:SISO")
-    public ResponseEntity<byte[]> autoSplitPdf(
-        @RequestParam("fileInput") @Parameter(description = "The input PDF file which needs to be split into separate documents based on QR code boundaries.", required = true) MultipartFile file,
-        @RequestParam(value ="duplexMode",defaultValue = "false") @Parameter(description = "Flag indicating if the duplex mode is active, where the page after the divider also gets removed.", required = false) boolean duplexMode)
-        throws IOException {
+    public ResponseEntity<byte[]> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request) throws IOException {
+        MultipartFile file = request.getFileInput();
+        boolean duplexMode = request.isDuplexMode();
 
         InputStream inputStream = file.getInputStream();
         PDDocument document = PDDocument.load(inputStream);
