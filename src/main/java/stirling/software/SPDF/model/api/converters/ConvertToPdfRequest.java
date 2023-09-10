@@ -1,10 +1,13 @@
 package stirling.software.SPDF.model.api.converters;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 @Data
+@EqualsAndHashCode
 public class ConvertToPdfRequest {
 
     @Schema(description = "The input images to be converted to a PDF file")

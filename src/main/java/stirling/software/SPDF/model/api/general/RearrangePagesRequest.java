@@ -2,11 +2,11 @@ package stirling.software.SPDF.model.api.general;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
-import stirling.software.SPDF.model.api.PDFFile;
-import stirling.software.SPDF.model.api.PDFWithPageNums;
+import lombok.EqualsAndHashCode;
 import stirling.software.SPDF.model.SortTypes;
+import stirling.software.SPDF.model.api.PDFWithPageNums;
 @Data
+@EqualsAndHashCode(callSuper=true)
 public class RearrangePagesRequest extends PDFWithPageNums {
 
     @Schema(implementation = SortTypes.class, description = "The custom mode for page rearrangement. Valid values are:\n"

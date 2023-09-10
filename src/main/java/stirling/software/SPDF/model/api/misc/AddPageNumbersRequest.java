@@ -2,11 +2,11 @@ package stirling.software.SPDF.model.api.misc;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 
-import org.springframework.web.multipart.MultipartFile;
-
 @Data
+@EqualsAndHashCode(callSuper=true)
 public class AddPageNumbersRequest extends PDFWithPageNums {
 
     @Schema(description = "Custom margin: small/medium/large", allowableValues = {"small", "medium", "large"})

@@ -21,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -51,7 +52,8 @@ public class GeneralWebController {
 	        }
 	        List<Map<String, String>> pipelineConfigsWithNames = new ArrayList<>();
 	        for (String config : pipelineConfigs) {
-	            Map<String, Object> jsonContent = new ObjectMapper().readValue(config, Map.class);
+	        	Map<String, Object> jsonContent = new ObjectMapper().readValue(config, new TypeReference<Map<String, Object>>(){});
+
 	            String name = (String) jsonContent.get("name");
 	            Map<String, String> configWithName = new HashMap<>();
 	            configWithName.put("json", config);

@@ -1,12 +1,14 @@
 package stirling.software.SPDF.model.api.misc;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import stirling.software.SPDF.model.api.PDFFile;
-
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import stirling.software.SPDF.model.api.PDFFile;
+
 @Data
+@EqualsAndHashCode(callSuper=true)
 public class MetadataRequest extends PDFFile {
 
     @Schema(description = "Delete all metadata if set to true")

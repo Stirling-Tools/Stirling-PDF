@@ -1,13 +1,14 @@
 package stirling.software.SPDF.model.api.misc;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
-import stirling.software.SPDF.model.api.PDFFile;
-
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import stirling.software.SPDF.model.api.PDFFile;
+
 @Data
+@EqualsAndHashCode(callSuper=true)
 public class ProcessPdfWithOcrRequest extends PDFFile {
 
     @Schema(description = "List of languages to use in OCR processing")
