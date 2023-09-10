@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,6 +23,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.misc.AddPageNumbersRequest;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -33,14 +35,13 @@ public class PageNumbersController {
 
     @PostMapping(value = "/add-page-numbers", consumes = "multipart/form-data")
     @Operation(summary = "Add page numbers to a PDF document", description = "This operation takes an input PDF file and adds page numbers to it. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> addPageNumbers(
-        @Parameter(description = "The input PDF file", required = true) @RequestParam("fileInput") MultipartFile file,
-        @Parameter(description = "Custom margin: small/medium/large", required = true, schema = @Schema(type = "string", allowableValues = {"small", "medium", "large"})) @RequestParam("customMargin") String customMargin,
-        @Parameter(description = "Position: 1 of 9 positions", required = true, schema = @Schema(type = "integer", minimum = "1", maximum = "9")) @RequestParam("position") int position,
-        @Parameter(description = "Starting number", required = true, schema = @Schema(type = "integer", minimum = "1")) @RequestParam("startingNumber") int startingNumber,
-        @Parameter(description = "Which pages to number, default all", required = false, schema = @Schema(type = "string")) @RequestParam(value = "pagesToNumber", required = false) String pagesToNumber,
-        @Parameter(description = "Custom text: defaults to just number but can have things like \"Page {n} of {p}\"", required = false, schema = @Schema(type = "string")) @RequestParam(value = "customText", required = false) String customText)
-        throws IOException {
+    public ResponseEntity<byte[]> addPageNumbers(@ModelAttribute AddPageNumbersRequest request) throws IOException {
+        MultipartFile file = request.getFileInput();
+        String customMargin = request.getCustomMargin();
+        int position = request.getPosition();
+        int startingNumber = request.getStartingNumber();
+        String pagesToNumber = request.getPagesToNumber();
+        String customText = request.getCustomText();
     	int pageNumber = startingNumber;
     	byte[] fileBytes = file.getBytes();
         PDDocument document = PDDocument.load(fileBytes);

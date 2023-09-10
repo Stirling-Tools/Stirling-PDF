@@ -20,6 +20,7 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -28,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import stirling.software.SPDF.model.api.security.SanitizePdfRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -36,25 +38,13 @@ public class SanitizeController {
 	@PostMapping(consumes = "multipart/form-data", value = "/sanitize-pdf")
 	@Operation(summary = "Sanitize a PDF file",
 	        description = "This endpoint processes a PDF file and removes specific elements based on the provided options. Input:PDF Output:PDF Type:SISO")
-	public ResponseEntity<byte[]> sanitizePDF(
-	        @RequestPart(required = true, value = "fileInput")
-	        @Parameter(description = "The input PDF file to be sanitized")
-	                MultipartFile inputFile,
-	        @RequestParam(name = "removeJavaScript", required = false, defaultValue = "false")
-	        @Parameter(description = "Remove JavaScript actions from the PDF if set to true")
-	                Boolean removeJavaScript,
-	        @RequestParam(name = "removeEmbeddedFiles", required = false, defaultValue = "false")
-	        @Parameter(description = "Remove embedded files from the PDF if set to true")
-	                Boolean removeEmbeddedFiles,
-	        @RequestParam(name = "removeMetadata", required = false, defaultValue = "false")
-	        @Parameter(description = "Remove metadata from the PDF if set to true")
-	                Boolean removeMetadata,
-	        @RequestParam(name = "removeLinks", required = false, defaultValue = "false")
-	        @Parameter(description = "Remove links from the PDF if set to true")
-	                Boolean removeLinks,
-	        @RequestParam(name = "removeFonts", required = false, defaultValue = "false")
-	        @Parameter(description = "Remove fonts from the PDF if set to true")
-	                Boolean removeFonts) throws IOException {
+	public ResponseEntity<byte[]> sanitizePDF(@ModelAttribute SanitizePdfRequest request) throws IOException {
+	    MultipartFile inputFile = request.getFileInput();
+	    Boolean removeJavaScript = request.getRemoveJavaScript();
+	    Boolean removeEmbeddedFiles = request.getRemoveEmbeddedFiles();
+	    Boolean removeMetadata = request.getRemoveMetadata();
+	    Boolean removeLinks = request.getRemoveLinks();
+	    Boolean removeFonts = request.getRemoveFonts();
 
 	    try (PDDocument document = PDDocument.load(inputFile.getInputStream())) {
 	        if (removeJavaScript) {

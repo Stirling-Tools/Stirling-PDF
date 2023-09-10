@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.misc.OverlayImageRequest;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -29,22 +31,12 @@ public class OverlayImageController {
         summary = "Overlay image onto a PDF file",
         description = "This endpoint overlays an image onto a PDF file at the specified coordinates. The image can be overlaid on every page of the PDF if specified.  Input:PDF/IMAGE Output:PDF Type:MF-SISO"
     )
-    public ResponseEntity<byte[]> overlayImage(
-        @RequestPart(required = true, value = "fileInput")
-        @Parameter(description = "The input PDF file to overlay the image onto.", required = true)
-            MultipartFile pdfFile,
-        @RequestParam("fileInput2")
-        @Parameter(description = "The image file to be overlaid onto the PDF.", required = true)
-            MultipartFile imageFile,
-        @RequestParam("x")
-        @Parameter(description = "The x-coordinate at which to place the top-left corner of the image.", example = "0")
-            float x,
-        @RequestParam("y")
-        @Parameter(description = "The y-coordinate at which to place the top-left corner of the image.", example = "0")
-            float y,
-        @RequestParam("everyPage")
-        @Parameter(description = "Whether to overlay the image onto every page of the PDF.", example = "false")
-            boolean everyPage) {
+    public ResponseEntity<byte[]> overlayImage(@ModelAttribute OverlayImageRequest request) {
+        MultipartFile pdfFile = request.getFileInput();
+        MultipartFile imageFile = request.getImageFile();
+        float x = request.getX();
+        float y = request.getY();
+        boolean everyPage = request.isEveryPage();
         try {
             byte[] pdfBytes = pdfFile.getBytes();
             byte[] imageBytes = imageFile.getBytes();

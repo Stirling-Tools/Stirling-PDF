@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -28,6 +29,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -51,35 +53,16 @@ public class OCRController {
     @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
     @Operation(summary = "Process a PDF file with OCR",
             description = "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options. Input:PDF Output:PDF Type:SI-Conditional")
-    public ResponseEntity<byte[]> processPdfWithOCR(
-            @RequestPart(required = true, value = "fileInput")
-            @Parameter(description = "The input PDF file to be processed with OCR")
-                    MultipartFile inputFile,
-            @RequestParam("languages")
-            @Parameter(description = "List of languages to use in OCR processing")
-                    List<String> selectedLanguages,
-            @RequestParam(name = "sidecar", required = false)
-            @Parameter(description = "Include OCR text in a sidecar text file if set to true")
-                    Boolean sidecar,
-            @RequestParam(name = "deskew", required = false)
-            @Parameter(description = "Deskew the input file if set to true")
-                    Boolean deskew,
-            @RequestParam(name = "clean", required = false)
-            @Parameter(description = "Clean the input file if set to true")
-                    Boolean clean,
-            @RequestParam(name = "clean-final", required = false)
-            @Parameter(description = "Clean the final output if set to true")
-                    Boolean cleanFinal,
-            @RequestParam(name = "ocrType", required = false)
-            @Parameter(description = "Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'", schema = @Schema(allowableValues = {"skip-text", "force-ocr", "Normal"}))
-                    String ocrType,
-            @RequestParam(name = "ocrRenderType", required = false, defaultValue = "hocr")
-            @Parameter(description = "Specify the OCR render type, either 'hocr' or 'sandwich'", schema = @Schema(allowableValues = {"hocr", "sandwich"}))
-                    String ocrRenderType,
-            @RequestParam(name = "removeImagesAfter", required = false)
-            @Parameter(description = "Remove images from the output PDF if set to true")
-                    Boolean removeImagesAfter) throws IOException, InterruptedException {
-
+    public ResponseEntity<byte[]> processPdfWithOCR(@ModelAttribute ProcessPdfWithOcrRequest request) throws IOException, InterruptedException {
+        MultipartFile inputFile = request.getFileInput();
+        List<String> selectedLanguages = request.getSelectedLanguages();
+        Boolean sidecar = request.getSidecar();
+        Boolean deskew = request.getDeskew();
+        Boolean clean = request.getClean();
+        Boolean cleanFinal = request.getCleanFinal();
+        String ocrType = request.getOcrType();
+        String ocrRenderType = request.getOcrRenderType();
+        Boolean removeImagesAfter = request.getRemoveImagesAfter();
         // --output-type pdfa
         if (selectedLanguages == null || selectedLanguages.isEmpty()) {
             throw new IOException("Please select at least one language.");

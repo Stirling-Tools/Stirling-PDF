@@ -18,6 +18,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +29,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.PDFText;
+import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.pdf.TextFinder;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
@@ -40,14 +42,14 @@ public class RedactController {
     @PostMapping(value = "/auto-redact", consumes = "multipart/form-data")
     @Operation(summary = "Redacts listOfText in a PDF document", 
                description = "This operation takes an input PDF file and redacts the provided listOfText. Input:PDF, Output:PDF, Type:SISO")
-    public ResponseEntity<byte[]> redactPdf(
-            @Parameter(description = "The input PDF file", required = true) @RequestParam("fileInput") MultipartFile file,
-            @Parameter(description = "List of listOfText to redact from the PDF", required = true, schema = @Schema(type = "string")) @RequestParam("listOfText") String listOfTextString,
-            @RequestParam(value = "useRegex", required = false) boolean useRegex,
-            @RequestParam(value = "wholeWordSearch", required = false) boolean wholeWordSearchBool,
-            @RequestParam(value = "redactColor", required = false, defaultValue = "#000000") String colorString,
-            @RequestParam(value = "customPadding", required = false) float customPadding,
-            @RequestParam(value = "convertPDFToImage", required = false) boolean convertPDFToImage) throws Exception {
+    public ResponseEntity<byte[]> redactPdf(@ModelAttribute RedactPdfRequest request) throws Exception {
+        MultipartFile file = request.getFileInput();
+        String listOfTextString = request.getListOfText();
+        boolean useRegex = request.isUseRegex();
+        boolean wholeWordSearchBool = request.isWholeWordSearch();
+        String colorString = request.getRedactColor();
+        float customPadding = request.getCustomPadding();
+        boolean convertPDFToImage = request.isConvertPDFToImage();
         
     	System.out.println(listOfTextString);
     	String[] listOfText = listOfTextString.split("\n");
