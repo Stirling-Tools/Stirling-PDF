@@ -19,7 +19,7 @@ public class RedactPdfRequest extends PDFFile {
     private boolean wholeWordSearch;
 
     @Schema(description = "The color for redaction", defaultValue = "#000000")
-    private String redactColor;
+    private String redactColor = "#000000";
 
     @Schema(description = "Custom padding for redaction", type = "number")
     private float customPadding;

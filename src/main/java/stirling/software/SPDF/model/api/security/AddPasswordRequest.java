@@ -16,7 +16,7 @@ public class AddPasswordRequest extends PDFFile {
     private String password;
 
     @Schema(description = "The length of the encryption key", allowableValues = {"40", "128", "256"}, defaultValue = "256")
-    private int keyLength;
+    private int keyLength = 256;
 
     @Schema(description = "Whether the document assembly is allowed", example = "false")
     private boolean canAssembleDocument;

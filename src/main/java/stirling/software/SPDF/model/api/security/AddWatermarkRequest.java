@@ -11,7 +11,9 @@ import stirling.software.SPDF.model.api.PDFFile;
 @EqualsAndHashCode(callSuper=true)
 public class AddWatermarkRequest extends PDFFile {
 
-    @Schema(description = "The watermark type (text or image)", required = true)
+    @Schema(description = "The watermark type (text or image)",
+    		allowableValues = {"text", "image"}, 
+    		required = true)
     private String watermarkType;
 
     @Schema(description = "The watermark text")
@@ -23,13 +25,13 @@ public class AddWatermarkRequest extends PDFFile {
     @Schema(description = "The selected alphabet", 
             allowableValues = {"roman", "arabic", "japanese", "korean", "chinese"}, 
             defaultValue = "roman")
-    private String alphabet;
+    private String alphabet = "roman";
 
     @Schema(description = "The font size of the watermark text", example = "30")
-    private float fontSize;
+    private float fontSize = 30;
 
     @Schema(description = "The rotation of the watermark in degrees", example = "0")
-    private float rotation;
+    private float rotation = 0;
 
     @Schema(description = "The opacity of the watermark (0.0 - 1.0)", example = "0.5")
     private float opacity;

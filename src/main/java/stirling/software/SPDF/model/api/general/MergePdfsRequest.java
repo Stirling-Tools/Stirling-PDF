@@ -18,5 +18,5 @@ public class MergePdfsRequest extends MultiplePDFFiles {
                 "byPDFTitle"
             }, 
             defaultValue = "orderProvided")
-    private String sortType;
+    private String sortType = "orderProvided";
 }

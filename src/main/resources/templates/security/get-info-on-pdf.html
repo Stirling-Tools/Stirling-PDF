@@ -14,7 +14,7 @@
 					<div class="col-md-6">
 						<h2 th:text="#{getPdfInfo.header}"></h2>
 						<form id="pdfInfoForm" method="post" enctype="multipart/form-data"
-							th:action="@{get-info-on-pdf}">
+							th:action="@{api/v1/security/get-info-on-pdf}">
 							<div
 								th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false')}"></div>
 							<br>
