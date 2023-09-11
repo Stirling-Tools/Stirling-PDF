@@ -21,7 +21,7 @@ public class OtherWebController {
     @Hidden
     public String compressPdfForm(Model model) {
         model.addAttribute("currentPage", "compress-pdf");
-        return "other/compress-pdf";
+        return "misc/compress-pdf";
     }
     
     @GetMapping("/extract-image-scans")
@@ -36,7 +36,7 @@ public class OtherWebController {
     @Hidden
     public String extractJavascriptForm(Model model) {
         model.addAttribute("currentPage", "show-javascript");
-        return "other/show-javascript";
+        return "misc/show-javascript";
     }
     
     
@@ -44,21 +44,21 @@ public class OtherWebController {
     @Hidden
     public String addPageNumbersForm(Model model) {
         model.addAttribute("currentPage", "add-page-numbers");
-        return "other/add-page-numbers";
+        return "misc/add-page-numbers";
     }
     
     @GetMapping("/extract-images")
     @Hidden
     public String extractImagesForm(Model model) {
         model.addAttribute("currentPage", "extract-images");
-        return "other/extract-images";
+        return "misc/extract-images";
     }
     
     @GetMapping("/flatten")
     @Hidden
     public String flattenForm(Model model) {
         model.addAttribute("currentPage", "flatten");
-        return "other/flatten";
+        return "misc/flatten";
     }
     
     
@@ -67,14 +67,14 @@ public class OtherWebController {
     @Hidden
     public String addWatermarkForm(Model model) {
         model.addAttribute("currentPage", "change-metadata");
-        return "other/change-metadata";
+        return "misc/change-metadata";
     }
     
     @GetMapping("/compare")
     @Hidden
     public String compareForm(Model model) {
         model.addAttribute("currentPage", "compare");
-        return "other/compare";
+        return "misc/compare";
     }
     
     public List<String> getAvailableTesseractLanguages() {
@@ -103,56 +103,49 @@ public class OtherWebController {
     @Hidden
     public String overlayImage(Model model) {
         model.addAttribute("currentPage", "add-image");
-        return "other/add-image";
+        return "misc/add-image";
     }
     
     @GetMapping("/adjust-contrast")
     @Hidden
     public String contrast(Model model) {
         model.addAttribute("currentPage", "adjust-contrast");
-        return "other/adjust-contrast";
+        return "misc/adjust-contrast";
     }
     
     @GetMapping("/repair")
     @Hidden
     public String repairForm(Model model) {
         model.addAttribute("currentPage", "repair");
-        return "other/repair";
+        return "misc/repair";
     }
     
     @GetMapping("/remove-blanks")
     @Hidden
     public String removeBlanksForm(Model model) {
         model.addAttribute("currentPage", "remove-blanks");
-        return "other/remove-blanks";
-    }
-    
-    @GetMapping("/multi-page-layout")
-    @Hidden
-    public String multiPageLayoutForm(Model model) {
-        model.addAttribute("currentPage", "multi-page-layout");
-        return "other/multi-page-layout";
+        return "misc/remove-blanks";
     }
     
     @GetMapping("/scale-pages")
     @Hidden
     public String scalePagesFrom(Model model) {
         model.addAttribute("currentPage", "scale-pages");
-        return "other/scale-pages";
+        return "misc/scale-pages";
     }
     
     @GetMapping("/auto-crop")
     @Hidden
     public String autoCropForm(Model model) {
         model.addAttribute("currentPage", "auto-crop");
-        return "other/auto-crop";
+        return "misc/auto-crop";
     }
     
     @GetMapping("/auto-rename")
     @Hidden
     public String autoRenameForm(Model model) {
         model.addAttribute("currentPage", "auto-rename");
-        return "other/auto-rename";
+        return "misc/auto-rename";
     }
     
 

@@ -140,6 +140,15 @@ public class GeneralWebController {
         return "sign";
     }
     
+    @GetMapping("/multi-page-layout")
+    @Hidden
+    public String multiPageLayoutForm(Model model) {
+        model.addAttribute("currentPage", "multi-page-layout");
+        return "multi-page-layout";
+    }
+    
+    
+    
     @Autowired
     private ResourceLoader resourceLoader;
     

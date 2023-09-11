@@ -180,8 +180,6 @@ public class RearrangePagesPDFController {
 			// Split the page order string into an array of page numbers or range of numbers
 			String[] pageOrderArr = pageOrder != null ? pageOrder.split(",") : new String[0];
 			int totalPages = document.getNumberOfPages();
-			System.out.println("pageOrder=" + pageOrder);
-			System.out.println("SortTypes length =" + sortType.length());
 			List<Integer> newPageOrder;
 			if (sortType != null && sortType.length() > 0) {
 				newPageOrder = processSortTypes(sortType, totalPages);
