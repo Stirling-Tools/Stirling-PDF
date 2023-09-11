@@ -39,6 +39,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -56,6 +57,7 @@ import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@RequestMapping("/api/v1/pipeline")
 @Tag(name = "Pipeline", description = "Pipeline APIs")
 public class PipelineController {
 

@@ -14,7 +14,7 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <h2 th:text="#{repair.header}"></h2>
-                         <form id="multiPdfForm" th:action="@{repair}" method="post" enctype="multipart/form-data">
+                         <form id="multiPdfForm" th:action="@{api/v1/misc/repair}" method="post" enctype="multipart/form-data">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{repair.submit}"></button> 
                         </form>

@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,7 +29,8 @@ import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
-@Tag(name = "Other", description = "Other APIs")
+@RequestMapping("/api/v1/misc")
+@Tag(name = "Misc", description = "Miscellaneous APIs")
 public class PageNumbersController {
 
     private static final Logger logger = LoggerFactory.getLogger(PageNumbersController.class);

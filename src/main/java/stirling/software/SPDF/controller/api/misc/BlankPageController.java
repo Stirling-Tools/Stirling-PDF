@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,7 +38,8 @@ import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
-@Tag(name = "Other", description = "Other APIs")
+@RequestMapping("/api/v1/misc")
+@Tag(name = "Misc", description = "Miscellaneous APIs")
 public class BlankPageController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")

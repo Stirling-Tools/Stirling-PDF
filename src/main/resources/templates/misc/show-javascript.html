@@ -49,7 +49,7 @@
         // Fetch the formData
         const formData = new FormData(event.target);
 
-        fetch('show-javascript', {
+        fetch('api/v1/misc/show-javascript', {
             method: 'POST',
             body: formData
         }).then(response => response.text())

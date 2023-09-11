@@ -8,6 +8,7 @@ import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,9 +21,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")
+@RequestMapping("/api/v1/convert")
 public class ConvertMarkdownToPdf {
 	
-	@PostMapping(consumes = "multipart/form-data", value = "/markdown-to-pdf")
+	@PostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
     @Operation(
         summary = "Convert a Markdown file to PDF",
         description = "This endpoint takes a Markdown file input, converts it to HTML, and then to PDF format."

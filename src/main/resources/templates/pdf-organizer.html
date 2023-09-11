@@ -14,7 +14,7 @@
                     <div class="col-md-6">
                         <h2 th:text="#{pdfOrganiser.header}"></h2>
 
-                        <form th:action="@{rearrange-pages}" method="post" enctype="multipart/form-data">
+                        <form th:action="@{api/v1/general/rearrange-pages}" method="post" enctype="multipart/form-data">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <div class="mb-3">
 						        <label for="customMode">Mode</label>

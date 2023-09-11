@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,7 +20,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
-@Tag(name = "Other", description = "Other APIs")
+@RequestMapping("/api/v1/misc")
+@Tag(name = "Misc", description = "Miscellaneous APIs")
 public class ShowJavascript {
 
     private static final Logger logger = LoggerFactory.getLogger(ShowJavascript.class);

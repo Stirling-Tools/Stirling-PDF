@@ -23,7 +23,7 @@
                         <p th:text="#{split.desc.7}"></p>
                         <p th:text="#{split.desc.8}"></p>
 
-                        <form th:action="@{split-pages}" method="post" enctype="multipart/form-data">
+                        <form th:action="@{api/v1/general/split-pages}" method="post" enctype="multipart/form-data">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
 
                             <div class="mb-3">

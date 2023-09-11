@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,10 +23,11 @@ import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToPDFA {
 
-	@PostMapping(consumes = "multipart/form-data", value = "/pdf-to-pdfa")
+	@PostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
 	@Operation(
 	    summary = "Convert a PDF to a PDF/A",
 	    description = "This endpoint converts a PDF file to a PDF/A file. PDF/A is a format designed for long-term archiving of digital documents. Input:PDF Output:PDF Type:SISO"

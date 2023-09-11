@@ -12,6 +12,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,6 +27,7 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")
+@RequestMapping("/api/v1/convert")
 public class ConvertOfficeController {
 
     public byte[] convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
@@ -60,7 +62,7 @@ public class ConvertOfficeController {
         return fileExtension.matches(extensionPattern);
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/file-to-pdf")
+    @PostMapping(consumes = "multipart/form-data", value = "/file/pdf")
     @Operation(
         summary = "Convert a file to a PDF using LibreOffice",
         description = "This endpoint converts a given file to a PDF using LibreOffice API  Input:Any Output:PDF Type:SISO"

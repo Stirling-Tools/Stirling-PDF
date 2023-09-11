@@ -22,6 +22,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,6 +34,7 @@ import stirling.software.SPDF.model.api.security.SanitizePdfRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@RequestMapping("/api/v1/security")
 public class SanitizeController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/sanitize-pdf")

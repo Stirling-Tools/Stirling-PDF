@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,7 +35,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.api.PDFWithImageFormatRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
-@Tag(name = "Other", description = "Other APIs")
+@RequestMapping("/api/v1/misc")
+@Tag(name = "Misc", description = "Miscellaneous APIs")
 public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);

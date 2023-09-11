@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,12 +28,13 @@ import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
+@RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertImgPDFController {
 
     private static final Logger logger = LoggerFactory.getLogger(ConvertImgPDFController.class);
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf-to-img")
+    @PostMapping(consumes = "multipart/form-data", value = "/pdf/img")
     @Operation(summary = "Convert PDF to image(s)",
             description = "This endpoint converts a PDF file to image(s) with the specified image format, color type, and DPI. Users can choose to get a single image or multiple images.  Input:PDF Output:Image Type:SI-Conditional")
     public ResponseEntity<Resource> convertToImage(@ModelAttribute ConvertToImageRequest request) throws IOException {
@@ -76,7 +78,7 @@ public class ConvertImgPDFController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/img-to-pdf")
+    @PostMapping(consumes = "multipart/form-data", value = "/img/pdf")
     @Operation(summary = "Convert images to a PDF file",
             description = "This endpoint converts one or more images to a PDF file. Users can specify whether to stretch the images to fit the PDF page, and whether to automatically rotate the images. Input:Image Output:PDF Type:SISO?")
     public ResponseEntity<byte[]> convertToPdf(@ModelAttribute ConvertToPdfRequest request) throws IOException {
