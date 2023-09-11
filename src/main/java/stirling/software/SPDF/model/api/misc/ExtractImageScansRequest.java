@@ -4,8 +4,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode
 public class ExtractImageScansRequest {
     @Schema(description = "The input file containing image scans", required = true)
     private MultipartFile fileInput;

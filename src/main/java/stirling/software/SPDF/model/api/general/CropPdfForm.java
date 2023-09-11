@@ -1,13 +1,11 @@
 package stirling.software.SPDF.model.api.general;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import stirling.software.SPDF.model.api.PDFFile;
 
-import org.springframework.web.multipart.MultipartFile;
-
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Data
+@EqualsAndHashCode(callSuper=true)
 public class CropPdfForm extends PDFFile {
 
 

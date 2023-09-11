@@ -2,10 +2,11 @@ package stirling.software.SPDF.model.api.security;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
+import lombok.EqualsAndHashCode;
 import stirling.software.SPDF.model.api.PDFFile;
 
 @Data
+@EqualsAndHashCode(callSuper=true)
 public class AddPasswordRequest extends PDFFile {
 
     @Schema(description = "The owner password to be added to the PDF file (Restricts what can be done with the document once it is opened)", defaultValue = "")

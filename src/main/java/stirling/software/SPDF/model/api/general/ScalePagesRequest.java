@@ -2,10 +2,11 @@ package stirling.software.SPDF.model.api.general;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
+import lombok.EqualsAndHashCode;
 import stirling.software.SPDF.model.api.PDFFile;
 
 @Data
+@EqualsAndHashCode(callSuper=true)
 public class ScalePagesRequest extends PDFFile {
 
     @Schema(description = "The scale of pages in the output PDF. Acceptable values are A0-A10, B0-B9, LETTER, TABLOID, LEDGER, LEGAL, EXECUTIVE.", 

@@ -2,10 +2,11 @@ package stirling.software.SPDF.model.api.converters;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
+import lombok.EqualsAndHashCode;
 import stirling.software.SPDF.model.api.PDFFile;
 
 @Data
+@EqualsAndHashCode(callSuper=true)
 public class ConvertToImageRequest extends PDFFile {
 
     @Schema(description = "The output image format", allowableValues = {"png", "jpeg", "jpg", "gif"})
