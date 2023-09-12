@@ -36,7 +36,7 @@ public class ScalePagesController {
 	@Operation(summary = "Change the size of a PDF page/document", description = "This operation takes an input PDF file and the size to scale the pages to in the output PDF file. Input:PDF Output:PDF Type:SISO")
 	public ResponseEntity<byte[]> scalePages(@ModelAttribute ScalePagesRequest request) throws IOException {
 	    MultipartFile file = request.getFileInput();
-	    String targetPDRectangle = request.getTargetPDRectangle();
+	    String targetPDRectangle = request.getPageSize();
 	    float scaleFactor = request.getScaleFactor();
 
 		Map<String, PDRectangle> sizeMap = new HashMap<>();

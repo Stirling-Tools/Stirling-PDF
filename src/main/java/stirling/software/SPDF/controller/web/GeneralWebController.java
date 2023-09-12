@@ -148,6 +148,14 @@ public class GeneralWebController {
     }
     
     
+    @GetMapping("/scale-pages")
+    @Hidden
+    public String scalePagesFrom(Model model) {
+        model.addAttribute("currentPage", "scale-pages");
+        return "scale-pages";
+    }
+    
+    
     
     @Autowired
     private ResourceLoader resourceLoader;

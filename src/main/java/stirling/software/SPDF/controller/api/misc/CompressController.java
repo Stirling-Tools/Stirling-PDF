@@ -48,7 +48,7 @@ public class CompressController {
     public ResponseEntity<byte[]> optimizePdf(@ModelAttribute OptimizePdfRequest request) throws Exception {
         MultipartFile inputFile = request.getFileInput();
         Integer optimizeLevel = request.getOptimizeLevel();
-        String expectedOutputSizeString = request.getExpectedOutputSizeString();
+        String expectedOutputSizeString = request.getExpectedOutputSize();
 
 
         if(expectedOutputSizeString == null && optimizeLevel == null) {

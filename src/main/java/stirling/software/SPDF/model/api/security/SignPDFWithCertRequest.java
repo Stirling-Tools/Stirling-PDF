@@ -27,7 +27,7 @@ public class SignPDFWithCertRequest extends PDFFile {
     private String password;
 
     @Schema(description = "Whether to visually show the signature in the PDF file")
-    private Boolean showSignature;
+    private boolean showSignature;
 
     @Schema(description = "The reason for signing the PDF")
     private String reason;

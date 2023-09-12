@@ -12,7 +12,7 @@ import stirling.software.SPDF.model.api.PDFFile;
 public class MetadataRequest extends PDFFile {
 
     @Schema(description = "Delete all metadata if set to true")
-    private Boolean deleteAll;
+    private boolean deleteAll;
 
     @Schema(description = "The author of the document")
     private String author;

@@ -75,7 +75,7 @@ public class CertSignController {
 	    MultipartFile certFile = request.getCertFile();
 	    MultipartFile p12File = request.getP12File();
 	    String password = request.getPassword();
-	    Boolean showSignature = request.getShowSignature();
+	    Boolean showSignature = request.isShowSignature();
 	    String reason = request.getReason();
 	    String location = request.getLocation();
 	    String name = request.getName();

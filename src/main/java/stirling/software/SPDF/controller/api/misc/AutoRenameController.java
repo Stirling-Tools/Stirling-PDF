@@ -35,7 +35,7 @@ public class AutoRenameController {
     @Operation(summary = "Extract header from PDF file", description = "This endpoint accepts a PDF file and attempts to extract its title or header based on heuristics. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> extractHeader(@ModelAttribute ExtractHeaderRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
-        Boolean useFirstTextAsFallback = request.getUseFirstTextAsFallback();
+        Boolean useFirstTextAsFallback = request.isUseFirstTextAsFallback();
 
     	        PDDocument document = PDDocument.load(file.getInputStream());
     	        PDFTextStripper reader = new PDFTextStripper() {

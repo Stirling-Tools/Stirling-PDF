@@ -39,11 +39,11 @@ public class SanitizeController {
 	        description = "This endpoint processes a PDF file and removes specific elements based on the provided options. Input:PDF Output:PDF Type:SISO")
 	public ResponseEntity<byte[]> sanitizePDF(@ModelAttribute SanitizePdfRequest request) throws IOException {
 	    MultipartFile inputFile = request.getFileInput();
-	    Boolean removeJavaScript = request.getRemoveJavaScript();
-	    Boolean removeEmbeddedFiles = request.getRemoveEmbeddedFiles();
-	    Boolean removeMetadata = request.getRemoveMetadata();
-	    Boolean removeLinks = request.getRemoveLinks();
-	    Boolean removeFonts = request.getRemoveFonts();
+	    boolean removeJavaScript = request.isRemoveJavaScript();
+	    boolean removeEmbeddedFiles = request.isRemoveEmbeddedFiles();
+	    boolean removeMetadata = request.isRemoveMetadata();
+	    boolean removeLinks = request.isRemoveLinks();
+	    boolean removeFonts = request.isRemoveFonts();
 
 	    try (PDDocument document = PDDocument.load(inputFile.getInputStream())) {
 	        if (removeJavaScript) {

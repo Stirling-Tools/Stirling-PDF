@@ -27,7 +27,7 @@ public class OtherWebController {
     @GetMapping("/extract-image-scans")
     @Hidden
     public ModelAndView extractImageScansForm() {
-        ModelAndView modelAndView = new ModelAndView("other/extract-image-scans");
+        ModelAndView modelAndView = new ModelAndView("misc/extract-image-scans");
         modelAndView.addObject("currentPage", "extract-image-scans");
         return modelAndView;
     }
@@ -90,7 +90,7 @@ public class OtherWebController {
     @GetMapping("/ocr-pdf")
     @Hidden
     public ModelAndView ocrPdfPage() {
-        ModelAndView modelAndView = new ModelAndView("other/ocr-pdf");
+        ModelAndView modelAndView = new ModelAndView("misc/ocr-pdf");
         List<String> languages = getAvailableTesseractLanguages();
         Collections.sort(languages);
         modelAndView.addObject("languages", languages);
@@ -127,13 +127,7 @@ public class OtherWebController {
         return "misc/remove-blanks";
     }
     
-    @GetMapping("/scale-pages")
-    @Hidden
-    public String scalePagesFrom(Model model) {
-        model.addAttribute("currentPage", "scale-pages");
-        return "misc/scale-pages";
-    }
-    
+
     @GetMapping("/auto-crop")
     @Hidden
     public String autoCropForm(Model model) {

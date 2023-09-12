@@ -10,17 +10,17 @@ import stirling.software.SPDF.model.api.PDFFile;
 public class SanitizePdfRequest extends PDFFile {
 
     @Schema(description = "Remove JavaScript actions from the PDF", defaultValue = "false")
-    private Boolean removeJavaScript;
+    private boolean removeJavaScript;
 
     @Schema(description = "Remove embedded files from the PDF", defaultValue = "false")
-    private Boolean removeEmbeddedFiles;
+    private boolean removeEmbeddedFiles;
 
     @Schema(description = "Remove metadata from the PDF", defaultValue = "false")
-    private Boolean removeMetadata;
+    private boolean removeMetadata;
 
     @Schema(description = "Remove links from the PDF", defaultValue = "false")
-    private Boolean removeLinks;
+    private boolean removeLinks;
 
     @Schema(description = "Remove fonts from the PDF", defaultValue = "false")
-    private Boolean removeFonts;
+    private boolean removeFonts;
 }

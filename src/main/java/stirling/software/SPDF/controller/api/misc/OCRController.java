@@ -53,14 +53,14 @@ public class OCRController {
             description = "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options. Input:PDF Output:PDF Type:SI-Conditional")
     public ResponseEntity<byte[]> processPdfWithOCR(@ModelAttribute ProcessPdfWithOcrRequest request) throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
-        List<String> selectedLanguages = request.getSelectedLanguages();
-        Boolean sidecar = request.getSidecar();
-        Boolean deskew = request.getDeskew();
-        Boolean clean = request.getClean();
-        Boolean cleanFinal = request.getCleanFinal();
+        List<String> selectedLanguages = request.getLanguages();
+        Boolean sidecar = request.isSidecar();
+        Boolean deskew = request.isDeskew();
+        Boolean clean = request.isClean();
+        Boolean cleanFinal = request.isCleanFinal();
         String ocrType = request.getOcrType();
         String ocrRenderType = request.getOcrRenderType();
-        Boolean removeImagesAfter = request.getRemoveImagesAfter();
+        Boolean removeImagesAfter = request.isRemoveImagesAfter();
         // --output-type pdfa
         if (selectedLanguages == null || selectedLanguages.isEmpty()) {
             throw new IOException("Please select at least one language.");

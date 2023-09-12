@@ -48,7 +48,7 @@ public class MetadataController {
         MultipartFile pdfFile = request.getFileInput();
 
         // Extract metadata information
-        Boolean deleteAll = request.getDeleteAll();
+        Boolean deleteAll = request.isDeleteAll();
         String author = request.getAuthor();
         String creationDate = request.getCreationDate();
         String creator = request.getCreator();
@@ -61,7 +61,9 @@ public class MetadataController {
 
         // Extract additional custom parameters
         Map<String, String> allRequestParams = request.getAllRequestParams();
-
+        if(allRequestParams == null) {
+        	allRequestParams = new java.util.HashMap<String, String>();
+        }
         // Load the PDF file into a PDDocument
         PDDocument document = PDDocument.load(pdfFile.getBytes());
 

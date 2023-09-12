@@ -40,7 +40,7 @@
 
 						    const formData = new FormData(event.target);
 						    
-						    fetch('get-info-on-pdf', { 
+						    fetch('api/v1/security/get-info-on-pdf', { 
 						        method: 'POST',
 						        body: formData
 						    })

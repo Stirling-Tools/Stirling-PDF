@@ -14,5 +14,5 @@ public class OptimizePdfRequest extends PDFFile {
     private Integer optimizeLevel;
 
     @Schema(description = "The expected output size, e.g. '100MB', '25KB', etc.")
-    private String expectedOutputSizeString;
+    private String expectedOutputSize;
 }

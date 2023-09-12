@@ -186,7 +186,8 @@ public class RearrangePagesPDFController {
 			} else {
 				newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages);
 			}
-
+			logger.info("newPageOrder = "  +newPageOrder);
+			logger.info("totalPages = "  +totalPages);
 			// Create a new list to hold the pages in the new order
 			List<PDPage> newPages = new ArrayList<>();
 			for (int i = 0; i < newPageOrder.size(); i++) {
