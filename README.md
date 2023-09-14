@@ -21,6 +21,15 @@ Feel free to request any features or bug fixes either in github issues or our [D
 
 
 ![stirling-home](images/stirling-home.png)
+
+## Features
+- Dark mode support.
+- Custom download options (see [here](https://github.com/Frooodle/Stirling-PDF/blob/main/images/settings.png) for example)
+- Parallel file processing and downloads
+- API for integration with external scripts 
+- Optional Login and Authentication support (see [here](https://github.com/Frooodle/Stirling-PDF/tree/main#login-authentication) for documentation)
+
+
 ## **PDF Features**
 
 ### **Page Operations**
@@ -70,13 +79,6 @@ Feel free to request any features or bug fixes either in github issues or our [D
 - Edit metadata. 
 - Flatten PDFs. 
 - Get all information on a PDF to view or export as JSON. 
-
-## Extra Features
-- Dark mode support.
-- Custom download options (see [here](https://github.com/Frooodle/Stirling-PDF/blob/main/images/settings.png) for example)
-- Parallel file processing and downloads
-- API for integration with external scripts 
-
 
 
 For a overview of the tasks and the technology each uses please view [groups.md](https://github.com/Frooodle/Stirling-PDF/blob/main/Groups.md)
