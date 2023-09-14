@@ -138,10 +138,6 @@ services:
 #      - /location/of/customFiles:/customFiles/
     environment:
       - DOCKER_ENABLE_SECURITY=false
-      
-      
-
-
 ```
 
 

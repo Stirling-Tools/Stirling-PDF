@@ -27,11 +27,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.api.security.SanitizePdfRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/security")
+@Tag(name = "Security", description = "Security APIs")
 public class SanitizeController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/sanitize-pdf")
