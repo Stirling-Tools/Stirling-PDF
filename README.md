@@ -173,9 +173,6 @@ The Current list of settings is
 ```
 security:
   enableLogin: false # set to 'true' to enable login
-  initialLogin:
-    username: 'username' # Specify the initial username for first boot (e.g. 'admin')
-    password: 'password' # Specify the initial password for first boot (e.g. 'password123')
   csrfDisabled: true
 
 system:
@@ -213,11 +210,11 @@ For those wanting to use Stirling-PDFs backend API to link with their own custom
 ### Prerequisites: 
 - User must have the folder ./configs volumed within docker so that it is retained during updates.
 - Docker uses must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables. 
-- Now the initial user must be generated. Navigate to your settings.yaml and configure your security settings along with the username and password (only required on the first boot to create the initial user, ignored after.). Alternatively, you can set these via the environment variables ``SECURITY_ENABLELOGIN : true`` ``SECURITY_INITIALLOGIN_USERNAME: username`` ``SECURITY_INITIALLOGIN_PASSWORD: password``
+- Now the initial user will be generated with username ``admin`` and password ``stirling``. On login you will be forced to change the password to a new one.
 
 Once the above has been done, on restart, a new stirling-pdf-DB.mv.db will show if everything worked.
 
-When you login to Stirling PDF you will be redirected to /login page to login with those credentials. After login everything should function as normal
+When you login to Stirling PDF you will be redirected to /login page to login with those default credentials. After login everything should function as normal
 
 To access your account settings go to Account settings in the settings cog menu (top right in navbar) This Account settings menu is also where you find your API key.
 
@@ -232,7 +229,7 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 - Progress bar/Tracking
 - Full custom logic pipelines to combine multiple operations together.
 - Folder support with auto scanning to perform operations on
-- Redact text (Via UI)
+- Redact text (Via UI not just automated way) 
 - Add Forms
 - Annotations
 - Multi page layout (Stich PDF pages together) support x rows y columns and custom page sizing 
