@@ -34,7 +34,7 @@ sourceSets {
 
 
 openApi {
-    apiDocsUrl = "http://localhost:8080/v3/api-docs"
+    apiDocsUrl = "http://localhost:8080/v1/api-docs"
     outputDir = file("$projectDir")
     outputFileName = "SwaggerDoc.json"
 }
