@@ -175,7 +175,7 @@
 
 					    
 					    document.addEventListener("DOMContentLoaded", function() {
-					        const form = document.querySelector('form[action="/change-password"]');
+					        const form = document.querySelector('form[action="api/v1/user/change-password"]');
 					        
 					        form.addEventListener('submit', function(event) {
 					            const newPassword = document.getElementById('newPassword').value;

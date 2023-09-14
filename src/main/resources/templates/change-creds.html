@@ -37,7 +37,7 @@
                         <!-- Change Username Form -->
                         <h4></h4>
                         <h4 th:text="#{changeCreds.changeUserAndPassword}">Change Username and password</h4>
-                        <form action="/api/v1/user/change-username-and-password" method="post">
+                        <form action="api/v1/user/change-username-and-password" method="post">
                             <div class="mb-3">
                                 <label for="newUsername" th:text="#{changeCreds.newUsername}">New Username</label>
                                 <input type="text" class="form-control" name="newUsername" id="newUsername" th:placeholder="${username}">
@@ -51,11 +51,29 @@
                                 <input type="password" class="form-control" name="newPassword" id="newPassword" th:placeholder="#{changeCreds.newPassword}">
                             </div>
                             <div class="mb-3">
+                                <label for="confirmNewPassword" th:text="#{account.confirmNewPassword}">Confirm New Password</label>
+                                <input type="password" class="form-control" name="confirmNewPassword" id="confirmNewPassword" th:placeholder="#{account.confirmNewPassword}">
+                            </div>
+                            <div class="mb-3">
                                 <button type="submit" class="btn btn-primary" th:text="#{changeCreds.submit}">Change credentials!</button>
                             </div>
                         </form>
 						
-			
+			<script>
+			document.addEventListener("DOMContentLoaded", function() {
+		        const form = document.querySelector('form[action="api/v1/user/change-username-and-password"]');
+		        
+		        form.addEventListener('submit', function(event) {
+		            const newPassword = document.getElementById('newPassword').value;
+		            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+		            if (newPassword !== confirmNewPassword) {
+		                alert('New Password and Confirm New Password must match.');
+		                event.preventDefault(); // Prevent form submission
+		            }
+		        });
+		    });
+			</script>
 </div>
 
 

@@ -21,44 +21,63 @@ Feel free to request any features or bug fixes either in github issues or our [D
 
 
 ![stirling-home](images/stirling-home.png)
+## **PDF Features**
 
-## Features
-- Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages.
-- Split PDFs into multiple files at specified page numbers or extract all pages as individual files.
-- Merge multiple PDFs together into a single resultant file
-- Convert PDFs to and from images
-- Reorganize PDF pages into different orders.
-- Add/Generate signatures
-- Format PDFs into a multi-paged page
-- Scale page contents size by set % 
-- Adjust Contrast
-- Crop PDF
-- Auto Split PDF (With physically scanned page dividers)
-- Flatten PDFs
-- Repair PDFs
-- Detect and remove blank pages
-- Compare 2 PDFs and show differences in text
-- Add images to PDFs
-- Rotating PDFs in 90 degree increments.
-- Compressing PDFs to decrease their filesize. (Using OCRMyPDF)
-- Add and remove passwords
-- Set PDF Permissions
-- Add watermark(s)
-- Convert Any common file to PDF (using LibreOffice)
-- Convert PDF to Word/Powerpoint/Others (using LibreOffice)
-- Convert HTML to PDF
-- URL to PDF
-- Extract images from PDF
-- Extract images from Scans
-- Add page numbers
-- Auto rename file by detecting PDF header text
-- OCR on PDF (Using OCRMyPDF)
-- PDF/A conversion (Using OCRMyPDF)
-- Edit metadata
+### **Page Operations**
+- Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages. 
+- Merge multiple PDFs together into a single resultant file. 
+- Split PDFs into multiple files at specified page numbers or extract all pages as individual files. 
+- Reorganize PDF pages into different orders. 
+- Rotate PDFs in 90-degree increments. 
+- Remove pages. 
+- Multi-page layout (Format PDFs into a multi-paged page). 
+- Scale page contents size by set %. 
+- Adjust Contrast. 
+- Crop PDF. 
+- Auto Split PDF (With physically scanned page dividers). 
+- Extract page(s). 
+- Convert PDF to a single page. 
+
+### **Conversion Operations**
+- Convert PDFs to and from images. 
+- Convert any common file to PDF (using LibreOffice). 
+- Convert PDF to Word/Powerpoint/Others (using LibreOffice). 
+- Convert HTML to PDF. 
+- URL to PDF. 
+- Markdown to PDF. 
+
+### **Security & Permissions**
+- Add and remove passwords. 
+- Change/set PDF Permissions. 
+- Add watermark(s). 
+- Certify/sign PDFs. 
+- Sanitize PDFs. 
+- Auto-redact text. 
+
+### **Other Operations**
+- Add/Generate/Write signatures. 
+- Repair PDFs. 
+- Detect and remove blank pages. 
+- Compare 2 PDFs and show differences in text. 
+- Add images to PDFs. 
+- Compress PDFs to decrease their filesize (Using OCRMyPDF). 
+- Extract images from PDF. 
+- Extract images from Scans. 
+- Add page numbers. 
+- Auto rename file by detecting PDF header text. 
+- OCR on PDF (Using OCRMyPDF). 
+- PDF/A conversion (Using OCRMyPDF). 
+- Edit metadata. 
+- Flatten PDFs. 
+- Get all information on a PDF to view or export as JSON. 
+
+## Extra Features
 - Dark mode support.
 - Custom download options (see [here](https://github.com/Frooodle/Stirling-PDF/blob/main/images/settings.png) for example)
 - Parallel file processing and downloads
 - API for integration with external scripts 
+
+
 
 For a overview of the tasks and the technology each uses please view [groups.md](https://github.com/Frooodle/Stirling-PDF/blob/main/Groups.md)
 Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) hosted by the team at adminforge.de
@@ -94,6 +113,7 @@ docker run -d \
   -p 8080:8080 \
   -v /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata \
   -v /location/of/extraConfigs:/configs \
+  -e DOCKER_ENABLE_SECURITY=false \
   --name stirling-pdf \
   frooodle/s-pdf:latest
   
@@ -114,6 +134,11 @@ services:
       - /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata #Required for extra OCR languages
       - /location/of/extraConfigs:/configs
 #      - /location/of/customFiles:/customFiles/
+    environment:
+      - DOCKER_ENABLE_SECURITY=false
+      
+      
+
 
 ```
 
@@ -122,8 +147,9 @@ services:
 Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
-Stirling PDF currently supports 16!
+Stirling PDF currently supports 18!
 - English (English) (en_GB)
+- English (US) (en_US)
 - Arabic (العربية) (ar_AR)
 - German (Deutsch) (de_DE)
 - French (Français) (fr_FR)
@@ -139,6 +165,7 @@ Stirling PDF currently supports 16!
 - Russian (Русский) (ru_RU)
 - Basque (Euskara) (eu_ES)
 - Japanese (日本語) (ja_JP)
+- Dutch (Nederlands) (nl_NL)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
@@ -190,7 +217,7 @@ endpoints:
   groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
 
 metrics:
-  enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
+  enabled: true # 'true' to enable Info APIs endpoints (view http://localhost:8080/swagger-ui/index.html#/API to learn more), 'false' to disable
 ```
 ### Extra notes
 - Endpoints. Currently, the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma separate lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image-to-pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Frooodle/Stirling-PDF/blob/main/groups.md) 

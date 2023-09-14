@@ -22,7 +22,6 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
 		String queryString = request.getQueryString();
 		if (queryString != null && !queryString.isEmpty()) {
 			String requestURI = request.getRequestURI();
-
 			Map<String, String> parameters = new HashMap<>();
 
 			// Keep only the allowed parameters
