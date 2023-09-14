@@ -60,8 +60,9 @@ import org.apache.xmpbox.xml.XmpParsingException;
 import org.apache.xmpbox.xml.XmpSerializer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -70,10 +71,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
+@RequestMapping("/api/v1/security")
 @Tag(name = "Security", description = "Security APIs")
 public class GetInfoOnPDF {
 	
@@ -81,11 +83,9 @@ public class GetInfoOnPDF {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/get-info-on-pdf")
     @Operation(summary = "Summary here", description = "desc. Input:PDF Output:JSON Type:SISO")
-    public ResponseEntity<byte[]> getPdfInfo(
-            @RequestPart(required = true, value = "fileInput") 
-            @Parameter(description = "The input PDF file to get info on", required = true) MultipartFile inputFile)
+    public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request)
             throws IOException {
-		
+		MultipartFile inputFile = request.getFileInput();
 		try (
 			    PDDocument pdfBoxDoc = PDDocument.load(inputFile.getInputStream());
 			) {

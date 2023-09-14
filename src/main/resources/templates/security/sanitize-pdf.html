@@ -13,7 +13,7 @@
                     <div class="col-md-6">
                         <h2 th:text="#{sanitizePDF.header}"></h2>
 
-                        <form action="sanitize-pdf" method="post" enctype="multipart/form-data">
+                        <form action="api/v1/security/sanitize-pdf" method="post" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             </div>

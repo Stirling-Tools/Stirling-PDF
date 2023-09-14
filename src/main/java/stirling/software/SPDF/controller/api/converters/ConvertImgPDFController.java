@@ -11,44 +11,35 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
+import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
+@RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertImgPDFController {
 
     private static final Logger logger = LoggerFactory.getLogger(ConvertImgPDFController.class);
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf-to-img")
+    @PostMapping(consumes = "multipart/form-data", value = "/pdf/img")
     @Operation(summary = "Convert PDF to image(s)",
             description = "This endpoint converts a PDF file to image(s) with the specified image format, color type, and DPI. Users can choose to get a single image or multiple images.  Input:PDF Output:Image Type:SI-Conditional")
-    public ResponseEntity<Resource> convertToImage(
-            @RequestPart(required = true, value = "fileInput")
-            @Parameter(description = "The input PDF file to be converted")
-                    MultipartFile file,
-            @RequestParam("imageFormat")
-            @Parameter(description = "The output image format", schema = @Schema(allowableValues = {"png", "jpeg", "jpg", "gif"}))
-                    String imageFormat,
-            @RequestParam("singleOrMultiple")
-            @Parameter(description = "Choose between a single image containing all pages or separate images for each page", schema = @Schema(allowableValues = {"single", "multiple"}))
-                    String singleOrMultiple,
-            @RequestParam("colorType")
-            @Parameter(description = "The color type of the output image(s)", schema = @Schema(allowableValues = {"color", "greyscale", "blackwhite"}))
-                    String colorType,
-            @RequestParam("dpi")
-            @Parameter(description = "The DPI (dots per inch) for the output image(s)")
-                    String dpi) throws IOException {
-
+    public ResponseEntity<Resource> convertToImage(@ModelAttribute ConvertToImageRequest request) throws IOException {
+        MultipartFile file = request.getFileInput();
+        String imageFormat = request.getImageFormat();
+        String singleOrMultiple = request.getSingleOrMultiple();
+        String colorType = request.getColorType();
+        String dpi = request.getDpi();
+        
         byte[] pdfBytes = file.getBytes();
         ImageType colorTypeResult = ImageType.RGB;
         if ("greyscale".equals(colorType)) {
@@ -83,22 +74,15 @@ public class ConvertImgPDFController {
         }
     }
 
-    @PostMapping(consumes = "multipart/form-data", value = "/img-to-pdf")
+    @PostMapping(consumes = "multipart/form-data", value = "/img/pdf")
     @Operation(summary = "Convert images to a PDF file",
             description = "This endpoint converts one or more images to a PDF file. Users can specify whether to stretch the images to fit the PDF page, and whether to automatically rotate the images. Input:Image Output:PDF Type:SISO?")
-    public ResponseEntity<byte[]> convertToPdf(
-            @RequestPart(required = true, value = "fileInput")
-            @Parameter(description = "The input images to be converted to a PDF file")
-                    MultipartFile[] file,
-            @RequestParam(defaultValue = "false", name = "stretchToFit")
-            @Parameter(description = "Whether to stretch the images to fit the PDF page or maintain the aspect ratio", example = "false")
-                    boolean stretchToFit,
-            @RequestParam("colorType")
-            @Parameter(description = "The color type of the output image(s)", schema = @Schema(allowableValues = {"color", "greyscale", "blackwhite"}))
-                    String colorType,
-            @RequestParam(defaultValue = "false", name = "autoRotate")
-            @Parameter(description = "Whether to automatically rotate the images to better fit the PDF page", example = "true")
-                    boolean autoRotate) throws IOException {
+    public ResponseEntity<byte[]> convertToPdf(@ModelAttribute ConvertToPdfRequest request) throws IOException {
+        MultipartFile[] file = request.getFileInput();
+        boolean stretchToFit = request.isStretchToFit();
+        String colorType = request.getColorType();
+        boolean autoRotate = request.isAutoRotate();
+        
         // Convert the file to PDF and get the resulting bytes
         byte[] bytes = PdfUtils.imageToPdf(file, stretchToFit, autoRotate, colorType);
         return WebResponseUtils.bytesToWebResponse(bytes, file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_converted.pdf");

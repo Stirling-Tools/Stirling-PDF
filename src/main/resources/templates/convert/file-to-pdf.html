@@ -15,7 +15,7 @@
                     <div class="col-md-6">
                         <h2 th:text="#{fileToPDF.header}"></h2>
 						<p th:text="#{processTimeWarning}">
-                        <form method="post" enctype="multipart/form-data" th:action="@{file-to-pdf}">
+                        <form method="post" enctype="multipart/form-data" th:action="@{api/v1/convert/file/pdf}">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
                             <br>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{fileToPDF.submit}"></button>

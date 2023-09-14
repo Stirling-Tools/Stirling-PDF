@@ -13,18 +13,18 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class CropController {
 
@@ -32,18 +32,13 @@ public class CropController {
 
 	@PostMapping(value = "/crop", consumes = "multipart/form-data")
 	@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")
-	public ResponseEntity<byte[]> cropPdf(
-			@Parameter(description = "The input PDF file", required = true) @RequestParam("fileInput") MultipartFile file,
-			@Parameter(description = "The x-coordinate of the top-left corner of the crop area", required = true, schema = @Schema(type = "number")) @RequestParam("x") float x,
-			@Parameter(description = "The y-coordinate of the top-left corner of the crop area", required = true, schema = @Schema(type = "number")) @RequestParam("y") float y,
-			@Parameter(description = "The width of the crop area", required = true, schema = @Schema(type = "number")) @RequestParam("width") float width,
-			@Parameter(description = "The height of the crop area", required = true, schema = @Schema(type = "number")) @RequestParam("height") float height)
+	public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm form)
 			throws IOException {
 
 
+		
 
-
-PDDocument sourceDocument = PDDocument.load(new ByteArrayInputStream(file.getBytes()));
+PDDocument sourceDocument = PDDocument.load(new ByteArrayInputStream(form.getFileInput().getBytes()));
 
 PDDocument newDocument = new PDDocument();
 
@@ -65,7 +60,7 @@ for (int i = 0; i < totalPages; i++) {
     contentStream.saveGraphicsState();
     
     // Define the crop area
-    contentStream.addRect(x, y, width, height);
+    contentStream.addRect(form.getX(), form.getY(), form.getWidth(), form.getHeight());
     contentStream.clip();
 
     // Draw the entire formXObject
@@ -76,7 +71,7 @@ for (int i = 0; i < totalPages; i++) {
     contentStream.close();
     
     // Now, set the new page's media box to the cropped size
-    newPage.setMediaBox(new PDRectangle(x, y, width, height));
+    newPage.setMediaBox(new PDRectangle(form.getX(), form.getY(), form.getWidth(), form.getHeight()));
 }
 
 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -85,7 +80,7 @@ newDocument.close();
 sourceDocument.close();
 
 byte[] pdfContent = baos.toByteArray();
-return WebResponseUtils.bytesToWebResponse(pdfContent, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_cropped.pdf");
+return WebResponseUtils.bytesToWebResponse(pdfContent, form.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_cropped.pdf");
 	}
 
 }

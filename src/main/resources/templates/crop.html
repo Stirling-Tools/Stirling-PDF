@@ -13,7 +13,7 @@
         <div class="row justify-content-center">
           <div class="col-md-6">
             <h2 th:text="#{crop.header}"></h2>
-             <form id="cropForm" action="/crop" method="post" enctype="multipart/form-data">
+             <form id="cropForm" action="/api/v1/general/crop" method="post" enctype="multipart/form-data">
               <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
               <input id="x" type="hidden" name="x">
               <input id="y" type="hidden" name="y">

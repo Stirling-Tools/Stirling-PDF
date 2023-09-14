@@ -9,7 +9,9 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,12 +19,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.SortTypes;
+import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
-
 @RestController
+@RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class RearrangePagesPDFController {
 
@@ -51,9 +54,7 @@ public class RearrangePagesPDFController {
 
 	}
 
-	private enum CustomMode {
-		REVERSE_ORDER, DUPLEX_SORT, BOOKLET_SORT, SIDE_STITCH_BOOKLET_SORT, ODD_EVEN_SPLIT, REMOVE_FIRST, REMOVE_LAST, REMOVE_FIRST_AND_LAST,
-	}
+	
 
 	private List<Integer> removeFirst(int totalPages) {
 		if (totalPages <= 1)
@@ -137,9 +138,9 @@ public class RearrangePagesPDFController {
 		return newPageOrder;
 	}
 
-	private List<Integer> processCustomMode(String customMode, int totalPages) {
+	private List<Integer> processSortTypes(String sortTypes, int totalPages) {
 		try {
-			CustomMode mode = CustomMode.valueOf(customMode.toUpperCase());
+			SortTypes mode = SortTypes.valueOf(sortTypes.toUpperCase());
 			switch (mode) {
 			case REVERSE_ORDER:
 				return reverseOrder(totalPages);
@@ -168,16 +169,10 @@ public class RearrangePagesPDFController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/rearrange-pages")
 	@Operation(summary = "Rearrange pages in a PDF file", description = "This endpoint rearranges pages in a given PDF file based on the specified page order or custom mode. Users can provide a page order as a comma-separated list of page numbers or page ranges, or a custom mode. Input:PDF Output:PDF")
-	public ResponseEntity<byte[]> rearrangePages(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to rearrange pages") MultipartFile pdfFile,
-			@RequestParam(required = false, value = "pageOrder") @Parameter(description = "The new page order as a comma-separated list of page numbers, page ranges (e.g., '1,3,5-7'), or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')") String pageOrder,
-			@RequestParam(required = false, value = "customMode") @Parameter(schema = @Schema(implementation = CustomMode.class, description = "The custom mode for page rearrangement. "
-					+ "Valid values are:\n" + "REVERSE_ORDER: Reverses the order of all pages.\n"
-					+ "DUPLEX_SORT: Sorts pages as if all fronts were scanned then all backs in reverse (1, n, 2, n-1, ...). "
-					+ "BOOKLET_SORT: Arranges pages for booklet printing (last, first, second, second last, ...).\n"
-					+ "ODD_EVEN_SPLIT: Splits and arranges pages into odd and even numbered pages.\n"
-					+ "REMOVE_FIRST: Removes the first page.\n" + "REMOVE_LAST: Removes the last page.\n"
-					+ "REMOVE_FIRST_AND_LAST: Removes both the first and the last pages.\n")) String customMode) {
+	public ResponseEntity<byte[]> rearrangePages(@ModelAttribute RearrangePagesRequest request) throws IOException {
+	    MultipartFile pdfFile = request.getFileInput();
+	    String pageOrder = request.getPageNumbers();
+	    String sortType = request.getCustomMode();
 		try {
 			// Load the input PDF
 			PDDocument document = PDDocument.load(pdfFile.getInputStream());
@@ -185,15 +180,14 @@ public class RearrangePagesPDFController {
 			// Split the page order string into an array of page numbers or range of numbers
 			String[] pageOrderArr = pageOrder != null ? pageOrder.split(",") : new String[0];
 			int totalPages = document.getNumberOfPages();
-			System.out.println("pageOrder=" + pageOrder);
-			System.out.println("customMode length =" + customMode.length());
 			List<Integer> newPageOrder;
-			if (customMode != null && customMode.length() > 0) {
-				newPageOrder = processCustomMode(customMode, totalPages);
+			if (sortType != null && sortType.length() > 0) {
+				newPageOrder = processSortTypes(sortType, totalPages);
 			} else {
 				newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages);
 			}
-
+			logger.info("newPageOrder = "  +newPageOrder);
+			logger.info("totalPages = "  +totalPages);
 			// Create a new list to hold the pages in the new order
 			List<PDPage> newPages = new ArrayList<>();
 			for (int i = 0; i < newPageOrder.size(); i++) {
