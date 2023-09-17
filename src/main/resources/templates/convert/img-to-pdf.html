@@ -21,10 +21,16 @@
                             
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*', inputText=#{imgPrompt})}"></div>
 
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" name="stretchToFit" id="stretchToFit"> 
-                                <label class="ms-3" for="stretchToFit" th:text=#{imageToPDF.selectText.1}></label>
-                            </div>
+                            <div class="mb-3">
+							    <label for="fitOption" th:text="#{imageToPDF.selectLabel}">Fit Options</label>
+							    <select class="form-control" id="fitOption" name="fitOption">
+							        <option value="fillPage" th:text="#{imageToPDF.fillPage}">Fill Page</option>
+							        <option value="fitDocumentToImage" th:text="#{imageToPDF.fitDocumentToImage}">Fit Document to Image</option>
+							        <option value="maintainAspectRatio" th:text="#{imageToPDF.maintainAspectRatio}">Maintain Aspect Ratio</option>
+							    </select>
+							</div>
+
+
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input" name="autoRotate" id="autoRotate"> 
                                 <label class="ms-3" for="autoRotate" th:text=#{imageToPDF.selectText.2}></label>

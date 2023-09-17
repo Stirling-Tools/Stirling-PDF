@@ -79,12 +79,12 @@ public class ConvertImgPDFController {
             description = "This endpoint converts one or more images to a PDF file. Users can specify whether to stretch the images to fit the PDF page, and whether to automatically rotate the images. Input:Image Output:PDF Type:SISO?")
     public ResponseEntity<byte[]> convertToPdf(@ModelAttribute ConvertToPdfRequest request) throws IOException {
         MultipartFile[] file = request.getFileInput();
-        boolean stretchToFit = request.isStretchToFit();
+        String fitOption = request.getFitOption();
         String colorType = request.getColorType();
         boolean autoRotate = request.isAutoRotate();
         
         // Convert the file to PDF and get the resulting bytes
-        byte[] bytes = PdfUtils.imageToPdf(file, stretchToFit, autoRotate, colorType);
+        byte[] bytes = PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType);
         return WebResponseUtils.bytesToWebResponse(bytes, file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_converted.pdf");
     }
 
