@@ -13,8 +13,11 @@ public class ConvertToPdfRequest {
     @Schema(description = "The input images to be converted to a PDF file")
     private MultipartFile[] fileInput;
 
-    @Schema(description = "Whether to stretch the images to fit the PDF page or maintain the aspect ratio", example = "false")
-    private boolean stretchToFit;
+    @Schema(description = "Option to determine how the image will fit onto the page", 
+            allowableValues = { "fillPage", "fitDocumentToImage", "maintainAspectRatio" })
+    private String fitOption;
+
+
 
     @Schema(description = "The color type of the output image(s)", allowableValues = {"color", "greyscale", "blackwhite"})
     private String colorType;
