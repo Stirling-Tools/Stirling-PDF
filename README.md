@@ -222,7 +222,7 @@ metrics:
 - customStaticFilePath. Customise static files such as the app logo by placing files in the /customFiles/static/ directory. An example of customising app logo is placing a /customFiles/static/favicon.svg to override current SVG. This can be used to change any images/icons/css/fonts/js etc in Stirling-PDF
 
 ### Environment only parameters
-- ``SYSTEM_ROOTURIPATH`` ie set to ``pdf-app`` to Set the application's root URI to ``localhost:8080/pdf-app``
+- ``SYSTEM_ROOTURIPATH`` ie set to ``/pdf-app`` to Set the application's root URI to ``localhost:8080/pdf-app``
 - ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
 - ``DOCKER_ENABLE_SECURITY`` to tell docker to download security jar (required as true for auth login)
 
