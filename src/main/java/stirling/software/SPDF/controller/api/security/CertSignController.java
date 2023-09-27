@@ -12,6 +12,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 
@@ -130,7 +131,8 @@ public class CertSignController {
 		signature.setName(name);
 		signature.setLocation(location);
 		signature.setReason(reason);
-
+		signature.setSignDate(Calendar.getInstance());
+		
 		// Load the PDF
 		try (PDDocument document = PDDocument.load(pdf.getBytes())) {
 			logger.info("Successfully loaded the provided PDF");
