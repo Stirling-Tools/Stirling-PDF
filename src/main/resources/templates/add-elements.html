@@ -64,16 +64,6 @@
                         </script>
 
                         <!-- add elements UIs -->
-                        <div class="add-element-list">
-                            <button id="addCheckBoxButton">Add Checkbox</button>
-                            <script>
-                                document.getElementById("addCheckBoxButton").addEventListener("click", () => {
-                                    const inp = document.createElement('input');
-                                    inp.setAttribute("type", "checkbox");
-                                    DraggableUtils.addDraggableElement(inp, false);
-                                });
-                            </script>
-                        </div>
                         <div class="tab-group show-on-file-selected">
                             <div class="tab-container" th:title="#{add-elements.upload}">
                                 <div th:replace="~{fragments/common :: fileSelector(name='image-upload', multiple=true, accept='image/*', inputText=#{imgPrompt})}"></div>
@@ -251,6 +241,92 @@
                                 </th:block>
 
                             </div>
+                            <div class="tab-container" th:title="#{add-elements.checkbox}">
+                                <label class="form-check-label" for="checkboxId" th:text="#{element-id}"></label>
+                                <input type="text" class="form-control" id="checkboxId" name="checkboxId">
+                                <div class="margin-auto-parent">
+                                    <button id="save-checkbox" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromCheckBox()" th:text="#{sign.add}"></button>
+                                </div>
+                                <script>
+                                    function addDraggableFromCheckBox() {
+                                        const id = document.getElementById('checkboxId').value;
+                                        const checkbox = document.createElement('input');
+                                        checkbox.setAttribute('type', 'checkbox');
+                                        checkbox.setAttribute('name', id);
+                                        const wrapper = DraggableUtils.addDraggableElement(checkbox, false);
+                                    }
+                                </script>
+                            </div>
+                            <div class="tab-container" th:title="#{add-elements.dropdown}">
+                                <label class="form-check-label" for="dropdownId" th:text="#{element-id}"></label>
+                                <input type="text" class="form-control" id="dropdownId" name="dropdownId">
+
+                                <label class="form-check-label" for="dropdownValues" th:text="#{comma-separated-values}"></label>
+                                <input type="text" class="form-control" id="dropdownValues" name="dropdownValues">
+
+                                <div class="margin-auto-parent">
+                                    <button id="save-dropdown" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromDropdown()" th:text="#{sign.add}"></button>
+                                </div>
+                                <script th:inline="javascript">
+                                    function addDraggableFromDropdown() {
+                                        const dropdownLabel = /*[[#{add-elements.dropdown}]]*/ '';
+                                        const id = document.getElementById('dropdownId').value;
+                                        const values = document.getElementById('dropdownValues').value.split(",");
+                                        const dropdown = document.createElement('div');
+                                        dropdown.setAttribute('type', 'dropdown');
+                                        dropdown.setAttribute('name', id);
+                                        dropdown.setAttribute('values', JSON.stringify(values));
+                                        dropdown.innerHTML = `${dropdownLabel}: ${id}`;
+                                        const wrapper = DraggableUtils.addDraggableElement(dropdown, true);
+                                    }
+                                </script>
+                            </div>
+                            <div class="tab-container" th:title="#{add-elements.optionList}">
+                                <label class="form-check-label" for="optionListId" th:text="#{element-id}"></label>
+                                <input type="text" class="form-control" id="optionListId" name="optionListId">
+
+                                <label class="form-check-label" for="optionListValues" th:text="#{comma-separated-values}"></label>
+                                <input type="text" class="form-control" id="optionListValues" name="optionListValues">
+
+                                <div class="margin-auto-parent">
+                                    <button id="save-optionList" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromoptionList()" th:text="#{sign.add}"></button>
+                                </div>
+                                <script th:inline="javascript">
+                                    function addDraggableFromoptionList() {
+                                        const optionListLabel = /*[[#{add-elements.optionList}]]*/ '';
+                                        const id = document.getElementById('optionListId').value;
+                                        const values = document.getElementById('optionListValues').value.split(",");
+                                        const optionList = document.createElement('div');
+                                        optionList.setAttribute('type', 'optionList');
+                                        optionList.setAttribute('name', id);
+                                        optionList.setAttribute('values', JSON.stringify(values));
+                                        optionList.innerHTML = `${optionListLabel}: ${id}`;
+                                        const wrapper = DraggableUtils.addDraggableElement(optionList, true);
+                                    }
+                                </script>
+                            </div>
+                            <div class="tab-container" th:title="#{add-elements.radioButton}">
+                                <label class="form-check-label" for="radioButtonId" th:text="#{group-id}"></label>
+                                <input type="text" class="form-control" id="radioButtonId" name="radioButton">
+
+                                <label class="form-check-label" for="radioButtonValue" th:text="#{element-value}"></label>
+                                <input type="text" class="form-control" id="radioButtonValue" name="radioButton">
+
+                                <div class="margin-auto-parent">
+                                    <button id="save-radioButton" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromRadioButton()" th:text="#{sign.add}"></button>
+                                </div>
+                                <script>
+                                    function addDraggableFromRadioButton() {
+                                        const id = document.getElementById('radioButtonId').value;
+                                        const value = document.getElementById('radioButtonValue').value;
+                                        const radioButton = document.createElement('input');
+                                        radioButton.setAttribute('type', 'radio');
+                                        radioButton.setAttribute('name', id);
+                                        radioButton.setAttribute('buttonValue', value);
+                                        const wrapper = DraggableUtils.addDraggableElement(radioButton, false);
+                                    }
+                                </script>
+                            </div>
                             <div class="tab-container" th:title="#{add-elements.textbox}">
                                 <label class="form-check-label" for="textboxId" th:text="#{element-id}"></label>
                                 <input type="text" class="form-control" id="textboxId" name="textboxId">
@@ -269,22 +345,6 @@
                                         textbox.readonly = true;
 
                                         const wrapper = DraggableUtils.addDraggableElement(textbox, true);
-                                    }
-                                </script>
-                            </div>
-                            <div class="tab-container" th:title="#{add-elements.checkbox}">
-                                <label class="form-check-label" for="checkboxId" th:text="#{element-id}"></label>
-                                <input type="text" class="form-control" id="checkboxId" name="checkboxId">
-                                <div class="margin-auto-parent">
-                                    <button id="save-checkbox" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromCheckBox()" th:text="#{sign.add}"></button>
-                                </div>
-                                <script>
-                                    function addDraggableFromCheckBox() {
-                                        const id = document.getElementById('checkboxId').value;
-                                        const checkbox = document.createElement('input');
-                                        checkbox.setAttribute('type', 'checkbox');
-                                        checkbox.setAttribute('name', id);
-                                        const wrapper = DraggableUtils.addDraggableElement(checkbox, false);
                                     }
                                 </script>
                             </div>
@@ -338,6 +398,13 @@
                                     top: 0px;
                                     left: 0;
                                 }
+                                .draggable-canvas > div {
+                                    width: 100%;
+                                    height: 100%;
+                                    line-height: normal;
+                                    color: rgb(var(--base-font-color));
+                                    background-color: rgba(var(--body-background-color), 0.5);
+                                }
                             </style>
                         </div>
 
@@ -348,7 +415,7 @@
                         
                         <script>
                             document.getElementById("download-pdf").addEventListener('click', async() => {
-                                const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
+                                const modifiedPdf = await DraggableUtils.getOverlaidPdfDocument();
                                 const modifiedPdfBytes = await modifiedPdf.save();
                                 const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
                                 const link = document.createElement('a');

@@ -184,7 +184,9 @@ const DraggableUtils = {
     parseTransform(element) {
         
     },
-    async getOverlayedPdfDocument() {
+    async getOverlaidPdfDocument() {
+        var radioGroups = new Map();
+
         const pdfBytes = await this.pdfDoc.getData();
         const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, { ignoreEncryption: true });
         this.storePageContents();
@@ -213,17 +215,45 @@ const DraggableUtils = {
 
                     // draw the image
                     page.drawImage(pdfImageObject, translatedPositions);
-                } else if (draggableElement.firstChild.nodeName == "INPUT" && draggableElement.firstChild.getAttribute("type") == "textarea") {
-                    const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight);
-                    const fieldKey = draggableElement.firstChild.getAttribute("name");
-                    const form = pdfDocModified.getForm();
-                    const field = form.createTextField(fieldKey);
-                    field.addToPage(page, translatedPositions);
                 } else if (draggableElement.firstChild.nodeName == "INPUT" && draggableElement.firstChild.getAttribute("type") == "checkbox") {
                     const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight);
                     const fieldKey = draggableElement.firstChild.getAttribute("name");
                     const form = pdfDocModified.getForm();
                     const field = form.createCheckBox(fieldKey);
+                    field.addToPage(page, translatedPositions);
+                } else if (draggableElement.firstChild.nodeName == "DIV" && draggableElement.firstChild.getAttribute("type") == "dropdown") {
+                    const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight);
+                    const fieldKey = draggableElement.firstChild.getAttribute("name");
+                    const fieldValues = JSON.parse(draggableElement.firstChild.getAttribute("values"));
+                    const form = pdfDocModified.getForm();
+                    const field = form.createDropdown(fieldKey);
+                    field.addOptions(fieldValues)
+                    field.addToPage(page, translatedPositions);
+                } else if (draggableElement.firstChild.nodeName == "DIV" && draggableElement.firstChild.getAttribute("type") == "optionList") {
+                    const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight);
+                    const fieldKey = draggableElement.firstChild.getAttribute("name");
+                    const fieldValues = JSON.parse(draggableElement.firstChild.getAttribute("values"));
+                    const form = pdfDocModified.getForm();
+                    const field = form.createOptionList(fieldKey);
+                    field.addOptions(fieldValues)
+                    field.addToPage(page, translatedPositions);
+                } else if (draggableElement.firstChild.nodeName == "INPUT" && draggableElement.firstChild.getAttribute("type") == "radio") { //
+                    const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight);
+                    const fieldKey = draggableElement.firstChild.getAttribute("name");
+                    const buttonValue = draggableElement.firstChild.getAttribute("buttonValue");
+                    const form = pdfDocModified.getForm();
+                    var radioGroup = radioGroups.get(fieldKey);
+                    if (!radioGroup) {
+                        radioGroup = form.createRadioGroup(fieldKey);
+                        radioGroups.set(fieldKey, radioGroup);
+                    }
+                    radioGroup.addOptionToPage(buttonValue, page, translatedPositions)
+                    console.log("added radio")
+                } else if (draggableElement.firstChild.nodeName == "INPUT" && draggableElement.firstChild.getAttribute("type") == "textarea") {
+                    const translatedPositions = this.rescaleForPage(page, draggableData, offsetWidth, offsetHeight);
+                    const fieldKey = draggableElement.firstChild.getAttribute("name");
+                    const form = pdfDocModified.getForm();
+                    const field = form.createTextField(fieldKey);
                     field.addToPage(page, translatedPositions);
                 }
             }
