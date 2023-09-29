@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -42,7 +43,8 @@ public class MultiPageLayoutController {
 
 	    int pagesPerSheet = request.getPagesPerSheet();
 	    MultipartFile file = request.getFileInput();
-
+	    boolean addBorder = request.isAddBorder();
+	    
 	    if (pagesPerSheet != 2 && pagesPerSheet != 3 && pagesPerSheet != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
 	        throw new IllegalArgumentException("pagesPerSheet must be 2, 3 or a perfect square");
 	    }
@@ -62,6 +64,10 @@ public class MultiPageLayoutController {
 	    PDPageContentStream contentStream = new PDPageContentStream(newDocument, newPage, PDPageContentStream.AppendMode.APPEND, true, true);
 	    LayerUtility layerUtility = new LayerUtility(newDocument);
 
+	    float borderThickness = 1.5f; // Specify border thickness as required
+	    contentStream.setLineWidth(borderThickness);
+	    contentStream.setStrokingColor(Color.BLACK);
+	    
 	    for (int i = 0; i < totalPages; i++) {
 	        if (i != 0 && i % pagesPerSheet == 0) {
 	            // Close the current content stream and create a new page and content stream
@@ -92,6 +98,14 @@ public class MultiPageLayoutController {
 	        contentStream.drawForm(formXObject);
 
 	        contentStream.restoreGraphicsState();
+	        
+	        if(addBorder) {
+		        // Draw border around each page
+		        float borderX = colIndex * cellWidth;
+		        float borderY = newPage.getMediaBox().getHeight() - (rowIndex + 1) * cellHeight;
+		        contentStream.addRect(borderX, borderY, cellWidth, cellHeight);
+		        contentStream.stroke();
+	        }
 	    }
 
 
