@@ -1,5 +1,8 @@
 package stirling.software.SPDF.controller.api.misc;
-
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -58,7 +61,8 @@ public class ExtractImagesController {
 
         int imageIndex = 1;
         String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
-        int pageNum = 1;
+        int pageNum = 0;
+        Set<Integer> processedImages = new HashSet<>();
         // Iterate over each page
         for (PDPage page : document.getPages()) {
             ++pageNum;
@@ -66,7 +70,12 @@ public class ExtractImagesController {
             for (COSName name : page.getResources().getXObjectNames()) {
                 if (page.getResources().isImageXObject(name)) {
                     PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
-
+                    int imageHash = image.hashCode();
+                    if(processedImages.contains(imageHash)) {
+                        continue; // Skip already processed images
+                    }
+                    processedImages.add(imageHash);
+                    
                     // Convert image to desired format
                     RenderedImage renderedImage = image.getImage();
                     BufferedImage bufferedImage = null;

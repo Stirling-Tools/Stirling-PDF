@@ -386,12 +386,16 @@ public class GetInfoOnPDF {
                 float width = mediaBox.getWidth();
                 float height = mediaBox.getHeight();
 
-                pageInfo.put("Width", width);
-                pageInfo.put("Height", height);
+                ObjectNode sizeInfo = objectMapper.createObjectNode();
+                
+                getDimensionInfo(sizeInfo, width, height);
+                
+                sizeInfo.put("Standard Page", getPageSize(width, height));
+                pageInfo.set("Size", sizeInfo);
+                		
                 pageInfo.put("Rotation", page.getRotation());
-
                 pageInfo.put("Page Orientation", getPageOrientation(width, height));
-                pageInfo.put("Standard Size", getPageSize(width, height));
+                
 
                 // Boxes
                 pageInfo.put("MediaBox", mediaBox.toString());
@@ -620,7 +624,7 @@ public class GetInfoOnPDF {
 
                 
 
-                pageInfoParent.set("Page " + pageNum, pageInfo);
+                pageInfoParent.set("Page " + (pageNum+1), pageInfo);
             }
 
             
@@ -670,28 +674,52 @@ public class GetInfoOnPDF {
             return "Square";
         }
     }
-    public String getPageSize(double width, double height) {
-        // Common aspect ratios used for standard paper sizes
-        double[] aspectRatios = {4.0 / 3.0, 3.0 / 2.0, Math.sqrt(2.0), 16.0 / 9.0};
+    public String getPageSize(float width, float height) {
+        // Define standard page sizes
+        Map<String, PDRectangle> standardSizes = new HashMap<>();
+        standardSizes.put("Letter", PDRectangle.LETTER);
+        standardSizes.put("LEGAL", PDRectangle.LEGAL);
+        standardSizes.put("A0", PDRectangle.A0);
+        standardSizes.put("A1", PDRectangle.A1);
+        standardSizes.put("A2", PDRectangle.A2);
+        standardSizes.put("A3", PDRectangle.A3);
+        standardSizes.put("A4", PDRectangle.A4);
+        standardSizes.put("A5", PDRectangle.A5);
+        standardSizes.put("A6", PDRectangle.A6);
 
-        // Check if the page matches any common aspect ratio
-        for (double aspectRatio : aspectRatios) {
-            if (isCloseToAspectRatio(width, height, aspectRatio)) {
-                return "Standard";
+        for (Map.Entry<String, PDRectangle> entry : standardSizes.entrySet()) {
+            PDRectangle size = entry.getValue();
+            if (isCloseToSize(width, height, size.getWidth(), size.getHeight())) {
+                return entry.getKey();
             }
         }
-
-        // If not a standard aspect ratio, consider it as a custom size
         return "Custom";
     }
-    private boolean isCloseToAspectRatio(double width, double height, double aspectRatio) {
-        // Calculate the aspect ratio of the page
-        double pageAspectRatio = width / height;
 
-        // Compare the page aspect ratio with the common aspect ratio within a threshold
-        return Math.abs(pageAspectRatio - aspectRatio) <= 0.05;
+    private boolean isCloseToSize(float width, float height, float standardWidth, float standardHeight) {
+        float tolerance = 1.0f; // You can adjust the tolerance as needed
+        return Math.abs(width - standardWidth) <= tolerance && Math.abs(height - standardHeight) <= tolerance;
     }
-    
+
+
+    public ObjectNode getDimensionInfo(ObjectNode dimensionInfo, float width, float height) {      
+        float ppi = 72; // Points Per Inch
+        
+        float widthInInches = width / ppi;
+        float heightInInches = height / ppi;
+        
+        float widthInCm = widthInInches * 2.54f;
+        float heightInCm = heightInInches * 2.54f;
+        
+        dimensionInfo.put("Width (px)", String.format("%.2f", width));
+        dimensionInfo.put("Height (px)", String.format("%.2f", height));
+        dimensionInfo.put("Width (in)", String.format("%.2f", widthInInches));
+        dimensionInfo.put("Height (in)", String.format("%.2f", heightInInches));
+        dimensionInfo.put("Width (cm)", String.format("%.2f", widthInCm));
+        dimensionInfo.put("Height (cm)", String.format("%.2f", heightInCm));
+        return dimensionInfo;
+    }
+
 
 
 public static boolean checkForStandard(PDDocument document, String standardKeyword) {

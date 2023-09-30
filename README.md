@@ -235,7 +235,8 @@ For those wanting to use Stirling-PDFs backend API to link with their own custom
 ### Prerequisites: 
 - User must have the folder ./configs volumed within docker so that it is retained during updates.
 - Docker uses must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables. 
-- Now the initial user will be generated with username ``admin`` and password ``stirling``. On login you will be forced to change the password to a new one.
+- Then either enable login via the settings.yml file or via setting ``SECURITY_ENABLE_LOGIN`` to ``true``
+- Now the initial user will be generated with username ``admin`` and password ``stirling``. On login you will be forced to change the password to a new one. You can also use the environment variables ``SECURITY_INITIALLOGIN_USERNAME`` and  ``SECURITY_INITIALLOGIN_PASSWORD`` to set your own straight away (Recommended to remove them after user creation).
 
 Once the above has been done, on restart, a new stirling-pdf-DB.mv.db will show if everything worked.
 
@@ -261,4 +262,7 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 - Fill forms mannual and automatic 
 
 ### Q2: Why is my application downloading .htm files?
-This is a issue caused commonly by your NGINX congifuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. client_max_body_size SIZE; Where "SIZE" is 50M for example for 50MB files.
+This is a issue caused commonly by your NGINX congifuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. ``client_max_body_size SIZE;`` Where "SIZE" is 50M for example for 50MB files.
+
+### Q3: Why is my download timing out
+NGINX has timeout values by default so if you are running Stirling-PDF behind NGINX you may need to set a timeout value such as adding the config ``proxy_read_timeout 3600;``
