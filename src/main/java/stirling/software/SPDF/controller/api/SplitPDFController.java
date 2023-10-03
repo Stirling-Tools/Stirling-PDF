@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.utils.WebResponseUtils;
-
+import org.apache.pdfbox.multipdf.Splitter;
 @RestController
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
@@ -50,26 +50,24 @@ public class SplitPDFController {
         	pageNumbers.add(document.getNumberOfPages()- 1);
         logger.info("Splitting PDF into pages: {}", pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
-        // split the document
+        Splitter splitter = new Splitter();
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
-        int previousPageNumber = 0;
+
+        int previousPageNumber = 1; // PDFBox uses 1-based indexing for pages.
         for (int splitPoint : pageNumbers) {
-            try (PDDocument splitDocument = new PDDocument()) {
-                for (int i = previousPageNumber; i <= splitPoint; i++) {
-                    PDPage page = document.getPage(i);
-                    splitDocument.addPage(page);
-                    logger.debug("Adding page {} to split document", i);
-                }
-                previousPageNumber = splitPoint + 1;
+        	splitPoint = splitPoint + 1;
+            splitter.setStartPage(previousPageNumber);
+            splitter.setEndPage(splitPoint);
+            List<PDDocument> splitDocuments = splitter.split(document);
 
+            for (PDDocument splitDoc : splitDocuments) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                splitDocument.save(baos);
-
+                splitDoc.save(baos);
                 splitDocumentsBoas.add(baos);
-            } catch (Exception e) {
-                logger.error("Failed splitting documents and saving them", e);
-                throw e;
+                splitDoc.close();
             }
+
+            previousPageNumber = splitPoint + 1;
         }
 
 
