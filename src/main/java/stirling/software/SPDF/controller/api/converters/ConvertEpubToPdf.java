@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import io.github.pixee.security.ZipSecurity;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
@@ -82,7 +83,7 @@ public class ConvertEpubToPdf {
     private Map<String, byte[]> extractEpubContent(MultipartFile fileInput) throws IOException {
         Map<String, byte[]> contentMap = new HashMap<>();
 
-        try (ZipInputStream zis = new ZipInputStream(fileInput.getInputStream())) {
+        try (ZipInputStream zis = ZipSecurity.createHardenedInputStream(fileInput.getInputStream())) {
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
