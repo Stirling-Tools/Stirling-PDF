@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 //Required for file input/output
 import java.io.File;
 import java.io.IOException;
+import java.security.SecureRandom;
 //Other required classes
 import java.util.Random;
 
@@ -85,7 +86,7 @@ public class FakeScanControllerWIP {
     	op.filter(sourceImage, destinationImage);
 
     	// Apply a rotation effect
-    	double rotationRequired = Math.toRadians((new Random().nextInt(3 - 1) + 1));  // Random angle between 1 and 3 degrees
+    	double rotationRequired = Math.toRadians((new SecureRandom().nextInt(3 - 1) + 1));  // Random angle between 1 and 3 degrees
     	double locationX = destinationImage.getWidth() / 2;
     	double locationY = destinationImage.getHeight() / 2;
     	AffineTransform tx = AffineTransform.getRotateInstance(rotationRequired, locationX, locationY);
@@ -103,7 +104,7 @@ public class FakeScanControllerWIP {
     	destinationImage = blurOp.filter(destinationImage, null);
 
     	// Add noise to the image based on the "dirtiness"
-    	Random random = new Random();
+    	Random random = new SecureRandom();
     	for (int y = 0; y < destinationImage.getHeight(); y++) {
     	    for (int x = 0; x < destinationImage.getWidth(); x++) {
     	        if (random.nextInt(100) < dirtiness) {
