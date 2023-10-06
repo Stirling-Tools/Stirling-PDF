@@ -1,5 +1,6 @@
 package stirling.software.SPDF;
 
+import io.github.pixee.security.SystemCommand;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -44,7 +45,7 @@ public class LibreOfficeListener {
         }
 
         // Start the listener process
-        process = Runtime.getRuntime().exec("unoconv --listener");
+        process = SystemCommand.runCommand(Runtime.getRuntime(), "unoconv --listener");
         lastActivityTime = System.currentTimeMillis();
 
         // Start a background thread to monitor the activity timeout
