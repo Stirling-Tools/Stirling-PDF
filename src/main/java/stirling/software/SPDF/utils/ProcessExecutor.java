@@ -1,5 +1,6 @@
 package stirling.software.SPDF.utils;
 
+import io.github.pixee.security.BoundedLineReader;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +63,7 @@ public class ProcessExecutor {
             Thread errorReaderThread = new Thread(() -> {
                 try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8))) {
                     String line;
-                    while ((line = errorReader.readLine()) != null) {
+                    while ((line = BoundedLineReader.readLine(errorReader, 5_000_000)) != null) {
                         errorLines.add(line);
                     }
                 } catch (IOException e) {
@@ -73,7 +74,7 @@ public class ProcessExecutor {
             Thread outputReaderThread = new Thread(() -> {
                 try (BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                     String line;
-                    while ((line = outputReader.readLine()) != null) {
+                    while ((line = BoundedLineReader.readLine(outputReader, 5_000_000)) != null) {
                         outputLines.add(line);
                     }
                 } catch (IOException e) {
