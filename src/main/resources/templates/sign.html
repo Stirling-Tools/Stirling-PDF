@@ -179,7 +179,7 @@ select#font-select, select#font-select option {
                             </div>
                             <div class="tab-container" th:title="#{sign.text}">
                                 <label class="form-check-label" for="sigText" th:text="#{text}"></label> 
-                                <input type="text" class="form-control" id="sigText" name="sigText">
+                                <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
                                 <label th:text="#{font}"></label> 
                                 <select class="form-control" name="font" id="font-select">
 								    <option th:each="font : ${fonts}" 
@@ -188,7 +188,13 @@ select#font-select, select#font-select option {
 								            th:class="${font.name.toLowerCase()+'-font'}">
 								    </option>
 								</select>
-
+                                <!--TODO add specific key for font size-->
+<!--                                <label for="form-select" th:text="#{watermark.selectText.3}"></label>-->
+<!--                                <select class="form-control" name="size" id="form-select">-->
+<!--                                    <option value="16">16px</option>-->
+<!--                                    <option value="32">32px</option>-->
+<!--                                    <option value="64">64px</option>-->
+<!--                                </select>-->
                                 <div class="margin-auto-parent">
                                     <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
                                 </div>
@@ -196,18 +202,53 @@ select#font-select, select#font-select option {
                                     function addDraggableFromText() {
                                         const sigText = document.getElementById('sigText').value;
                                         const font = document.querySelector('select[name=font]').value;
+                                        // const fontSize = document.querySelector('select[name=size]').value;
+                                        // console.log("fontSize: " + fontSize)
                                         const fontSize = 100;
 
                                         const canvas = document.createElement('canvas');
                                         const ctx = canvas.getContext('2d');
                                         ctx.font = `${fontSize}px ${font}`;
-                                        const textWidth = ctx.measureText(sigText).width;
-                                        const textHeight = fontSize;
+
+                                        let yAxis = fontSize * .4;
+
+                                        let paragraphs = sigText.split(/\r?\n/);
+
+                                        let lengthiestParagraph = paragraphs[0];
+
+                                        for (let i = 0; i < paragraphs.length; i++) {
+                                            let previousParagraph;
+                                            let currentParagraph = paragraphs[i];
+
+                                            if (i === 0) {
+                                                previousParagraph = '';
+                                            } else {
+                                                previousParagraph = paragraphs[i-1];
+                                            }
+
+                                            if (currentParagraph.length > previousParagraph.length)
+                                                lengthiestParagraph = currentParagraph;
+
+
+                                                ctx.fillText(currentParagraph, 0, yAxis, fontSize);
+                                            yAxis += fontSize * .8;
+                                        }
+
+                                        console.log("lengthiest pagragraph: " + lengthiestParagraph);
+
+                                        const textWidth = ctx.measureText(lengthiestParagraph).width;
+                                        // const textHeight = fontSize;
+                                        const textHeight = fontSize * 1.6;
 
                                         canvas.width = textWidth;
                                         canvas.height = textHeight*1.35; //for tails
                                         ctx.font = `${fontSize}px ${font}`;
-                                        ctx.fillText(sigText, 0, fontSize);
+                                        // console.log(sigText);
+                                        console.log(sigText.split(/\r?\n/));
+
+
+
+                                        // ctx.fillText(sigText, 0, fontSize);
 
                                         const dataURL = canvas.toDataURL();
                                         DraggableUtils.createDraggableCanvasFromUrl(dataURL);
