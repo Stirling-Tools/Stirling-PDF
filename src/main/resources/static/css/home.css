@@ -84,3 +84,5 @@ filter: invert(0.2) sepia(2) saturate(50) hue-rotate(190deg);
 .jumbotron {
     padding: 3rem 3rem;  /* Reduce vertical padding */
 }
+
+

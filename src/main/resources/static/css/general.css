@@ -92,3 +92,15 @@ html[lang-direction="rtl"] label.form-check-label {
 .hidden {
     display: none;
 }
+
+@font-face {
+    font-family: 'CZL';
+    src: url('https://cdn-r2.czl.net/frame/fonts/CZL.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+html, body, h1, h2, h3, h4, h5, h6, a, p, span, input, div, button, label, pre, select, option, textarea, th, td, li, em, strong, cite, q, dfn, abbr, time, var, samp, kbd, sub, sup, i, b, u, mark, ruby, rt, rp, bdi, bdo, s, small, del, ins, caption, figure, figcaption, main, nav, article, section, header, footer, aside, details, summary，code {
+    font-family: "CZL", system-ui, -apple-system, "Microsoft YaHei", Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif ;
+}

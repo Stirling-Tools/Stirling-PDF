@@ -7,7 +7,7 @@ security:
   csrfDisabled: true
 
 system:
-  defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
+  defaultLocale: 'zh-CN' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
 
 #ui:
