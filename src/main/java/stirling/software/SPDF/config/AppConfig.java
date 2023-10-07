@@ -9,17 +9,6 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Configuration
 public class AppConfig {
 
-	@Bean
-    public CustomEditorConfigurer customEditorConfigurer() {
-        return new CustomEditorConfigurer();
-    }
-
-    @Bean
-    public PropertyEditorRegistrar propertyEditorRegistrar() {
-        return registry -> {
-            registry.registerCustomEditor(String.class, new EmptyStringAsNullEditor());
-        };
-    }
     
     @Autowired
     ApplicationProperties applicationProperties;
