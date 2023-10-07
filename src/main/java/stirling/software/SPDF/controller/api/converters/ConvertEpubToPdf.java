@@ -1,36 +1,5 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import java.io.IOException;
-
-import org.commonmark.node.Node;
-import org.commonmark.parser.Parser;
-import org.commonmark.renderer.html.HtmlRenderer;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import stirling.software.SPDF.utils.FileToPdf;
-import stirling.software.SPDF.utils.WebResponseUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.ResponseEntity;
-
-import io.swagger.v3.oas.annotations.Operation;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.DocumentBuilder;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
@@ -41,7 +10,29 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.GeneralFile;
+import stirling.software.SPDF.utils.FileToPdf;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
 @RestController
+@RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertEpubToPdf {
 	//TODO
@@ -52,9 +43,9 @@ public class ConvertEpubToPdf {
 	    description = "This endpoint takes an EPUB file input and converts it to a single PDF."
 	)
 	public ResponseEntity<byte[]> epubToSinglePdf(
-	        @RequestPart(required = true, value = "fileInput") MultipartFile fileInput) 
+			@ModelAttribute GeneralFile request) 
 	        throws Exception {
-
+		MultipartFile fileInput = request.getFileInput();
 	    if (fileInput == null) {
 	        throw new IllegalArgumentException("Please provide an EPUB file for conversion.");
 	    }
@@ -83,7 +74,7 @@ public class ConvertEpubToPdf {
 
 	// Assuming a pseudo-code function that merges multiple PDFs into one.
 	private byte[] mergeMultiplePdfsIntoOne(List<byte[]> individualPdfs) {
-	    // You can use a library such as iText or PDFBox to perform the merging here.
+	    // You can use a library such as  PDFBox to perform the merging here.
 	    // Return the byte[] of the merged PDF.
 		return null;
 	}

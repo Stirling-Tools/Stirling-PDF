@@ -1,8 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -24,40 +22,35 @@ import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @RestController
+@RequestMapping("/api/v1/security")
 @Tag(name = "Security", description = "Security APIs")
 public class WatermarkController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/add-watermark")
 	@Operation(summary = "Add watermark to a PDF file", description = "This endpoint adds a watermark to a given PDF file. Users can specify the watermark type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO")
-	public ResponseEntity<byte[]> addWatermark(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to add a watermark") MultipartFile pdfFile,
-			@RequestParam(required = true) @Parameter(description = "The watermark type (text or image)") String watermarkType,
-			@RequestParam(required = false) @Parameter(description = "The watermark text") String watermarkText,
-			@RequestPart(required = false) @Parameter(description = "The watermark image") MultipartFile watermarkImage,
-			
-			@RequestParam(defaultValue = "roman", name = "alphabet") @Parameter(description = "The selected alphabet", 
-            schema = @Schema(type = "string", 
-                             allowableValues = {"roman","arabic","japanese","korean","chinese"}, 
-                             defaultValue = "roman")) String alphabet,
-			@RequestParam(defaultValue = "30", name = "fontSize") @Parameter(description = "The font size of the watermark text", example = "30") float fontSize,
-			@RequestParam(defaultValue = "0", name = "rotation") @Parameter(description = "The rotation of the watermark in degrees", example = "0") float rotation,
-			@RequestParam(defaultValue = "0.5", name = "opacity") @Parameter(description = "The opacity of the watermark (0.0 - 1.0)", example = "0.5") float opacity,
-			@RequestParam(defaultValue = "50", name = "widthSpacer") @Parameter(description = "The width spacer between watermark elements", example = "50") int widthSpacer,
-			@RequestParam(defaultValue = "50", name = "heightSpacer") @Parameter(description = "The height spacer between watermark elements", example = "50") int heightSpacer)
-			throws IOException, Exception {
+	public ResponseEntity<byte[]> addWatermark(@ModelAttribute AddWatermarkRequest request) throws IOException, Exception {
+	    MultipartFile pdfFile = request.getFileInput();
+	    String watermarkType = request.getWatermarkType();
+	    String watermarkText = request.getWatermarkText();
+	    MultipartFile watermarkImage = request.getWatermarkImage();
+	    String alphabet = request.getAlphabet();
+	    float fontSize = request.getFontSize();
+	    float rotation = request.getRotation();
+	    float opacity = request.getOpacity();
+	    int widthSpacer = request.getWidthSpacer();
+	    int heightSpacer = request.getHeightSpacer();
 
 		// Load the input PDF
 		PDDocument document = PDDocument.load(pdfFile.getInputStream());

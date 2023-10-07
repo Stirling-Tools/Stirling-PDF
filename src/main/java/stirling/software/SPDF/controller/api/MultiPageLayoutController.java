@@ -1,101 +1,124 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayInputStream;
+
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.apache.pdfbox.multipdf.LayerUtility;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.util.Matrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.kernel.geom.Rectangle;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfPage;
-import com.itextpdf.kernel.pdf.PdfReader;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
-import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
-
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class MultiPageLayoutController {
 
 	private static final Logger logger = LoggerFactory.getLogger(MultiPageLayoutController.class);
 
 	@PostMapping(value = "/multi-page-layout", consumes = "multipart/form-data")
-	@Operation(summary = "Merge multiple pages of a PDF document into a single page", description = "This operation takes an input PDF file and the number of pages to merge into a single sheet in the output PDF file. Input:PDF Output:PDF Type:SISO")
-	public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(
-			@Parameter(description = "The input PDF file", required = true) @RequestParam("fileInput") MultipartFile file,
-			@Parameter(description = "The number of pages to fit onto a single sheet in the output PDF. Acceptable values are 2, 3, 4, 9, 16.", required = true, schema = @Schema(type = "integer", allowableValues = {
-					"2", "3", "4", "9", "16" })) @RequestParam("pagesPerSheet") int pagesPerSheet)
-			throws IOException {
+	@Operation(
+	    summary = "Merge multiple pages of a PDF document into a single page",
+	    description = "This operation takes an input PDF file and the number of pages to merge into a single sheet in the output PDF file. Input:PDF Output:PDF Type:SISO"
+	)
+	public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(@ModelAttribute MergeMultiplePagesRequest request)
+	        throws IOException {
 
-		if (pagesPerSheet != 2 && pagesPerSheet != 3
-				&& pagesPerSheet != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
-			throw new IllegalArgumentException("pagesPerSheet must be 2, 3 or a perfect square");
-		}
+	    int pagesPerSheet = request.getPagesPerSheet();
+	    MultipartFile file = request.getFileInput();
+	    boolean addBorder = request.isAddBorder();
+	    
+	    if (pagesPerSheet != 2 && pagesPerSheet != 3 && pagesPerSheet != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
+	        throw new IllegalArgumentException("pagesPerSheet must be 2, 3 or a perfect square");
+	    }
 
-		int cols = pagesPerSheet == 2 || pagesPerSheet == 3 ? pagesPerSheet : (int) Math.sqrt(pagesPerSheet);
-		int rows = pagesPerSheet == 2 || pagesPerSheet == 3 ? 1 : (int) Math.sqrt(pagesPerSheet);
+	    int cols = pagesPerSheet == 2 || pagesPerSheet == 3 ? pagesPerSheet : (int) Math.sqrt(pagesPerSheet);
+	    int rows = pagesPerSheet == 2 || pagesPerSheet == 3 ? 1 : (int) Math.sqrt(pagesPerSheet);
 
-		byte[] bytes = file.getBytes();
-		PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
-		PdfDocument pdfDoc = new PdfDocument(reader);
+	    PDDocument sourceDocument = PDDocument.load(file.getInputStream());
+	    PDDocument newDocument = new PDDocument();
+	    PDPage newPage = new PDPage(PDRectangle.A4);
+	    newDocument.addPage(newPage);
 
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		PdfWriter writer = new PdfWriter(baos);
-		PdfDocument outputPdf = new PdfDocument(writer);
-		PageSize pageSize = new PageSize(PageSize.A4.rotate());
+	    int totalPages = sourceDocument.getNumberOfPages();
+	    float cellWidth = newPage.getMediaBox().getWidth() / cols;
+	    float cellHeight = newPage.getMediaBox().getHeight() / rows;
 
-		int totalPages = pdfDoc.getNumberOfPages();
-		float cellWidth = pageSize.getWidth() / cols;
-		float cellHeight = pageSize.getHeight() / rows;
+	    PDPageContentStream contentStream = new PDPageContentStream(newDocument, newPage, PDPageContentStream.AppendMode.APPEND, true, true);
+	    LayerUtility layerUtility = new LayerUtility(newDocument);
 
-		for (int i = 1; i <= totalPages; i += pagesPerSheet) {
-			PdfPage page = outputPdf.addNewPage(pageSize);
-			PdfCanvas pdfCanvas = new PdfCanvas(page);
+	    float borderThickness = 1.5f; // Specify border thickness as required
+	    contentStream.setLineWidth(borderThickness);
+	    contentStream.setStrokingColor(Color.BLACK);
+	    
+	    for (int i = 0; i < totalPages; i++) {
+	        if (i != 0 && i % pagesPerSheet == 0) {
+	            // Close the current content stream and create a new page and content stream
+	            contentStream.close();
+	            newPage = new PDPage(PDRectangle.A4);
+	            newDocument.addPage(newPage);
+	            contentStream = new PDPageContentStream(newDocument, newPage, PDPageContentStream.AppendMode.APPEND, true, true);
+	        }
 
-			for (int row = 0; row < rows; row++) {
-				for (int col = 0; col < cols; col++) {
-					int index = i + row * cols + col;
-					if (index <= totalPages) {
-						// Get the page and calculate scaling factors
-						Rectangle rect = pdfDoc.getPage(index).getPageSize();
-						float scaleWidth = cellWidth / rect.getWidth();
-						float scaleHeight = cellHeight / rect.getHeight();
-						float scale = Math.min(scaleWidth, scaleHeight);
+	        PDPage sourcePage = sourceDocument.getPage(i);
+	        PDRectangle rect = sourcePage.getMediaBox();
+	        float scaleWidth = cellWidth / rect.getWidth();
+	        float scaleHeight = cellHeight / rect.getHeight();
+	        float scale = Math.min(scaleWidth, scaleHeight);
 
-						PdfFormXObject formXObject = pdfDoc.getPage(index).copyAsFormXObject(outputPdf);
-						float x = col * cellWidth + (cellWidth - rect.getWidth() * scale) / 2;
-						float y = (rows - 1 - row) * cellHeight + (cellHeight - rect.getHeight() * scale) / 2;
+	        int adjustedPageIndex = i % pagesPerSheet;  // This will reset the index for every new page
+	        int rowIndex = adjustedPageIndex / cols;
+	        int colIndex = adjustedPageIndex % cols;
 
-						// Save the graphics state, apply the transformations, add the object, and then
-						// restore the graphics state
-						pdfCanvas.saveState();
-						pdfCanvas.concatMatrix(scale, 0, 0, scale, x, y);
-						pdfCanvas.addXObject(formXObject, 0, 0);
-						pdfCanvas.restoreState();
-					}
-				}
-			}
-		}
+	        float x = colIndex * cellWidth + (cellWidth - rect.getWidth() * scale) / 2;
+	        float y = newPage.getMediaBox().getHeight() - ((rowIndex + 1) * cellHeight - (cellHeight - rect.getHeight() * scale) / 2);
 
-		outputPdf.close();
-		byte[] pdfContent = baos.toByteArray();
-		pdfDoc.close();
-		
-		return WebResponseUtils.bytesToWebResponse(pdfContent, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_layoutChanged.pdf");
+	        contentStream.saveGraphicsState();
+	        contentStream.transform(Matrix.getTranslateInstance(x, y));
+	        contentStream.transform(Matrix.getScaleInstance(scale, scale));
+
+	        PDFormXObject formXObject = layerUtility.importPageAsForm(sourceDocument, i);
+	        contentStream.drawForm(formXObject);
+
+	        contentStream.restoreGraphicsState();
+	        
+	        if(addBorder) {
+		        // Draw border around each page
+		        float borderX = colIndex * cellWidth;
+		        float borderY = newPage.getMediaBox().getHeight() - (rowIndex + 1) * cellHeight;
+		        contentStream.addRect(borderX, borderY, cellWidth, cellHeight);
+		        contentStream.stroke();
+	        }
+	    }
+
+
+	    contentStream.close(); // Close the final content stream
+	    sourceDocument.close();
+
+	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	    newDocument.save(baos);
+	    newDocument.close();
+
+	    byte[] result = baos.toByteArray();
+	    return WebResponseUtils.bytesToWebResponse(result, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_layoutChanged.pdf");
 	}
+
 
 }

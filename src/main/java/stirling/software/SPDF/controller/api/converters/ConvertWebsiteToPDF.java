@@ -7,15 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
@@ -23,17 +22,16 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @Tag(name = "Convert", description = "Convert APIs")
+@RequestMapping("/api/v1/convert")
 public class ConvertWebsiteToPDF {
 
-	@PostMapping(consumes = "multipart/form-data", value = "/url-to-pdf")
+	@PostMapping(consumes = "multipart/form-data", value = "/url/pdf")
 	@Operation(
 	    summary = "Convert a URL to a PDF",
 	    description = "This endpoint fetches content from a URL and converts it to a PDF format."
 	)
-	public ResponseEntity<byte[]> urlToPdf(
-	    @RequestParam(required = true, value = "urlInput")
-	    @Parameter(description = "The input URL to be converted to a PDF file", required = true)
-	        String URL) throws IOException, InterruptedException {
+	public ResponseEntity<byte[]> urlToPdf(@ModelAttribute UrlToPdfRequest request) throws IOException, InterruptedException {
+	    String URL = request.getUrlInput();
 
 	    // Validate the URL format
 	    if(!URL.matches("^https?://.*") || !GeneralUtils.isValidURL(URL)) {

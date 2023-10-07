@@ -32,10 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.itextpdf.kernel.pdf.PdfPage;
-import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
-import com.itextpdf.kernel.pdf.canvas.parser.listener.SimpleTextExtractionStrategy;
-
 import stirling.software.SPDF.pdf.ImageFinder;
 
 public class PdfUtils {
@@ -252,7 +248,7 @@ public class PdfUtils {
             throw e;
         }
     }
-    public static byte[] imageToPdf(MultipartFile[] files, boolean stretchToFit, boolean autoRotate, String colorType) throws IOException {
+    public static byte[] imageToPdf(MultipartFile[] files, String fitOption, boolean autoRotate, String colorType) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             for (MultipartFile file : files) {
             	String contentType = file.getContentType();
@@ -265,7 +261,7 @@ public class PdfUtils {
                         BufferedImage pageImage = reader.read(i);
                         BufferedImage convertedImage = ImageProcessingUtils.convertColorType(pageImage, colorType);
                         PDImageXObject pdImage = LosslessFactory.createFromImage(doc, convertedImage);
-                        addImageToDocument(doc, pdImage, stretchToFit, autoRotate);
+                        addImageToDocument(doc, pdImage, fitOption, autoRotate);
                     }
                 } else {
                     File imageFile = Files.createTempFile("image", ".png").toFile();
@@ -283,7 +279,7 @@ public class PdfUtils {
                         } else {
                             pdImage = LosslessFactory.createFromImage(doc, convertedImage);
                         }
-                        addImageToDocument(doc, pdImage, stretchToFit, autoRotate);
+                        addImageToDocument(doc, pdImage, fitOption, autoRotate);
                     } catch (IOException e) {
                         logger.error("Error writing image to file: {}", imageFile.getAbsolutePath(), e);
                         throw e;
@@ -299,12 +295,20 @@ public class PdfUtils {
         }
     }
 
-    private static void addImageToDocument(PDDocument doc, PDImageXObject image, boolean stretchToFit, boolean autoRotate) throws IOException {
+    private static void addImageToDocument(PDDocument doc, PDImageXObject image, String fitOption, boolean autoRotate) throws IOException {
         boolean imageIsLandscape = image.getWidth() > image.getHeight();
         PDRectangle pageSize = PDRectangle.A4;
+
+        System.out.println(fitOption); 
+
         if (autoRotate && imageIsLandscape) {
             pageSize = new PDRectangle(pageSize.getHeight(), pageSize.getWidth());
         }
+
+        if ("fitDocumentToImage".equals(fitOption)) {
+            pageSize = new PDRectangle(image.getWidth(), image.getHeight());
+        }
+
         PDPage page = new PDPage(pageSize);
         doc.addPage(page);
 
@@ -312,9 +316,9 @@ public class PdfUtils {
         float pageHeight = page.getMediaBox().getHeight();
 
         try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
-            if (stretchToFit) {
+            if ("fillPage".equals(fitOption) || "fitDocumentToImage".equals(fitOption)) {
                 contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
-            } else {
+            } else if ("maintainAspectRatio".equals(fitOption)) {
                 float imageAspectRatio = (float) image.getWidth() / (float) image.getHeight();
                 float pageAspectRatio = pageWidth / pageHeight;
 
@@ -334,6 +338,7 @@ public class PdfUtils {
             throw e;
         }
     }
+
 
     public static byte[] overlayImage(byte[] pdfBytes, byte[] imageBytes, float x, float y, boolean everyPage) throws IOException {
 

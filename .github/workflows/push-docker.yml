@@ -21,6 +21,8 @@ jobs:
     
 
     - uses: gradle/gradle-build-action@v2.4.2
+      env:
+        DOCKER_ENABLE_SECURITY: false
       with:
         gradle-version: 7.6
         arguments: clean build
@@ -77,6 +79,8 @@ jobs:
         cache-to: type=gha,mode=max
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        build-args: 
+          VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
         platforms: linux/amd64,linux/arm64/v8
 
 
@@ -105,6 +109,8 @@ jobs:
         cache-to: type=gha,mode=max
         tags: ${{ steps.meta2.outputs.tags }}
         labels: ${{ steps.meta2.outputs.labels }}
+        build-args: 
+          VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
         platforms: linux/amd64,linux/arm64/v8
 
 

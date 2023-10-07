@@ -17,19 +17,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.utils.WebResponseUtils;
-
+import org.apache.pdfbox.multipdf.Splitter;
 @RestController
+@RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class SplitPDFController {
 
@@ -38,57 +38,36 @@ public class SplitPDFController {
     @PostMapping(consumes = "multipart/form-data", value = "/split-pages")
     @Operation(summary = "Split a PDF file into separate documents",
             description = "This endpoint splits a given PDF file into separate documents based on the specified page numbers or ranges. Users can specify pages using individual numbers, ranges, or 'all' for every page. Input:PDF Output:PDF Type:SIMO")
-    public ResponseEntity<byte[]> splitPdf(
-            @RequestPart(required = true, value = "fileInput")
-            @Parameter(description = "The input PDF file to be split")
-                    MultipartFile file,
-            @RequestParam("pages")
-            @Parameter(description = "The pages to be included in separate documents. Specify individual page numbers (e.g., '1,3,5'), ranges (e.g., '1-3,5-7'), or 'all' for every page.")
-                    String pages) throws IOException {
-        // parse user input
-
+    public ResponseEntity<byte[]> splitPdf(@ModelAttribute PDFWithPageNums request) throws IOException {
+    	MultipartFile file = request.getFileInput();
+        String pages = request.getPageNumbers();
         // open the pdf document
         InputStream inputStream = file.getInputStream();
         PDDocument document = PDDocument.load(inputStream);
 
-        List<Integer> pageNumbers = new ArrayList<>();
-        pages = pages.replaceAll("\\s+", ""); // remove whitespaces
-        if (pages.toLowerCase().equals("all")) {
-            for (int i = 0; i < document.getNumberOfPages(); i++) {
-                pageNumbers.add(i);
-            }
-        } else {
-            String[] splitPoints = pages.split(",");
-            for (String splitPoint : splitPoints) {
-                List<Integer> orderedPages = GeneralUtils.parsePageList(new String[] {splitPoint}, document.getNumberOfPages());
-                pageNumbers.addAll(orderedPages);
-            }
-            // Add the last page as a split point
-            pageNumbers.add(document.getNumberOfPages() - 1);
-        }
-
+        List<Integer> pageNumbers = request.getPageNumbersList(document);
+        if(!pageNumbers.contains(document.getNumberOfPages() - 1))
+        	pageNumbers.add(document.getNumberOfPages()- 1);
         logger.info("Splitting PDF into pages: {}", pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
-        // split the document
+        Splitter splitter = new Splitter();
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
-        int previousPageNumber = 0;
+
+        int previousPageNumber = 1; // PDFBox uses 1-based indexing for pages.
         for (int splitPoint : pageNumbers) {
-            try (PDDocument splitDocument = new PDDocument()) {
-                for (int i = previousPageNumber; i <= splitPoint; i++) {
-                    PDPage page = document.getPage(i);
-                    splitDocument.addPage(page);
-                    logger.debug("Adding page {} to split document", i);
-                }
-                previousPageNumber = splitPoint + 1;
+        	splitPoint = splitPoint + 1;
+            splitter.setStartPage(previousPageNumber);
+            splitter.setEndPage(splitPoint);
+            List<PDDocument> splitDocuments = splitter.split(document);
 
+            for (PDDocument splitDoc : splitDocuments) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                splitDocument.save(baos);
-
+                splitDoc.save(baos);
                 splitDocumentsBoas.add(baos);
-            } catch (Exception e) {
-                logger.error("Failed splitting documents and saving them", e);
-                throw e;
+                splitDoc.close();
             }
+
+            previousPageNumber = splitPoint + 1;
         }
 
 

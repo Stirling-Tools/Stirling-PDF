@@ -19,7 +19,7 @@ pipeline/
 
 #### Stirling-PDF Files ###
 customFiles/
-config/
+configs/
 watchedFolders/
 
 
@@ -116,7 +116,7 @@ watchedFolders/
 *.zip
 *.tar.gz
 *.rar
-
+*.db
 /build
 
 /.vscode

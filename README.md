@@ -19,46 +19,66 @@ Any file which has been downloaded by the user will have already been deleted fr
 
 Feel free to request any features or bug fixes either in github issues or our [Discord](https://discord.gg/Cn8pWhQRxZ)
 
-
 ![stirling-home](images/stirling-home.png)
 
 ## Features
-- Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages.
-- Split PDFs into multiple files at specified page numbers or extract all pages as individual files.
-- Merge multiple PDFs together into a single resultant file
-- Convert PDFs to and from images
-- Reorganize PDF pages into different orders.
-- Add/Generate signatures
-- Format PDFs into a multi-paged page
-- Scale page contents size by set % 
-- Adjust Contrast
-- Crop PDF
-- Auto Split PDF (With physically scanned page dividers)
-- Flatten PDFs
-- Repair PDFs
-- Detect and remove blank pages
-- Compare 2 PDFs and show differences in text
-- Add images to PDFs
-- Rotating PDFs in 90 degree increments.
-- Compressing PDFs to decrease their filesize. (Using OCRMyPDF)
-- Add and remove passwords
-- Set PDF Permissions
-- Add watermark(s)
-- Convert Any common file to PDF (using LibreOffice)
-- Convert PDF to Word/Powerpoint/Others (using LibreOffice)
-- Convert HTML to PDF
-- URL to PDF
-- Extract images from PDF
-- Extract images from Scans
-- Add page numbers
-- Auto rename file by detecting PDF header text
-- OCR on PDF (Using OCRMyPDF)
-- PDF/A conversion (Using OCRMyPDF)
-- Edit metadata
 - Dark mode support.
 - Custom download options (see [here](https://github.com/Frooodle/Stirling-PDF/blob/main/images/settings.png) for example)
 - Parallel file processing and downloads
 - API for integration with external scripts 
+- Optional Login and Authentication support (see [here](https://github.com/Frooodle/Stirling-PDF/tree/main#login-authentication) for documentation)
+
+
+## **PDF Features**
+
+### **Page Operations**
+- Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages. 
+- Merge multiple PDFs together into a single resultant file. 
+- Split PDFs into multiple files at specified page numbers or extract all pages as individual files. 
+- Reorganize PDF pages into different orders. 
+- Rotate PDFs in 90-degree increments. 
+- Remove pages. 
+- Multi-page layout (Format PDFs into a multi-paged page). 
+- Scale page contents size by set %. 
+- Adjust Contrast. 
+- Crop PDF. 
+- Auto Split PDF (With physically scanned page dividers). 
+- Extract page(s). 
+- Convert PDF to a single page. 
+
+### **Conversion Operations**
+- Convert PDFs to and from images. 
+- Convert any common file to PDF (using LibreOffice). 
+- Convert PDF to Word/Powerpoint/Others (using LibreOffice). 
+- Convert HTML to PDF. 
+- URL to PDF. 
+- Markdown to PDF. 
+
+### **Security & Permissions**
+- Add and remove passwords. 
+- Change/set PDF Permissions. 
+- Add watermark(s). 
+- Certify/sign PDFs. 
+- Sanitize PDFs. 
+- Auto-redact text. 
+
+### **Other Operations**
+- Add/Generate/Write signatures. 
+- Repair PDFs. 
+- Detect and remove blank pages. 
+- Compare 2 PDFs and show differences in text. 
+- Add images to PDFs. 
+- Compress PDFs to decrease their filesize (Using OCRMyPDF). 
+- Extract images from PDF. 
+- Extract images from Scans. 
+- Add page numbers. 
+- Auto rename file by detecting PDF header text. 
+- OCR on PDF (Using OCRMyPDF). 
+- PDF/A conversion (Using OCRMyPDF). 
+- Edit metadata. 
+- Flatten PDFs. 
+- Get all information on a PDF to view or export as JSON. 
+
 
 For a overview of the tasks and the technology each uses please view [groups.md](https://github.com/Frooodle/Stirling-PDF/blob/main/Groups.md)
 Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) hosted by the team at adminforge.de
@@ -66,7 +86,6 @@ Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) h
 ## Technologies used
 - Spring Boot + Thymeleaf
 - PDFBox
-- IText7
 - [LibreOffice](https://www.libreoffice.org/discover/libreoffice/) for advanced conversions
 - [OcrMyPdf](https://github.com/ocrmypdf/OCRmyPDF)
 - HTML, CSS, JavaScript
@@ -82,9 +101,9 @@ Please view https://github.com/Frooodle/Stirling-PDF/blob/main/LocalRunGuide.md
 ### Docker
 https://hub.docker.com/r/frooodle/s-pdf
 
-Stirling PDF has 3 different versions, a Full version, Lite and ultra-Lite. Depending on the types of features you use you may want a smaller image to save on space.
+Stirling PDF has 3 different versions, a Full version, Lite, and ultra-Lite. Depending on the types of features you use you may want a smaller image to save on space.
 To see what the different versions offer please look at our [version mapping](https://github.com/Frooodle/Stirling-PDF/blob/main/Version-groups.md)
-For people that dont mind about space optimisation just use latest tag.
+For people that don't mind about space optimization just use the latest tag.
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest?label=Stirling-PDF%20Full)
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-lite?label=Stirling-PDF%20Lite)
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
@@ -94,19 +113,15 @@ Docker Run
 docker run -d \
   -p 8080:8080 \
   -v /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata \
+  -v /location/of/extraConfigs:/configs \
+  -e DOCKER_ENABLE_SECURITY=false \
   --name stirling-pdf \
   frooodle/s-pdf:latest
   
   
   Can also add these for customisation but are not required
-  -v /location/of/extraConfigs:/configs \
+  
   -v /location/of/customFiles:/customFiles \
-  -e APP_HOME_NAME="Stirling PDF" \
-  -e APP_HOME_DESCRIPTION="Your locally hosted one-stop-shop for all your PDF needs." \
-  -e APP_NAVBAR_NAME="Stirling PDF" \
-  -e ALLOW_GOOGLE_VISIBILITY="true" \
-  -e APP_ROOT_PATH="/" \
-  -e APP_LOCALE="en_GB" \
 ```
 Docker Compose
 ```
@@ -118,16 +133,10 @@ services:
       - '8080:8080'
     volumes:
       - /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata #Required for extra OCR languages
-#      - /location/of/extraConfigs:/configs
+      - /location/of/extraConfigs:/configs
 #      - /location/of/customFiles:/customFiles/
-#    environment:
-#      APP_LOCALE: en_GB
-#      APP_HOME_NAME: Stirling PDF
-#      APP_HOME_DESCRIPTION: Your locally hosted one-stop-shop for all your PDF needs.
-#      APP_NAVBAR_NAME: Stirling PDF
-#      APP_ROOT_PATH: /
-#      ALLOW_GOOGLE_VISIBILITY: true
-
+    environment:
+      - DOCKER_ENABLE_SECURITY=false
 ```
 
 
@@ -135,8 +144,9 @@ services:
 Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
-Stirling PDF currently supports 16!
+Stirling PDF currently supports 18!
 - English (English) (en_GB)
+- English (US) (en_US)
 - Arabic (العربية) (ar_AR)
 - German (Deutsch) (de_DE)
 - French (Français) (fr_FR)
@@ -152,54 +162,107 @@ Stirling PDF currently supports 16!
 - Russian (Русский) (ru_RU)
 - Basque (Euskara) (eu_ES)
 - Japanese (日本語) (ja_JP)
+- Dutch (Nederlands) (nl_NL)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
 
 And please create a PR to merge it back in so others can use it! 
 
-Also please note as i add new features i will google translate existing languages so that they dont lose support. This could mean that new features need grammer corrections as added.
-
 ## How to View
 1. Open a web browser and navigate to `http://localhost:8080/`
 2. Use the application by following the instructions on the website.
 
 
-## Customize App
-Stirling PDF allows easy customization of the visible application name.
-Simply use environment variables APP_HOME_NAME, APP_HOME_DESCRIPTION and APP_NAVBAR_NAME with Docker or Java. 
-If running Java directly, you can also pass these as properties using -D arguments.
+## Customisation
+Stirling PDF allows easy customization of the app.
+Includes things like
+- Custom application name
+- Custom slogans, icons, images, and even custom HTML (via file overrides)
 
-Using the same method you can also change 
 
-- The default language by providing APP_LOCALE with values like de-DE fr-FR or ar-AR (Note the - character not _ ) to select your default language (Will always default to English on invalid locale) Current accepted locales can be seen above in the Want to add your own language section
-- Enable/Disable search engine visiblility with ALLOW_GOOGLE_VISIBILITY with true / false values. Default disable visiblility.
-- Change root URI for Stirling-PDF ie change server.com/ to server.com/pdf-app by running APP_ROOT_PATH as pdf-app
-- Disable and remove endpoints and functionality from Stirling-PDF. Currently the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma seperated lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image to pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Frooodle/Stirling-PDF/blob/main/groups.md) 
-- Change the max file size allowed through the server with the environment variable MAX_FILE_SIZE. default  2000MB
-- Customise static files such as app logo by placing files in the /customFiles/static/ directory. Example to customise app logo is placing a /customFiles/static/favicon.svg to override current SVG. This can be used to change any images/icons/css/fonts/js etc in Stirling-PDF
-- Enable/Disable metric api endpoints with ENABLE_API_METRICS. Default enabled
+There are two options for this, either using the generated settings file ``settings.yml``
+This file is located in the ``/configs`` directory and follows standard YAML formatting
+
+Environment variables are also supported and would override the settings file
+For example in the settings.yml you have
+```
+system:
+  defaultLocale: 'en-US'
+```
+
+To have this via an environment variable you would have ``SYSTEM_DEFAULTLOCALE``
+
+The Current list of settings is
+```
+security:
+  enableLogin: false # set to 'true' to enable login
+  csrfDisabled: true
+
+system:
+  defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
+  googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
+  customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
+
+#ui:
+#  appName: exampleAppName # Application's visible name
+#  homeDescription: I am a description # Short description or tagline shown on homepage.
+#  appNameNavbar: navbarName # Name displayed on the navigation bar
+
+endpoints:
+  toRemove: [] # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
+  groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
+
+metrics:
+  enabled: true # 'true' to enable Info APIs endpoints (view http://localhost:8080/swagger-ui/index.html#/API to learn more), 'false' to disable
+```
+### Extra notes
+- Endpoints. Currently, the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma separate lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image-to-pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Frooodle/Stirling-PDF/blob/main/groups.md) 
+- customStaticFilePath. Customise static files such as the app logo by placing files in the /customFiles/static/ directory. An example of customising app logo is placing a /customFiles/static/favicon.svg to override current SVG. This can be used to change any images/icons/css/fonts/js etc in Stirling-PDF
+
+### Environment only parameters
+- ``SYSTEM_ROOTURIPATH`` ie set to ``/pdf-app`` to Set the application's root URI to ``localhost:8080/pdf-app``
+- ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
+- ``DOCKER_ENABLE_SECURITY`` to tell docker to download security jar (required as true for auth login)
 
 ## API
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
 [here](https://app.swaggerhub.com/apis-docs/Frooodle/Stirling-PDF/) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation (Or by following the API button in your settings of Stirling-PDF)
 
 
+## Login authentication
+![stirling-login](images/login-light.png)
+### Prerequisites: 
+- User must have the folder ./configs volumed within docker so that it is retained during updates.
+- Docker uses must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables. 
+- Then either enable login via the settings.yml file or via setting ``SECURITY_ENABLE_LOGIN`` to ``true``
+- Now the initial user will be generated with username ``admin`` and password ``stirling``. On login you will be forced to change the password to a new one. You can also use the environment variables ``SECURITY_INITIALLOGIN_USERNAME`` and  ``SECURITY_INITIALLOGIN_PASSWORD`` to set your own straight away (Recommended to remove them after user creation).
+
+Once the above has been done, on restart, a new stirling-pdf-DB.mv.db will show if everything worked.
+
+When you login to Stirling PDF you will be redirected to /login page to login with those default credentials. After login everything should function as normal
+
+To access your account settings go to Account settings in the settings cog menu (top right in navbar) This Account settings menu is also where you find your API key.
+
+To add new users go to the bottom of Account settings and hit 'Admin Settings', here you can add new users. The different roles mentioned within this are for rate limiting. This is a Work in progress which will be expanding on more in future
+
+For API usage you must provide a header with 'X-API-Key' and the associated API key for that user.
+
+
 ## FAQ
 
-### Q1: Can you add authentication in Stirling PDF?
-There is no Auth within Stirling PDF and there is none planned. This feature will not be added. Instead we recommended you use trusted and secure authentication software like Authentik or Authelia.
-
-### Q2: What are your planned features?
-- Crop
+### Q1: What are your planned features?
 - Progress bar/Tracking
 - Full custom logic pipelines to combine multiple operations together.
 - Folder support with auto scanning to perform operations on
-- Redact sections of pages
-- Add page numbers
-- Auto rename (Renames file based on file title text)
-- URL to PDF
-- Change contrast
+- Redact text (Via UI not just automated way) 
+- Add Forms
+- Annotations
+- Multi page layout (Stich PDF pages together) support x rows y columns and custom page sizing 
+- Fill forms mannual and automatic 
 
-### Q3: Why is my application downloading .htm files?
-This is a issue caused commonly by your NGINX congifuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. client_max_body_size SIZE; Where "SIZE" is 50M for example for 50MB files.
+### Q2: Why is my application downloading .htm files?
+This is a issue caused commonly by your NGINX congifuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. ``client_max_body_size SIZE;`` Where "SIZE" is 50M for example for 50MB files.
+
+### Q3: Why is my download timing out
+NGINX has timeout values by default so if you are running Stirling-PDF behind NGINX you may need to set a timeout value such as adding the config ``proxy_read_timeout 3600;``

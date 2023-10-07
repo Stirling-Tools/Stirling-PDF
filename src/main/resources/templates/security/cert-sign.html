@@ -16,14 +16,14 @@
 					<div class="col-md-6">
 						<h2 th:text="#{certSign.header}"></h2>
 
-						<form action="/cert-sign" method="post"
+						<form action="api/v1/security/cert-sign" method="post"
 							enctype="multipart/form-data">
-							<div class="form-group">
+							<div class="mb-3">
 								<label th:text="#{certSign.selectPDF}"></label>
 								<div
 									th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
 							</div>
-							<div class="form-group">
+							<div class="mb-3">
 								<label for="certType" th:text="#{certSign.certType}"></label> <select
 									class="form-control" id="certType" name="certType">
 									<option value="" th:text="#{selectFillter}"></option>
@@ -32,50 +32,50 @@
 								</select>
 							</div>
 
-							<div class="form-group" id="p12Group" style="display: none;">
+							<div class="mb-3" id="p12Group" style="display: none;">
 								<label th:text="#{certSign.selectP12}"></label>
 								<div
-									th:replace="~{fragments/common :: fileSelector(name='p12', notRequired=true, multiple=false, accept='.p12,.pfx')}"></div>
+									th:replace="~{fragments/common :: fileSelector(name='p12File', notRequired=true, multiple=false, accept='.p12,.pfx')}"></div>
 							</div>
 
 							<div id="pemGroup" style="display: none;">
-								<div class="form-group">
+								<div class="mb-3">
 									<label th:text="#{certSign.selectKey}"></label>
 									<div
-										th:replace="~{fragments/common :: fileSelector(name='key', multiple=false, notRequired=true, accept='.pem,.der')}"></div>
+										th:replace="~{fragments/common :: fileSelector(name='privateKeyFile', multiple=false, notRequired=true, accept='.pem,.der')}"></div>
 								</div>
-								<div class="form-group">
+								<div class="mb-3">
 									<label th:text="#{certSign.selectCert}"></label>
 									<div
-										th:replace="~{fragments/common :: fileSelector(name='cert', multiple=false, notRequired=true, accept='.pem,.der')}"></div>
+										th:replace="~{fragments/common :: fileSelector(name='certFile', multiple=false, notRequired=true, accept='.pem,.der')}"></div>
 								</div>
 							</div>
 
-							<div class="form-group">
+							<div class="mb-3">
 								<label th:text="#{certSign.password}"></label> <input
 									type="password" class="form-control" id="password"
 									name="password">
 							</div>
                             
-							<div class="form-group">
+							<div class="mb-3">
 								<label><input type="checkbox" id="showSignature"
 									name="showSignature" th:text="#{certSign.showSig}"></label>
 							</div>
 
 							<div id="signatureDetails" style="display: none;">
-								<div class="form-group">
+								<div class="mb-3">
 									<label for="reason" th:text="#{certSign.reason}"></label> <input type="text"
 										class="form-control" id="reason" name="reason">
 								</div>
-								<div class="form-group">
+								<div class="mb-3">
 									<label for="location" th:text="#{certSign.location}"></label> <input type="text"
 										class="form-control" id="location" name="location">
 								</div>
-								<div class="form-group">
+								<div class="mb-3">
 									<label for="name" th:text="#{certSign.name}"></label> <input type="text"
 										class="form-control" id="name" name="name">
 								</div>
-								<div class="form-group">
+								<div class="mb-3">
 									<label for="pageNumber" th:text="#{pageNum}"></label> <input
 										type="number" class="form-control" id="pageNumber"
 										name="pageNumber" min="1">
@@ -120,7 +120,7 @@
 							</script>
 
 
-							<div class="form-group text-center">
+							<div class="mb-3 text-center">
 								<button type="submit" id="submitBtn" class="btn btn-primary"
 									th:text="#{certSign.submit}"></button>
 							</div>

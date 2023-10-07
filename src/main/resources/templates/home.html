@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
 
@@ -12,7 +12,7 @@
         <div id="content-wrap">
             <div th:insert="~{fragments/navbar.html :: navbar}"></div>
             <!-- Jumbotron -->
-            <div class="jumbotron jumbotron-fluid d-none d-md-block" id="jumbotron">
+            <div class="bg-light p-5 rounded d-none d-md-block" id="jumbotron">
                 <div class="container">
                     <h1 class="display-4" th:text="${@appName}"></h1>
                     <p class="lead" th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}"></p>
@@ -23,6 +23,7 @@
             <script src="js/homecard.js"></script>
             	
             <div class=" container">
+            <br>
             <input type="text" id="searchBar" onkeyup="filterCards()" placeholder="Search for features...">
             <div class="features-container ">
             	
@@ -89,6 +90,7 @@
                 <div th:replace="~{fragments/card :: card(id='extract-page', cardTitle=#{home.extractPage.title}, cardText=#{home.extractPage.desc}, cardLink='extract-page', svgPath='images/extract.svg')}"></div>
                 <div th:replace="~{fragments/card :: card(id='pdf-to-single-page', cardTitle=#{home.PdfToSinglePage.title}, cardText=#{home.PdfToSinglePage.desc}, cardLink='pdf-to-single-page', svgPath='images/single-page.svg')}"></div>
                 <div th:replace="~{fragments/card :: card(id='show-javascript', cardTitle=#{home.showJS.title}, cardText=#{home.showJS.desc}, cardLink='show-javascript', svgPath='images/js.svg')}"></div>
+                <div th:replace="~{fragments/card :: card(id='auto-redact', cardTitle=#{home.autoRedact.title}, cardText=#{home.autoRedact.desc}, cardLink='auto-redact', svgPath='images/eraser-fill.svg')}"></div>
                 
                 
                 

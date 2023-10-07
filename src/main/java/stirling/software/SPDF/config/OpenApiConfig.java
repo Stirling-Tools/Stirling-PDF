@@ -1,9 +1,5 @@
 package stirling.software.SPDF.config;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,14 +14,9 @@ public class OpenApiConfig {
 	public OpenAPI customOpenAPI() {
 	    String version = getClass().getPackage().getImplementationVersion();
 	    if (version == null) {
-	        Properties props = new Properties();
-	        try (InputStream input = getClass().getClassLoader().getResourceAsStream("version.properties")) {
-	            props.load(input);
-	            version = props.getProperty("version");
-	        } catch (IOException ex) {
-	            ex.printStackTrace();
+	        
 	            version = "1.0.0"; // default version if all else fails
-	        }
+	        
 	    }
 
 	    return new OpenAPI().components(new Components()).info(

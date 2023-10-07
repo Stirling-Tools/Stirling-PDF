@@ -1,16 +1,27 @@
 package stirling.software.SPDF.config;
 
+import org.springframework.beans.PropertyEditorRegistrar;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import stirling.software.SPDF.model.ApplicationProperties;
 @Configuration
 public class AppConfig {
+
+    
+    @Autowired
+    ApplicationProperties applicationProperties;
+    
+    @Bean(name = "loginEnabled")
+    public boolean loginEnabled() {
+        return applicationProperties.getSecurity().getEnableLogin();
+    }
+
     @Bean(name = "appName")
     public String appName() {
-        String appName = System.getProperty("APP_HOME_NAME");
-        if (appName == null)
-            appName = System.getenv("APP_HOME_NAME");
-        return (appName != null) ? appName : "Stirling PDF";
+        String homeTitle =  applicationProperties.getUi().getAppName();
+        return (homeTitle != null) ? homeTitle : "Stirling PDF";
     }
 
     @Bean(name = "appVersion")
@@ -21,22 +32,24 @@ public class AppConfig {
 
     @Bean(name = "homeText")
     public String homeText() {
-        String homeText = System.getProperty("APP_HOME_DESCRIPTION");
-        if (homeText == null)
-            homeText = System.getenv("APP_HOME_DESCRIPTION");
-        return (homeText != null) ? homeText : "null";
+    	return (applicationProperties.getUi().getHomeDescription() != null) ? applicationProperties.getUi().getHomeDescription() : "null";
     }
+
 
     @Bean(name = "navBarText")
     public String navBarText() {
-        String navBarText = System.getProperty("APP_NAVBAR_NAME");
-        if (navBarText == null)
-            navBarText = System.getenv("APP_NAVBAR_NAME");
-        if (navBarText == null)
-            navBarText = System.getProperty("APP_HOME_NAME");
-        if (navBarText == null)
-            navBarText = System.getenv("APP_HOME_NAME");
-
-        return (navBarText != null) ? navBarText : "Stirling PDF";
+        String defaultNavBar = applicationProperties.getUi().getAppNameNavbar() != null ? applicationProperties.getUi().getAppNameNavbar() : applicationProperties.getUi().getAppName();
+        return (defaultNavBar != null) ? defaultNavBar : "Stirling PDF";
     }
+	
+	@Bean(name = "rateLimit")
+    public boolean rateLimit() {
+        String appName = System.getProperty("rateLimit");
+        if (appName == null) 
+            appName = System.getenv("rateLimit");
+        System.out.println("rateLimit=" + appName);
+        return (appName != null) ? Boolean.valueOf(appName) : false;
+    }
+	
+	
 }

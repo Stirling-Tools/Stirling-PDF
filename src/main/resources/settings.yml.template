@@ -1,0 +1,23 @@
+# Welcome to settings file
+# Remove comment marker # if on start of line to enable the configuration
+# If you want to override with environment parameter follow parameter naming SECURITY_INITIALLOGIN_USERNAME
+
+security:
+  enableLogin: false # set to 'true' to enable login
+  csrfDisabled: true
+
+system:
+  defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
+  googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
+
+#ui:
+#  appName: exampleAppName # Application's visible name
+#  homeDescription: I am a description # Short description or tagline shown on homepage.
+#  appNameNavbar: navbarName # Name displayed on the navigation bar
+
+endpoints:
+  toRemove: [] # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
+  groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
+
+metrics:
+  enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable

@@ -14,7 +14,7 @@
 					<div class="col-md-6">
 						<h2 th:text="#{getPdfInfo.header}"></h2>
 						<form id="pdfInfoForm" method="post" enctype="multipart/form-data"
-							th:action="@{get-info-on-pdf}">
+							th:action="@{api/v1/security/get-info-on-pdf}">
 							<div
 								th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false')}"></div>
 							<br>
@@ -40,7 +40,7 @@
 
 						    const formData = new FormData(event.target);
 						    
-						    fetch('get-info-on-pdf', { 
+						    fetch('api/v1/security/get-info-on-pdf', { 
 						        method: 'POST',
 						        body: formData
 						    })
@@ -142,13 +142,17 @@
 						    const buttonElem = document.createElement('button');
 						    buttonElem.className = 'btn btn-link';
 						    buttonElem.type = 'button';
-						    buttonElem.dataset.toggle = "collapse";
-						    buttonElem.dataset.target = `#${safeKey}-content-${depth}`;
+						    buttonElem.dataset.bsToggle = "collapse";
+						    buttonElem.dataset.bsTarget = `#${safeKey}-content-${depth}`;
 						    buttonElem.setAttribute('aria-expanded', 'true');
 						    buttonElem.setAttribute('aria-controls', `${safeKey}-content-${depth}`);
 						    buttonElem.textContent = key;
 						    return buttonElem;
 						}
+						const collapsibleElems = document.querySelectorAll('[data-bs-toggle="collapse"]');
+						collapsibleElems.forEach(elem => {
+						    new bootstrap.Collapse(elem);
+						});
                        </script>
 					</div>
 				</div>

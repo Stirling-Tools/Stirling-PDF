@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,26 +24,28 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.config.StartupApplicationListener;
+import stirling.software.SPDF.model.ApplicationProperties;
 
 @RestController
 @RequestMapping("/api/v1")
 @Tag(name = "API", description = "Info APIs")
 public class MetricsController {
 
+	
+	@Autowired
+	ApplicationProperties applicationProperties;
+	
+   
     private final MeterRegistry meterRegistry;
 
-    private boolean isEndpointEnabled;
+    private boolean metricsEnabled;
     
     @PostConstruct
     public void init() {
-        String isEndpointEnabled = System.getProperty("ENABLE_API_METRICS");
-        if (isEndpointEnabled == null) {
-        	isEndpointEnabled = System.getenv("ENABLE_API_METRICS");
-        	if (isEndpointEnabled == null) {
-        		isEndpointEnabled = "true";
-        	}
-        }
-        this.isEndpointEnabled = "true".equalsIgnoreCase(isEndpointEnabled);
+    	Boolean metricsEnabled = applicationProperties.getMetrics().getEnabled();
+    	if(metricsEnabled == null)
+    		metricsEnabled = true;
+        this.metricsEnabled = metricsEnabled;
     }
     
     public MetricsController(MeterRegistry meterRegistry) {
@@ -54,7 +56,7 @@ public class MetricsController {
     @Operation(summary = "Application status and version",
             description = "This endpoint returns the status of the application and its version number.")
     public ResponseEntity<?> getStatus() {
-        if (!isEndpointEnabled) {
+        if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
         }
 
@@ -68,7 +70,7 @@ public class MetricsController {
     @Operation(summary = "GET request count",
             description = "This endpoint returns the total count of GET requests or the count of GET requests for a specific endpoint.")
     public ResponseEntity<?> getPageLoads(@RequestParam(required = false,  name = "endpoint") @Parameter(description = "endpoint") Optional<String> endpoint) {
-    	if (!isEndpointEnabled) {
+    	if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
         }
     	try {
@@ -109,7 +111,7 @@ public class MetricsController {
     @Operation(summary = "GET requests count for all endpoints",
             description = "This endpoint returns the count of GET requests for each endpoint.")
     public ResponseEntity<?> getAllEndpointLoads() {
-    	if (!isEndpointEnabled) {
+    	if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
         }
         try {
@@ -170,7 +172,7 @@ public class MetricsController {
     @Operation(summary = "POST request count",
             description = "This endpoint returns the total count of POST requests or the count of POST requests for a specific endpoint.")
     public ResponseEntity<?> getTotalRequests(@RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint") Optional<String> endpoint) {
-    	if (!isEndpointEnabled) {
+    	if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
         }
     	try {
@@ -208,7 +210,7 @@ public class MetricsController {
     @Operation(summary = "POST requests count for all endpoints",
             description = "This endpoint returns the count of POST requests for each endpoint.")
     public ResponseEntity<?> getAllPostRequests() {
-    	if (!isEndpointEnabled) {
+    	if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
         }
         try {
@@ -244,7 +246,7 @@ public class MetricsController {
     
     @GetMapping("/uptime")
     public ResponseEntity<?> getUptime() {
-        if (!isEndpointEnabled) {
+        if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
         }
 

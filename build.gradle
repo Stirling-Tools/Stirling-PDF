@@ -8,15 +8,33 @@ plugins {
 }
 
 group = 'stirling.software'
-version = '0.12.3'
+version = '0.14.5'
 sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
 }
 
+sourceSets {
+    main {
+        java {
+            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false') {
+                exclude 'stirling/software/SPDF/config/security/**'
+                exclude 'stirling/software/SPDF/controller/api/UserController.java'
+                exclude 'stirling/software/SPDF/controller/web/AccountWebController.java'
+                exclude 'stirling/software/SPDF/model/ApiKeyAuthenticationToken.java'
+                exclude 'stirling/software/SPDF/model/Authority.java'
+                exclude 'stirling/software/SPDF/model/PersistentLogin.java'
+                exclude 'stirling/software/SPDF/model/User.java'
+                exclude 'stirling/software/SPDF/repository/**'
+            }
+        }
+    }
+}
+
+
 openApi {
-    apiDocsUrl = "http://localhost:8080/v3/api-docs"
+    apiDocsUrl = "http://localhost:8080/v1/api-docs"
     outputDir = file("$projectDir")
     outputFileName = "SwaggerDoc.json"
 }
@@ -48,7 +66,18 @@ dependencies {
 	implementation 'org.yaml:snakeyaml:2.1'
 	implementation 'org.springframework.boot:spring-boot-starter-web:3.1.2'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.1.2'
+	
+	if (System.getenv('DOCKER_ENABLE_SECURITY') != 'false') {
+        implementation 'org.springframework.boot:spring-boot-starter-security:3.1.2'
+        implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
+        implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+		implementation "com.h2database:h2"
+    }
+	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.2'
+	
+	
+
 	// https://mvnrepository.com/artifact/org.apache.pdfbox/jbig2-imageio
 	implementation group: 'org.apache.pdfbox', name: 'jbig2-imageio', version: '3.0.4'
 	implementation 'commons-io:commons-io:2.13.0'
@@ -57,16 +86,20 @@ dependencies {
     
 	//general PDF
     implementation 'org.apache.pdfbox:pdfbox:2.0.29'
+    implementation 'org.apache.pdfbox:xmpbox:2.0.29'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.70' 
-    implementation 'com.itextpdf:itext7-core:7.2.5'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-core'
     implementation group: 'com.google.zxing', name: 'core', version: '3.5.1'
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
 	implementation 'org.commonmark:commonmark:0.21.0'
+    // https://mvnrepository.com/artifact/com.github.vladimir-bukhtoyarov/bucket4j-core
+	implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
     
     developmentOnly("org.springframework.boot:spring-boot-devtools")
+	compileOnly 'org.projectlombok:lombok:1.18.28'
+	annotationProcessor 'org.projectlombok:lombok:1.18.28'
 
 }
 

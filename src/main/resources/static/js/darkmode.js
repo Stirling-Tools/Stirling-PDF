@@ -1,6 +1,55 @@
 var toggleCount = 0;
 var lastToggleTime = Date.now();
 
+var elements = {
+	lightModeStyles: null,
+	darkModeStyles: null,
+	rainbowModeStyles: null,
+	darkModeIcon: null
+};
+
+function getElements() {
+	elements.lightModeStyles = document.getElementById("light-mode-styles");
+	elements.darkModeStyles = document.getElementById("dark-mode-styles");
+	elements.rainbowModeStyles = document.getElementById("rainbow-mode-styles");
+	elements.darkModeIcon = document.getElementById("dark-mode-icon");
+}
+
+function setMode(mode) {
+	var event = new CustomEvent('modeChanged', { detail: mode });
+    document.dispatchEvent(event);
+	elements.lightModeStyles.disabled = mode !== "off";
+	elements.darkModeStyles.disabled = mode !== "on";
+	elements.rainbowModeStyles.disabled = mode !== "rainbow";
+	var jumbotron = document.getElementById('jumbotron');
+	if (mode === "on") {
+        elements.darkModeIcon.src = "moon.svg";
+        // Add the table-dark class to tables for dark mode
+        var tables = document.querySelectorAll('.table');
+        tables.forEach(table => {
+            table.classList.add('table-dark');
+        });
+        if(jumbotron) {
+        	jumbotron.classList.add('bg-dark');
+        	jumbotron.classList.remove('bg-light');
+    	}
+    } else if (mode === "off") {
+        elements.darkModeIcon.src = "sun.svg";
+        // Remove the table-dark class for light mode
+        var tables = document.querySelectorAll('.table-dark');
+        tables.forEach(table => {
+            table.classList.remove('table-dark');
+        });
+        if(jumbotron){
+			console.log(mode)
+         	jumbotron.classList.remove('bg-dark');
+         	jumbotron.classList.add('bg-light');
+     	}
+    } else if (mode === "rainbow") {
+		elements.darkModeIcon.src = "rainbow.svg";
+	}
+}
+
 function toggleDarkMode() {
 	var currentTime = Date.now();
 	if (currentTime - lastToggleTime < 1000) {
@@ -10,65 +59,30 @@ function toggleDarkMode() {
 	}
 	lastToggleTime = currentTime;
 
-	var lightModeStyles = document.getElementById("light-mode-styles");
-	var darkModeStyles = document.getElementById("dark-mode-styles");
-	var rainbowModeStyles = document.getElementById("rainbow-mode-styles");
-	var darkModeIcon = document.getElementById("dark-mode-icon");
-
 	if (toggleCount >= 18) {
 		localStorage.setItem("dark-mode", "rainbow");
-		lightModeStyles.disabled = true;
-		darkModeStyles.disabled = true;
-		rainbowModeStyles.disabled = false;
-		darkModeIcon.src = "rainbow.svg";
+		setMode("rainbow");
 	} else if (localStorage.getItem("dark-mode") == "on") {
 		localStorage.setItem("dark-mode", "off");
-		lightModeStyles.disabled = false;
-		darkModeStyles.disabled = true;
-		rainbowModeStyles.disabled = true;
-		darkModeIcon.src = "sun.svg";
+		setMode("off");
 	} else {
 		localStorage.setItem("dark-mode", "on");
-		lightModeStyles.disabled = true;
-		darkModeStyles.disabled = false;
-		rainbowModeStyles.disabled = true;
-		darkModeIcon.src = "moon.svg";
+		setMode("on");
 	}
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-	var lightModeStyles = document.getElementById("light-mode-styles");
-	var darkModeStyles = document.getElementById("dark-mode-styles");
-	var rainbowModeStyles = document.getElementById("rainbow-mode-styles");
-	var darkModeIcon = document.getElementById("dark-mode-icon");
+	getElements();
 
-	if (localStorage.getItem("dark-mode") == "on") {
-		lightModeStyles.disabled = true;
-		darkModeStyles.disabled = false;
-		rainbowModeStyles.disabled = true;
-		darkModeIcon.src = "moon.svg";
-	} else if (localStorage.getItem("dark-mode") == "off") {
-		lightModeStyles.disabled = false;
-		darkModeStyles.disabled = true;
-		rainbowModeStyles.disabled = true;
-		darkModeIcon.src = "sun.svg";
-	} else if (localStorage.getItem("dark-mode") == "rainbow") {
-		lightModeStyles.disabled = true;
-		darkModeStyles.disabled = true;
-		rainbowModeStyles.disabled = false;
-		darkModeIcon.src = "rainbow.svg";
+	var currentMode = localStorage.getItem("dark-mode");
+	if (currentMode === "on" || currentMode === "off" || currentMode === "rainbow") {
+		setMode(currentMode);
+	} else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+		setMode("on");
 	} else {
-		if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-			darkModeStyles.disabled = false;
-			rainbowModeStyles.disabled = true;
-			darkModeIcon.src = "moon.svg";
-		} else {
-			darkModeStyles.disabled = true;
-			rainbowModeStyles.disabled = true;
-			darkModeIcon.src = "sun.svg";
-		}
+		setMode("off");
 	}
-
+	
 	document.getElementById("dark-mode-toggle").addEventListener("click", function(event) {
 		event.preventDefault();
 		toggleDarkMode();

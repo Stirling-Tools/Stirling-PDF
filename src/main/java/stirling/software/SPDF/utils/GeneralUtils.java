@@ -65,7 +65,8 @@ public class GeneralUtils {
 	        } else if (sizeStr.endsWith("B")) {
 	            return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));
 	        } else {
-	            // Input string does not have a valid format, handle this case
+	        	// Assume MB if no unit is specified
+	            return (long) (Double.parseDouble(sizeStr) * 1024 * 1024);
 	        }
 	    } catch (NumberFormatException e) {
 	        // The numeric part of the input string cannot be parsed, handle this case
@@ -74,6 +75,9 @@ public class GeneralUtils {
 	    return null;
 	}
 
+	public static List<Integer> parsePageString(String pageOrder, int totalPages) {
+		return parsePageList(pageOrder.split(","), totalPages);
+	}
 	public static List<Integer> parsePageList(String[] pageOrderArr, int totalPages) {
 	    List<Integer> newPageOrder = new ArrayList<>();
 
