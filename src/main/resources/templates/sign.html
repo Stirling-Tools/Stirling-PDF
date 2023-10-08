@@ -214,7 +214,6 @@ select#font-select, select#font-select option {
 
                                         canvas.width = textWidth;
                                         canvas.height = paragraphs.length * textHeight*1.35; //for tails
-                                        // ctx.font = `${fontSize / 2}px ${font}`;
                                         ctx.font = `${fontSize}px ${font}`;
 
 
@@ -227,7 +226,6 @@ select#font-select, select#font-select option {
                                         console.log(canvas.height);
 
                                         paragraphs.forEach(paragraph => {
-                                            // ctx.letterSpacing = "50px";
                                             ctx.fillText(paragraph, 0, y);
                                             y += fontSize;
                                         });
