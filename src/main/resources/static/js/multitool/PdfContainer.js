@@ -14,6 +14,7 @@ class PdfContainer {
         this.rotateElement = this.rotateElement.bind(this);
         this.rotateAll = this.rotateAll.bind(this);
         this.exportPdf = this.exportPdf.bind(this);
+        this.updateFilename = this.updateFilename.bind(this);
 
         this.pdfAdapters = pdfAdapters;
 
@@ -28,6 +29,9 @@ class PdfContainer {
         window.addPdfs = this.addPdfs;
         window.exportPdf = this.exportPdf;
         window.rotateAll = this.rotateAll;
+
+        const filenameInput = document.getElementById('filename-input');
+        filenameInput.onkeyup = this.updateFilename;
     }
 
     movePageTo(startElement, endElement, scrollTo = false) {
@@ -202,9 +206,19 @@ class PdfContainer {
             // Download the file
             const downloadLink = document.createElement('a');
             downloadLink.href = url;
+            console.log('filename before download ' + this.filename);
             downloadLink.download = this.fileName ? this.fileName : 'managed.pdf';
             downloadLink.click();
         }
+    }
+
+    updateFilename() {
+       const filenameInput = document.getElementById('filename-input');
+        const filenameParagraph = document.getElementById('filename');
+
+        console.log('updatedFilename fired ' + filenameInput.value);
+        this.filename = filenameInput.value;
+        filenameParagraph.innerText = this.filename;
     }
 }
 
