@@ -3,11 +3,13 @@ class PdfContainer {
     pagesContainer;
     pagesContainerWrapper;
     pdfAdapters;
+    downloadLink;
 
     constructor(id, wrapperId, pdfAdapters) {
         this.fileName = null;
         this.pagesContainer = document.getElementById(id)
         this.pagesContainerWrapper = document.getElementById(wrapperId);
+        this.downloadLink = null;
         this.movePageTo = this.movePageTo.bind(this);
         this.addPdfs = this.addPdfs.bind(this);
         this.addPdfsFromFiles = this.addPdfsFromFiles.bind(this);
@@ -15,6 +17,7 @@ class PdfContainer {
         this.rotateAll = this.rotateAll.bind(this);
         this.exportPdf = this.exportPdf.bind(this);
         this.updateFilename = this.updateFilename.bind(this);
+        this.setDownloadAttribute = this.setDownloadAttribute.bind(this);
 
         this.pdfAdapters = pdfAdapters;
 
@@ -204,12 +207,24 @@ class PdfContainer {
             window.open(url, '_blank');
         } else {
             // Download the file
-            const downloadLink = document.createElement('a');
-            downloadLink.href = url;
-            console.log('filename before download ' + this.filename);
-            downloadLink.download = this.fileName ? this.fileName : 'managed.pdf';
-            downloadLink.click();
+            this.downloadLink = document.createElement('a');
+            this.downloadLink.id = 'download-link';
+            this.downloadLink.href = url;
+            console.log('downloadLink.href ' + this.downloadLink.href);
+            // downloadLink.download = this.fileName ? this.fileName : 'managed.pdf';
+            // downloadLink.download = this.fileName;
+            this.downloadLink.setAttribute('download', this.filename ? this.fileName : 'managed.pdf');
+            this.downloadLink.setAttribute('target', '_blank');
+            this.downloadLink.onclick = this.setDownloadAttribute;
+            console.log('downloadLink download ' + this.downloadLink.download);
+            this.downloadLink.click();
         }
+    }
+
+    setDownloadAttribute() {
+        console.log('inside setDownloadAttribute ' + this.filename);
+        this.downloadLink.setAttribute("download", this.filename);
+        console.log('downloadLink download 2 ' + a.download);
     }
 
     updateFilename() {
