@@ -188,13 +188,6 @@ select#font-select, select#font-select option {
 								            th:class="${font.name.toLowerCase()+'-font'}">
 								    </option>
 								</select>
-                                <!--TODO add specific key for font size-->
-<!--                                <label for="form-select" th:text="#{watermark.selectText.3}"></label>-->
-<!--                                <select class="form-control" name="size" id="form-select">-->
-<!--                                    <option value="16">16px</option>-->
-<!--                                    <option value="32">32px</option>-->
-<!--                                    <option value="64">64px</option>-->
-<!--                                </select>-->
                                 <div class="margin-auto-parent">
                                     <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
                                 </div>
@@ -216,21 +209,14 @@ select#font-select, select#font-select option {
                                         canvas.height = paragraphs.length * textHeight*1.35; //for tails
                                         ctx.font = `${fontSize}px ${font}`;
 
-
                                         ctx.textBaseline = 'top';
 
-                                        // let y = fontSize;
                                         let y = 0;
-
-                                        console.log(paragraphs);
-                                        console.log(canvas.height);
 
                                         paragraphs.forEach(paragraph => {
                                             ctx.fillText(paragraph, 0, y);
                                             y += fontSize;
                                         });
-
-                                        // ctx.fillText(sigText, 0, fontSize);
 
                                         const dataURL = canvas.toDataURL();
                                         DraggableUtils.createDraggableCanvasFromUrl(dataURL);
