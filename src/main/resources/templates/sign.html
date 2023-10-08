@@ -210,11 +210,13 @@ select#font-select, select#font-select option {
                                         const textWidth = ctx.measureText(sigText).width;
                                         const textHeight = fontSize;
 
-                                        canvas.width = textWidth;
-                                        canvas.height = textHeight*1.35; //for tails
-                                        // ctx.font = `${fontSize / 2}px ${font}`;
-                                        ctx.font = `${fontSize / 2}px ${font}`;
                                         let paragraphs = sigText.split(/\r?\n/);
+
+                                        canvas.width = textWidth;
+                                        canvas.height = paragraphs.length * textHeight*1.35; //for tails
+                                        // ctx.font = `${fontSize / 2}px ${font}`;
+                                        ctx.font = `${fontSize}px ${font}`;
+
 
                                         ctx.textBaseline = 'top';
 
@@ -227,9 +229,8 @@ select#font-select, select#font-select option {
                                         paragraphs.forEach(paragraph => {
                                             // ctx.letterSpacing = "50px";
                                             ctx.fillText(paragraph, 0, y);
-                                            y += 24;
+                                            y += fontSize;
                                         });
-
 
                                         // ctx.fillText(sigText, 0, fontSize);
 
