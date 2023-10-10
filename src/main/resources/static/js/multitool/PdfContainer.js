@@ -35,6 +35,7 @@ class PdfContainer {
 
         const filenameInput = document.getElementById('filename-input');
         filenameInput.onkeyup = this.updateFilename;
+        filenameInput.disabled = true;
     }
 
     movePageTo(startElement, endElement, scrollTo = false) {
@@ -67,6 +68,10 @@ class PdfContainer {
         input.setAttribute("accept", "application/pdf");
         input.onchange = async(e) => {
             const files = e.target.files;
+            if (files.length > 0) {
+                const filenameInput = document.getElementById('filename-input');
+                filenameInput.disabled = false;
+            }
             this.addPdfsFromFiles(files, nextSiblingElement);
         }
 
@@ -224,7 +229,6 @@ class PdfContainer {
     setDownloadAttribute() {
         console.log('inside setDownloadAttribute ' + this.filename);
         this.downloadLink.setAttribute("download", this.filename);
-        console.log('downloadLink download 2 ' + a.download);
     }
 
     updateFilename() {
