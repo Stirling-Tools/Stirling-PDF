@@ -113,12 +113,23 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void saveUser(String username, String password, String role, boolean firstLogin) {
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(password));
+        user.addAuthority(new Authority(role, user));
+        user.setEnabled(true);
+        user.setFirstLogin(firstLogin);
+        userRepository.save(user);
+    }
+    
     public void saveUser(String username, String password, String role) {
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.addAuthority(new Authority(role, user));
         user.setEnabled(true);
+        user.setFirstLogin(false);
         userRepository.save(user);
     }
     
@@ -167,6 +178,12 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
+    
+    public void changeFirstUse(User user, boolean firstUse) {
+        user.setFirstLogin(firstUse);
+        userRepository.save(user);
+    }
+    
     
     public boolean isPasswordCorrect(User user, String currentPassword) {
         return passwordEncoder.matches(currentPassword, user.getPassword());

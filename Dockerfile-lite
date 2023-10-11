@@ -10,8 +10,34 @@ RUN apt-get update && \
         unoconv && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy the application JAR file
+
+# Set Environment Variables
+ENV DOCKER_ENABLE_SECURITY=false \
+    HOME=/home/stirlingpdfuser \
+    VERSION_TAG=$VERSION_TAG 
+#	PUID=1000 \
+#   PGID=1000 \
+#   UMASK=022 \
+
+# Create user and group
+#RUN groupadd -g $PGID stirlingpdfgroup && \
+#    useradd -u $PUID -g stirlingpdfgroup -s /bin/sh stirlingpdfuser && \
+#    mkdir -p $HOME && chown stirlingpdfuser:stirlingpdfgroup $HOME
+
+# Set up necessary directories and permissions
+RUN mkdir -p /scripts /usr/share/fonts/opentype/noto /configs /customFiles
+
+#    chown -R stirlingpdfuser:stirlingpdfgroup /usr/share/fonts/opentype/noto /configs /customFiles
+
+# Copy necessary files
+COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
+COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
 COPY build/libs/*.jar app.jar
+
+# Set font cache and permissions
+RUN fc-cache -f -v 
+#    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+
 
 
 
@@ -19,8 +45,10 @@ COPY build/libs/*.jar app.jar
 EXPOSE 8080
 
 # Set environment variables
-ENV GROUPS_TO_REMOVE=Python,OpenCV,OCRmyPDF
+ENV ENDPOINTS_GROUPS_TO_REMOVE=Python,OpenCV,OCRmyPDF
 ENV DOCKER_ENABLE_SECURITY=false
 
 # Run the application
+#USER stirlingpdfuser
+
 CMD ["java", "-jar", "/app.jar"]

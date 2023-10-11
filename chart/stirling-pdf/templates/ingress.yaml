@@ -1,0 +1,85 @@
+{{- if .Values.ingress.enabled }}
+{{- $servicePort := .Values.service.externalPort -}}
+{{- $serviceName := include "stirlingpdf.fullname" . -}}
+{{- $ingressExtraPaths := .Values.ingress.extraPaths -}}
+---
+{{- if semverCompare "<1.14-0" .Capabilities.KubeVersion.GitVersion }}
+apiVersion: extensions/v1beta1
+{{- else if semverCompare "<1.19-0" .Capabilities.KubeVersion.GitVersion }}
+apiVersion: networking.k8s.io/v1beta1
+{{- else }}
+apiVersion: networking.k8s.io/v1
+{{- end }}
+kind: Ingress
+metadata:
+  name: {{ include "stirlingpdf.fullname" . }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "stirlingpdf.labels" . | nindent 4 }}
+    {{- with .Values.ingress.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- with .Values.ingress.ingressClassName }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  rules:
+  {{- range .Values.ingress.hosts }}
+  - host: {{ .name }}
+    http:
+      paths:
+      {{- range $ingressExtraPaths }}
+      - path: {{ default "/" .path | quote }}
+        backend:
+        {{- if semverCompare "<1.19-0" $.Capabilities.KubeVersion.GitVersion }}
+          {{- if $.Values.service.servicename }}
+          serviceName: {{ $.Values.service.servicename }}
+          {{- else }}
+          serviceName: {{ default $serviceName .service }}
+          {{- end }}
+          servicePort: {{ default $servicePort .port }}
+        {{- else }}
+          service:
+            {{- if $.Values.service.servicename }}
+            name: {{ $.Values.service.servicename }}
+            {{- else }}
+            name: {{ default $serviceName .service }}
+            {{- end }}
+            port:
+              number: {{ default $servicePort .port }}
+        pathType: {{ default $.Values.ingress.pathType .pathType }}
+        {{- end }}
+      {{- end }}
+      - path: {{ default "/" .path | quote }}
+        backend:
+        {{- if semverCompare "<1.19-0" $.Capabilities.KubeVersion.GitVersion }}
+          {{- if $.Values.service.servicename }}
+          serviceName: {{ $.Values.service.servicename }}
+          {{- else }}
+          serviceName: {{ default $serviceName .service }}
+          {{- end }}
+          servicePort: {{ default $servicePort .servicePort }}
+        {{- else }}
+          service:
+            {{- if $.Values.service.servicename }}
+            name: {{ $.Values.service.servicename }}
+            {{- else }}
+            name: {{ default $serviceName .service }}
+            {{- end }}
+            port:
+              number: {{ default $servicePort .port }}
+        pathType: {{ $.Values.ingress.pathType }}
+        {{- end }}
+  {{- end }}
+  tls:
+  {{- range .Values.ingress.hosts }}
+  {{- if .tls }}
+  - hosts:
+    - {{ .name }}
+    secretName: {{ .tlsSecret }}
+  {{- end }}
+  {{- end }}
+{{- end -}}

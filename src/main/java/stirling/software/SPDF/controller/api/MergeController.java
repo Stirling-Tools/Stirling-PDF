@@ -15,19 +15,19 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class MergeController {
 
@@ -88,20 +88,10 @@ private Comparator<MultipartFile> getSortComparator(String sortType) {
 @PostMapping(consumes = "multipart/form-data", value = "/merge-pdfs")
 @Operation(summary = "Merge multiple PDF files into one",
         description = "This endpoint merges multiple PDF files into a single PDF file. The merged file will contain all pages from the input files in the order they were provided. Input:PDF Output:PDF Type:MISO")
-public ResponseEntity<byte[]> mergePdfs(
-        @RequestPart(required = true, value = "fileInput") MultipartFile[] files,
-        @RequestParam(value = "sortType", defaultValue = "orderProvided") 
-        @Parameter(schema = @Schema(description = "The type of sorting to be applied on the input files before merging.",
-                        allowableValues = {
-                            "orderProvided", 
-                            "byFileName", 
-                            "byDateModified", 
-                            "byDateCreated", 
-                            "byPDFTitle"
-                        }))
-        String sortType) throws IOException {
+public ResponseEntity<byte[]> mergePdfs(@ModelAttribute MergePdfsRequest form) throws IOException {
 
-    Arrays.sort(files, getSortComparator(sortType));
+	MultipartFile[]  files = form.getFileInput();
+    Arrays.sort(files, getSortComparator(form.getSortType()));
 
     List<PDDocument> documents = new ArrayList<>();
     for (MultipartFile file : files) {

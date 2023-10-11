@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import org.springframework.beans.PropertyEditorRegistrar;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,12 +9,12 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Configuration
 public class AppConfig {
 
+    
     @Autowired
     ApplicationProperties applicationProperties;
     
     @Bean(name = "loginEnabled")
     public boolean loginEnabled() {
-        System.out.println(applicationProperties.toString());
         return applicationProperties.getSecurity().getEnableLogin();
     }
 

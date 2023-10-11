@@ -1,0 +1,31 @@
+{{- if and ( .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" ) ( .Values.serviceMonitor.enabled ) }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "stirlingpdf.fullname" . }}
+  namespace: {{ .Values.serviceMonitor.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "stirlingpdf.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  endpoints:
+  - targetPort: 8080
+{{- if .Values.serviceMonitor.interval }}
+    interval: {{ .Values.serviceMonitor.interval }}
+{{- end }}
+{{- if .Values.serviceMonitor.metricsPath }}
+    path: {{ .Values.serviceMonitor.metricsPath }}
+{{- end }}
+{{- if .Values.serviceMonitor.timeout }}
+    scrapeTimeout: {{ .Values.serviceMonitor.timeout }}
+{{- end }}
+  jobLabel: {{ include "stirlingpdf.fullname" . }}
+  namespaceSelector:
+    matchNames:
+    - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      {{- include "stirlingpdf.selectorLabels" . | nindent 6 }}
+{{- end }}

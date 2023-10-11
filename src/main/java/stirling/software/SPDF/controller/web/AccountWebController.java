@@ -1,22 +1,8 @@
 package stirling.software.SPDF.controller.web;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,10 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.UserRepository;
 @Controller
@@ -107,6 +91,7 @@ public class AccountWebController {
 	            model.addAttribute("username", username);
 	            model.addAttribute("role", user.get().getRolesAsString());
 	            model.addAttribute("settings", settingsJson);
+	            model.addAttribute("changeCredsFlag", user.get().isFirstLogin());
 	        }
 		} else {
 	        	return "redirect:/";
@@ -115,6 +100,36 @@ public class AccountWebController {
 	}
 	 
 	
+	
+	@GetMapping("/change-creds")
+	public String changeCreds(HttpServletRequest request, Model model, Authentication authentication) {
+		if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/";
+        }
+		if (authentication != null && authentication.isAuthenticated()) {
+	        Object principal = authentication.getPrincipal();
+
+	        if (principal instanceof UserDetails) {
+	            // Cast the principal object to UserDetails
+	            UserDetails userDetails = (UserDetails) principal;
+
+	            // Retrieve username and other attributes
+	            String username = userDetails.getUsername();
+
+	            // Fetch user details from the database
+	            Optional<User> user = userRepository.findByUsername(username);  // Assuming findByUsername method exists
+	            if (!user.isPresent()) {
+	                // Handle error appropriately
+	                return "redirect:/error";  // Example redirection in case of error
+	            }
+	            // Add attributes to the model
+	            model.addAttribute("username", username);
+	        }
+		} else {
+	        	return "redirect:/";
+	        }
+	    return "change-creds";
+	}
 	
 	
 }

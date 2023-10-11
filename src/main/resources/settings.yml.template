@@ -4,16 +4,11 @@
 
 security:
   enableLogin: false # set to 'true' to enable login
-  initialLogin:
-    username: 'username' # Specify the initial username for first boot (e.g. 'admin')
-    password: 'password' # Specify the initial password for first boot (e.g. 'password123')
   csrfDisabled: true
 
 system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
-  rootURIPath: / # Set the application's root URI (e.g. /pdf-app)
-  customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
 
 #ui:
 #  appName: exampleAppName # Application's visible name
