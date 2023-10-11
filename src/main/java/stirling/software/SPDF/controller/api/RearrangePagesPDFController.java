@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.SortTypes;
+import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -33,11 +34,12 @@ public class RearrangePagesPDFController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/remove-pages")
 	@Operation(summary = "Remove pages from a PDF file", description = "This endpoint removes specified pages from a given PDF file. Users can provide a comma-separated list of page numbers or ranges to delete. Input:PDF Output:PDF Type:SISO")
-	public ResponseEntity<byte[]> deletePages(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file from which pages will be removed") MultipartFile pdfFile,
-			@RequestParam("pagesToDelete") @Parameter(description = "Comma-separated list of pages or page ranges to delete, e.g., '1,3,5-8'") String pagesToDelete)
+	public ResponseEntity<byte[]> deletePages(@ModelAttribute PDFWithPageNums request )
 			throws IOException {
 
+		MultipartFile pdfFile = request.getFileInput();
+		String pagesToDelete = request.getPageNumbers();
+		
 		PDDocument document = PDDocument.load(pdfFile.getBytes());
 
 		// Split the page order string into an array of page numbers or range of numbers

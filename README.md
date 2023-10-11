@@ -19,7 +19,6 @@ Any file which has been downloaded by the user will have already been deleted fr
 
 Feel free to request any features or bug fixes either in github issues or our [Discord](https://discord.gg/Cn8pWhQRxZ)
 
-
 ![stirling-home](images/stirling-home.png)
 
 ## Features
@@ -232,6 +231,7 @@ For those wanting to use Stirling-PDFs backend API to link with their own custom
 
 
 ## Login authentication
+![stirling-login](images/login-light.png)
 ### Prerequisites: 
 - User must have the folder ./configs volumed within docker so that it is retained during updates.
 - Docker uses must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables. 
