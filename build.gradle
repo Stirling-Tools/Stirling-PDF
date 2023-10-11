@@ -91,7 +91,7 @@ dependencies {
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.70' 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-core'
-    implementation group: 'com.google.zxing', name: 'core', version: '3.5.1'
+    implementation group: 'com.google.zxing', name: 'core', version: '3.5.2'
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
 	implementation 'org.commonmark:commonmark:0.21.0'
     // https://mvnrepository.com/artifact/com.github.vladimir-bukhtoyarov/bucket4j-core
