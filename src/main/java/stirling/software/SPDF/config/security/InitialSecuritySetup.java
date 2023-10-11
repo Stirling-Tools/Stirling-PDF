@@ -26,10 +26,17 @@ public class InitialSecuritySetup {
 	@PostConstruct
 	public void init() {
 		if (!userService.hasUsers()) {
-			String initialUsername = "admin";
-			String initialPassword = "stirling";
-			userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId(), true);
 			
+			
+			String initialUsername = applicationProperties.getSecurity().getInitialLogin().getUsername();
+			String initialPassword = applicationProperties.getSecurity().getInitialLogin().getPassword();
+			if (initialUsername != null && initialPassword != null) {
+				userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
+			} else {
+				initialUsername = "admin";
+			    initialPassword = "stirling";
+				userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId(), true);
+			}
 			
 	        
 		}

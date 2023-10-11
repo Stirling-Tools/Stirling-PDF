@@ -12,6 +12,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 
@@ -44,19 +45,19 @@ import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@RequestMapping("/api/v1/security")
 @Tag(name = "Security", description = "Security APIs")
 public class CertSignController {
 
@@ -68,30 +69,18 @@ public class CertSignController {
 
 	@PostMapping(consumes = "multipart/form-data", value = "/cert-sign")
 	@Operation(summary = "Sign PDF with a Digital Certificate", description = "This endpoint accepts a PDF file, a digital certificate and related information to sign the PDF. It then returns the digitally signed PDF file. Input:PDF Output:PDF Type:MF-SISO")
-	public ResponseEntity<byte[]> signPDF2(
-			@RequestPart(required = true, value = "fileInput") @Parameter(description = "The input PDF file to be signed") MultipartFile pdf,
-
-			@RequestParam(value = "certType", required = false) @Parameter(description = "The type of the digital certificate", schema = @Schema(allowableValues = {
-					"PKCS12", "PEM" })) String certType,
-
-			@RequestParam(value = "key", required = false) @Parameter(description = "The private key for the digital certificate (required for PEM type certificates)") MultipartFile privateKeyFile,
-
-			@RequestParam(value = "cert", required = false) @Parameter(description = "The digital certificate (required for PEM type certificates)") MultipartFile certFile,
-
-			@RequestParam(value = "p12", required = false) @Parameter(description = "The PKCS12 keystore file (required for PKCS12 type certificates)") MultipartFile p12File,
-
-			@RequestParam(value = "password", required = false) @Parameter(description = "The password for the keystore or the private key") String password,
-
-			@RequestParam(value = "showSignature", required = false) @Parameter(description = "Whether to visually show the signature in the PDF file") Boolean showSignature,
-
-			@RequestParam(value = "reason", required = false) @Parameter(description = "The reason for signing the PDF") String reason,
-
-			@RequestParam(value = "location", required = false) @Parameter(description = "The location where the PDF is signed") String location,
-
-			@RequestParam(value = "name", required = false) @Parameter(description = "The name of the signer") String name,
-
-			@RequestParam(value = "pageNumber", required = false) @Parameter(description = "The page number where the signature should be visible. This is required if showSignature is set to true") Integer pageNumber)
-			throws Exception {
+	public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request) throws Exception {
+	    MultipartFile pdf = request.getFileInput();
+	    String certType = request.getCertType();
+	    MultipartFile privateKeyFile = request.getPrivateKeyFile();
+	    MultipartFile certFile = request.getCertFile();
+	    MultipartFile p12File = request.getP12File();
+	    String password = request.getPassword();
+	    Boolean showSignature = request.isShowSignature();
+	    String reason = request.getReason();
+	    String location = request.getLocation();
+	    String name = request.getName();
+	    Integer pageNumber = request.getPageNumber();
 
 		PrivateKey privateKey = null;
 		X509Certificate cert = null;
@@ -142,7 +131,8 @@ public class CertSignController {
 		signature.setName(name);
 		signature.setLocation(location);
 		signature.setReason(reason);
-
+		signature.setSignDate(Calendar.getInstance());
+		
 		// Load the PDF
 		try (PDDocument document = PDDocument.load(pdf.getBytes())) {
 			logger.info("Successfully loaded the provided PDF");

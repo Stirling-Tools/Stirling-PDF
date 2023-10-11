@@ -75,6 +75,9 @@ public class GeneralUtils {
 	    return null;
 	}
 
+	public static List<Integer> parsePageString(String pageOrder, int totalPages) {
+		return parsePageList(pageOrder.split(","), totalPages);
+	}
 	public static List<Integer> parsePageList(String[] pageOrderArr, int totalPages) {
 	    List<Integer> newPageOrder = new ArrayList<>();
 

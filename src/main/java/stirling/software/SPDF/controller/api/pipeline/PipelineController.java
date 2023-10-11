@@ -37,9 +37,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,9 +51,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
+import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@RequestMapping("/api/v1/pipeline")
 @Tag(name = "Pipeline", description = "Pipeline APIs")
 public class PipelineController {
 
@@ -418,8 +420,9 @@ public class PipelineController {
 	}
 
 	@PostMapping("/handleData")
-	public ResponseEntity<byte[]> handleData(@RequestPart("fileInput") MultipartFile[] files,
-			@RequestParam("json") String jsonString) {
+	public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request) {
+	    MultipartFile[] files = request.getFileInputs();
+	    String jsonString = request.getJsonString();
 		logger.info("Received POST request to /handleData with {} files", files.length);
 		try {
 			List<Resource> outputFiles = handleFiles(files, jsonString);

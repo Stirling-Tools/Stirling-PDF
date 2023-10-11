@@ -15,17 +15,18 @@ import org.apache.pdfbox.util.Matrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.general.ScalePagesRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
+@RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class ScalePagesController {
 
@@ -33,14 +34,10 @@ public class ScalePagesController {
 
 	@PostMapping(value = "/scale-pages", consumes = "multipart/form-data")
 	@Operation(summary = "Change the size of a PDF page/document", description = "This operation takes an input PDF file and the size to scale the pages to in the output PDF file. Input:PDF Output:PDF Type:SISO")
-	public ResponseEntity<byte[]> scalePages(
-			@Parameter(description = "The input PDF file", required = true) @RequestParam("fileInput") MultipartFile file,
-			@Parameter(description = "The scale of pages in the output PDF. Acceptable values are A0-A10, B0-B9, LETTER, TABLOID, LEDGER, LEGAL, EXECUTIVE.", required = true, schema = @Schema(type = "string", allowableValues = {
-					"A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "B0", "B1", "B2", "B3", "B4",
-					"B5", "B6", "B7", "B8", "B9", "LETTER", "TABLOID", "LEDGER", "LEGAL",
-					"EXECUTIVE" })) @RequestParam("pageSize") String targetPDRectangle,
-			@Parameter(description = "The scale of the content on the pages of the output PDF. Acceptable values are floats.", required = true, schema = @Schema(type = "integer")) @RequestParam("scaleFactor") float scaleFactor)
-			throws IOException {
+	public ResponseEntity<byte[]> scalePages(@ModelAttribute ScalePagesRequest request) throws IOException {
+	    MultipartFile file = request.getFileInput();
+	    String targetPDRectangle = request.getPageSize();
+	    float scaleFactor = request.getScaleFactor();
 
 		Map<String, PDRectangle> sizeMap = new HashMap<>();
 		// Add A0 - A10
