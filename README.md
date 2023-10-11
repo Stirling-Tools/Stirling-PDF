@@ -19,46 +19,66 @@ Any file which has been downloaded by the user will have already been deleted fr
 
 Feel free to request any features or bug fixes either in github issues or our [Discord](https://discord.gg/Cn8pWhQRxZ)
 
-
 ![stirling-home](images/stirling-home.png)
 
 ## Features
-- Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages.
-- Split PDFs into multiple files at specified page numbers or extract all pages as individual files.
-- Merge multiple PDFs together into a single resultant file
-- Convert PDFs to and from images
-- Reorganize PDF pages into different orders.
-- Add/Generate signatures
-- Format PDFs into a multi-paged page
-- Scale page contents size by set % 
-- Adjust Contrast
-- Crop PDF
-- Auto Split PDF (With physically scanned page dividers)
-- Flatten PDFs
-- Repair PDFs
-- Detect and remove blank pages
-- Compare 2 PDFs and show differences in text
-- Add images to PDFs
-- Rotating PDFs in 90 degree increments.
-- Compressing PDFs to decrease their filesize. (Using OCRMyPDF)
-- Add and remove passwords
-- Set PDF Permissions
-- Add watermark(s)
-- Convert Any common file to PDF (using LibreOffice)
-- Convert PDF to Word/Powerpoint/Others (using LibreOffice)
-- Convert HTML to PDF
-- URL to PDF
-- Extract images from PDF
-- Extract images from Scans
-- Add page numbers
-- Auto rename file by detecting PDF header text
-- OCR on PDF (Using OCRMyPDF)
-- PDF/A conversion (Using OCRMyPDF)
-- Edit metadata
 - Dark mode support.
 - Custom download options (see [here](https://github.com/Frooodle/Stirling-PDF/blob/main/images/settings.png) for example)
 - Parallel file processing and downloads
 - API for integration with external scripts 
+- Optional Login and Authentication support (see [here](https://github.com/Frooodle/Stirling-PDF/tree/main#login-authentication) for documentation)
+
+
+## **PDF Features**
+
+### **Page Operations**
+- Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages. 
+- Merge multiple PDFs together into a single resultant file. 
+- Split PDFs into multiple files at specified page numbers or extract all pages as individual files. 
+- Reorganize PDF pages into different orders. 
+- Rotate PDFs in 90-degree increments. 
+- Remove pages. 
+- Multi-page layout (Format PDFs into a multi-paged page). 
+- Scale page contents size by set %. 
+- Adjust Contrast. 
+- Crop PDF. 
+- Auto Split PDF (With physically scanned page dividers). 
+- Extract page(s). 
+- Convert PDF to a single page. 
+
+### **Conversion Operations**
+- Convert PDFs to and from images. 
+- Convert any common file to PDF (using LibreOffice). 
+- Convert PDF to Word/Powerpoint/Others (using LibreOffice). 
+- Convert HTML to PDF. 
+- URL to PDF. 
+- Markdown to PDF. 
+
+### **Security & Permissions**
+- Add and remove passwords. 
+- Change/set PDF Permissions. 
+- Add watermark(s). 
+- Certify/sign PDFs. 
+- Sanitize PDFs. 
+- Auto-redact text. 
+
+### **Other Operations**
+- Add/Generate/Write signatures. 
+- Repair PDFs. 
+- Detect and remove blank pages. 
+- Compare 2 PDFs and show differences in text. 
+- Add images to PDFs. 
+- Compress PDFs to decrease their filesize (Using OCRMyPDF). 
+- Extract images from PDF. 
+- Extract images from Scans. 
+- Add page numbers. 
+- Auto rename file by detecting PDF header text. 
+- OCR on PDF (Using OCRMyPDF). 
+- PDF/A conversion (Using OCRMyPDF). 
+- Edit metadata. 
+- Flatten PDFs. 
+- Get all information on a PDF to view or export as JSON. 
+
 
 For a overview of the tasks and the technology each uses please view [groups.md](https://github.com/Frooodle/Stirling-PDF/blob/main/Groups.md)
 Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) hosted by the team at adminforge.de
@@ -94,6 +114,7 @@ docker run -d \
   -p 8080:8080 \
   -v /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata \
   -v /location/of/extraConfigs:/configs \
+  -e DOCKER_ENABLE_SECURITY=false \
   --name stirling-pdf \
   frooodle/s-pdf:latest
   
@@ -114,7 +135,8 @@ services:
       - /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata #Required for extra OCR languages
       - /location/of/extraConfigs:/configs
 #      - /location/of/customFiles:/customFiles/
-
+    environment:
+      - DOCKER_ENABLE_SECURITY=false
 ```
 
 
@@ -122,8 +144,9 @@ services:
 Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
-Stirling PDF currently supports 16!
+Stirling PDF currently supports 18!
 - English (English) (en_GB)
+- English (US) (en_US)
 - Arabic (العربية) (ar_AR)
 - German (Deutsch) (de_DE)
 - French (Français) (fr_FR)
@@ -139,6 +162,7 @@ Stirling PDF currently supports 16!
 - Russian (Русский) (ru_RU)
 - Basque (Euskara) (eu_ES)
 - Japanese (日本語) (ja_JP)
+- Dutch (Nederlands) (nl_NL)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
@@ -173,9 +197,6 @@ The Current list of settings is
 ```
 security:
   enableLogin: false # set to 'true' to enable login
-  initialLogin:
-    username: 'username' # Specify the initial username for first boot (e.g. 'admin')
-    password: 'password' # Specify the initial password for first boot (e.g. 'password123')
   csrfDisabled: true
 
 system:
@@ -193,14 +214,14 @@ endpoints:
   groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
 
 metrics:
-  enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
+  enabled: true # 'true' to enable Info APIs endpoints (view http://localhost:8080/swagger-ui/index.html#/API to learn more), 'false' to disable
 ```
 ### Extra notes
 - Endpoints. Currently, the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma separate lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image-to-pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Frooodle/Stirling-PDF/blob/main/groups.md) 
 - customStaticFilePath. Customise static files such as the app logo by placing files in the /customFiles/static/ directory. An example of customising app logo is placing a /customFiles/static/favicon.svg to override current SVG. This can be used to change any images/icons/css/fonts/js etc in Stirling-PDF
 
 ### Environment only parameters
-- ``SYSTEM_ROOTURIPATH`` ie set to ``pdf-app`` to Set the application's root URI tp ``localhost:8080/pdf-app``
+- ``SYSTEM_ROOTURIPATH`` ie set to ``/pdf-app`` to Set the application's root URI to ``localhost:8080/pdf-app``
 - ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
 - ``DOCKER_ENABLE_SECURITY`` to tell docker to download security jar (required as true for auth login)
 
@@ -210,14 +231,16 @@ For those wanting to use Stirling-PDFs backend API to link with their own custom
 
 
 ## Login authentication
+![stirling-login](images/login-light.png)
 ### Prerequisites: 
 - User must have the folder ./configs volumed within docker so that it is retained during updates.
 - Docker uses must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables. 
-- Now the initial user must be generated. Navigate to your settings.yaml and configure your security settings along with the username and password (only required on the first boot to create the initial user, ignored after.). Alternatively, you can set these via the environment variables ``SECURITY_ENABLELOGIN : true`` ``SECURITY_INITIALLOGIN_USERNAME: username`` ``SECURITY_INITIALLOGIN_PASSWORD: password``
+- Then either enable login via the settings.yml file or via setting ``SECURITY_ENABLE_LOGIN`` to ``true``
+- Now the initial user will be generated with username ``admin`` and password ``stirling``. On login you will be forced to change the password to a new one. You can also use the environment variables ``SECURITY_INITIALLOGIN_USERNAME`` and  ``SECURITY_INITIALLOGIN_PASSWORD`` to set your own straight away (Recommended to remove them after user creation).
 
 Once the above has been done, on restart, a new stirling-pdf-DB.mv.db will show if everything worked.
 
-When you login to Stirling PDF you will be redirected to /login page to login with those credentials. After login everything should function as normal
+When you login to Stirling PDF you will be redirected to /login page to login with those default credentials. After login everything should function as normal
 
 To access your account settings go to Account settings in the settings cog menu (top right in navbar) This Account settings menu is also where you find your API key.
 
@@ -232,11 +255,14 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 - Progress bar/Tracking
 - Full custom logic pipelines to combine multiple operations together.
 - Folder support with auto scanning to perform operations on
-- Redact text (Via UI)
+- Redact text (Via UI not just automated way) 
 - Add Forms
 - Annotations
 - Multi page layout (Stich PDF pages together) support x rows y columns and custom page sizing 
 - Fill forms mannual and automatic 
 
 ### Q2: Why is my application downloading .htm files?
-This is a issue caused commonly by your NGINX congifuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. client_max_body_size SIZE; Where "SIZE" is 50M for example for 50MB files.
+This is a issue caused commonly by your NGINX congifuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. ``client_max_body_size SIZE;`` Where "SIZE" is 50M for example for 50MB files.
+
+### Q3: Why is my download timing out
+NGINX has timeout values by default so if you are running Stirling-PDF behind NGINX you may need to set a timeout value such as adding the config ``proxy_read_timeout 3600;``

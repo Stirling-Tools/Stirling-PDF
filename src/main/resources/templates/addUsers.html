@@ -32,7 +32,7 @@
 					            <td th:text="${user.username}"></td>
 					            <td th:text="${user.getRolesAsString()}"></td>
 					            <td>
-					                <form th:if="${user.username != currentUsername}" th:action="@{'/admin/deleteUser/' + ${user.username}}" method="post">
+					                <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post">
 					                    <button type="submit" th:text="#{delete}">Delete</button>
 					                </form>
 					            </td>
@@ -46,7 +46,7 @@
 						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
 						    <span th:text="#{usernameExistsMessage}">Default message if not found</span>
 						</div>
-					    <form action="/admin/saveUser" method="post">
+					    <form action="/api/v1/user/admin/saveUser" method="post">
 					        <div class="mb-3">
 					            <label for="username" th:text="#{username}">Username</label>
 					            <input type="text" class="form-control" name="username" required>

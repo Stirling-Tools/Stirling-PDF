@@ -8,18 +8,19 @@ import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.general.RotatePDFRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class RotationController {
 
@@ -31,13 +32,9 @@ public class RotationController {
         description = "This endpoint rotates a given PDF file by a specified angle. The angle must be a multiple of 90. Input:PDF Output:PDF Type:SISO"
     )
     public ResponseEntity<byte[]> rotatePDF(
-        @RequestPart(required = true, value = "fileInput")
-        @Parameter(description = "The PDF file to be rotated", required = true)
-            MultipartFile pdfFile,
-        @RequestParam("angle")
-        @Parameter(description = "The angle by which to rotate the PDF file. This should be a multiple of 90.", example = "90", required = true)
-            Integer angle) throws IOException {
-    	
+    		@ModelAttribute RotatePDFRequest request) throws IOException {
+        MultipartFile pdfFile = request.getFileInput();
+        Integer angle = request.getAngle();
         // Load the PDF document
         PDDocument document = PDDocument.load(pdfFile.getBytes());
 

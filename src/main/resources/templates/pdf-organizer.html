@@ -14,7 +14,7 @@
                     <div class="col-md-6">
                         <h2 th:text="#{pdfOrganiser.header}"></h2>
 
-                        <form th:action="@{rearrange-pages}" method="post" enctype="multipart/form-data">
+                        <form th:action="@{api/v1/general/rearrange-pages}" method="post" enctype="multipart/form-data">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <div class="mb-3">
 						        <label for="customMode">Mode</label>
@@ -32,7 +32,7 @@
 						    </div>
                             <div class="mb-3">
                                 <label for="pageOrder" th:text="#{pageOrderPrompt}"></label> 
-                                <input type="text" class="form-control" id="pageOrder" name="pageOrder" placeholder="(e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)" required>
+                                <input type="text" class="form-control" id="pageOrder" name="pageNumbers" placeholder="(e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)" required>
                             </div>
                             
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfOrganiser.submit}"></button>
