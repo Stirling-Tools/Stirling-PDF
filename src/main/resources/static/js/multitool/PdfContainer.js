@@ -35,11 +35,13 @@ class PdfContainer {
 
         const filenameInput = document.getElementById('filename-input');
         const filenameParagraph = document.getElementById('filename');
+        const downloadBtn = document.getElementById('export-button');
 
         filenameInput.onkeyup = this.updateFilename;
         filenameInput.disabled = true;
         filenameInput.innerText = "";
         filenameParagraph.innerText = "";
+        downloadBtn.disabled = true;
     }
 
     movePageTo(startElement, endElement, scrollTo = false) {
@@ -78,10 +80,10 @@ class PdfContainer {
                 const downloadBtn = document.getElementById('export-button');
 
                 filenameInput.disabled = false;
-                downloadBtn.disabled = false;
 
                 if (pagesContainer.childElementCount === 0) {
                     filenameInput.value = "";
+                    downloadBtn.disabled = true;
                 }
             }
 
@@ -228,26 +230,31 @@ class PdfContainer {
             this.downloadLink = document.createElement('a');
             this.downloadLink.id = 'download-link';
             this.downloadLink.href = url;
-            console.log('downloadLink.href ' + this.downloadLink.href);
             // downloadLink.download = this.fileName ? this.fileName : 'managed.pdf';
             // downloadLink.download = this.fileName;
             this.downloadLink.setAttribute('download', this.filename ? this.fileName : 'managed.pdf');
             this.downloadLink.setAttribute('target', '_blank');
             this.downloadLink.onclick = this.setDownloadAttribute;
-            console.log('downloadLink download ' + this.downloadLink.download);
             this.downloadLink.click();
         }
     }
 
     setDownloadAttribute() {
-        console.log('inside setDownloadAttribute ' + this.filename);
         this.downloadLink.setAttribute("download", this.filename ? this.filename : 'managed.pdf');
     }
 
     updateFilename() {
        const filenameInput = document.getElementById('filename-input');
         const filenameParagraph = document.getElementById('filename');
+        const downloadBtn = document.getElementById('export-button');
 
+        if (filenameInput.value === "") {
+            filenameParagraph.innerText = "";
+            downloadBtn.disabled = true;
+            return;
+        }
+
+        downloadBtn.disabled = false;
         this.filename = filenameInput.value;
         filenameParagraph.innerText = this.filename + ".pdf";
     }
