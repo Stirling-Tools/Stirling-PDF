@@ -34,8 +34,12 @@ class PdfContainer {
         window.rotateAll = this.rotateAll;
 
         const filenameInput = document.getElementById('filename-input');
+        const filenameParagraph = document.getElementById('filename');
+
         filenameInput.onkeyup = this.updateFilename;
         filenameInput.disabled = true;
+        filenameInput.innerText = "";
+        filenameParagraph.innerText = "";
     }
 
     movePageTo(startElement, endElement, scrollTo = false) {
@@ -70,8 +74,17 @@ class PdfContainer {
             const files = e.target.files;
             if (files.length > 0) {
                 const filenameInput = document.getElementById('filename-input');
+                const pagesContainer = document.getElementById('pages-container');
+                const downloadBtn = document.getElementById('export-button');
+
                 filenameInput.disabled = false;
+                downloadBtn.disabled = false;
+
+                if (pagesContainer.childElementCount === 0) {
+                    filenameInput.value = "";
+                }
             }
+
             this.addPdfsFromFiles(files, nextSiblingElement);
         }
 
@@ -228,16 +241,15 @@ class PdfContainer {
 
     setDownloadAttribute() {
         console.log('inside setDownloadAttribute ' + this.filename);
-        this.downloadLink.setAttribute("download", this.filename);
+        this.downloadLink.setAttribute("download", this.filename ? this.filename : 'managed.pdf');
     }
 
     updateFilename() {
        const filenameInput = document.getElementById('filename-input');
         const filenameParagraph = document.getElementById('filename');
 
-        console.log('updatedFilename fired ' + filenameInput.value);
         this.filename = filenameInput.value;
-        filenameParagraph.innerText = this.filename;
+        filenameParagraph.innerText = this.filename + ".pdf";
     }
 }
 
