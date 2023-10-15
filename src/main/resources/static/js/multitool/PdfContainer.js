@@ -228,8 +228,16 @@ class PdfContainer {
 
         const filenameInput = document.getElementById('filename-input');
 
+        let inputArr = filenameInput.value.split('.');
+
+        if (inputArr !== null && inputArr !== undefined && inputArr.length > 0) {
+            filenameInput.value = inputArr[0];
+            this.filename = filenameInput.value;
+        }
+
         if (!filenameInput.value.includes('.pdf')) {
             filenameInput.value = filenameInput.value + '.pdf';
+            this.filename = filenameInput.value;
         }
 
         if (downloadOption === 'sameWindow') {
