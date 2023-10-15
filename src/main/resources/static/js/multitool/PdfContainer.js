@@ -17,6 +17,7 @@ class PdfContainer {
         this.exportPdf = this.exportPdf.bind(this);
         this.updateFilename = this.updateFilename.bind(this);
         this.setDownloadAttribute = this.setDownloadAttribute.bind(this);
+        this.preventIllegalChars = this.preventIllegalChars.bind(this);
 
         this.pdfAdapters = pdfAdapters;
 
@@ -36,6 +37,7 @@ class PdfContainer {
         const downloadBtn = document.getElementById('export-button');
 
         filenameInput.onkeyup = this.updateFilename;
+        filenameInput.onkeydown = this.preventIllegalChars;
         filenameInput.disabled = true;
         filenameInput.innerText = "";
         downloadBtn.disabled = true;
@@ -231,7 +233,14 @@ class PdfContainer {
         let inputArr = filenameInput.value.split('.');
 
         if (inputArr !== null && inputArr !== undefined && inputArr.length > 0) {
-            filenameInput.value = inputArr[0];
+
+            inputArr = inputArr.filter(n => n); // remove all empty strings, nulls or undefined
+
+            if (inputArr.length > 1) {
+                inputArr.pop(); // remove right part after last dot
+            }
+
+            filenameInput.value = inputArr.join();
             this.filename = filenameInput.value;
         }
 
@@ -275,7 +284,17 @@ class PdfContainer {
 
         downloadBtn.disabled = false;
         this.filename = filenameInput.value;
-        filenameParagraph.innerText = this.filename + ".pdf";
+    }
+
+    preventIllegalChars(e) {
+        // const filenameInput = document.getElementById('filename-input');
+        //
+        // filenameInput.value = filenameInput.value.replace('.pdf', '');
+        //
+        // // prevent .
+        // if (filenameInput.value.includes('.')) {
+        //     filenameInput.value.replace('.','');
+        // }
     }
 }
 
