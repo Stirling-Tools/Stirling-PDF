@@ -240,7 +240,7 @@ class PdfContainer {
                 inputArr.pop(); // remove right part after last dot
             }
 
-            filenameInput.value = inputArr.join();
+            filenameInput.value = inputArr.join('');
             this.filename = filenameInput.value;
         }
 
