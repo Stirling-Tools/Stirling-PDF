@@ -6,7 +6,6 @@ class PdfContainer {
     downloadLink;
 
     constructor(id, wrapperId, pdfAdapters) {
-        this.fileName = null;
         this.pagesContainer = document.getElementById(id)
         this.pagesContainerWrapper = document.getElementById(wrapperId);
         this.downloadLink = null;
@@ -34,13 +33,11 @@ class PdfContainer {
         window.rotateAll = this.rotateAll;
 
         const filenameInput = document.getElementById('filename-input');
-        const filenameParagraph = document.getElementById('filename');
         const downloadBtn = document.getElementById('export-button');
 
         filenameInput.onkeyup = this.updateFilename;
         filenameInput.disabled = true;
         filenameInput.innerText = "";
-        filenameParagraph.innerText = "";
         downloadBtn.disabled = true;
     }
 
@@ -83,8 +80,18 @@ class PdfContainer {
 
                 if (pagesContainer.childElementCount === 0) {
                     filenameInput.value = "";
+                    this.filename = null;
                     downloadBtn.disabled = true;
+                } else {
+                    this.filename = filenameInput.value;
                 }
+
+                if (this.filename === null || this.filename === undefined) {
+                    filenameInput.value = files[0].name;
+                } else {
+                    filenameInput.value = this.filename;
+                }
+
             }
 
             this.addPdfsFromFiles(files, nextSiblingElement);
@@ -219,6 +226,12 @@ class PdfContainer {
         const url = URL.createObjectURL(pdfBlob);
         const downloadOption = localStorage.getItem('downloadOption');
 
+        const filenameInput = document.getElementById('filename-input');
+
+        if (!filenameInput.value.includes('.pdf')) {
+            filenameInput.value = filenameInput.value + '.pdf';
+        }
+
         if (downloadOption === 'sameWindow') {
             // Open the file in the same window
             window.location.href = url;
@@ -245,11 +258,9 @@ class PdfContainer {
 
     updateFilename() {
        const filenameInput = document.getElementById('filename-input');
-        const filenameParagraph = document.getElementById('filename');
         const downloadBtn = document.getElementById('export-button');
 
         if (filenameInput.value === "") {
-            filenameParagraph.innerText = "";
             downloadBtn.disabled = true;
             return;
         }
