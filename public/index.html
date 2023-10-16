@@ -12,6 +12,19 @@
 </head>
 <body>
     <input type="file" id="pdfFile" accept=".pdf">
-    <a id="downloadLink" style="display: none;" download="modified.pdf">Download Modified PDF</a>
+
+    <ul id="operations">
+
+    </ul>
+
+    <select id="pdfOptions">
+        <option value="scaleContent">Scale Content</option>
+        <option value="changePageSize">Change Page Size</option>
+        <option value="mergePDFs">Merge PDFs</option>
+        <option value="splitPDFs">Split PDFs</option>
+    </select>
+    <button id="addButton">Add</button>
+
+    <button id="doneButton">Done</button>
 </body>
 </html>
