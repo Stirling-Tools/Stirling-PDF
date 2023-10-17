@@ -55,4 +55,4 @@ import { traverseOperations } from "./traverseOperations.js";
         //     }
         // }
     });
-})(exampleWorkflows.mergeOnly);
+})(exampleWorkflows.rotateOnly);

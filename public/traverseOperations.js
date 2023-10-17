@@ -1,4 +1,7 @@
+import { extractPages } from "./functions/extractPages.js";
 import { mergePDFs } from "./functions/mergePDFs.js";
+import { rotatePages } from "./functions/rotatePDF.js";
+import { splitPDF } from "./functions/splitPDF.js";
 import { organizeWaitOperations } from "./organizeWaitOperations.js";
 
 export async function traverseOperations(operations, input) {
@@ -34,6 +37,8 @@ export async function traverseOperations(operations, input) {
                 }
                 break;
             case "removeObjects":
+                console.warn("RemoveObjects not implemented yet.")
+
                 if(Array.isArray(input)) {
                     for (let i = 0; i < input.length; i++) {
                         // TODO: modfiy input
@@ -52,16 +57,47 @@ export async function traverseOperations(operations, input) {
                     for (let i = 0; i < input.length; i++) {
                         // TODO: modfiy input
                         input[i].fileName += "_extractedPages";
+                        input[i].buffer = await extractPages(input[i].buffer, operation.values["pagesToExtractArray"]);
                         await nextOperation(operation.operations, input[i]);
                     }
                 }
                 else {
                     // TODO: modfiy input
                     input.fileName += "_extractedPages";
+                    input.buffer = await extractPages(input.buffer, operation.values["pagesToExtractArray"]);
                     await nextOperation(operation.operations, input);
                 }
                 break;
+            case "split":
+                // TODO: When a split goes into a wait function it might break the done condition, as it will count multiplpe times.
+                if(Array.isArray(input)) {
+                    for (let i = 0; i < input.length; i++) {
+                        const splits = await splitPDF(input[i].buffer, operation.values["pagesToSplitAfterArray"]);
+
+                        for (let j = 0; j < splits.length; j++) {
+                            const split = {};
+                            split.originalFileName = input[i].originalFileName;
+                            split.fileName = input[i].fileName + "_split";
+                            split.buffer = splits[j];
+                            await nextOperation(operation.operations, split);
+                        }
+                    }
+                }
+                else {
+                    const splits = await splitPDF(input.buffer, operation.values["pagesToSplitAfterArray"]);
+
+                    for (let j = 0; j < splits.length; j++) {
+                        const split = {};
+                        split.originalFileName = input.originalFileName;
+                        split.fileName = input.fileName + "_split";
+                        split.buffer = splits[j];
+                        await nextOperation(operation.operations, split);
+                    }
+                }
+                break;
             case "fillField":
+                console.warn("FillField not implemented yet.")
+
                 if(Array.isArray(input)) {
                     for (let i = 0; i < input.length; i++) {
                         // TODO: modfiy input
@@ -76,6 +112,8 @@ export async function traverseOperations(operations, input) {
                 }
                 break;
             case "extractImages":
+                console.warn("ExtractImages not implemented yet.")
+
                 if(Array.isArray(input)) {
                     for (let i = 0; i < input.length; i++) {
                         // TODO: modfiy input
@@ -105,6 +143,7 @@ export async function traverseOperations(operations, input) {
                 await nextOperation(operation.operations, input);
                 break;
             case "transform": {
+                console.warn("Transform not implemented yet.")
                 if(Array.isArray(input)) {
                     for (let i = 0; i < input.length; i++) {
                         // TODO: modfiy input
@@ -119,6 +158,38 @@ export async function traverseOperations(operations, input) {
                 }
                 break;
             }
+            case "extract":
+                if(Array.isArray(input)) {
+                    for (let i = 0; i < input.length; i++) {
+                        // TODO: modfiy input
+                        input[i].fileName += "_extractedPages";
+                        input[i].buffer = await extractPages(input[i].buffer, operation.values["pagesToExtractArray"]);
+                        await nextOperation(operation.operations, input[i]);
+                    }
+                }
+                else {
+                    // TODO: modfiy input
+                    input.fileName += "_extractedPages";
+                    input.buffer = await extractPages(input.buffer, operation.values["pagesToExtractArray"]);
+                    await nextOperation(operation.operations, input);
+                }
+                break;
+            case "rotate":
+                if(Array.isArray(input)) {
+                    for (let i = 0; i < input.length; i++) {
+                        // TODO: modfiy input
+                        input[i].fileName += "_turned";
+                        input[i].buffer = await rotatePages(input[i].buffer, operation.values["rotation"]);
+                        await nextOperation(operation.operations, input[i]);
+                    }
+                }
+                else {
+                    // TODO: modfiy input
+                    input.fileName += "_turned";
+                    input.buffer = await rotatePages(input.buffer, operation.values["rotation"]);
+                    await nextOperation(operation.operations, input);
+                }
+                break;
             default:
                 console.log("operation type unknown: ", operation.type);
                 break;
