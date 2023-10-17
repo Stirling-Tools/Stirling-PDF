@@ -25,34 +25,5 @@ import { traverseOperations } from "./traverseOperations.js";
         results.forEach(result => {
             download(result.buffer, result.fileName, "application/pdf");
         });
-
-        // if(files.length > 1) {
-        //     files.forEach(file => {
-                
-        //     });
-        // }
-        // else {
-        //     const file = files[0];
-        //     let pdfBuffer = new Uint8Array(await file.arrayBuffer());
-        //     if (file) {
-        //         for (let i = 0; i < selectedElementsList.length; i++) {
-        //           const selectedOption = selectedElementsList[i];
-              
-        //           // Perform actions based on the selected option using the switch statement
-        //           switch (selectedOption.textContent) {
-        //             case "scaleContent":
-        //                 pdfBuffer = await scaleContent(pdfBuffer, 2);
-        //                 break;
-        //             case "changePageSize":
-        //                 pdfBuffer = await scalePage(pdfBuffer, PageSize.letter);
-        //                 break;
-        //             default:
-        //                 // Handle any other actions or errors here
-        //                 throw new Error(`This action ${selectedOption.value} has not been implemented.`);
-        //             }
-        //         }
-        //         download(pdfBuffer, file.name.replace(/\.[^/.]+$/, "") + "_mod.pdf", "application/pdf");
-        //     }
-        // }
     });
-})(exampleWorkflows.rotateOnly);
+})(exampleWorkflows.imposeOnly);

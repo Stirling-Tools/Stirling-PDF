@@ -123,3 +123,17 @@ export const rotateOnly = {
         }
     ]
 }
+
+// Split a document up into multiple documents
+export const imposeOnly = {
+    outputOptions: {
+        zip: false
+    },
+    operations: [
+        {
+            type: "impose",
+            values: { "nup": 2, "format": "A4L" },
+            operations: []
+        }
+    ]
+}

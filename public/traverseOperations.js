@@ -1,4 +1,5 @@
 import { extractPages } from "./functions/extractPages.js";
+import { impose } from "./functions/impose.js";
 import { mergePDFs } from "./functions/mergePDFs.js";
 import { rotatePages } from "./functions/rotatePDF.js";
 import { splitPDF } from "./functions/splitPDF.js";
@@ -18,7 +19,6 @@ export async function traverseOperations(operations, input) {
         }
     
         for (let i = 0; i < operations.length; i++) {
-            console.warn(input);
             await computeOperation(operations[i], structuredClone(input)); // break references
         }
     }
@@ -55,14 +55,12 @@ export async function traverseOperations(operations, input) {
             case "extract":
                 if(Array.isArray(input)) {
                     for (let i = 0; i < input.length; i++) {
-                        // TODO: modfiy input
                         input[i].fileName += "_extractedPages";
                         input[i].buffer = await extractPages(input[i].buffer, operation.values["pagesToExtractArray"]);
                         await nextOperation(operation.operations, input[i]);
                     }
                 }
                 else {
-                    // TODO: modfiy input
                     input.fileName += "_extractedPages";
                     input.buffer = await extractPages(input.buffer, operation.values["pagesToExtractArray"]);
                     await nextOperation(operation.operations, input);
@@ -161,14 +159,12 @@ export async function traverseOperations(operations, input) {
             case "extract":
                 if(Array.isArray(input)) {
                     for (let i = 0; i < input.length; i++) {
-                        // TODO: modfiy input
                         input[i].fileName += "_extractedPages";
                         input[i].buffer = await extractPages(input[i].buffer, operation.values["pagesToExtractArray"]);
                         await nextOperation(operation.operations, input[i]);
                     }
                 }
                 else {
-                    // TODO: modfiy input
                     input.fileName += "_extractedPages";
                     input.buffer = await extractPages(input.buffer, operation.values["pagesToExtractArray"]);
                     await nextOperation(operation.operations, input);
@@ -177,16 +173,28 @@ export async function traverseOperations(operations, input) {
             case "rotate":
                 if(Array.isArray(input)) {
                     for (let i = 0; i < input.length; i++) {
-                        // TODO: modfiy input
                         input[i].fileName += "_turned";
                         input[i].buffer = await rotatePages(input[i].buffer, operation.values["rotation"]);
                         await nextOperation(operation.operations, input[i]);
                     }
                 }
                 else {
-                    // TODO: modfiy input
                     input.fileName += "_turned";
                     input.buffer = await rotatePages(input.buffer, operation.values["rotation"]);
+                    await nextOperation(operation.operations, input);
+                }
+                break;
+            case "impose":
+                if(Array.isArray(input)) {
+                    for (let i = 0; i < input.length; i++) {
+                        input[i].fileName += "_imposed";
+                        input[i].buffer = await impose(input[i].buffer, operation.values["nup"], operation.values["format"]);
+                        await nextOperation(operation.operations, input[i]);
+                    }
+                }
+                else {
+                    input.fileName += "_imposed";
+                    input.buffer = await impose(input.buffer, operation.values["nup"], operation.values["format"]);
                     await nextOperation(operation.operations, input);
                 }
                 break;
