@@ -1,15 +1,16 @@
+import { mergePDFs } from "./functions/mergePDFs.js";
 import { organizeWaitOperations } from "./organizeWaitOperations.js";
 
 export async function traverseOperations(operations, input) {
     const waitOperations = organizeWaitOperations(operations);
+    const results = [];
     await nextOperation(operations, input);
+    return results;
 
     async function nextOperation(operations, input) {
         if(Array.isArray(operations) && operations.length == 0) { // isEmpty
             console.log("operation done: " + input.fileName);
-            
-            //TODO: Delay the download
-            download(input, input.fileName, "application/pdf");
+            results.push(input);
             return;
         }
     
@@ -89,15 +90,16 @@ export async function traverseOperations(operations, input) {
                 }
                 break;
             case "merge":
-                if(Array.isArray(input)) {
+                if(Array.isArray(input) && input.length > 1) {
+                    const inputs = input;
                     input = {
-                        originalFileName: input.map(input => input.originalFileName).join("_and_"),
-                        fileName: input.map(input => input.fileName).join("_and_") + "_merged",
-                        buffer: input[0].buffer // TODO: merge inputs
+                        originalFileName: inputs.map(input => input.originalFileName).join("_and_"),
+                        fileName: inputs.map(input => input.fileName).join("_and_") + "_merged",
+                        buffer: await mergePDFs(inputs.map(input => input.buffer))
                     }
                 }
                 else {
-                    // TODO: modfiy input
+                    // Only one input, no need to merge
                     input.fileName += "_merged";
                 }
                 await nextOperation(operation.operations, input);

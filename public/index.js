@@ -1,6 +1,6 @@
 import { scaleContent } from "./functions/scaleContent.js";
 import { scalePage, PageSize } from "./functions/scalePage.js";
-import { testWorkflow } from "./testWorkflow.js";
+import * as exampleWorkflows from "./exampleWorkflows.js";
 import { traverseOperations } from "./traverseOperations.js";
 
 (async (workflow) => {
@@ -10,22 +10,22 @@ import { traverseOperations } from "./traverseOperations.js";
     doneButton.addEventListener('click', async (e) => {
         const files = Array.from(pdfFileInput.files);
         console.log(files);
-        const pdfBuffers = await Promise.all(files.map(async file => {
+        const inputs = await Promise.all(files.map(async file => {
             return {
                 originalFileName: file.name.replace(/\.[^/.]+$/, ""),
                 fileName: file.name.replace(/\.[^/.]+$/, ""),
                 buffer: new Uint8Array(await file.arrayBuffer())
             }
         }));
-        console.log(pdfBuffers);
+        console.log(inputs);
 
-        await traverseOperations(workflow.operations, pdfBuffers);
+        // TODO: This can also be run serverside
+        const results = await traverseOperations(workflow.operations, inputs);
+        
+        results.forEach(result => {
+            download(result.buffer, result.fileName, "application/pdf");
+        });
 
-        // if(selectedElementsList[0].textContent == "mergePDFs") {
-
-        // }
-
-        // // TODO: This can also be run serverside
         // if(files.length > 1) {
         //     files.forEach(file => {
                 
@@ -55,4 +55,4 @@ import { traverseOperations } from "./traverseOperations.js";
         //     }
         // }
     });
-})(testWorkflow);
+})(exampleWorkflows.mergeOnly);
