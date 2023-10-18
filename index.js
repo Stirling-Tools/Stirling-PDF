@@ -1,15 +1,16 @@
 
-const express = require('express');
+import express from 'express';
 const app = express();
-const path = require('path');
 const PORT = 8080;
  
 // Static Middleware
-app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static('./public'));
  
-app.get('/', function (req, res, next) {
+app.get('/', function (req, res, next) { // TODO: Use EJS?
     res.render('home.ejs');
-})
+});
+
+// TODO: Import and server /api
  
 app.listen(PORT, function (err) {
     if (err) console.log(err);

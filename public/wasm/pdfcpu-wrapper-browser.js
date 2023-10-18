@@ -21,14 +21,12 @@ function configureFs() {
             fs = BrowserFS.BFSRequire("fs");
             Buffer = BrowserFS.BFSRequire("buffer").Buffer;
 
-            // TODO: Find a way to remove these globals:
             window.fs = fs;
             window.Buffer = Buffer;
         }
     );
 }
 
-// TODO: This needs to be changed in order to run on node
 function loadWasm() {
     const script = document.createElement("script");
     script.src = wasmLocation + "/wasm_exec.js";
@@ -55,7 +53,8 @@ const runWasm = async (param) => {
 async function loadFileAsync(data) {
     console.log(`Writing file to MemoryFS`);
     await fs.writeFile(`/input.pdf`, data);
-    let exitCode = await runWasm([
+    console.log(`Write done. Validating...`);
+    let exitcode = await runWasm([
         "pdfcpu.wasm",
         "validate",
         "-c",
@@ -63,23 +62,21 @@ async function loadFileAsync(data) {
         `/input.pdf`,
     ]);
 
-    if (exitCode !== 0)
+    if (exitcode !== 0)
         throw new Error("There was an error validating your PDFs");
+
+    console.log(`File is Valid`);
 }
 
 export async function impose(snapshot, nup, format) {
+    
+};
+
+export async function oneToOne(wasmArray, snapshot) {
     await loadFileAsync(Buffer.from(snapshot));
 
-    let exitcode = await runWasm([
-        "pdfcpu.wasm",
-        "nup",
-        "-c",
-        "disable",
-        'f:' + format,
-        "output.pdf",
-        String(nup),
-        "input.pdf",
-    ]);
+    console.error("Nuping File");
+    let exitcode = await runWasm(wasmArray);
 
     if (exitcode !== 0) {
         console.error("There was an error nuping your PDFs");
@@ -91,4 +88,16 @@ export async function impose(snapshot, nup, format) {
     fs.unlink("output.pdf");
     console.log("Your File ist Ready!");
     return new Uint8Array(contents);
-};
+}
+
+export async function manyToOne() {
+    //TODO: Do this of neccesary for some operations
+}
+
+export async function oneToMany() {
+    //TODO: Do this of neccesary for some operations
+}
+
+export async function manyToMany() {
+    //TODO: Do this of neccesary for some operations
+}

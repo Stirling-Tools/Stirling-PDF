@@ -1,4 +1,4 @@
-import * as pdfcpuWraopper from "../wasm/pdfcpu-wrapper-browser.js";
+import * as pdfcpuWraopper from "../public/wasm/pdfcpu-wrapper-node.js";
 
 export async function impose(snapshot, nup, format) {
     return await pdfcpuWraopper.oneToOne([
@@ -12,3 +12,4 @@ export async function impose(snapshot, nup, format) {
             "input.pdf",
         ], snapshot);
 }
+
