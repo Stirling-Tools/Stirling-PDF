@@ -9,7 +9,7 @@ const activeWorkflows = {};
 
 const router = express.Router();
 
-router.post("/", [
+router.post("/:workflowUuid?", [
     multer().array("files"),
     async (req, res, next) => {
         const workflow = JSON.parse(req.body.workflow);
@@ -18,10 +18,7 @@ router.post("/", [
 
         // TODO: Validate
 
-        let workflowID = undefined;
-
         const inputs = await Promise.all(req.files.map(async file => {
-            console.log(file);
             return {
                 originalFileName: file.originalname.replace(/\.[^/.]+$/, ""),
                 fileName: file.originalname.replace(/\.[^/.]+$/, ""),
@@ -33,11 +30,26 @@ router.post("/", [
         if(req.body.async === "false") {
             console.log("Don't do async");
 
-            const pdfResults = await traverseOperations(workflow.operations, inputs);
+            const traverse = traverseOperations(workflow.operations, inputs);
+
+            let pdfResults;
+            let iteration;
+            while (true) {
+                iteration = await traverse.next();
+                if (iteration.done) {
+                    pdfResults = iteration.value;
+                    break;
+                }
+            }
+
             downloadHandler(res, pdfResults);
         }
         else {
-            workflowID = generateWorkflowID();
+            // TODO: UUID collision checks
+            let workflowID = req.params.workflowUuid
+            if(!workflowID)
+                workflowID = generateWorkflowID();
+
             activeWorkflows[workflowID] = {
                 createdAt: Date.now(),
                 finished: false, 
@@ -45,6 +57,7 @@ router.post("/", [
                 result: null,
                 // TODO: When auth is implemented: owner
             }
+            const activeWorkflow = activeWorkflows[workflowID];
 
             res.status(501).json({
                 "warning": "Unfinished Endpoint",
@@ -55,11 +68,26 @@ router.post("/", [
                 }
             });
 
-            traverseOperations(workflow.operations, inputs).then((pdfResults) => {
-                activeWorkflows[workflowID].result = pdfResults;
-                activeWorkflows[workflowID].finished = true;
-                // TODO: Post to eventStream
-            });
+            const traverse = traverseOperations(workflow.operations, inputs);
+
+            let pdfResults;
+            let iteration;
+            while (true) {
+                iteration = await traverse.next();
+                if (iteration.done) {
+                    pdfResults = iteration.value;
+                    if(activeWorkflow.eventStream) {
+                        activeWorkflow.eventStream.write(`data: processing done`);
+                        activeWorkflow.eventStream.end();
+                    }
+                    break;
+                }
+                if(activeWorkflow.eventStream)
+                    activeWorkflow.eventStream.write(`data: ${iteration.value}\n\n`);
+            }
+
+            activeWorkflow.result = pdfResults;
+            activeWorkflow.finished = true;
         }
     }
 ]);
@@ -73,8 +101,22 @@ router.get("/progress/:workflowUuid", (req, res, nex) => {
 });
 
 router.get("/progress-stream/:workflowUuid", (req, res, nex) => {
-    // TODO: Send realtime updates
-    res.status(501).json({"warning": "Event-Stream has not been implemented yet."});
+    // TODO: Validation
+
+    // Send realtime updates
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders(); // flush the headers to establish SSE with client
+
+    const workflow = activeWorkflows[req.params.workflowUuid];
+    workflow.eventStream = res;
+
+    res.on('close', () => {
+        res.end();
+        // TODO: Abort if not already done?
+    });
 });
 
 router.get("/result/:workflowUuid", (req, res, nex) => {

@@ -5,13 +5,16 @@ import { rotatePages } from "./functions/rotatePDF.js";
 import { splitPDF } from "./functions/splitPDF.js";
 import { organizeWaitOperations } from "./public/organizeWaitOperations.js";
 
-export async function traverseOperations(operations, input) {
+export async function * traverseOperations(operations, input) {
     const waitOperations = organizeWaitOperations(operations);
     const results = [];
-    await nextOperation(operations, input);
+    for await (const value of nextOperation(operations, input)) {
+        yield value;
+    }
     return results;
 
-    async function nextOperation(operations, input) {
+    // TODO: Pult all nextOperation() in the for await, like for "extract"
+    async function * nextOperation(operations, input) {
         if(Array.isArray(operations) && operations.length == 0) { // isEmpty
             console.log("operation done: " + input.fileName);
             results.push(input);
@@ -19,11 +22,13 @@ export async function traverseOperations(operations, input) {
         }
     
         for (let i = 0; i < operations.length; i++) {
-            await computeOperation(operations[i], structuredClone(input)); // break references
+            for await (const value of computeOperation(operations[i], structuredClone(input))) {
+                yield value;
+            }
         }
     }
     
-    async function computeOperation(operation, input) {
+    async function * computeOperation(operation, input) {
         switch (operation.type) {
             case "done":
                 console.log("Done operation will get called if all waits are done. Skipping for now.")
@@ -57,13 +62,17 @@ export async function traverseOperations(operations, input) {
                     for (let i = 0; i < input.length; i++) {
                         input[i].fileName += "_extractedPages";
                         input[i].buffer = await extractPages(input[i].buffer, operation.values["pagesToExtractArray"]);
-                        await nextOperation(operation.operations, input[i]);
+                        for await (const value of nextOperation(operation.operations, input[i])) {
+                            yield value;
+                        }
                     }
                 }
                 else {
                     input.fileName += "_extractedPages";
                     input.buffer = await extractPages(input.buffer, operation.values["pagesToExtractArray"]);
-                    await nextOperation(operation.operations, input);
+                    for await (const value of nextOperation(operation.operations, input)) {
+                        yield value;
+                    }
                 }
                 break;
             case "split":
@@ -202,5 +211,6 @@ export async function traverseOperations(operations, input) {
                 console.log("operation type unknown: ", operation.type);
                 break;
         }
+        yield operation.type;
     }
 }
