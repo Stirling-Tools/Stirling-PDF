@@ -1,5 +1,4 @@
 import express from 'express';
-import multer from 'multer';
 import crypto from 'crypto';
 import stream from "stream";
 
@@ -10,19 +9,27 @@ const activeWorkflows = {};
 const router = express.Router();
 
 router.post("/:workflowUuid?", [
-    multer().array("files"),
-    async (req, res, next) => {
-        const workflow = JSON.parse(req.body.workflow);
-        console.log("fileCount: ", req.files.length);
-        console.log("workflow: ", workflow);
+    async (req, res) => {
+        if(req.files == null) {
+            res.status(400).json({"error": "No files were uploaded."});
+            return;
+        }
 
-        // TODO: Validate
+        if(Array.isArray(req.files.files)) {
+            req.files = req.files.files;
+        }
+        else {
+            req.files = [req.files.files];
+        }
+
+        const workflow = JSON.parse(req.body.workflow);
+        // TODO: Validate input further (json may fail or not be a valid workflow)
 
         const inputs = await Promise.all(req.files.map(async file => {
             return {
-                originalFileName: file.originalname.replace(/\.[^/.]+$/, ""),
-                fileName: file.originalname.replace(/\.[^/.]+$/, ""),
-                buffer: new Uint8Array(await file.buffer)
+                originalFileName: file.name.replace(/\.[^/.]+$/, ""),
+                fileName: file.name.replace(/\.[^/.]+$/, ""),
+                buffer: new Uint8Array(await file.data)
             }
         }));
 
@@ -37,11 +44,15 @@ router.post("/:workflowUuid?", [
             while (true) {
                 iteration = await traverse.next();
                 if (iteration.done) {
+                    console.log(iteration.value);
                     pdfResults = iteration.value;
+                    console.log("Done");
                     break;
                 }
             }
 
+            console.log("Download");
+            console.log(pdfResults);
             downloadHandler(res, pdfResults);
         }
         else {
@@ -59,8 +70,7 @@ router.post("/:workflowUuid?", [
             }
             const activeWorkflow = activeWorkflows[workflowID];
 
-            res.status(501).json({
-                "warning": "Unfinished Endpoint",
+            res.status(200).json({
                 "workflowID": workflowID,
                 "data-recieved": {
                     "fileCount": req.files.length,
@@ -77,7 +87,7 @@ router.post("/:workflowUuid?", [
                 if (iteration.done) {
                     pdfResults = iteration.value;
                     if(activeWorkflow.eventStream) {
-                        activeWorkflow.eventStream.write(`data: processing done`);
+                        activeWorkflow.eventStream.write(`data: processing done\n\n`);
                         activeWorkflow.eventStream.end();
                     }
                     break;
@@ -93,7 +103,14 @@ router.post("/:workflowUuid?", [
 ]);
 
 router.get("/progress/:workflowUuid", (req, res, nex) => {
-    // TODO: Validation
+    if(!req.params.workflowUuid) {
+        res.status(400).json({"error": "No workflowUuid weres provided."});
+        return;
+    }
+    if(!activeWorkflows.hasOwnProperty(req.params.workflowUuid)) {
+        res.status(400).json({"error": `No workflow with workflowUuid "${req.params.workflowUuid}" was found.`});
+        return;
+    }
 
     // Return current progress
     const workflow = activeWorkflows[req.params.workflowUuid];
@@ -101,7 +118,16 @@ router.get("/progress/:workflowUuid", (req, res, nex) => {
 });
 
 router.get("/progress-stream/:workflowUuid", (req, res, nex) => {
-    // TODO: Validation
+    if(!req.params.workflowUuid) {
+        res.status(400).json({"error": "No workflowUuid weres provided."});
+        return;
+    }
+    if(!activeWorkflows.hasOwnProperty(req.params.workflowUuid)) {
+        res.status(400).json({"error": `No workflow with workflowUuid "${req.params.workflowUuid}" was found.`});
+        return;
+    }
+
+    // TODO: Check if already done
 
     // Send realtime updates
     res.setHeader('Cache-Control', 'no-cache');
@@ -120,7 +146,14 @@ router.get("/progress-stream/:workflowUuid", (req, res, nex) => {
 });
 
 router.get("/result/:workflowUuid", (req, res, nex) => {
-    // TODO: Validation
+    if(!req.params.workflowUuid) {
+        res.status(400).json({"error": "No workflowUuid weres provided."});
+        return;
+    }
+    if(!activeWorkflows.hasOwnProperty(req.params.workflowUuid)) {
+        res.status(400).json({"error": `No workflow with workflowUuid "${req.params.workflowUuid}" was found.`});
+        return;
+    }
 
     /* 
      * If workflow isn't done return error
@@ -139,6 +172,15 @@ router.get("/result/:workflowUuid", (req, res, nex) => {
 });
 
 router.post("/abort/:workflowUuid", (req, res, nex) => {
+    if(!req.params.workflowUuid) {
+        res.status(400).json({"error": "No workflowUuid weres provided."});
+        return;
+    }
+    if(!activeWorkflows.hasOwnProperty(req.params.workflowUuid)) {
+        res.status(400).json({"error": `No workflow with workflowUuid "${req.params.workflowUuid}" was found.`});
+        return;
+    }
+
     // TODO: Abort workflow
     res.status(501).json({"warning": "Abortion has not been implemented yet."});
 });
@@ -148,7 +190,10 @@ function generateWorkflowID() {
 }
 
 function downloadHandler(res, pdfResults) {
-    if(pdfResults.length > 1) {
+    if(pdfResults.length == 0) {
+        res.status(500).json({"warning": "The workflow had no outputs."});
+    } 
+    else if(pdfResults.length > 1) {
         res.status(501).json({"warning": "The workflow had multiple outputs, this is not implemented yet."});
         // TODO: Implement ZIP
     }
