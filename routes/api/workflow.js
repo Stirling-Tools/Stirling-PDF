@@ -45,11 +45,11 @@ router.post("/:workflowUuid?", [
             while (true) {
                 iteration = await traverse.next();
                 if (iteration.done) {
-                    console.log(iteration.value);
                     pdfResults = iteration.value;
                     console.log("Done");
                     break;
                 }
+                console.log(iteration.value);
             }
 
             console.log("Download");

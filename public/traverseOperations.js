@@ -5,7 +5,7 @@ import { rotatePages } from "./functions/rotatePDF.js";
 import { splitPDF } from "./functions/splitPDF.js";
 import { organizeWaitOperations } from "./organizeWaitOperations.js";
 
-// TODO: Make this run with feedback like the server side func. 
+// TODO: Make this run with feedback like the server side func & The serverside func also got now functionality & fixes for split, so copy it and make it work with the new readsteam system on frontend
 export async function traverseOperations(operations, input) {
     const waitOperations = organizeWaitOperations(operations);
     const results = [];
