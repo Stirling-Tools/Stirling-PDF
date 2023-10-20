@@ -7,7 +7,7 @@ import { organizeWaitOperations } from "./public/organizeWaitOperations.js";
 
 export async function * traverseOperations(operations, input) {
     const waitOperations = organizeWaitOperations(operations);
-    const results = [];
+    let results = [];
     for await (const value of nextOperation(operations, input)) {
         yield value;
     }
@@ -16,9 +16,16 @@ export async function * traverseOperations(operations, input) {
     // TODO: Pult all nextOperation() in the for await, like for "extract"
     async function * nextOperation(operations, input) {
         if(Array.isArray(operations) && operations.length == 0) { // isEmpty
-            console.log("operation done: " + input.fileName);
-            results.push(input);
-            return;
+            if(Array.isArray(input)) {
+                console.log("operation done: " + input[0].fileName + "+");
+                results = results.concat(input);
+                return;
+            }
+            else {
+                console.log("operation done: " + input.fileName);
+                results.push(input);
+                return;
+            }
         }
     
         for (let i = 0; i < operations.length; i++) {
@@ -90,35 +97,42 @@ export async function * traverseOperations(operations, input) {
                 }
                 break;
             case "split":
+                // TODO: When a split goes into another split function and then into a wait function it might break the done condition, as it will count multiple times.
                 if(Array.isArray(input)) {
                     for (let i = 0; i < input.length; i++) {
-                        const splits = await splitPDF(input[i].buffer, operation.values["pagesToSplitAfterArray"]);
+                        const splitResult = await splitPDF(input[i].buffer, operation.values["pagesToSplitAfterArray"]);
 
-                        for (let j = 0; j < splits.length; j++) {
-                            const split = {};
-                            split.originalFileName = input[i].originalFileName;
-                            split.fileName = input[i].fileName + "_split" + j;
-                            split.buffer = splits[j];
-                            split.splitCount = splits.length * input.length;
-                            // TODO: When a split goes into another split function and then into a wait function it might break the done condition, as it will count multiplpe times.
-                            for await (const value of nextOperation(operation.operations, split)) {
-                                yield value;
-                            }
+                        const splits = [];
+                        for (let j = 0; j < splitResult.length; j++) {
+                            splits.push({
+                                originalFileName: input[i].originalFileName,
+                                fileName: input[i].fileName + "_split" + j,
+                                buffer: splitResult[j],
+                                splitCount: splitResult.length
+                            })
+                        }
+                        console.log(splits);
+
+                        for await (const value of nextOperation(operation.operations, splits)) {
+                            yield value;
                         }
                     }
                 }
                 else {
-                    const splits = await splitPDF(input.buffer, operation.values["pagesToSplitAfterArray"]);
+                    const splitResult = await splitPDF(input.buffer, operation.values["pagesToSplitAfterArray"]);
 
-                    for (let j = 0; j < splits.length; j++) {
-                        const split = {};
-                        split.originalFileName = input.originalFileName;
-                        split.fileName = input.fileName + "_split" + j;
-                        split.buffer = splits[j];
-                        split.splitCount = splits.length;
-                        for await (const value of nextOperation(operation.operations, split)) {
-                            yield value;
-                        }
+                    const splits = [];
+                    for (let j = 0; j < splitResult.length; j++) {
+                        splits.push({
+                            originalFileName: input.originalFileName,
+                            fileName: input.fileName + "_split" + j,
+                            buffer: splitResult[j],
+                            splitCount: splitResult.length
+                        })
+                    }
+                    
+                    for await (const value of nextOperation(operation.operations, splits)) {
+                        yield value;
                     }
                 }
                 break;
