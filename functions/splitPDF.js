@@ -20,6 +20,5 @@ export const splitPDF = async (snapshot, splitAfterPageArray) => {
     }
     subDocuments.push(await createSubDocument(pdfDoc, pagesArray));
     pagesArray = [];
-
     return subDocuments;
 };

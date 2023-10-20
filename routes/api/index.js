@@ -6,7 +6,8 @@ const router = express.Router();
 router.use(fileUpload());
 
 router.get("/", function (req, res, next) {
-    res.status(501).json({"Error": "Unfinished Endpoint"});
+    // TODO: Implement root api endpoint
+    res.status(501).json({"Error": "Unfinished Endpoint. This sould probably send some api docs?"});
 });
 
 router.use("/workflow", workflow);

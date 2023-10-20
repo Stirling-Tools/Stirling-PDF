@@ -8,7 +8,7 @@ This is the development repository for the new StirlingPDF backend. With the pow
 
 ## Understanding Workflows
 
-Workflows are the way you define what operations and their order should be applied to the PDF.
+Workflows define how to apply operations to a PDF, including their order and relations with eachother.
 
 Workflows can be created via the web-ui and then exported or, if you want to brag a bit, you can create the JSON object yourself.
 

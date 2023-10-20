@@ -1,6 +1,7 @@
 import express from 'express';
 import crypto from 'crypto';
 import stream from "stream";
+import Archiver from 'archiver';
 
 import { traverseOperations } from "../../traverseOperations.js";
 
@@ -52,10 +53,10 @@ router.post("/:workflowUuid?", [
             }
 
             console.log("Download");
-            console.log(pdfResults);
             downloadHandler(res, pdfResults);
         }
         else {
+            console.log("Start Aync Workflow");
             // TODO: UUID collision checks
             let workflowID = req.params.workflowUuid
             if(!workflowID)
@@ -194,8 +195,27 @@ function downloadHandler(res, pdfResults) {
         res.status(500).json({"warning": "The workflow had no outputs."});
     } 
     else if(pdfResults.length > 1) {
-        res.status(501).json({"warning": "The workflow had multiple outputs, this is not implemented yet."});
-        // TODO: Implement ZIP
+        // TODO: Also allow the user to download multiple files without zip compressen, because this is kind of slow...
+        res.writeHead(200, {
+            'Content-Type': 'application/zip',
+            'Content-disposition': 'attachment; filename=workflow-results.zip'
+        });
+
+        var zip = Archiver('zip');
+
+        // Stream the file to the user.
+        zip.pipe(res);
+
+        console.log("Adding Files to ZIP...");
+
+        for (let i = 0; i < pdfResults.length; i++) {
+            // TODO: Implement other file types (mostly fro image & text extraction)
+            // TODO: Check for name collisions
+            zip.append(Buffer.from(pdfResults[i].buffer), { name: pdfResults[i].fileName + ".pdf" });   
+        }
+
+        zip.finalize();
+        console.log("Sent");
     }
     else {
         const readStream = new stream.PassThrough();

@@ -35,7 +35,21 @@ export async function * traverseOperations(operations, input) {
                 break;
             case "wait":
                 const waitOperation = waitOperations[operation.values.id];
-                waitOperation.input.push(input);
+
+                if(Array.isArray(input)) {
+                    // waitOperation.input.concat(input); // May have unexpected concequences. Better throw an error for now.
+                    throw new Error("Wait recieved an array as input. I don't know if this can happen, but if it does happen, I will investigate. Please share your workflow (:");
+                }
+                else {
+                    waitOperation.input.push(input);
+                }
+
+                // Wait for all elements of previous split to finish
+                if(input.splitCount && input.splitCount > 0) {
+                    input.splitCount--;
+                    return;
+                }
+
                 waitOperation.waitCount--;
                 if(waitOperation.waitCount == 0) {
                     await nextOperation(waitOperation.doneOperation.operations, waitOperation.input);
@@ -76,7 +90,6 @@ export async function * traverseOperations(operations, input) {
                 }
                 break;
             case "split":
-                // TODO: When a split goes into a wait function it might break the done condition, as it will count multiplpe times.
                 if(Array.isArray(input)) {
                     for (let i = 0; i < input.length; i++) {
                         const splits = await splitPDF(input[i].buffer, operation.values["pagesToSplitAfterArray"]);
@@ -84,9 +97,13 @@ export async function * traverseOperations(operations, input) {
                         for (let j = 0; j < splits.length; j++) {
                             const split = {};
                             split.originalFileName = input[i].originalFileName;
-                            split.fileName = input[i].fileName + "_split";
+                            split.fileName = input[i].fileName + "_split" + j;
                             split.buffer = splits[j];
-                            await nextOperation(operation.operations, split);
+                            split.splitCount = splits.length * input.length;
+                            // TODO: When a split goes into another split function and then into a wait function it might break the done condition, as it will count multiplpe times.
+                            for await (const value of nextOperation(operation.operations, split)) {
+                                yield value;
+                            }
                         }
                     }
                 }
@@ -96,9 +113,12 @@ export async function * traverseOperations(operations, input) {
                     for (let j = 0; j < splits.length; j++) {
                         const split = {};
                         split.originalFileName = input.originalFileName;
-                        split.fileName = input.fileName + "_split";
+                        split.fileName = input.fileName + "_split" + j;
                         split.buffer = splits[j];
-                        await nextOperation(operation.operations, split);
+                        split.splitCount = splits.length;
+                        for await (const value of nextOperation(operation.operations, split)) {
+                            yield value;
+                        }
                     }
                 }
                 break;

@@ -5,6 +5,7 @@ import { rotatePages } from "./functions/rotatePDF.js";
 import { splitPDF } from "./functions/splitPDF.js";
 import { organizeWaitOperations } from "./organizeWaitOperations.js";
 
+// TODO: Make this run with feedback like the server side func. 
 export async function traverseOperations(operations, input) {
     const waitOperations = organizeWaitOperations(operations);
     const results = [];
