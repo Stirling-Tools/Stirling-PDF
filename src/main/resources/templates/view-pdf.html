@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{multiTool.title})}"></th:block>
+
+<body>
+<div id="image-highlighter"></div>
+<div id="page-container">
+    <div id="content-wrap">
+        <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+        <br> <br>
+        <div class="container">
+            <fieldset class="upload_dropZone text-center mb-3 p-4">
+
+                <legend class="visually-hidden">Image uploader</legend>
+
+                <svg class="upload_svg" width="60" height="60" aria-hidden="true">
+                    <use href="#icon-imageUpload"></use>
+                </svg>
+
+                <p class="small my-2">Drag &amp; Drop PDF(s) inside dashed region<br><i>or</i></p>
+
+                <input id="upload_image_background" data-post-name="image_background"
+                       data-post-url="https://someplace.com/image/uploads/backgrounds/"
+                       class="position-absolute invisible" type="file" multiple
+                       accept="image/jpeg, image/png, image/svg+xml"/>
+
+                <label class="btn btn-upload mb-3" for="upload_image_background">Choose file(s)</label>
+
+                <div class="upload_gallery d-flex flex-wrap justify-content-center gap-3 mb-0"></div>
+
+            </fieldset>
+        </div>
+
+    </div>
+    <div th:insert="~{fragments/footer.html :: footer}"></div>
+</div>
+<div id="drag-container"></div>
+
+<script type="module">
+
+</script>
+
+<style>
+    fieldset {
+        --colorPrimaryNormal: #00b3bb;
+        --colorPrimaryDark: #00979f;
+        --colorPrimaryGlare: #00cdd7;
+        --colorPrimaryHalf: #80d9dd;
+        --colorPrimaryQuarter: #bfecee;
+        --colorPrimaryEighth: #dff5f7;
+        --colorPrimaryPale: #f3f5f7;
+        --colorPrimarySeparator: #f3f5f7;
+        --colorPrimaryOutline: #dff5f7;
+        --colorButtonNormal: #00b3bb;
+        --colorButtonHover: #00cdd7;
+        --colorLinkNormal: #00979f;
+        --colorLinkHover: #00cdd7;
+
+    }
+
+    body {
+        margin: 24px;
+    }
+
+    .upload_dropZone {
+        color: var(--base-font-color);
+        background-color: var(--background-color);
+        outline: 2px dashed var(--scroll-bar-color, #c1ddef);
+        outline-offset: -12px;
+        transition: outline-offset 0.2s ease-out,
+        outline-color 0.3s ease-in-out,
+        background-color 0.2s ease-out;
+    }
+
+    .upload_dropZone.highlight {
+        outline-offset: -4px;
+        outline-color: var(--bs-blue, #0576bd);
+        background-color: var(--colorPrimaryEighth, #c8dadf);
+    }
+
+    .upload_svg {
+        fill: var(--bs-blue, #0576bd);
+    }
+
+    .btn-upload {
+        color: #fff;
+        background-color: var(--bs-blue);
+    }
+
+    .btn-upload:hover,
+    .btn-upload:focus {
+        color: #fff;
+        background-color: var(--bs-blue);
+    }
+
+    .upload_img {
+        width: calc(33.333% - (2rem / 3));
+        object-fit: contain;
+    }
+</style>
+</body>
+
+</html>
