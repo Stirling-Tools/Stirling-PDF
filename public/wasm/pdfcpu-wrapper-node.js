@@ -79,13 +79,21 @@ export async function oneToOne(wasmArray, snapshot) {
     await checkExistsWithTimeout("/output.pdf", 1000);
     console.log("Write started...");
 
-    // TODO: [Important] This fails for large PDFs. Need to a way to check if file write is definitely done.
-    // We need to wait for the file write in memfs to finish in node for some reason
-    await new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve();
-        }, 1000);
-    });
+
+    // TODO: Make this more elegant, this waits for the write to finish.
+    // Maybe replace wasmfs with https://github.com/streamich/memfs
+    let fileSize;
+    while (true) {
+        fileSize = fs.statSync("/output.pdf").size;
+        await new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve();
+            }, 50);
+        });
+        if(fileSize > 0 && fileSize == fs.statSync("/output.pdf").size) // Wait for file Size not changing anymore.
+            break;
+    }
+    
     console.log("Could be done?");
 
     fs.unlinkSync("input.pdf");
