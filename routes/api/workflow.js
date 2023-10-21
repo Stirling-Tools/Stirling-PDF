@@ -3,7 +3,8 @@ import crypto from 'crypto';
 import stream from "stream";
 import Archiver from 'archiver';
 
-import { traverseOperations } from "../../traverseOperations.js";
+import * as Functions from "../../functions.js";
+import { traverseOperations } from "../../public/traverseOperations.js";
 
 const activeWorkflows = {};
 
@@ -38,7 +39,7 @@ router.post("/:workflowUuid?", [
         if(req.body.async === "false") {
             console.log("Don't do async");
 
-            const traverse = traverseOperations(workflow.operations, inputs);
+            const traverse = traverseOperations(workflow.operations, inputs, Functions);
 
             let pdfResults;
             let iteration;

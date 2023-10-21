@@ -75,7 +75,7 @@ export async function impose(snapshot, nup, format) {
 export async function oneToOne(wasmArray, snapshot) {
     await loadFileAsync(Buffer.from(snapshot));
 
-    console.error("Nuping File");
+    console.log("Nuping File");
     let exitcode = await runWasm(wasmArray);
 
     if (exitcode !== 0) {
