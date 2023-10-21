@@ -78,19 +78,21 @@ export async function oneToOne(wasmArray, snapshot) {
     
     await checkExistsWithTimeout("/output.pdf", 1000);
     console.log("Write started...");
+
+    // TODO: [Important] This fails for large PDFs. Need to a way to check if file write is definitely done.
     // We need to wait for the file write in memfs to finish in node for some reason
     await new Promise((resolve, reject) => {
         setTimeout(() => {
             resolve();
-        }, 100);
+        }, 1000);
     });
-
+    console.log("Could be done?");
 
     fs.unlinkSync("input.pdf");
 
     const data = fs.readFileSync("/output.pdf"); 
     if(data.length == 0) {
-        throw Error("File Size 0 that should not happen");
+        throw Error("File Size 0 that should not happen. The write probably didn't finish in time.");
     }
     fs.unlinkSync("output.pdf");
     console.log("Your File ist Ready!");
@@ -98,15 +100,15 @@ export async function oneToOne(wasmArray, snapshot) {
 }
 
 export async function manyToOne() {
-    //TODO: Do this of neccesary for some operations
+    //TODO: Do this if necessary for some pdfcpu operations
 }
 
 export async function oneToMany() {
-    //TODO: Do this of neccesary for some operations
+    //TODO: Do this if necessary for some pdfcpu operations
 }
 
 export async function manyToMany() {
-    //TODO: Do this of neccesary for some operations
+    //TODO: Do this if necessary for some pdfcpu operations
 }
 
 // THX: https://stackoverflow.com/questions/26165725/nodejs-check-file-exists-if-not-wait-till-it-exist

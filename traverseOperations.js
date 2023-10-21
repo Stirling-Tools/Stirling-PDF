@@ -11,7 +11,6 @@ export async function * traverseOperations(operations, input) {
     yield* nextOperation(operations, input)
     return results;
 
-    // TODO: Pult all nextOperation() in the for await, like for "extract"
     async function * nextOperation(operations, input) {
         console.log(Array.isArray(operations) && operations.length == 0);
         if(Array.isArray(operations) && operations.length == 0) { // isEmpty
@@ -35,24 +34,14 @@ export async function * traverseOperations(operations, input) {
     async function * computeOperation(operation, input) {
         yield "Starting: " + operation.type;
         switch (operation.type) {
-            case "done":
-                console.log("Done operation will get called if all waits are done. Skipping for now.")
-                break;
             case "wait":
                 const waitOperation = waitOperations[operation.values.id];
 
                 if(Array.isArray(input)) {
-                    // waitOperation.input.concat(input); // May have unexpected concequences. Better throw an error for now.
-                    throw new Error("Wait recieved an array as input. I don't know if this can happen, but if it does happen, I will investigate. Please share your workflow (:");
+                    waitOperation.input.concat(input); // TODO: May have unexpected concequences. Needs further testing!
                 }
                 else {
                     waitOperation.input.push(input);
-                }
-
-                // Wait for all elements of previous split to finish
-                if(input.splitCount && input.splitCount > 0) {
-                    input.splitCount--;
-                    return;
                 }
 
                 waitOperation.waitCount--;
@@ -60,56 +49,17 @@ export async function * traverseOperations(operations, input) {
                     yield* nextOperation(waitOperation.doneOperation.operations, waitOperation.input);
                 }
                 break;
-            case "removeObjects":
-                console.warn("RemoveObjects not implemented yet.")
-
-                if(Array.isArray(input)) {
-                    for (let i = 0; i < input.length; i++) {
-                        // TODO: modfiy input
-                        input[i].fileName += "_removedObjects";
-                        yield* nextOperation(operation.operations, input[i]);
-                    }
-                }
-                else {
-                    // TODO: modfiy input
-                    input.fileName += "_removedObjects";
-                    yield* nextOperation(operation.operations, input);
-                }
-                break;
             case "extract":
-                if(Array.isArray(input)) {
-                    for (let i = 0; i < input.length; i++) {
-                        input[i].fileName += "_extractedPages";
-                        input[i].buffer = await extractPages(input[i].buffer, operation.values["pagesToExtractArray"]);
-                        yield* nextOperation(operation.operations, input[i]);
-                    }
-                }
-                else {
+                yield * nToN(input, operation, async (input) => {
                     input.fileName += "_extractedPages";
                     input.buffer = await extractPages(input.buffer, operation.values["pagesToExtractArray"]);
-                    yield* nextOperation(operation.operations, input);
-                }
+                });
+
                 break;
             case "split":
-                // TODO: When a split goes into another split function and then into a wait function it might break the done condition, as it will count multiple times.
-                if(Array.isArray(input)) {
-                    for (let i = 0; i < input.length; i++) {
-                        const splitResult = await splitPDF(input[i].buffer, operation.values["pagesToSplitAfterArray"]);
+                // TODO: A split might break the done condition, it may count multiple times. Needs further testing!
 
-                        const splits = [];
-                        for (let j = 0; j < splitResult.length; j++) {
-                            splits.push({
-                                originalFileName: input[i].originalFileName,
-                                fileName: input[i].fileName + "_split" + j,
-                                buffer: splitResult[j],
-                                splitCount: splitResult.length
-                            })
-                        }
-
-                        yield* nextOperation(operation.operations, splits);
-                    }
-                }
-                else {
+                yield * oneToN(input, operation, async (input) => {
                     const splitResult = await splitPDF(input.buffer, operation.values["pagesToSplitAfterArray"]);
 
                     const splits = [];
@@ -117,122 +67,73 @@ export async function * traverseOperations(operations, input) {
                         splits.push({
                             originalFileName: input.originalFileName,
                             fileName: input.fileName + "_split" + j,
-                            buffer: splitResult[j],
-                            splitCount: splitResult.length
+                            buffer: splitResult[j]
                         })
                     }
-                    
-                    yield* nextOperation(operation.operations, splits);
-                }
-                break;
-            case "fillField":
-                console.warn("FillField not implemented yet.")
 
-                if(Array.isArray(input)) {
-                    for (let i = 0; i < input.length; i++) {
-                        // TODO: modfiy input
-                        input[i].fileName += "_filledField";
-                        yield* nextOperation(operation.operations, input[i]);
-                    }
-                }
-                else {
-                    // TODO: modfiy input
-                    input.fileName += "_filledField";
-                    yield* nextOperation(operation.operations, input);
-                }
-                break;
-            case "extractImages":
-                console.warn("ExtractImages not implemented yet.")
-
-                if(Array.isArray(input)) {
-                    for (let i = 0; i < input.length; i++) {
-                        // TODO: modfiy input
-                        input[i].fileName += "_extractedImages";
-                        yield* nextOperation(operation.operations, input[i]);
-                    }
-                }
-                else {
-                    // TODO: modfiy input
-                    input.fileName += "_extractedImages";
-                    yield* nextOperation(operation.operations, input);
-                }
+                    input = splits;
+                });
                 break;
             case "merge":
-                if(Array.isArray(input) && input.length > 1) {
+                yield * nToOne(input, operation, async (input) => {
                     const inputs = input;
                     input = {
                         originalFileName: inputs.map(input => input.originalFileName).join("_and_"),
                         fileName: inputs.map(input => input.fileName).join("_and_") + "_merged",
                         buffer: await mergePDFs(inputs.map(input => input.buffer))
                     }
-                }
-                else {
-                    // Only one input, no need to merge
-                    input.fileName += "_merged";
-                }
-                yield* nextOperation(operation.operations, input);
-                break;
-            case "transform": {
-                console.warn("Transform not implemented yet.")
-                if(Array.isArray(input)) {
-                    for (let i = 0; i < input.length; i++) {
-                        // TODO: modfiy input
-                        input[i].fileName += "_transformed";
-                        yield* nextOperation(operation.operations, input[i]);
-                    }
-                }
-                else {
-                    // TODO: modfiy input
-                    input.fileName += "_transformed";
-                    yield* nextOperation(operation.operations, input);
-                }
-                break;
-            }
-            case "extract":
-                if(Array.isArray(input)) {
-                    for (let i = 0; i < input.length; i++) {
-                        input[i].fileName += "_extractedPages";
-                        input[i].buffer = await extractPages(input[i].buffer, operation.values["pagesToExtractArray"]);
-                        yield* nextOperation(operation.operations, input[i]);
-                    }
-                }
-                else {
-                    input.fileName += "_extractedPages";
-                    input.buffer = await extractPages(input.buffer, operation.values["pagesToExtractArray"]);
-                    yield* nextOperation(operation.operations, input);
-                }
+                });
                 break;
             case "rotate":
-                if(Array.isArray(input)) {
-                    for (let i = 0; i < input.length; i++) {
-                        input[i].fileName += "_turned";
-                        input[i].buffer = await rotatePages(input[i].buffer, operation.values["rotation"]);
-                        yield* nextOperation(operation.operations, input[i]);
-                    }
-                }
-                else {
+                yield * nToN(input, operation, async (input) => {
                     input.fileName += "_turned";
                     input.buffer = await rotatePages(input.buffer, operation.values["rotation"]);
-                    yield* nextOperation(operation.operations, input);
-                }
+                });
                 break;
             case "impose":
-                if(Array.isArray(input)) {
-                    for (let i = 0; i < input.length; i++) {
-                        input[i].fileName += "_imposed";
-                        input[i].buffer = await impose(input[i].buffer, operation.values["nup"], operation.values["format"]);
-                        yield* nextOperation(operation.operations, input[i]);
-                    }
-                }
-                else {
+                yield * nToN(input, operation, async (input) => {
                     input.fileName += "_imposed";
                     input.buffer = await impose(input.buffer, operation.values["nup"], operation.values["format"]);
-                    yield* nextOperation(operation.operations, input);
-                }
+                });
                 break;
             default:
-                console.log("operation type unknown: ", operation.type);
+                throw new Error(`${operation.type} not implemented yet.`);
                 break;
+        }
+    }
+
+    async function * nToOne(input, operation, callback) {
+        if(!Array.isArray(input)) {
+            input = [input];
+        }
+        
+        await callback(input);
+        yield* nextOperation(operation.operations, input);
+    }
+
+    async function * oneToN(input, operation, callback) {
+        if(Array.isArray(input)) {
+            for (let i = 0; i < input.length; i++) {
+                await callback(input[i]);
+            }
+            yield* nextOperation(operation.operations, input);
+        }
+        else {
+            await callback(input);
+            yield* nextOperation(operation.operations, input);
+        }
+    }
+
+    async function * nToN(input, operation, callback) {
+        if(Array.isArray(input)) {
+            for (let i = 0; i < input.length; i++) {
+                await callback(input[i]);
+            }
+            yield* nextOperation(operation.operations, input);
+        }
+        else {
+            await callback(input);
+            yield* nextOperation(operation.operations, input);
         }
     }
 }
