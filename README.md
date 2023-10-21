@@ -96,14 +96,20 @@ Current functions of spdf and their progress in this repo.
 - [ ] Change Metadata
 - [ ] Add Watermark
 
+<br>
+
 - [ ] Remove Pages
 - [ ] Remove Blank Pages
 - [ ] Detect/Split Scanned photos
+
+<br>
 
 - [ ] Repair
 - [ ] Compress
 - [ ] Flatten
 - [ ] Compare/Diff
+
+<br>
 
 - [ ] Sign
 - [ ] Sign with Certificate
@@ -111,12 +117,16 @@ Current functions of spdf and their progress in this repo.
 - [ ] Remove Password
 - [ ] Change Permissions
 
+<br>
+
 - [ ] Image to PDF
 - [ ] Add image
 - [ ] Extract Images
 - [ ] PDF to Image
 - [ ] OCR
-- 
+
+<br>
+
 - [ ] Convert file to PDF
 - [ ] PDF to Text/RTF
 - [ ] PDF to HTML
