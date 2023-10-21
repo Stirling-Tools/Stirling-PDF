@@ -8,9 +8,7 @@ import { organizeWaitOperations } from "./public/organizeWaitOperations.js";
 export async function * traverseOperations(operations, input) {
     const waitOperations = organizeWaitOperations(operations);
     let results = [];
-    for await (const value of nextOperation(operations, input)) {
-        yield value;
-    }
+    yield* nextOperation(operations, input)
     return results;
 
     // TODO: Pult all nextOperation() in the for await, like for "extract"
@@ -30,9 +28,7 @@ export async function * traverseOperations(operations, input) {
         }
     
         for (let i = 0; i < operations.length; i++) {
-            for await (const value of computeOperation(operations[i], structuredClone(input))) {
-                yield value;
-            }
+            yield* computeOperation(operations[i], structuredClone(input));
         }
     }
     
@@ -61,9 +57,7 @@ export async function * traverseOperations(operations, input) {
 
                 waitOperation.waitCount--;
                 if(waitOperation.waitCount == 0) {
-                    for await (const value of nextOperation(waitOperation.doneOperation.operations, waitOperation.input)) {
-                        yield value;
-                    }
+                    yield* nextOperation(waitOperation.doneOperation.operations, waitOperation.input);
                 }
                 break;
             case "removeObjects":
@@ -73,17 +67,13 @@ export async function * traverseOperations(operations, input) {
                     for (let i = 0; i < input.length; i++) {
                         // TODO: modfiy input
                         input[i].fileName += "_removedObjects";
-                        for await (const value of nextOperation(operation.operations, input[i])) {
-                            yield value;
-                        }
+                        yield* nextOperation(operation.operations, input[i]);
                     }
                 }
                 else {
                     // TODO: modfiy input
                     input.fileName += "_removedObjects";
-                    for await (const value of nextOperation(operation.operations, input)) {
-                        yield value;
-                    }
+                    yield* nextOperation(operation.operations, input);
                 }
                 break;
             case "extract":
@@ -91,17 +81,13 @@ export async function * traverseOperations(operations, input) {
                     for (let i = 0; i < input.length; i++) {
                         input[i].fileName += "_extractedPages";
                         input[i].buffer = await extractPages(input[i].buffer, operation.values["pagesToExtractArray"]);
-                        for await (const value of nextOperation(operation.operations, input[i])) {
-                            yield value;
-                        }
+                        yield* nextOperation(operation.operations, input[i]);
                     }
                 }
                 else {
                     input.fileName += "_extractedPages";
                     input.buffer = await extractPages(input.buffer, operation.values["pagesToExtractArray"]);
-                    for await (const value of nextOperation(operation.operations, input)) {
-                        yield value;
-                    }
+                    yield* nextOperation(operation.operations, input);
                 }
                 break;
             case "split":
@@ -120,9 +106,7 @@ export async function * traverseOperations(operations, input) {
                             })
                         }
 
-                        for await (const value of nextOperation(operation.operations, splits)) {
-                            yield value;
-                        }
+                        yield* nextOperation(operation.operations, splits);
                     }
                 }
                 else {
@@ -138,9 +122,7 @@ export async function * traverseOperations(operations, input) {
                         })
                     }
                     
-                    for await (const value of nextOperation(operation.operations, splits)) {
-                        yield value;
-                    }
+                    yield* nextOperation(operation.operations, splits);
                 }
                 break;
             case "fillField":
@@ -150,17 +132,13 @@ export async function * traverseOperations(operations, input) {
                     for (let i = 0; i < input.length; i++) {
                         // TODO: modfiy input
                         input[i].fileName += "_filledField";
-                        for await (const value of nextOperation(operation.operations, input[i])) {
-                            yield value;
-                        }
+                        yield* nextOperation(operation.operations, input[i]);
                     }
                 }
                 else {
                     // TODO: modfiy input
                     input.fileName += "_filledField";
-                    for await (const value of nextOperation(operation.operations, input)) {
-                        yield value;
-                    }
+                    yield* nextOperation(operation.operations, input);
                 }
                 break;
             case "extractImages":
@@ -170,17 +148,13 @@ export async function * traverseOperations(operations, input) {
                     for (let i = 0; i < input.length; i++) {
                         // TODO: modfiy input
                         input[i].fileName += "_extractedImages";
-                        for await (const value of nextOperation(operation.operations, input[i])) {
-                            yield value;
-                        }
+                        yield* nextOperation(operation.operations, input[i]);
                     }
                 }
                 else {
                     // TODO: modfiy input
                     input.fileName += "_extractedImages";
-                    for await (const value of nextOperation(operation.operations, input)) {
-                        yield value;
-                    }
+                    yield* nextOperation(operation.operations, input);
                 }
                 break;
             case "merge":
@@ -196,9 +170,7 @@ export async function * traverseOperations(operations, input) {
                     // Only one input, no need to merge
                     input.fileName += "_merged";
                 }
-                for await (const value of nextOperation(operation.operations, input)) {
-                    yield value;
-                }
+                yield* nextOperation(operation.operations, input);
                 break;
             case "transform": {
                 console.warn("Transform not implemented yet.")
@@ -206,17 +178,13 @@ export async function * traverseOperations(operations, input) {
                     for (let i = 0; i < input.length; i++) {
                         // TODO: modfiy input
                         input[i].fileName += "_transformed";
-                        for await (const value of nextOperation(operation.operations, input[i])) {
-                            yield value;
-                        }
+                        yield* nextOperation(operation.operations, input[i]);
                     }
                 }
                 else {
                     // TODO: modfiy input
                     input.fileName += "_transformed";
-                    for await (const value of nextOperation(operation.operations, input)) {
-                        yield value;
-                    }
+                    yield* nextOperation(operation.operations, input);
                 }
                 break;
             }
@@ -225,17 +193,13 @@ export async function * traverseOperations(operations, input) {
                     for (let i = 0; i < input.length; i++) {
                         input[i].fileName += "_extractedPages";
                         input[i].buffer = await extractPages(input[i].buffer, operation.values["pagesToExtractArray"]);
-                        for await (const value of nextOperation(operation.operations, input[i])) {
-                            yield value;
-                        }
+                        yield* nextOperation(operation.operations, input[i]);
                     }
                 }
                 else {
                     input.fileName += "_extractedPages";
                     input.buffer = await extractPages(input.buffer, operation.values["pagesToExtractArray"]);
-                    for await (const value of nextOperation(operation.operations, input)) {
-                        yield value;
-                    }
+                    yield* nextOperation(operation.operations, input);
                 }
                 break;
             case "rotate":
@@ -243,17 +207,13 @@ export async function * traverseOperations(operations, input) {
                     for (let i = 0; i < input.length; i++) {
                         input[i].fileName += "_turned";
                         input[i].buffer = await rotatePages(input[i].buffer, operation.values["rotation"]);
-                        for await (const value of nextOperation(operation.operations, input[i])) {
-                            yield value;
-                        }
+                        yield* nextOperation(operation.operations, input[i]);
                     }
                 }
                 else {
                     input.fileName += "_turned";
                     input.buffer = await rotatePages(input.buffer, operation.values["rotation"]);
-                    for await (const value of nextOperation(operation.operations, input)) {
-                        yield value;
-                    }
+                    yield* nextOperation(operation.operations, input);
                 }
                 break;
             case "impose":
@@ -261,17 +221,13 @@ export async function * traverseOperations(operations, input) {
                     for (let i = 0; i < input.length; i++) {
                         input[i].fileName += "_imposed";
                         input[i].buffer = await impose(input[i].buffer, operation.values["nup"], operation.values["format"]);
-                        for await (const value of nextOperation(operation.operations, input[i])) {
-                            yield value;
-                        }
+                        yield* nextOperation(operation.operations, input[i]);
                     }
                 }
                 else {
                     input.fileName += "_imposed";
                     input.buffer = await impose(input.buffer, operation.values["nup"], operation.values["format"]);
-                    for await (const value of nextOperation(operation.operations, input)) {
-                        yield value;
-                    }
+                    yield* nextOperation(operation.operations, input);
                 }
                 break;
             default:

@@ -77,50 +77,50 @@ If you are interested in learning about this, take a look at the Example workflo
 
 ### New
 
-[ ] Propper auth using passportjs
-[x] Workflows
-[ ] Node based editing of them.
-[x] Client side PDF-Manipulation
-[ ] Stateful UI
+- [x] Client side PDF-Manipulation
+- [x] Workflows
+- [ ] Stateful UI
+- [ ] Node based editing of them
+- [ ] Propper auth using passportjs
 
 ### Functions
 
 Current functions of spdf and their progress in this repo.
 
-[x] Merge
-[x] Split
-[x] Rotate
-[x] Multi-Page-Layout
-[x] Adjust page size/scale
-[ ] Organize
-[ ] Change Metadata
-[ ] Add Watermark
+- [x] Merge
+- [x] Split
+- [x] Rotate
+- [x] Multi-Page-Layout
+- [x] Adjust page size/scale
+- [ ] Organize
+- [ ] Change Metadata
+- [ ] Add Watermark
 
-[ ] Remove Pages
-[ ] Remove Blank Pages
-[ ] Detect/Split Scanned photos
+- [ ] Remove Pages
+- [ ] Remove Blank Pages
+- [ ] Detect/Split Scanned photos
 
-[ ] Repair
-[ ] Compress
-[ ] Flatten
-[ ] Compare/Diff
+- [ ] Repair
+- [ ] Compress
+- [ ] Flatten
+- [ ] Compare/Diff
 
-[ ] Sign
-[ ] Sign with Certificate
-[ ] Add Password
-[ ] Remove Password
-[ ] Change Permissions
+- [ ] Sign
+- [ ] Sign with Certificate
+- [ ] Add Password
+- [ ] Remove Password
+- [ ] Change Permissions
 
-[ ] Image to PDF
-[ ] Add image
-[ ] Extract Images
-[ ] PDF to Image
-[ ] OCR
-
-[ ] Convert file to PDF
-[ ] PDF to Text/RTF
-[ ] PDF to HTML
-[ ] PDF to XML
+- [ ] Image to PDF
+- [ ] Add image
+- [ ] Extract Images
+- [ ] PDF to Image
+- [ ] OCR
+- 
+- [ ] Convert file to PDF
+- [ ] PDF to Text/RTF
+- [ ] PDF to HTML
+- [ ] PDF to XML
 
 ## Contribute
 
