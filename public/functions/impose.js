@@ -1,6 +1,4 @@
-import * as pdfcpuWraopper from "../wasm/pdfcpu-wrapper-browser.js";
-
-export async function impose(snapshot, nup, format) {
+export async function impose(snapshot, nup, format, pdfcpuWraopper) {
     return await pdfcpuWraopper.oneToOne([
             "pdfcpu.wasm",
             "nup",

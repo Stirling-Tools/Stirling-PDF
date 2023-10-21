@@ -1,9 +1,7 @@
 import { createSubDocument } from "./extractPages.js";
 
-const { PDFDocument, ParseSpeeds } = PDFLib;
-
-export const splitPDF = async (snapshot, splitAfterPageArray) => {
-    const pdfDoc = await PDFDocument.load(snapshot)
+export async function splitPDF(snapshot, splitAfterPageArray, PDFLib) {
+    const pdfDoc = await PDFLib.PDFDocument.load(snapshot)
 
     const numberOfPages = pdfDoc.getPages().length;
 
@@ -13,13 +11,13 @@ export const splitPDF = async (snapshot, splitAfterPageArray) => {
 
     for (let i = 0; i < numberOfPages; i++) {
         if(i > splitAfter && pagesArray.length > 0) {
-            subDocuments.push(await createSubDocument(pdfDoc, pagesArray));
+            subDocuments.push(await createSubDocument(pdfDoc, pagesArray, PDFLib));
             splitAfter = splitAfterPageArray.shift();
             pagesArray = [];
         }
         pagesArray.push(i);        
     }
-    subDocuments.push(await createSubDocument(pdfDoc, pagesArray));
+    subDocuments.push(await createSubDocument(pdfDoc, pagesArray, PDFLib));
     pagesArray = [];
 
     return subDocuments;

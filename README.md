@@ -52,7 +52,7 @@ You can also nest workflows like this:
         {
           "type": "impose",
           "values": {
-            "nup": 2, // 2 pages of the input docuemtn will be put on one page of the output document.
+            "nup": 2, // 2 pages of the input document will be put on one page of the output document.
             "format": "A4L" // A4L -> The page size of the Ouput will be an A4 in Landscape. You can also use other paper formats and "P" for portrait output. 
           },
           "operations": []

@@ -1,9 +1,7 @@
-const { PDFDocument, ParseSpeeds } = PDFLib;
-
-export const scaleContent = async (snapshot, scale_factor) => {
+export async function scaleContent(snapshot, scaleFactor, PDFLib) {
     // Load the original PDF file
-    const pdfDoc = await PDFDocument.load(snapshot, {
-        parseSpeed: ParseSpeeds.Fastest,
+    const pdfDoc = await PDFLib.PDFDocument.load(snapshot, {
+        parseSpeed: PDFLib.ParseSpeeds.Fastest,
     });
 
     const pages = pdfDoc.getPages();
@@ -13,10 +11,10 @@ export const scaleContent = async (snapshot, scale_factor) => {
         const height = page.getHeight();
         
         // Scale content
-        page.scaleContent(scale_factor, scale_factor);
+        page.scaleContent(scaleFactor, scaleFactor);
         const scaled_diff = {
-            width: Math.round(width - scale_factor * width),
-            height: Math.round(height - scale_factor * height),
+            width: Math.round(width - scaleFactor * width),
+            height: Math.round(height - scaleFactor * height),
         };
 
         // Center content in new page format

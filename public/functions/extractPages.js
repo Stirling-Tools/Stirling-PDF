@@ -1,14 +1,12 @@
-const { PDFDocument, ParseSpeeds } = PDFLib;
-
-export const extractPages = async (snapshot, pagesToExtractArray) => {
-    const pdfDoc = await PDFDocument.load(snapshot)
+export async function extractPages(snapshot, pagesToExtractArray, PDFLib) {
+    const pdfDoc = await PDFLib.PDFDocument.load(snapshot)
 
     // TODO: invent a better format for pagesToExtractArray and convert it.
-    return createSubDocument(pdfDoc, pagesToExtractArray);
+    return createSubDocument(pdfDoc, pagesToExtractArray, PDFLib);
 };
 
-export async function createSubDocument(pdfDoc, pagesToExtractArray) {
-    const subDocument = await PDFDocument.create();
+export async function createSubDocument(pdfDoc, pagesToExtractArray, PDFLib) {
+    const subDocument = await PDFLib.PDFDocument.create();
 
     // Check that array max number is not larger pdf pages number
     if(Math.max(...pagesToExtractArray) >= pdfDoc.getPageCount()) {
