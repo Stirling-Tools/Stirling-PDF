@@ -1,0 +1,19 @@
+{
+  "name": "pdfjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@wasmer/wasmfs": "^0.12.0",
+    "archiver": "^6.0.1",
+    "express": "^4.18.2",
+    "express-fileupload": "^1.4.1",
+    "pdf-lib": "^1.17.1"
+  },
+  "type": "module"
+}
