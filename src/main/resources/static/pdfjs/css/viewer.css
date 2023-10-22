@@ -2060,6 +2060,7 @@ input:hover {
   --toolbarButton-editorStamp-icon: url(../images/toolbarButton-editorStamp.svg);
   --toolbarButton-menuArrow-icon: url(../images/toolbarButton-menuArrow.svg);
   --toolbarButton-sidebarToggle-icon: url(../images/toolbarButton-sidebarToggle.svg);
+  --toolbarButton-backToHome-icon: url(../images/toolBarButton-home.svg);
   --toolbarButton-secondaryToolbarToggle-icon: url(../images/toolbarButton-secondaryToolbarToggle.svg);
   --toolbarButton-pageUp-icon: url(../images/toolbarButton-pageUp.svg);
   --toolbarButton-pageDown-icon: url(../images/toolbarButton-pageDown.svg);
@@ -2903,6 +2904,12 @@ body {
   transform: scaleX(var(--dir-factor));
 }
 
+#backToHome::before {
+  -webkit-mask-image: var(--toolbarButton-backToHome-icon);
+  mask-image: var(--toolbarButton-backToHome-icon);
+  transform: scaleX(var(--dir-factor));
+}
+
 #findPrevious::before {
   -webkit-mask-image: var(--findbarButton-previous-icon);
   mask-image: var(--findbarButton-previous-icon);
@@ -2962,6 +2969,11 @@ body {
 :is(#openFile, #secondaryOpenFile)::before {
   -webkit-mask-image: var(--toolbarButton-openFile-icon);
   mask-image: var(--toolbarButton-openFile-icon);
+}
+
+:is(#backToHome, #secondaryBackToHome)::before {
+  -webkit-mask-image: var(--toolbarButton-backToHome-icon);
+  mask-image: var(--toolbarButton-backToHome-icon);
 }
 
 :is(#download, #secondaryDownload)::before {

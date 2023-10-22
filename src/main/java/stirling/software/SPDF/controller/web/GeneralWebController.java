@@ -77,7 +77,7 @@ public class GeneralWebController {
 
     @GetMapping("/view-pdf")
     @Hidden
-    public String ViewPdfForm(Model model) {
+    public String ViewPdfForm2(Model model) {
         model.addAttribute("currentPage", "view-pdf");
         return "view-pdf";
     }
