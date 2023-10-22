@@ -16,7 +16,7 @@ Workflows can be created via the web-ui and then exported or, if you want to bra
 
 To create your own, you have to understand a few key features first. You can also look at more examples our github repository.
 
-``` json
+```json
 {
   "outputOptions": {
     "zip": false
@@ -37,7 +37,7 @@ The workflow above will extract the first (p\[0\]) and third (p\[2\]) page of th
 
 You can also nest workflows like this:
 
-``` json
+```json
 {
   "outputOptions": {
     "zip": false
@@ -75,62 +75,67 @@ If you are interested in learning about this, take a look at the Example workflo
 
 ## Features
 
-### New
+### Rewrite Roadmap
 
-- [x] Client side PDF-Manipulation
-- [x] Workflows
-- [ ] Stateful UI
-- [ ] Node based editing of them
-- [ ] Propper auth using passportjs
+* [x] Client side PDF-Manipulation
+* [x] Workflows
+* [ ] Feature equivalent with S-PDF v1
+* [ ] Stateful UI
+* [ ] Node based editing of Workflows
+* [ ] Propper auth using passportjs
 
 ### Functions
 
 Current functions of spdf and their progress in this repo.
 
-- [x] Merge
-- [x] Split
-- [x] Rotate
-- [x] Multi-Page-Layout
-- [x] Adjust page size/scale
-- [ ] Organize
-- [ ] Change Metadata
-- [ ] Add Watermark
+| Status | Feature                | Description |
+| ------ | ---------------------- | ----------- |
+| ✔️   | Merge                  |             |
+| ✔️   | Split                  |             |
+| ✔️   | Rotate                 |             |
+| ✔️   | Multi-Page-Layout      |             |
+| ✔️   | Adjust page size/scale |             |
+| 🚧    | Organize               |             |
+| 🚧    | Change Metadata        |             |
+| ❌     | Add Watermark          |             |
 
-<br>
+| Status | Feature                     | Description |
+| ------ | --------------------------- | ----------- |
+| ❌     | Remove Pages                |             |
+| ❌     | Remove Blank Pages          |             |
+| ❌     | Detect/Split Scanned photos |             |
 
-- [ ] Remove Pages
-- [ ] Remove Blank Pages
-- [ ] Detect/Split Scanned photos
+| Status | Feature      | Description |
+| ------ | ------------ | ----------- |
+| ❌     | Repair       |             |
+| ❌     | Compress     |             |
+| ❌     | Flatten      |             |
+| ❌     | Compare/Diff |             |
 
-<br>
+| Status | Feature               | Description |
+| ------ | --------------------- | ----------- |
+| ❌     | Sign                  |             |
+| ❌     | Sign with Certificate |             |
+| ❌     | Add Password          |             |
+| ❌     | Remove Password       |             |
+| ❌     | Change Permissions    |             |
 
-- [ ] Repair
-- [ ] Compress
-- [ ] Flatten
-- [ ] Compare/Diff
+| Status | Feature        | Description |
+| ------ | -------------- | ----------- |
+| ❌     | Image to PDF   |             |
+| ❌     | Add image      |             |
+| ❌     | Extract Images |             |
+| ❌     | PDF to Image   |             |
+| ❌     | OCR            |             |
 
-<br>
+| Status | Feature             | Description |
+| ------ | ------------------- | ----------- |
+| ❌     | Convert file to PDF |             |
+| ❌     | PDF to Text/RTF     |             |
+| ❌     | PDF to HTML         |             |
+| ❌     | PDF to XML          |             |
 
-- [ ] Sign
-- [ ] Sign with Certificate
-- [ ] Add Password
-- [ ] Remove Password
-- [ ] Change Permissions
-
-<br>
-
-- [ ] Image to PDF
-- [ ] Add image
-- [ ] Extract Images
-- [ ] PDF to Image
-- [ ] OCR
-
-<br>
-
-- [ ] Convert file to PDF
-- [ ] PDF to Text/RTF
-- [ ] PDF to HTML
-- [ ] PDF to XML
+✔️: Done, 🚧: Started Developement, ❌: Planned Feature
 
 ## Contribute
 
