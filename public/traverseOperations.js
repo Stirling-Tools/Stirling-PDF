@@ -1,5 +1,12 @@
 import { organizeWaitOperations } from "./organizeWaitOperations.js";
 
+/**
+ * 
+ * @param {*} operations 
+ * @param {*} input 
+ * @param {import('./functions.js')} Functions 
+ * @returns 
+ */
 export async function * traverseOperations(operations, input, Functions) {
     const waitOperations = organizeWaitOperations(operations);
     let results = [];
@@ -88,6 +95,12 @@ export async function * traverseOperations(operations, input, Functions) {
                     }
     
                     input = splits;
+                });
+                break;
+            case "editMetadata":
+                yield* nToN(input, operation, async (input) => {
+                    input.fileName += "_metadataEdited";
+                    input.buffer = await Functions.editMetadata(input.buffer, operation.values["metadata"]);
                 });
                 break;
             default:

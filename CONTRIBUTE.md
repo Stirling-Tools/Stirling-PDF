@@ -15,6 +15,8 @@ Backend functions can have different implementations than their frontend counter
 
 Registering functions will also pass them their dependencies for the specific target platform (Node, Browser)
 
+[Traverse Operations](/public/traverseOperations.js)\
+
 ### Backend
 
 [Register Functions](/functions.js)\

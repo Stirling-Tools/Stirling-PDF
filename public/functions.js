@@ -8,6 +8,7 @@ import { rotatePages as dependantRotatePages } from './functions/rotatePages.js'
 import { scaleContent as dependantScaleContent} from './functions/scaleContent.js';
 import { scalePage as dependantScalePage } from './functions/scalePage.js';
 import { splitPDF as dependantSplitPDF } from './functions/splitPDF.js';
+import { editMetadata as dependantEditMetadata} from "./functions/editMetadata.js";
 
 export async function extractPages(snapshot, pagesToExtractArray) {
     return dependantExtractPages(snapshot, pagesToExtractArray, PDFLib);
@@ -35,4 +36,8 @@ export async function scalePage(snapshot, pageSize) {
 
 export async function splitPDF(snapshot, splitAfterPageArray) {
     return dependantSplitPDF(snapshot, splitAfterPageArray, PDFLib);
+}
+
+export async function editMetadata(snapshot, metadata) {
+    return dependantEditMetadata(snapshot, metadata, PDFLib);
 }
