@@ -1,0 +1,5 @@
+/node_modules/
+.env
+/testFiles/
+/ignore/
+*.code-workspace

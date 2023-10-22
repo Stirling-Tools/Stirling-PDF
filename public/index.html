@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <!--TODO: Remove External Dependencies-->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/downloadjs@1.4.7"></script>
+
+    <script src="/wasm/browserfs.min.js"></script>
+
+    <script src="index.js" type="module"></script>
+</head>
+<body>
+    <input type="file" id="pdfFile" accept=".pdf" multiple>
+
+    <ul id="operations">
+
+    </ul>
+
+    <select id="pdfOptions">
+        <option value="scaleContent">Scale Content</option>
+        <option value="changePageSize">Change Page Size</option>
+        <option value="mergePDFs">Merge PDFs</option>
+        <option value="splitPDFs">Split PDFs</option>
+    </select>
+    <button id="addButton">Add</button>
+
+    <button id="doneButton">Done</button>
+</body>
+</html>
