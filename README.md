@@ -32,6 +32,7 @@ Feel free to request any features or bug fixes either in github issues or our [D
 ## **PDF Features**
 
 ### **Page Operations**
+- View and modify PDFs (current support is for annotating, drawing, and adding images).
 - Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages. 
 - Merge multiple PDFs together into a single resultant file. 
 - Split PDFs into multiple files at specified page numbers or extract all pages as individual files. 
@@ -144,7 +145,7 @@ services:
 Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
-Stirling PDF currently supports 18!
+Stirling PDF currently supports 19!
 - English (English) (en_GB)
 - English (US) (en_US)
 - Arabic (العربية) (ar_AR)
@@ -163,6 +164,7 @@ Stirling PDF currently supports 18!
 - Basque (Euskara) (eu_ES)
 - Japanese (日本語) (ja_JP)
 - Dutch (Nederlands) (nl_NL)
+- Greek (el_GR)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
@@ -257,7 +259,6 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 - Folder support with auto scanning to perform operations on
 - Redact text (Via UI not just automated way) 
 - Add Forms
-- Annotations
 - Multi page layout (Stich PDF pages together) support x rows y columns and custom page sizing 
 - Fill forms mannual and automatic 
 
