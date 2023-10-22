@@ -1,0 +1,3591 @@
+/* Copyright 2014 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+:root {
+  --highlight-bg-color: rgba(180, 0, 170, 1);
+  --highlight-selected-bg-color: rgba(0, 100, 0, 1);
+}
+
+@media screen and (forced-colors: active) {
+  :root {
+    --highlight-bg-color: Highlight;
+    --highlight-selected-bg-color: ButtonText;
+  }
+}
+
+.textLayer {
+  position: absolute;
+  text-align: initial;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0.25;
+  line-height: 1;
+  -webkit-text-size-adjust: none;
+  -moz-text-size-adjust: none;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  z-index: 2;
+}
+
+.textLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+
+/* Only necessary in Google Chrome, see issue 14205, and most unfortunately
+ * the problem doesn't show up in "text" reference tests. */
+.textLayer span.markedContent {
+  top: 0;
+  height: 0;
+}
+
+.textLayer .highlight {
+  margin: -1px;
+  padding: 1px;
+  background-color: var(--highlight-bg-color);
+  border-radius: 4px;
+}
+
+.textLayer .highlight.appended {
+  position: initial;
+}
+
+.textLayer .highlight.begin {
+  border-radius: 4px 0 0 4px;
+}
+
+.textLayer .highlight.end {
+  border-radius: 0 4px 4px 0;
+}
+
+.textLayer .highlight.middle {
+  border-radius: 0;
+}
+
+.textLayer .highlight.selected {
+  background-color: var(--highlight-selected-bg-color);
+}
+
+.textLayer ::-moz-selection {
+  background: blue;
+  background: AccentColor; /* stylelint-disable-line declaration-block-no-duplicate-properties */
+}
+
+.textLayer ::selection {
+  background: blue;
+  background: AccentColor; /* stylelint-disable-line declaration-block-no-duplicate-properties */
+}
+
+/* Avoids https://github.com/mozilla/pdf.js/issues/13840 in Chrome */
+.textLayer br::-moz-selection {
+  background: transparent;
+}
+
+.textLayer br::selection {
+  background: transparent;
+}
+
+.textLayer .endOfContent {
+  display: block;
+  position: absolute;
+  inset: 100% 0 0;
+  z-index: -1;
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.textLayer .endOfContent.active {
+  top: 0;
+}
+
+
+:root {
+  --annotation-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
+  --input-focus-border-color: Highlight;
+  --input-focus-outline: 1px solid Canvas;
+  --input-unfocused-border-color: transparent;
+  --input-disabled-border-color: transparent;
+  --input-hover-border-color: black;
+  --link-outline: none;
+}
+
+@media screen and (forced-colors: active) {
+  :root {
+    --input-focus-border-color: CanvasText;
+    --input-unfocused-border-color: ActiveText;
+    --input-disabled-border-color: GrayText;
+    --input-hover-border-color: Highlight;
+    --link-outline: 1.5px solid LinkText;
+    --hcm-highligh-filter: invert(100%);
+  }
+
+  .annotationLayer .textWidgetAnnotation :is(input, textarea):required,
+  .annotationLayer .choiceWidgetAnnotation select:required,
+  .annotationLayer
+  .buttonWidgetAnnotation:is(.checkBox, .radioButton)
+  input:required {
+    outline: 1.5px solid selectedItem;
+  }
+
+  .annotationLayer .linkAnnotation:hover {
+    -webkit-backdrop-filter: var(--hcm-highligh-filter);
+    backdrop-filter: var(--hcm-highligh-filter);
+  }
+
+  .annotationLayer .linkAnnotation > a:hover {
+    opacity: 0 !important;
+    background: none !important;
+    box-shadow: none;
+  }
+
+  .annotationLayer .popupAnnotation .popup {
+    outline: calc(1.5px * var(--scale-factor)) solid CanvasText !important;
+    background-color: ButtonFace !important;
+    color: ButtonText !important;
+  }
+
+  .annotationLayer .highlightArea:hover::after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    -webkit-backdrop-filter: var(--hcm-highligh-filter);
+    backdrop-filter: var(--hcm-highligh-filter);
+    content: "";
+    pointer-events: none;
+  }
+
+  .annotationLayer .popupAnnotation.focused .popup {
+    outline: calc(3px * var(--scale-factor)) solid Highlight !important;
+  }
+}
+
+.annotationLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  transform-origin: 0 0;
+  z-index: 3;
+}
+
+.annotationLayer[data-main-rotation="90"] .norotate {
+  transform: rotate(270deg) translateX(-100%);
+}
+
+.annotationLayer[data-main-rotation="180"] .norotate {
+  transform: rotate(180deg) translate(-100%, -100%);
+}
+
+.annotationLayer[data-main-rotation="270"] .norotate {
+  transform: rotate(90deg) translateY(-100%);
+}
+
+.annotationLayer canvas {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.annotationLayer section {
+  position: absolute;
+  text-align: initial;
+  pointer-events: auto;
+  box-sizing: border-box;
+  transform-origin: 0 0;
+}
+
+.annotationLayer .linkAnnotation {
+  outline: var(--link-outline);
+}
+
+.annotationLayer :is(.linkAnnotation, .buttonWidgetAnnotation.pushButton) > a {
+  position: absolute;
+  font-size: 1em;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.annotationLayer
+:is(.linkAnnotation, .buttonWidgetAnnotation.pushButton):not(.hasBorder)
+> a:hover {
+  opacity: 0.2;
+  background-color: rgba(255, 255, 0, 1);
+  box-shadow: 0 2px 10px rgba(255, 255, 0, 1);
+}
+
+.annotationLayer .linkAnnotation.hasBorder:hover {
+  background-color: rgba(255, 255, 0, 0.2);
+}
+
+.annotationLayer .hasBorder {
+  background-size: 100% 100%;
+}
+
+.annotationLayer .textAnnotation img {
+  position: absolute;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.annotationLayer .textWidgetAnnotation :is(input, textarea),
+.annotationLayer .choiceWidgetAnnotation select,
+.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input {
+  background-image: var(--annotation-unfocused-field-background);
+  border: 2px solid var(--input-unfocused-border-color);
+  box-sizing: border-box;
+  font: calc(9px * var(--scale-factor)) sans-serif;
+  height: 100%;
+  margin: 0;
+  vertical-align: top;
+  width: 100%;
+}
+
+.annotationLayer .textWidgetAnnotation :is(input, textarea):required,
+.annotationLayer .choiceWidgetAnnotation select:required,
+.annotationLayer
+.buttonWidgetAnnotation:is(.checkBox, .radioButton)
+input:required {
+  outline: 1.5px solid red;
+}
+
+.annotationLayer .choiceWidgetAnnotation select option {
+  padding: 0;
+}
+
+.annotationLayer .buttonWidgetAnnotation.radioButton input {
+  border-radius: 50%;
+}
+
+.annotationLayer .textWidgetAnnotation textarea {
+  resize: none;
+}
+
+.annotationLayer .textWidgetAnnotation :is(input, textarea)[disabled],
+.annotationLayer .choiceWidgetAnnotation select[disabled],
+.annotationLayer
+.buttonWidgetAnnotation:is(.checkBox, .radioButton)
+input[disabled] {
+  background: none;
+  border: 2px solid var(--input-disabled-border-color);
+  cursor: not-allowed;
+}
+
+.annotationLayer .textWidgetAnnotation :is(input, textarea):hover,
+.annotationLayer .choiceWidgetAnnotation select:hover,
+.annotationLayer
+.buttonWidgetAnnotation:is(.checkBox, .radioButton)
+input:hover {
+  border: 2px solid var(--input-hover-border-color);
+}
+
+.annotationLayer .textWidgetAnnotation :is(input, textarea):hover,
+.annotationLayer .choiceWidgetAnnotation select:hover,
+.annotationLayer .buttonWidgetAnnotation.checkBox input:hover {
+  border-radius: 2px;
+}
+
+.annotationLayer .textWidgetAnnotation :is(input, textarea):focus,
+.annotationLayer .choiceWidgetAnnotation select:focus {
+  background: none;
+  border: 2px solid var(--input-focus-border-color);
+  border-radius: 2px;
+  outline: var(--input-focus-outline);
+}
+
+.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) :focus {
+  background-image: none;
+  background-color: transparent;
+}
+
+.annotationLayer .buttonWidgetAnnotation.checkBox :focus {
+  border: 2px solid var(--input-focus-border-color);
+  border-radius: 2px;
+  outline: var(--input-focus-outline);
+}
+
+.annotationLayer .buttonWidgetAnnotation.radioButton :focus {
+  border: 2px solid var(--input-focus-border-color);
+  outline: var(--input-focus-outline);
+}
+
+.annotationLayer .buttonWidgetAnnotation.checkBox input:checked::before,
+.annotationLayer .buttonWidgetAnnotation.checkBox input:checked::after,
+.annotationLayer .buttonWidgetAnnotation.radioButton input:checked::before {
+  background-color: CanvasText;
+  content: "";
+  display: block;
+  position: absolute;
+}
+
+.annotationLayer .buttonWidgetAnnotation.checkBox input:checked::before,
+.annotationLayer .buttonWidgetAnnotation.checkBox input:checked::after {
+  height: 80%;
+  left: 45%;
+  width: 1px;
+}
+
+.annotationLayer .buttonWidgetAnnotation.checkBox input:checked::before {
+  transform: rotate(45deg);
+}
+
+.annotationLayer .buttonWidgetAnnotation.checkBox input:checked::after {
+  transform: rotate(-45deg);
+}
+
+.annotationLayer .buttonWidgetAnnotation.radioButton input:checked::before {
+  border-radius: 50%;
+  height: 50%;
+  left: 30%;
+  top: 20%;
+  width: 50%;
+}
+
+.annotationLayer .textWidgetAnnotation input.comb {
+  font-family: monospace;
+  padding-left: 2px;
+  padding-right: 0;
+}
+
+.annotationLayer .textWidgetAnnotation input.comb:focus {
+  /*
+   * Letter spacing is placed on the right side of each character. Hence, the
+   * letter spacing of the last character may be placed outside the visible
+   * area, causing horizontal scrolling. We avoid this by extending the width
+   * when the element has focus and revert this when it loses focus.
+   */
+  width: 103%;
+}
+
+.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.annotationLayer .fileAttachmentAnnotation .popupTriggerArea {
+  height: 100%;
+  width: 100%;
+}
+
+.annotationLayer .popupAnnotation {
+  position: absolute;
+  font-size: calc(9px * var(--scale-factor));
+  pointer-events: none;
+  width: -moz-max-content;
+  width: max-content;
+  max-width: 45%;
+  height: auto;
+}
+
+.annotationLayer .popup {
+  background-color: rgba(255, 255, 153, 1);
+  box-shadow: 0 calc(2px * var(--scale-factor)) calc(5px * var(--scale-factor)) rgba(136, 136, 136, 1);
+  border-radius: calc(2px * var(--scale-factor));
+  outline: 1.5px solid rgb(255, 255, 74);
+  padding: calc(6px * var(--scale-factor));
+  cursor: pointer;
+  font: message-box;
+  white-space: normal;
+  word-wrap: break-word;
+  pointer-events: auto;
+}
+
+.annotationLayer .popupAnnotation.focused .popup {
+  outline-width: 3px;
+}
+
+.annotationLayer .popup * {
+  font-size: calc(9px * var(--scale-factor));
+}
+
+.annotationLayer .popup > .header {
+  display: inline-block;
+}
+
+.annotationLayer .popup > .header h1 {
+  display: inline;
+}
+
+.annotationLayer .popup > .header .popupDate {
+  display: inline-block;
+  margin-left: calc(5px * var(--scale-factor));
+  width: -moz-fit-content;
+  width: fit-content;
+}
+
+.annotationLayer .popupContent {
+  border-top: 1px solid rgba(51, 51, 51, 1);
+  margin-top: calc(2px * var(--scale-factor));
+  padding-top: calc(2px * var(--scale-factor));
+}
+
+.annotationLayer .richText > * {
+  white-space: pre-wrap;
+  font-size: calc(9px * var(--scale-factor));
+}
+
+.annotationLayer .popupTriggerArea {
+  cursor: pointer;
+}
+
+.annotationLayer section svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.annotationLayer .annotationTextContent {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  color: transparent;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.annotationLayer .annotationTextContent span {
+  width: 100%;
+  display: inline-block;
+}
+
+.annotationLayer svg.quadrilateralsContainer {
+  contain: strict;
+  width: 0;
+  height: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+
+:root {
+  --xfa-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
+  --xfa-focus-outline: auto;
+}
+
+@media screen and (forced-colors: active) {
+  :root {
+    --xfa-focus-outline: 2px solid CanvasText;
+  }
+
+  .xfaLayer *:required {
+    outline: 1.5px solid selectedItem;
+  }
+}
+
+.xfaLayer {
+  background-color: transparent;
+}
+
+.xfaLayer .highlight {
+  margin: -1px;
+  padding: 1px;
+  background-color: rgba(239, 203, 237, 1);
+  border-radius: 4px;
+}
+
+.xfaLayer .highlight.appended {
+  position: initial;
+}
+
+.xfaLayer .highlight.begin {
+  border-radius: 4px 0 0 4px;
+}
+
+.xfaLayer .highlight.end {
+  border-radius: 0 4px 4px 0;
+}
+
+.xfaLayer .highlight.middle {
+  border-radius: 0;
+}
+
+.xfaLayer .highlight.selected {
+  background-color: rgba(203, 223, 203, 1);
+}
+
+.xfaPage {
+  overflow: hidden;
+  position: relative;
+}
+
+.xfaContentarea {
+  position: absolute;
+}
+
+.xfaPrintOnly {
+  display: none;
+}
+
+.xfaLayer {
+  position: absolute;
+  text-align: initial;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  line-height: 1.2;
+}
+
+.xfaLayer * {
+  color: inherit;
+  font: inherit;
+  font-style: inherit;
+  font-weight: inherit;
+  font-kerning: inherit;
+  letter-spacing: -0.01px;
+  text-align: inherit;
+  text-decoration: inherit;
+  box-sizing: border-box;
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
+  pointer-events: auto;
+  line-height: inherit;
+}
+
+.xfaLayer *:required {
+  outline: 1.5px solid red;
+}
+
+.xfaLayer div,
+.xfaLayer svg,
+.xfaLayer svg * {
+  pointer-events: none;
+}
+
+.xfaLayer a {
+  color: blue;
+}
+
+.xfaRich li {
+  margin-left: 3em;
+}
+
+.xfaFont {
+  color: black;
+  font-weight: normal;
+  font-kerning: none;
+  font-size: 10px;
+  font-style: normal;
+  letter-spacing: 0;
+  text-decoration: none;
+  vertical-align: 0;
+}
+
+.xfaCaption {
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.xfaCaptionForCheckButton {
+  overflow: hidden;
+  flex: 1 1 auto;
+}
+
+.xfaLabel {
+  height: 100%;
+  width: 100%;
+}
+
+.xfaLeft {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.xfaRight {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+}
+
+:is(.xfaLeft, .xfaRight) > :is(.xfaCaption, .xfaCaptionForCheckButton) {
+  max-height: 100%;
+}
+
+.xfaTop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.xfaBottom {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+}
+
+:is(.xfaTop, .xfaBottom) > :is(.xfaCaption, .xfaCaptionForCheckButton) {
+  width: 100%;
+}
+
+.xfaBorder {
+  background-color: transparent;
+  position: absolute;
+  pointer-events: none;
+}
+
+.xfaWrapped {
+  width: 100%;
+  height: 100%;
+}
+
+:is(.xfaTextfield, .xfaSelect):focus {
+  background-image: none;
+  background-color: transparent;
+  outline: var(--xfa-focus-outline);
+  outline-offset: -1px;
+}
+
+:is(.xfaCheckbox, .xfaRadio):focus {
+  outline: var(--xfa-focus-outline);
+}
+
+.xfaTextfield,
+.xfaSelect {
+  height: 100%;
+  width: 100%;
+  flex: 1 1 auto;
+  border: none;
+  resize: none;
+  background-image: var(--xfa-unfocused-field-background);
+}
+
+.xfaSelect {
+  padding-inline: 2px;
+}
+
+:is(.xfaTop, .xfaBottom) > :is(.xfaTextfield, .xfaSelect) {
+  flex: 0 1 auto;
+}
+
+.xfaButton {
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  border: none;
+  text-align: center;
+}
+
+.xfaLink {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.xfaCheckbox,
+.xfaRadio {
+  width: 100%;
+  height: 100%;
+  flex: 0 0 auto;
+  border: none;
+}
+
+.xfaRich {
+  white-space: pre-wrap;
+  width: 100%;
+  height: 100%;
+}
+
+.xfaImage {
+  -o-object-position: left top;
+  object-position: left top;
+  -o-object-fit: contain;
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+}
+
+.xfaLrTb,
+.xfaRlTb,
+.xfaTb {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.xfaLr {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.xfaRl {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: stretch;
+}
+
+.xfaTb > div {
+  justify-content: left;
+}
+
+.xfaPosition {
+  position: relative;
+}
+
+.xfaArea {
+  position: relative;
+}
+
+.xfaValignMiddle {
+  display: flex;
+  align-items: center;
+}
+
+.xfaTable {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.xfaTable .xfaRow {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.xfaTable .xfaRlRow {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: stretch;
+  flex: 1;
+}
+
+.xfaTable .xfaRlRow > div {
+  flex: 1;
+}
+
+:is(.xfaNonInteractive, .xfaDisabled, .xfaReadOnly) :is(input, textarea) {
+  background: initial;
+}
+
+@media print {
+  .xfaTextfield,
+  .xfaSelect {
+    background: transparent;
+  }
+
+  .xfaSelect {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    text-indent: 1px;
+    text-overflow: "";
+  }
+}
+
+/* Ignored in GECKOVIEW builds: */
+
+:root {
+  --outline-width: 2px;
+  --outline-color: #0060df;
+  --outline-around-width: 1px;
+  --outline-around-color: #f0f0f4;
+  --hover-outline-around-color: var(--outline-around-color);
+  --focus-outline: solid var(--outline-width) var(--outline-color);
+  --unfocus-outline: solid var(--outline-width) transparent;
+  --focus-outline-around: solid var(--outline-around-width) var(--outline-around-color);
+  --hover-outline-color: #8f8f9d;
+  --hover-outline: solid var(--outline-width) var(--hover-outline-color);
+  --hover-outline-around: solid var(--outline-around-width) var(--hover-outline-around-color);
+  --freetext-line-height: 1.35;
+  --freetext-padding: 2px;
+  --resizer-bg-color: var(--outline-color);
+  --resizer-size: 6px;
+  --resizer-shift: calc(
+          0px - (var(--outline-width) + var(--resizer-size)) / 2 -
+          var(--outline-around-width)
+  );
+  --editorFreeText-editing-cursor: text;
+  --editorInk-editing-cursor: url(../images/cursor-editorInk.svg) 0 16, pointer;
+
+  --alt-text-opacity: 0.8;
+  --alt-text-add-image: url(../images/altText_add.svg);
+  --alt-text-done-image: url(../images/altText_done.svg);
+  --alt-text-bg-color: rgba(43, 42, 51, var(--alt-text-opacity));
+  --alt-text-fg-color: #fbfbfe;
+  --alt-text-border-color: var(--alt-text-bg-color);
+  --alt-text-hover-bg-color: rgba(82, 82, 94, var(--alt-text-opacity));
+  --alt-text-hover-fg-color: var(--alt-text-fg-color);
+  --alt-text-hover-border-color: var(--alt-text-hover-bg-color);
+  --alt-text-active-bg-color: rgba(91, 91, 102, var(--alt-text-opacity));
+  --alt-text-active-fg-color: var(--alt-text-fg-color);
+  --alt-text-active-border-color: var(--alt-text-hover-bg-color);
+  --alt-text-focus-outline-color: #0060df;
+  --alt-text-focus-border-color: #f0f0f4;
+  --alt-text-shadow: 0 2px 6px 0 rgba(28, 27, 34, 0.5);
+}
+
+@media (-webkit-min-device-pixel-ratio: 1.1), (min-resolution: 1.1dppx) {
+  :root {
+    --editorFreeText-editing-cursor: url(../images/cursor-editorFreeText.svg) 0 16,
+    text;
+  }
+}
+
+@media screen and (forced-colors: active) {
+  :root {
+    --outline-color: CanvasText;
+    --outline-around-color: ButtonFace;
+    --resizer-bg-color: ButtonText;
+    --hover-outline-color: Highlight;
+    --hover-outline-around-color: SelectedItemText;
+
+    --alt-text-bg-color: Canvas;
+    --alt-text-fg-color: ButtonText;
+    --alt-text-border-color: ButtonText;
+    --alt-text-hover-bg-color: Canvas;
+    --alt-text-hover-fg-color: SelectedItem;
+    --alt-text-hover-border-color: SelectedItem;
+    --alt-text-active-bg-color: ButtonFace;
+    --alt-text-active-fg-color: SelectedItem;
+    --alt-text-active-border-color: ButtonText;
+    --alt-text-focus-outline-color: CanvasText;
+    --alt-text-focus-border-color: ButtonText;
+    --alt-text-shadow: none;
+    --alt-text-opacity: 1;
+  }
+}
+
+[data-editor-rotation="90"] {
+  transform: rotate(90deg);
+}
+
+[data-editor-rotation="180"] {
+  transform: rotate(180deg);
+}
+
+[data-editor-rotation="270"] {
+  transform: rotate(270deg);
+}
+
+.annotationEditorLayer {
+  background: transparent;
+  position: absolute;
+  inset: 0;
+  font-size: calc(100px * var(--scale-factor));
+  transform-origin: 0 0;
+  cursor: auto;
+  z-index: 4;
+}
+
+.annotationEditorLayer.waiting {
+  content: "";
+  cursor: wait;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.annotationEditorLayer.freeTextEditing {
+  cursor: var(--editorFreeText-editing-cursor);
+}
+
+.annotationEditorLayer.inkEditing {
+  cursor: var(--editorInk-editing-cursor);
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) {
+  position: absolute;
+  background: transparent;
+  z-index: 1;
+  transform-origin: 0 0;
+  cursor: auto;
+  max-width: 100%;
+  max-height: 100%;
+  border: var(--unfocus-outline);
+}
+
+.annotationEditorLayer .draggable.selectedEditor:is(.freeTextEditor, .inkEditor, .stampEditor) {
+  cursor: move;
+}
+
+.annotationEditorLayer .selectedEditor:is(.freeTextEditor, .inkEditor, .stampEditor) {
+  border: var(--focus-outline);
+  outline: var(--focus-outline-around);
+}
+
+.annotationEditorLayer .selectedEditor:is(.freeTextEditor, .inkEditor, .stampEditor)::before {
+  /*
+    This is a workaround for the lack of support for stripes(...) (see
+    https://drafts.csswg.org/css-images-4/#stripes).
+    The outline should be composed of 1px white, 2px blue and 1px white.
+    This could be achieved in different ways:
+      - using a linear-gradient;
+      - using a box-shadow;
+      - using an outline on the selected element and an outline+border on
+        the ::before pseudo-element.
+    All these options lead to incorrect rendering likely due to rounding
+    issues.
+    That said it doesn't mean that the current is ideal, but it's the best
+    we could come up with for the moment.
+    One drawback of this approach is that we use a border on the selected
+    element which means that we must take care of it when positioning the
+    div in js (see AnnotationEditor._borderLineWidth in editor.js).
+  */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--focus-outline-around);
+  pointer-events: none;
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor):hover:not(.selectedEditor) {
+  border: var(--hover-outline);
+  outline: var(--hover-outline-around);
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor):hover:not(.selectedEditor)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--focus-outline-around);
+}
+
+.annotationEditorLayer .freeTextEditor {
+  padding: calc(var(--freetext-padding) * var(--scale-factor));
+  width: auto;
+  height: auto;
+  touch-action: none;
+}
+
+.annotationEditorLayer .freeTextEditor .internal {
+  background: transparent;
+  border: none;
+  inset: 0;
+  overflow: visible;
+  white-space: nowrap;
+  font: 10px sans-serif;
+  line-height: var(--freetext-line-height);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.annotationEditorLayer .freeTextEditor .overlay {
+  position: absolute;
+  display: none;
+  background: transparent;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.annotationEditorLayer .freeTextEditor .overlay.enabled {
+  display: block;
+}
+
+.annotationEditorLayer .freeTextEditor .internal:empty::before {
+  content: attr(default-content);
+  color: gray;
+}
+
+.annotationEditorLayer .freeTextEditor .internal:focus {
+  outline: none;
+  -webkit-user-select: auto;
+  -moz-user-select: auto;
+  user-select: auto;
+}
+
+.annotationEditorLayer .inkEditor {
+  width: 100%;
+  height: 100%;
+}
+
+.annotationEditorLayer .inkEditor.editing {
+  cursor: inherit;
+}
+
+.annotationEditorLayer .inkEditor .inkEditorCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.annotationEditorLayer .stampEditor {
+  width: auto;
+  height: auto;
+}
+
+.annotationEditorLayer .stampEditor canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers {
+  position: absolute;
+  inset: 0;
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers.hidden {
+  display: none;
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer {
+  width: var(--resizer-size);
+  height: var(--resizer-size);
+  background: content-box var(--resizer-bg-color);
+  border: var(--focus-outline-around);
+  border-radius: 2px;
+  position: absolute;
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.topLeft {
+  top: var(--resizer-shift);
+  left: var(--resizer-shift);
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.topMiddle {
+  top: var(--resizer-shift);
+  left: calc(50% + var(--resizer-shift));
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.topRight {
+  top: var(--resizer-shift);
+  right: var(--resizer-shift);
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.middleRight {
+  top: calc(50% + var(--resizer-shift));
+  right: var(--resizer-shift);
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.bottomRight {
+  bottom: var(--resizer-shift);
+  right: var(--resizer-shift);
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.bottomMiddle {
+  bottom: var(--resizer-shift);
+  left: calc(50% + var(--resizer-shift));
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.bottomLeft {
+  bottom: var(--resizer-shift);
+  left: var(--resizer-shift);
+}
+
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.middleLeft {
+  top: calc(50% + var(--resizer-shift));
+  left: var(--resizer-shift);
+}
+
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.topLeft,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.topLeft,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.topLeft,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.topLeft,
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.bottomRight,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.bottomRight,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.bottomRight,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.bottomRight {
+  cursor: nwse-resize;
+}
+
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.topMiddle,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.topMiddle,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.topMiddle,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.topMiddle,
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.bottomMiddle,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.bottomMiddle,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.bottomMiddle,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.bottomMiddle {
+  cursor: ns-resize;
+}
+
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.topRight,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.topRight,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.topRight,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.topRight,
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.bottomLeft,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.bottomLeft,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.bottomLeft,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.bottomLeft {
+  cursor: nesw-resize;
+}
+
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.middleRight,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.middleRight,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.middleRight,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.middleRight,
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.middleLeft,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.middleLeft,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.middleLeft,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.middleLeft {
+  cursor: ew-resize;
+}
+
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.topLeft,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.topLeft,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.topLeft,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.topLeft,
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.bottomRight,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.bottomRight,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.bottomRight,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.bottomRight {
+  cursor: nesw-resize;
+}
+
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.topMiddle,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.topMiddle,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.topMiddle,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.topMiddle,
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.bottomMiddle,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.bottomMiddle,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.bottomMiddle,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.bottomMiddle {
+  cursor: ew-resize;
+}
+
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.topRight,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.topRight,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.topRight,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.topRight,
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.bottomLeft,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.bottomLeft,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.bottomLeft,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.bottomLeft {
+  cursor: nwse-resize;
+}
+
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.middleRight,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.middleRight,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.middleRight,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.middleRight,
+.annotationEditorLayer[data-main-rotation="0"]
+:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.middleLeft,
+.annotationEditorLayer[data-main-rotation="90"]
+:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.middleLeft,
+.annotationEditorLayer[data-main-rotation="180"]
+:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.middleLeft,
+.annotationEditorLayer[data-main-rotation="270"]
+:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.middleLeft {
+  cursor: ns-resize;
+}
+
+.annotationEditorLayer
+:is(
+      [data-main-rotation="0"] [data-editor-rotation="90"],
+      [data-main-rotation="90"] [data-editor-rotation="0"],
+      [data-main-rotation="180"] [data-editor-rotation="270"],
+      [data-main-rotation="270"] [data-editor-rotation="180"]
+    ) .altText {
+  rotate: 270deg;
+}
+
+[dir="ltr"] .annotationEditorLayer
+:is(
+      [data-main-rotation="0"] [data-editor-rotation="90"],
+      [data-main-rotation="90"] [data-editor-rotation="0"],
+      [data-main-rotation="180"] [data-editor-rotation="270"],
+      [data-main-rotation="270"] [data-editor-rotation="180"]
+    ) .altText {
+  inset-inline-start: calc(100% - 8px);
+}
+
+[dir="ltr"] .annotationEditorLayer
+:is(
+      [data-main-rotation="0"] [data-editor-rotation="90"],
+      [data-main-rotation="90"] [data-editor-rotation="0"],
+      [data-main-rotation="180"] [data-editor-rotation="270"],
+      [data-main-rotation="270"] [data-editor-rotation="180"]
+    ) .altText.small {
+  inset-inline-start: calc(100% + 8px);
+  inset-block-start: 100%;
+}
+
+[dir="rtl"] .annotationEditorLayer
+:is(
+      [data-main-rotation="0"] [data-editor-rotation="90"],
+      [data-main-rotation="90"] [data-editor-rotation="0"],
+      [data-main-rotation="180"] [data-editor-rotation="270"],
+      [data-main-rotation="270"] [data-editor-rotation="180"]
+    ) .altText {
+  inset-block-end: calc(100% - 8px);
+}
+
+[dir="rtl"] .annotationEditorLayer
+:is(
+      [data-main-rotation="0"] [data-editor-rotation="90"],
+      [data-main-rotation="90"] [data-editor-rotation="0"],
+      [data-main-rotation="180"] [data-editor-rotation="270"],
+      [data-main-rotation="270"] [data-editor-rotation="180"]
+    ) .altText.small {
+  inset-inline-start: -8px;
+  inset-block-start: 0;
+}
+
+.annotationEditorLayer
+:is(
+      [data-main-rotation="0"] [data-editor-rotation="180"],
+      [data-main-rotation="90"] [data-editor-rotation="90"],
+      [data-main-rotation="180"] [data-editor-rotation="0"],
+      [data-main-rotation="270"] [data-editor-rotation="270"]
+    ) .altText {
+  rotate: 180deg;
+
+  inset-block-end: calc(100% - 8px);
+  inset-inline-start: calc(100% - 8px);
+}
+
+.annotationEditorLayer
+:is(
+      [data-main-rotation="0"] [data-editor-rotation="180"],
+      [data-main-rotation="90"] [data-editor-rotation="90"],
+      [data-main-rotation="180"] [data-editor-rotation="0"],
+      [data-main-rotation="270"] [data-editor-rotation="270"]
+    ) .altText.small {
+  inset-inline-start: 100%;
+  inset-block-start: -8px;
+}
+
+.annotationEditorLayer
+:is(
+      [data-main-rotation="0"] [data-editor-rotation="270"],
+      [data-main-rotation="90"] [data-editor-rotation="180"],
+      [data-main-rotation="180"] [data-editor-rotation="90"],
+      [data-main-rotation="270"] [data-editor-rotation="0"]
+    ) .altText {
+  rotate: 90deg;
+}
+
+[dir="ltr"] .annotationEditorLayer
+:is(
+      [data-main-rotation="0"] [data-editor-rotation="270"],
+      [data-main-rotation="90"] [data-editor-rotation="180"],
+      [data-main-rotation="180"] [data-editor-rotation="90"],
+      [data-main-rotation="270"] [data-editor-rotation="0"]
+    ) .altText {
+  inset-block-end: calc(100% - 8px);
+}
+
+[dir="ltr"] .annotationEditorLayer
+:is(
+      [data-main-rotation="0"] [data-editor-rotation="270"],
+      [data-main-rotation="90"] [data-editor-rotation="180"],
+      [data-main-rotation="180"] [data-editor-rotation="90"],
+      [data-main-rotation="270"] [data-editor-rotation="0"]
+    ) .altText.small {
+  inset-inline-start: -8px;
+  inset-block-start: 0;
+}
+
+[dir="rtl"] .annotationEditorLayer
+:is(
+      [data-main-rotation="0"] [data-editor-rotation="270"],
+      [data-main-rotation="90"] [data-editor-rotation="180"],
+      [data-main-rotation="180"] [data-editor-rotation="90"],
+      [data-main-rotation="270"] [data-editor-rotation="0"]
+    ) .altText {
+  inset-inline-start: calc(100% - 8px);
+}
+
+[dir="rtl"] .annotationEditorLayer
+:is(
+      [data-main-rotation="0"] [data-editor-rotation="270"],
+      [data-main-rotation="90"] [data-editor-rotation="180"],
+      [data-main-rotation="180"] [data-editor-rotation="90"],
+      [data-main-rotation="270"] [data-editor-rotation="0"]
+    ) .altText.small {
+  inset-inline-start: calc(100% + 8px);
+  inset-block-start: 100%;
+}
+
+.altText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 4px;
+  width: auto;
+  height: 24px;
+  min-width: 88px;
+  z-index: 1;
+  pointer-events: all;
+
+  color: var(--alt-text-fg-color);
+  font: menu;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--alt-text-border-color);
+  background-color: var(--alt-text-bg-color);
+  box-shadow: var(--alt-text-shadow);
+
+  position: absolute;
+  inset-block-end: 8px;
+  inset-inline-start: 8px;
+}
+
+[dir="ltr"] .altText {
+  transform-origin: 0 100%;
+}
+
+[dir="rtl"] .altText {
+  transform-origin: 100% 100%;
+}
+
+.altText.small {
+
+  inset-block-end: unset;
+  inset-inline-start: 0;
+  inset-block-start: calc(100% + 8px);
+}
+
+[dir="ltr"] .altText.small {
+  transform-origin: 0 0;
+}
+
+[dir="rtl"] .altText.small {
+  transform-origin: 100% 0;
+}
+
+.altText:hover {
+  background-color: var(--alt-text-hover-bg-color);
+  border-color: var(--alt-text-hover-border-color);
+  color: var(--alt-text-hover-fg-color);
+  cursor: pointer;
+}
+
+.altText:hover::before {
+  background-color: var(--alt-text-hover-fg-color);
+}
+
+.altText:active {
+  background-color: var(--alt-text-active-bg-color);
+  border-color: var(--alt-text-active-border-color);
+  color: var(--alt-text-active-fg-color);
+}
+
+.altText:active::before {
+  background-color: var(--alt-text-active-fg-color);
+}
+
+.altText:focus-visible {
+  outline: 2px solid var(--alt-text-focus-outline-color);
+  border-color: var(--alt-text-focus-border-color);
+}
+
+.altText::before {
+  content: "";
+  -webkit-mask-image: var(--alt-text-add-image);
+  mask-image: var(--alt-text-add-image);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  display: inline-block;
+  width: 12px;
+  height: 13px;
+  background-color: var(--alt-text-fg-color);
+  margin-inline-end: 4px;
+}
+
+.altText.done::before {
+  -webkit-mask-image: var(--alt-text-done-image);
+  mask-image: var(--alt-text-done-image);
+}
+
+.altText .tooltip {
+  display: none;
+}
+
+.altText .tooltip.show {
+  --alt-text-tooltip-bg: #f0f0f4;
+  --alt-text-tooltip-fg: #15141a;
+  --alt-text-tooltip-border: #8f8f9d;
+  --alt-text-tooltip-shadow: 0px 2px 6px 0px rgba(58, 57, 68, 0.2);
+
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: calc(100% + 2px);
+  inset-inline-start: 0;
+  padding-block: 2px 3px;
+  padding-inline: 3px;
+  max-width: 300px;
+  width: -moz-max-content;
+  width: max-content;
+  height: auto;
+  font-size: 12px;
+
+  border: 0.5px solid var(--alt-text-tooltip-border);
+  background: var(--alt-text-tooltip-bg);
+  box-shadow: var(--alt-text-tooltip-shadow);
+  color: var(--alt-text-tooltip-fg);
+
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+
+  .altText .tooltip.show {
+    --alt-text-tooltip-bg: #1c1b22;
+    --alt-text-tooltip-fg: #fbfbfe;
+    --alt-text-tooltip-shadow: 0px 2px 6px 0px #15141a;
+  }
+}
+
+@media screen and (forced-colors: active) {
+
+  .altText .tooltip.show {
+    --alt-text-tooltip-bg: Canvas;
+    --alt-text-tooltip-fg: CanvasText;
+    --alt-text-tooltip-border: CanvasText;
+    --alt-text-tooltip-shadow: none;
+  }
+}
+
+#altTextDialog {
+  --dialog-bg-color: white;
+  --dialog-border-color: white;
+  --dialog-shadow: 0 2px 14px 0 rgba(58, 57, 68, 0.2);
+  --text-primary-color: #15141a;
+  --text-secondary-color: #5b5b66;
+  --hover-filter: brightness(0.9);
+  --focus-ring-color: #0060df;
+  --focus-ring-outline: 2px solid var(--focus-ring-color);
+
+  --textarea-border-color: #8f8f9d;
+  --textarea-bg-color: white;
+  --textarea-fg-color: var(--text-secondary-color);
+
+  --radio-bg-color: #f0f0f4;
+  --radio-checked-bg-color: #fbfbfe;
+  --radio-border-color: #8f8f9d;
+  --radio-checked-border-color: #0060df;
+
+  --button-cancel-bg-color: #f0f0f4;
+  --button-cancel-fg-color: var(--text-primary-color);
+  --button-cancel-border-color: var(--button-cancel-bg-color);
+  --button-cancel-hover-bg-color: var(--button-cancel-bg-color);
+  --button-cancel-hover-fg-color: var(--button-cancel-fg-color);
+  --button-cancel-hover-border-color: var(--button-cancel-hover-bg-color);
+
+  --button-save-bg-color: #0060df;
+  --button-save-fg-color: #fbfbfe;
+  --button-save-hover-bg-color: var(--button-save-bg-color);
+  --button-save-hover-fg-color: var(--button-save-fg-color);
+  --button-save-hover-border-color: var(--button-save-hover-bg-color);
+  --button-save-disabled-bg-color: var(--button-save-bg-color);
+  --button-save-disabled-fg-color: var(--button-save-fg-color);
+  --button-save-disabled-opacity: 0.4;
+
+  font: message-box;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 150%;
+  border-radius: 4px;
+  padding: 12px 16px;
+  border: 1px solid var(--dialog-border-color);
+  background: var(--dialog-bg-color);
+  color: var(--text-primary-color);
+  box-shadow: var(--dialog-shadow);
+}
+
+@media (prefers-color-scheme: dark) {
+
+  #altTextDialog {
+    --dialog-bg-color: #1c1b22;
+    --dialog-border-color: #1c1b22;
+    --dialog-shadow: 0 2px 14px 0 #15141a;
+    --text-primary-color: #fbfbfe;
+    --text-secondary-color: #cfcfd8;
+    --focus-ring-color: #00ddff;
+    --hover-filter: brightness(1.4);
+
+    --textarea-bg-color: #42414d;
+
+    --radio-bg-color: #2b2a33;
+    --radio-checked-bg-color: #15141a;
+    --radio-checked-border-color: #00ddff;
+
+    --button-cancel-bg-color: #2b2a33;
+    --button-save-bg-color: #00ddff;
+    --button-save-fg-color: #15141a;
+  }
+}
+
+@media screen and (forced-colors: active) {
+
+  #altTextDialog {
+    --dialog-bg-color: Canvas;
+    --dialog-border-color: CanvasText;
+    --dialog-shadow: none;
+    --text-primary-color: CanvasText;
+    --text-secondary-color: CanvasText;
+    --hover-filter: none;
+    --focus-ring-color: ButtonBorder;
+
+    --textarea-border-color: ButtonBorder;
+    --textarea-bg-color: Field;
+    --textarea-fg-color: ButtonText;
+
+    --radio-bg-color: ButtonFace;
+    --radio-checked-bg-color: ButtonFace;
+    --radio-border-color: ButtonText;
+    --radio-checked-border-color: ButtonText;
+
+    --button-cancel-bg-color: ButtonFace;
+    --button-cancel-fg-color: ButtonText;
+    --button-cancel-border-color: ButtonText;
+    --button-cancel-hover-bg-color: AccentColor;
+    --button-cancel-hover-fg-color: AccentColorText;
+
+    --button-save-bg-color: ButtonText;
+    --button-save-fg-color: ButtonFace;
+    --button-save-hover-bg-color: AccentColor;
+    --button-save-hover-fg-color: AccentColorText;
+    --button-save-disabled-bg-color: GrayText;
+    --button-save-disabled-fg-color: Canvas;
+    --button-save-disabled-opacity: 1;
+  }
+}
+
+#altTextDialog::backdrop {
+  /* This is needed to avoid to darken the image the user want to describe. */
+  -webkit-mask: url(#alttext-manager-mask);
+  mask: url(#alttext-manager-mask);
+}
+
+#altTextDialog.positioned {
+  margin: 0;
+}
+
+#altTextDialog #altTextContainer {
+  width: 300px;
+  height: -moz-fit-content;
+  height: fit-content;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+#altTextDialog #altTextContainer *:focus-visible {
+  outline: var(--focus-ring-outline);
+  outline-offset: 2px;
+}
+
+#altTextDialog #altTextContainer .radio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+#altTextDialog #altTextContainer .radio .radioButton {
+  display: flex;
+  gap: 8px;
+  align-self: stretch;
+  align-items: center;
+}
+
+#altTextDialog #altTextContainer .radio .radioButton input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--radio-bg-color);
+  border: 1px solid var(--radio-border-color);
+}
+
+#altTextDialog #altTextContainer .radio .radioButton input:hover {
+  filter: var(--hover-filter);
+}
+
+#altTextDialog #altTextContainer .radio .radioButton input:checked {
+  background-color: var(--radio-checked-bg-color);
+  border: 4px solid var(--radio-checked-border-color);
+}
+
+#altTextDialog #altTextContainer .radio .radioLabel {
+  display: flex;
+  padding-inline-start: 24px;
+  align-items: flex-start;
+  gap: 10px;
+  align-self: stretch;
+}
+
+#altTextDialog #altTextContainer .radio .radioLabel span {
+  flex: 1 0 0;
+  font-size: 11px;
+  color: var(--text-secondary-color);
+}
+
+#altTextDialog #altTextContainer #overallDescription {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  align-self: stretch;
+}
+
+#altTextDialog #altTextContainer #overallDescription span {
+  align-self: stretch;
+}
+
+#altTextDialog #altTextContainer #overallDescription .title {
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 590;
+}
+
+#altTextDialog #altTextContainer #addDescription {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+#altTextDialog #altTextContainer #addDescription .descriptionArea {
+  flex: 1;
+  padding-inline: 24px 10px;
+}
+
+#altTextDialog #altTextContainer #addDescription .descriptionArea textarea {
+  font: inherit;
+  width: 100%;
+  min-height: 75px;
+  padding: 8px;
+  resize: none;
+  margin: 0;
+  box-sizing: border-box;
+  border-radius: 4px;
+  border: 1px solid var(--textarea-border-color);
+  background: var(--textarea-bg-color);
+  color: var(--textarea-fg-color);
+}
+
+#altTextDialog #altTextContainer #addDescription .descriptionArea textarea:focus {
+  outline-offset: 0;
+  border-color: transparent;
+}
+
+#altTextDialog #altTextContainer #addDescription .descriptionArea textarea:disabled {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+#altTextDialog #altTextContainer #buttons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 8px;
+  align-self: stretch;
+}
+
+#altTextDialog #altTextContainer #buttons button {
+  border-radius: 4px;
+  border: 1px solid;
+  font: menu;
+  font-weight: 600;
+  padding: 4px 16px;
+  width: auto;
+  height: 32px;
+}
+
+#altTextDialog #altTextContainer #buttons button:hover {
+  cursor: pointer;
+  filter: var(--hover-filter);
+}
+
+#altTextDialog #altTextContainer #buttons button#altTextCancel {
+  color: var(--button-cancel-fg-color);
+  background-color: var(--button-cancel-bg-color);
+  border-color: var(--button-cancel-border-color);
+}
+
+#altTextDialog #altTextContainer #buttons button#altTextCancel:hover {
+  color: var(--button-cancel-hover-fg-color);
+  background-color: var(--button-cancel-hover-bg-color);
+  border-color: var(--button-cancel-hover-border-color);
+}
+
+#altTextDialog #altTextContainer #buttons button#altTextSave {
+  color: var(--button-save-hover-fg-color);
+  background-color: var(--button-save-hover-bg-color);
+  border-color: var(--button-save-hover-border-color);
+  opacity: 1;
+}
+
+#altTextDialog #altTextContainer #buttons button#altTextSave:hover {
+  color: var(--button-save-hover-fg-color);
+  background-color: var(--button-save-hover-bg-color);
+  border-color: var(--button-save-hover-border-color);
+}
+
+#altTextDialog #altTextContainer #buttons button#altTextSave:disabled {
+  color: var(--button-save-disabled-fg-color);
+  background-color: var(--button-save-disabled-bg-color);
+  opacity: var(--button-save-disabled-opacity);
+  pointer-events: none;
+}
+
+:root {
+  --viewer-container-height: 0;
+  --pdfViewer-padding-bottom: 0;
+  --page-margin: 1px auto -8px;
+  --page-border: 9px solid transparent;
+  --spreadHorizontalWrapped-margin-LR: -3.5px;
+  --loading-icon-delay: 400ms;
+}
+
+@media screen and (forced-colors: active) {
+  :root {
+    --pdfViewer-padding-bottom: 9px;
+    --page-margin: 8px auto -1px;
+    --page-border: 1px solid CanvasText;
+    --spreadHorizontalWrapped-margin-LR: 3.5px;
+  }
+}
+
+[data-main-rotation="90"] {
+  transform: rotate(90deg) translateY(-100%);
+}
+
+[data-main-rotation="180"] {
+  transform: rotate(180deg) translate(-100%, -100%);
+}
+
+[data-main-rotation="270"] {
+  transform: rotate(270deg) translateX(-100%);
+}
+
+#hiddenCopyElement {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.pdfViewer {
+  /* Define this variable here and not in :root to avoid to reflow all the UI
+     when scaling (see #15929). */
+  --scale-factor: 1;
+
+  padding-bottom: var(--pdfViewer-padding-bottom);
+}
+
+.pdfViewer .canvasWrapper {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.pdfViewer .page {
+  direction: ltr;
+  width: 816px;
+  height: 1056px;
+  margin: var(--page-margin);
+  position: relative;
+  overflow: visible;
+  border: var(--page-border);
+  background-clip: content-box;
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.pdfViewer .dummyPage {
+  position: relative;
+  width: 0;
+  height: var(--viewer-container-height);
+}
+
+.pdfViewer.noUserSelect {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.pdfViewer.removePageBorders .page {
+  margin: 0 auto 10px;
+  border: none;
+}
+
+.pdfViewer:is(.scrollHorizontal, .scrollWrapped),
+.spread {
+  margin-inline: 3.5px;
+  text-align: center;
+}
+
+.pdfViewer.scrollHorizontal,
+.spread {
+  white-space: nowrap;
+}
+
+.pdfViewer.removePageBorders,
+.pdfViewer:is(.scrollHorizontal, .scrollWrapped) .spread {
+  margin-inline: 0;
+}
+
+.spread :is(.page, .dummyPage),
+.pdfViewer:is(.scrollHorizontal, .scrollWrapped) :is(.page, .spread) {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.spread .page,
+.pdfViewer:is(.scrollHorizontal, .scrollWrapped) .page {
+  margin-inline: var(--spreadHorizontalWrapped-margin-LR);
+}
+
+.pdfViewer.removePageBorders .spread .page,
+.pdfViewer.removePageBorders:is(.scrollHorizontal, .scrollWrapped) .page {
+  margin-inline: 5px;
+}
+
+.pdfViewer .page canvas {
+  margin: 0;
+  display: block;
+}
+
+.pdfViewer .page canvas .structTree {
+  contain: strict;
+}
+
+.pdfViewer .page canvas[hidden] {
+  display: none;
+}
+
+.pdfViewer .page canvas[zooming] {
+  width: 100%;
+  height: 100%;
+}
+
+.pdfViewer .page.loadingIcon::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  content: "";
+  width: 100%;
+  height: 100%;
+  background: url("../images/loading-icon.gif") center no-repeat;
+  display: none;
+  /* Using a delay with background-image doesn't work,
+     consequently we use the display. */
+  transition-property: display;
+  transition-delay: var(--loading-icon-delay);
+  z-index: 5;
+  contain: strict;
+}
+
+.pdfViewer .page.loading::after {
+  display: block;
+}
+
+.pdfViewer .page:not(.loading)::after {
+  transition-property: none;
+  display: none;
+}
+
+.pdfPresentationMode .pdfViewer {
+  padding-bottom: 0;
+}
+
+.pdfPresentationMode .spread {
+  margin: 0;
+}
+
+.pdfPresentationMode .pdfViewer .page {
+  margin: 0 auto;
+  border: 2px solid transparent;
+}
+
+:root {
+  --dir-factor: 1;
+  --inline-start: left;
+  --inline-end: right;
+
+  --sidebar-width: 200px;
+  --sidebar-transition-duration: 200ms;
+  --sidebar-transition-timing-function: ease;
+
+  --toolbar-icon-opacity: 0.7;
+  --doorhanger-icon-opacity: 0.9;
+
+  --main-color: rgba(12, 12, 13, 1);
+  --body-bg-color: rgba(212, 212, 215, 1);
+  --progressBar-color: rgba(10, 132, 255, 1);
+  --progressBar-bg-color: rgba(221, 221, 222, 1);
+  --progressBar-blend-color: rgba(116, 177, 239, 1);
+  --scrollbar-color: auto;
+  --scrollbar-bg-color: auto;
+  --toolbar-icon-bg-color: rgba(0, 0, 0, 1);
+  --toolbar-icon-hover-bg-color: rgba(0, 0, 0, 1);
+
+  --sidebar-narrow-bg-color: rgba(212, 212, 215, 0.9);
+  --sidebar-toolbar-bg-color: rgba(245, 246, 247, 1);
+  --toolbar-bg-color: rgba(249, 249, 250, 1);
+  --toolbar-border-color: rgba(184, 184, 184, 1);
+  --toolbar-box-shadow: 0 1px 0 var(--toolbar-border-color);
+  --toolbar-border-bottom: none;
+  --toolbarSidebar-box-shadow: inset calc(-1px * var(--dir-factor)) 0 0 rgba(0, 0, 0, 0.25),
+  0 1px 0 rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
+  --toolbarSidebar-border-bottom: none;
+  --button-hover-color: rgba(221, 222, 223, 1);
+  --toggled-btn-color: rgba(0, 0, 0, 1);
+  --toggled-btn-bg-color: rgba(0, 0, 0, 0.3);
+  --toggled-hover-active-btn-color: rgba(0, 0, 0, 0.4);
+  --toggled-hover-btn-outline: none;
+  --dropdown-btn-bg-color: rgba(215, 215, 219, 1);
+  --dropdown-btn-border: none;
+  --separator-color: rgba(0, 0, 0, 0.3);
+  --field-color: rgba(6, 6, 6, 1);
+  --field-bg-color: rgba(255, 255, 255, 1);
+  --field-border-color: rgba(187, 187, 188, 1);
+  --treeitem-color: rgba(0, 0, 0, 0.8);
+  --treeitem-bg-color: rgba(0, 0, 0, 0.15);
+  --treeitem-hover-color: rgba(0, 0, 0, 0.9);
+  --treeitem-selected-color: rgba(0, 0, 0, 0.9);
+  --treeitem-selected-bg-color: rgba(0, 0, 0, 0.25);
+  --thumbnail-hover-color: rgba(0, 0, 0, 0.1);
+  --thumbnail-selected-color: rgba(0, 0, 0, 0.2);
+  --doorhanger-bg-color: rgba(255, 255, 255, 1);
+  --doorhanger-border-color: rgba(12, 12, 13, 0.2);
+  --doorhanger-hover-color: rgba(12, 12, 13, 1);
+  --doorhanger-hover-bg-color: rgba(237, 237, 237, 1);
+  --doorhanger-separator-color: rgba(222, 222, 222, 1);
+  --dialog-button-border: none;
+  --dialog-button-bg-color: rgba(12, 12, 13, 0.1);
+  --dialog-button-hover-bg-color: rgba(12, 12, 13, 0.3);
+
+  --loading-icon: url(../images/loading.svg);
+  --treeitem-expanded-icon: url(../images/treeitem-expanded.svg);
+  --treeitem-collapsed-icon: url(../images/treeitem-collapsed.svg);
+  --toolbarButton-editorFreeText-icon: url(../images/toolbarButton-editorFreeText.svg);
+  --toolbarButton-editorInk-icon: url(../images/toolbarButton-editorInk.svg);
+  --toolbarButton-editorStamp-icon: url(../images/toolbarButton-editorStamp.svg);
+  --toolbarButton-menuArrow-icon: url(../images/toolbarButton-menuArrow.svg);
+  --toolbarButton-sidebarToggle-icon: url(../images/toolbarButton-sidebarToggle.svg);
+  --toolbarButton-secondaryToolbarToggle-icon: url(../images/toolbarButton-secondaryToolbarToggle.svg);
+  --toolbarButton-pageUp-icon: url(../images/toolbarButton-pageUp.svg);
+  --toolbarButton-pageDown-icon: url(../images/toolbarButton-pageDown.svg);
+  --toolbarButton-zoomOut-icon: url(../images/toolbarButton-zoomOut.svg);
+  --toolbarButton-zoomIn-icon: url(../images/toolbarButton-zoomIn.svg);
+  --toolbarButton-presentationMode-icon: url(../images/toolbarButton-presentationMode.svg);
+  --toolbarButton-print-icon: url(../images/toolbarButton-print.svg);
+  --toolbarButton-openFile-icon: url(../images/toolbarButton-openFile.svg);
+  --toolbarButton-download-icon: url(../images/toolbarButton-download.svg);
+  --toolbarButton-bookmark-icon: url(../images/toolbarButton-bookmark.svg);
+  --toolbarButton-viewThumbnail-icon: url(../images/toolbarButton-viewThumbnail.svg);
+  --toolbarButton-viewOutline-icon: url(../images/toolbarButton-viewOutline.svg);
+  --toolbarButton-viewAttachments-icon: url(../images/toolbarButton-viewAttachments.svg);
+  --toolbarButton-viewLayers-icon: url(../images/toolbarButton-viewLayers.svg);
+  --toolbarButton-currentOutlineItem-icon: url(../images/toolbarButton-currentOutlineItem.svg);
+  --toolbarButton-search-icon: url(../images/toolbarButton-search.svg);
+  --findbarButton-previous-icon: url(../images/findbarButton-previous.svg);
+  --findbarButton-next-icon: url(../images/findbarButton-next.svg);
+  --secondaryToolbarButton-firstPage-icon: url(../images/secondaryToolbarButton-firstPage.svg);
+  --secondaryToolbarButton-lastPage-icon: url(../images/secondaryToolbarButton-lastPage.svg);
+  --secondaryToolbarButton-rotateCcw-icon: url(../images/secondaryToolbarButton-rotateCcw.svg);
+  --secondaryToolbarButton-rotateCw-icon: url(../images/secondaryToolbarButton-rotateCw.svg);
+  --secondaryToolbarButton-selectTool-icon: url(../images/secondaryToolbarButton-selectTool.svg);
+  --secondaryToolbarButton-handTool-icon: url(../images/secondaryToolbarButton-handTool.svg);
+  --secondaryToolbarButton-scrollPage-icon: url(../images/secondaryToolbarButton-scrollPage.svg);
+  --secondaryToolbarButton-scrollVertical-icon: url(../images/secondaryToolbarButton-scrollVertical.svg);
+  --secondaryToolbarButton-scrollHorizontal-icon: url(../images/secondaryToolbarButton-scrollHorizontal.svg);
+  --secondaryToolbarButton-scrollWrapped-icon: url(../images/secondaryToolbarButton-scrollWrapped.svg);
+  --secondaryToolbarButton-spreadNone-icon: url(../images/secondaryToolbarButton-spreadNone.svg);
+  --secondaryToolbarButton-spreadOdd-icon: url(../images/secondaryToolbarButton-spreadOdd.svg);
+  --secondaryToolbarButton-spreadEven-icon: url(../images/secondaryToolbarButton-spreadEven.svg);
+  --secondaryToolbarButton-documentProperties-icon: url(../images/secondaryToolbarButton-documentProperties.svg);
+  --editorParams-stampAddImage-icon: url(../images/toolbarButton-zoomIn.svg);
+}
+
+[dir="rtl"]:root {
+  --dir-factor: -1;
+  --inline-start: right;
+  --inline-end: left;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --main-color: rgba(249, 249, 250, 1);
+    --body-bg-color: rgba(42, 42, 46, 1);
+    --progressBar-color: rgba(0, 96, 223, 1);
+    --progressBar-bg-color: rgba(40, 40, 43, 1);
+    --progressBar-blend-color: rgba(20, 68, 133, 1);
+    --scrollbar-color: rgba(121, 121, 123, 1);
+    --scrollbar-bg-color: rgba(35, 35, 39, 1);
+    --toolbar-icon-bg-color: rgba(255, 255, 255, 1);
+    --toolbar-icon-hover-bg-color: rgba(255, 255, 255, 1);
+
+    --sidebar-narrow-bg-color: rgba(42, 42, 46, 0.9);
+    --sidebar-toolbar-bg-color: rgba(50, 50, 52, 1);
+    --toolbar-bg-color: rgba(56, 56, 61, 1);
+    --toolbar-border-color: rgba(12, 12, 13, 1);
+    --button-hover-color: rgba(102, 102, 103, 1);
+    --toggled-btn-color: rgba(255, 255, 255, 1);
+    --toggled-btn-bg-color: rgba(0, 0, 0, 0.3);
+    --toggled-hover-active-btn-color: rgba(0, 0, 0, 0.4);
+    --dropdown-btn-bg-color: rgba(74, 74, 79, 1);
+    --separator-color: rgba(0, 0, 0, 0.3);
+    --field-color: rgba(250, 250, 250, 1);
+    --field-bg-color: rgba(64, 64, 68, 1);
+    --field-border-color: rgba(115, 115, 115, 1);
+    --treeitem-color: rgba(255, 255, 255, 0.8);
+    --treeitem-bg-color: rgba(255, 255, 255, 0.15);
+    --treeitem-hover-color: rgba(255, 255, 255, 0.9);
+    --treeitem-selected-color: rgba(255, 255, 255, 0.9);
+    --treeitem-selected-bg-color: rgba(255, 255, 255, 0.25);
+    --thumbnail-hover-color: rgba(255, 255, 255, 0.1);
+    --thumbnail-selected-color: rgba(255, 255, 255, 0.2);
+    --doorhanger-bg-color: rgba(74, 74, 79, 1);
+    --doorhanger-border-color: rgba(39, 39, 43, 1);
+    --doorhanger-hover-color: rgba(249, 249, 250, 1);
+    --doorhanger-hover-bg-color: rgba(93, 94, 98, 1);
+    --doorhanger-separator-color: rgba(92, 92, 97, 1);
+    --dialog-button-bg-color: rgba(92, 92, 97, 1);
+    --dialog-button-hover-bg-color: rgba(115, 115, 115, 1);
+
+    /* This image is used in <input> elements, which unfortunately means that
+     * the `mask-image` approach used with all of the other images doesn't work
+     * here; hence why we still have two versions of this particular image. */
+    --loading-icon: url(../images/loading-dark.svg);
+  }
+}
+
+@media screen and (forced-colors: active) {
+  :root {
+    --button-hover-color: Highlight;
+    --doorhanger-hover-bg-color: Highlight;
+    --toolbar-icon-opacity: 1;
+    --toolbar-icon-bg-color: ButtonText;
+    --toolbar-icon-hover-bg-color: ButtonFace;
+    --toggled-hover-active-btn-color: ButtonText;
+    --toggled-hover-btn-outline: 2px solid ButtonBorder;
+    --toolbar-border-color: CanvasText;
+    --toolbar-border-bottom: 1px solid var(--toolbar-border-color);
+    --toolbar-box-shadow: none;
+    --toggled-btn-color: HighlightText;
+    --toggled-btn-bg-color: LinkText;
+    --doorhanger-hover-color: ButtonFace;
+    --doorhanger-border-color-whcm: 1px solid ButtonText;
+    --doorhanger-triangle-opacity-whcm: 0;
+    --dialog-button-border: 1px solid Highlight;
+    --dialog-button-hover-bg-color: Highlight;
+    --dialog-button-hover-color: ButtonFace;
+    --dropdown-btn-border: 1px solid ButtonText;
+    --field-border-color: ButtonText;
+    --main-color: CanvasText;
+    --separator-color: GrayText;
+    --doorhanger-separator-color: GrayText;
+    --toolbarSidebar-box-shadow: none;
+    --toolbarSidebar-border-bottom: 1px solid var(--toolbar-border-color);
+  }
+}
+
+@media screen and (prefers-reduced-motion: reduce) {
+  :root {
+    --sidebar-transition-duration: 0;
+  }
+}
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background-color: var(--body-bg-color);
+  scrollbar-color: var(--scrollbar-color) var(--scrollbar-bg-color);
+}
+
+.hidden,
+[hidden] {
+  display: none !important;
+}
+
+#viewerContainer.pdfPresentationMode:-webkit-full-screen {
+  top: 0;
+  background-color: rgba(0, 0, 0, 1);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#viewerContainer.pdfPresentationMode:fullscreen {
+  top: 0;
+  background-color: rgba(0, 0, 0, 1);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.pdfPresentationMode:-webkit-full-screen section:not([data-internal-link]) {
+  pointer-events: none;
+}
+
+.pdfPresentationMode:fullscreen section:not([data-internal-link]) {
+  pointer-events: none;
+}
+
+.pdfPresentationMode:-webkit-full-screen .textLayer span {
+  cursor: none;
+}
+
+.pdfPresentationMode:fullscreen .textLayer span {
+  cursor: none;
+}
+
+.pdfPresentationMode.pdfPresentationModeControls > *,
+.pdfPresentationMode.pdfPresentationModeControls .textLayer span {
+  cursor: default;
+}
+
+#outerContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#sidebarContainer {
+  position: absolute;
+  inset-block: 32px 0;
+  inset-inline-start: calc(-1 * var(--sidebar-width));
+  width: var(--sidebar-width);
+  visibility: hidden;
+  z-index: 100;
+  font: message-box;
+  border-top: 1px solid rgba(51, 51, 51, 1);
+  border-inline-end: var(--doorhanger-border-color-whcm);
+  transition-property: inset-inline-start;
+  transition-duration: var(--sidebar-transition-duration);
+  transition-timing-function: var(--sidebar-transition-timing-function);
+}
+
+#outerContainer:is(.sidebarMoving, .sidebarOpen) #sidebarContainer {
+  visibility: visible;
+}
+
+#outerContainer.sidebarOpen #sidebarContainer {
+  inset-inline-start: 0;
+}
+
+#mainContainer {
+  position: absolute;
+  inset: 0;
+  min-width: 350px;
+}
+
+#sidebarContent {
+  inset-block: 32px 0;
+  inset-inline-start: 0;
+  overflow: auto;
+  position: absolute;
+  width: 100%;
+  box-shadow: inset calc(-1px * var(--dir-factor)) 0 0 rgba(0, 0, 0, 0.25);
+}
+
+#viewerContainer {
+  overflow: auto;
+  position: absolute;
+  inset: 32px 0 0;
+  outline: none;
+}
+
+#viewerContainer:not(.pdfPresentationMode) {
+  transition-duration: var(--sidebar-transition-duration);
+  transition-timing-function: var(--sidebar-transition-timing-function);
+}
+
+#outerContainer.sidebarOpen #viewerContainer:not(.pdfPresentationMode) {
+  inset-inline-start: var(--sidebar-width);
+  transition-property: inset-inline-start;
+}
+
+.toolbar {
+  position: relative;
+  inset-inline: 0;
+  z-index: 9999;
+  cursor: default;
+  font: message-box;
+}
+
+:is(.toolbar, .editorParamsToolbar, .findbar, #sidebarContainer)
+:is(input, button, select),
+.secondaryToolbar :is(input, button, a, select) {
+  outline: none;
+  font: message-box;
+}
+
+#toolbarContainer {
+  width: 100%;
+}
+
+#toolbarSidebar {
+  width: 100%;
+  height: 32px;
+  background-color: var(--sidebar-toolbar-bg-color);
+  box-shadow: var(--toolbarSidebar-box-shadow);
+  border-bottom: var(--toolbarSidebar-border-bottom);
+}
+
+#sidebarResizer {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: -6px;
+  width: 6px;
+  z-index: 200;
+  cursor: ew-resize;
+}
+
+#toolbarContainer,
+.findbar,
+.secondaryToolbar,
+.editorParamsToolbar {
+  position: relative;
+  height: 32px;
+  background-color: var(--toolbar-bg-color);
+  box-shadow: var(--toolbar-box-shadow);
+  border-bottom: var(--toolbar-border-bottom);
+}
+
+#toolbarViewer {
+  height: 32px;
+}
+
+#loadingBar {
+  /* Define these variables here, and not in :root, to avoid reflowing the
+     entire viewer when updating progress (see issue 15958). */
+  --progressBar-percent: 0%;
+  --progressBar-end-offset: 0;
+
+  position: absolute;
+  inset-inline: 0 var(--progressBar-end-offset);
+  height: 4px;
+  background-color: var(--progressBar-bg-color);
+  border-bottom: 1px solid var(--toolbar-border-color);
+  transition-property: inset-inline-start;
+  transition-duration: var(--sidebar-transition-duration);
+  transition-timing-function: var(--sidebar-transition-timing-function);
+}
+
+#outerContainer.sidebarOpen #loadingBar {
+  inset-inline-start: var(--sidebar-width);
+}
+
+#loadingBar .progress {
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  width: 100%;
+  transform: scaleX(var(--progressBar-percent));
+  transform-origin: calc(50% - 50% * var(--dir-factor)) 0;
+  height: 100%;
+  background-color: var(--progressBar-color);
+  overflow: hidden;
+  transition: transform 200ms;
+}
+
+@keyframes progressIndeterminate {
+  0% {
+    transform: translateX(calc(-142px * var(--dir-factor)));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+#loadingBar.indeterminate .progress {
+  transform: none;
+  background-color: var(--progressBar-bg-color);
+  transition: none;
+}
+
+#loadingBar.indeterminate .progress .glimmer {
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  height: 100%;
+  width: calc(100% + 150px);
+  background: repeating-linear-gradient(
+          135deg,
+          var(--progressBar-blend-color) 0,
+          var(--progressBar-bg-color) 5px,
+          var(--progressBar-bg-color) 45px,
+          var(--progressBar-color) 55px,
+          var(--progressBar-color) 95px,
+          var(--progressBar-blend-color) 100px
+  );
+  animation: progressIndeterminate 1s linear infinite;
+}
+
+#outerContainer.sidebarResizing
+:is(#sidebarContainer, #viewerContainer, #loadingBar) {
+  /* Improve responsiveness and avoid visual glitches when the sidebar is resized. */
+  transition-duration: 0s;
+}
+
+.findbar,
+.secondaryToolbar,
+.editorParamsToolbar {
+  top: 32px;
+  position: absolute;
+  z-index: 30000;
+  height: auto;
+  padding: 0 4px;
+  margin: 4px 2px;
+  font: message-box;
+  font-size: 12px;
+  line-height: 14px;
+  text-align: left;
+  cursor: default;
+}
+
+.findbar {
+  inset-inline-start: 64px;
+  min-width: 300px;
+  background-color: var(--toolbar-bg-color);
+}
+
+.findbar > div {
+  height: 32px;
+}
+
+.findbar > div#findbarInputContainer {
+  margin-inline-end: 4px;
+}
+
+.findbar.wrapContainers > div,
+.findbar.wrapContainers > div#findbarMessageContainer > * {
+  clear: both;
+}
+
+.findbar.wrapContainers > div#findbarMessageContainer {
+  height: auto;
+}
+
+.findbar input[type="checkbox"] {
+  pointer-events: none;
+}
+
+.findbar label {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.findbar label:hover,
+.findbar input:focus-visible + label {
+  color: var(--toggled-btn-color);
+  background-color: var(--button-hover-color);
+}
+
+.findbar .toolbarField[type="checkbox"]:checked + .toolbarLabel {
+  background-color: var(--toggled-btn-bg-color) !important;
+  color: var(--toggled-btn-color);
+}
+
+#findInput {
+  width: 200px;
+}
+
+#findInput::-moz-placeholder {
+  font-style: normal;
+}
+
+#findInput::placeholder {
+  font-style: normal;
+}
+
+#findInput[data-status="pending"] {
+  background-image: var(--loading-icon);
+  background-repeat: no-repeat;
+  background-position: calc(50% + 48% * var(--dir-factor));
+}
+
+#findInput[data-status="notFound"] {
+  background-color: rgba(255, 102, 102, 1);
+}
+
+.secondaryToolbar,
+.editorParamsToolbar {
+  padding: 6px 0 10px;
+  inset-inline-end: 4px;
+  height: auto;
+  background-color: var(--doorhanger-bg-color);
+}
+
+.editorParamsToolbarContainer {
+  width: 220px;
+  margin-bottom: -4px;
+}
+
+.editorParamsToolbarContainer > .editorParamsSetter {
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 10px;
+}
+
+.editorParamsToolbarContainer .editorParamsLabel {
+  padding-inline-end: 10px;
+  flex: none;
+  color: var(--main-color);
+}
+
+.editorParamsToolbarContainer .editorParamsColor {
+  width: 32px;
+  height: 32px;
+  flex: none;
+}
+
+.editorParamsToolbarContainer .editorParamsSlider {
+  background-color: transparent;
+  width: 90px;
+  flex: 0 1 0;
+}
+
+.editorParamsToolbarContainer .editorParamsSlider::-moz-range-progress {
+  background-color: black;
+}
+
+.editorParamsToolbarContainer .editorParamsSlider::-webkit-slider-runnable-track,
+.editorParamsToolbarContainer .editorParamsSlider::-moz-range-track {
+  background-color: black;
+}
+
+.editorParamsToolbarContainer .editorParamsSlider::-webkit-slider-thumb,
+.editorParamsToolbarContainer .editorParamsSlider::-moz-range-thumb {
+  background-color: white;
+}
+
+#secondaryToolbarButtonContainer {
+  max-width: 220px;
+  min-height: 26px;
+  max-height: calc(var(--viewer-container-height) - 40px);
+  overflow-y: auto;
+  margin-bottom: -4px;
+}
+
+#editorStampParamsToolbar {
+  inset-inline-end: 40px;
+  background-color: var(--toolbar-bg-color);
+}
+
+#editorInkParamsToolbar {
+  inset-inline-end: 68px;
+  background-color: var(--toolbar-bg-color);
+}
+
+#editorFreeTextParamsToolbar {
+  inset-inline-end: 96px;
+  background-color: var(--toolbar-bg-color);
+}
+
+#editorStampAddImage::before {
+  -webkit-mask-image: var(--editorParams-stampAddImage-icon);
+  mask-image: var(--editorParams-stampAddImage-icon);
+}
+
+.doorHanger,
+.doorHangerRight {
+  border-radius: 2px;
+  box-shadow: 0 1px 5px var(--doorhanger-border-color),
+  0 0 0 1px var(--doorhanger-border-color);
+  border: var(--doorhanger-border-color-whcm);
+}
+
+:is(.doorHanger, .doorHangerRight)::after,
+:is(.doorHanger, .doorHangerRight)::before {
+  bottom: 100%;
+  border: 8px solid rgba(0, 0, 0, 0);
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+  opacity: var(--doorhanger-triangle-opacity-whcm);
+}
+
+.doorHanger::after {
+  inset-inline-start: 10px;
+  margin-inline-start: -8px;
+  border-bottom-color: var(--toolbar-bg-color);
+}
+
+.doorHangerRight::after {
+  inset-inline-end: 10px;
+  margin-inline-end: -8px;
+  border-bottom-color: var(--doorhanger-bg-color);
+}
+
+:is(.doorHanger, .doorHangerRight)::before {
+  border-bottom-color: var(--doorhanger-border-color);
+  border-width: 9px;
+}
+
+.doorHanger::before {
+  inset-inline-start: 10px;
+  margin-inline-start: -9px;
+}
+
+.doorHangerRight::before {
+  inset-inline-end: 10px;
+  margin-inline-end: -9px;
+}
+
+#findResultsCount {
+  background-color: rgba(217, 217, 217, 1);
+  color: rgba(82, 82, 82, 1);
+  text-align: center;
+  padding: 4px 5px;
+  margin: 5px;
+}
+
+#findMsg[data-status="notFound"] {
+  font-weight: bold;
+}
+
+:is(#findResultsCount, #findMsg):empty {
+  display: none;
+}
+
+#toolbarViewerMiddle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+#toolbarViewerLeft,
+#toolbarSidebarLeft {
+  float: var(--inline-start);
+}
+
+#toolbarViewerRight,
+#toolbarSidebarRight {
+  float: var(--inline-end);
+}
+
+#toolbarViewerLeft > *,
+#toolbarViewerMiddle > *,
+#toolbarViewerRight > *,
+#toolbarSidebarLeft *,
+#toolbarSidebarRight *,
+.findbar * {
+  position: relative;
+  float: var(--inline-start);
+}
+
+#toolbarViewerLeft {
+  padding-inline-start: 1px;
+}
+
+#toolbarViewerRight {
+  padding-inline-end: 1px;
+}
+
+#toolbarSidebarRight {
+  padding-inline-end: 2px;
+}
+
+.splitToolbarButton {
+  margin: 2px;
+  display: inline-block;
+}
+
+.splitToolbarButton > .toolbarButton {
+  float: var(--inline-start);
+}
+
+.toolbarButton,
+.secondaryToolbarButton,
+.dialogButton {
+  border: none;
+  background: none;
+  width: 28px;
+  height: 28px;
+  outline: none;
+}
+
+.dialogButton:is(:hover, :focus-visible) {
+  background-color: var(--dialog-button-hover-bg-color);
+}
+
+.dialogButton:is(:hover, :focus-visible) > span {
+  color: var(--dialog-button-hover-color);
+}
+
+.toolbarButton > span {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+:is(.toolbarButton, .secondaryToolbarButton, .dialogButton)[disabled] {
+  opacity: 0.5;
+}
+
+.splitToolbarButton > .toolbarButton:is(:hover, :focus-visible),
+.dropdownToolbarButton:hover {
+  background-color: var(--button-hover-color);
+}
+
+.splitToolbarButton > .toolbarButton {
+  position: relative;
+  margin: 0;
+}
+
+#toolbarSidebar .splitToolbarButton > .toolbarButton {
+  margin-inline-end: 2px;
+}
+
+.splitToolbarButtonSeparator {
+  float: var(--inline-start);
+  margin: 4px 0;
+  width: 1px;
+  height: 20px;
+  background-color: var(--separator-color);
+}
+
+.toolbarButton,
+.dropdownToolbarButton,
+.secondaryToolbarButton,
+.dialogButton {
+  min-width: 16px;
+  margin: 2px 1px;
+  padding: 2px 6px 0;
+  border: none;
+  border-radius: 2px;
+  color: var(--main-color);
+  font-size: 12px;
+  line-height: 14px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  cursor: default;
+  box-sizing: border-box;
+}
+
+.toolbarButton:is(:hover, :focus-visible) {
+  background-color: var(--button-hover-color);
+}
+
+.secondaryToolbarButton:is(:hover, :focus-visible) {
+  background-color: var(--doorhanger-hover-bg-color);
+  color: var(--doorhanger-hover-color);
+}
+
+:is(.toolbarButton, .secondaryToolbarButton).toggled,
+.splitToolbarButton.toggled > .toolbarButton.toggled {
+  background-color: var(--toggled-btn-bg-color);
+  color: var(--toggled-btn-color);
+}
+
+:is(.toolbarButton, .secondaryToolbarButton).toggled:hover,
+.splitToolbarButton.toggled > .toolbarButton.toggled:hover {
+  outline: var(--toggled-hover-btn-outline) !important;
+}
+
+:is(.toolbarButton, .secondaryToolbarButton).toggled::before {
+  background-color: var(--toggled-btn-color);
+}
+
+:is(.toolbarButton, .secondaryToolbarButton).toggled:hover:active,
+.splitToolbarButton.toggled > .toolbarButton.toggled:hover:active {
+  background-color: var(--toggled-hover-active-btn-color);
+}
+
+.dropdownToolbarButton {
+  /* Define this variable here, and not in :root, to avoid reflowing the
+     entire viewer when updating the width. */
+  --scale-select-width: 140px;
+
+  width: var(--scale-select-width);
+  padding: 0;
+  background-color: var(--dropdown-btn-bg-color);
+  border: var(--dropdown-btn-border);
+}
+
+.dropdownToolbarButton::after {
+  top: 6px;
+  inset-inline-end: 6px;
+  pointer-events: none;
+  -webkit-mask-image: var(--toolbarButton-menuArrow-icon);
+  mask-image: var(--toolbarButton-menuArrow-icon);
+}
+
+.dropdownToolbarButton > select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: inherit;
+  height: 28px;
+  font-size: 12px;
+  color: var(--main-color);
+  margin: 0;
+  padding: 1px 0 2px;
+  padding-inline-start: 6px;
+  border: none;
+  background-color: var(--dropdown-btn-bg-color);
+}
+
+.dropdownToolbarButton > select:is(:hover, :focus-visible) {
+  background-color: var(--button-hover-color);
+  color: var(--toggled-btn-color);
+}
+
+.dropdownToolbarButton > select > option {
+  background: var(--doorhanger-bg-color);
+  color: var(--main-color);
+}
+
+.toolbarButtonSpacer {
+  width: 30px;
+  display: inline-block;
+  height: 1px;
+}
+
+:is(.toolbarButton, .secondaryToolbarButton, .treeItemToggler)::before,
+.dropdownToolbarButton::after {
+  /* All matching images have a size of 16x16
+   * All relevant containers have a size of 28x28 */
+  position: absolute;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+
+  content: "";
+  background-color: var(--toolbar-icon-bg-color);
+  -webkit-mask-size: cover;
+  mask-size: cover;
+}
+
+.dropdownToolbarButton:is(:hover, :focus-visible, :active)::after {
+  background-color: var(--toolbar-icon-hover-bg-color);
+}
+
+.toolbarButton::before {
+  opacity: var(--toolbar-icon-opacity);
+  top: 6px;
+  left: 6px;
+}
+
+.toolbarButton:is(:hover, :focus-visible)::before,
+.secondaryToolbarButton:is(:hover, :focus-visible)::before {
+  background-color: var(--toolbar-icon-hover-bg-color);
+}
+
+.secondaryToolbarButton::before {
+  opacity: var(--doorhanger-icon-opacity);
+  top: 5px;
+  inset-inline-start: 12px;
+}
+
+#sidebarToggle::before {
+  -webkit-mask-image: var(--toolbarButton-sidebarToggle-icon);
+  mask-image: var(--toolbarButton-sidebarToggle-icon);
+  transform: scaleX(var(--dir-factor));
+}
+
+#secondaryToolbarToggle::before {
+  -webkit-mask-image: var(--toolbarButton-secondaryToolbarToggle-icon);
+  mask-image: var(--toolbarButton-secondaryToolbarToggle-icon);
+  transform: scaleX(var(--dir-factor));
+}
+
+#findPrevious::before {
+  -webkit-mask-image: var(--findbarButton-previous-icon);
+  mask-image: var(--findbarButton-previous-icon);
+}
+
+#findNext::before {
+  -webkit-mask-image: var(--findbarButton-next-icon);
+  mask-image: var(--findbarButton-next-icon);
+}
+
+#previous::before {
+  -webkit-mask-image: var(--toolbarButton-pageUp-icon);
+  mask-image: var(--toolbarButton-pageUp-icon);
+}
+
+#next::before {
+  -webkit-mask-image: var(--toolbarButton-pageDown-icon);
+  mask-image: var(--toolbarButton-pageDown-icon);
+}
+
+#zoomOut::before {
+  -webkit-mask-image: var(--toolbarButton-zoomOut-icon);
+  mask-image: var(--toolbarButton-zoomOut-icon);
+}
+
+#zoomIn::before {
+  -webkit-mask-image: var(--toolbarButton-zoomIn-icon);
+  mask-image: var(--toolbarButton-zoomIn-icon);
+}
+
+#presentationMode::before {
+  -webkit-mask-image: var(--toolbarButton-presentationMode-icon);
+  mask-image: var(--toolbarButton-presentationMode-icon);
+}
+
+#editorFreeText::before {
+  -webkit-mask-image: var(--toolbarButton-editorFreeText-icon);
+  mask-image: var(--toolbarButton-editorFreeText-icon);
+}
+
+#editorInk::before {
+  -webkit-mask-image: var(--toolbarButton-editorInk-icon);
+  mask-image: var(--toolbarButton-editorInk-icon);
+}
+
+#editorStamp::before {
+  -webkit-mask-image: var(--toolbarButton-editorStamp-icon);
+  mask-image: var(--toolbarButton-editorStamp-icon);
+}
+
+#print::before,
+#secondaryPrint::before {
+  -webkit-mask-image: var(--toolbarButton-print-icon);
+  mask-image: var(--toolbarButton-print-icon);
+}
+
+:is(#openFile, #secondaryOpenFile)::before {
+  -webkit-mask-image: var(--toolbarButton-openFile-icon);
+  mask-image: var(--toolbarButton-openFile-icon);
+}
+
+:is(#download, #secondaryDownload)::before {
+  -webkit-mask-image: var(--toolbarButton-download-icon);
+  mask-image: var(--toolbarButton-download-icon);
+}
+
+a.secondaryToolbarButton {
+  padding-top: 5px;
+  text-decoration: none;
+}
+
+a:is(.toolbarButton, .secondaryToolbarButton)[href="#"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+#viewBookmark::before {
+  -webkit-mask-image: var(--toolbarButton-bookmark-icon);
+  mask-image: var(--toolbarButton-bookmark-icon);
+}
+
+#viewThumbnail::before {
+  -webkit-mask-image: var(--toolbarButton-viewThumbnail-icon);
+  mask-image: var(--toolbarButton-viewThumbnail-icon);
+}
+
+#viewOutline::before {
+  -webkit-mask-image: var(--toolbarButton-viewOutline-icon);
+  mask-image: var(--toolbarButton-viewOutline-icon);
+  transform: scaleX(var(--dir-factor));
+}
+
+#viewAttachments::before {
+  -webkit-mask-image: var(--toolbarButton-viewAttachments-icon);
+  mask-image: var(--toolbarButton-viewAttachments-icon);
+}
+
+#viewLayers::before {
+  -webkit-mask-image: var(--toolbarButton-viewLayers-icon);
+  mask-image: var(--toolbarButton-viewLayers-icon);
+}
+
+#currentOutlineItem::before {
+  -webkit-mask-image: var(--toolbarButton-currentOutlineItem-icon);
+  mask-image: var(--toolbarButton-currentOutlineItem-icon);
+  transform: scaleX(var(--dir-factor));
+}
+
+#viewFind::before {
+  -webkit-mask-image: var(--toolbarButton-search-icon);
+  mask-image: var(--toolbarButton-search-icon);
+}
+
+.pdfSidebarNotification::after {
+  position: absolute;
+  display: inline-block;
+  top: 2px;
+  inset-inline-end: 2px;
+  /* Create a filled circle, with a diameter of 9 pixels, using only CSS: */
+  content: "";
+  background-color: rgba(112, 219, 85, 1);
+  height: 9px;
+  width: 9px;
+  border-radius: 50%;
+}
+
+.secondaryToolbarButton {
+  position: relative;
+  margin: 0;
+  padding: 0 0 1px;
+  padding-inline-start: 36px;
+  height: auto;
+  min-height: 26px;
+  width: auto;
+  min-width: 100%;
+  text-align: start;
+  white-space: normal;
+  border-radius: 0;
+  box-sizing: border-box;
+  display: inline-block;
+}
+
+.secondaryToolbarButton > span {
+  padding-inline-end: 4px;
+}
+
+#firstPage::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-firstPage-icon);
+  mask-image: var(--secondaryToolbarButton-firstPage-icon);
+}
+
+#lastPage::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-lastPage-icon);
+  mask-image: var(--secondaryToolbarButton-lastPage-icon);
+}
+
+#pageRotateCcw::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-rotateCcw-icon);
+  mask-image: var(--secondaryToolbarButton-rotateCcw-icon);
+}
+
+#pageRotateCw::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-rotateCw-icon);
+  mask-image: var(--secondaryToolbarButton-rotateCw-icon);
+}
+
+#cursorSelectTool::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-selectTool-icon);
+  mask-image: var(--secondaryToolbarButton-selectTool-icon);
+}
+
+#cursorHandTool::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-handTool-icon);
+  mask-image: var(--secondaryToolbarButton-handTool-icon);
+}
+
+#scrollPage::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-scrollPage-icon);
+  mask-image: var(--secondaryToolbarButton-scrollPage-icon);
+}
+
+#scrollVertical::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-scrollVertical-icon);
+  mask-image: var(--secondaryToolbarButton-scrollVertical-icon);
+}
+
+#scrollHorizontal::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-scrollHorizontal-icon);
+  mask-image: var(--secondaryToolbarButton-scrollHorizontal-icon);
+}
+
+#scrollWrapped::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-scrollWrapped-icon);
+  mask-image: var(--secondaryToolbarButton-scrollWrapped-icon);
+}
+
+#spreadNone::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-spreadNone-icon);
+  mask-image: var(--secondaryToolbarButton-spreadNone-icon);
+}
+
+#spreadOdd::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-spreadOdd-icon);
+  mask-image: var(--secondaryToolbarButton-spreadOdd-icon);
+}
+
+#spreadEven::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-spreadEven-icon);
+  mask-image: var(--secondaryToolbarButton-spreadEven-icon);
+}
+
+#documentProperties::before {
+  -webkit-mask-image: var(--secondaryToolbarButton-documentProperties-icon);
+  mask-image: var(--secondaryToolbarButton-documentProperties-icon);
+}
+
+.verticalToolbarSeparator {
+  display: block;
+  margin: 5px 2px;
+  width: 1px;
+  height: 22px;
+  background-color: var(--separator-color);
+}
+
+.horizontalToolbarSeparator {
+  display: block;
+  margin: 6px 0;
+  height: 1px;
+  width: 100%;
+  background-color: var(--doorhanger-separator-color);
+}
+
+.toolbarField {
+  padding: 4px 7px;
+  margin: 3px 0;
+  border-radius: 2px;
+  background-color: var(--field-bg-color);
+  background-clip: padding-box;
+  border: 1px solid var(--field-border-color);
+  box-shadow: none;
+  color: var(--field-color);
+  font-size: 12px;
+  line-height: 16px;
+  outline: none;
+}
+
+.toolbarField[type="checkbox"] {
+  opacity: 0;
+  position: absolute !important;
+  left: 0;
+  margin: 10px 0 3px;
+  margin-inline-start: 7px;
+}
+
+#pageNumber {
+  -moz-appearance: textfield; /* hides the spinner in moz */
+  text-align: end;
+  width: 40px;
+  background-size: 0 0;
+  transition-property: none;
+}
+
+#pageNumber.visiblePageIsLoading {
+  background-image: var(--loading-icon);
+  background-repeat: no-repeat;
+  background-position: calc(50% - 42% * var(--dir-factor));
+  background-size: 16px 16px;
+  /* Using a delay with background-image doesn't work,
+     consequently we use background-size. */
+  transition-property: background-size;
+  transition-delay: var(--loading-icon-delay);
+}
+
+#pageNumber::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.toolbarField:focus {
+  border-color: #0a84ff;
+}
+
+.toolbarLabel {
+  min-width: 16px;
+  padding: 7px;
+  margin: 2px;
+  border-radius: 2px;
+  color: var(--main-color);
+  font-size: 12px;
+  line-height: 14px;
+  text-align: left;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+#numPages.toolbarLabel {
+  padding-inline-start: 3px;
+}
+
+#thumbnailView,
+#outlineView,
+#attachmentsView,
+#layersView {
+  position: absolute;
+  width: calc(100% - 8px);
+  inset-block: 0;
+  padding: 4px 4px 0;
+  overflow: auto;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+#thumbnailView {
+  width: calc(100% - 60px);
+  padding: 10px 30px 0;
+}
+
+#thumbnailView > a:is(:active, :focus) {
+  outline: 0;
+}
+
+.thumbnail {
+  /* Define these variables here, and not in :root, since the individual
+     thumbnails may have different sizes. */
+  --thumbnail-width: 0;
+  --thumbnail-height: 0;
+
+  float: var(--inline-start);
+  width: var(--thumbnail-width);
+  height: var(--thumbnail-height);
+  margin: 0 10px 5px;
+  padding: 1px;
+  border: 7px solid transparent;
+  border-radius: 2px;
+}
+
+#thumbnailView > a:last-of-type > .thumbnail {
+  margin-bottom: 10px;
+}
+
+a:focus > .thumbnail,
+.thumbnail:hover {
+  border-color: var(--thumbnail-hover-color);
+}
+
+.thumbnail.selected {
+  border-color: var(--thumbnail-selected-color) !important;
+}
+
+.thumbnailImage {
+  width: var(--thumbnail-width);
+  height: var(--thumbnail-height);
+  opacity: 0.9;
+}
+
+a:focus > .thumbnail > .thumbnailImage,
+.thumbnail:hover > .thumbnailImage {
+  opacity: 0.95;
+}
+
+.thumbnail.selected > .thumbnailImage {
+  opacity: 1 !important;
+}
+
+.thumbnail:not([data-loaded]) > .thumbnailImage {
+  width: calc(var(--thumbnail-width) - 2px);
+  height: calc(var(--thumbnail-height) - 2px);
+  border: 1px dashed rgba(132, 132, 132, 1);
+}
+
+.treeWithDeepNesting > .treeItem,
+.treeItem > .treeItems {
+  margin-inline-start: 20px;
+}
+
+.treeItem > a {
+  text-decoration: none;
+  display: inline-block;
+  /* Subtract the right padding (left, in RTL mode) of the container: */
+  min-width: calc(100% - 4px);
+  height: auto;
+  margin-bottom: 1px;
+  padding: 2px 0 5px;
+  padding-inline-start: 4px;
+  border-radius: 2px;
+  color: var(--treeitem-color);
+  font-size: 13px;
+  line-height: 15px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  white-space: normal;
+  cursor: pointer;
+}
+
+#layersView .treeItem > a * {
+  cursor: pointer;
+}
+
+#layersView .treeItem > a > label {
+  padding-inline-start: 4px;
+}
+
+#layersView .treeItem > a > label > input {
+  float: var(--inline-start);
+  margin-top: 1px;
+}
+
+.treeItemToggler {
+  position: relative;
+  float: var(--inline-start);
+  height: 0;
+  width: 0;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.treeItemToggler::before {
+  inset-inline-end: 4px;
+  -webkit-mask-image: var(--treeitem-expanded-icon);
+  mask-image: var(--treeitem-expanded-icon);
+}
+
+.treeItemToggler.treeItemsHidden::before {
+  -webkit-mask-image: var(--treeitem-collapsed-icon);
+  mask-image: var(--treeitem-collapsed-icon);
+  transform: scaleX(var(--dir-factor));
+}
+
+.treeItemToggler.treeItemsHidden ~ .treeItems {
+  display: none;
+}
+
+.treeItem.selected > a {
+  background-color: var(--treeitem-selected-bg-color);
+  color: var(--treeitem-selected-color);
+}
+
+.treeItemToggler:hover,
+.treeItemToggler:hover + a,
+.treeItemToggler:hover ~ .treeItems,
+.treeItem > a:hover {
+  background-color: var(--treeitem-bg-color);
+  background-clip: padding-box;
+  border-radius: 2px;
+  color: var(--treeitem-hover-color);
+}
+
+.dialogButton {
+  width: auto;
+  margin: 3px 4px 2px !important;
+  padding: 2px 11px;
+  color: var(--main-color);
+  background-color: var(--dialog-button-bg-color);
+  border: var(--dialog-button-border) !important;
+}
+
+dialog {
+  margin: auto;
+  padding: 15px;
+  border-spacing: 4px;
+  color: var(--main-color);
+  font: message-box;
+  font-size: 12px;
+  line-height: 14px;
+  background-color: var(--doorhanger-bg-color);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+dialog > .row {
+  display: table-row;
+}
+
+dialog > .row > * {
+  display: table-cell;
+}
+
+dialog .toolbarField {
+  margin: 5px 0;
+}
+
+dialog .separator {
+  display: block;
+  margin: 4px 0;
+  height: 1px;
+  width: 100%;
+  background-color: var(--separator-color);
+}
+
+dialog .buttonRow {
+  text-align: center;
+  vertical-align: middle;
+}
+
+dialog :link {
+  color: rgba(255, 255, 255, 1);
+}
+
+#passwordDialog {
+  text-align: center;
+}
+
+#passwordDialog .toolbarField {
+  width: 200px;
+}
+
+#documentPropertiesDialog {
+  text-align: left;
+}
+
+#documentPropertiesDialog .row > * {
+  min-width: 100px;
+  text-align: start;
+}
+
+#documentPropertiesDialog .row > span {
+  width: 125px;
+  word-wrap: break-word;
+}
+
+#documentPropertiesDialog .row > p {
+  max-width: 225px;
+  word-wrap: break-word;
+}
+
+#documentPropertiesDialog .buttonRow {
+  margin-top: 10px;
+}
+
+.grab-to-pan-grab {
+  cursor: grab !important;
+}
+
+.grab-to-pan-grab
+*:not(input):not(textarea):not(button):not(select):not(:link) {
+  cursor: inherit !important;
+}
+
+.grab-to-pan-grab:active,
+.grab-to-pan-grabbing {
+  cursor: grabbing !important;
+}
+
+.grab-to-pan-grabbing {
+  position: fixed;
+  background: rgba(0, 0, 0, 0);
+  display: block;
+  inset: 0;
+  overflow: hidden;
+  z-index: 50000; /* should be higher than anything else in PDF.js! */
+}
+
+@page {
+  margin: 0;
+}
+
+#printContainer {
+  display: none;
+}
+
+@media print {
+  body {
+    background: rgba(0, 0, 0, 0) none;
+  }
+
+  body[data-pdfjsprinting] #outerContainer {
+    display: none;
+  }
+
+  body[data-pdfjsprinting] #printContainer {
+    display: block;
+  }
+
+  #printContainer {
+    height: 100%;
+  }
+
+  /* wrapper around (scaled) print canvas elements */
+  #printContainer > .printedPage {
+    page-break-after: always;
+    page-break-inside: avoid;
+
+    /* The wrapper always cover the whole page. */
+    height: 100%;
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #printContainer > .xfaPrintedPage .xfaPage {
+    position: absolute;
+  }
+
+  #printContainer > .xfaPrintedPage {
+    page-break-after: always;
+    page-break-inside: avoid;
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  #printContainer > .printedPage :is(canvas, img) {
+    /* The intrinsic canvas / image size will make sure that we fit the page. */
+    max-width: 100%;
+    max-height: 100%;
+
+    direction: ltr;
+    display: block;
+  }
+}
+
+.visibleLargeView,
+.visibleMediumView {
+  display: none;
+}
+
+@media all and (max-width: 900px) {
+  #toolbarViewerMiddle {
+    display: table;
+    margin: auto;
+    left: auto;
+    position: inherit;
+    transform: none;
+  }
+}
+
+@media all and (max-width: 840px) {
+  #sidebarContainer {
+    background-color: var(--sidebar-narrow-bg-color);
+  }
+
+  #outerContainer.sidebarOpen #viewerContainer {
+    inset-inline-start: 0 !important;
+  }
+}
+
+@media all and (max-width: 820px) {
+  #outerContainer .hiddenLargeView {
+    display: none;
+  }
+
+  #outerContainer .visibleLargeView {
+    display: inherit;
+  }
+}
+
+@media all and (max-width: 750px) {
+  #outerContainer .hiddenMediumView {
+    display: none;
+  }
+
+  #outerContainer .visibleMediumView {
+    display: inherit;
+  }
+}
+
+@media all and (max-width: 690px) {
+  .hiddenSmallView,
+  .hiddenSmallView * {
+    display: none;
+  }
+
+  .toolbarButtonSpacer {
+    width: 0;
+  }
+
+  .findbar {
+    inset-inline-start: 34px;
+  }
+}
+
+@media all and (max-width: 560px) {
+  #scaleSelectContainer {
+    display: none;
+  }
+}

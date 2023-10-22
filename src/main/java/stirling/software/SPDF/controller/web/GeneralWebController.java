@@ -81,6 +81,13 @@ public class GeneralWebController {
         model.addAttribute("currentPage", "view-pdf");
         return "view-pdf";
     }
+
+    @GetMapping("/viewer")
+    @Hidden
+    public String ViewForm(Model model) {
+        model.addAttribute("currentPage", "viewer");
+        return "viewer";
+    }
     
     @GetMapping("/multi-tool")
     @Hidden
