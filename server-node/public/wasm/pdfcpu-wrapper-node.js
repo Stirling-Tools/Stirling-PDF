@@ -1,5 +1,3 @@
-// TODO: Uses the BrowserFS import, needs to be changed for serverside
-
 import { WasmFs } from '@wasmer/wasmfs';
 import path from "path";
 

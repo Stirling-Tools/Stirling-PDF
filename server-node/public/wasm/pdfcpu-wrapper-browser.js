@@ -1,5 +1,3 @@
-// TODO: Uses the BrowserFS import, needs to be changed for serverside
-
 let wasmLocation = "/wasm/";
 
 let fs;
@@ -8,7 +6,7 @@ let Buffer;
 configureFs();
 loadWasm();
 
-function configureFs() {
+async function configureFs() {
     BrowserFS.configure(
         {
             fs: "InMemory",
@@ -28,10 +26,7 @@ function configureFs() {
 }
 
 function loadWasm() {
-    const script = document.createElement("script");
-    script.src = wasmLocation + "/wasm_exec.js";
-    script.async = true;
-    document.body.appendChild(script);
+    import("../../../server-node/public/wasm/wasm_exec.js");
 }
 
 const runWasm = async (param) => {
