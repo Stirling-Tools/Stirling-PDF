@@ -19,7 +19,6 @@ Any file which has been downloaded by the user will have already been deleted fr
 
 Feel free to request any features or bug fixes either in github issues or our [Discord](https://discord.gg/Cn8pWhQRxZ)
 
-
 ![stirling-home](images/stirling-home.png)
 
 ## Features
@@ -33,6 +32,7 @@ Feel free to request any features or bug fixes either in github issues or our [D
 ## **PDF Features**
 
 ### **Page Operations**
+- View and modify PDFs - View multi page PDFs with custom viewing sorting and searching. Plus on page edit features like annotate, draw and adding text and images. (Using PDF.js with Joxit and Liberation.Liberation fonts)
 - Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages. 
 - Merge multiple PDFs together into a single resultant file. 
 - Split PDFs into multiple files at specified page numbers or extract all pages as individual files. 
@@ -145,7 +145,7 @@ services:
 Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
-Stirling PDF currently supports 18!
+Stirling PDF currently supports 19!
 - English (English) (en_GB)
 - English (US) (en_US)
 - Arabic (العربية) (ar_AR)
@@ -164,6 +164,7 @@ Stirling PDF currently supports 18!
 - Basque (Euskara) (eu_ES)
 - Japanese (日本語) (ja_JP)
 - Dutch (Nederlands) (nl_NL)
+- Greek (el_GR)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
@@ -232,6 +233,7 @@ For those wanting to use Stirling-PDFs backend API to link with their own custom
 
 
 ## Login authentication
+![stirling-login](images/login-light.png)
 ### Prerequisites: 
 - User must have the folder ./configs volumed within docker so that it is retained during updates.
 - Docker uses must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables. 
@@ -257,7 +259,6 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 - Folder support with auto scanning to perform operations on
 - Redact text (Via UI not just automated way) 
 - Add Forms
-- Annotations
 - Multi page layout (Stich PDF pages together) support x rows y columns and custom page sizing 
 - Fill forms mannual and automatic 
 

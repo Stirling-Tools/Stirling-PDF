@@ -91,3 +91,26 @@ hr {
     border-color: rgba(255, 255, 255, 0.6); /* semi-transparent white */
     background-color: rgba(255, 255, 255, 0.6); /* for some browsers that might use background instead of border for <hr> */
 }
+
+#global-buttons-container input {
+    background-color: #323948;
+    caret-color: #ffffff;
+    color: #ffffff;
+}
+#global-buttons-container input::placeholder {
+    color: #ffffff;
+}
+
+#global-buttons-container input:disabled::-webkit-input-placeholder { /* WebKit browsers */
+    color:    #6E6865;
+}
+#global-buttons-container input:disabled:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    color:    #6E6865;
+}
+#global-buttons-container input:disabled::-moz-placeholder { /* Mozilla Firefox 19+ */
+    color:    #6E6865;
+}
+#global-buttons-container input:disabled:-ms-input-placeholder { /* Internet Explorer 10+ */
+    color:    #6E6865;
+}
+
