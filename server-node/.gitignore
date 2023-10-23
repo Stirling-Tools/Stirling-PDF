@@ -1,0 +1,4 @@
+.env
+/testFiles/
+/ignore/
+*.code-workspace

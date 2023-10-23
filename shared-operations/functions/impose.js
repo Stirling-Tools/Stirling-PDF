@@ -1,5 +1,5 @@
-export async function impose(snapshot, nup, format, pdfcpuWraopper) {
-    return await pdfcpuWraopper.oneToOne([
+export async function impose(snapshot, nup, format, pdfcpuWrapper) {
+    return await pdfcpuWrapper.oneToOne([
             "pdfcpu.wasm",
             "nup",
             "-c",

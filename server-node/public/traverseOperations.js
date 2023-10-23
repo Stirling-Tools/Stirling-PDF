@@ -103,6 +103,12 @@ export async function * traverseOperations(operations, input, Functions) {
                     input.buffer = await Functions.editMetadata(input.buffer, operation.values["metadata"]);
                 });
                 break;
+            case "organizePages":
+                yield* nToN(input, operation, async (input) => {
+                    input.fileName += "_pagesOrganized";
+                    input.buffer = await Functions.organizePages(input.buffer, operation.values["operation"], operation.values["customOrderString"]);
+                });
+                break;
             default:
                 throw new Error(`${operation.type} not implemented yet.`);
                 break;

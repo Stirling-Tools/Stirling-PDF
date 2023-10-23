@@ -13,7 +13,8 @@
     "archiver": "^6.0.1",
     "express": "^4.18.2",
     "express-fileupload": "^1.4.1",
-    "pdf-lib": "^1.17.1"
+    "pdf-lib": "^1.17.1",
+    "shared-operations": "file:../shared-operations"
   },
   "type": "module"
 }
