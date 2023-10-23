@@ -95,7 +95,7 @@ Current functions of spdf and their progress in this repo.
 | ✔️   | Rotate                 |             |
 | ✔️   | Multi-Page-Layout      |             |
 | ✔️   | Adjust page size/scale |             |
-| 🚧    | Organize               |             |
+| ✔️    | Organize               |             |
 | ✔️    | Change Metadata        |             |
 | ❌     | Add Watermark          |             |
 
