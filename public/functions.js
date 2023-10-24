@@ -1,5 +1,5 @@
 // PDFLib gets importet via index.html script-tag
-// TODO: OpenCV
+// TODO: OpenCV wasm js from browser
 import * as pdfcpuWraopper from "./wasm/pdfcpu-wrapper-browser.js";
 
 import { extractPages as dependantExtractPages } from "./functions/extractPages.js";
