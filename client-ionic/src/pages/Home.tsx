@@ -1,9 +1,22 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Home.css';
 import "../../../server-node/public/wasm/pdfcpu-wrapper-browser.js"
 import { splitPDF } from '../utils/pdf-operations.js';
-console.log(splitPDF);
+
+import { FilePicker } from '@capawesome/capacitor-file-picker';
+
+async function testFunction() {
+    console.log("Test Function for Button Click");
+    console.log(splitPDF);
+
+    const result = await FilePicker.pickFiles({
+        types: ['application/pdf'],
+        multiple: true,
+    });
+
+    console.log(result);
+}
 
 const Home: React.FC = () => {
   return (
@@ -19,7 +32,7 @@ const Home: React.FC = () => {
             <IonTitle size="large">Blank</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <ExploreContainer />
+        <IonButton onClick={testFunction}>Default</IonButton>
       </IonContent>
     </IonPage>
   );

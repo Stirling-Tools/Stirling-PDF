@@ -13,6 +13,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@capacitor/core": "^5.5.0",
+    "@capawesome/capacitor-file-picker": "^5.1.1",
     "@ionic/react": "^7.0.0",
     "@ionic/react-router": "^7.0.0",
     "@types/react-router": "^5.1.20",
