@@ -1,29 +1,41 @@
 export async function removeBlankPages(snapshot, whiteThreashold, PDFJS, OpenCV, PDFLib) {
     
-    const pdfDoc = await PDFJS.getDocument(snapshot).promise;
+    const emptyPages = await findEmptyPages(snapshot);
 
-    const emptyPages = [];
-    for (let i = 1; i <= pdfDoc.numPages; i++) {
-        const page = await pdfDoc.getPage(i);
-        console.log("Checking images");
+    console.log("Empty Pages: ", emptyPages);
 
-        if(!await hasText(page)) {
-            console.log("Found text on Page, page is not empty");
-            continue;
+    const pdfDoc = await PDFLib.PDFDocument.load(snapshot);
+
+    // Reverse the array before looping in order to keep the indecies at the right pages. E.g. if you delete page 5 page 7 becomes page 6, if you delete page 7 page 5 remains page 5
+    emptyPages.reverse().forEach(pageIndex => {
+        pdfDoc.removePage(pageIndex);
+    })
+
+    return pdfDoc.save();
+
+    async function findEmptyPages(snapshot) {
+        const pdfDoc = await PDFJS.getDocument(snapshot).promise;
+
+        const emptyPages = [];
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            console.log("Checking page " + i);
+    
+            if(!await hasText(page)) {
+                console.log(`Found text on Page ${i}, page is not empty`);
+                continue;
+            }
+    
+            if(!await areImagesBlank(page, whiteThreashold)) {
+                console.log(`Found non white image on Page ${i}, page is not empty`);
+                continue;
+            }
+    
+            console.log(`Page ${i} is empty.`);
+            emptyPages.push(i - 1);
         }
-
-        if(!await areImagesBlank(page, whiteThreashold)) {
-            console.log("Found image on Page, page is not empty");
-            continue;
-        }
-
-        emptyPages.push[i];
+        return emptyPages;
     }
-
-    console.log(emptyPages);
-
-    // TODO: Remove emptyPages using pdflib
-    // return pdf;
 
     async function areImagesBlank(page, whiteThreashold) {
         const ops = await page.getOperatorList();
