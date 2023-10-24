@@ -1,5 +1,6 @@
 // PDFLib gets importet via index.html script-tag
-// TODO: OpenCV wasm js from browser
+const OpenCV = { cv: cv } // OPENCV gets importet as cv via index.html script-tag
+// PDFJS as pdfjsLib via index.html script-tag
 import * as pdfcpuWraopper from "./wasm/pdfcpu-wrapper-browser.js";
 
 import { extractPages as dependantExtractPages } from "./functions/extractPages.js";
@@ -50,5 +51,5 @@ export async function organizePages(snapshot, operation, customOrderString) {
 }
 
 export async function removeBlankPages(snapshot, whiteThreashold) {
-    return dependantRemoveBlankPages(snapshot, whiteThreashold, PDFLib, OpenCV);
+    return dependantRemoveBlankPages(snapshot, whiteThreashold, pdfjsLib, OpenCV, PDFLib);
 }

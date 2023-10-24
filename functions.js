@@ -51,5 +51,5 @@ export async function organizePages(snapshot, operation, customOrderString) {
 }
 
 export async function removeBlankPages(snapshot, whiteThreashold) {
-    return dependantRemoveBlankPages(snapshot, whiteThreashold, PDFJS, OpenCV);
+    return dependantRemoveBlankPages(snapshot, whiteThreashold, PDFJS, OpenCV, PDFLib);
 }

@@ -1,10 +1,11 @@
-export async function removeBlankPages(snapshot, whiteThreashold, PDFJS, OpenCV) {
+export async function removeBlankPages(snapshot, whiteThreashold, PDFJS, OpenCV, PDFLib) {
     
     const pdfDoc = await PDFJS.getDocument(snapshot).promise;
 
     const emptyPages = [];
     for (let i = 1; i <= pdfDoc.numPages; i++) {
         const page = await pdfDoc.getPage(i);
+        console.log("Checking images");
 
         if(!await hasText(page)) {
             console.log("Found text on Page, page is not empty");

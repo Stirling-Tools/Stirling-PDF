@@ -40,4 +40,4 @@ import * as Functions from "./functions.js";
             download(result.buffer, result.fileName, "application/pdf");
         });
     });
-})(exampleWorkflows.imposeOnly);
+})(exampleWorkflows.removeBlankPagesOnly);

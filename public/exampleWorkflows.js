@@ -137,3 +137,17 @@ export const imposeOnly = {
         }
     ]
 }
+
+// Split a document up into multiple documents
+export const removeBlankPagesOnly = {
+    outputOptions: {
+        zip: false
+    },
+    operations: [
+        {
+            type: "removeBlankPages",
+            values: { "whiteThreashold": 10 },
+            operations: []
+        }
+    ]
+}
