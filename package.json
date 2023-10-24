@@ -13,7 +13,9 @@
     "archiver": "^6.0.1",
     "express": "^4.18.2",
     "express-fileupload": "^1.4.1",
-    "pdf-lib": "^1.17.1"
+    "opencv-wasm": "^4.3.0-10",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^2.0.943"
   },
   "type": "module"
 }

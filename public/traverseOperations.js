@@ -109,6 +109,12 @@ export async function * traverseOperations(operations, input, Functions) {
                     input.buffer = await Functions.organizePages(input.buffer, operation.values["operation"], operation.values["customOrderString"]);
                 });
                 break;
+            case "removeBlankPages":
+                yield* nToN(input, operation, async (input) => {
+                    input.fileName += "_removedBlanks";
+                    input.buffer = await Functions.removeBlankPages(input.buffer, operation.values["whiteThreashold"]);
+                });
+                break;
             default:
                 throw new Error(`${operation.type} not implemented yet.`);
                 break;

@@ -1,4 +1,6 @@
 import PDFLib from 'pdf-lib';
+import OpenCV from 'opencv-wasm';
+import PDFJS from "pdfjs-dist";
 import * as pdfcpuWraopper from "./public/wasm/pdfcpu-wrapper-node.js";
 
 import { extractPages as dependantExtractPages } from "./public/functions/extractPages.js";
@@ -10,6 +12,7 @@ import { scalePage as dependantScalePage } from './public/functions/scalePage.js
 import { splitPDF as dependantSplitPDF } from './public/functions/splitPDF.js';
 import { editMetadata as dependantEditMetadata } from './public/functions/editMetadata.js';
 import { organizePages as dependantOrganizePages } from './public/functions/organizePages.js';
+import { removeBlankPages as dependantRemoveBlankPages} from './public/functions/removeBlankPages.js';
 
 export async function extractPages(snapshot, pagesToExtractArray) {
     return dependantExtractPages(snapshot, pagesToExtractArray, PDFLib);
@@ -45,4 +48,8 @@ export async function editMetadata(snapshot, metadata) {
 
 export async function organizePages(snapshot, operation, customOrderString) {
     return dependantOrganizePages(snapshot, operation, customOrderString, PDFLib);
+}
+
+export async function removeBlankPages(snapshot, whiteThreashold) {
+    return dependantRemoveBlankPages(snapshot, whiteThreashold, PDFJS, OpenCV);
 }
