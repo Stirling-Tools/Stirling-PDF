@@ -14,7 +14,7 @@ app.get('/', function (req, res, next) { // TODO: Use EJS?
 });
 
 app.use("/api/operations", operations);
-app.use("/api/workflow", workflow);
+//app.use("/api/workflow", workflow);
 
 app.listen(PORT, function (err) {
     if (err) console.log(err);
