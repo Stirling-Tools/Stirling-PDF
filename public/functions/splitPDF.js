@@ -1,4 +1,4 @@
-import { createSubDocument } from "./extractPages.js";
+import { createSubDocument } from "./shared/createSubDocument.js";
 
 export async function splitPDF(snapshot, splitAfterPageArray, PDFLib) {
     const pdfDoc = await PDFLib.PDFDocument.load(snapshot)
