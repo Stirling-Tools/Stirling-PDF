@@ -12,11 +12,13 @@ StirlingPDF aims to support as many types of operations as possible, including s
 ### Adding a shared (server + client) operation
 1. Add the code for the operation to a new file in the [functions folder](/shared-operations/functions/). 
 
-> **NOTE:** all functions in these files use **dependency injection** (see existing functions for examples).
+> **NOTE:** many of the functions in these files use **dependency injection** (see impose for an example).
 > 
-> **Explanation:** Because the server and client import libraries in different ways, we import the library as needed in the wrapper module, then pass into the a operation function as a parameter.
+> **Explanation:** Because some libraries need to be imported in different ways. We import the library as needed in the ```pdf-operations.js``` files, then pass the required library objects into the operation function as a parameter.
 
-2. Now that we have the function code, we need to tell the other modules that it exists. Edit the [server operations](/server-node/public/pdf-operations.js) and the [client operations](/client-ionic/src/utils/pdf-operations.js) files to add your new operation! (Try to follow existing patterns where possible, keep the added operations in alphabetical order in the files).
+2. Now that we have the function code, we need to tell the other modules that it exists. Edit the [server operations](/server-node/src/pdf-operations.js) and the [client operations](/client-ionic/src/utils/pdf-operations.ts) files to add your new operation! (Try to follow existing patterns where possible, keep the added operations in alphabetical order in the files).
+   
+3. If you added a wrapper function to the [client operations](/client-ionic/src/utils/pdf-operations.ts) file, you will also need to add the TypeScript declarations to the [declaration](/client-ionic/declarations/shared-operations.d.ts) file. See the other module declarations for examples.
 
 ### Adding a server only operation
 > WIP
