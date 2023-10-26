@@ -1,7 +1,6 @@
 {
-  "name": "shared-operations",
-  "version": "1.0.0",
-  "description": "",
+  "name": "@stirling-pdf/shared-operations",
+  "version": "0.0.0",
   "main": "index.js",
   "type": "module",
   "scripts": {

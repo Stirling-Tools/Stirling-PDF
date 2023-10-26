@@ -4,7 +4,7 @@ import { organizeWaitOperations } from "./organizeWaitOperations.js";
  * 
  * @param {*} operations 
  * @param {*} input 
- * @param {import('./functions.js')} Functions 
+ * @param {import('./pdf-operations.js')} Functions 
  * @returns 
  */
 export async function * traverseOperations(operations, input, Functions) {

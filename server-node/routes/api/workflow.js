@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import stream from "stream";
 import Archiver from 'archiver';
 
-import * as Functions from "../../functions.js";
+import * as Functions from "../../public/pdf-operations.js";
 import { traverseOperations } from "../../public/traverseOperations.js";
 
 const activeWorkflows = {};

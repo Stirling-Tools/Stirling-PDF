@@ -1,5 +1,5 @@
 {
-  "name": "ionic-app-base",
+  "name": "@stirling-pdf/client-ionic",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -24,7 +24,7 @@
     "react-dom": "^18.2.0",
     "react-router": "^5.3.4",
     "react-router-dom": "^5.3.4",
-    "shared-operations": "file:../shared-operations"
+    "@stirling-pdf/shared-operations": "*"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",

@@ -1,0 +1,13 @@
+{
+  "name": "stirling-pdf",
+  "private":"true",
+  "workspaces":[
+    "client-ionic",
+    "server-node",
+    "shared-operations"
+  ],
+  "scripts": {
+    "node-server-dev": "node ./server-node/index.js",
+    "client-ionic-dev": "node ./server-node/index.js"
+  }
+}

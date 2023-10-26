@@ -2,7 +2,7 @@ import { scaleContent } from "./functions/scaleContent.js";
 import { scalePage, PageSize } from "./functions/scalePage.js";
 import * as exampleWorkflows from "./exampleWorkflows.js";
 import { traverseOperations } from "./traverseOperations.js";
-import * as Functions from "./functions.js";
+import * as Functions from "./pdf-operations.js";
 
 (async (workflow) => {
     const pdfFileInput = document.getElementById('pdfFile');
