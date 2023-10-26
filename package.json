@@ -1,13 +1,15 @@
 {
   "name": "stirling-pdf",
-  "private":"true",
-  "workspaces":[
+  "private": "true",
+  "workspaces": [
     "client-ionic",
     "server-node",
     "shared-operations"
   ],
   "scripts": {
-    "node-server-dev": "node ./server-node/index.js",
-    "client-ionic-dev": "node ./server-node/index.js"
+    "dev": "concurrently --names \"node,ionic\" -c \"red.bold,cyan.bold\" --kill-others \"npm run -w server-node dev\" \"npm run -w client-ionic dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }
