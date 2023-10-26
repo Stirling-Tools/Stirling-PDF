@@ -16,6 +16,9 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "../shared-operations/packages/wasm", "../server-node/public/utils/pdfcpu-wrapper-node.js"],
+  "include": [
+    "src",
+    "declarations/*.d.ts"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -1,22 +1,27 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton } from '@ionic/react';
-import ExploreContainer from '../components/ExploreContainer';
 import './Home.css';
-import "../../../server-node/public/wasm/pdfcpu-wrapper-browser.js"
-import { splitPDF } from '../utils/pdf-operations.js';
+import { rotatePages } from '../utils/pdf-operations.js';
 
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 
-async function testFunction() {
-    console.log("Test Function for Button Click");
-    console.log(splitPDF);
+console.log(rotatePages);
+async function rotate90() {
+  console.log("Test rotate 90 with Button Click");
 
-    const result = await FilePicker.pickFiles({
-        types: ['application/pdf'],
-        multiple: true,
-    });
+  const pickedFiles = await FilePicker.pickFiles({
+    types: ['application/pdf'],
+    multiple: false,
+  });
+  const file = pickedFiles.files[0];
+  
+  const buffer = await file.blob?.arrayBuffer();
+  if (!buffer) return;
+  
+  const rotated = await rotatePages(buffer, 90)
 
-    console.log(result);
+  console.log(rotated);
 }
+
 
 const Home: React.FC = () => {
   return (
@@ -32,7 +37,7 @@ const Home: React.FC = () => {
             <IonTitle size="large">Blank</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonButton onClick={testFunction}>Default</IonButton>
+        <IonButton onClick={rotate90}>Rotate 90</IonButton>
       </IonContent>
     </IonPage>
   );

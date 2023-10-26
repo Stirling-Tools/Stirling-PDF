@@ -17,14 +17,15 @@
     "@capawesome/capacitor-file-picker": "^5.1.1",
     "@ionic/react": "^7.0.0",
     "@ionic/react-router": "^7.0.0",
+    "@stirling-pdf/shared-operations": "*",
     "@types/react-router": "^5.1.20",
     "@types/react-router-dom": "^5.3.3",
     "ionicons": "^7.0.0",
+    "pdf-lib": "^1.17.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "^5.3.4",
-    "react-router-dom": "^5.3.4",
-    "@stirling-pdf/shared-operations": "*"
+    "react-router-dom": "^5.3.4"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",

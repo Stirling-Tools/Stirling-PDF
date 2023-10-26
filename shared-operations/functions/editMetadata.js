@@ -1,5 +1,6 @@
 
-import PDFLib from 'pdf-lib';
+import { PDFDocument, ParseSpeeds } from 'pdf-lib';
+
 
 /**
  * @typedef {Object} Metadata
@@ -17,13 +18,12 @@ import PDFLib from 'pdf-lib';
  * 
  * @param {Uint16Array} snapshot
  * @param {Metadata} metadata - Set property to null or "" to clear, undefined properties will be skipped.
- * @param {PDFLib} PDFLib
- * @returns 
+ * @returns Promise<Uint8Array>
  */
 export async function editMetadata(snapshot, metadata) {
     // Load the original PDF file
-    const pdfDoc = await PDFLib.PDFDocument.load(snapshot, {
-        parseSpeed: PDFLib.ParseSpeeds.Fastest,
+    const pdfDoc = await PDFDocument.load(snapshot, {
+        parseSpeed: ParseSpeeds.Fastest,
     });
 
     if(metadata.Title !== undefined)

@@ -1,10 +1,10 @@
 
-import PDFLib from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
 
 import { createSubDocument } from "./extractPages.js";
 
 export async function splitPDF(snapshot, splitAfterPageArray) {
-    const pdfDoc = await PDFLib.PDFDocument.load(snapshot)
+    const pdfDoc = await PDFDocument.load(snapshot)
 
     const numberOfPages = pdfDoc.getPages().length;
 

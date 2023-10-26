@@ -1,5 +1,5 @@
 
-import PDFLib from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
 
 /**
  * @typedef {"CUSTOM_PAGE_ORDER"|"REVERSE_ORDER"|"DUPLEX_SORT"|"BOOKLET_SORT"|"ODD_EVEN_SPLIT"|"REMOVE_FIRST"|"REMOVE_LAST"|"REMOVE_FIRST_AND_LAST"} OrderOperation
@@ -14,8 +14,8 @@ import PDFLib from 'pdf-lib';
  * @returns 
  */
 export async function organizePages(snapshot, operation, customOrderString) {
-    const pdfDoc = await PDFLib.PDFDocument.load(snapshot);
-    let subDocument = await PDFLib.PDFDocument.create();
+    const pdfDoc = await PDFDocument.load(snapshot);
+    let subDocument = await PDFDocument.create();
     const copiedPages = await subDocument.copyPages(pdfDoc, pdfDoc.getPageIndices());
 
 
