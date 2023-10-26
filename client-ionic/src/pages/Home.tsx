@@ -4,6 +4,8 @@ import { rotatePages } from '../utils/pdf-operations.js';
 
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 
+import download from 'downloadjs';
+
 console.log(rotatePages);
 async function rotate90() {
   console.log("Test rotate 90 with Button Click");
@@ -19,7 +21,7 @@ async function rotate90() {
   
   const rotated = await rotatePages(buffer, 90)
 
-  console.log(rotated);
+  download(rotated, "Rotated.pdf", "application/pdf");
 }
 
 
