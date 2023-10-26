@@ -1,11 +1,14 @@
-export async function extractPages(snapshot, pagesToExtractArray, PDFLib) {
+
+import PDFLib from 'pdf-lib';
+
+export async function extractPages(snapshot, pagesToExtractArray) {
     const pdfDoc = await PDFLib.PDFDocument.load(snapshot)
 
     // TODO: invent a better format for pagesToExtractArray and convert it.
-    return createSubDocument(pdfDoc, pagesToExtractArray, PDFLib);
+    return createSubDocument(pdfDoc, pagesToExtractArray);
 };
 
-export async function createSubDocument(pdfDoc, pagesToExtractArray, PDFLib) {
+export async function createSubDocument(pdfDoc, pagesToExtractArray) {
     const subDocument = await PDFLib.PDFDocument.create();
 
     // Check that array max number is not larger pdf pages number

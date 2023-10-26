@@ -1,4 +1,7 @@
-export async function rotatePages (snapshot, rotation, PDFLib) {
+
+import PDFLib from 'pdf-lib';
+
+export async function rotatePages (snapshot, rotation) {
     // Load the original PDF file
     const pdfDoc = await PDFLib.PDFDocument.load(snapshot, {
         parseSpeed: PDFLib.ParseSpeeds.Fastest,

@@ -1,4 +1,7 @@
-export const mergePDFs = async (snapshots, PDFLib) => {
+
+import PDFLib from 'pdf-lib';
+
+export const mergePDFs = async (snapshots) => {
 
     const mergedPdf = await PDFLib.PDFDocument.create(); 
 

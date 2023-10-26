@@ -2,8 +2,10 @@ import express from 'express';
 import crypto from 'crypto';
 import stream from "stream";
 import Archiver from 'archiver';
+import multer from 'multer'
+const upload = multer();
 
-import * as Functions from "../../public/pdf-operations.js";
+import * as Functions from "../../src/pdf-operations.js";
 import { traverseOperations } from "../../public/traverseOperations.js";
 
 const activeWorkflows = {};
@@ -11,6 +13,7 @@ const activeWorkflows = {};
 const router = express.Router();
 
 router.post("/:workflowUuid?", [
+    upload.any(),
     async (req, res) => {
         if(req.files == null) {
             res.status(400).json({"error": "No files were uploaded."});

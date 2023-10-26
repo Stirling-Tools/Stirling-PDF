@@ -1,4 +1,7 @@
-export async function scaleContent(snapshot, scaleFactor, PDFLib) {
+
+import PDFLib from 'pdf-lib';
+
+export async function scaleContent(snapshot, scaleFactor) {
     // Load the original PDF file
     const pdfDoc = await PDFLib.PDFDocument.load(snapshot, {
         parseSpeed: PDFLib.ParseSpeeds.Fastest,
