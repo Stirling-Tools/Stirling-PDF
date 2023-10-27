@@ -32,7 +32,7 @@ Feel free to request any features or bug fixes either in github issues or our [D
 ## **PDF Features**
 
 ### **Page Operations**
-- View and modify PDFs (current support is for annotating, drawing, and adding images).
+- View and modify PDFs - View multi page PDFs with custom viewing sorting and searching. Plus on page edit features like annotate, draw and adding text and images. (Using PDF.js with Joxit and Liberation.Liberation fonts)
 - Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages. 
 - Merge multiple PDFs together into a single resultant file. 
 - Split PDFs into multiple files at specified page numbers or extract all pages as individual files. 
