@@ -4,9 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "ionic": "ionic serve",
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "ionic serve",
+    "dev-android": "ionic build && ionic cap run android -l --external --open",
+    "linux_build-release-android": "ionic cap build android --no-open --prod && cd android && ./gradlew assemble && mkdir -p ../releases && mv app/build/outputs/apk/release/app-release-unsigned.apk ../releases/StirlingPDF.apk  && echo \"packaged APK\"",
+    "linux_build-release-pwa": "ionic build && mkdir -p releases && zip -r releases/pwa.zip dist/ && echo \"packaged PWA\"",
+    "build-vite": "tsc && vite build",
     "preview": "vite preview",
     "test.e2e": "cypress run",
     "test.unit": "vitest",
@@ -50,6 +52,7 @@
     "jsdom": "^22.1.0",
     "typescript": "^5.1.6",
     "vite": "4.5.0",
+    "vite-plugin-pwa": "^0.16.6",
     "vitest": "^0.32.2"
   }
 }
