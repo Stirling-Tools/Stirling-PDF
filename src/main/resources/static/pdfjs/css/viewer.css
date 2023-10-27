@@ -2352,14 +2352,14 @@ body {
 .secondaryToolbar,
 .editorParamsToolbar {
   position: relative;
-  height: 32px;
+  height: 35px;
   background-color: var(--toolbar-bg-color);
   box-shadow: var(--toolbar-box-shadow);
   border-bottom: var(--toolbar-border-bottom);
 }
 
 #toolbarViewer {
-  height: 32px;
+  height: 35px;
 }
 
 #loadingBar {
