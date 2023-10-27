@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "ionic serve",
     "dev-android": "ionic build && ionic cap run android -l --external --open",
-    "linux_build-release-android": "ionic cap build android --no-open --prod && cd android && ./gradlew assemble && mkdir -p ../releases && mv app/build/outputs/apk/release/app-release-unsigned.apk ../releases/StirlingPDF.apk  && echo \"packaged APK\"",
-    "linux_build-release-pwa": "ionic build && mkdir -p releases && zip -r releases/pwa.zip dist/ && echo \"packaged PWA\"",
+    "linux_build-release-android": "ionic cap build android --no-open --prod && cd android && ./gradlew assembleDebug && mkdir -p ../releases && mv app/build/outputs/apk/debug/app-debug.apk ../releases/StirlingPDF.apk  && echo \"Done packaging APK!!!\"",
+    "linux_build-release-pwa": "ionic build && mkdir -p releases && zip -r releases/pwa.zip dist/ && echo \"Done packaging PWA!!!\"",
     "build-vite": "tsc && vite build",
     "preview": "vite preview",
     "test.e2e": "cypress run",
