@@ -1,3 +1,5 @@
+import { getImagesOnPage } from "./getImagesOnPage.js";
+
 export async function detectEmptyPages(snapshot, whiteThreashold, PDFJS, OpenCV) {
     const pdfDoc = await PDFJS.getDocument(snapshot).promise;
 
@@ -27,15 +29,10 @@ export async function detectEmptyPages(snapshot, whiteThreashold, PDFJS, OpenCV)
     }
 
     async function areImagesBlank(page, threshold) {
-        const ops = await page.getOperatorList();
-    
-        for (var j=0; j < ops.fnArray.length; j++) {
-            if (ops.fnArray[j] == PDFJS.OPS.paintJpegXObject || ops.fnArray[j] == PDFJS.OPS.paintImageXObject) {
-                const image = page.objs.get(ops.argsArray[j][0]);
-                if(image.data) {
-                    return isImageBlank(image, threshold);
-                }
-            }
+        const images = getImagesOnPage(page, PDFJS);
+        for (const image of images) {
+            if(!isImageBlank(image, threshold))
+                return false;
         }
         return true;
     }

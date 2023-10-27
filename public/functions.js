@@ -13,6 +13,7 @@ import { splitPDF as dependantSplitPDF } from './functions/splitPDF.js';
 import { editMetadata as dependantEditMetadata} from "./functions/editMetadata.js";
 import { organizePages as dependantOrganizePages} from "./functions/organizePages.js";
 import { removeBlankPages as dependantRemoveBlankPages} from "./functions/removeBlankPages.js";
+import { splitOn as dependantSplitOn } from "./functions/splitOn.js";
 
 export async function extractPages(snapshot, pagesToExtractArray) {
     return dependantExtractPages(snapshot, pagesToExtractArray, PDFLib);
@@ -52,4 +53,8 @@ export async function organizePages(snapshot, operation, customOrderString) {
 
 export async function removeBlankPages(snapshot, whiteThreashold) {
     return dependantRemoveBlankPages(snapshot, whiteThreashold, pdfjsLib, OpenCV, PDFLib);
+}
+
+export async function splitOn(snapshot, type, whiteThreashold) {
+    return dependantSplitOn(snapshot, type, whiteThreashold, pdfjsLib, OpenCV, PDFLib);
 }

@@ -115,6 +115,12 @@ export async function * traverseOperations(operations, input, Functions) {
                     input.buffer = await Functions.removeBlankPages(input.buffer, operation.values["whiteThreashold"]);
                 });
                 break;
+            case "splitOn":
+                yield* oneToN(input, operation, async (input) => {
+                    input.fileName += "_split";
+                    input.buffer = await Functions.splitOn(input.buffer, operation.values["type"], operation.values["whiteThreashold"]);
+                });
+                break;
             default:
                 throw new Error(`${operation.type} not implemented yet.`);
                 break;

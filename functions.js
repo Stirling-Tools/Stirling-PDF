@@ -1,7 +1,9 @@
 import PDFLib from 'pdf-lib';
-import OpenCV from 'opencv-wasm';
 import PDFJS from "pdfjs-dist";
+
+delete global.crypto; // TODO: I hate to do this, but the new node version forces me to, if anyone finds a better solution, please tell me!
 import * as pdfcpuWraopper from "./public/wasm/pdfcpu-wrapper-node.js";
+import OpenCV from 'opencv-wasm';
 
 import { extractPages as dependantExtractPages } from "./public/functions/extractPages.js";
 import { impose as dependantImpose } from './public/functions/impose.js';
@@ -13,6 +15,7 @@ import { splitPDF as dependantSplitPDF } from './public/functions/splitPDF.js';
 import { editMetadata as dependantEditMetadata } from './public/functions/editMetadata.js';
 import { organizePages as dependantOrganizePages } from './public/functions/organizePages.js';
 import { removeBlankPages as dependantRemoveBlankPages} from './public/functions/removeBlankPages.js';
+import { splitOn as dependantSplitOn } from "./public/functions/splitOn.js";
 
 export async function extractPages(snapshot, pagesToExtractArray) {
     return dependantExtractPages(snapshot, pagesToExtractArray, PDFLib);
@@ -52,4 +55,8 @@ export async function organizePages(snapshot, operation, customOrderString) {
 
 export async function removeBlankPages(snapshot, whiteThreashold) {
     return dependantRemoveBlankPages(snapshot, whiteThreashold, PDFJS, OpenCV, PDFLib);
+}
+
+export async function splitOn(snapshot, type, whiteThreashold) {
+    return dependantSplitOn(snapshot, type, whiteThreashold, PDFJS, OpenCV, PDFLib);
 }
