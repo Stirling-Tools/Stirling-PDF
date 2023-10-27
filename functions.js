@@ -1,5 +1,6 @@
 import PDFLib from 'pdf-lib';
 import PDFJS from "pdfjs-dist";
+import jsQR from "jsqr";
 
 delete global.crypto; // TODO: I hate to do this, but the new node version forces me to, if anyone finds a better solution, please tell me!
 import * as pdfcpuWraopper from "./public/wasm/pdfcpu-wrapper-node.js";
@@ -58,5 +59,5 @@ export async function removeBlankPages(snapshot, whiteThreashold) {
 }
 
 export async function splitOn(snapshot, type, whiteThreashold) {
-    return dependantSplitOn(snapshot, type, whiteThreashold, PDFJS, OpenCV, PDFLib);
+    return dependantSplitOn(snapshot, type, whiteThreashold, PDFJS, OpenCV, PDFLib, jsQR);
 }

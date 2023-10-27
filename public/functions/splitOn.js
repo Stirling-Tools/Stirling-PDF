@@ -1,8 +1,6 @@
 import { detectEmptyPages } from "./shared/detectEmptyPages.js";
 import { getImagesOnPage } from "./shared/getImagesOnPage.js";
 
-import jsQR from "jsQR";
-
 /**
  * @typedef {"BAR_CODE"|"QR_CODE"|"BLANK_PAGE"} SplitType
  */
@@ -16,7 +14,7 @@ import jsQR from "jsQR";
  * @param {} PDFLib
  * @returns 
  */
-export async function splitOn(snapshot, type, whiteThreashold, PDFJS, OpenCV, PDFLib) {
+export async function splitOn(snapshot, type, whiteThreashold, PDFJS, OpenCV, PDFLib, jsQR) {
     
     let splitAtPages = [];
 
@@ -70,7 +68,8 @@ export async function splitOn(snapshot, type, whiteThreashold, PDFJS, OpenCV, PD
     async function checkForQROnImage(image) {
         console.log(image.data, image.width, image.height, image.width * image.height * 4);
         
-        // TODO: There is an issue with the jsQR package, and the package seems to be stale, we could create a fork and fix the issue (The package expects rgba but sometimes we have rgb). In the meanwhile we just force rgba:
+        // TODO: There is an issue with the jsQR package (The package expects rgba but sometimes we have rgb), and the package seems to be stale, we could create a fork and fix the issue. In the meanwhile we just force rgba:
+        // Check for rgb and convert to rgba
         if(image.data.length == image.width * image.height * 3) {
             const tmpArray = new Uint8ClampedArray(image.width * image.height * 4);
 

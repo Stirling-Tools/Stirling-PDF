@@ -1,7 +1,10 @@
 // PDFLib gets importet via index.html script-tag
-const OpenCV = { cv: cv } // OPENCV gets importet as cv via index.html script-tag
 // PDFJS as pdfjsLib via index.html script-tag
+// TODO: import jsQR
+
+
 import * as pdfcpuWraopper from "./wasm/pdfcpu-wrapper-browser.js";
+const OpenCV = { cv: cv } // OPENCV gets importet as cv via index.html script-tag
 
 import { extractPages as dependantExtractPages } from "./functions/extractPages.js";
 import { impose as dependantImpose } from './functions/impose.js';
@@ -56,5 +59,5 @@ export async function removeBlankPages(snapshot, whiteThreashold) {
 }
 
 export async function splitOn(snapshot, type, whiteThreashold) {
-    return dependantSplitOn(snapshot, type, whiteThreashold, pdfjsLib, OpenCV, PDFLib);
+    return dependantSplitOn(snapshot, type, whiteThreashold, pdfjsLib, OpenCV, PDFLib, jsQR);
 }
