@@ -1,3 +1,6 @@
 node_modules/
 *.code-workspace
 .idea/
+dist/
+android/
+ios/

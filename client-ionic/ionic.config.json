@@ -1,5 +1,7 @@
 {
-  "name": "ionic-app-base",
-  "integrations": {},
+  "name": "StirlingPDF",
+  "integrations": {
+    "capacitor": {}
+  },
   "type": "react-vite"
 }
