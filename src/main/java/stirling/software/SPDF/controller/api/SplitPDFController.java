@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.utils.WebResponseUtils;
-import org.apache.pdfbox.multipdf.Splitter;
+
 @RestController
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
@@ -50,24 +50,26 @@ public class SplitPDFController {
         	pageNumbers.add(document.getNumberOfPages()- 1);
         logger.info("Splitting PDF into pages: {}", pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
-        Splitter splitter = new Splitter();
+        // split the document
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
-
-        int previousPageNumber = 1; // PDFBox uses 1-based indexing for pages.
+        int previousPageNumber = 0;
         for (int splitPoint : pageNumbers) {
-        	splitPoint = splitPoint + 1;
-            splitter.setStartPage(previousPageNumber);
-            splitter.setEndPage(splitPoint);
-            List<PDDocument> splitDocuments = splitter.split(document);
+            try (PDDocument splitDocument = new PDDocument()) {
+                for (int i = previousPageNumber; i <= splitPoint; i++) {
+                    PDPage page = document.getPage(i);
+                    splitDocument.addPage(page);
+                    logger.debug("Adding page {} to split document", i);
+                }
+                previousPageNumber = splitPoint + 1;
 
-            for (PDDocument splitDoc : splitDocuments) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                splitDoc.save(baos);
-                splitDocumentsBoas.add(baos);
-                splitDoc.close();
-            }
+                splitDocument.save(baos);
 
-            previousPageNumber = splitPoint + 1;
+                splitDocumentsBoas.add(baos);
+            } catch (Exception e) {
+                logger.error("Failed splitting documents and saving them", e);
+                throw e;
+            }
         }
 
 
