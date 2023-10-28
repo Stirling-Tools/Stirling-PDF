@@ -106,7 +106,7 @@ Current functions of spdf and their progress in this repo.
 | Status | Feature            | Description |
 | ------ | ------------------ | ----------- |
 | ✔️    | Remove Blank Pages |             |
-| 🚧    | Auto Split Pages   |             |
+| ✔️    | Auto Split Pages   |             |
 
 | Status | Feature      | Description |
 | ------ | ------------ | ----------- |

@@ -76,7 +76,6 @@ export async function splitOn(snapshot, type, whiteThreashold, PDFJS, OpenCV, PD
         const pagesWithQR = [];
         for (let i = 0; i < pdfDoc.numPages; i++) {
             const page = await pdfDoc.getPage(i + 1);
-            console.log("Checking page " + i);
 
             const images = await getImagesOnPage(page, PDFJS);
 
@@ -91,8 +90,6 @@ export async function splitOn(snapshot, type, whiteThreashold, PDFJS, OpenCV, PD
     }
 
     async function checkForQROnImage(image) {
-        console.log(image.data, image.width, image.height, image.width * image.height * 4);
-        
         // TODO: There is an issue with the jsQR package (The package expects rgba but sometimes we have rgb), and the package seems to be stale, we could create a fork and fix the issue. In the meanwhile we just force rgba:
         // Check for rgb and convert to rgba
         if(image.data.length == image.width * image.height * 3) {
