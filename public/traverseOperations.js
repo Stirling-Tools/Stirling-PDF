@@ -93,8 +93,7 @@ export async function * traverseOperations(operations, input, Functions) {
                             buffer: splitResult[j]
                         })
                     }
-    
-                    input = splits;
+                    return splits;
                 });
                 break;
             case "editMetadata":
@@ -117,8 +116,17 @@ export async function * traverseOperations(operations, input, Functions) {
                 break;
             case "splitOn":
                 yield* oneToN(input, operation, async (input) => {
-                    input.fileName += "_split";
-                    input.buffer = await Functions.splitOn(input.buffer, operation.values["type"], operation.values["whiteThreashold"]);
+                    const splitResult = await Functions.splitOn(input.buffer, operation.values["type"], operation.values["whiteThreashold"]);
+                    const splits = [];
+                    for (let j = 0; j < splitResult.length; j++) {
+                        splits.push({
+                            originalFileName: input.originalFileName,
+                            fileName: input.fileName + "_split" + j,
+                            buffer: splitResult[j]
+                        })
+                    }
+    
+                    return splits;
                 });
                 break;
             default:
@@ -138,13 +146,14 @@ export async function * traverseOperations(operations, input, Functions) {
 
     async function * oneToN(input, operation, callback) {
         if(Array.isArray(input)) {
+            let output = [];
             for (let i = 0; i < input.length; i++) {
-                await callback(input[i]);
+                output = output.concat(await callback(input[i]));
             }
-            yield* nextOperation(operation.operations, input);
+            yield* nextOperation(operation.operations, output);
         }
         else {
-            await callback(input);
+            input = await callback(input);
             yield* nextOperation(operation.operations, input);
         }
     }

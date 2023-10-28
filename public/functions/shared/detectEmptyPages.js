@@ -29,7 +29,7 @@ export async function detectEmptyPages(snapshot, whiteThreashold, PDFJS, OpenCV)
     }
 
     async function areImagesBlank(page, threshold) {
-        const images = getImagesOnPage(page, PDFJS);
+        const images = await getImagesOnPage(page, PDFJS);
         for (const image of images) {
             if(!isImageBlank(image, threshold))
                 return false;
@@ -37,7 +37,7 @@ export async function detectEmptyPages(snapshot, whiteThreashold, PDFJS, OpenCV)
         return true;
     }
     
-    async function isImageBlank(image, threshold) {
+    function isImageBlank(image, threshold) {
         const src = new OpenCV.cv.Mat(image.width, image.height, OpenCV.cv.CV_8UC4);
         src.data.set(image.data);
         // Convert the image to grayscale

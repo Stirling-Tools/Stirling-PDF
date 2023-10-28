@@ -1,5 +1,6 @@
 import { detectEmptyPages } from "./shared/detectEmptyPages.js";
 import { getImagesOnPage } from "./shared/getImagesOnPage.js";
+import { createSubDocument } from "./shared/createSubDocument.js";
 
 /**
  * @typedef {"BAR_CODE"|"QR_CODE"|"BLANK_PAGE"} SplitType
@@ -39,18 +40,42 @@ export async function splitOn(snapshot, type, whiteThreashold, PDFJS, OpenCV, PD
 
     console.log("Split At Pages: ", splitAtPages);
 
+    // Remove detected Pages & Split
     const pdfDoc = await PDFLib.PDFDocument.load(snapshot);
 
-    // TODO: Remove detected Pages & Split
+    const numberOfPages = pdfDoc.getPages().length;
 
-    return pdfDoc.save();
+    let pagesArray = [];
+    let splitAfter = splitAtPages.shift();
+    const subDocuments = [];
+
+    for (let i = 0; i < numberOfPages; i++) {
+        console.log(i);
+        if(i == splitAfter) {
+            if(pagesArray.length > 0) {
+                subDocuments.push(await createSubDocument(pdfDoc, pagesArray, PDFLib));
+                pagesArray = [];
+            }
+            splitAfter = splitAtPages.shift();
+        }
+        else { // Skip splitAtPage
+            console.log("PagesArray")
+            pagesArray.push(i);
+        }
+    }
+    if(pagesArray.length > 0) {
+        subDocuments.push(await createSubDocument(pdfDoc, pagesArray, PDFLib)); 
+    }
+    pagesArray = [];
+
+    return subDocuments;
 
     async function getPagesWithQRCode(snapshot) {
         const pdfDoc = await PDFJS.getDocument(snapshot).promise;
 
         const pagesWithQR = [];
-        for (let i = 1; i <= pdfDoc.numPages; i++) {
-            const page = await pdfDoc.getPage(i);
+        for (let i = 0; i < pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i + 1);
             console.log("Checking page " + i);
 
             const images = await getImagesOnPage(page, PDFJS);
