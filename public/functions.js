@@ -1,7 +1,6 @@
-// PDFLib gets importet via index.html script-tag
+// PDFLib gets imported via index.html script-tag
 // PDFJS as pdfjsLib via index.html script-tag
-// TODO: import jsQR
-
+// jsQR via index.html script-tag
 
 import * as pdfcpuWraopper from "./wasm/pdfcpu-wrapper-browser.js";
 const OpenCV = { cv: cv } // OPENCV gets importet as cv via index.html script-tag
