@@ -1,9 +1,9 @@
 import { useState } from "react";
 import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/tauri";
+import { appendToFilename } from './utils/file-utils';
+import { openFiles, downloadFile } from './utils/tauri-wrapper'
+import { rotatePages } from './utils/pdf-operations';
 import "./App.css";
-
-console.log(invoke)
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
@@ -12,6 +12,33 @@ function App() {
   async function greet() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
     setGreetMsg(`Hello, ${name}! You've been greeted from Tauri!`);
+  }
+  async function rotatePdf() {
+    var selected = await openFiles({
+      multiple: false,
+      filters: [{
+        name: 'PDF',
+        extensions: ['pdf']
+      }]
+    })
+    
+    if (!selected) return;
+    selected
+
+    const rotated = await rotatePages(selected[0].data, 90);
+    console.log(rotated);
+
+    const appendedPath = appendToFilename(selected[0].getPath(), "_rotated");
+    console.log(appendedPath)
+
+    await downloadFile(rotated, {
+      defaultPath: appendedPath,
+      filters: [{
+        name: "PDF",
+        extensions: ['pdf']
+      }]
+    });
+    console.log("done!")
   }
 
   return (
@@ -46,6 +73,8 @@ function App() {
         />
         <button type="submit">Greet</button>
       </form>
+
+      <button onClick={rotatePdf}>Rotate 90</button>
 
       <p>{greetMsg}</p>
     </div>
