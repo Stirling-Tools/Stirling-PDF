@@ -232,6 +232,8 @@ public class ApplicationProperties {
 	    private String appNameNavbar;
 
 	    public String getAppName() {
+	    	if(appName != null && appName.trim().length() == 0)
+	    		return null;
 	        return appName;
 	    }
 
@@ -240,6 +242,8 @@ public class ApplicationProperties {
 	    }
 
 	    public String getHomeDescription() {
+	    	if(homeDescription != null && homeDescription.trim().length() == 0)
+	    		return null;
 	        return homeDescription;
 	    }
 
@@ -248,6 +252,8 @@ public class ApplicationProperties {
 	    }
 
 	    public String getAppNameNavbar() {
+	    	if(appNameNavbar != null && appNameNavbar.trim().length() == 0)
+	    		return null;
 	        return appNameNavbar;
 	    }
 
