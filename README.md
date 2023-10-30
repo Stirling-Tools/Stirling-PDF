@@ -145,7 +145,7 @@ services:
 Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
-Stirling PDF currently supports 19!
+Stirling PDF currently supports 20!
 - English (English) (en_GB)
 - English (US) (en_US)
 - Arabic (العربية) (ar_AR)
@@ -165,6 +165,7 @@ Stirling PDF currently supports 19!
 - Japanese (日本語) (ja_JP)
 - Dutch (Nederlands) (nl_NL)
 - Greek (el_GR)
+- Turkish (Türkçe) (tr_TR)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
