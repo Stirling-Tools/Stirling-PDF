@@ -1,14 +1,14 @@
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.1.2'
-	id 'io.spring.dependency-management' version '1.1.2'
+	id 'io.spring.dependency-management' version '1.1.3'
 	id 'org.springdoc.openapi-gradle-plugin' version '1.6.0'
 	id "io.swagger.swaggerhub" version "1.2.0"
-	id 'edu.sc.seis.launch4j' version '3.0.3'
+	id 'edu.sc.seis.launch4j' version '3.0.5'
 }
 
 group = 'stirling.software'
-version = '0.14.4'
+version = '0.15.2'
 sourceCompatibility = '17'
 
 repositories {
@@ -74,7 +74,7 @@ dependencies {
 		implementation "com.h2database:h2"
     }
 	
-	testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.2'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.4'
 	
 	
 
@@ -82,7 +82,7 @@ dependencies {
 	implementation group: 'org.apache.pdfbox', name: 'jbig2-imageio', version: '3.0.4'
 	implementation 'commons-io:commons-io:2.13.0'
 	
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
     
 	//general PDF
     implementation 'org.apache.pdfbox:pdfbox:2.0.29'
@@ -91,7 +91,7 @@ dependencies {
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.70' 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-core'
-    implementation group: 'com.google.zxing', name: 'core', version: '3.5.1'
+    implementation group: 'com.google.zxing', name: 'core', version: '3.5.2'
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
 	implementation 'org.commonmark:commonmark:0.21.0'
     // https://mvnrepository.com/artifact/com.github.vladimir-bukhtoyarov/bucket4j-core
