@@ -1,15 +1,22 @@
-#searchBar { 
-	background-image: url('/images/search.svg'); 
-	background-position: 16px 16px; 
-	background-repeat: no-repeat; 
-	width: 100%; 
-	font-size: 16px; 
+#searchBar {
+	background-image: url('/images/search.svg');
+	background-position: 16px 16px;
+	background-repeat: no-repeat;
+	width: 100%;
+	font-size: 16px;
 	margin-bottom: 12px;
-	padding: 12px 20px 12px 40px; 
+	padding: 12px 20px 12px 40px;
 	border: 1px solid #ddd;
-	
-	
+
+
 }
+.dark-mode-search {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' hei… 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") !important;
+    color: #f8f9fa !important;
+    background-color: #212529 !important;
+    border-color: #343a40 !important;
+  }
+
 
 
 .features-container {
@@ -25,10 +32,10 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    background: rgba(13, 110, 253, 0.05); 
+    background: rgba(13, 110, 253, 0.05);
     transition: transform 0.3s, border 0.3s;
     transform-origin: center center;
-    outline: 2px solid transparent; 
+    outline: 2px solid transparent;
 }
 
 .feature-card a {
