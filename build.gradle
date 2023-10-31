@@ -46,15 +46,15 @@ launch4j {
   outfile="Stirling-PDF.exe"
   headerType="console"
   jarTask = tasks.bootJar
-  
+
   errTitle="Encountered error, Do you have Java 17?"
-  downloadUrl="https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.exe" 
+  downloadUrl="https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.exe"
   variables=["BROWSER_OPEN=true"]
   jreMinVersion="17"
-  
+
   mutexName="Stirling-PDF"
   windowTitle="Stirling-PDF"
-  
+
   messagesStartupError="An error occurred while starting Stirling-PDF"
   //messagesJreNotFoundError="This application requires a Java Runtime Environment, Please download Java 17."
   messagesJreVersionError="You are running the wrong version of Java, Please download Java 17."
@@ -63,45 +63,55 @@ launch4j {
 }
 
 dependencies {
-	implementation 'org.yaml:snakeyaml:2.1'
-	implementation 'org.springframework.boot:spring-boot-starter-web:3.1.2'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.1.2'
-	
-	if (System.getenv('DOCKER_ENABLE_SECURITY') != 'false') {
+    implementation 'org.yaml:snakeyaml:2.1'
+    implementation 'org.springframework.boot:spring-boot-starter-web:3.1.2'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.1.2'
+
+    if (System.getenv('DOCKER_ENABLE_SECURITY') != 'false') {
         implementation 'org.springframework.boot:spring-boot-starter-security:3.1.2'
         implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
         implementation "org.springframework.boot:spring-boot-starter-data-jpa"
-		implementation "com.h2database:h2"
+        implementation "com.h2database:h2"
     }
-	
-	testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.4'
-	
-	
 
-	// https://mvnrepository.com/artifact/org.apache.pdfbox/jbig2-imageio
-	implementation group: 'org.apache.pdfbox', name: 'jbig2-imageio', version: '3.0.4'
-	implementation 'commons-io:commons-io:2.13.0'
-	
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.4'
+
+
+
+    // https://mvnrepository.com/artifact/org.apache.pdfbox/jbig2-imageio
+    implementation group: 'org.apache.pdfbox', name: 'jbig2-imageio', version: '3.0.4'
+    implementation 'commons-io:commons-io:2.13.0'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
-    
-	//general PDF
+
+    //general PDF
+
+    // https://mvnrepository.com/artifact/com.opencsv/opencsv
+    implementation group: 'com.opencsv', name: 'opencsv', version: '5.7.1'
     implementation 'org.apache.pdfbox:pdfbox:2.0.29'
     implementation 'org.apache.pdfbox:xmpbox:2.0.29'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.70' 
+    implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-core'
     implementation group: 'com.google.zxing', name: 'core', version: '3.5.2'
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
-	implementation 'org.commonmark:commonmark:0.21.0'
+    implementation 'org.commonmark:commonmark:0.21.0'
     // https://mvnrepository.com/artifact/com.github.vladimir-bukhtoyarov/bucket4j-core
-	implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
-    
+    implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
+
     developmentOnly("org.springframework.boot:spring-boot-devtools")
-	compileOnly 'org.projectlombok:lombok:1.18.28'
-	annotationProcessor 'org.projectlombok:lombok:1.18.28'
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+
+//// https://mvnrepository.com/artifact/technology.tabula/tabula
+//    implementation group: 'technology.tabula', name: 'tabula', version: '1.0.5'
+
+
+//    implementation files('/Users/artempetrenko/Java/Stirling-PDF/tabula-1.0.5-jar-with-dependencies.jar')
+    implementation fileTree(include: ['tabula-1.0.5-jar-with-dependencies.jar'],dir: 'libs')
 
 }
+
 
 task writeVersion {
     def propsFile = file('src/main/resources/version.properties')
@@ -128,7 +138,7 @@ jar {
         attributes 'Implementation-Title': 'Stirling-PDF',
                    'Implementation-Version': project.version
     }
-    
+
 }
 
 tasks.named('test') {
