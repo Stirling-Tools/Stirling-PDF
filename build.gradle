@@ -102,14 +102,6 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     compileOnly 'org.projectlombok:lombok:1.18.28'
     annotationProcessor 'org.projectlombok:lombok:1.18.28'
-
-//// https://mvnrepository.com/artifact/technology.tabula/tabula
-//    implementation group: 'technology.tabula', name: 'tabula', version: '1.0.5'
-
-
-//    implementation files('/Users/artempetrenko/Java/Stirling-PDF/tabula-1.0.5-jar-with-dependencies.jar')
-    implementation fileTree(include: ['tabula-1.0.5-jar-with-dependencies.jar'],dir: 'libs')
-
 }
 
 
