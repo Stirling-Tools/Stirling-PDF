@@ -5,11 +5,12 @@ import Dashboard from "./pages/Dashboard";
 import NoMatch from "./pages/NoMatch";
 import NavBar from "./components/NavBar";
 
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Col, Container, Row } from "react-bootstrap";
+
 export default function App() {
   return (
     <div>
-      <h1>Basic Example</h1>
-
       {/* Routes nest inside one another. Nested route paths build upon
             parent route paths, and nested route elements render inside
             parent route elements. See the note about <Outlet> below. */}
@@ -32,12 +33,18 @@ export default function App() {
 function Layout() {
   return (
     <div>
-        <NavBar/>
+      <NavBar/>
 
       {/* An <Outlet> renders whatever child route is currently active,
           so you can think about this <Outlet> as a placeholder for
           the child routes we defined above. */}
-      <Outlet />
+      <Container fluid="sm" className="">
+        <div className="row justify-content-center">
+          <div className="col-md-6">
+            <Outlet/>
+          </div>
+        </div>
+      </Container>
     </div>
   );
 }

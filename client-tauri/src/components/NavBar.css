@@ -1,0 +1,135 @@
+#search-icon i {
+    font-size: 24px; /* Adjust this to your desired size */
+    transition: color 0.3s;
+}
+
+#search-icon:hover i {
+    color: #666; /* Adjust this to your hover color */
+}
+
+#navbarSearch {
+    transition: all 0.3s;
+    max-height: 0;
+    overflow: hidden;
+
+}
+
+#navbarSearch.show {
+    max-height: 300px; /* Adjust this to your desired max height */
+}
+
+.search-input {
+    transition: border 0.3s, box-shadow 0.3s;
+
+}
+
+.search-input:focus {
+    border-color: #666; /* Adjust this to your focus color */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Adjust this to your desired shadow */
+}
+
+#searchResults {
+    max-width: 300px; /* Adjust to your preferred width */
+    transition: height 0.3s ease; /* Smooth height transition */
+}
+
+/* Set a fixed height and styling for each search result item */
+.search-results a {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* space between icon and text */
+    height: 40px; /* Adjust based on your design */
+    overflow: hidden; /* Prevent content from overflowing */
+    white-space: nowrap; /* Prevent text from wrapping to next line */
+    text-overflow: ellipsis; /* Truncate text if it's too long */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+#navbarSearch {
+    top: 100%;
+    right: 0;
+}
+
+#searchForm {
+    width: 200px;  /* Adjust this value as needed */
+}
+
+/* Style the search results to match the navbar */
+#searchResults {
+    max-height: 200px;  /* Adjust this value as needed */
+    overflow-y: auto;
+    width: 100%;
+}
+
+#searchResults .dropdown-item {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    height: 50px;  /* Fixed height */
+    overflow: hidden;  /* Hide overflow */
+}
+
+#searchResults .icon {
+    margin-right: 10px;
+}
+
+#searchResults .icon-text {
+    display: inline;
+    overflow: hidden;  /* Hide overflow */
+    text-overflow: ellipsis;  /* Add ellipsis for long text */
+}
+
+
+
+.main-icon {
+	width: 36px;
+	height: 36px;
+	vertical-align: middle;
+	transform: translateY(-2px);
+}
+
+.nav-icon svg {
+	width: 16px;
+	height: 16px;
+	vertical-align: middle;
+	transform: translateY(-2px);
+}
+/*
+.icon+.icon {
+	margin-left: -4px;
+}
+*/
+.nav-icon span {
+	margin-left: 9px;
+}
+
+.nav-item-separator {
+	position: relative;
+	margin: 0 4px; /* Adjust the margin as needed */
+}
+
+.nav-item-separator::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 10%; /* Adjust the top and bottom margins as needed */
+	bottom: 10%;
+	width: 1px;
+	background-color: #ccc; /* Adjust the color as needed */
+}
+
+.navbar-icon {
+	width: 20px;
+	height: 20px;
+	transform: translateY(-2px);
+}
