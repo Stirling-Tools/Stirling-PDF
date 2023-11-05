@@ -1,13 +1,13 @@
 <div th:fragment="navbar" class="mx-auto">
-<script src="js/languageSelection.js"></script>
+    <script src="js/languageSelection.js"></script>
 
-<script th:inline="javascript">
-	const currentVersion =  /*[[${@appVersion}]]*/ '';
-	const noFavourites =  /*[[#{noFavourites}]]*/ '';
-</script>
-<script th:src="@{js/githubVersion.js}"></script>
+    <script th:inline="javascript">
+        const currentVersion =  /*[[${@appVersion}]]*/ '';
+        const noFavourites =  /*[[#{noFavourites}]]*/ '';
+    </script>
+    <script th:src="@{js/githubVersion.js}"></script>
 
-<link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/navbar.css">
 
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container ">
@@ -39,33 +39,33 @@
                         </a>
                     </li>-->
 
-<li class="nav-item nav-item-separator"></li>
-    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='crop' OR ${currentPage}=='adjust-contrast' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' OR ${currentPage}=='multi-page-layout' OR ${currentPage}=='scale-pages' OR ${currentPage}=='auto-split-pdf' OR ${currentPage}=='extract-page' OR ${currentPage}=='pdf-to-single-page' ? 'active' : ''">
-    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <img class="icon" src="images/file-earmark-pdf.svg" alt="icon">
-        <span class="icon-text"  th:text="#{navbar.pageOps}"></span>
-    </a>
-    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-        <!-- Existing menu items -->
-        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('merge-pdfs', 'images/union.svg', 'home.merge.title', 'home.merge.desc', 'merge.tags')}"></div>
-        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdfs', 'images/layout-split.svg', 'home.split.title', 'home.split.desc', 'split.tags')}"></div>
-        <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'pdf-organizer', 'images/sort-numeric-down.svg', 'home.pdfOrganiser.title', 'home.pdfOrganiser.desc', 'pdfOrganiser.tags')}"></div>
-        <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'rotate-pdf', 'images/arrow-clockwise.svg', 'home.rotate.title', 'home.rotate.desc', 'rotate.tags')}"></div>
-        <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'remove-pages', 'images/file-earmark-x.svg', 'home.removePages.title', 'home.removePages.desc', 'removePages.tags')}"></div>
-		<div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'multi-page-layout', 'images/page-layout.svg', 'home.pageLayout.title', 'home.pageLayout.desc', 'pageLayout.tags')}"></div>
-		<div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'scale-pages', 'images/scale-pages.svg', 'home.scalePages.title', 'home.scalePages.desc', 'scalePages.tags')}"></div>
-		<div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'auto-split-pdf', 'images/layout-split.svg', 'home.autoSplitPDF.title', 'home.autoSplitPDF.desc', 'autoSplitPDF.tags')}"></div>
-        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('adjust-contrast', 'images/adjust-contrast.svg', 'home.adjust-contrast.title', 'home.adjust-contrast.desc', 'adjust-contrast.tags')}"></div>
-        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('crop', 'images/crop.svg', 'home.crop.title', 'home.crop.desc', 'crop.tags')}"></div>
-        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('extract-page', 'images/extract.svg', 'home.extractPage.title', 'home.extractPage.desc', 'extractPage.tags')}"></div>
-        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-single-page', 'images/single-page.svg', 'home.PdfToSinglePage.title', 'home.PdfToSinglePage.desc', 'PdfToSinglePage.tags')}"></div>
+                    <li class="nav-item nav-item-separator"></li>
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='crop' OR ${currentPage}=='adjust-contrast' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' OR ${currentPage}=='multi-page-layout' OR ${currentPage}=='scale-pages' OR ${currentPage}=='auto-split-pdf' OR ${currentPage}=='extract-page' OR ${currentPage}=='pdf-to-single-page' ? 'active' : ''">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <img class="icon" src="images/file-earmark-pdf.svg" alt="icon">
+                            <span class="icon-text"  th:text="#{navbar.pageOps}"></span>
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <!-- Existing menu items -->
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('merge-pdfs', 'images/union.svg', 'home.merge.title', 'home.merge.desc', 'merge.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdfs', 'images/layout-split.svg', 'home.split.title', 'home.split.desc', 'split.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'pdf-organizer', 'images/sort-numeric-down.svg', 'home.pdfOrganiser.title', 'home.pdfOrganiser.desc', 'pdfOrganiser.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'rotate-pdf', 'images/arrow-clockwise.svg', 'home.rotate.title', 'home.rotate.desc', 'rotate.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'remove-pages', 'images/file-earmark-x.svg', 'home.removePages.title', 'home.removePages.desc', 'removePages.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'multi-page-layout', 'images/page-layout.svg', 'home.pageLayout.title', 'home.pageLayout.desc', 'pageLayout.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'scale-pages', 'images/scale-pages.svg', 'home.scalePages.title', 'home.scalePages.desc', 'scalePages.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ( 'auto-split-pdf', 'images/layout-split.svg', 'home.autoSplitPDF.title', 'home.autoSplitPDF.desc', 'autoSplitPDF.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('adjust-contrast', 'images/adjust-contrast.svg', 'home.adjust-contrast.title', 'home.adjust-contrast.desc', 'adjust-contrast.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('crop', 'images/crop.svg', 'home.crop.title', 'home.crop.desc', 'crop.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('extract-page', 'images/extract.svg', 'home.extractPage.title', 'home.extractPage.desc', 'extractPage.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-single-page', 'images/single-page.svg', 'home.PdfToSinglePage.title', 'home.PdfToSinglePage.desc', 'PdfToSinglePage.tags')}"></div>
 
 
-    </div>
-</li>
-<li class="nav-item nav-item-separator"></li>
+                        </div>
+                    </li>
+                    <li class="nav-item nav-item-separator"></li>
                     <li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='pdf-to-pdfa' OR ${currentPage}=='file-to-pdf' OR ${currentPage}=='xlsx-to-pdf' OR ${currentPage}=='pdf-to-word' OR ${currentPage}=='pdf-to-presentation' OR ${currentPage}=='pdf-to-text' OR ${currentPage}=='pdf-to-html' OR ${currentPage}=='pdf-to-xml' ? 'active' : ''"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
-                        aria-haspopup="true" aria-expanded="false">
+                                                                                                                                                                                                                                                                                                                                                                                                                                  aria-haspopup="true" aria-expanded="false">
                         <img class="icon" src="images/arrow-left-right.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;">
                         <span class="icon-text"  th:text="#{navbar.convert}"></span>
                     </a>
@@ -75,7 +75,7 @@
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('file-to-pdf', 'images/file.svg', 'home.fileToPDF.title', 'home.fileToPDF.desc', 'fileToPDF.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('html-to-pdf', 'images/html.svg', 'home.HTMLToPDF.title', 'home.HTMLToPDF.desc', 'HTMLToPDF.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('url-to-pdf', 'images/url.svg', 'home.URLToPDF.title', 'home.URLToPDF.desc', 'URLToPDF.tags')}"></div>
-							<div th:replace="~{fragments/navbarEntry :: navbarEntry ('markdown-to-pdf', 'images/markdown.svg', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('markdown-to-pdf', 'images/markdown.svg', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags')}"></div>
                             <hr class="dropdown-divider">
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-img', 'images/image.svg', 'home.pdfToImage.title', 'home.pdfToImage.desc', 'pdfToImage.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-word', 'images/file-earmark-word.svg', 'home.PDFToWord.title', 'home.PDFToWord.desc', 'PDFToWord.tags')}"></div>
@@ -91,32 +91,34 @@
                         </div>
                     </li>
 
-<li class="nav-item nav-item-separator"></li>
+                    <li class="nav-item nav-item-separator"></li>
 
-                  <li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='add-watermark' OR ${currentPage}=='cert-sign' OR ${currentPage}=='sanitize-pdf' ? 'active' : ''">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <img class="icon" src="images/shield-check.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{navbar.security}"></span>
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-password', 'images/lock.svg', 'home.addPassword.title', 'home.addPassword.desc', 'addPassword.tags')}"></div>
-                        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-password', 'images/unlock.svg', 'home.removePassword.title', 'home.removePassword.desc', 'removePassword.tags')}"></div>
-                        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('change-permissions', 'images/shield-lock.svg', 'home.permissions.title', 'home.permissions.desc', 'permissions.tags')}"></div>
-                        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-watermark', 'images/droplet.svg', 'home.watermark.title', 'home.watermark.desc', 'watermark.tags')}"></div>
-                        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('cert-sign', 'images/award.svg', 'home.certSign.title', 'home.certSign.desc', 'certSign.tags')}"></div>
-                        <div th:replace="~{fragments/navbarEntry :: navbarEntry ('sanitize-pdf', 'images/sanitize.svg', 'home.sanitizePdf.title', 'home.sanitizePdf.desc', 'sanitizePdf.tags')}"></div>
-						<div th:replace="~{fragments/navbarEntry :: navbarEntry ('auto-redact', 'images/eraser-fill.svg', 'home.autoRedact.title', 'home.autoRedact.desc', 'autoRedact.tags')}"></div>
-                    </div>
-                </li>
+                    <li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='add-watermark' OR ${currentPage}=='cert-sign' OR ${currentPage}=='sanitize-pdf' ? 'active' : ''">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <img class="icon" src="images/shield-check.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text"  th:text="#{navbar.security}"></span>
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-password', 'images/lock.svg', 'home.addPassword.title', 'home.addPassword.desc', 'addPassword.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-password', 'images/unlock.svg', 'home.removePassword.title', 'home.removePassword.desc', 'removePassword.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('change-permissions', 'images/shield-lock.svg', 'home.permissions.title', 'home.permissions.desc', 'permissions.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-watermark', 'images/droplet.svg', 'home.watermark.title', 'home.watermark.desc', 'watermark.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('cert-sign', 'images/award.svg', 'home.certSign.title', 'home.certSign.desc', 'certSign.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('sanitize-pdf', 'images/sanitize.svg', 'home.sanitizePdf.title', 'home.sanitizePdf.desc', 'sanitizePdf.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('auto-redact', 'images/eraser-fill.svg', 'home.autoRedact.title', 'home.autoRedact.desc', 'autoRedact.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('auto-extract', 'images/eraser-fill.svg', 'home.tableExtraxt.title', 'home.tableExtraxt.desc', 'tableExtraxt.tags')}"></div>
 
-                  <li class="nav-item nav-item-separator"></li>
+                        </div>
+                    </li>
+
+                    <li class="nav-item nav-item-separator"></li>
                     <li class="nav-item dropdown" th:classappend="${currentPage}=='sign' OR ${currentPage}=='repair' OR ${currentPage}=='compare' OR ${currentPage}=='show-javascript' OR ${currentPage}=='flatten' OR ${currentPage}=='remove-blanks' OR ${currentPage}=='extract-image-scans' OR ${currentPage}=='change-metadata' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' OR ${currentPage}=='add-page-numbers' OR ${currentPage}=='auto-rename' OR ${currentPage}=='get-info-on-pdf' ? 'active' : ''">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <img class="icon" src="images/card-list.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;">
-                        <span class="icon-text"  th:text="#{navbar.other}"></span>
+                            <img class="icon" src="images/card-list.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;">
+                            <span class="icon-text"  th:text="#{navbar.other}"></span>
 
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        	<!--<div th:replace="~{fragments/navbarEntry :: navbarEntry ('pipeline', 'images/pipeline.svg', 'home.pipeline.title', 'home.pipeline.desc', 'pipeline.tags')}"></div> -->
+                            <!--<div th:replace="~{fragments/navbarEntry :: navbarEntry ('pipeline', 'images/pipeline.svg', 'home.pipeline.title', 'home.pipeline.desc', 'pipeline.tags')}"></div> -->
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('ocr-pdf', 'images/search.svg', 'home.ocr.title', 'home.ocr.desc', 'ocr.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-image', 'images/file-earmark-richtext.svg', 'home.addImage.title', 'home.addImage.desc', 'addImage.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('compress-pdf', 'images/file-zip.svg', 'home.compressPdfs.title', 'home.compressPdfs.desc', 'compressPdfs.tags')}"></div>
@@ -130,8 +132,8 @@
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('compare', 'images/scales.svg', 'home.compare.title', 'home.compare.desc', 'compare.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-page-numbers', 'images/add-page-numbers.svg', 'home.add-page-numbers.title', 'home.add-page-numbers.desc', 'add-page-numbers.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('auto-rename', 'images/fonts.svg', 'home.auto-rename.title', 'home.auto-rename.desc', 'auto-rename.tags')}"></div>
-                        	<div th:replace="~{fragments/navbarEntry :: navbarEntry ('get-info-on-pdf', 'images/info.svg', 'home.getPdfInfo.title', 'home.getPdfInfo.desc', 'getPdfInfo.tags')}"></div>
-                        	<div th:replace="~{fragments/navbarEntry :: navbarEntry ('show-javascript', 'images/js.svg', 'home.showJS.title', 'home.showJS.desc', 'showJS.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('get-info-on-pdf', 'images/info.svg', 'home.getPdfInfo.title', 'home.getPdfInfo.desc', 'getPdfInfo.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('show-javascript', 'images/js.svg', 'home.showJS.title', 'home.showJS.desc', 'showJS.tags')}"></div>
                         </div>
                     </li>
 
@@ -147,23 +149,23 @@
                         </div>
                     </li>
 
-         
 
-					<script src="js/languageSelection.js"></script>
-					<script src="js/darkmode.js"></script>
 
-    				<li class="nav-item">
+                    <script src="js/languageSelection.js"></script>
+                    <script src="js/darkmode.js"></script>
+
+                    <li class="nav-item">
                         <a class="nav-link" id="dark-mode-toggle" href="#">
-                          <img class="navbar-icon" id="dark-mode-icon" src="moon.svg" alt="icon" />
+                            <img class="navbar-icon" id="dark-mode-icon" src="moon.svg" alt="icon" />
                         </a>
-                      </li>
+                    </li>
 
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-globe2 globe-icon" viewBox="0 0 20 20">
-                          <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855-.143.268-.276.56-.395.872.705.157 1.472.257 2.282.287V1.077zM4.249 3.539c.142-.384.304-.744.481-1.078a6.7 6.7 0 0 1 .597-.933A7.01 7.01 0 0 0 3.051 3.05c.362.184.763.349 1.198.49zM3.509 7.5c.036-1.07.188-2.087.436-3.008a9.124 9.124 0 0 1-1.565-.667A6.964 6.964 0 0 0 1.018 7.5h2.49zm1.4-2.741a12.344 12.344 0 0 0-.4 2.741H7.5V5.091c-.91-.03-1.783-.145-2.591-.332zM8.5 5.09V7.5h2.99a12.342 12.342 0 0 0-.399-2.741c-.808.187-1.681.301-2.591.332zM4.51 8.5c.035.987.176 1.914.399 2.741A13.612 13.612 0 0 1 7.5 10.91V8.5H4.51zm3.99 0v2.409c.91.03 1.783.145 2.591.332.223-.827.364-1.754.4-2.741H8.5zm-3.282 3.696c.12.312.252.604.395.872.552 1.035 1.218 1.65 1.887 1.855V11.91c-.81.03-1.577.13-2.282.287zm.11 2.276a6.696 6.696 0 0 1-.598-.933 8.853 8.853 0 0 1-.481-1.079 8.38 8.38 0 0 0-1.198.49 7.01 7.01 0 0 0 2.276 1.522zm-1.383-2.964A13.36 13.36 0 0 1 3.508 8.5h-2.49a6.963 6.963 0 0 0 1.362 3.675c.47-.258.995-.482 1.565-.667zm6.728 2.964a7.009 7.009 0 0 0 2.275-1.521 8.376 8.376 0 0 0-1.197-.49 8.853 8.853 0 0 1-.481 1.078 6.688 6.688 0 0 1-.597.933zM8.5 11.909v3.014c.67-.204 1.335-.82 1.887-1.855.143-.268.276-.56.395-.872A12.63 12.63 0 0 0 8.5 11.91zm3.555-.401c.57.185 1.095.409 1.565.667A6.963 6.963 0 0 0 14.982 8.5h-2.49a13.36 13.36 0 0 1-.437 3.008zM14.982 7.5a6.963 6.963 0 0 0-1.362-3.675c-.47.258-.995.482-1.565.667.248.92.4 1.938.437 3.008h2.49zM11.27 2.461c.177.334.339.694.482 1.078a8.368 8.368 0 0 0 1.196-.49 7.01 7.01 0 0 0-2.275-1.52c.218.283.418.597.597.932zm-.488 1.343a7.765 7.765 0 0 0-.395-.872C9.835 1.897 9.17 1.282 8.5 1.077V4.09c.81-.03 1.577-.13 2.282-.287z"/>
-                        </svg>
-                         </a>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-globe2 globe-icon" viewBox="0 0 20 20">
+                                <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855-.143.268-.276.56-.395.872.705.157 1.472.257 2.282.287V1.077zM4.249 3.539c.142-.384.304-.744.481-1.078a6.7 6.7 0 0 1 .597-.933A7.01 7.01 0 0 0 3.051 3.05c.362.184.763.349 1.198.49zM3.509 7.5c.036-1.07.188-2.087.436-3.008a9.124 9.124 0 0 1-1.565-.667A6.964 6.964 0 0 0 1.018 7.5h2.49zm1.4-2.741a12.344 12.344 0 0 0-.4 2.741H7.5V5.091c-.91-.03-1.783-.145-2.591-.332zM8.5 5.09V7.5h2.99a12.342 12.342 0 0 0-.399-2.741c-.808.187-1.681.301-2.591.332zM4.51 8.5c.035.987.176 1.914.399 2.741A13.612 13.612 0 0 1 7.5 10.91V8.5H4.51zm3.99 0v2.409c.91.03 1.783.145 2.591.332.223-.827.364-1.754.4-2.741H8.5zm-3.282 3.696c.12.312.252.604.395.872.552 1.035 1.218 1.65 1.887 1.855V11.91c-.81.03-1.577.13-2.282.287zm.11 2.276a6.696 6.696 0 0 1-.598-.933 8.853 8.853 0 0 1-.481-1.079 8.38 8.38 0 0 0-1.198.49 7.01 7.01 0 0 0 2.276 1.522zm-1.383-2.964A13.36 13.36 0 0 1 3.508 8.5h-2.49a6.963 6.963 0 0 0 1.362 3.675c.47-.258.995-.482 1.565-.667zm6.728 2.964a7.009 7.009 0 0 0 2.275-1.521 8.376 8.376 0 0 0-1.197-.49 8.853 8.853 0 0 1-.481 1.078 6.688 6.688 0 0 1-.597.933zM8.5 11.909v3.014c.67-.204 1.335-.82 1.887-1.855.143-.268.276-.56.395-.872A12.63 12.63 0 0 0 8.5 11.91zm3.555-.401c.57.185 1.095.409 1.565.667A6.963 6.963 0 0 0 14.982 8.5h-2.49a13.36 13.36 0 0 1-.437 3.008zM14.982 7.5a6.963 6.963 0 0 0-1.362-3.675c-.47.258-.995.482-1.565.667.248.92.4 1.938.437 3.008h2.49zM11.27 2.461c.177.334.339.694.482 1.078a8.368 8.368 0 0 0 1.196-.49 7.01 7.01 0 0 0-2.275-1.52c.218.283.418.597.597.932zm-.488 1.343a7.765 7.765 0 0 0-.395-.872C9.835 1.897 9.17 1.282 8.5 1.077V4.09c.81-.03 1.577-.13 2.282-.287z"/>
+                            </svg>
+                        </a>
                         <div class="dropdown-menu" aria-labelledby="languageDropdown">
                             <th:block th:insert="~{fragments/languages :: langs}"></th:block>
                         </div>
@@ -178,68 +180,68 @@
 
                     </li>
 
-             <!-- Search Button and Search Bar -->
-<li class="nav-item position-relative">
-    <a href="#" class="nav-link" id="search-icon">
-        <img class="navbar-icon" src="images/search.svg" alt="icon" width="24" height="24">
-    </a>
-    <!-- Search Bar -->
-    <div class="collapse position-absolute" id="navbarSearch">
-        <form class="d-flex p-2 bg-white border search-form" id="searchForm">
-            <input class="form-control search-input" type="search" placeholder="Search" aria-label="Search" id="navbarSearchInput">
-        </form>
-        <!-- Search Results -->
-        <div id="searchResults" class="border p-2 bg-white search-results"></div>
-    </div>
-</li>
-<style>
-#search-icon i {
-    font-size: 24px; /* Adjust this to your desired size */
-    transition: color 0.3s;
-}
+                    <!-- Search Button and Search Bar -->
+                    <li class="nav-item position-relative">
+                        <a href="#" class="nav-link" id="search-icon">
+                            <img class="navbar-icon" src="images/search.svg" alt="icon" width="24" height="24">
+                        </a>
+                        <!-- Search Bar -->
+                        <div class="collapse position-absolute" id="navbarSearch">
+                            <form class="d-flex p-2 bg-white border search-form" id="searchForm">
+                                <input class="form-control search-input" type="search" placeholder="Search" aria-label="Search" id="navbarSearchInput">
+                            </form>
+                            <!-- Search Results -->
+                            <div id="searchResults" class="border p-2 bg-white search-results"></div>
+                        </div>
+                    </li>
+                    <style>
+                        #search-icon i {
+                            font-size: 24px; /* Adjust this to your desired size */
+                            transition: color 0.3s;
+                        }
 
-#search-icon:hover i {
-    color: #666; /* Adjust this to your hover color */
-}
+                        #search-icon:hover i {
+                            color: #666; /* Adjust this to your hover color */
+                        }
 
-#navbarSearch {
-    transition: all 0.3s;
-    max-height: 0;
-    overflow: hidden;
+                        #navbarSearch {
+                            transition: all 0.3s;
+                            max-height: 0;
+                            overflow: hidden;
 
-}
+                        }
 
-#navbarSearch.show {
-    max-height: 300px; /* Adjust this to your desired max height */
-}
+                        #navbarSearch.show {
+                            max-height: 300px; /* Adjust this to your desired max height */
+                        }
 
-.search-input {
-    transition: border 0.3s, box-shadow 0.3s;
+                        .search-input {
+                            transition: border 0.3s, box-shadow 0.3s;
 
-}
+                        }
 
-.search-input:focus {
-    border-color: #666; /* Adjust this to your focus color */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Adjust this to your desired shadow */
-}
+                        .search-input:focus {
+                            border-color: #666; /* Adjust this to your focus color */
+                            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Adjust this to your desired shadow */
+                        }
 
-#searchResults {
-    max-width: 300px; /* Adjust to your preferred width */
-    transition: height 0.3s ease; /* Smooth height transition */
-}
+                        #searchResults {
+                            max-width: 300px; /* Adjust to your preferred width */
+                            transition: height 0.3s ease; /* Smooth height transition */
+                        }
 
-/* Set a fixed height and styling for each search result item */
-.search-results a {
-    display: flex;
-    align-items: center;
-    gap: 10px; /* space between icon and text */
-    height: 40px; /* Adjust based on your design */
-    overflow: hidden; /* Prevent content from overflowing */
-    white-space: nowrap; /* Prevent text from wrapping to next line */
-    text-overflow: ellipsis; /* Truncate text if it's too long */
-}
+                        /* Set a fixed height and styling for each search result item */
+                        .search-results a {
+                            display: flex;
+                            align-items: center;
+                            gap: 10px; /* space between icon and text */
+                            height: 40px; /* Adjust based on your design */
+                            overflow: hidden; /* Prevent content from overflowing */
+                            white-space: nowrap; /* Prevent text from wrapping to next line */
+                            text-overflow: ellipsis; /* Truncate text if it's too long */
+                        }
 
-</style>
+                    </style>
 
                 </ul>
 
@@ -251,61 +253,61 @@
         <script src="js/search.js"></script>
     </nav>
 
-	<div th:insert="~{fragments/errorBannerPerPage.html :: errorBannerPerPage}"></div>
+    <div th:insert="~{fragments/errorBannerPerPage.html :: errorBannerPerPage}"></div>
     <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="settingsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content dark-card">
-            <div class="modal-header">
-                <h5 class="modal-title" id="settingsModalLabel" th:text="#{settings.title}"></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <p class="mb-0" th:utext="#{settings.appVersion} + ' ' + ${@appVersion}"></p>
-                    <a href="https://github.com/sponsors/Frooodle" target="_blank">
-                        <button type="button" class="btn btn-sm btn-outline-primary">Sponsor Stirling-PDF</button>
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content dark-card">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settingsModalLabel" th:text="#{settings.title}"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <p class="mb-0" th:utext="#{settings.appVersion} + ' ' + ${@appVersion}"></p>
+                        <a href="https://github.com/sponsors/Frooodle" target="_blank">
+                            <button type="button" class="btn btn-sm btn-outline-primary">Sponsor Stirling-PDF</button>
+                        </a>
+                        <a href="swagger-ui/index.html" target="_blank">
+                            <button type="button" class="btn btn-sm btn-outline-primary">API</button>
+                        </a>
+                        <a href="https://github.com/Frooodle/Stirling-PDF/releases" target="_blank">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="update-btn" th:utext="#{settings.update}"></button>
+                        </a>
+                    </div>
+                    <div class="mb-3">
+                        <label for="downloadOption" th:utext="#{settings.downloadOption.title}"></label>
+                        <select class="form-control" id="downloadOption">
+                            <option value="sameWindow" th:utext="#{settings.downloadOption.1}"></option>
+                            <option value="newWindow" th:utext="#{settings.downloadOption.2}"></option>
+                            <option value="downloadFile" th:utext="#{settings.downloadOption.3}"></option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label>
+                        <input type="range" class="form-range" min="1" max="9" step="1" id="zipThreshold" value="4">
+                        <span id="zipThresholdValue" class="ms-2"></span>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="boredWaiting">
+                        <label class="form-check-label" for="boredWaiting" th:text="#{bored}"></label>
+                    </div>
+                    <a th:if="${@loginEnabled}" href="account" target="_blank">
+                        <button type="button" class="btn btn-sm btn-outline-primary" th:text="#{settings.accountSettings}">Account Settings</button>
                     </a>
-                    <a href="swagger-ui/index.html" target="_blank">
-                        <button type="button" class="btn btn-sm btn-outline-primary">API</button>
+                </div>
+                <div class="modal-footer">
+                    <a th:if="${@loginEnabled}" href="/logout">
+                        <button type="button" class="btn btn-danger" th:text="#{settings.signOut}">Sign Out</button>
                     </a>
-                    <a href="https://github.com/Frooodle/Stirling-PDF/releases" target="_blank">
-					    <button type="button" class="btn btn-sm btn-outline-primary" id="update-btn" th:utext="#{settings.update}"></button>
-					</a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
                 </div>
-                <div class="mb-3">
-                    <label for="downloadOption" th:utext="#{settings.downloadOption.title}"></label>
-                    <select class="form-control" id="downloadOption">
-                        <option value="sameWindow" th:utext="#{settings.downloadOption.1}"></option>
-                        <option value="newWindow" th:utext="#{settings.downloadOption.2}"></option>
-                        <option value="downloadFile" th:utext="#{settings.downloadOption.3}"></option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label>
-                    <input type="range" class="form-range" min="1" max="9" step="1" id="zipThreshold" value="4">
-                    <span id="zipThresholdValue" class="ms-2"></span>
-                </div>
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="boredWaiting">
-                    <label class="form-check-label" for="boredWaiting" th:text="#{bored}"></label>
-                </div>
-                <a th:if="${@loginEnabled}" href="account" target="_blank">
-                    <button type="button" class="btn btn-sm btn-outline-primary" th:text="#{settings.accountSettings}">Account Settings</button>
-                </a>
-            </div>
-            <div class="modal-footer">
-            	<a th:if="${@loginEnabled}" href="/logout">
-	                <button type="button" class="btn btn-danger" th:text="#{settings.signOut}">Sign Out</button>
-	            </a>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
             </div>
         </div>
     </div>
-</div>
 
 
 
-<script src="js/settings.js"></script>
+    <script src="js/settings.js"></script>
 
 
 
