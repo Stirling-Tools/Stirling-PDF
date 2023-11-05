@@ -103,6 +103,8 @@
 	height: 16px;
 	vertical-align: middle;
 	transform: translateY(-2px);
+	margin-left: 4px;
+	margin-right: 4px;
 }
 /*
 .icon+.icon {
@@ -110,7 +112,8 @@
 }
 */
 .nav-icon span {
-	margin-left: 9px;
+	margin-left: 4px;
+	margin-right: 4px;
 }
 
 .nav-item-separator {

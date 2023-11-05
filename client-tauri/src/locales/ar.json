@@ -1,0 +1,853 @@
+{
+  "translation": {
+    "language": {
+      "name":"العربية",
+      "flag": "🇸🇦",
+      "direction": "rtl"
+    },
+    "pdfPrompt": "اختر PDF",
+    "multiPdfPrompt": "اختر ملفات PDF (2+)",
+    "multiPdfDropPrompt": "حدد (أو اسحب وأفلت) جميع ملفات PDF التي تحتاجها",
+    "imgPrompt": "اختر صورة",
+    "genericSubmit": "إرسال",
+    "processTimeWarning": "تحذير: يمكن أن تستغرق هذه العملية ما يصل إلى دقيقة حسب حجم الملف",
+    "pageOrderPrompt": "ترتيب الصفحات (أدخل قائمة بأرقام الصفحات مفصولة بفواصل):",
+    "goToPage": "اذهب",
+    "true": "\u0635\u062D\u064A\u062D",
+    "false": "\u062E\u0637\u0623",
+    "unknown": "\u063A\u064A\u0631 \u0645\u0639\u0631\u0648\u0641",
+    "save": "\u062D\u0641\u0638",
+    "close": "\u0625\u063A\u0644\u0627\u0642",
+    "filesSelected": "الملفات المحددة",
+    "noFavourites": "لم تتم إضافة أي مفضلات",
+    "bored": "الانتظار بالملل؟",
+    "alphabet": "\u0627\u0644\u0623\u0628\u062C\u062F\u064A\u0629",
+    "downloadPdf": "تنزيل PDF",
+    "text": "نص",
+    "font": "الخط",
+    "selectFillter": "- حدد -",
+    "pageNum": "رقم الصفحة",
+    "sizes": {
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large",
+      "x-large": "X-Large"
+    },
+    "error": {
+      "pdfPassword": "The PDF Document is passworded and either the password was not provided or was incorrect"
+    },
+    "delete": "Delete",
+    "username": "Username",
+    "password": "Password",
+    "welcome": "Welcome",
+    "property": "Property",
+    "black": "Black",
+    "white": "White",
+    "red": "Red",
+    "green": "Green",
+    "blue": "Blue",
+    "custom": "Custom...",
+    "changedCredsMessage": "Credentials changed!",
+    "notAuthenticatedMessage": "User not authenticated.",
+    "userNotFoundMessage": "User not found.",
+    "incorrectPasswordMessage": "Current password is incorrect.",
+    "usernameExistsMessage": "New Username already exists.",
+    "navbar": {
+      "convert": "تحويل",
+      "security": "الأمان",
+      "other": "أخرى",
+      "darkmode": "الوضع الداكن",
+      "pageOps": "عمليات الصفحة",
+      "settings": "\u0625\u0639\u062F\u0627\u062F\u0627\u062A"
+    },
+    "settings": {
+      "title": "\u0627\u0644\u0625\u0639\u062F\u0627\u062F\u0627\u062A",
+      "update": "\u0627\u0644\u062A\u062D\u062F\u064A\u062B \u0645\u062A\u0627\u062D",
+      "appVersion": "\u0625\u0635\u062F\u0627\u0631 \u0627\u0644\u062A\u0637\u0628\u064A\u0642:",
+      "downloadOption": {
+        "1": "\u0641\u062A\u062D \u0641\u064A \u0646\u0641\u0633 \u0627\u0644\u0646\u0627\u0641\u0630\u0629",
+        "2": "\u0641\u062A\u062D \u0641\u064A \u0646\u0627\u0641\u0630\u0629 \u062C\u062F\u064A\u062F\u0629",
+        "3": "\u062A\u0646\u0632\u064A\u0644 \u0627\u0644\u0645\u0644\u0641",
+        "title": "\u062A\u062D\u062F\u064A\u062F \u062E\u064A\u0627\u0631 \u0627\u0644\u062A\u0646\u0632\u064A\u0644 (\u0644\u0644\u062A\u0646\u0632\u064A\u0644\u0627\u062A \u0630\u0627\u062A \u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0648\u0627\u062D\u062F \u063A\u064A\u0631 \u0627\u0644\u0645\u0636\u063A\u0648\u0637):"
+      },
+      "zipThreshold": "\u0645\u0644\u0641\u0627\u062A \u0645\u0636\u063A\u0648\u0637\u0629 \u0639\u0646\u062F \u062A\u062C\u0627\u0648\u0632 \u0639\u062F\u062F \u0627\u0644\u0645\u0644\u0641\u0627\u062A \u0627\u0644\u062A\u064A \u062A\u0645 \u062A\u0646\u0632\u064A\u0644\u0647\u0627",
+      "signOut": "Sign Out",
+      "accountSettings": "Account Settings"
+    },
+    "changeCreds": {
+      "title": "Change Credentials",
+      "header": "Update Your Account Details",
+      "changeUserAndPassword": "You are using default login credentials. Please enter a new password (and username if wanted)",
+      "newUsername": "New Username",
+      "oldPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmNewPassword": "Confirm New Password",
+      "submit": "Submit Changes"
+    },
+    "account": {
+      "title": "Account Settings",
+      "accountSettings": "Account Settings",
+      "adminSettings": "Admin Settings - View and Add Users",
+      "userControlSettings": "User Control Settings",
+      "changeUsername": "Change Username",
+      "password": "Confirmation Password",
+      "oldPassword": "Old password",
+      "newPassword": "New Password",
+      "changePassword": "Change Password",
+      "confirmNewPassword": "Confirm New Password",
+      "signOut": "Sign Out",
+      "yourApiKey": "Your API Key",
+      "syncTitle": "Sync browser settings with Account",
+      "settingsCompare": "Settings Comparison:",
+      "property": "Property",
+      "webBrowserSettings": "Web Browser Setting",
+      "syncToBrowser": "Sync Account -> Browser",
+      "syncToAccount": "Sync Account <- Browser"
+    },
+    "adminUserSettings": {
+      "title": "User Control Settings",
+      "header": "Admin User Control Settings",
+      "admin": "Admin",
+      "user": "User",
+      "addUser": "Add New User",
+      "roles": "Roles",
+      "role": "Role",
+      "actions": "Actions",
+      "apiUser": "Limited API User",
+      "webOnlyUser": "Web Only User",
+      "forceChange": "Force user to change username/password on login",
+      "submit": "Save User"
+    },
+    "home": {
+      "desc": "متجرك الشامل المستضاف محليًا لجميع احتياجات PDF الخاصة بك.",
+      "searchBar": "Search for features...",
+      "viewPdf": {
+        "title": "View PDF",
+        "desc": "View, annotate, add text or images"
+      },
+      "multiTool": {
+        "title": "أداة متعددة PDF",
+        "desc": "دمج الصفحات وتدويرها وإعادة ترتيبها وإزالتها"
+      },
+      "merge": {
+        "title": "دمج ملفات",
+        "desc": "دمج ملفات PDF متعددة في ملف واحد بسهولة."
+      },
+      "split": {
+        "title": "انقسام ملفات",
+        "desc": "تقسيم ملفات PDF إلى مستندات متعددة"
+      },
+      "rotate": {
+        "title": "تدوير ملفات",
+        "desc": "قم بتدوير ملفات PDF الخاصة بك بسهولة."
+      },
+      "imageToPdf": {
+        "title": "صورة إلى PDF",
+        "desc": "تحويل الصور (PNG ، JPEG ، GIF) إلى PDF."
+      },
+      "pdfToImage": {
+        "title": "تحويل PDF إلى صورة",
+        "desc": "تحويل ملف PDF إلى صورة. (PNG ، JPEG ، GIF)"
+      },
+      "pdfOrganiser": {
+        "title": "منظم",
+        "desc": "إزالة / إعادة ترتيب الصفحات بأي ترتيب"
+      },
+      "addImage": {
+        "title": "إضافة صورة إلى ملف PDF",
+        "desc": "إضافة صورة إلى موقع معين في PDF (العمل قيد التقدم)"
+      },
+      "watermark": {
+        "title": "إضافة علامة مائية",
+        "desc": "أضف علامة مائية مخصصة إلى مستند PDF الخاص بك."
+      },
+      "permissions": {
+        "title": "تغيير الأذونات",
+        "desc": "قم بتغيير أذونات مستند PDF الخاص بك"
+      },
+      "removePages": {
+        "title": "إزالة الصفحات",
+        "desc": "حذف الصفحات غير المرغوب فيها من مستند PDF الخاص بك."
+      },
+      "addPassword": {
+        "title": "إضافة كلمة مرور",
+        "desc": "تشفير مستند PDF الخاص بك بكلمة مرور."
+      },
+      "removePassword": {
+        "title": "إزالة كلمة المرور",
+        "desc": "إزالة الحماية بكلمة مرور من مستند PDF الخاص بك."
+      },
+      "compressPdfs": {
+        "title": "ضغط ملفات",
+        "desc": "ضغط ملفات PDF لتقليل حجم الملف."
+      },
+      "changeMetadata": {
+        "title": "\u062A\u063A\u064A\u064A\u0631 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0648\u0635\u0641\u064A\u0629",
+        "desc": "\u062A\u063A\u064A\u064A\u0631 / \u0625\u0632\u0627\u0644\u0629 / \u0625\u0636\u0627\u0641\u0629 \u0628\u064A\u0627\u0646\u0627\u062A \u0623\u0648\u0644\u064A\u0629 \u0645\u0646 \u0645\u0633\u062A\u0646\u062F PDF"
+      },
+      "fileToPDF": {
+        "title": "\u062A\u062D\u0648\u064A\u0644 \u0627\u0644\u0645\u0644\u0641 \u0625\u0644\u0649 PDF",
+        "desc": "\u062A\u062D\u0648\u064A\u0644 \u0623\u064A \u0645\u0644\u0641 \u062A\u0642\u0631\u064A\u0628\u0627 \u0625\u0644\u0649 PDF (DOCX \u0648PNG \u0648XLS \u0648PPT \u0648TXT \u0648\u0627\u0644\u0645\u0632\u064A\u062F)"
+      },
+      "ocr": {
+        "title": "\u062A\u0634\u063A\u064A\u0644 OCR \u0639\u0644\u0649 PDF \u0648 / \u0623\u0648 \u0645\u0633\u062D \u0636\u0648\u0626\u064A",
+        "desc": "\u064A\u0642\u0648\u0645 \u0628\u0631\u0646\u0627\u0645\u062C \u0627\u0644\u062A\u0646\u0638\u064A\u0641 \u0628\u0645\u0633\u062D \u0648\u0627\u0643\u062A\u0634\u0627\u0641 \u0627\u0644\u0646\u0635 \u0645\u0646 \u0627\u0644\u0635\u0648\u0631 \u062F\u0627\u062E\u0644 \u0645\u0644\u0641 PDF \u0648\u064A\u0639\u064A\u062F \u0625\u0636\u0627\u0641\u062A\u0647 \u0643\u0646\u0635"
+      },
+      "extractImages": {
+        "title": "\u0627\u0633\u062A\u062E\u0631\u0627\u062C \u0627\u0644\u0635\u0648\u0631",
+        "desc": "\u064A\u0633\u062A\u062E\u0631\u062C \u062C\u0645\u064A\u0639 \u0627\u0644\u0635\u0648\u0631 \u0645\u0646 \u0645\u0644\u0641 PDF \u0648\u064A\u062D\u0641\u0638\u0647\u0627 \u0641\u064A \u0627\u0644\u0631\u0645\u0632 \u0627\u0644\u0628\u0631\u064A\u062F\u064A"
+      },
+      "pdfToPDFA": {
+        "title": "\u062A\u062D\u0648\u064A\u0644 \u0645\u0644\u0641\u0627\u062A PDF \u0625\u0644\u0649 PDF / A",
+        "desc": "\u062A\u062D\u0648\u064A\u0644 PDF \u0625\u0644\u0649 PDF / A \u0644\u0644\u062A\u062E\u0632\u064A\u0646 \u0637\u0648\u064A\u0644 \u0627\u0644\u0645\u062F\u0649"
+      },
+      "PDFToWord": {
+        "title": "تحويل PDF إلى Word",
+        "desc": "تحويل PDF إلى تنسيقات Word (DOC و DOCX و ODT)"
+      },
+      "PDFToPresentation": {
+        "title": "PDF للعرض التقديمي",
+        "desc": "تحويل PDF إلى تنسيقات عرض تقديمي (PPT و PPTX و ODP)"
+      },
+      "PDFToText": {
+        "title": "تحويل PDF إلى نص / RTF",
+        "desc": "تحويل PDF إلى تنسيق نص أو RTF"
+      },
+      "PDFToHTML": {
+        "title": "تحويل PDF إلى HTML",
+        "desc": "تحويل PDF إلى تنسيق HTML"
+      },
+      "PDFToXML": {
+        "title": "تحويل PDF إلى XML",
+        "desc": "تحويل PDF إلى تنسيق XML"
+      },
+      "ScannerImageSplit": {
+        "title": "كشف / انقسام الصور الممسوحة ضوئيًا",
+        "desc": "تقسيم عدة صور من داخل صورة / ملف PDF"
+      },
+      "sign": {
+        "title": "تسجيل الدخول",
+        "desc": "إضافة التوقيع إلى PDF عن طريق الرسم أو النص أو الصورة"
+      },
+      "flatten": {
+        "title": "تسطيح",
+        "desc": "قم بإزالة كافة العناصر والنماذج التفاعلية من ملف PDF"
+      },
+      "repair": {
+        "title": "إصلاح",
+        "desc": "يحاول إصلاح ملف PDF تالف / معطل"
+      },
+      "removeBlanks": {
+        "title": "إزالة الصفحات الفارغة",
+        "desc": "يكتشف ويزيل الصفحات الفارغة من المستند"
+      },
+      "compare": {
+        "title": "قارن",
+        "desc": "يقارن ويظهر الاختلافات بين 2 من مستندات PDF"
+      },
+      "certSign": {
+        "title": "Sign with Certificate",
+        "desc": "Signs a PDF with a Certificate/Key (PEM/P12)"
+      },
+      "pageLayout": {
+        "title": "Multi-Page Layout",
+        "desc": "Merge multiple pages of a PDF document into a single page"
+      },
+      "scalePages": {
+        "title": "Adjust page size/scale",
+        "desc": "Change the size/scale of page and/or its contents."
+      },
+      "pipeline": {
+        "title": "Pipeline (Advanced)",
+        "desc": "Run multiple actions on PDFs by defining pipeline scripts"
+      },
+      "add-page-numbers": {
+        "title": "Add Page Numbers",
+        "desc": "Add Page numbers throughout a document in a set location"
+      },
+      "auto-rename": {
+        "title": "Auto Rename PDF File",
+        "desc": "Auto renames a PDF file based on its detected header"
+      },
+      "adjust-contrast": {
+        "title": "Adjust Colors/Contrast",
+        "desc": "Adjust Contrast, Saturation and Brightness of a PDF"
+      },
+      "crop": {
+        "title": "Crop PDF",
+        "desc": "Crop a PDF to reduce its size (maintains text!)"
+      },
+      "autoSplitPDF": {
+        "title": "Auto Split Pages",
+        "desc": "Auto Split Scanned PDF with physical scanned page splitter QR Code"
+      },
+      "sanitizePdf": {
+        "title": "Sanitize",
+        "desc": "Remove scripts and other elements from PDF files"
+      },
+      "URLToPDF": {
+        "title": "URL/Website To PDF",
+        "desc": "Converts any http(s)URL to PDF"
+      },
+      "HTMLToPDF": {
+        "title": "HTML to PDF",
+        "desc": "Converts any HTML file or zip to PDF"
+      },
+      "MarkdownToPDF": {
+        "title": "Markdown to PDF",
+        "desc": "Converts any Markdown file to PDF"
+      },
+      "getPdfInfo": {
+        "title": "Get ALL Info on PDF",
+        "desc": "Grabs any and all information possible on PDFs"
+      },
+      "extractPage": {
+        "title": "Extract page(s)",
+        "desc": "Extracts select pages from PDF"
+      },
+      "PdfToSinglePage": {
+        "title": "PDF to Single Large Page",
+        "desc": "Merges all PDF pages into one large single page"
+      },
+      "showJS": {
+        "title": "Show Javascript",
+        "desc": "Searches and displays any JS injected into a PDF"
+      },
+      "autoRedact": {
+        "title": "Auto Redact",
+        "desc": "Auto Redacts(Blacks out) text in a PDF based on input text"
+      }
+    },
+    "viewPdf": {
+      "tags": "view,read,annotate,text,image",
+      "title": "View PDF",
+      "header": "View PDF"
+    },
+    "multiTool": {
+      "tags": "Multi Tool,Multi operation,UI,click drag,front end,client side",
+      "title": "أداة متعددة PDF",
+      "header": "أداة متعددة PDF"
+    },
+    "merge": {
+      "tags": "merge,Page operations,Back end,server side",
+      "title": "دمج",
+      "header": "دمج ملفات PDF متعددة (2+)",
+      "sortByName": "Sort by name",
+      "sortByDate": "Sort by date",
+      "submit": "دمج"
+    },
+    "split": {
+      "tags": "Page operations,divide,Multi Page,cut,server side",
+      "title": "انقسام PDF",
+      "header": "تقسيم PDF",
+      "desc": {
+        "1": "الأرقام التي تحددها هي رقم الصفحة التي تريد تقسيمها",
+        "2": "على هذا النحو ، سيؤدي تحديد 1،3،7-8 إلى تقسيم مستند من 10 صفحات إلى 6 PDFS منفصلة مع:",
+        "3": "المستند رقم 1: الصفحة 1",
+        "4": "المستند رقم 2: الصفحتان 2 و 3",
+        "5": "المستند رقم 3: الصفحة 4 و 5 و 6",
+        "6": "المستند رقم 4: الصفحة 7",
+        "7": "المستند رقم 5: الصفحة 8",
+        "8": "المستند رقم 6: الصفحتان 9 و 10"
+      },
+      "splitPages": "أدخل الصفحات المراد تقسيمها:",
+      "submit": "Split"
+    },
+    "rotate": {
+      "tags": "server side",
+      "title": "تدوير PDF",
+      "header": "تدوير PDF",
+      "selectAngle": "حدد زاوية الدوران (بمضاعفات 90 درجة):",
+      "submit": "استدارة"
+    },
+    "imageToPdf": {
+      "tags": "conversion,img,jpg,picture,photo"
+    },
+    "pdfToImage": {
+      "tags": "conversion,img,jpg,picture,photo",
+      "title": "تحويل PDF إلى صورة",
+      "header": "تحويل PDF إلى صورة",
+      "selectText": "تنسيق الصورة",
+      "singleOrMultiple": "\u0646\u0648\u0639 \u0646\u062A\u064A\u062C\u0629 \u0627\u0644\u0635\u0648\u0631\u0629",
+      "single": "\u0635\u0648\u0631\u0629 \u0648\u0627\u062D\u062F\u0629 \u0643\u0628\u064A\u0631\u0629",
+      "multi": "\u0635\u0648\u0631 \u0645\u062A\u0639\u062F\u062F\u0629",
+      "colorType": "\u0646\u0648\u0639 \u0627\u0644\u0644\u0648\u0646",
+      "color": "\u0627\u0644\u0644\u0648\u0646",
+      "grey": "\u062A\u062F\u0631\u062C \u0627\u0644\u0631\u0645\u0627\u062F\u064A",
+      "blackwhite": "\u0623\u0628\u064A\u0636 \u0648\u0623\u0633\u0648\u062F (\u0642\u062F \u064A\u0641\u0642\u062F \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A!)",
+      "submit": "تحول"
+    },
+    "pdfOrganiser": {
+      "tags": "duplex,even,odd,sort,move",
+      "title": "منظم الصفحة",
+      "header": "منظم صفحات PDF",
+      "submit": "إعادة ترتيب الصفحات"
+    },
+    "addImage": {
+      "tags": "img,jpg,picture,photo",
+      "title": "إضافة صورة",
+      "header": "إضافة صورة إلى PDF",
+      "everyPage": "كل صفحة؟",
+      "upload": "إضافة صورة",
+      "submit": "إضافة صورة"
+    },
+    "watermark": {
+      "tags": "Text,repeating,label,own,copyright,trademark,img,jpg,picture,photo",
+      "title": "إضافة علامة مائية",
+      "header": "إضافة علامة مائية",
+      "selectText": {
+        "1": "حدد PDF لإضافة العلامة المائية إلى:",
+        "2": "نص العلامة المائية:",
+        "3": "حجم الخط:",
+        "4": "دوران (0-360):",
+        "5": "widthSpacer (مسافة بين كل علامة مائية أفقيًا):",
+        "6": "heightSpacer (مسافة بين كل علامة مائية عموديًا):",
+        "7": "\u0627\u0644\u062A\u0639\u062A\u064A\u0645 (0\u066A - 100\u066A):",
+        "8": "Watermark Type:",
+        "9": "Watermark Image:"
+      },
+      "submit": "إضافة علامة مائية"
+    },
+    "permissions": {
+      "tags": "read,write,edit,print",
+      "title": "تغيير الأذونات",
+      "header": "تغيير الأذونات",
+      "warning": "تحذير من أن تكون هذه الأذونات غير قابلة للتغيير ، يوصى بتعيينها بكلمة مرور عبر صفحة إضافة كلمة المرور",
+      "selectText": {
+        "1": "حدد ملف PDF لتغيير الأذونات",
+        "2": "أذونات لتعيينها",
+        "3": "منع تجميع المستند",
+        "4": "منع استخراج المحتوى",
+        "5": "منع الاستخراج للوصول",
+        "6": "منع ملء النموذج",
+        "7": "منع التعديل",
+        "8": "منع تعديل التعليق التوضيحي",
+        "9": "منع الطباعة",
+        "10": "منع طباعة التنسيقات المختلفة"
+      },
+      "submit": "تغيير"
+    },
+    "removePages": {
+      "tags": "Remove pages,delete pages"
+    },
+    "addPassword": {
+      "tags": "secure,security",
+      "title": "إضافة كلمة مرور",
+      "header": "إضافة كلمة مرور (تشفير)",
+      "selectText": {
+        "1": "حدد ملف PDF للتشفير",
+        "2": "كلمة المرور",
+        "3": "طول مفتاح التشفير",
+        "4": "القيم الأعلى تكون أقوى ، لكن القيم الأقل لها توافق أفضل.",
+        "5": "أذونات للتعيين",
+        "6": "منع تجميع المستند",
+        "7": "منع استخراج المحتوى",
+        "8": "منع الاستخراج للوصول",
+        "9": "منع ملء النموذج",
+        "10": "منع التعديل",
+        "11": "منع تعديل التعليقات التوضيحية",
+        "12": "منع الطباعة",
+        "13": "منع طباعة تنسيقات مختلفة",
+        "14": "Owner Password",
+        "15": "Restricts what can be done with the document once it is opened (Not supported by all readers)",
+        "16": "Restricts the opening of the document itself"
+      },
+      "submit": "تشفير"
+    },
+    "removePassword": {
+      "tags": "secure,Decrypt,security,unpassword,delete password",
+      "title": "إزالة كلمة المرور",
+      "header": "إزالة كلمة المرور (فك التشفير)",
+      "selectText": {
+        "1": "حدد PDF لفك التشفير",
+        "2": "كلمة المرور"
+      },
+      "submit": "إزالة"
+    },
+    "compressPdfs": {
+      "tags": "squish,small,tiny"
+    },
+    "fileToPDF": {
+      "tags": "transformation,format,document,picture,slide,text,conversion,office,docs,word,excel,powerpoint",
+      "title": "\u0645\u0644\u0641 \u0625\u0644\u0649 PDF",
+      "header": "\u062A\u062D\u0648\u064A\u0644 \u0623\u064A \u0645\u0644\u0641 \u0625\u0644\u0649 PDF",
+      "credit": "\u062A\u0633\u062A\u062E\u062F\u0645 \u0647\u0630\u0647 \u0627\u0644\u062E\u062F\u0645\u0629 \u0644\u064A\u0628\u0631 \u0623\u0648\u0641\u064A\u0633 \u0648\u0623\u0648\u0646\u0648\u0643\u0648\u0646\u0641 \u0644\u062A\u062D\u0648\u064A\u0644 \u0627\u0644\u0645\u0644\u0641\u0627\u062A.",
+      "supportedFileTypes": "\u064A\u062C\u0628 \u0623\u0646 \u062A\u062A\u0636\u0645\u0646 \u0623\u0646\u0648\u0627\u0639 \u0627\u0644\u0645\u0644\u0641\u0627\u062A \u0627\u0644\u0645\u062F\u0639\u0648\u0645\u0629 \u0645\u0627 \u064A\u0644\u064A \u0648\u0644\u0643\u0646 \u0644\u0644\u062D\u0635\u0648\u0644 \u0639\u0644\u0649 \u0642\u0627\u0626\u0645\u0629 \u0645\u062D\u062F\u062B\u0629 \u0643\u0627\u0645\u0644\u0629 \u0628\u0627\u0644\u062A\u0646\u0633\u064A\u0642\u0627\u062A \u0627\u0644\u0645\u062F\u0639\u0648\u0645\u0629 \u060C \u064A\u0631\u062C\u0649 \u0627\u0644\u0631\u062C\u0648\u0639 \u0625\u0644\u0649 \u0648\u062B\u0627\u0626\u0642 LibreOffice",
+      "submit": "\u062A\u062D\u0648\u064A\u0644 \u0625\u0644\u0649 PDF"
+    },
+    "ocr": {
+      "tags": "recognition,text,image,scan,read,identify,detection,editable",
+      "title": "\u0627\u0644\u062A\u0639\u0631\u0641 \u0627\u0644\u0636\u0648\u0626\u064A \u0639\u0644\u0649 \u0627\u0644\u062D\u0631\u0648\u0641 / \u062A\u0646\u0638\u064A\u0641 \u0627\u0644\u0645\u0633\u062D \u0627\u0644\u0636\u0648\u0626\u064A",
+      "header": "\u0645\u0633\u062D \u0627\u0644\u0645\u0633\u062D \u0627\u0644\u0636\u0648\u0626\u064A / \u0627\u0644\u062A\u0639\u0631\u0641 \u0627\u0644\u0636\u0648\u0626\u064A \u0639\u0644\u0649 \u0627\u0644\u062D\u0631\u0648\u0641 (\u0627\u0644\u062A\u0639\u0631\u0641 \u0627\u0644\u0636\u0648\u0626\u064A \u0639\u0644\u0649 \u0627\u0644\u062D\u0631\u0648\u0641)",
+      "selectText": {
+        "1": "\u062D\u062F\u062F \u0627\u0644\u0644\u063A\u0627\u062A \u0627\u0644\u062A\u064A \u0633\u064A\u062A\u0645 \u0627\u0643\u062A\u0634\u0627\u0641\u0647\u0627 \u062F\u0627\u062E\u0644 \u0645\u0644\u0641 PDF (\u0627\u0644\u0644\u063A\u0627\u062A \u0627\u0644\u0645\u062F\u0631\u062C\u0629 \u0647\u064A \u062A\u0644\u0643 \u0627\u0644\u062A\u064A \u062A\u0645 \u0627\u0643\u062A\u0634\u0627\u0641\u0647\u0627 \u062D\u0627\u0644\u064A\u064B\u0627):",
+        "2": "\u0625\u0646\u062A\u0627\u062C \u0645\u0644\u0641 \u0646\u0635\u064A \u064A\u062D\u062A\u0648\u064A \u0639\u0644\u0649 \u0646\u0635 OCR \u0628\u062C\u0627\u0646\u0628 \u0645\u0644\u0641 PDF \u0627\u0644\u0630\u064A \u062A\u0645 \u0625\u0639\u062F\u0627\u062F\u0647 \u0628\u0648\u0627\u0633\u0637\u0629 OCR",
+        "3": "\u062A\u0645 \u0645\u0633\u062D \u0627\u0644\u0635\u0641\u062D\u0627\u062A \u0627\u0644\u0635\u062D\u064A\u062D\u0629 \u0636\u0648\u0626\u064A\u064B\u0627 \u0628\u0632\u0627\u0648\u064A\u0629 \u0645\u0646\u062D\u0631\u0641\u0629 \u0639\u0646 \u0637\u0631\u064A\u0642 \u062A\u062F\u0648\u064A\u0631\u0647\u0627 \u0645\u0631\u0629 \u0623\u062E\u0631\u0649 \u0641\u064A \u0645\u0643\u0627\u0646\u0647\u0627",
+        "4": "\u0635\u0641\u062D\u0629 \u0646\u0638\u064A\u0641\u0629 \u0644\u0630\u0644\u0643 \u0645\u0646 \u063A\u064A\u0631 \u0627\u0644\u0645\u062D\u062A\u0645\u0644 \u0623\u0646 \u064A\u062C\u062F OCR \u0646\u0635\u064B\u0627 \u0641\u064A \u0636\u0648\u0636\u0627\u0621 \u0627\u0644\u062E\u0644\u0641\u064A\u0629. (\u0644\u0627 \u064A\u0648\u062C\u062F \u062A\u063A\u064A\u064A\u0631 \u0641\u064A \u0627\u0644\u0625\u062E\u0631\u0627\u062C)",
+        "5": "\u0635\u0641\u062D\u0629 \u0646\u0638\u064A\u0641\u0629 \u060C \u0644\u0630\u0644\u0643 \u0645\u0646 \u063A\u064A\u0631 \u0627\u0644\u0645\u062D\u062A\u0645\u0644 \u0623\u0646 \u064A\u062C\u062F OCR \u0646\u0635\u064B\u0627 \u0641\u064A \u0636\u0648\u0636\u0627\u0621 \u0627\u0644\u062E\u0644\u0641\u064A\u0629 \u060C \u0648\u064A\u062D\u0627\u0641\u0638 \u0639\u0644\u0649 \u0627\u0644\u062A\u0646\u0638\u064A\u0641 \u0641\u064A \u0627\u0644\u0625\u062E\u0631\u0627\u062C.",
+        "6": "\u064A\u062A\u062C\u0627\u0647\u0644 \u0627\u0644\u0635\u0641\u062D\u0627\u062A \u0627\u0644\u062A\u064A \u062A\u062D\u062A\u0648\u064A \u0639\u0644\u0649 \u0646\u0635 \u062A\u0641\u0627\u0639\u0644\u064A \u060C \u0641\u0642\u0637 \u0635\u0641\u062D\u0627\u062A OCRs \u0627\u0644\u062A\u064A \u0647\u064A \u0635\u0648\u0631",
+        "7": "\u0641\u0631\u0636 \u0627\u0644\u062A\u0639\u0631\u0641 \u0627\u0644\u0636\u0648\u0626\u064A \u0639\u0644\u0649 \u0627\u0644\u062D\u0631\u0648\u0641 \u060C \u0633\u064A\u0624\u062F\u064A \u0627\u0644\u062A\u0639\u0631\u0641 \u0627\u0644\u0636\u0648\u0626\u064A \u0639\u0644\u0649 \u0627\u0644\u062D\u0631\u0648\u0641 \u0639\u0644\u0649 \u0643\u0644 \u0635\u0641\u062D\u0629 \u0625\u0644\u0649 \u0625\u0632\u0627\u0644\u0629 \u062C\u0645\u064A\u0639 \u0639\u0646\u0627\u0635\u0631 \u0627\u0644\u0646\u0635 \u0627\u0644\u0623\u0635\u0644\u064A",
+        "8": "\u0639\u0627\u062F\u064A (\u062E\u0637\u0623 \u0625\u0630\u0627 \u0643\u0627\u0646 PDF \u064A\u062D\u062A\u0648\u064A \u0639\u0644\u0649 \u0646\u0635)",
+        "9": "\u0625\u0639\u062F\u0627\u062F\u0627\u062A \u0625\u0636\u0627\u0641\u064A\u0629",
+        "10": "\u0648\u0636\u0639 \u0627\u0644\u062A\u0639\u0631\u0641 \u0627\u0644\u0636\u0648\u0626\u064A \u0639\u0644\u0649 \u0627\u0644\u062D\u0631\u0648\u0641",
+        "11": "إزالة الصور بعد التعرف الضوئي على الحروف (يزيل كل الصور ، يكون مفيدًا فقط إذا كان جزءًا من خطوة التحويل)",
+        "12": "نوع العرض (متقدم)"
+      },
+      "help": "\u064A\u0631\u062C\u0649 \u0642\u0631\u0627\u0621\u0629 \u0647\u0630\u0647 \u0627\u0644\u0648\u062B\u0627\u0626\u0642 \u062D\u0648\u0644 \u0643\u064A\u0641\u064A\u0629 \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0647\u0630\u0627 \u0644\u0644\u063A\u0627\u062A \u0623\u062E\u0631\u0649 \u0648 / \u0623\u0648 \u0627\u0644\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0644\u064A\u0633 \u0641\u064A \u0639\u0627\u0645\u0644 \u0627\u0644\u0625\u0631\u0633\u0627\u0621",
+      "credit": "\u062A\u0633\u062A\u062E\u062F\u0645 \u0647\u0630\u0647 \u0627\u0644\u062E\u062F\u0645\u0629 OCRmyPDF \u0648 Tesseract \u0644 OCR.",
+      "submit": "\u0645\u0639\u0627\u0644\u062C\u0629 PDF \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 OCR"
+    },
+    "extractImages": {
+      "tags": "picture,photo,save,archive,zip,capture,grab",
+      "title": "\u0627\u0633\u062A\u062E\u0631\u0627\u062C \u0627\u0644\u0635\u0648\u0631",
+      "header": "\u0627\u0633\u062A\u062E\u0631\u0627\u062C \u0627\u0644\u0635\u0648\u0631",
+      "selectText": "\u062D\u062F\u062F \u062A\u0646\u0633\u064A\u0642 \u0627\u0644\u0635\u0648\u0631\u0629 \u0644\u062A\u062D\u0648\u064A\u0644 \u0627\u0644\u0635\u0648\u0631 \u0627\u0644\u0645\u0633\u062A\u062E\u0631\u062C\u0629 \u0625\u0644\u0649",
+      "submit": "\u0627\u0633\u062A\u062E\u0631\u0627\u062C"
+    },
+    "pdfToPDFA": {
+      "tags": "archive,long-term,standard,conversion,storage,preservation",
+      "title": "PDF \u0625\u0644\u0649 PDF / A",
+      "header": "PDF \u0625\u0644\u0649 PDF / A",
+      "credit": "\u062A\u0633\u062A\u062E\u062F\u0645 \u0647\u0630\u0647 \u0627\u0644\u062E\u062F\u0645\u0629 OCRmyPDF \u0644\u062A\u062D\u0648\u064A\u0644 PDF / A.",
+      "submit": "\u062A\u062D\u0648\u064A\u0644"
+    },
+    "PDFToWord": {
+      "tags": "doc,docx,odt,word,transformation,format,conversion,office,microsoft,docfile",
+      "title": "تحويل PDF إلى Word",
+      "header": "تحويل PDF إلى Word",
+      "selectText": {
+        "1": "تنسيق ملف الإخراج"
+      },
+      "credit": "تستخدم هذه الخدمة LibreOffice لتحويل الملفات.",
+      "submit": "تحويل"
+    },
+    "PDFToPresentation": {
+      "tags": "slides,show,office,microsoft",
+      "title": "PDF للعرض التقديمي",
+      "header": "PDF للعرض التقديمي",
+      "selectText": {
+        "1": "تنسيق ملف الإخراج"
+      },
+      "credit": "تستخدم هذه الخدمة LibreOffice لتحويل الملف.",
+      "submit": "تحويل"
+    },
+    "PDFToText": {
+      "tags": "richformat,richtextformat,rich text format",
+      "title": "تحويل PDF إلى نص / RTF",
+      "header": "تحويل PDF إلى نص / RTF",
+      "selectText": {
+        "1": "تنسيق ملف الإخراج"
+      },
+      "credit": "تستخدم هذه الخدمة LibreOffice لتحويل الملفات.",
+      "submit": "تحويل"
+    },
+    "PDFToHTML": {
+      "tags": "web content,browser friendly",
+      "title": "PDF إلى HTML",
+      "header": "PDF إلى HTML",
+      "credit": "تستخدم هذه الخدمة LibreOffice لتحويل الملفات.",
+      "submit": "تحويل"
+    },
+    "PDFToXML": {
+      "tags": "data-extraction,structured-content,interop,transformation,convert",
+      "title": "تحويل PDF إلى XML",
+      "header": "تحويل PDF إلى XML",
+      "credit": "تستخدم هذه الخدمة LibreOffice لتحويل الملفات.",
+      "submit": "تحويل"
+    },
+    "ScannerImageSplit": {
+      "tags": "separate,auto-detect,scans,multi-photo,organize",
+      "selectText": {
+        "1": "عتبة الزاوية:",
+        "2": "تعيين الحد الأدنى للزاوية المطلقة المطلوبة لتدوير الصورة (افتراضي: 10).",
+        "3": "التسامح:",
+        "4": "يحدد نطاق تباين اللون حول لون الخلفية المقدر (الافتراضي: 30).",
+        "5": "أدنى مساحة:",
+        "6": "تعيين الحد الأدنى لمنطقة الصورة (الافتراضي: 10000).",
+        "7": "الحد الأدنى لمنطقة المحيط:",
+        "8": "تعيين الحد الأدنى لمنطقة المحيط للصورة",
+        "9": "حجم الحدود:",
+        "10": "يضبط حجم الحدود المضافة والمزالة لمنع الحدود البيضاء في الإخراج (الافتراضي: 1)."
+      }
+    },
+    "sign": {
+      "tags": "authorize,initials,drawn-signature,text-sign,image-signature",
+      "title": "تسجيل الدخول",
+      "header": "توقيع ملفات PDF",
+      "upload": "تحميل الصورة",
+      "draw": "رسم التوقيع",
+      "text": "Text Input",
+      "clear": "واضح",
+      "add": "إضافة"
+    },
+    "flatten": {
+      "tags": "static,deactivate,non-interactive,streamline",
+      "title": "تسطيح",
+      "header": "تسوية ملفات PDF",
+      "submit": "تسطيح"
+    },
+    "repair": {
+      "tags": "fix,restore,correction,recover",
+      "title": "إصلاح",
+      "header": "إصلاح ملفات PDF",
+      "submit": "الإصلاح"
+    },
+    "removeBlanks": {
+      "tags": "cleanup,streamline,non-content,organize",
+      "title": "إزالة الفراغات",
+      "header": "إزالة الصفحات الفارغة",
+      "threshold": "العتبة:",
+      "thresholdDesc": "الحد الفاصل لتحديد مدى بياض البكسل الأبيض",
+      "whitePercent": "نسبة الأبيض (٪):",
+      "whitePercentDesc": "النسبة المئوية للصفحة التي يجب أن تكون بيضاء لتتم إزالتها",
+      "submit": "إزالة الفراغات"
+    },
+    "compare": {
+      "tags": "differentiate,contrast,changes,analysis",
+      "title": "يقارن",
+      "header": "قارن ملفات PDF",
+      "document": {
+        "1": "المستند 1",
+        "2": "المستند 2"
+      },
+      "submit": "يقارن"
+    },
+    "certSign": {
+      "tags": "authenticate,PEM,P12,official,encrypt",
+      "title": "توقيع الشهادة",
+      "header": "قم بتوقيع ملف PDF بشهادتك (العمل قيد التقدم)",
+      "selectPDF": "حدد ملف PDF للتوقيع:",
+      "selectKey": "حدد ملف المفتاح الخاص (تنسيق PKCS ",
+      "selectCert": "حدد ملف الشهادة الخاص بك (تنسيق X.509 ، يمكن أن يكون .pem أو .der):",
+      "selectP12": "حدد ملف تخزين المفاتيح PKCS ",
+      "certType": "نوع الشهادة",
+      "password": "أدخل ملف تخزين المفاتيح أو كلمة المرور الخاصة (إن وجدت):",
+      "showSig": "إظهار التوقيع",
+      "reason": "السبب",
+      "location": "الموقع",
+      "name": "الاسم",
+      "submit": "تسجيل PDF"
+    },
+    "pageLayout": {
+      "tags": "merge,composite,single-view,organize",
+      "title": "Multi Page Layout",
+      "header": "Multi Page Layout",
+      "pagesPerSheet": "Pages per sheet:",
+      "addBorder": "Add Borders",
+      "submit": "Submit"
+    },
+    "scalePages": {
+      "tags": "resize,modify,dimension,adapt",
+      "title": "Adjust page-scale",
+      "header": "Adjust page-scale",
+      "pageSize": "Size of a page of the document.",
+      "scaleFactor": "Zoom level (crop) of a page.",
+      "submit": "Submit"
+    },
+    "pipeline": {
+      "tags": "automate,sequence,scripted,batch-process",
+      "title": "Pipeline"
+    },
+    "add-page-numbers": {
+      "tags": "paginate,label,organize,index"
+    },
+    "auto-rename": {
+      "tags": "auto-detect,header-based,organize,relabel",
+      "title": "Auto Rename",
+      "header": "Auto Rename PDF",
+      "submit": "Auto Rename"
+    },
+    "adjust-contrast": {
+      "tags": "color-correction,tune,modify,enhance"
+    },
+    "crop": {
+      "tags": "trim,shrink,edit,shape",
+      "title": "Crop",
+      "header": "Crop Image",
+      "submit": "Submit"
+    },
+    "autoSplitPDF": {
+      "tags": "QR-based,separate,scan-segment,organize",
+      "title": "Auto Split PDF",
+      "header": "Auto Split PDF",
+      "description": "Print, Insert, Scan, upload, and let us auto-separate your documents. No manual work sorting needed.",
+      "selectText": {
+        "1": "Print out some divider sheets from below (Black and white is fine).",
+        "2": "Scan all your documents at once by inserting the divider sheet between them.",
+        "3": "Upload the single large scanned PDF file and let Stirling PDF handle the rest.",
+        "4": "Divider pages are automatically detected and removed, guaranteeing a neat final document."
+      },
+      "formPrompt": "Submit PDF containing Stirling-PDF Page dividers:",
+      "duplexMode": "Duplex Mode (Front and back scanning)",
+      "dividerDownload1": "Download 'Auto Splitter Divider (minimal).pdf'",
+      "dividerDownload2": "Download 'Auto Splitter Divider (with instructions).pdf'",
+      "submit": "Submit"
+    },
+    "sanitizePdf": {
+      "tags": "clean,secure,safe,remove-threats"
+    },
+    "URLToPDF": {
+      "tags": "web-capture,save-page,web-to-doc,archive",
+      "title": "URL To PDF",
+      "header": "URL To PDF",
+      "submit": "Convert",
+      "credit": "Uses WeasyPrint"
+    },
+    "HTMLToPDF": {
+      "tags": "markup,web-content,transformation,convert",
+      "title": "HTML To PDF",
+      "header": "HTML To PDF",
+      "help": "Accepts HTML files and ZIPs containing html/css/images etc required",
+      "submit": "Convert",
+      "credit": "Uses WeasyPrint"
+    },
+    "MarkdownToPDF": {
+      "tags": "markup,web-content,transformation,convert",
+      "title": "Markdown To PDF",
+      "header": "Markdown To PDF",
+      "submit": "Convert",
+      "help": "Work in progress",
+      "credit": "Uses WeasyPrint"
+    },
+    "getPdfInfo": {
+      "tags": "infomation,data,stats,statistics",
+      "title": "Get Info on PDF",
+      "header": "Get Info on PDF",
+      "submit": "Get Info",
+      "downloadJson": "Download JSON"
+    },
+    "extractPage": {
+      "tags": "extract"
+    },
+    "PdfToSinglePage": {
+      "tags": "single page"
+    },
+    "showJS": {
+      "tags": "JS",
+      "title": "Show Javascript",
+      "header": "Show Javascript",
+      "downloadJS": "Download Javascript",
+      "submit": "Show"
+    },
+    "login": {
+      "title": "Sign in",
+      "signin": "Sign in",
+      "rememberme": "Remember me",
+      "invalid": "Invalid username or password.",
+      "locked": "Your account has been locked.",
+      "signinTitle": "Please sign in"
+    },
+    "autoRedact": {
+      "title": "Auto Redact",
+      "header": "Auto Redact",
+      "colorLabel": "Colour",
+      "textsToRedactLabel": "Text to Redact (line-separated)",
+      "textsToRedactPlaceholder": "e.g. \\nConfidential  \\nTop-Secret",
+      "useRegexLabel": "Use Regex",
+      "wholeWordSearchLabel": "Whole Word Search",
+      "customPaddingLabel": "Custom Extra Padding",
+      "convertPDFToImageLabel": "Convert PDF to PDF-Image (Used to remove text behind the box)",
+      "submitButton": "Submit"
+    },
+    "pdfToSinglePage": {
+      "title": "PDF To Single Page",
+      "header": "PDF To Single Page",
+      "submit": "Convert To Single Page"
+    },
+    "pageExtracter": {
+      "title": "Extract Pages",
+      "header": "Extract Pages",
+      "submit": "Extract"
+    },
+    "sanitizePDF": {
+      "title": "Sanitize PDF",
+      "header": "Sanitize a PDF file",
+      "selectText": {
+        "1": "Remove JavaScript actions",
+        "2": "Remove embedded files",
+        "3": "Remove metadata",
+        "4": "Remove links",
+        "5": "Remove fonts"
+      },
+      "submit": "Sanitize PDF"
+    },
+    "addPageNumbers": {
+      "title": "Add Page Numbers",
+      "header": "Add Page Numbers",
+      "selectText": {
+        "1": "Select PDF file:",
+        "2": "Margin Size",
+        "3": "Position",
+        "4": "Starting Number",
+        "5": "Pages to Number",
+        "6": "Custom Text"
+      },
+      "customTextDesc": "Custom Text",
+      "numberPagesDesc": "Which pages to number, default 'all', also accepts 1-5 or 2,5,9 etc",
+      "customNumberDesc": "Defaults to {n}, also accepts 'Page {n} of {total}', 'Text-{n}', '{filename}-{n}",
+      "submit": "Add Page Numbers"
+    },
+    "adjustContrast": {
+      "title": "Adjust Contrast",
+      "header": "Adjust Contrast",
+      "contrast": "Contrast:",
+      "brightness": "Brightness:",
+      "saturation": "Saturation:",
+      "download": "Download"
+    },
+    "compress": {
+      "title": "ضغط",
+      "header": "ضغط ملف PDF",
+      "credit": "تستخدم هذه الخدمة OCRmyPDF لضغط / تحسين PDF.",
+      "selectText": {
+        "1": "الوضع اليدوي - من 1 إلى 4",
+        "2": "مستوى التحسين:",
+        "3": "4 (رهيب للصور النصية)",
+        "4": "الوضع التلقائي - يضبط الجودة تلقائيًا للحصول على ملف PDF بالحجم المحدد",
+        "5": "حجم PDF المتوقع (على سبيل المثال 25 ميجا بايت ، 10.8 ميجا بايت ، 25 كيلو بايت)"
+      },
+      "submit": "ضغطضغط"
+    },
+    "pageRemover": {
+      "title": "مزيل الصفحة",
+      "header": "مزيل صفحة PDF",
+      "pagesToDelete": "الصفحات المراد حذفها (أدخل قائمة بأرقام الصفحات مفصولة بفواصل):",
+      "submit": "حذف الصفحات"
+    },
+    "imageToPDF": {
+      "title": "صورة إلى PDF",
+      "header": "صورة إلى PDF",
+      "submit": "تحول",
+      "selectLabel": "Image Fit Options",
+      "fillPage": "Fill Page",
+      "fitDocumentToImage": "Fit Page to Image",
+      "maintainAspectRatio": "Maintain Aspect Ratios",
+      "selectText": {
+        "2": "\u062F\u0648\u0631\u0627\u0646 PDF \u062A\u0644\u0642\u0627\u0626\u064A\u064B\u0627",
+        "3": "\u0627\u0644\u0645\u0646\u0637\u0642 \u0627\u0644\u0645\u062A\u0639\u062F\u062F \u0644\u0644\u0645\u0644\u0641\u0627\u062A (\u0645\u0641\u0639\u0651\u0644 \u0641\u0642\u0637 \u0625\u0630\u0627 \u0643\u0646\u062A \u062A\u0639\u0645\u0644 \u0645\u0639 \u0635\u0648\u0631 \u0645\u062A\u0639\u062F\u062F\u0629)",
+        "4": "\u062F\u0645\u062C \u0641\u064A \u0645\u0644\u0641 PDF \u0648\u0627\u062D\u062F",
+        "5": "\u062A\u062D\u0648\u064A\u0644 \u0625\u0644\u0649 \u0645\u0644\u0641\u0627\u062A PDF \u0645\u0646\u0641\u0635\u0644\u0629"
+      }
+    },
+    "changeMetadata": {
+      "title": "\u0627\u0644\u0639\u0646\u0648\u0627\u0646:",
+      "header": "\u062A\u063A\u064A\u064A\u0631 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0648\u0635\u0641\u064A\u0629",
+      "selectText": {
+        "1": "\u064A\u0631\u062C\u0649 \u062A\u0639\u062F\u064A\u0644 \u0627\u0644\u0645\u062A\u063A\u064A\u0631\u0627\u062A \u0627\u0644\u062A\u064A \u062A\u0631\u063A\u0628 \u0641\u064A \u062A\u063A\u064A\u064A\u0631\u0647\u0627",
+        "2": "\u062D\u0630\u0641 \u0643\u0644 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0623\u0648\u0644\u064A\u0629",
+        "3": "\u0625\u0638\u0647\u0627\u0631 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0623\u0648\u0644\u064A\u0629 \u0627\u0644\u0645\u062E\u0635\u0635\u0629:",
+        "4": "\u0628\u064A\u0627\u0646\u0627\u062A \u0648\u0635\u0641\u064A\u0629 \u0623\u062E\u0631\u0649:",
+        "5": "\u0625\u0636\u0627\u0641\u0629 \u0625\u062F\u062E\u0627\u0644 \u0628\u064A\u0627\u0646\u0627\u062A \u0623\u0648\u0644\u064A\u0629 \u0645\u062E\u0635\u0635"
+      },
+      "author": "\u0627\u0644\u0645\u0624\u0644\u0641:",
+      "creationDate": "\u062A\u0627\u0631\u064A\u062E \u0627\u0644\u0625\u0646\u0634\u0627\u0621 (yyyy / MM / dd HH: mm: ss):",
+      "creator": "\u0627\u0644\u0645\u0646\u0634\u0626:",
+      "keywords": "\u0627\u0644\u0643\u0644\u0645\u0627\u062A \u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629:",
+      "modDate": "\u062A\u0627\u0631\u064A\u062E \u0627\u0644\u062A\u0639\u062F\u064A\u0644 (yyyy / MM / dd HH: mm: ss):",
+      "producer": "\u0627\u0644\u0645\u0646\u062A\u062C:",
+      "subject": "\u0627\u0644\u0645\u0648\u0636\u0648\u0639:",
+      "trapped": "\u0645\u062D\u0627\u0635\u0631:",
+      "submit": "\u062A\u063A\u064A\u064A\u0631"
+    }
+  }
+}

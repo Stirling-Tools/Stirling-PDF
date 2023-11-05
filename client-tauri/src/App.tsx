@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import { Routes, Route, Outlet } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -6,11 +8,28 @@ import NoMatch from "./pages/NoMatch";
 import NavBar from "./components/NavBar";
 
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Col, Container, Row } from "react-bootstrap";
+import { Container } from "react-bootstrap";
+
+import i18n from "i18next";
+import { useTranslation, initReactI18next } from "react-i18next";
+import LanguageDetector from 'i18next-browser-languagedetector';
+import ar from './locales/ar.json';
+import en from './locales/en.json';
+
+import './general.css'
+
+i18n
+  .use(LanguageDetector)
+  .use(initReactI18next) // passes i18n down to react-i18next
+  .init({
+    fallbackLng: "en",
+    resources: { ar,en },
+  });
 
 export default function App() {
+
   return (
-    <div>
+    <Suspense fallback="loading">
       {/* Routes nest inside one another. Nested route paths build upon
             parent route paths, and nested route elements render inside
             parent route elements. See the note about <Outlet> below. */}
@@ -26,13 +45,14 @@ export default function App() {
           <Route path="*" element={<NoMatch />} />
         </Route>
       </Routes>
-    </div>
+    </Suspense>
   );
 }
 
 function Layout() {
+  const { t } = useTranslation();
   return (
-    <div>
+    <div lang-direction={t('language.direction')}>
       <NavBar/>
 
       {/* An <Outlet> renders whatever child route is currently active,
