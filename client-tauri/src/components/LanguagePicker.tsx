@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { BsGlobe2 } from 'react-icons/bs';
 
 function generateSublist() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const out: JSX.Element[] = [];
   const languages = i18n.options.resources;
   for (var key in languages) {

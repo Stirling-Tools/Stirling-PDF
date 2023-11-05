@@ -71,7 +71,7 @@ function convertToNavDropdown(sublist: NavInfoSublist) {
 }
 
 function NavBar() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const navInfo = [
     {displayText: t('multiTool.title'), icon: BsTools, dest: "/home", tooltip: t('home.multiTool.desc')},
