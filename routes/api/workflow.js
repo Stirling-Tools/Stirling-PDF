@@ -17,12 +17,7 @@ router.post("/:workflowUuid?", [
             return;
         }
 
-        if(Array.isArray(req.files.files)) {
-            req.files = req.files.files;
-        }
-        else {
-            req.files = [req.files.files];
-        }
+        req.files = Array.from(req.files.files); // Convert single values to array, keep arrays as is.
 
         const workflow = JSON.parse(req.body.workflow);
         // TODO: Validate input further (json may fail or not be a valid workflow)
@@ -80,7 +75,7 @@ router.post("/:workflowUuid?", [
                 }
             });
 
-            const traverse = traverseOperations(workflow.operations, inputs);
+            const traverse = traverseOperations(workflow.operations, inputs, Functions);
 
             let pdfResults;
             let iteration;

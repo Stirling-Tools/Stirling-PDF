@@ -1,19 +1,31 @@
 import { organizeWaitOperations } from "./organizeWaitOperations.js";
 
 /**
+ * @typedef PDF
+ * @property {string} originalFileName
+ * @property {string} fileName
+ * @property {Uint8Array} buffer
+ */
+
+/**
  * 
- * @param {*} operations 
- * @param {*} input 
+ * @param {JSON} operations 
+ * @param {PDF|PDF[]} input 
  * @param {import('./functions.js')} Functions 
- * @returns 
+ * @returns {}
  */
 export async function * traverseOperations(operations, input, Functions) {
     const waitOperations = organizeWaitOperations(operations);
-    let results = [];
+    /** @type {PDF[]} */ let results = [];
     yield* nextOperation(operations, input);
-    console.log("Done2");
     return results;
 
+    /**
+     * 
+     * @param {JSON} operations 
+     * @param {PDF|PDF[]} input 
+     * @returns {undefined}
+     */
     async function * nextOperation(operations, input) {
         if(Array.isArray(operations) && operations.length == 0) { // isEmpty
             if(Array.isArray(input)) {
@@ -33,6 +45,12 @@ export async function * traverseOperations(operations, input, Functions) {
         }
     }
     
+    /**
+     * 
+     * @param {JSON} operation
+     * @param {PDF|PDF[]} input 
+     * @returns {undefined}
+     */
     async function * computeOperation(operation, input) {
         yield "Starting: " + operation.type;
         switch (operation.type) {
@@ -135,15 +153,25 @@ export async function * traverseOperations(operations, input, Functions) {
         }
     }
 
+    /**
+     * 
+     * @param {PDF|PDF[]} input 
+     * @param {JSON} operation
+     * @returns {undefined}
+     */
     async function * nToOne(inputs, operation, callback) {
-        if(!Array.isArray(inputs)) {
-            inputs = [inputs];
-        }
+        inputs = Array.from(inputs); // Convert single values to array, keep arrays as is.
         
         inputs = await callback(inputs);
         yield* nextOperation(operation.operations, inputs);
     }
 
+    /**
+     * 
+     * @param {PDF|PDF[]} input 
+     * @param {JSON} operation
+     * @returns {undefined}
+     */
     async function * oneToN(input, operation, callback) {
         if(Array.isArray(input)) {
             let output = [];
@@ -158,6 +186,12 @@ export async function * traverseOperations(operations, input, Functions) {
         }
     }
 
+    /**
+     * 
+     * @param {PDF|PDF[]} input 
+     * @param {JSON} operation
+     * @returns {undefined}
+     */
     async function * nToN(input, operation, callback) {
         if(Array.isArray(input)) {
             for (let i = 0; i < input.length; i++) {
