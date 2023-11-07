@@ -75,10 +75,11 @@ export async function splitOn(snapshot, type, whiteThreashold, PDFJS, OpenCV, PD
 
         const pagesWithQR = [];
         for (let i = 0; i < pdfDoc.numPages; i++) {
+            console.log("Page:", i, "/", pdfDoc.numPages);
             const page = await pdfDoc.getPage(i + 1);
 
             const images = await getImagesOnPage(page, PDFJS);
-
+            console.log("images:", images);
             for (const image of images) {
                 const data = await checkForQROnImage(image);
                 if(data == "https://github.com/Frooodle/Stirling-PDF") {
@@ -86,12 +87,16 @@ export async function splitOn(snapshot, type, whiteThreashold, PDFJS, OpenCV, PD
                 }
             }
         }
+        if(pagesWithQR.length == 0) {
+            console.warn("Could not find any QR Codes in the provided PDF.")
+        }
         return pagesWithQR;
     }
 
     async function checkForQROnImage(image) {
         // TODO: There is an issue with the jsQR package (The package expects rgba but sometimes we have rgb), and the package seems to be stale, we could create a fork and fix the issue. In the meanwhile we just force rgba:
         // Check for rgb and convert to rgba
+
         if(image.data.length == image.width * image.height * 3) {
             const tmpArray = new Uint8ClampedArray(image.width * image.height * 4);
 

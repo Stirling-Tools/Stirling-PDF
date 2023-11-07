@@ -12,7 +12,6 @@ import * as Functions from "./functions.js";
         console.log("Starting...");
 
         const files = Array.from(pdfFileInput.files);
-        console.log(files);
         const inputs = await Promise.all(files.map(async file => {
             return {
                 originalFileName: file.name.replace(/\.[^/.]+$/, ""),

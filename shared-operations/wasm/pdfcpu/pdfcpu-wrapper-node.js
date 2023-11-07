@@ -1,5 +1,3 @@
-// TODO: Uses the BrowserFS import, needs to be changed for serverside
-
 import { WasmFs } from '@wasmer/wasmfs';
 import path from "path";
 
@@ -9,6 +7,7 @@ let nodeWasmLocation = "./public/wasm/";
 let fs;
 const wasmfs = new WasmFs();
 
+// TODO: This can later be defered to load asynchronously
 (async () => {
     await loadWasm();
     await configureFs();

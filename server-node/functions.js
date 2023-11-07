@@ -3,20 +3,20 @@ import PDFJS from "pdfjs-dist";
 import jsQR from "jsqr";
 
 delete global.crypto; // TODO: I hate to do this, but the new node version forces me to, if anyone finds a better solution, please tell me!
-import * as pdfcpuWraopper from "./public/wasm/pdfcpu-wrapper-node.js";
+import * as pdfcpuWraopper from "../shared-operations/wasm/pdfcpu/pdfcpu-wrapper-node.js";
 import OpenCV from 'opencv-wasm';
 
-import { extractPages as dependantExtractPages } from "./public/functions/extractPages.js";
-import { impose as dependantImpose } from './public/functions/impose.js';
-import { mergePDFs as dependantMergePDFs } from './public/functions/mergePDFs.js';
-import { rotatePages as dependantRotatePages } from './public/functions/rotatePages.js';
-import { scaleContent as dependantScaleContent} from './public/functions/scaleContent.js';
-import { scalePage as dependantScalePage } from './public/functions/scalePage.js';
-import { splitPDF as dependantSplitPDF } from './public/functions/splitPDF.js';
-import { editMetadata as dependantEditMetadata } from './public/functions/editMetadata.js';
-import { organizePages as dependantOrganizePages } from './public/functions/organizePages.js';
-import { removeBlankPages as dependantRemoveBlankPages} from './public/functions/removeBlankPages.js';
-import { splitOn as dependantSplitOn } from "./public/functions/splitOn.js";
+import { extractPages as dependantExtractPages } from "../shared-operations/functions/extractPages.js";
+import { impose as dependantImpose } from '../shared-operations/functions/impose.js';
+import { mergePDFs as dependantMergePDFs } from '../shared-operations/functions/mergePDFs.js';
+import { rotatePages as dependantRotatePages } from '../shared-operations/functions/rotatePages.js';
+import { scaleContent as dependantScaleContent} from '../shared-operations/functions/scaleContent.js';
+import { scalePage as dependantScalePage } from '../shared-operations/functions/scalePage.js';
+import { splitPDF as dependantSplitPDF } from '../shared-operations/functions/splitPDF.js';
+import { editMetadata as dependantEditMetadata } from '../shared-operations/functions/editMetadata.js';
+import { organizePages as dependantOrganizePages } from '../shared-operations/functions/organizePages.js';
+import { removeBlankPages as dependantRemoveBlankPages} from '../shared-operations/functions/removeBlankPages.js';
+import { splitOn as dependantSplitOn } from "../shared-operations/functions/splitOn.js";
 
 export async function extractPages(snapshot, pagesToExtractArray) {
     return dependantExtractPages(snapshot, pagesToExtractArray, PDFLib);

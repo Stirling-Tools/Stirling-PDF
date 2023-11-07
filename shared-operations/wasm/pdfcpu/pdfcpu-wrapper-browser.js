@@ -1,10 +1,11 @@
-// TODO: Uses the BrowserFS import, needs to be changed for serverside
+// imports browserfs via index.html script-tag
 
-let wasmLocation = "/wasm/";
+let wasmLocation = "/wasm/pdfcpu/";
 
 let fs;
 let Buffer;
 
+// TODO: This can later be defered to load asynchronously
 configureFs();
 loadWasm();
 

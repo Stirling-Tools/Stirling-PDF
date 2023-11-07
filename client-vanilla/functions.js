@@ -2,7 +2,8 @@
 // PDFJS as pdfjsLib via index.html script-tag
 // jsQR via index.html script-tag
 
-import * as pdfcpuWraopper from "./wasm/pdfcpu-wrapper-browser.js";
+import * as pdfcpuWraopper from "./wasm/pdfcpu/pdfcpu-wrapper-browser.js";
+
 const OpenCV = { cv: cv } // OPENCV gets importet as cv via index.html script-tag
 
 import { extractPages as dependantExtractPages } from "./functions/extractPages.js";
@@ -16,6 +17,8 @@ import { editMetadata as dependantEditMetadata} from "./functions/editMetadata.j
 import { organizePages as dependantOrganizePages} from "./functions/organizePages.js";
 import { removeBlankPages as dependantRemoveBlankPages} from "./functions/removeBlankPages.js";
 import { splitOn as dependantSplitOn } from "./functions/splitOn.js";
+
+// TODO: Dynamic loading & undloading of libraries.
 
 export async function extractPages(snapshot, pagesToExtractArray) {
     return dependantExtractPages(snapshot, pagesToExtractArray, PDFLib);

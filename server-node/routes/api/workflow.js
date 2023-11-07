@@ -4,7 +4,7 @@ import stream from "stream";
 import Archiver from 'archiver';
 
 import * as Functions from "../../functions.js";
-import { traverseOperations } from "../../public/traverseOperations.js";
+import { traverseOperations } from "../../../shared-operations/traverseOperations.js";
 
 const activeWorkflows = {};
 
@@ -17,7 +17,12 @@ router.post("/:workflowUuid?", [
             return;
         }
 
-        req.files = Array.from(req.files.files); // Convert single values to array, keep arrays as is.
+        if(Array.isArray(req.files.files)) {
+            req.files = req.files.files;
+        }
+        else {
+            req.files = [req.files.files];
+        }
 
         const workflow = JSON.parse(req.body.workflow);
         // TODO: Validate input further (json may fail or not be a valid workflow)
