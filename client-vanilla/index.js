@@ -11,7 +11,6 @@ import * as Functions from "./functions.js";
     // Clear existing options (if any)
     dropdown.innerHTML = '';
 
-    console.log(exampleWorkflows);
     // Iterate over the keys of the object and create an option for each key
     for (const key in exampleWorkflows) {
         const option = document.createElement('option');
