@@ -18,7 +18,7 @@ import NavDropdown from 'react-bootstrap/NavDropdown';
 import { LinkContainer } from 'react-router-bootstrap';
 import { useTranslation } from 'react-i18next';
 
-import LanguagePicker from "./LanguagePicker";
+import LanguagePicker from "./toolbar/LanguagePicker";
 import Logo from '../../public/stirling-pdf-logo.svg'
 import './NavBar.css';
 
