@@ -1,5 +1,5 @@
 
-To run the application without Docker, you will need to manually install all dependencies and build the necessary components.
+To run the application without Docker/Podman, you will need to manually install all dependencies and build the necessary components.
 
 Note that some dependencies might not be available in the standard repositories of all Linux distributions, and may require additional steps to install.
 
@@ -7,6 +7,8 @@ The following guide assumes you have a basic understanding of using a command li
 
 It should work on most Linux distributions and MacOS. For Windows, you might need to use Windows Subsystem for Linux (WSL) for certain steps.
 The amount of dependencies is to actually reduce overall size, ie installing LibreOffice sub components rather than full LibreOffice package.
+
+You could theoretically use a Distrobox/Toolbox, if your Distribution has old or not all Packages. But you might just as well use the Docker Container then.
 
 ### Step 1: Prerequisites
 
