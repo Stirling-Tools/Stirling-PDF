@@ -4,7 +4,28 @@ import * as exampleWorkflows from "./exampleWorkflows.js";
 import { traverseOperations } from "./traverseOperations.js";
 import * as Functions from "./functions.js";
 
-(async (workflow) => {
+(async () => {
+    const workflowField = document.getElementById("workflow");
+
+    const dropdown = document.getElementById("pdfOptions");
+    // Clear existing options (if any)
+    dropdown.innerHTML = '';
+
+    console.log(exampleWorkflows);
+    // Iterate over the keys of the object and create an option for each key
+    for (const key in exampleWorkflows) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.text = key;
+        dropdown.appendChild(option);
+    }
+    
+    const loadButton = document.getElementById("loadButton");
+    loadButton.addEventListener("click", (e) => {
+        workflowField.value = JSON.stringify(exampleWorkflows[dropdown.value], null, 2);
+    });
+    loadButton.click();
+
     const pdfFileInput = document.getElementById('pdfFile');
     const doneButton = document.getElementById("doneButton");
 
@@ -21,6 +42,8 @@ import * as Functions from "./functions.js";
         }));
         console.log(inputs);
 
+        const workflow = JSON.parse(workflowField.value);
+        console.log(workflow);
         const traverse = traverseOperations(workflow.operations, inputs, Functions);
 
         let pdfResults;
@@ -35,8 +58,9 @@ import * as Functions from "./functions.js";
             console.log(`data: ${iteration.value}\n\n`);
         }
         
+        // TODO: Zip if wanted
         pdfResults.forEach(result => {
             download(result.buffer, result.fileName, "application/pdf");
         });
     });
-})(exampleWorkflows.splitOnQR);
+})();
