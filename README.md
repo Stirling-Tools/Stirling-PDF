@@ -88,22 +88,25 @@ If you are interested in learning about this, take a look at the Example workflo
 
 Current functions of spdf and their progress in this repo.
 
-| Status | Feature                | Description |
-| ------ | ---------------------- | ----------- |
-| ✔️   | Merge                  |             |
-| ✔️   | Split                  |             |
-| ✔️   | Rotate                 |             |
-| ✔️   | Multi-Page-Layout      |             |
-| ✔️   | Adjust page size/scale |             |
-| 🚧    | Organize               |             |
-| ✔️    | Change Metadata        |             |
-| ❌     | Add Watermark          |             |
+| Status | Feature                  | Description |
+| ------ | ------------------------ | ----------- |
+| ✔️   | Merge                    |             |
+| ✔️   | Split                    |             |
+| ✔️   | Rotate                   |             |
+| ✔️   | Multi-Page-Layout        |             |
+| ✔️   | Adjust page size/scale   |             |
+| ✔️   | Organize                 |             |
+| ✔️   | Change Metadata          |             |
+| ✔️   | Auto Rename              |             |
+| ❌     | Add Watermark            |             |
+| ❌     | PDF to Single large Page |             |
+| ❌     | Auto Redact              |             |
+| ❌     | Remove Pages             |             |
 
-| Status | Feature                     | Description |
-| ------ | --------------------------- | ----------- |
-| ❌     | Remove Pages                |             |
-| ❌     | Remove Blank Pages          |             |
-| ❌     | Detect/Split Scanned photos |             |
+| Status | Feature            | Description |
+| ------ | ------------------ | ----------- |
+| ✔️    | Remove Blank Pages |             |
+| ✔️    | Auto Split Pages   |             |
 
 | Status | Feature      | Description |
 | ------ | ------------ | ----------- |
@@ -111,6 +114,9 @@ Current functions of spdf and their progress in this repo.
 | ❌     | Compress     |             |
 | ❌     | Flatten      |             |
 | ❌     | Compare/Diff |             |
+| ❌     | Sanitize     |             |
+| ❌     | Get info     |             |
+| ❌     | Show JS      |             |
 
 | Status | Feature               | Description |
 | ------ | --------------------- | ----------- |
@@ -120,20 +126,25 @@ Current functions of spdf and their progress in this repo.
 | ❌     | Remove Password       |             |
 | ❌     | Change Permissions    |             |
 
-| Status | Feature        | Description |
-| ------ | -------------- | ----------- |
-| ❌     | Image to PDF   |             |
-| ❌     | Add image      |             |
-| ❌     | Extract Images |             |
-| ❌     | PDF to Image   |             |
-| ❌     | OCR            |             |
+| Status | Feature                     | Description |
+| ------ | --------------------------- | ----------- |
+| ❌     | Image to PDF                |             |
+| ❌     | Add image                   |             |
+| ❌     | Extract Images              |             |
+| ❌     | PDF to Image                |             |
+| ❌     | OCR                         |             |
+| ❌     | Detect/Split Scanned photos |             |
 
-| Status | Feature             | Description |
-| ------ | ------------------- | ----------- |
-| ❌     | Convert file to PDF |             |
-| ❌     | PDF to Text/RTF     |             |
-| ❌     | PDF to HTML         |             |
-| ❌     | PDF to XML          |             |
+| Status | Feature                  | Description |
+| ------ | ------------------------ | ----------- |
+| ❌     | Convert file to PDF      |             |
+| ❌     | PDF to Text/RTF          |             |
+| ❌     | PDF to HTML              |             |
+| ❌     | PDF to XML               |             |
+| ❌     | URL to PDF               |             |
+| ❌     | HTML to PDF              |             |
+| ❌     | Markdown to PDF          |             |
+
 
 ✔️: Done, 🚧: Started Developement, ❌: Planned Feature
 

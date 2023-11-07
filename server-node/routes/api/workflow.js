@@ -5,8 +5,8 @@ import Archiver from 'archiver';
 import multer from 'multer'
 const upload = multer();
 
-import * as Functions from "../../src/pdf-operations.js";
-import { traverseOperations } from "../../public/traverseOperations.js";
+import * as Functions from "../../functions.js";
+import { traverseOperations } from "../../../shared-operations/traverseOperations.js";
 
 const activeWorkflows = {};
 
@@ -83,7 +83,7 @@ router.post("/:workflowUuid?", [
                 }
             });
 
-            const traverse = traverseOperations(workflow.operations, inputs);
+            const traverse = traverseOperations(workflow.operations, inputs, Functions);
 
             let pdfResults;
             let iteration;

@@ -110,7 +110,6 @@ export const splitOnly = {
     ]
 }
 
-// Split a document up into multiple documents
 export const rotateOnly = {
     outputOptions: {
         zip: false
@@ -124,7 +123,6 @@ export const rotateOnly = {
     ]
 }
 
-// Split a document up into multiple documents
 export const imposeOnly = {
     outputOptions: {
         zip: false
@@ -137,3 +135,31 @@ export const imposeOnly = {
         }
     ]
 }
+
+export const removeBlankPagesOnly = {
+    outputOptions: {
+        zip: false
+    },
+    operations: [
+        {
+            type: "removeBlankPages",
+            values: { "whiteThreashold": 10 },
+            operations: []
+        }
+    ]
+}
+
+export const splitOnQR = {
+    outputOptions: {
+        zip: false
+    },
+    operations: [
+        {
+            type: "splitOn",
+            values: {
+            type: "QR_CODE"
+            },
+            operations: []
+        }
+    ]
+  }

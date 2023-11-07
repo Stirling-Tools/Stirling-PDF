@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <script src="/dep/pdf-lib.min.js"></script>
+    <script src="/dep/downloadjs_1.4.7.js"></script>
+    <script src="/dep/pdf.min.js"></script>
+    <script src="/dep/jsQR.js"></script>
+
+    <script src="/wasm/browserfs.min.js"></script>
+    <script src="/wasm/opencv/opencv_3_4_custom_O3.js"></script>
+
+    <script src="index.js" type="module"></script>
+</head>
+<body>
+    <input type="file" id="pdfFile" accept=".pdf" multiple>
+    <br>
+    
+    <br>
+    <textarea name="workflow" id="workflow" cols="120" rows="20"></textarea>
+    <br>
+    <select id="pdfOptions">
+    </select>
+    <button id="loadButton">Load</button>
+    <br>
+    
+    <br>
+    <button id="doneButton">Done</button>
+</body>
+</html>

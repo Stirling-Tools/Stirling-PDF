@@ -5,6 +5,8 @@ This file should introduce you with the concepts and tools used in this project.
 ## PDF Library Docs
 - [pdf-lib](https://pdf-lib.js.org) - js
 - [pdfcpu](https://pdfcpu.io) - go-wasm
+- [opencv-wasm](https://www.npmjs.com/package/opencv-wasm) - ?-wasm
+- [pdfjs](https://www.npmjs.com/package/pdfjs-dist) - js
 
 ## Adding a PDF Operation
 StirlingPDF aims to support as many types of operations as possible, including some that cannot be executed in the client. Because of this, we have decided to move some of the shared functionality into it's own node module so that it can be shared by both client and server.

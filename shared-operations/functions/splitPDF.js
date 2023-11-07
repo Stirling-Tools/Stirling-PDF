@@ -1,7 +1,7 @@
 
 import { PDFDocument } from 'pdf-lib';
 
-import { createSubDocument } from "./extractPages.js";
+import { createSubDocument } from "./shared/extractPages.js";
 
 export async function splitPDF(snapshot, splitAfterPageArray) {
     const pdfDoc = await PDFDocument.load(snapshot)
@@ -18,7 +18,7 @@ export async function splitPDF(snapshot, splitAfterPageArray) {
             splitAfter = splitAfterPageArray.shift();
             pagesArray = [];
         }
-        pagesArray.push(i);        
+        pagesArray.push(i);
     }
     subDocuments.push(await createSubDocument(pdfDoc, pagesArray));
     pagesArray = [];
