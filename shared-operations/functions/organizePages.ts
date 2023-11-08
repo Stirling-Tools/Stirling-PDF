@@ -1,5 +1,5 @@
 
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, PDFPage } from 'pdf-lib';
 
 export async function organizePages(
             snapshot: string | Uint8Array | ArrayBuffer,
@@ -29,14 +29,14 @@ export async function organizePages(
             customOrderedPages.forEach((page) => subDocument.addPage(page));
             break;
         case "REVERSE_ORDER":
-            const reversedPages = [];
+            const reversedPages: PDFPage[] = [];
             for (let i = pageCount - 1; i >= 0; i--) {
                 reversedPages.push(copiedPages[i]);
             }
             reversedPages.forEach((page) => subDocument.addPage(page));
             break;
         case 'DUPLEX_SORT': //TODO: Needs to be checked by someone who knows more about duplex printing.
-            const duplexPages = [];
+            const duplexPages: PDFPage[]  = [];
             const half = (pageCount + 1) / 2
             for (let i = 1; i <= half; i++) {
                 duplexPages.push(copiedPages[i - 1]);
@@ -47,7 +47,7 @@ export async function organizePages(
             duplexPages.forEach((page) => subDocument.addPage(page));
             break;
         case 'BOOKLET_SORT':
-            const bookletPages = [];
+            const bookletPages: PDFPage[]  = [];
             for (let i = 0; i < pageCount / 2; i++) {
                 bookletPages.push(copiedPages[i]);
                 bookletPages.push(copiedPages[pageCount - i - 1]);
@@ -55,8 +55,8 @@ export async function organizePages(
             bookletPages.forEach((page) => subDocument.addPage(page));
             break;
         case 'ODD_EVEN_SPLIT':
-            const oddPages = [];
-            const evenPages = [];
+            const oddPages: PDFPage[]  = [];
+            const evenPages: PDFPage[]  = [];
             for (let i = 0; i < pageCount; i++) {
                 if (i % 2 === 0) {
                     evenPages.push(copiedPages[i]);

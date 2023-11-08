@@ -6,7 +6,7 @@ import multer from 'multer'
 const upload = multer();
 
 import * as Functions from "../../functions.js";
-import { traverseOperations } from "../../../shared-operations/traverseOperations.js";
+import { traverseOperations } from "../../../shared-operations/workflow/traverseOperations.js";
 
 const activeWorkflows = {};
 

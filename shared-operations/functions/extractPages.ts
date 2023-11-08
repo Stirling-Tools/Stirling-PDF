@@ -1,6 +1,6 @@
 
 import { PDFDocument } from 'pdf-lib';
-import { createSubDocument } from './createSubDocument';
+import { createSubDocument } from './common/createSubDocument';
 
 export async function extractPages(snapshot: string | Uint8Array | ArrayBuffer, pagesToExtractArray: number[]): Promise<Uint8Array>{
     const pdfDoc = await PDFDocument.load(snapshot)

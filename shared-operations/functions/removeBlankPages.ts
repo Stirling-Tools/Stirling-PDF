@@ -1,5 +1,5 @@
 import { PDFDocument } from 'pdf-lib';
-import { detectEmptyPages } from "./detectEmptyPages.js";
+import { detectEmptyPages } from "./common/detectEmptyPages.js";
 
 export async function removeBlankPages(snapshot, whiteThreashold) {
     

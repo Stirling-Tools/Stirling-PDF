@@ -2,9 +2,9 @@
 import { PDFDocument } from 'pdf-lib';
 import PDFJS from 'pdfjs-dist';
 
-import { detectEmptyPages } from "./detectEmptyPages.js";
-import { getImagesOnPage } from "./getImagesOnPage.js";
-import { createSubDocument } from "./createSubDocument.js";
+import { detectEmptyPages } from "./common/detectEmptyPages.js";
+import { getImagesOnPage } from "./common/getImagesOnPage.js";
+import { createSubDocument } from "./common/createSubDocument.js";
 import { TypedArray, DocumentInitParameters } from 'pdfjs-dist/types/src/display/api.js';
 
 export async function splitOn(
