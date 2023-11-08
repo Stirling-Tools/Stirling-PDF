@@ -1,7 +1,7 @@
 
 import { PDFDocument } from 'pdf-lib';
 
-export async function createSubDocument(pdfDoc, pagesToExtractArray) {
+export async function createSubDocument(pdfDoc: PDFDocument, pagesToExtractArray: number[]): Promise<Uint8Array> {
     const subDocument = await PDFDocument.create();
 
     // Check that array max number is not larger pdf pages number

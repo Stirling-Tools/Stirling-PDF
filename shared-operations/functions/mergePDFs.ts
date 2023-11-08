@@ -1,7 +1,7 @@
 
 import { PDFDocument } from 'pdf-lib';
 
-export const mergePDFs = async (snapshots) => {
+export async function mergePDFs(snapshots: (string | Uint8Array | ArrayBuffer)[]): Promise<Uint8Array> {
 
     const mergedPdf = await PDFDocument.create(); 
 

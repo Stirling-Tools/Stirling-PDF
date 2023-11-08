@@ -1,9 +1,9 @@
 import { PDFDocument } from 'pdf-lib';
 import { detectEmptyPages } from "./detectEmptyPages.js";
 
-export async function removeBlankPages(snapshot, whiteThreashold, OpenCV) {
+export async function removeBlankPages(snapshot, whiteThreashold) {
     
-    const emptyPages = await detectEmptyPages(snapshot, whiteThreashold, OpenCV);
+    const emptyPages = await detectEmptyPages(snapshot, whiteThreashold);
 
     console.log("Empty Pages: ", emptyPages);
 

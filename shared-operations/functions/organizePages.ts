@@ -1,19 +1,17 @@
 
 import { PDFDocument } from 'pdf-lib';
 
-/**
- * @typedef {"CUSTOM_PAGE_ORDER"|"REVERSE_ORDER"|"DUPLEX_SORT"|"BOOKLET_SORT"|"ODD_EVEN_SPLIT"|"REMOVE_FIRST"|"REMOVE_LAST"|"REMOVE_FIRST_AND_LAST"} OrderOperation
- */
-
-/**
- * 
- * @param {Uint16Array} snapshot
- * @param {OrderOperation} operation
- * @param {string} customOrderString
- * @param {import('pdf-lib')} PDFLib
- * @returns 
- */
-export async function organizePages(snapshot, operation, customOrderString) {
+export async function organizePages(
+            snapshot: string | Uint8Array | ArrayBuffer,
+            operation: "CUSTOM_PAGE_ORDER" |
+                       "REVERSE_ORDER" |
+                       "DUPLEX_SORT" |
+                       "BOOKLET_SORT" |
+                       "ODD_EVEN_SPLIT" |
+                       "REMOVE_FIRST" |
+                       "REMOVE_LAST" |
+                       "REMOVE_FIRST_AND_LAST",
+            customOrderString: string): Promise<Uint8Array> {
     const pdfDoc = await PDFDocument.load(snapshot);
     let subDocument = await PDFDocument.create();
     const copiedPages = await subDocument.copyPages(pdfDoc, pdfDoc.getPageIndices());
@@ -90,8 +88,8 @@ export async function organizePages(snapshot, operation, customOrderString) {
     return subDocument.save();
 };
 
-function parseCustomPageOrder(customOrder, pageCount) {
-    const pageOrderArray = [];
+function parseCustomPageOrder(customOrder: string, pageCount: number) {
+    const pageOrderArray: number[] = [];
     const ranges = customOrder.split(',');
 
     ranges.forEach((range) => {

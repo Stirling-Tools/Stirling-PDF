@@ -1,7 +1,7 @@
 
 import { PDFDocument, ParseSpeeds } from 'pdf-lib';
 
-export async function scalePage(snapshot, pageSize) {
+export async function scalePage(snapshot: string | Uint8Array | ArrayBuffer, pageSize: {width:number,height:number}): Promise<Uint8Array> {
     // Load the original PDF file
     const pdfDoc = await PDFDocument.load(snapshot, {
         parseSpeed: ParseSpeeds.Fastest,

@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "image-js": "^0.35.5",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^4.0.189"
   }
