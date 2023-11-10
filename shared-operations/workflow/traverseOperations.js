@@ -1,5 +1,17 @@
 import { organizeWaitOperations } from "./organizeWaitOperations.js";
 
+import { extractPages } from "../functions/extractPages.js";
+import { impose } from '../functions/impose.js';
+import { mergePDFs } from '../functions/mergePDFs.js';
+import { rotatePages } from '../functions/rotatePages.js';
+import { scaleContent} from '../functions/scaleContent.js';
+import { scalePage } from '../functions/scalePage.js';
+import { splitPDF } from '../functions/splitPDF.js';
+import { Metadata as dependantEditMetadata } from '../functions/editMetadata.js';
+import { organizePages } from '../functions/organizePages.js';
+import { removeBlankPages} from '../functions/removeBlankPages.js';
+import { splitOn } from "../functions/splitOn.js";
+
 /**
  * @typedef PDF
  * @property {string} originalFileName
@@ -11,10 +23,9 @@ import { organizeWaitOperations } from "./organizeWaitOperations.js";
  * 
  * @param {JSON} operations 
  * @param {PDF|PDF[]} input 
- * @param {import('./functions.js')} Functions 
  * @returns {}
  */
-export async function * traverseOperations(operations, input, Functions) {
+export async function * traverseOperations(operations, input) {
     const waitOperations = organizeWaitOperations(operations);
     /** @type {PDF[]} */ let results = [];
     yield* nextOperation(operations, input);
@@ -74,13 +85,13 @@ export async function * traverseOperations(operations, input, Functions) {
             case "extract":
                 yield* nToN(input, operation, async (input) => {
                     input.fileName += "_extractedPages";
-                    input.buffer = await Functions.extractPages(input.buffer, operation.values["pagesToExtractArray"]);
+                    input.buffer = await extractPages(input.buffer, operation.values["pagesToExtractArray"]);
                 });
                 break;
             case "impose":
                 yield* nToN(input, operation, async (input) => {
                     input.fileName += "_imposed";
-                    input.buffer = await Functions.impose(input.buffer, operation.values["nup"], operation.values["format"]);
+                    input.buffer = await impose(input.buffer, operation.values["nup"], operation.values["format"]);
                 });
                 break;
             case "merge":
@@ -88,20 +99,20 @@ export async function * traverseOperations(operations, input, Functions) {
                     return {
                         originalFileName: inputs.map(input => input.originalFileName).join("_and_"),
                         fileName: inputs.map(input => input.fileName).join("_and_") + "_merged",
-                        buffer: await Functions.mergePDFs(inputs.map(input => input.buffer))
+                        buffer: await mergePDFs(inputs.map(input => input.buffer))
                     }
                 });
                 break;
             case "rotate":
                 yield* nToN(input, operation, async (input) => {
                     input.fileName += "_turned";
-                    input.buffer = await Functions.rotatePages(input.buffer, operation.values["rotation"]);
+                    input.buffer = await rotatePages(input.buffer, operation.values["rotation"]);
                 });
                 break;
             case "split":
                 // TODO: A split might break the done condition, it may count multiple times. Needs further testing!
                 yield* oneToN(input, operation, async (input) => {
-                    const splitResult = await Functions.splitPDF(input.buffer, operation.values["pagesToSplitAfterArray"]);
+                    const splitResult = await splitPDF(input.buffer, operation.values["pagesToSplitAfterArray"]);
     
                     const splits = [];
                     for (let j = 0; j < splitResult.length; j++) {
@@ -117,24 +128,24 @@ export async function * traverseOperations(operations, input, Functions) {
             case "editMetadata":
                 yield* nToN(input, operation, async (input) => {
                     input.fileName += "_metadataEdited";
-                    input.buffer = await Functions.editMetadata(input.buffer, operation.values["metadata"]);
+                    input.buffer = await editMetadata(input.buffer, operation.values["metadata"]);
                 });
                 break;
             case "organizePages":
                 yield* nToN(input, operation, async (input) => {
                     input.fileName += "_pagesOrganized";
-                    input.buffer = await Functions.organizePages(input.buffer, operation.values["operation"], operation.values["customOrderString"]);
+                    input.buffer = await organizePages(input.buffer, operation.values["operation"], operation.values["customOrderString"]);
                 });
                 break;
             case "removeBlankPages":
                 yield* nToN(input, operation, async (input) => {
                     input.fileName += "_removedBlanks";
-                    input.buffer = await Functions.removeBlankPages(input.buffer, operation.values["whiteThreashold"]);
+                    input.buffer = await removeBlankPages(input.buffer, operation.values["whiteThreashold"]);
                 });
                 break;
             case "splitOn":
                 yield* oneToN(input, operation, async (input) => {
-                    const splitResult = await Functions.splitOn(input.buffer, operation.values["type"], operation.values["whiteThreashold"]);
+                    const splitResult = await splitOn(input.buffer, operation.values["type"], operation.values["whiteThreashold"]);
                     const splits = [];
                     for (let j = 0; j < splitResult.length; j++) {
                         splits.push({

@@ -1,6 +1,7 @@
 
 import { PDFDocument } from 'pdf-lib';
 import PDFJS from 'pdfjs-dist';
+import jsQR from "jsqr";
 
 import { detectEmptyPages } from "./common/detectEmptyPages.js";
 import { getImagesOnPage } from "./common/getImagesOnPage.js";
@@ -10,8 +11,7 @@ import { TypedArray, DocumentInitParameters } from 'pdfjs-dist/types/src/display
 export async function splitOn(
             snapshot: string | ArrayBuffer | Uint8Array,
             type: "BAR_CODE"|"QR_CODE"|"BLANK_PAGE",
-            whiteThreashold: number,
-            jsQR: (arg0: any, arg1: number, arg2: number) => any) {
+            whiteThreashold: number) {
     let splitAtPages: number[] = [];
 
     switch (type) {
@@ -86,7 +86,7 @@ export async function splitOn(
         return pagesWithQR;
     }
 
-    async function checkForQROnImage(image) {
+    async function checkForQROnImage(image: any) {
         // TODO: There is an issue with the jsQR package (The package expects rgba but sometimes we have rgb), and the package seems to be stale, we could create a fork and fix the issue. In the meanwhile we just force rgba:
         // Check for rgb and convert to rgba
 
