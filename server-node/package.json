@@ -1,10 +1,14 @@
 {
   "name": "@stirling-pdf/server-node",
   "version": "0.0.0",
+  "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "node ."
+    "build": "npx tsc",
+    "start": "node dist/index.js",
+    "dev": "nodemon index.ts"
   },
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -15,8 +19,12 @@
     "express-fileupload": "^1.4.2",
     "jsqr": "^1.4.0",
     "multer": "^1.4.5-lts.1",
-    "opencv-wasm": "^4.3.0-10",
+    "nodemon": "^3.0.1",
     "pdf-lib": "^1.17.1"
   },
-  "type": "module"
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.2.2"
+  }
 }

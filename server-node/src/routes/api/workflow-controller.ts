@@ -1,36 +1,31 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import crypto from 'crypto';
 import stream from "stream";
 import Archiver from 'archiver';
 import multer from 'multer'
 const upload = multer();
 
-import * as Functions from "../../functions.js";
-import { traverseOperations } from "../../../shared-operations/workflow/traverseOperations.js";
+import Operations from "../../utils/pdf-operations";
+import { traverseOperations } from "@stirling-pdf/shared-operations/workflow/traverseOperations.js";
 
-const activeWorkflows = {};
+const activeWorkflows: any = {};
 
 const router = express.Router();
 
 router.post("/:workflowUuid?", [
     upload.any(),
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         if(req.files == null) {
             res.status(400).json({"error": "No files were uploaded."});
             return;
         }
 
-        if(Array.isArray(req.files.files)) {
-            req.files = req.files.files;
-        }
-        else {
-            req.files = [req.files.files];
-        }
+        const filesArr = Array.isArray(req.files.files) ? req.files.files : [req.files.files];
 
         const workflow = JSON.parse(req.body.workflow);
         // TODO: Validate input further (json may fail or not be a valid workflow)
 
-        const inputs = await Promise.all(req.files.map(async file => {
+        const inputs = await Promise.all(filesArr.map(async file => {
             return {
                 originalFileName: file.name.replace(/\.[^/.]+$/, ""),
                 fileName: file.name.replace(/\.[^/.]+$/, ""),
@@ -42,7 +37,7 @@ router.post("/:workflowUuid?", [
         if(req.body.async === "false") {
             console.log("Don't do async");
 
-            const traverse = traverseOperations(workflow.operations, inputs, Functions);
+            const traverse = traverseOperations(workflow.operations, inputs, Operations);
 
             let pdfResults;
             let iteration;
@@ -78,12 +73,12 @@ router.post("/:workflowUuid?", [
             res.status(200).json({
                 "workflowID": workflowID,
                 "data-recieved": {
-                    "fileCount": req.files.length,
+                    "fileCount": filesArr.length,
                     "workflow": workflow
                 }
             });
 
-            const traverse = traverseOperations(workflow.operations, inputs, Functions);
+            const traverse = traverseOperations(workflow.operations, inputs, Operations);
 
             let pdfResults;
             let iteration;
@@ -107,7 +102,7 @@ router.post("/:workflowUuid?", [
     }
 ]);
 
-router.get("/progress/:workflowUuid", (req, res, nex) => {
+router.get("/progress/:workflowUuid", (req: Request, res: Response) => {
     if(!req.params.workflowUuid) {
         res.status(400).json({"error": "No workflowUuid weres provided."});
         return;
@@ -122,7 +117,7 @@ router.get("/progress/:workflowUuid", (req, res, nex) => {
     res.status(200).json({ createdAt: workflow.createdAt, finished: workflow.finished });
 });
 
-router.get("/progress-stream/:workflowUuid", (req, res, nex) => {
+router.get("/progress-stream/:workflowUuid", (req: Request, res: Response) => {
     if(!req.params.workflowUuid) {
         res.status(400).json({"error": "No workflowUuid weres provided."});
         return;
@@ -150,7 +145,7 @@ router.get("/progress-stream/:workflowUuid", (req, res, nex) => {
     });
 });
 
-router.get("/result/:workflowUuid", (req, res, nex) => {
+router.get("/result/:workflowUuid", (req: Request, res: Response) => {
     if(!req.params.workflowUuid) {
         res.status(400).json({"error": "No workflowUuid weres provided."});
         return;
@@ -176,7 +171,7 @@ router.get("/result/:workflowUuid", (req, res, nex) => {
     delete activeWorkflows[req.params.workflowUuid];
 });
 
-router.post("/abort/:workflowUuid", (req, res, nex) => {
+router.post("/abort/:workflowUuid", (req: Request, res: Response) => {
     if(!req.params.workflowUuid) {
         res.status(400).json({"error": "No workflowUuid weres provided."});
         return;
@@ -194,7 +189,7 @@ function generateWorkflowID() {
     return crypto.randomUUID();
 }
 
-function downloadHandler(res, pdfResults) {
+function downloadHandler(res: Response, pdfResults: any) {
     if(pdfResults.length == 0) {
         res.status(500).json({"warning": "The workflow had no outputs."});
     } 
