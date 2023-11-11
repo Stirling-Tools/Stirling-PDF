@@ -1,5 +1,5 @@
 import { DocumentInitParameters, PDFPageProxy } from "pdfjs-dist/types/src/display/api.js";
-import PDFJS from 'pdfjs-dist';
+import * as PDFJS from 'pdfjs-dist';
 import { Image } from 'image-js';
 
 import { getImagesOnPage } from "./getImagesOnPage.js";

@@ -1,6 +1,6 @@
 
 import { PDFDocument } from 'pdf-lib';
-import PDFJS from 'pdfjs-dist';
+import * as PDFJS from 'pdfjs-dist';
 import jsQR from "jsqr";
 
 import { detectEmptyPages } from "./common/detectEmptyPages.js";

@@ -1,6 +1,6 @@
 
 import { PDFPageProxy } from "pdfjs-dist/types/src/display/api.js";
-import PDFJS from 'pdfjs-dist';
+import * as PDFJS from 'pdfjs-dist';
 
 export async function getImagesOnPage(page: PDFPageProxy) {
     const ops = await page.getOperatorList();

@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/index.js",
-    "dev": "nodemon index.ts"
+    "dev": "nodemon --watch './**/*.ts' --exec 'node --experimental-specifier-resolution=node --loader ts-node/esm' ./index.ts"
   },
   "keywords": [],
   "author": "",
@@ -26,5 +26,7 @@
     "@types/express": "^4.17.21",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.2.2"
-  }
+  },
+  "exports": "./dist/index.js",
+  "type": "module"
 }
