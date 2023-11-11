@@ -113,10 +113,10 @@ export async function * traverseOperations(operations, input, Operations) {
                     return splits;
                 });
                 break;
-            case "editMetadata":
+            case "updateMetadata":
                 yield* nToN(input, operation, async (input) => {
                     input.fileName += "_metadataEdited";
-                    input.buffer = await Operations.editMetadata(input.buffer, operation.values["metadata"]);
+                    input.buffer = await Operations.updateMetadata(input.buffer, operation.values["metadata"]);
                 });
                 break;
             case "organizePages":
