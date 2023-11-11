@@ -40,7 +40,7 @@ router.post('/update-metadata', upload.single("pdfFile"), async function(req: Re
         title: Joi.string(),
         trapped: Joi.string(),
         allRequestParams: Joi.object().pattern(Joi.string(), Joi.string()),
-    });
+    }).required();
     const { error, value } = schema.validate(req.body);
     if (error) {
         res.status(400).send(error.details);
@@ -51,7 +51,7 @@ router.post('/update-metadata', upload.single("pdfFile"), async function(req: Re
         return;
     }
 
-    const processed = await Operations.updateMetadata(req.file.buffer, value.angle)
+    const processed = await Operations.updateMetadata(req.file.buffer, value)
     const newFilename = appendToFilename(req.file.originalname, '_edited-metadata');
     respondWithBinaryPdf(res, processed, newFilename);
 });
