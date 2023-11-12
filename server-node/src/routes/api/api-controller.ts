@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 
-import workflow from './workflow-controller';
+//import workflow from './workflow-controller';
 import operations from './operations-controller';
 
 const router = express.Router();
@@ -11,6 +11,6 @@ router.get("/", (req: Request, res: Response) => {
 });
 
 router.use("/operations", operations);
-router.use("/workflow", workflow);
+//router.use("/workflow", workflow);
 
 export default router;

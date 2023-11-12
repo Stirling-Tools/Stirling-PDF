@@ -5,13 +5,13 @@ import Archiver from 'archiver';
 import multer from 'multer'
 const upload = multer();
 
-import Operations from "../../utils/pdf-operations";
-import { traverseOperations } from "@stirling-pdf/shared-operations/workflow/traverseOperations.js";
+//import Operations from "../../utils/pdf-operations";
+//import { traverseOperations } from "@stirling-pdf/shared-operations/workflow/traverseOperations.js";
 
 const activeWorkflows: any = {};
 
 const router = express.Router();
-
+/*
 router.post("/:workflowUuid?", [
     upload.any(),
     async (req: Request, res: Response) => {
@@ -159,7 +159,7 @@ router.get("/result/:workflowUuid", (req: Request, res: Response) => {
      * If workflow isn't done return error
      * Send file, TODO: if there are multiple outputs return as zip
      * If download is done, delete results / allow deletion within the next 5-60 mins
-    */
+    *
     const workflow = activeWorkflows[req.params.workflowUuid];
     if(!workflow.finished) {
         res.status(202).json({ message: "Workflow hasn't finished yet. Check progress or connect to progress-steam to get notified when its done." });
@@ -227,5 +227,5 @@ function downloadHandler(res: Response, pdfResults: any) {
         readStream.pipe(res);
     }
 }
-
+*/
 export default router;
