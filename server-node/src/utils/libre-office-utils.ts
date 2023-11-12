@@ -3,7 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { exec, spawn } from 'child_process'
-import { PdfFile, fromUint8Array } from '@stirling-pdf/shared-operations/wrappers/PdfFile'
+import { PdfFile, fromUint8Array } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
 
 export async function fileToPdf(byteArray: Uint8Array, filename: string): Promise<PdfFile> {
     const parentDir = path.join(os.tmpdir(), "StirlingPDF");
