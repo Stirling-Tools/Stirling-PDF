@@ -1,34 +1,17 @@
 import { organizeWaitOperations } from "./organizeWaitOperations.js";
+import { Operation } from "../../declarations/Operation.js";
+import { PDF } from "../../declarations/PDF.js";
 
-/**
- * @typedef PDF
- * @property {string} originalFileName
- * @property {string} fileName
- * @property {Uint8Array} buffer
- */
-
-/**
- * 
- * @param {JSON} operations 
- * @param {PDF|PDF[]} input 
- * @returns {}
- */
-export async function * traverseOperations(operations, input, Operations) {
+export async function * traverseOperations(operations: Operation[], input: PDF[] | PDF, Operations: AllOperations) {
     const waitOperations = organizeWaitOperations(operations);
-    /** @type {PDF[]} */ let results = [];
+    let results: PDF[] = [];
     yield* nextOperation(operations, input);
     return results;
 
-    /**
-     * 
-     * @param {JSON} operations 
-     * @param {PDF|PDF[]} input 
-     * @returns {undefined}
-     */
-    async function * nextOperation(operations, input) {
+    async function * nextOperation(operations: Operation[], input: PDF[] | PDF) {
         if(Array.isArray(operations) && operations.length == 0) { // isEmpty
             if(Array.isArray(input)) {
-                console.log("operation done: " + input[0].fileName + input.length > 1 ? "+" : "");
+                console.log("operation done: " + input[0].fileName + (input.length > 1 ? "+" : ""));
                 results = results.concat(input);
                 return;
             }
@@ -44,13 +27,7 @@ export async function * traverseOperations(operations, input, Operations) {
         }
     }
     
-    /**
-     * 
-     * @param {JSON} operation
-     * @param {PDF|PDF[]} input 
-     * @returns {undefined}
-     */
-    async function * computeOperation(operation, input) {
+    async function * computeOperation(operation: Operation, input: PDF|PDF[]) {
         yield "Starting: " + operation.type;
         switch (operation.type) {
             case "done": // Skip this, because it is a valid node.

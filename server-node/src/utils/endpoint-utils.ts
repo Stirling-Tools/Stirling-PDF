@@ -1,6 +1,6 @@
 
 import { Response } from 'express';
-import { PdfFile } from '@stirling-pdf/shared-operations/wrappers/PdfFile'
+import { PdfFile } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
 
 export async function respondWithFile(res: Response, bytes: Uint8Array, name: string, mimeType: string): Promise<void> {
     res.writeHead(200, {

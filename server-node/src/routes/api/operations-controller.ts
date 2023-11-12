@@ -1,7 +1,7 @@
 
 import Operations from '../../utils/pdf-operations';
 import { respondWithPdfFile, response_mustHaveExactlyOneFile } from '../../utils/endpoint-utils';
-import { PdfFile, fromMulterFile } from '@stirling-pdf/shared-operations/wrappers/PdfFile'
+import { PdfFile, fromMulterFile } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
 
 import express, { Request, Response } from 'express';
 const router = express.Router();
