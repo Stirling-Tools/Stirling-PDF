@@ -1,6 +1,6 @@
 
 import { PDFDocument, ParseSpeeds } from 'pdf-lib';
-
+import { PdfFile, fromPdfLib } from '../wrappers/PdfFile';
 
 export type Metadata = {
     deleteAll?: boolean,        // Delete all metadata if set to true
@@ -13,21 +13,11 @@ export type Metadata = {
     subject?: string,           // The subject of the document
     title?: string,             // The title of the document
     //trapped?: string,           // The trapped status of the document
-    //allRequestParams?: object,  // Map list of key and value of custom parameters. Note these must start with customKey and customValue if they are non-standard
+    //allRequestParams?: {[key: string]: [key: string]},  // Map list of key and value of custom parameters. Note these must start with customKey and customValue if they are non-standard
 }
 
-/**
- * 
- * @param {Uint16Array} snapshot
- * @param {Metadata} metadata - Set property to null or "" to clear, undefined properties will be skipped.
- * @returns Promise<Uint8Array>
- */
-export async function updateMetadata(snapshot: string | Uint8Array | ArrayBuffer, metadata: Metadata): Promise<Uint8Array> {
-    // Load the original PDF file
-    const pdfDoc = await PDFDocument.load(snapshot, {
-        parseSpeed: ParseSpeeds.Slow,
-        updateMetadata: false,
-    });
+export async function updateMetadata(file: PdfFile, metadata: Metadata|null): Promise<PdfFile> {
+    const pdfDoc = await file.getAsPdfLib();
 
     if (!metadata || metadata.deleteAll) {
         pdfDoc.setAuthor("");
@@ -40,7 +30,7 @@ export async function updateMetadata(snapshot: string | Uint8Array | ArrayBuffer
         pdfDoc.setTitle("")
     }
     if (!metadata) {
-        return pdfDoc.save();
+        return fromPdfLib(pdfDoc, file.filename);
     }
 
     if(metadata.author)
@@ -62,6 +52,5 @@ export async function updateMetadata(snapshot: string | Uint8Array | ArrayBuffer
 
     // TODO add trapped and custom metadata. May need another library
 
-    // Serialize the modified document
-    return pdfDoc.save();
+    return fromPdfLib(pdfDoc, file.filename);
 };

@@ -1,30 +1,36 @@
 
-import { PDFDocument, ParseSpeeds } from 'pdf-lib';
+import { PDFPage } from 'pdf-lib';
+import { PdfFile, fromPdfLib } from '../wrappers/PdfFile';
 
-export async function scaleContent(snapshot: string | Uint8Array | ArrayBuffer, scaleFactor: number): Promise<Uint8Array> {
-    // Load the original PDF file
-    const pdfDoc = await PDFDocument.load(snapshot, {
-        parseSpeed: ParseSpeeds.Fastest,
-    });
-
+export async function scaleContent(file: PdfFile, scaleFactor: number|number[]): Promise<PdfFile> {
+    const pdfDoc = await file.getAsPdfLib();
     const pages = pdfDoc.getPages();
 
-    pages.forEach(page => {
-        const width = page.getWidth();
-        const height = page.getHeight();
-        
-        // Scale content
-        page.scaleContent(scaleFactor, scaleFactor);
-        const scaled_diff = {
-            width: Math.round(width - scaleFactor * width),
-            height: Math.round(height - scaleFactor * height),
-        };
+    if (Array.isArray(scaleFactor)) {
+        if (scaleFactor.length != pages.length) {
+            throw new Error(`Number of given scale factors '${scaleFactor.length}' is not the same as the number of pages '${pages.length}'`)
+        }
+        for (let i=0; i<scaleFactor.length; i++) {
+            scalePage(pages[i], scaleFactor[i]);
+        }
+    } else {
+        pages.forEach(page => scalePage(page, scaleFactor));
+    }
 
-        // Center content in new page format
-        page.translateContent(Math.round(scaled_diff.width / 2), Math.round(scaled_diff.height / 2));
-
-    });
-
-    // Serialize the modified document
-    return pdfDoc.save();
+    return fromPdfLib(pdfDoc, file.filename);
 };
+
+function scalePage(page: PDFPage, scaleFactor: number) {
+    const width = page.getWidth();
+    const height = page.getHeight();
+
+    // Scale content
+    page.scaleContent(scaleFactor, scaleFactor);
+    const scaled_diff = {
+        width: Math.round(width - scaleFactor * width),
+        height: Math.round(height - scaleFactor * height),
+    };
+
+    // Center content in new page format
+    page.translateContent(Math.round(scaled_diff.width / 2), Math.round(scaled_diff.height / 2));
+}

@@ -1,13 +1,15 @@
 
-import express, { Request, Response } from 'express';
+import { Response } from 'express';
+import { PdfFile } from '@stirling-pdf/shared-operations/wrappers/PdfFile'
 
-export function respondWithBinaryPdf(res: Response, buffer: Uint8Array, filename: string) {
+export async function respondWithPdfFile(res: Response, file: PdfFile): Promise<void> {
+    const byteFile = await file.convertToByteArrayFile();
     res.writeHead(200, {
         'Content-Type': "application/pdf",
-        'Content-disposition': 'attachment;filename=' + filename,
-        'Content-Length': buffer.length
+        'Content-disposition': 'attachment;filename=' + byteFile.filename,
+        'Content-Length': byteFile.byteArray?.length
     });
-    res.end(buffer)
+    res.end(byteFile.byteArray)
 }
 
 export function response_mustHaveExactlyOneFile(res: Response): void {

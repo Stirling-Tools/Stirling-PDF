@@ -14,5 +14,5 @@ export async function mergePDFs(files: PdfFile[]): Promise<PdfFile> {
         copiedPages.forEach((page) => mergedPdf.addPage(page));
     }
 
-    return fromPdfLib(mergedPdf);
+    return fromPdfLib(mergedPdf, files[0].filename);
 };

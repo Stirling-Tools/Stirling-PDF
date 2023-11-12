@@ -7,12 +7,13 @@ export class PdfFile {
     byteArray: Uint8Array | null;
     pdfLib: PDFDocument | null;
     pdfJs: PDFDocumentProxy | null;
-    filename?: string;
+    filename: string;
 
     constructor() {    
         this.byteArray = null;
         this.pdfLib = null;
         this.pdfJs = null;
+        this.filename = "";
     }   
 
     async convertToByteArrayFile(): Promise<PdfFile> {
@@ -57,22 +58,22 @@ export class PdfFile {
     }
 }
 
-export function fromMulterFile(value: Express.Multer.File, filename?: string): PdfFile {
-    return fromUint8Array(value.buffer, filename)
+export function fromMulterFile(value: Express.Multer.File): PdfFile {
+    return fromUint8Array(value.buffer, value.originalname)
 }
-export function fromUint8Array(value: Uint8Array, filename?: string): PdfFile {
+export function fromUint8Array(value: Uint8Array, filename: string): PdfFile {
     const out = new PdfFile();
     out.byteArray = value;
     out.filename = filename;
     return out;
 }
-export function fromPdfLib(value: PDFDocument, filename?: string): PdfFile {
+export function fromPdfLib(value: PDFDocument, filename: string): PdfFile {
     const out = new PdfFile();
     out.pdfLib = value;
     out.filename = filename;
     return out;
 }
-export function fromPdfJs(value: PDFDocumentProxy, filename?: string): PdfFile {
+export function fromPdfJs(value: PDFDocumentProxy, filename: string): PdfFile {
     const out = new PdfFile();
     out.pdfJs = value;
     out.filename = filename;

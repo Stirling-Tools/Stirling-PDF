@@ -48,7 +48,7 @@ export async function selectPages(file: PdfFile, pagesToExtractArray: number[]):
         subDocument.addPage(copiedPages[i]);
     }
 
-    return fromPdfLib(subDocument);
+    return fromPdfLib(subDocument, file.filename);
 }
 
 export async function removePages(file: PdfFile, pagesToRemoveArray: number[]): Promise<PdfFile> {
