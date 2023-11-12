@@ -1,9 +1,4 @@
-
-export interface Operation {
-    values: {id:any};
-    type: string;
-    operations?: Operation[];
-}
+import { Operation } from "../../declarations/Operation";
 
 export function organizeWaitOperations(operations: Operation[]) {
 

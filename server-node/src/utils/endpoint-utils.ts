@@ -1,6 +1,6 @@
 
 import { Response } from 'express';
-import { PdfFile } from '@stirling-pdf/shared-operations/wrappers/PdfFile'
+import { PdfFile } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
 
 export async function respondWithPdfFile(res: Response, file: PdfFile): Promise<void> {
     const byteFile = await file.convertToByteArrayFile();

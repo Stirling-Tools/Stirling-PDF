@@ -5,100 +5,100 @@ import Archiver from 'archiver';
 import multer from 'multer'
 const upload = multer();
 
-//import Operations from "../../utils/pdf-operations";
-//import { traverseOperations } from "@stirling-pdf/shared-operations/workflow/traverseOperations.js";
+import Operations from "../../utils/pdf-operations";
+import { traverseOperations } from "@stirling-pdf/shared-operations/src/workflow/traverseOperations";
 
 const activeWorkflows: any = {};
 
 const router = express.Router();
-/*
+
 router.post("/:workflowUuid?", [
-    upload.any(),
+    upload.array("files"),
     async (req: Request, res: Response) => {
-        if(req.files == null) {
+        // TODO: Maybe replace with another validator
+        if(req.files?.length == 0) {
             res.status(400).json({"error": "No files were uploaded."});
             return;
         }
-
-        const filesArr = Array.isArray(req.files.files) ? req.files.files : [req.files.files];
-
+ 
+        // TODO: Validate input further (json may be invalid or not be in workflow format)
         const workflow = JSON.parse(req.body.workflow);
-        // TODO: Validate input further (json may fail or not be a valid workflow)
 
-        const inputs = await Promise.all(filesArr.map(async file => {
+        const inputs = await Promise.all((req.files as Express.Multer.File[]).map(async file => {
+            console.log(file);
             return {
-                originalFileName: file.name.replace(/\.[^/.]+$/, ""),
-                fileName: file.name.replace(/\.[^/.]+$/, ""),
-                buffer: new Uint8Array(await file.data)
+                originalFileName: file.originalname.replace(/\.[^/.]+$/, ""),
+                fileName: file.originalname.replace(/\.[^/.]+$/, ""),
+                buffer: new Uint8Array(await file.buffer)
             }
         }));
 
-        // Allow option to do it synchronously and just make a long request
-        if(req.body.async === "false") {
-            console.log("Don't do async");
+        // // Allow option to do it synchronously and just make a long request
+        // if(req.body.async === "false") {
+        //     console.log("Don't do async");
 
-            const traverse = traverseOperations(workflow.operations, inputs, Operations);
+        //     const traverse = traverseOperations(workflow.operations, inputs, Operations);
 
-            let pdfResults;
-            let iteration;
-            while (true) {
-                iteration = await traverse.next();
-                if (iteration.done) {
-                    pdfResults = iteration.value;
-                    console.log("Done");
-                    break;
-                }
-                console.log(iteration.value);
-            }
+        //     let pdfResults;
+        //     let iteration;
+        //     while (true) {
+        //         iteration = await traverse.next();
+        //         if (iteration.done) {
+        //             pdfResults = iteration.value;
+        //             console.log("Done");
+        //             break;
+        //         }
+        //         console.log(iteration.value);
+        //     }
 
-            console.log("Download");
-            downloadHandler(res, pdfResults);
-        }
-        else {
-            console.log("Start Aync Workflow");
-            // TODO: UUID collision checks
-            let workflowID = req.params.workflowUuid
-            if(!workflowID)
-                workflowID = generateWorkflowID();
+        //     console.log("Download");
+        //     downloadHandler(res, pdfResults);
+        // }
+        // else {
+        //     console.log("Start Aync Workflow");
+        //     // TODO: UUID collision checks
+        //     let workflowID = req.params.workflowUuid
+        //     if(!workflowID)
+        //         workflowID = generateWorkflowID();
 
-            activeWorkflows[workflowID] = {
-                createdAt: Date.now(),
-                finished: false, 
-                eventStream: null,
-                result: null,
-                // TODO: When auth is implemented: owner
-            }
-            const activeWorkflow = activeWorkflows[workflowID];
+        //     activeWorkflows[workflowID] = {
+        //         createdAt: Date.now(),
+        //         finished: false, 
+        //         eventStream: null,
+        //         result: null,
+        //         // TODO: When auth is implemented: owner
+        //     }
+        //     const activeWorkflow = activeWorkflows[workflowID];
 
-            res.status(200).json({
-                "workflowID": workflowID,
-                "data-recieved": {
-                    "fileCount": filesArr.length,
-                    "workflow": workflow
-                }
-            });
+        //     res.status(200).json({
+        //         "workflowID": workflowID,
+        //         "data-recieved": {
+        //             "fileCount": filesArr.length,
+        //             "workflow": workflow
+        //         }
+        //     });
 
-            const traverse = traverseOperations(workflow.operations, inputs, Operations);
+        //     const traverse = traverseOperations(workflow.operations, inputs, Operations);
 
-            let pdfResults;
-            let iteration;
-            while (true) {
-                iteration = await traverse.next();
-                if (iteration.done) {
-                    pdfResults = iteration.value;
-                    if(activeWorkflow.eventStream) {
-                        activeWorkflow.eventStream.write(`data: processing done\n\n`);
-                        activeWorkflow.eventStream.end();
-                    }
-                    break;
-                }
-                if(activeWorkflow.eventStream)
-                    activeWorkflow.eventStream.write(`data: ${iteration.value}\n\n`);
-            }
+        //     let pdfResults;
+        //     let iteration;
+        //     while (true) {
+        //         iteration = await traverse.next();
+        //         if (iteration.done) {
+        //             pdfResults = iteration.value;
+        //             if(activeWorkflow.eventStream) {
+        //                 activeWorkflow.eventStream.write(`data: processing done\n\n`);
+        //                 activeWorkflow.eventStream.end();
+        //             }
+        //             break;
+        //         }
+        //         if(activeWorkflow.eventStream)
+        //             activeWorkflow.eventStream.write(`data: ${iteration.value}\n\n`);
+        //     }
 
-            activeWorkflow.result = pdfResults;
-            activeWorkflow.finished = true;
-        }
+        //     activeWorkflow.result = pdfResults;
+        //     activeWorkflow.finished = true;
+        // }
     }
 ]);
 
@@ -159,7 +159,7 @@ router.get("/result/:workflowUuid", (req: Request, res: Response) => {
      * If workflow isn't done return error
      * Send file, TODO: if there are multiple outputs return as zip
      * If download is done, delete results / allow deletion within the next 5-60 mins
-    *
+    */
     const workflow = activeWorkflows[req.params.workflowUuid];
     if(!workflow.finished) {
         res.status(202).json({ message: "Workflow hasn't finished yet. Check progress or connect to progress-steam to get notified when its done." });
@@ -227,5 +227,5 @@ function downloadHandler(res: Response, pdfResults: any) {
         readStream.pipe(res);
     }
 }
-*/
+
 export default router;
