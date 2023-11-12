@@ -4,6 +4,7 @@ import { Routes, Route, Outlet } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
+import ToPdf from "./pages/convert/ToPdf"
 import NoMatch from "./pages/NoMatch";
 import NavBar from "./components/NavBar";
 
@@ -38,6 +39,7 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="to-pdf" element={<ToPdf />} />
 
           {/* Using path="*"" means "match anything", so this route
                 acts like a catch-all for URLs that we don't have explicit

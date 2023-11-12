@@ -14,8 +14,19 @@
     "allowlist": {
       "all": false,
       "shell": {
-        "all": false,
-        "open": true
+        "all": true,
+        "open": true,
+        "scope": [
+          {
+            "name": "libreoffice-version",
+            "cmd": "libreoffice",
+            "args": ["--version"]
+          },{
+            "name": "libreoffice-convert",
+            "cmd": "libreoffice",
+            "args": ["--headless","--convert-to",{ "validator": "\\S+" },{ "validator": "\\S+" },"--outdir",{ "validator": "\\S+" }]
+          }
+        ]
       },
       "dialog": {
         "all": false,
@@ -31,8 +42,8 @@
         "writeFile": true,
         "readDir": false,
         "copyFile": false,
-        "createDir": false,
-        "removeDir": false,
+        "createDir": true,
+        "removeDir": true,
         "removeFile": false,
         "renameFile": false,
         "exists": false

@@ -1,5 +1,4 @@
 
-import { PDFDocument, ParseSpeeds } from 'pdf-lib';
 import { PdfFile, fromPdfLib } from '../wrappers/PdfFile';
 
 export type Metadata = {

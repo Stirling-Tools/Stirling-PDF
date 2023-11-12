@@ -86,7 +86,7 @@ function NavBar() {
     ]},
     {displayText: t('navbar.convert'), icon: BsArrowLeftRight, sublist: [
       { displayText: t('home.imageToPdf.title'), icon: BsFileEarmarkImage, dest: "/dashboard", tooltip: t('home.imageToPdf.desc') },
-      { displayText: t('home.fileToPDF.title'), icon: BsFileEarmark, dest: "/nothing-here", tooltip: t('home.fileToPDF.desc') },
+      { displayText: t('home.fileToPDF.title'), icon: BsFileEarmark, dest: "/to-pdf", tooltip: t('home.fileToPDF.desc') },
       { displayText: t('home.HTMLToPDF.title'), icon: BsFiletypeHtml, dest: "/nothing-here", tooltip: t('home.HTMLToPDF.desc') },
       { displayText: t('home.URLToPDF.title'), icon: BsLink, dest: "/nothing-here", tooltip: t('home.URLToPDF.desc') },
       { displayText: t('home.MarkdownToPDF.title'), icon: BsFiletypeMd, dest: "/nothing-here", tooltip: t('home.MarkdownToPDF.desc') },

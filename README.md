@@ -88,66 +88,136 @@ If you are interested in learning about this, take a look at the Example workflo
 
 Current functions of spdf and their progress in this repo.
 
+#### Page Operations
 | Status | Feature                  | Description |
 | ------ | ------------------------ | ----------- |
-| ✔️   | Merge                    |             |
-| ✔️   | Split                    |             |
-| ✔️   | Rotate                   |             |
-| ✔️   | Multi-Page-Layout        |             |
-| ✔️   | Adjust page size/scale   |             |
-| ✔️   | Organize                 |             |
-| ✔️   | Change Metadata          |             |
-| ✔️   | Auto Rename              |             |
-| ❌     | Add Watermark            |             |
+| 🚧A    | Merge                    |             |
+| 🚧A    | Split                    |             |
+| 🚧A    | Organize                 |             |
+| 🚧S    | Rotate                   |             |
+| 🚧A    | Remove Pages             |             |
+| 🚧A    | Multi-Page Layout        |             |
+| ❌     | Adjust page size/scale   |             |
+| 🚧A    | Auto Split Pages         |             |
+| ❌     | Adjust Colours/Contrast  |             |
+| ❌     | Crop                     |             |
+| 🚧A    | Extract Pages            |             |
 | ❌     | PDF to Single large Page |             |
-| ❌     | Auto Redact              |             |
-| ❌     | Remove Pages             |             |
 
-| Status | Feature            | Description |
-| ------ | ------------------ | ----------- |
-| ✔️    | Remove Blank Pages |             |
-| ✔️    | Auto Split Pages   |             |
 
-| Status | Feature      | Description |
-| ------ | ------------ | ----------- |
-| ❌     | Repair       |             |
-| ❌     | Compress     |             |
-| ❌     | Flatten      |             |
-| ❌     | Compare/Diff |             |
-| ❌     | Sanitize     |             |
-| ❌     | Get info     |             |
-| ❌     | Show JS      |             |
+#### Convert
+| Status | Feature             | Description |
+| ------ | ------------------- | ----------- |
+| ❌     | Image to PDF        |             |
+| 🚧S    | Convert file to PDF |             |
+| ❌     | URL to PDF          |             |
+| ❌     | HTML to PDF         |             |
+| ❌     | Markdown to PDF     |             |
+| ❌     | PDF to Image        |             |
+| ❌     | PDF to Word         |             |
+| ❌     | PDF to Presentation |             |
+| ❌     | PDF to Text/RTF     |             |
+| ❌     | PDF to HTML         |             |
+| ❌     | PDF to PDF/A        |             |
 
+#### Security
 | Status | Feature               | Description |
 | ------ | --------------------- | ----------- |
-| ❌     | Sign                  |             |
-| ❌     | Sign with Certificate |             |
 | ❌     | Add Password          |             |
 | ❌     | Remove Password       |             |
 | ❌     | Change Permissions    |             |
+| ❌     | Add Watermark         |             |
+| ❌     | Sign with Certificate |             |
+| ❌     | Sanitize              |             |
+| ❌     | Auto Redact           |             |
 
+#### Miscellaneous
 | Status | Feature                     | Description |
 | ------ | --------------------------- | ----------- |
-| ❌     | Image to PDF                |             |
-| ❌     | Add image                   |             |
-| ❌     | Extract Images              |             |
-| ❌     | PDF to Image                |             |
 | ❌     | OCR                         |             |
-| ❌     | Detect/Split Scanned photos |             |
+| ❌     | Add image                   |             |
+| ❌     | Compress                    |             |
+| ❌     | Extract Images              |             |
+| 🚧S    | Change Metadata             |             |
+| 🚧A    | Detect/Split Scanned photos |             |
+| ❌     | Sign                        |             |
+| ❌     | Flatten                     |             |
+| ❌     | Repair                      |             |
+| 🚧A    | Remove Blank Pages          |             |
+| ❌     | Compare/Diff                |             |
+| ❌     | Add Page Numbers            |             |
+| ❌     | Auto Rename                 |             |
+| ❌     | Get info                    |             |
+| ❌     | Show JS                     |             |
 
-| Status | Feature                  | Description |
-| ------ | ------------------------ | ----------- |
-| ❌     | Convert file to PDF      |             |
-| ❌     | PDF to Text/RTF          |             |
-| ❌     | PDF to HTML              |             |
-| ❌     | PDF to XML               |             |
-| ❌     | URL to PDF               |             |
-| ❌     | HTML to PDF              |             |
-| ❌     | Markdown to PDF          |             |
+
 
 
 ✔️: Done, 🚧: Started Developement, ❌: Planned Feature
+A: Available in the internal API, S: Available on the node server, C: Available in the client
 
 ## Contribute
 
 For initial instructions look at [CONTRIBUTE.md](./CONTRIBUTE.md)
+
+
+
+/*
+///// CONVERT 2 pdf
+file2pdf
+url2pdf
+html2pdf
+md2pdf
+image2pdf
+
+///// CONVERT from pdf
+pdf2image
+flatten
+pdf2pdf/a
+pdf2word
+pdf2presentation
+pdf2rtf
+pdf2html
+pdf2xml
+
+///// SINGLE
+merge
+rotate
+crop
+pageNumbers
+colours/contrast
+addPassword
+removePassword
+compress
+changeMetadata
+change Permissions
+OCR
+sanitise
+repair
+compare
+extract images
+signWith certificate
+impose
+adjust page size/scale
+auto rename
+getAllInfo
+showJS
+redact
+pdf2singleLargePage
+
+///// SPLITTING
+split
+auto split
+detect/split scanned
+
+///// REARRANGE
+- organise pages (remove/re-arrange)
+- removePages
+- removeBlank
+- extractPages
+
+///// ADD OBJECTS
+add image
+add watermark
+sign
+*/

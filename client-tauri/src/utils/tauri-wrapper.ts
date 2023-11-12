@@ -1,6 +1,7 @@
 
 import { open, save } from '@tauri-apps/api/dialog';
 import { readBinaryFile, writeBinaryFile } from '@tauri-apps/api/fs';
+import { Command } from '@tauri-apps/api/shell'
 
 export type TauriBrowserFile = {
     name: string,
@@ -52,7 +53,7 @@ export function openFiles(options: SelectFilesDialogOptions): Promise<TauriBrows
                 selected = [selected];
             }
         
-            const files:TauriBrowserFile[] = [];
+            const files: TauriBrowserFile[] = [];
             for (const s of selected) {
                 const contents = await readBinaryFile(s);
                 const res = byteArrayToFile(contents, s);
@@ -73,7 +74,7 @@ export function openFiles(options: SelectFilesDialogOptions): Promise<TauriBrows
             input.onchange = async () => {
                 if (input.files && input.files.length) { 
                     console.log("input.files", input.files)
-                    const files:TauriBrowserFile[] = [];
+                    const files: TauriBrowserFile[] = [];
                     for (const f of input.files) {
                         const contents = new Uint8Array(await f.arrayBuffer());
                         const res = byteArrayToFile(contents, f.name);
@@ -138,4 +139,31 @@ export async function downloadFile(fileData: Uint8Array, options: DownloadFilesD
             downloadLink.click();
         }
     }
+}
+
+/**
+ * Dont forget to whitelist the Command in src-tauri/tauri.conf.json! (tauri.allowlist.shell.scope)
+ * @param commandName The name of the command to run. Must be defined in tauri.allowlist.shell.scope[].name
+ * @param args The args to pass into the command
+ * @param callback A callback function that is called when output is logged
+ * @returns A log of all the outputs logged
+ */
+export function runShell(commandName: string, args: string[], callback: (message: any, stream:"stdout"|"stderr"|"error") => void): Promise<void> {
+    return new Promise(async (resolve, reject) => {
+
+        const comm = new Command(commandName, args);
+        comm.on('close', data => {
+            if (data.code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`Command failed with exit code ${data.code} and signal ${data.signal}`));
+            }
+        });
+        comm.on('error', error => callback(error, "error"));
+        comm.stdout.on('data', line => callback(line, "stdout"));
+        comm.stderr.on('data', line => callback(line, "stderr"));
+
+        const child = await comm.spawn();
+        console.debug(`Started child process with pid: ${child.pid}`)
+    });
 }

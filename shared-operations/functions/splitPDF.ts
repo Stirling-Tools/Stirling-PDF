@@ -1,6 +1,4 @@
 
-import { PDFDocument } from 'pdf-lib';
-
 import { selectPages } from "./subDocumentFunctions";
 import { PdfFile } from '../wrappers/PdfFile';
 
