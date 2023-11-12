@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8000;
 
 // server-node: backend api
-import api from './src/routes/api/api-controller';
+import api from './routes/api/api-controller';
 app.use("/api/", api);
 
 // serve

@@ -33,6 +33,7 @@ router.post("/:workflowUuid?", [
             }
         }));
 
+        // TODO: Enable if traverse & organize migration is done.
         // // Allow option to do it synchronously and just make a long request
         // if(req.body.async === "false") {
         //     console.log("Don't do async");
