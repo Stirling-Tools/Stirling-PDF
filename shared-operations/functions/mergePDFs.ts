@@ -1,20 +1,18 @@
 
 import { PDFDocument } from 'pdf-lib';
-import { PdfFile, convertAllToLibPdf, fromPDFDocument } from '../wrappers/PdfFile';
+import { PdfFile, convertAllToPdfLibFile, fromPdfLib } from '../wrappers/PdfFile';
 
 export async function mergePDFs(files: PdfFile[]): Promise<PdfFile> {
 
-    await convertAllToLibPdf(files);
+    const pdfLibFiles = await convertAllToPdfLibFile(files);
 
     const mergedPdf = await PDFDocument.create(); 
 
-    for (let i = 0; i < files.length; i++) {
-        const pdfToMerge = files[i].pdfLib;
-        if (!pdfToMerge) continue;
-
+    for (let i = 0; i < pdfLibFiles.length; i++) {
+        const pdfToMerge = await pdfLibFiles[i].getAsPdfLib();
         const copiedPages = await mergedPdf.copyPages(pdfToMerge, pdfToMerge.getPageIndices());
         copiedPages.forEach((page) => mergedPdf.addPage(page));
     }
 
-    return fromPDFDocument(mergedPdf);
+    return fromPdfLib(mergedPdf);
 };

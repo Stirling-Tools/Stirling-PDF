@@ -5,11 +5,12 @@ import jsQR from "jsqr";
 
 import { detectEmptyPages } from "./common/detectEmptyPages.js";
 import { getImagesOnPage } from "./common/getImagesOnPage.js";
-import { createSubDocument } from "./common/createSubDocument.js";
+import { selectPages } from "./subDocumentFunctions";
 import { TypedArray, DocumentInitParameters } from 'pdfjs-dist/types/src/display/api.js';
+import { PdfFile } from '../wrappers/PdfFile.js';
 
 export async function splitOn(
-            snapshot: string | ArrayBuffer | Uint8Array,
+            file: PdfFile,
             type: "BAR_CODE"|"QR_CODE"|"BLANK_PAGE",
             whiteThreashold: number) {
     let splitAtPages: number[] = [];
@@ -20,11 +21,11 @@ export async function splitOn(
             throw new Error("This split-type has not been implemented yet");
 
         case "QR_CODE":
-            splitAtPages = await getPagesWithQRCode(snapshot);
+            splitAtPages = await getPagesWithQRCode(file);
             break;
 
         case "BLANK_PAGE":
-            splitAtPages = await detectEmptyPages(snapshot, whiteThreashold);
+            splitAtPages = await detectEmptyPages(file, whiteThreashold);
             break;
     
         default:
@@ -34,19 +35,18 @@ export async function splitOn(
     console.log("Split At Pages: ", splitAtPages);
 
     // Remove detected Pages & Split
-    const pdfDoc = await PDFDocument.load(snapshot);
-
-    const numberOfPages = pdfDoc.getPages().length;
+    const pdfDoc = await file.getAsPdfLib();
+    const numberOfPages = pdfDoc.getPageCount();
 
     let pagesArray: number[] = [];
     let splitAfter = splitAtPages.shift();
-    const subDocuments: Uint8Array[] = [];
+    const subDocuments: PdfFile[] = [];
 
     for (let i = 0; i < numberOfPages; i++) {
         console.log(i);
         if(i == splitAfter) {
             if(pagesArray.length > 0) {
-                subDocuments.push(await createSubDocument(pdfDoc, pagesArray));
+                subDocuments.push(await selectPages(file, pagesArray));
                 pagesArray = [];
             }
             splitAfter = splitAtPages.shift();
@@ -57,14 +57,14 @@ export async function splitOn(
         }
     }
     if(pagesArray.length > 0) {
-        subDocuments.push(await createSubDocument(pdfDoc, pagesArray));
+        subDocuments.push(await selectPages(file, pagesArray));
     }
     pagesArray = [];
 
     return subDocuments;
 
-    async function getPagesWithQRCode(snapshot: string | ArrayBuffer | URL | TypedArray | DocumentInitParameters) {
-        const pdfDoc = await PDFJS.getDocument(snapshot).promise;
+    async function getPagesWithQRCode(file: PdfFile) {
+        const pdfDoc = await file.getAsPdfJs();
 
         const pagesWithQR: number[] = [];
         for (let i = 0; i < pdfDoc.numPages; i++) {

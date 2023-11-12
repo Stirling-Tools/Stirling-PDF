@@ -1,11 +1,12 @@
-import { DocumentInitParameters, PDFPageProxy } from "pdfjs-dist/types/src/display/api.js";
-import * as PDFJS from 'pdfjs-dist';
+
+import { PdfFile } from '../../wrappers/PdfFile';
+import { PDFPageProxy } from "pdfjs-dist/types/src/display/api.js";
 import { Image } from 'image-js';
 
 import { getImagesOnPage } from "./getImagesOnPage.js";
 
-export async function detectEmptyPages(snapshot: string | URL | ArrayBuffer | DocumentInitParameters, whiteThreashold: number) {
-    const pdfDoc = await PDFJS.getDocument(snapshot).promise;
+export async function detectEmptyPages(file: PdfFile, whiteThreashold: number): Promise<number[]> {
+    const pdfDoc = await file.getAsPdfJs();
 
     const emptyPages: number[] = [];
     for (let i = 1; i <= pdfDoc.numPages; i++) {
