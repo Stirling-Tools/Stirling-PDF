@@ -8,7 +8,7 @@ export async function * traverseOperations(operations: Operation[], input: PDF[]
     yield* nextOperation(operations, input);
     return results;
 
-    async function * nextOperation(operations: Operation[], input: PDF[] | PDF) {
+    async function * nextOperation(operations: Operation[] | undefined, input: PDF[] | PDF) {
         if(Array.isArray(operations) && operations.length == 0) { // isEmpty
             if(Array.isArray(input)) {
                 console.log("operation done: " + input[0].fileName + (input.length > 1 ? "+" : ""));
@@ -79,7 +79,7 @@ export async function * traverseOperations(operations: Operation[], input: PDF[]
                 yield* oneToN(input, operation, async (input) => {
                     const splitResult = await Operations.splitPDF(input.buffer, operation.values["pagesToSplitAfterArray"]);
     
-                    const splits = [];
+                    const splits: PDF[] = [];
                     for (let j = 0; j < splitResult.length; j++) {
                         splits.push({
                             originalFileName: input.originalFileName,
@@ -111,7 +111,7 @@ export async function * traverseOperations(operations: Operation[], input: PDF[]
             case "splitOn":
                 yield* oneToN(input, operation, async (input) => {
                     const splitResult = await Operations.splitOn(input.buffer, operation.values["type"], operation.values["whiteThreashold"]);
-                    const splits = [];
+                    const splits: PDF[] = [];
                     for (let j = 0; j < splitResult.length; j++) {
                         splits.push({
                             originalFileName: input.originalFileName,
@@ -129,28 +129,15 @@ export async function * traverseOperations(operations: Operation[], input: PDF[]
         }
     }
 
-    /**
-     * 
-     * @param {PDF|PDF[]} input 
-     * @param {JSON} operation
-     * @returns {undefined}
-     */
-    async function * nToOne(inputs, operation, callback) {
-        inputs = Array.from(inputs); // Convert single values to array, keep arrays as is.
+    async function * nToOne(inputs: PDF|PDF[], operation: Operation, callback: (pdf: PDF[]) => Promise<PDF>) {
+        let output: PDF = await callback(Array.isArray(inputs) ? inputs : Array.of(inputs));
         
-        inputs = await callback(inputs);
-        yield* nextOperation(operation.operations, inputs);
+        yield* nextOperation(operation.operations, output);
     }
 
-    /**
-     * 
-     * @param {PDF|PDF[]} input 
-     * @param {JSON} operation
-     * @returns {undefined}
-     */
-    async function * oneToN(input, operation, callback) {
+    async function * oneToN(input: PDF|PDF[], operation: Operation, callback: (pdf: PDF) => Promise<PDF[]>) {
         if(Array.isArray(input)) {
-            let output = [];
+            let output: PDF[] = [];
             for (let i = 0; i < input.length; i++) {
                 output = output.concat(await callback(input[i]));
             }
@@ -162,13 +149,7 @@ export async function * traverseOperations(operations: Operation[], input: PDF[]
         }
     }
 
-    /**
-     * 
-     * @param {PDF|PDF[]} input 
-     * @param {JSON} operation
-     * @returns {undefined}
-     */
-    async function * nToN(input, operation, callback) {
+    async function * nToN(input: PDF|PDF[], operation: Operation, callback: (pdf: PDF) => void) {
         if(Array.isArray(input)) {
             for (let i = 0; i < input.length; i++) {
                 await callback(input[i]);
