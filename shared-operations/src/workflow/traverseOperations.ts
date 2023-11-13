@@ -2,13 +2,13 @@ import { organizeWaitOperations } from "./organizeWaitOperations.js";
 import { Operation, WaitOperation } from "../../declarations/Operation.js";
 import { PDF } from "../../declarations/PDF.js";
 
-export async function * traverseOperations(operations: Operation[], input: PDF[] | PDF, Operations: AllOperations) {
+export async function * traverseOperations(operations: Operation[], input: PDF[] | PDF, Operations: AllOperations): AsyncGenerator<string, PDF[], void> {
     const waitOperations = organizeWaitOperations(operations);
     let results: PDF[] = [];
     yield* nextOperation(operations, input);
     return results;
 
-    async function * nextOperation(operations: Operation[] | undefined, input: PDF[] | PDF) {
+    async function * nextOperation(operations: Operation[] | undefined, input: PDF[] | PDF): AsyncGenerator<string, void, void> {
         if(operations === undefined || (Array.isArray(operations) && operations.length == 0)) { // isEmpty
             if(Array.isArray(input)) {
                 console.log("operation done: " + input[0].fileName + (input.length > 1 ? "+" : ""));
@@ -27,7 +27,7 @@ export async function * traverseOperations(operations: Operation[], input: PDF[]
         }
     }
     
-    async function * computeOperation(operation: Operation, input: PDF|PDF[]) {
+    async function * computeOperation(operation: Operation, input: PDF|PDF[]): AsyncGenerator<string, void, void> {
         yield "Starting: " + operation.type;
         switch (operation.type) {
             case "done": // Skip this, because it is a valid node.
@@ -129,13 +129,13 @@ export async function * traverseOperations(operations: Operation[], input: PDF[]
         }
     }
 
-    async function * nToOne(inputs: PDF|PDF[], operation: Operation, callback: (pdf: PDF[]) => Promise<PDF>) {
+    async function * nToOne(inputs: PDF|PDF[], operation: Operation, callback: (pdf: PDF[]) => Promise<PDF>): AsyncGenerator<string, void, void> {
         let output: PDF = await callback(Array.isArray(inputs) ? inputs : Array.of(inputs));
         
         yield* nextOperation(operation.operations, output);
     }
 
-    async function * oneToN(input: PDF|PDF[], operation: Operation, callback: (pdf: PDF) => Promise<PDF[]>) {
+    async function * oneToN(input: PDF|PDF[], operation: Operation, callback: (pdf: PDF) => Promise<PDF[]>): AsyncGenerator<string, void, void> {
         if(Array.isArray(input)) {
             let output: PDF[] = [];
             for (let i = 0; i < input.length; i++) {
@@ -149,7 +149,7 @@ export async function * traverseOperations(operations: Operation[], input: PDF[]
         }
     }
 
-    async function * nToN(input: PDF|PDF[], operation: Operation, callback: (pdf: PDF) => void) {
+    async function * nToN(input: PDF|PDF[], operation: Operation, callback: (pdf: PDF) => void): AsyncGenerator<string, void, void> {
         if(Array.isArray(input)) {
             for (let i = 0; i < input.length; i++) {
                 await callback(input[i]);
