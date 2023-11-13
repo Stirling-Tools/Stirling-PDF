@@ -1,6 +1,6 @@
 
 import { readBinaryFile, writeBinaryFile, removeDir, BaseDirectory } from '@tauri-apps/api/fs';
-import { PdfFile, fromUint8Array } from '@stirling-pdf/shared-operations/wrappers/PdfFile'
+import { PdfFile, fromUint8Array } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
 import { runShell } from './tauri-wrapper';
 
 export async function fileToPdf(byteArray: Uint8Array, filename: string): Promise<PdfFile> {
