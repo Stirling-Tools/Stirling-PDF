@@ -1,5 +1,5 @@
 import { organizeWaitOperations } from "./organizeWaitOperations.js";
-import { Operation } from "../../declarations/Operation.js";
+import { Operation, WaitOperation } from "../../declarations/Operation.js";
 import { PDF } from "../../declarations/PDF.js";
 
 export async function * traverseOperations(operations: Operation[], input: PDF[] | PDF, Operations: AllOperations) {
@@ -9,7 +9,7 @@ export async function * traverseOperations(operations: Operation[], input: PDF[]
     return results;
 
     async function * nextOperation(operations: Operation[] | undefined, input: PDF[] | PDF) {
-        if(Array.isArray(operations) && operations.length == 0) { // isEmpty
+        if(operations === undefined || (Array.isArray(operations) && operations.length == 0)) { // isEmpty
             if(Array.isArray(input)) {
                 console.log("operation done: " + input[0].fileName + (input.length > 1 ? "+" : ""));
                 results = results.concat(input);
@@ -33,7 +33,7 @@ export async function * traverseOperations(operations: Operation[], input: PDF[]
             case "done": // Skip this, because it is a valid node.
                 break;
             case "wait":
-                const waitOperation = waitOperations[operation.values.id];
+                const waitOperation = waitOperations[(operation as WaitOperation).values.id];
 
                 if(Array.isArray(input)) {
                     waitOperation.input.concat(input); // TODO: May have unexpected concequences. Needs further testing!

@@ -1,5 +1,9 @@
 export interface Operation {
-    values: {id:any};
+    protected values: any;
     type: string;
     operations?: Operation[];
+}
+
+export interface WaitOperation extends Operation {
+    values: { id: number }
 }
