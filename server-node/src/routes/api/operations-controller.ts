@@ -1,7 +1,7 @@
 
 import Operations from '../../utils/pdf-operations';
 import { respondWithPdfFile, response_mustHaveExactlyOneFile } from '../../utils/endpoint-utils';
-import { PdfFile, PdfFileSchema, fromMulterFile, fromMulterFiles } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
+import { PdfFile, PdfFileSchema } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
 
 import express, { Request, Response, RequestHandler } from 'express';
 const router = express.Router();
@@ -18,14 +18,14 @@ function registerEndpoint(endpoint: string,
     router.post(endpoint, fileHandler, async function(req: Request, res: Response) {
         const body = req.body;
         if (req.file) {
-            body.file = fromMulterFile(req.file);
+            body.file = PdfFile.fromMulterFile(req.file);
         }
         if (req.files) {
             if (Array.isArray(req.files))
-                body.files = fromMulterFiles(req.files);
+                body.files = PdfFile.fromMulterFiles(req.files);
             else {
                 const flattenedFiles = Object.values(req.files).flatMap(va => va);
-                body.files = fromMulterFiles(flattenedFiles);
+                body.files = PdfFile.fromMulterFiles(flattenedFiles);
             }
         }
 

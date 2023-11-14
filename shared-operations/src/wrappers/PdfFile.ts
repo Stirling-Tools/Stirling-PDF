@@ -1,106 +1,84 @@
-
-import { PDFDocument } from 'pdf-lib';
 import * as PDFJS from 'pdfjs-dist';
-import { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
+import { PDFDocumentProxy as PDFJSDocument } from 'pdfjs-dist/types/src/display/api';
+import { PDFDocument as PDFLibDocument } from 'pdf-lib';
+
 import Joi from 'joi';
 
 export class PdfFile {
-    byteArray: Uint8Array | null;
-    pdfLib: PDFDocument | null;
-    pdfJs: PDFDocumentProxy | null;
+    private representation: Uint8Array | PDFLibDocument | PDFJSDocument;
+    originalFilename: string;
     filename: string;
 
-    constructor() {    
-        this.byteArray = null;
-        this.pdfLib = null;
-        this.pdfJs = null;
-        this.filename = "";
-    }   
-
-    async convertToByteArrayFile(): Promise<PdfFile> {
-        if (this.byteArray) return this;
-
-        var byteArray: Uint8Array|null = null;
-        if (this.pdfLib) {
-            byteArray = await this.pdfLib.save();
-        } else if (this.pdfJs) {
-            byteArray = await this.pdfJs.getData();
-        }
-        return fromUint8Array(byteArray!, this.filename);
+    get uint8Array() : Promise<Uint8Array> {
+        switch (this.representation.constructor) {
+            case Uint8Array:
+                return new Promise((resolve, reject) => {
+                    resolve(this.representation as Uint8Array);
+                });
+            case PDFLibDocument:
+                return (this.representation as PDFLibDocument).save();
+            case PDFJSDocument:
+                return (this.representation as PDFJSDocument).getData();
+            default:
+                throw Error("unhandeled PDF type");
+        } 
     }
-    async convertToPdfLibFile(): Promise<PdfFile> {
-        if (this.pdfLib) return this;
-
-        const byteFile = await this.convertToByteArrayFile();
-        const pdfLib = await PDFDocument.load(byteFile.byteArray!, {
-            updateMetadata: false,
-        });
-        return fromPdfLib(pdfLib, this.filename);
-    }
-    async convertToPdfJsFile(): Promise<PdfFile> {
-        if (this.pdfJs) return this;
-
-        const byteFile = await this.convertToByteArrayFile();
-        const pdfJs = await PDFJS.getDocument(byteFile.byteArray!).promise;
-        return fromPdfJs(pdfJs, this.filename);
+    set uint8Array(value: Uint8Array) {
+        this.representation = value;
     }
 
-    async getAsByteArray(): Promise<Uint8Array> {
-        const file = await this.convertToByteArrayFile();
-        return file.byteArray!;
+    get pdflibDocument() : Promise<PDFLibDocument> {
+        switch (this.representation.constructor) {
+            case PDFLibDocument: // PDFLib
+                return new Promise((resolve, reject) => {
+                    resolve(this.representation as PDFLibDocument);
+                });
+            default:
+                return new Promise(async (resolve, reject) => {
+                    resolve(PDFLibDocument.load(await this.uint8Array, {
+                        updateMetadata: false,
+                    }));
+                });
+        } 
     }
-    async getAsPdfLib(): Promise<PDFDocument> {
-        const file = await this.convertToPdfLibFile();
-        return file.pdfLib!;
+    set pdflibDocument(value: PDFLibDocument) {
+        this.representation = value;
     }
-    async getAsPdfJs(): Promise<PDFDocumentProxy> {
-        const file = await this.convertToPdfJsFile();
-        return file.pdfJs!;
+
+    get pdfjsDocuemnt() : Promise<PDFJSDocument> {
+        switch (this.representation.constructor) {
+            case PDFJSDocument:
+                return new Promise((resolve, reject) => {
+                    resolve(this.representation as PDFJSDocument);
+                });
+            default:
+                return new Promise(async (resolve, reject) => {
+                    resolve(await PDFJS.getDocument(await this.uint8Array).promise);
+                });
+        } 
+    }
+    set pdfjsDocuemnt(value: PDFJSDocument) {
+        this.representation = value;
+    }
+
+    constructor(originalFilename: string, representation: Uint8Array | PDFLibDocument | PDFJSDocument, filename?: string) {
+        this.originalFilename = originalFilename;
+        this.filename = filename ? filename : originalFilename;
+
+        this.representation = representation;
+    }
+
+    static fromMulterFile(value: Express.Multer.File): PdfFile {
+        return new PdfFile(value.originalname, value.buffer as Uint8Array)
+    }
+    static fromMulterFiles(values: Express.Multer.File[]): PdfFile[] {
+        return values.map(v => PdfFile.fromMulterFile(v));
     }
 }
+
 export const PdfFileSchema = Joi.any().custom((value, helpers) => {
     if (!(value instanceof PdfFile)) {
         throw new Error('value is not a PdfFile');
     }
     return value;
 }, "PdfFile validation");
-
-export function fromMulterFile(value: Express.Multer.File): PdfFile {
-    return fromUint8Array(value.buffer, value.originalname)
-}
-export function fromMulterFiles(values: Express.Multer.File[]): PdfFile[] {
-    return values.map(v => fromUint8Array(v.buffer, v.originalname));
-}
-export function fromUint8Array(value: Uint8Array, filename: string): PdfFile {
-    const out = new PdfFile();
-    out.byteArray = value;
-    out.filename = filename;
-    return out;
-}
-export function fromPdfLib(value: PDFDocument, filename: string): PdfFile {
-    const out = new PdfFile();
-    out.pdfLib = value;
-    out.filename = filename;
-    return out;
-}
-export function fromPdfJs(value: PDFDocumentProxy, filename: string): PdfFile {
-    const out = new PdfFile();
-    out.pdfJs = value;
-    out.filename = filename;
-    return out;
-}
-
-export async function convertAllToByteArrayFile(files: PdfFile[]): Promise<(PdfFile)[]> {
-    const pdfPromises = files.map(s => s.convertToByteArrayFile());
-    return await Promise.all(pdfPromises);
-}
-
-export async function convertAllToPdfLibFile(files: PdfFile[]): Promise<(PdfFile)[]> {
-    const pdfPromises = files.map(s => s.convertToPdfLibFile());
-    return await Promise.all(pdfPromises);
-}
-
-export async function convertAllToPdfJsFile(files: PdfFile[]): Promise<(PdfFile)[]> {
-    const pdfPromises = files.map(s => s.convertToPdfJsFile());
-    return await Promise.all(pdfPromises);
-}

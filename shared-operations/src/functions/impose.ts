@@ -1,5 +1,3 @@
-
-import { PdfFile, fromPdfLib } from '../wrappers/PdfFile';
 export type ImposeParamsType = {
     file: any;
     nup: number;

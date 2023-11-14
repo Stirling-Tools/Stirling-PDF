@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/index.js",
-    "dev": "nodemon --watch './**/*.ts' --exec node --experimental-specifier-resolution=node --loader ts-node/esm ./src/index.ts"
+    "dev": "nodemon"
   },
   "keywords": [],
   "author": "",

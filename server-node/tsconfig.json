@@ -111,4 +111,9 @@
     "src",
     "declarations/*.d.ts"
   ],
+  "ts-node": {
+    "experimentalSpecifierResolution": "node",
+    "transpileOnly": true,
+    "esm": true,
+  },
 }
