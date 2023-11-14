@@ -12,8 +12,8 @@ export async function respondWithFile(res: Response, bytes: Uint8Array, name: st
 }
 
 export async function respondWithPdfFile(res: Response, file: PdfFile): Promise<void> {
-    const byteFile = await file.convertToByteArrayFile();
-    respondWithFile(res, byteFile.byteArray!, byteFile.filename, "application/pdf");
+    const byteArray = await file.uint8Array;
+    respondWithFile(res, byteArray, file.filename, "application/pdf");
 }
 
 export function response_mustHaveExactlyOneFile(res: Response): void {

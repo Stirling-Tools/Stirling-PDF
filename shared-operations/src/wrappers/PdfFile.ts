@@ -99,6 +99,31 @@ export class PdfFile {
     static fromMulterFiles(values: Express.Multer.File[]): PdfFile[] {
         return values.map(v => PdfFile.fromMulterFile(v));
     }
+
+    static async cacheAsUint8Arrays(files: PdfFile[]): Promise<Map<PdfFile, Uint8Array>> {
+        const docCache = new Map<PdfFile, Uint8Array>();
+        await Promise.all(files.map(async (file) => {
+            const pdfLibDocument = await file.uint8Array;
+            docCache.set(file, pdfLibDocument);
+        }));
+        return docCache;
+    }
+    static async cacheAsPdfLibDocuments(files: PdfFile[]): Promise<Map<PdfFile, PDFLibDocument>> {
+        const docCache = new Map<PdfFile, PDFLibDocument>();
+        await Promise.all(files.map(async (file) => {
+            const pdfLibDocument = await file.pdflibDocument;
+            docCache.set(file, pdfLibDocument);
+        }));
+        return docCache;
+    }
+    static async cacheAsPdfJsDocuments(files: PdfFile[]): Promise<Map<PdfFile, PDFJSDocument>> {
+        const docCache = new Map<PdfFile, PDFJSDocument>();
+        await Promise.all(files.map(async (file) => {
+            const pdfLibDocument = await file.pdfjsDocument;
+            docCache.set(file, pdfLibDocument);
+        }));
+        return docCache;
+    }
 }
 
 export const PdfFileSchema = Joi.any().custom((value, helpers) => {

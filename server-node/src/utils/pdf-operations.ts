@@ -1,7 +1,7 @@
 
-import SharedOperations, { OperationsType } from "@stirling-pdf/shared-operations/src";
+import SharedOperations, { OperationsType } from "@stirling-pdf/shared-operations/src"
 import { ImposeParamsType } from '@stirling-pdf/shared-operations/src/functions/impose'
-import { PdfFile } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
+import { PdfFile } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile"
 
 // Import injected libraries here!
 //import * as pdfcpuWrapper from "@stirling-pdf/shared-operations/wasm/pdfcpu/pdfcpu-wrapper-node.js";

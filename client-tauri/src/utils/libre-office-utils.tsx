@@ -1,6 +1,6 @@
 
 import { readBinaryFile, writeBinaryFile, removeDir, BaseDirectory } from '@tauri-apps/api/fs';
-import { PdfFile, fromUint8Array } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
+import { PdfFile,RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
 import { runShell } from './tauri-wrapper';
 
 export async function fileToPdf(byteArray: Uint8Array, filename: string): Promise<PdfFile> {
@@ -26,7 +26,7 @@ export async function fileToPdf(byteArray: Uint8Array, filename: string): Promis
 
     await removeDir(tempDir);
 
-    return fromUint8Array(outputBytes, outputFileName);
+    return new PdfFile(outputFileName, outputBytes, RepresentationType.Uint8Array);
 }
 
 export async function isLibreOfficeInstalled() {
