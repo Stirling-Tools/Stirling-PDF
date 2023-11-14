@@ -9,8 +9,10 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
     yield* nextOperation(operations, input);
     return results;
 
-    async function * nextOperation(actions: Action[], input: PdfFile[] | PdfFile): AsyncGenerator<string, void, void> {
-        if(Array.isArray(actions) && actions.length == 0) { // isEmpty
+    async function * nextOperation(actions: Action[] | undefined, input: PdfFile[] | PdfFile): AsyncGenerator<string, void, void> {
+        console.log("Next Operation");
+        if(actions === undefined || (Array.isArray(actions) && actions.length == 0)) { // isEmpty
+            console.log("Last Operation");
             if(Array.isArray(input)) {
                 console.log("operation done: " + input[0].filename + (input.length > 1 ? "+" : ""));
                 results = results.concat(input);
@@ -24,11 +26,12 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
         }
     
         for (let i = 0; i < actions.length; i++) {
-            yield* computeOperation(actions[i], structuredClone(input));
+            yield* computeOperation(actions[i], input); // TODO: structuredClone doesn't work in ts need to find another solution to pass by value.
         }
     }
     
     async function * computeOperation(action: Action, input: PdfFile|PdfFile[]): AsyncGenerator<string, void, void> {
+
         yield "Starting: " + action.type;
         switch (action.type) {
             case "done": // Skip this, because it is a valid node.
@@ -132,9 +135,7 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
         const input = Array.isArray(inputs) ? inputs : [inputs]; // Convert single values to array, keep arrays as is.
         
         const newInputs = await callback(input);
-        if (action.actions) {
-            yield* nextOperation(action.actions, newInputs);
-        }
+        yield* nextOperation(action.actions, newInputs);
     }
 
     /**
@@ -149,15 +150,11 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
             for (let i = 0; i < input.length; i++) {
                 output = output.concat(await callback(input[i]));
             }
-            if (action.actions) {
-                yield* nextOperation(action.actions, output);
-            }
+            yield* nextOperation(action.actions, output);
         }
         else {
             const nextInput = await callback(input);
-            if (action.actions) {
-                yield* nextOperation(action.actions, nextInput);
-            }
+            yield* nextOperation(action.actions, nextInput);
         }
     }
 
@@ -167,15 +164,11 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
             for (let i = 0; i < input.length; i++) {
                 nextInputs.concat(await callback(input[i]));
             }
-            if (action.actions) {
-                yield* nextOperation(action.actions, nextInputs);
-            }
+            yield* nextOperation(action.actions, nextInputs);
         }
         else {
             const nextInput = await callback(input);
-            if (action.actions) {
-                yield* nextOperation(action.actions, nextInput);
-            }
+            yield* nextOperation(action.actions, nextInput);
         }
     }
 }

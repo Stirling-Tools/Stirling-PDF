@@ -1,6 +1,6 @@
 
 import { PDFDocument } from 'pdf-lib';
-import { PdfFile } from '../wrappers/PdfFile';
+import { PdfFile, RepresentationType } from '../wrappers/PdfFile';
 
 export type MergeParamsType = {
     files: PdfFile[];
@@ -15,5 +15,5 @@ export async function mergePDFs(params: MergeParamsType): Promise<PdfFile> {
         copiedPages.forEach((page) => mergedPdf.addPage(page));
     }
 
-    return new PdfFile("mergedPDF", mergedPdf);
+    return new PdfFile("mergedPDF", mergedPdf, RepresentationType.PDFLibDocument);
 };

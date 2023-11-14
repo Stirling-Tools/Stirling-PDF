@@ -3,7 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { exec, spawn } from 'child_process'
-import { PdfFile, fromUint8Array } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
+import { PdfFile, RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
 
 export async function fileToPdf(byteArray: Uint8Array, filename: string): Promise<PdfFile> {
     const parentDir = path.join(os.tmpdir(), "StirlingPDF");
@@ -22,7 +22,7 @@ export async function fileToPdf(byteArray: Uint8Array, filename: string): Promis
 
     fs.rmdirSync(tempDir);
 
-    return fromUint8Array(outputBytes, outputFileName);
+    return new PdfFile(outputFileName, outputBytes, RepresentationType.Uint8Array);
 }
 
 export function isLibreOfficeInstalled() {

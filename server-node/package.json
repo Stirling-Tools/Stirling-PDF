@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.10",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.2.2"
   },

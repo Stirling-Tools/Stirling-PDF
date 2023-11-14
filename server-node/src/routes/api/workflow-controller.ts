@@ -7,6 +7,7 @@ const upload = multer();
 
 import Operations from "../../utils/pdf-operations";
 import { traverseOperations } from "@stirling-pdf/shared-operations/src/workflow/traverseOperations";
+import { PdfFile, RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile';
 
 const activeWorkflows: any = {};
 
@@ -24,82 +25,78 @@ router.post("/:workflowUuid?", [
         // TODO: Validate input further (json may be invalid or not be in workflow format)
         const workflow = JSON.parse(req.body.workflow);
 
+        // TODO: Replace with static multer function of pdffile
         const inputs = await Promise.all((req.files as Express.Multer.File[]).map(async file => {
-            console.log(file);
-            return {
-                originalFileName: file.originalname.replace(/\.[^/.]+$/, ""),
-                fileName: file.originalname.replace(/\.[^/.]+$/, ""),
-                buffer: new Uint8Array(await file.buffer)
-            }
+            return new PdfFile(file.originalname.replace(/\.[^/.]+$/, ""), new Uint8Array(await file.buffer), RepresentationType.Uint8Array, file.originalname.replace(/\.[^/.]+$/, ""));
         }));
 
         // TODO: Enable if traverse & organize migration is done.
-        // // Allow option to do it synchronously and just make a long request
-        // if(req.body.async === "false") {
-        //     console.log("Don't do async");
+        // Allow option to do it synchronously and just make a long request
+        if(req.body.async === "false") {
+            console.log("Don't do async");
 
-        //     const traverse = traverseOperations(workflow.operations, inputs, Operations);
+            const traverse = traverseOperations(workflow.operations, inputs, Operations);
 
-        //     let pdfResults;
-        //     let iteration;
-        //     while (true) {
-        //         iteration = await traverse.next();
-        //         if (iteration.done) {
-        //             pdfResults = iteration.value;
-        //             console.log("Done");
-        //             break;
-        //         }
-        //         console.log(iteration.value);
-        //     }
+            let pdfResults;
+            let iteration;
+            while (true) {
+                iteration = await traverse.next();
+                if (iteration.done) {
+                    pdfResults = iteration.value;
+                    console.log("Done");
+                    break;
+                }
+                console.log(iteration.value);
+            }
 
-        //     console.log("Download");
-        //     downloadHandler(res, pdfResults);
-        // }
-        // else {
-        //     console.log("Start Aync Workflow");
-        //     // TODO: UUID collision checks
-        //     let workflowID = req.params.workflowUuid
-        //     if(!workflowID)
-        //         workflowID = generateWorkflowID();
+            console.log("Download");
+            await downloadHandler(res, pdfResults);
+        }
+        else {
+            console.log("Start Aync Workflow");
+            // TODO: UUID collision checks
+            let workflowID = req.params.workflowUuid
+            if(!workflowID)
+                workflowID = generateWorkflowID();
 
-        //     activeWorkflows[workflowID] = {
-        //         createdAt: Date.now(),
-        //         finished: false, 
-        //         eventStream: null,
-        //         result: null,
-        //         // TODO: When auth is implemented: owner
-        //     }
-        //     const activeWorkflow = activeWorkflows[workflowID];
+            activeWorkflows[workflowID] = {
+                createdAt: Date.now(),
+                finished: false, 
+                eventStream: null,
+                result: null,
+                // TODO: When auth is implemented: owner
+            }
+            const activeWorkflow = activeWorkflows[workflowID];
 
-        //     res.status(200).json({
-        //         "workflowID": workflowID,
-        //         "data-recieved": {
-        //             "fileCount": filesArr.length,
-        //             "workflow": workflow
-        //         }
-        //     });
+            res.status(200).json({
+                "workflowID": workflowID,
+                "data-recieved": {
+                    "fileCount": inputs.length,
+                    "workflow": workflow
+                }
+            });
 
-        //     const traverse = traverseOperations(workflow.operations, inputs, Operations);
+            const traverse = traverseOperations(workflow.operations, inputs, Operations);
 
-        //     let pdfResults;
-        //     let iteration;
-        //     while (true) {
-        //         iteration = await traverse.next();
-        //         if (iteration.done) {
-        //             pdfResults = iteration.value;
-        //             if(activeWorkflow.eventStream) {
-        //                 activeWorkflow.eventStream.write(`data: processing done\n\n`);
-        //                 activeWorkflow.eventStream.end();
-        //             }
-        //             break;
-        //         }
-        //         if(activeWorkflow.eventStream)
-        //             activeWorkflow.eventStream.write(`data: ${iteration.value}\n\n`);
-        //     }
+            let pdfResults;
+            let iteration;
+            while (true) {
+                iteration = await traverse.next();
+                if (iteration.done) {
+                    pdfResults = iteration.value;
+                    if(activeWorkflow.eventStream) {
+                        activeWorkflow.eventStream.write(`data: processing done\n\n`);
+                        activeWorkflow.eventStream.end();
+                    }
+                    break;
+                }
+                if(activeWorkflow.eventStream)
+                    activeWorkflow.eventStream.write(`data: ${iteration.value}\n\n`);
+            }
 
-        //     activeWorkflow.result = pdfResults;
-        //     activeWorkflow.finished = true;
-        // }
+            activeWorkflow.result = pdfResults;
+            activeWorkflow.finished = true;
+        }
     }
 ]);
 
@@ -146,7 +143,7 @@ router.get("/progress-stream/:workflowUuid", (req: Request, res: Response) => {
     });
 });
 
-router.get("/result/:workflowUuid", (req: Request, res: Response) => {
+router.get("/result/:workflowUuid", async (req: Request, res: Response) => {
     if(!req.params.workflowUuid) {
         res.status(400).json({"error": "No workflowUuid weres provided."});
         return;
@@ -167,7 +164,7 @@ router.get("/result/:workflowUuid", (req: Request, res: Response) => {
         return
     }
 
-    downloadHandler(res, workflow.result);
+    await downloadHandler(res, workflow.result);
     // Delete workflow / results when done.
     delete activeWorkflows[req.params.workflowUuid];
 });
@@ -190,7 +187,7 @@ function generateWorkflowID() {
     return crypto.randomUUID();
 }
 
-function downloadHandler(res: Response, pdfResults: any) {
+async function downloadHandler(res: Response, pdfResults: PdfFile[]) {
     if(pdfResults.length == 0) {
         res.status(500).json({"warning": "The workflow had no outputs."});
     } 
@@ -211,7 +208,7 @@ function downloadHandler(res: Response, pdfResults: any) {
         for (let i = 0; i < pdfResults.length; i++) {
             // TODO: Implement other file types (mostly fro image & text extraction)
             // TODO: Check for name collisions
-            zip.append(Buffer.from(pdfResults[i].buffer), { name: pdfResults[i].fileName + ".pdf" });   
+            zip.append(Buffer.from(await pdfResults[i].uint8Array), { name: pdfResults[i].filename + ".pdf" });   
         }
 
         zip.finalize();
@@ -219,10 +216,10 @@ function downloadHandler(res: Response, pdfResults: any) {
     }
     else {
         const readStream = new stream.PassThrough();
-        readStream.end(pdfResults[0].buffer);
+        readStream.end(pdfResults[0].uint8Array);
 
         // TODO: Implement other file types (mostly fro image & text extraction)
-        res.set("Content-disposition", 'attachment; filename=' + pdfResults[0].fileName + ".pdf");
+        res.set("Content-disposition", 'attachment; filename=' + pdfResults[0].filename + ".pdf");
         res.set("Content-Type", "application/pdf");
 
         readStream.pipe(res);

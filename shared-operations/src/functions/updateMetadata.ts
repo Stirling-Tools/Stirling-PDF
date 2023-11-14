@@ -1,5 +1,5 @@
 
-import { PdfFile, fromPdfLib } from '../wrappers/PdfFile';
+import { PdfFile } from '../wrappers/PdfFile';
 
 export type UpdateMetadataParams = {
     file: PdfFile,
@@ -17,7 +17,7 @@ export type UpdateMetadataParams = {
 }
 
 export async function updateMetadata(params: UpdateMetadataParams): Promise<PdfFile> {
-    const pdfDoc = await params.file.getAsPdfLib();
+    const pdfDoc = await params.file.pdflibDocument;
 
     if (params.deleteAll) {
         pdfDoc.setAuthor("");
@@ -49,5 +49,5 @@ export async function updateMetadata(params: UpdateMetadataParams): Promise<PdfF
 
     // TODO add trapped and custom metadata. May need another library
 
-    return fromPdfLib(pdfDoc, params.file.filename);
+    return params.file;
 };

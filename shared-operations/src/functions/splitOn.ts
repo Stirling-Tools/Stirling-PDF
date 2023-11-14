@@ -16,6 +16,8 @@ export async function splitOn(params: SplitOnParamsType) {
     const { file, type, whiteThreashold } = params;
 
     let splitAtPages: number[] = [];
+    
+    console.log("File: ", file);
 
     switch (type) {
         case "BAR_CODE":
@@ -35,6 +37,8 @@ export async function splitOn(params: SplitOnParamsType) {
     }
 
     console.log("Split At Pages: ", splitAtPages);
+
+    console.log("File: ", file);
 
     // Remove detected Pages & Split
     const pdfDoc = await file.pdflibDocument;
@@ -66,7 +70,9 @@ export async function splitOn(params: SplitOnParamsType) {
     return subDocuments;
 
     async function getPagesWithQRCode(file: PdfFile) {
-        const pdfDoc = await file.pdfjsDocuemnt;
+        console.log("FileInQRPrev: ", file);
+        const pdfDoc = await file.pdfjsDocument;
+        console.log("FileInQRAfter: ", file);
 
         const pagesWithQR: number[] = [];
         for (let i = 0; i < pdfDoc.numPages; i++) {
@@ -74,7 +80,7 @@ export async function splitOn(params: SplitOnParamsType) {
             const page = await pdfDoc.getPage(i + 1);
 
             const images = await getImagesOnPage(page);
-            console.log("images:", images);
+            // console.log("images:", images);
             for (const image of images) {
                 const data = await checkForQROnImage(image);
                 if(data == "https://github.com/Frooodle/Stirling-PDF") {
