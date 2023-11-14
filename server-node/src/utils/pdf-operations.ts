@@ -4,10 +4,10 @@ import { ImposeParamsType } from '@stirling-pdf/shared-operations/src/functions/
 import { PdfFile } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
 
 // Import injected libraries here!
-//import * as pdfcpuWrapper from "@stirling-pdf/shared-operations/wasm/pdfcpu/pdfcpu-wrapper-node.js";
+import * as pdfcpuWrapper from "@stirling-pdf/shared-operations/src/wasm/pdfcpu/pdfcpu-wrapper-node.js";
 
 async function impose(params: ImposeParamsType): Promise<PdfFile> {
-    const paramsToUse = { ...params, pdfcpuWrapper: null }; // TODO change null to pdfcpuWrapper
+    const paramsToUse = { ...params, pdfcpuWrapper: pdfcpuWrapper };
     return SharedOperations.impose(paramsToUse);
 }
 

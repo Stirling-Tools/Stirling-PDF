@@ -1,8 +1,7 @@
 import { WasmFs } from '@wasmer/wasmfs';
 import path from "path";
 
-let webWasmLocation = "/wasm/";
-let nodeWasmLocation = "./public/wasm/";
+let nodeWasmLocation = "../shared-operations/src/wasm/pdfcpu/";
 
 let fs;
 const wasmfs = new WasmFs();
@@ -22,7 +21,7 @@ async function configureFs() {
 }
 
 async function loadWasm() {
-    global.crypto = (await import("crypto")).webcrypto; // wasm dependecy
+    // global.crypto = (await import("crypto")).webcrypto; // wasm dependecy
     await import("./wasm_exec.js");
 }
 
