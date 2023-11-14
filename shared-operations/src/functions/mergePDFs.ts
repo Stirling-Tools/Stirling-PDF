@@ -15,5 +15,5 @@ export async function mergePDFs(params: MergeParamsType): Promise<PdfFile> {
         copiedPages.forEach((page) => mergedPdf.addPage(page));
     }
 
-    return new PdfFile(params.files.map(f => ), mergedPdf, params.files[0].filename);
+    return new PdfFile("mergedPDF", mergedPdf);
 };

@@ -1,6 +1,6 @@
 
 import { PDFPage } from 'pdf-lib';
-import { PdfFile, fromPdfLib } from '../wrappers/PdfFile';
+import { PdfFile } from '../wrappers/PdfFile';
 
 export type ScaleContentParamsType = {
     file: PdfFile;
@@ -10,7 +10,7 @@ export type ScaleContentParamsType = {
 export async function scaleContent(params: ScaleContentParamsType): Promise<PdfFile> {
     const { file, scaleFactor } = params;
     
-    const pdfDoc = await file.getAsPdfLib();
+    const pdfDoc = await file.pdflibDocument;
     const pages = pdfDoc.getPages();
 
     if (Array.isArray(scaleFactor)) {
@@ -24,7 +24,7 @@ export async function scaleContent(params: ScaleContentParamsType): Promise<PdfF
         pages.forEach(page => scalePage(page, scaleFactor));
     }
 
-    return fromPdfLib(pdfDoc, file.filename);
+    return file;
 };
 
 function scalePage(page: PDFPage, scaleFactor: number) {

@@ -37,7 +37,7 @@ export async function splitOn(params: SplitOnParamsType) {
     console.log("Split At Pages: ", splitAtPages);
 
     // Remove detected Pages & Split
-    const pdfDoc = await file.getAsPdfLib();
+    const pdfDoc = await file.pdflibDocument;
     const numberOfPages = pdfDoc.getPageCount();
 
     let pagesArray: number[] = [];
@@ -66,7 +66,7 @@ export async function splitOn(params: SplitOnParamsType) {
     return subDocuments;
 
     async function getPagesWithQRCode(file: PdfFile) {
-        const pdfDoc = await file.getAsPdfJs();
+        const pdfDoc = await file.pdfjsDocuemnt;
 
         const pagesWithQR: number[] = [];
         for (let i = 0; i < pdfDoc.numPages; i++) {

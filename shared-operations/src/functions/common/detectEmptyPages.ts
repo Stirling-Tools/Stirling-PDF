@@ -6,7 +6,7 @@ import { Image } from 'image-js';
 import { getImagesOnPage } from "./getImagesOnPage.js";
 
 export async function detectEmptyPages(file: PdfFile, whiteThreashold: number): Promise<number[]> {
-    const pdfDoc = await file.getAsPdfJs();
+    const pdfDoc = await file.pdfjsDocuemnt;
 
     const emptyPages: number[] = [];
     for (let i = 1; i <= pdfDoc.numPages; i++) {
