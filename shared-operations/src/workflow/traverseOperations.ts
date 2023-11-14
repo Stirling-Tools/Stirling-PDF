@@ -26,12 +26,12 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
         }
     
         for (let i = 0; i < actions.length; i++) {
-            yield* computeOperation(actions[i], input); // TODO: structuredClone doesn't work in ts need to find another solution to pass by value.
+            yield* computeOperation(actions[i], Object.assign([], input)); // structuredClone-like for ts TODO: test if this really works
         }
     }
     
     async function * computeOperation(action: Action, input: PdfFile|PdfFile[]): AsyncGenerator<string, void, void> {
-
+        console.log("Input: ", input);
         yield "Starting: " + action.type;
         switch (action.type) {
             case "done": // Skip this, because it is a valid node.

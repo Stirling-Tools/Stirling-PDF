@@ -216,7 +216,7 @@ async function downloadHandler(res: Response, pdfResults: PdfFile[]) {
     }
     else {
         const readStream = new stream.PassThrough();
-        readStream.end(pdfResults[0].uint8Array);
+        readStream.end(await pdfResults[0].uint8Array);
 
         // TODO: Implement other file types (mostly fro image & text extraction)
         res.set("Content-disposition", 'attachment; filename=' + pdfResults[0].filename + ".pdf");
