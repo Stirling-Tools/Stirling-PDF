@@ -14,6 +14,7 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
         if(actions === undefined || (Array.isArray(actions) && actions.length == 0)) { // isEmpty
             console.log("Last Operation");
             if(Array.isArray(input)) {
+                console.log("ArrayOut: ", input);
                 console.log("operation done: " + input[0].filename + (input.length > 1 ? "+" : ""));
                 results = results.concat(input);
                 return;
@@ -62,6 +63,7 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                 yield* nToN(input, action, async (input) => {
                     const newPdf = await Operations.impose({file: input, nup: action.values["nup"], format: action.values["format"]});
                     newPdf.filename += "_imposed";
+                    console.log("newPDF: ", newPdf);
                     return newPdf;
                 });
                 break;
@@ -158,12 +160,14 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
         }
     }
 
-    async function * nToN(input: PdfFile|PdfFile[], action: Action, callback: (pdf: PdfFile) => Promise<PdfFile>): AsyncGenerator<string, void, void> {
+    async function * nToN(input: PdfFile|PdfFile[], action: Action, callback: (pdf: PdfFile) => Promise<PdfFile|PdfFile[]>): AsyncGenerator<string, void, void> {
         if(Array.isArray(input)) {
-            const nextInputs: PdfFile[] = []
+            console.log("inputs", input);
+            let nextInputs: PdfFile[] = []
             for (let i = 0; i < input.length; i++) {
-                nextInputs.concat(await callback(input[i]));
+                nextInputs = nextInputs.concat(await callback(input[i]));
             }
+            console.log("nextInputs", nextInputs);
             yield* nextOperation(action.actions, nextInputs);
         }
         else {

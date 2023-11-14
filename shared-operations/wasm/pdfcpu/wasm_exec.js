@@ -212,6 +212,9 @@
 	if (!global.crypto) {
 		throw new Error("global.crypto is not available, polyfill required (getRandomValues only)");
 	}
+    if(!global.crypto.getRandomValues) {
+        throw new Error("global.crypto.getRandomValues is not available, polyfill required (getRandomValues only)");
+    }
 
 	if (!global.performance) {
 		global.performance = {
