@@ -2,7 +2,14 @@
 import { PDFPage } from 'pdf-lib';
 import { PdfFile, fromPdfLib } from '../wrappers/PdfFile';
 
-export async function scalePage(file: PdfFile, pageSize: {width?:number,height?:number}|{width?:number,height?:number}[]): Promise<PdfFile> {
+export type ScalePageParamsType = {
+    file: PdfFile;
+    pageSize: { width?:number,height?:number }|{ width?:number,height?:number }[];
+}
+
+export async function scalePage(params: ScalePageParamsType): Promise<PdfFile> {
+    const { file, pageSize } = params;
+
     const pdfDoc = await file.getAsPdfLib();
     const pages = pdfDoc.getPages();
 

@@ -14,7 +14,7 @@ import { scaleContent as dependantScaleContent} from './functions/scaleContent.j
 import { scalePage as dependantScalePage } from './functions/scalePage.js';
 import { splitPDF as dependantSplitPDF } from './functions/splitPDF.js';
 import { editMetadata as dependantEditMetadata} from "./functions/editMetadata.js";
-import { organizePages as dependantOrganizePages} from "./functions/organizePages.js";
+import { sortPagesWithPreset as dependantSortPagesWithPreset} from "./functions/organizePages.js";
 import { removeBlankPages as dependantRemoveBlankPages} from "./functions/removeBlankPages.js";
 import { splitOn as dependantSplitOn } from "./functions/splitOn.js";
 
@@ -52,8 +52,8 @@ export async function editMetadata(snapshot, metadata) {
     return dependantEditMetadata(snapshot, metadata, PDFLib);
 }
 
-export async function organizePages(snapshot, operation, customOrderString) {
-    return dependantOrganizePages(snapshot, operation, customOrderString, PDFLib);
+export async function sortPagesWithPreset(snapshot, operation, fancyPageSelector) {
+    return dependantSortPagesWithPreset(snapshot, operation, fancyPageSelector, PDFLib);
 }
 
 export async function removeBlankPages(snapshot, whiteThreashold) {

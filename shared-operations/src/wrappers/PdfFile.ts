@@ -2,6 +2,7 @@
 import { PDFDocument } from 'pdf-lib';
 import * as PDFJS from 'pdfjs-dist';
 import { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
+import Joi from 'joi';
 
 export class PdfFile {
     byteArray: Uint8Array | null;
@@ -57,9 +58,18 @@ export class PdfFile {
         return file.pdfJs!;
     }
 }
+export const PdfFileSchema = Joi.any().custom((value, helpers) => {
+    if (!(value instanceof PdfFile)) {
+        throw new Error('value is not a PdfFile');
+    }
+    return value;
+}, "PdfFile validation");
 
 export function fromMulterFile(value: Express.Multer.File): PdfFile {
     return fromUint8Array(value.buffer, value.originalname)
+}
+export function fromMulterFiles(values: Express.Multer.File[]): PdfFile[] {
+    return values.map(v => fromUint8Array(v.buffer, v.originalname));
 }
 export function fromUint8Array(value: Uint8Array, filename: string): PdfFile {
     const out = new PdfFile();

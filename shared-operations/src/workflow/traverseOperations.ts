@@ -1,39 +1,40 @@
-import { organizeWaitOperations } from "./organizeWaitOperations.js";
-import { Operation, WaitOperation } from "../../declarations/Operation.js";
-import { PDF } from "../../declarations/PDF.js";
+import { organizeWaitOperations } from "./organizeWaitOperations";
+import { Action } from "../../declarations/Action";
+import { OperationsType } from "../../src/index";
+import { PdfFile } from "../wrappers/PdfFile";
 
-export async function * traverseOperations(operations: Operation[], input: PDF[] | PDF, Operations: AllOperations): AsyncGenerator<string, PDF[], void> {
+export async function * traverseOperations(operations: Action[], input: PdfFile[] | PdfFile, Operations: OperationsType): AsyncGenerator<string, PdfFile[], void> {
     const waitOperations = organizeWaitOperations(operations);
-    let results: PDF[] = [];
+    let results: PdfFile[] = [];
     yield* nextOperation(operations, input);
     return results;
 
-    async function * nextOperation(operations: Operation[] | undefined, input: PDF[] | PDF): AsyncGenerator<string, void, void> {
-        if(operations === undefined || (Array.isArray(operations) && operations.length == 0)) { // isEmpty
+    async function * nextOperation(actions: Action[], input: PdfFile[] | PdfFile): AsyncGenerator<string, void, void> {
+        if(Array.isArray(actions) && actions.length == 0) { // isEmpty
             if(Array.isArray(input)) {
-                console.log("operation done: " + input[0].fileName + (input.length > 1 ? "+" : ""));
+                console.log("operation done: " + input[0].filename + (input.length > 1 ? "+" : ""));
                 results = results.concat(input);
                 return;
             }
             else {
-                console.log("operation done: " + input.fileName);
+                console.log("operation done: " + input.filename);
                 results.push(input);
                 return;
             }
         }
     
-        for (let i = 0; i < operations.length; i++) {
-            yield* computeOperation(operations[i], structuredClone(input));
+        for (let i = 0; i < actions.length; i++) {
+            yield* computeOperation(actions[i], structuredClone(input));
         }
     }
     
-    async function * computeOperation(operation: Operation, input: PDF|PDF[]): AsyncGenerator<string, void, void> {
-        yield "Starting: " + operation.type;
-        switch (operation.type) {
+    async function * computeOperation(action: Action, input: PdfFile|PdfFile[]): AsyncGenerator<string, void, void> {
+        yield "Starting: " + action.type;
+        switch (action.type) {
             case "done": // Skip this, because it is a valid node.
                 break;
             case "wait":
-                const waitOperation = waitOperations[(operation as WaitOperation).values.id];
+                const waitOperation = waitOperations[action.values.id];
 
                 if(Array.isArray(input)) {
                     waitOperation.input.concat(input); // TODO: May have unexpected concequences. Needs further testing!
@@ -43,122 +44,138 @@ export async function * traverseOperations(operations: Operation[], input: PDF[]
                 }
 
                 waitOperation.waitCount--;
-                if(waitOperation.waitCount == 0) {
-                    yield* nextOperation(waitOperation.doneOperation.operations, waitOperation.input);
+                if(waitOperation.waitCount == 0 && waitOperation.doneOperation.actions) {
+                    yield* nextOperation(waitOperation.doneOperation.actions, waitOperation.input);
                 }
                 break;
             case "extract":
-                yield* nToN(input, operation, async (input) => {
-                    input.fileName += "_extractedPages";
-                    input.buffer = await Operations.extractPages(input.buffer, operation.values["pagesToExtractArray"]);
+                yield* nToN(input, action, async (input) => {
+                    const newPdf = await Operations.selectPages({file: input, pagesToExtractArray: action.values["pagesToExtractArray"]});
+                    newPdf.filename += "_extractedPages";
+                    return newPdf;
                 });
                 break;
             case "impose":
-                yield* nToN(input, operation, async (input) => {
-                    input.fileName += "_imposed";
-                    input.buffer = await Operations.impose(input.buffer, operation.values["nup"], operation.values["format"]);
+                yield* nToN(input, action, async (input) => {
+                    const newPdf = await Operations.impose({file: input, nup: action.values["nup"], format: action.values["format"]});
+                    newPdf.filename += "_imposed";
+                    return newPdf;
                 });
                 break;
             case "merge":
-                yield* nToOne(input, operation, async (inputs) => {
-                    return {
-                        originalFileName: inputs.map(input => input.originalFileName).join("_and_"),
-                        fileName: inputs.map(input => input.fileName).join("_and_") + "_merged",
-                        buffer: await Operations.mergePDFs(inputs.map(input => input.buffer))
-                    }
+                yield* nToOne(input, action, async (inputs) => {
+                    const newPdf = await Operations.mergePDFs({files: inputs});
+                    newPdf.filename = inputs.map(input => input.filename).join("_and_") + "_merged";
+                    return newPdf;
                 });
                 break;
             case "rotate":
-                yield* nToN(input, operation, async (input) => {
-                    input.fileName += "_turned";
-                    input.buffer = await Operations.rotatePages(input.buffer, operation.values["rotation"]);
+                yield* nToN(input, action, async (input) => {
+                    const newPdf = await Operations.rotatePages({file: input, rotation: action.values["rotation"]});
+                    newPdf.filename += "_turned";
+                    return newPdf;
                 });
                 break;
             case "split":
                 // TODO: A split might break the done condition, it may count multiple times. Needs further testing!
-                yield* oneToN(input, operation, async (input) => {
-                    const splitResult = await Operations.splitPDF(input.buffer, operation.values["pagesToSplitAfterArray"]);
-    
-                    const splits: PDF[] = [];
+                yield* oneToN(input, action, async (input) => {
+                    const splitResult = await Operations.splitPDF({file: input, splitAfterPageArray: action.values["splitAfterPageArray"]});
                     for (let j = 0; j < splitResult.length; j++) {
-                        splits.push({
-                            originalFileName: input.originalFileName,
-                            fileName: input.fileName + "_split" + j,
-                            buffer: splitResult[j]
-                        })
+                        splitResult[j].filename = splitResult[j].filename + "_split" + j;
                     }
-                    return splits;
+                    return splitResult;
                 });
                 break;
             case "updateMetadata":
-                yield* nToN(input, operation, async (input) => {
-                    input.fileName += "_metadataEdited";
-                    input.buffer = await Operations.updateMetadata(input.buffer, operation.values["metadata"]);
+                yield* nToN(input, action, async (input) => {
+                    const newPdf = await Operations.updateMetadata({file: input, ...action.values["metadata"]});
+                    newPdf.filename += "_metadataEdited";
+                    return newPdf;
                 });
                 break;
-            case "organizePages":
-                yield* nToN(input, operation, async (input) => {
-                    input.fileName += "_pagesOrganized";
-                    input.buffer = await Operations.organizePages(input.buffer, operation.values["operation"], operation.values["customOrderString"]);
+            case "sortPagesWithPreset":
+                yield* nToN(input, action, async (input) => {
+                    const newPdf = await Operations.sortPagesWithPreset({file: input, sortPreset: action.values["sortPreset"], fancyPageSelector: action.values["fancyPageSelector"]});
+                    newPdf.filename += "_pagesOrganized";
+                    return newPdf;
                 });
                 break;
             case "removeBlankPages":
-                yield* nToN(input, operation, async (input) => {
-                    input.fileName += "_removedBlanks";
-                    input.buffer = await Operations.removeBlankPages(input.buffer, operation.values["whiteThreashold"]);
+                yield* nToN(input, action, async (input) => {
+                    const newPdf = await Operations.removeBlankPages({file: input, whiteThreashold: action.values["whiteThreashold"]});
+                    newPdf.filename += "_removedBlanks";
+                    return newPdf;
                 });
                 break;
             case "splitOn":
-                yield* oneToN(input, operation, async (input) => {
-                    const splitResult = await Operations.splitOn(input.buffer, operation.values["type"], operation.values["whiteThreashold"]);
-                    const splits: PDF[] = [];
+                yield* oneToN(input, action, async (input) => {
+                    const splitResult = await Operations.splitOn({file: input, type: action.values["type"], whiteThreashold: action.values["whiteThreashold"]});
                     for (let j = 0; j < splitResult.length; j++) {
-                        splits.push({
-                            originalFileName: input.originalFileName,
-                            fileName: input.fileName + "_split" + j,
-                            buffer: splitResult[j]
-                        })
+                        splitResult[j].filename = splitResult[j].filename + "_split" + j;
                     }
-    
-                    return splits;
+                    return splitResult;
                 });
                 break;
             default:
-                throw new Error(`${operation.type} not implemented yet.`);
+                throw new Error(`${action.type} not implemented yet.`);
                 break;
         }
     }
 
-    async function * nToOne(inputs: PDF|PDF[], operation: Operation, callback: (pdf: PDF[]) => Promise<PDF>): AsyncGenerator<string, void, void> {
-        let output: PDF = await callback(Array.isArray(inputs) ? inputs : Array.of(inputs));
+    /**
+     * 
+     * @param {PdfFile|PdfFile[]} input 
+     * @param {JSON} action
+     * @returns {undefined}
+     */
+    async function * nToOne(inputs: PdfFile|PdfFile[], action: Action, callback: (pdf: PdfFile[]) => Promise<PdfFile>): AsyncGenerator<string, void, void> {
+        const input = Array.isArray(inputs) ? inputs : [inputs]; // Convert single values to array, keep arrays as is.
         
-        yield* nextOperation(operation.operations, output);
+        const newInputs = await callback(input);
+        if (action.actions) {
+            yield* nextOperation(action.actions, newInputs);
+        }
     }
 
-    async function * oneToN(input: PDF|PDF[], operation: Operation, callback: (pdf: PDF) => Promise<PDF[]>): AsyncGenerator<string, void, void> {
+    /**
+     * 
+     * @param {PdfFile|PdfFile[]} input 
+     * @param {JSON} action
+     * @returns {undefined}
+     */
+    async function * oneToN(input: PdfFile|PdfFile[], action: Action, callback: (pdf: PdfFile) => Promise<PdfFile[]>): AsyncGenerator<string, void, void> {
         if(Array.isArray(input)) {
-            let output: PDF[] = [];
+            let output: PdfFile[] = [];
             for (let i = 0; i < input.length; i++) {
                 output = output.concat(await callback(input[i]));
             }
-            yield* nextOperation(operation.operations, output);
+            if (action.actions) {
+                yield* nextOperation(action.actions, output);
+            }
         }
         else {
-            input = await callback(input);
-            yield* nextOperation(operation.operations, input);
+            const nextInput = await callback(input);
+            if (action.actions) {
+                yield* nextOperation(action.actions, nextInput);
+            }
         }
     }
 
-    async function * nToN(input: PDF|PDF[], operation: Operation, callback: (pdf: PDF) => void): AsyncGenerator<string, void, void> {
+    async function * nToN(input: PdfFile|PdfFile[], action: Action, callback: (pdf: PdfFile) => Promise<PdfFile>): AsyncGenerator<string, void, void> {
         if(Array.isArray(input)) {
+            const nextInputs: PdfFile[] = []
             for (let i = 0; i < input.length; i++) {
-                await callback(input[i]);
+                nextInputs.concat(await callback(input[i]));
             }
-            yield* nextOperation(operation.operations, input);
+            if (action.actions) {
+                yield* nextOperation(action.actions, nextInputs);
+            }
         }
         else {
-            await callback(input);
-            yield* nextOperation(operation.operations, input);
+            const nextInput = await callback(input);
+            if (action.actions) {
+                yield* nextOperation(action.actions, nextInput);
+            }
         }
     }
 }

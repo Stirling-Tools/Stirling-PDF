@@ -6,10 +6,15 @@ import { getImagesOnPage } from "./common/getImagesOnPage.js";
 import { selectPages } from "./subDocumentFunctions";
 import { PdfFile } from '../wrappers/PdfFile.js';
 
-export async function splitOn(
-            file: PdfFile,
-            type: "BAR_CODE"|"QR_CODE"|"BLANK_PAGE",
-            whiteThreashold: number) {
+export type SplitOnParamsType = {
+    file: PdfFile;
+    type: "BAR_CODE"|"QR_CODE"|"BLANK_PAGE";
+    whiteThreashold: number;
+}
+
+export async function splitOn(params: SplitOnParamsType) {
+    const { file, type, whiteThreashold } = params;
+
     let splitAtPages: number[] = [];
 
     switch (type) {
@@ -43,7 +48,7 @@ export async function splitOn(
         console.log(i);
         if(i == splitAfter) {
             if(pagesArray.length > 0) {
-                subDocuments.push(await selectPages(file, pagesArray));
+                subDocuments.push(await selectPages({file, pagesToExtractArray:pagesArray}));
                 pagesArray = [];
             }
             splitAfter = splitAtPages.shift();
@@ -54,7 +59,7 @@ export async function splitOn(
         }
     }
     if(pagesArray.length > 0) {
-        subDocuments.push(await selectPages(file, pagesArray));
+        subDocuments.push(await selectPages({file, pagesToExtractArray:pagesArray}));
     }
     pagesArray = [];
 
