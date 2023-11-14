@@ -17,7 +17,7 @@ export type UpdateMetadataParams = {
 }
 
 export async function updateMetadata(params: UpdateMetadataParams): Promise<PdfFile> {
-    const pdfDoc = await params.file.pdflibDocument;
+    const pdfDoc = await params.file.pdfLibDocument;
 
     if (params.deleteAll) {
         pdfDoc.setAuthor("");

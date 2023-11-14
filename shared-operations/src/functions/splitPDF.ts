@@ -10,7 +10,7 @@ export type SplitPdfParamsType = {
 export async function splitPDF(params: SplitPdfParamsType): Promise<PdfFile[]> {
     const { file, splitAfterPageArray } = params;
 
-    const pdflibDocument = await file.pdflibDocument;
+    const pdflibDocument = await file.pdfLibDocument;
 
     const numberOfPages = pdflibDocument.getPages().length;
 

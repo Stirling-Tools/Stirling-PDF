@@ -44,7 +44,7 @@ export class PdfFile {
         this.representationType = RepresentationType.Uint8Array;
     }
 
-    get pdflibDocument() : Promise<PDFLibDocument> {
+    get pdfLibDocument() : Promise<PDFLibDocument> {
         switch (this.representationType) {
             case RepresentationType.PDFLibDocument:
                 return new Promise((resolve, reject) => {
@@ -56,17 +56,17 @@ export class PdfFile {
                     var pdfLibDoc = await PDFLibDocument.load(uint8Array, {
                         updateMetadata: false,
                     });
-                    this.pdflibDocument = pdfLibDoc;
+                    this.pdfLibDocument = pdfLibDoc;
                     resolve(pdfLibDoc);
                 });
         } 
     }
-    set pdflibDocument(value: PDFLibDocument) {
+    set pdfLibDocument(value: PDFLibDocument) {
         this.representation = value;
         this.representationType = RepresentationType.PDFLibDocument;
     }
 
-    get pdfjsDocument() : Promise<PDFJSDocument> {
+    get pdfJsDocument() : Promise<PDFJSDocument> {
         switch (this.representationType) {
             case RepresentationType.PDFJSDocument:
                 return new Promise((resolve, reject) => {
@@ -75,12 +75,12 @@ export class PdfFile {
             default:
                 return new Promise(async (resolve, reject) => {
                     const pdfjsDoc = await PDFJS.getDocument(await this.uint8Array).promise;
-                    this.pdfjsDocument = pdfjsDoc;
+                    this.pdfJsDocument = pdfjsDoc;
                     resolve(pdfjsDoc);
                 });
         } 
     }
-    set pdfjsDocument(value: PDFJSDocument) {
+    set pdfJsDocument(value: PDFJSDocument) {
         this.representation = value;
         this.representationType = RepresentationType.PDFJSDocument;
     }
@@ -111,7 +111,7 @@ export class PdfFile {
     static async cacheAsPdfLibDocuments(files: PdfFile[]): Promise<Map<PdfFile, PDFLibDocument>> {
         const docCache = new Map<PdfFile, PDFLibDocument>();
         await Promise.all(files.map(async (file) => {
-            const pdfLibDocument = await file.pdflibDocument;
+            const pdfLibDocument = await file.pdfLibDocument;
             docCache.set(file, pdfLibDocument);
         }));
         return docCache;
@@ -119,7 +119,7 @@ export class PdfFile {
     static async cacheAsPdfJsDocuments(files: PdfFile[]): Promise<Map<PdfFile, PDFJSDocument>> {
         const docCache = new Map<PdfFile, PDFJSDocument>();
         await Promise.all(files.map(async (file) => {
-            const pdfLibDocument = await file.pdfjsDocument;
+            const pdfLibDocument = await file.pdfJsDocument;
             docCache.set(file, pdfLibDocument);
         }));
         return docCache;

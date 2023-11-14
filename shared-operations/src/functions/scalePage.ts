@@ -10,7 +10,7 @@ export type ScalePageParamsType = {
 export async function scalePage(params: ScalePageParamsType): Promise<PdfFile> {
     const { file, pageSize } = params;
 
-    const pdfDoc = await file.pdflibDocument;
+    const pdfDoc = await file.pdfLibDocument;
     const pages = pdfDoc.getPages();
 
     if (Array.isArray(pageSize)) {

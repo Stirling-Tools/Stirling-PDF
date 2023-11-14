@@ -10,7 +10,7 @@ export type ScaleContentParamsType = {
 export async function scaleContent(params: ScaleContentParamsType): Promise<PdfFile> {
     const { file, scaleFactor } = params;
     
-    const pdfDoc = await file.pdflibDocument;
+    const pdfDoc = await file.pdfLibDocument;
     const pages = pdfDoc.getPages();
 
     if (Array.isArray(scaleFactor)) {

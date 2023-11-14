@@ -10,7 +10,7 @@ export type RotateParamsType = {
 export async function rotatePages(params: RotateParamsType): Promise<PdfFile> {
     const { file, rotation } = params;
     
-    const pages = (await file.pdflibDocument).getPages();
+    const pages = (await file.pdfLibDocument).getPages();
 
     if (Array.isArray(rotation)) {
         if (rotation.length != pages.length) {
