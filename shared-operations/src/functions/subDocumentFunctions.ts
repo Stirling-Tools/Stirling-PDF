@@ -4,9 +4,16 @@ import { PdfFile, fromPdfLib } from '../wrappers/PdfFile.js';
 import { detectEmptyPages } from "./common/detectEmptyPages.js";
 
 
-export async function sortPagesWithPreset(file: PdfFile, sortPreset: string, fancyPageSelector: string) {
+export type SortPagesWithPresetParamsType = {
+    file: PdfFile;
+    sortPreset: string;
+    fancyPageSelector: string;
+}
+export async function sortPagesWithPreset(params: SortPagesWithPresetParamsType) {
+    const { file, sortPreset } = params;
+
     if (sortPreset === "CUSTOM_PAGE_ORDER") {
-        return rearrangePages(file, fancyPageSelector);
+        return rearrangePages(params); // fancyPageSelector passed down with params
     }
 
     const sortFunction = sorts[sortPreset];
@@ -19,19 +26,32 @@ export async function sortPagesWithPreset(file: PdfFile, sortPreset: string, fan
     
     const pageCount = byteFile.pdfLib.getPageCount();
     const sortIndecies = sortFunction(pageCount);
-    return selectPages(byteFile, sortIndecies);
+    return selectPages({file:byteFile, pagesToExtractArray:sortIndecies});
 }
 
-export async function rearrangePages(file: PdfFile, fancyPageSelector: string): Promise<PdfFile> {
+export type RearrangePagesParamsType = {
+    file: PdfFile;
+    sortPreset: string;
+    fancyPageSelector: string;
+}
+export async function rearrangePages(params: RearrangePagesParamsType): Promise<PdfFile> {
+    const { file, fancyPageSelector } = params;
+
     const byteFile = await file.convertToPdfLibFile();
     if (!byteFile?.pdfLib) return byteFile;
 
     const pagesToExtractArray = parseFancyPageSelector(fancyPageSelector, byteFile.pdfLib.getPageCount());
-    const newDocument = selectPages(byteFile, pagesToExtractArray);
+    const newDocument = selectPages({file:byteFile, pagesToExtractArray});
     return newDocument;
 };
 
-export async function selectPages(file: PdfFile, pagesToExtractArray: number[]): Promise<PdfFile> {
+export type SelectPagesParamsType = {
+    file: PdfFile;
+    pagesToExtractArray: number[];
+}
+export async function selectPages(params: SelectPagesParamsType): Promise<PdfFile> {
+    const { file, pagesToExtractArray } = params;
+
     const byteFile = await file.convertToPdfLibFile();
     if (!byteFile?.pdfLib) return byteFile;
 
@@ -51,18 +71,30 @@ export async function selectPages(file: PdfFile, pagesToExtractArray: number[]):
     return fromPdfLib(subDocument, file.filename);
 }
 
-export async function removePages(file: PdfFile, pagesToRemoveArray: number[]): Promise<PdfFile> {
+export type RemovePagesParamsType = {
+    file: PdfFile;
+    pagesToRemoveArray: number[];
+}
+export async function removePages(params: RemovePagesParamsType): Promise<PdfFile> {
+    const { file, pagesToRemoveArray } = params;
+
     const byteFile = await file.convertToPdfLibFile();
     if (!byteFile?.pdfLib) return byteFile;
 
     const pagesToExtractArray = invertSelection(pagesToRemoveArray, byteFile.pdfLib.getPageIndices())
-    return selectPages(byteFile, pagesToExtractArray);
+    return selectPages({file:byteFile, pagesToExtractArray});
 }
 
-export async function removeBlankPages(file: PdfFile, whiteThreashold: number) {
+export type RemoveBlankPagesParamsType = {
+    file: PdfFile;
+    whiteThreashold: number;
+}
+export async function removeBlankPages(params: RemoveBlankPagesParamsType) {
+    const { file, whiteThreashold } = params;
+
     const emptyPages = await detectEmptyPages(file, whiteThreashold);
     console.log("Empty Pages: ", emptyPages);
-    return removePages(file, emptyPages);
+    return removePages({file, pagesToRemoveArray:emptyPages});
 }
 
 

@@ -1,7 +1,8 @@
 
 import { PdfFile, fromPdfLib } from '../wrappers/PdfFile';
 
-export type Metadata = {
+export type UpdateMetadataParams = {
+    file: PdfFile,
     deleteAll?: boolean,        // Delete all metadata if set to true
     author?: string,            // The author of the document
     creationDate?: Date,        // The creation date of the document (format: yyyy/MM/dd HH:mm:ss)
@@ -15,10 +16,10 @@ export type Metadata = {
     //allRequestParams?: {[key: string]: [key: string]},  // Map list of key and value of custom parameters. Note these must start with customKey and customValue if they are non-standard
 }
 
-export async function updateMetadata(file: PdfFile, metadata: Metadata|null): Promise<PdfFile> {
-    const pdfDoc = await file.getAsPdfLib();
+export async function updateMetadata(params: UpdateMetadataParams): Promise<PdfFile> {
+    const pdfDoc = await params.file.getAsPdfLib();
 
-    if (!metadata || metadata.deleteAll) {
+    if (params.deleteAll) {
         pdfDoc.setAuthor("");
         pdfDoc.setCreationDate(new Date(0))
         pdfDoc.setCreator("")
@@ -28,28 +29,25 @@ export async function updateMetadata(file: PdfFile, metadata: Metadata|null): Pr
         pdfDoc.setSubject("")
         pdfDoc.setTitle("")
     }
-    if (!metadata) {
-        return fromPdfLib(pdfDoc, file.filename);
-    }
 
-    if(metadata.author)
-        pdfDoc.setAuthor(metadata.author);
-    if(metadata.creationDate)
-        pdfDoc.setCreationDate(metadata.creationDate)
-    if(metadata.creator)
-        pdfDoc.setCreator(metadata.creator)
-    if(metadata.keywords)
-        pdfDoc.setKeywords(metadata.keywords.split(","))
-    if(metadata.modificationDate)
-        pdfDoc.setModificationDate(metadata.modificationDate)
-    if(metadata.producer)
-        pdfDoc.setProducer(metadata.producer)
-    if(metadata.subject)
-        pdfDoc.setSubject(metadata.subject)
-    if(metadata.title)
-        pdfDoc.setTitle(metadata.title)
+    if(params.author)
+        pdfDoc.setAuthor(params.author);
+    if(params.creationDate)
+        pdfDoc.setCreationDate(params.creationDate)
+    if(params.creator)
+        pdfDoc.setCreator(params.creator)
+    if(params.keywords)
+        pdfDoc.setKeywords(params.keywords.split(","))
+    if(params.modificationDate)
+        pdfDoc.setModificationDate(params.modificationDate)
+    if(params.producer)
+        pdfDoc.setProducer(params.producer)
+    if(params.subject)
+        pdfDoc.setSubject(params.subject)
+    if(params.title)
+        pdfDoc.setTitle(params.title)
 
     // TODO add trapped and custom metadata. May need another library
 
-    return fromPdfLib(pdfDoc, file.filename);
+    return fromPdfLib(pdfDoc, params.file.filename);
 };

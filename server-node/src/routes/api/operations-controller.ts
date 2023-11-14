@@ -1,93 +1,50 @@
 
 import Operations from '../../utils/pdf-operations';
 import { respondWithPdfFile, response_mustHaveExactlyOneFile } from '../../utils/endpoint-utils';
-import { PdfFile, fromMulterFile } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
+import { PdfFile, PdfFileSchema, fromMulterFile, fromMulterFiles } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
 
-import express, { Request, Response } from 'express';
+import express, { Request, Response, RequestHandler } from 'express';
 const router = express.Router();
 import multer from 'multer';
 const upload = multer();
-import Joi from 'joi';
+import Joi, { array } from 'joi';
 
-router.post('/merge-pdfs', upload.single("pdfFile"), async function(req: Request, res: Response) {
-    const schema = Joi.object({
-        deleteAll: Joi.string(),
-        author: Joi.string(),
-        creationDate: Joi.string(),
-        creator: Joi.string(),
-        keywords: Joi.string(),
-        modificationDate: Joi.string(),
-        producer: Joi.string(),
-        subject: Joi.string(),
-        title: Joi.string(),
-        trapped: Joi.string(),
-        allRequestParams: Joi.object().pattern(Joi.string(), Joi.string()),
-    }).required();
-    const { error, value } = schema.validate(req.body);
-    if (error) {
-        res.status(400).send(error.details);
-        return;
-    }
-    if (!req.file) {
-        response_mustHaveExactlyOneFile(res);
-        return;
-    }
+function registerEndpoint(endpoint: string,
+                          nameToAppend: string,
+                          fileHandler: RequestHandler,
+                          operationFunction: (params: any) => Promise<PdfFile|PdfFile[]>,
+                          joiSchema: Joi.ObjectSchema<any>
+        ): void {
+    router.post(endpoint, fileHandler, async function(req: Request, res: Response) {
+        const body = req.body;
+        if (req.file) {
+            body.file = fromMulterFile(req.file);
+        }
+        if (req.files) {
+            if (Array.isArray(req.files))
+                body.files = fromMulterFiles(req.files);
+            else {
+                const flattenedFiles = Object.values(req.files).flatMap(va => va);
+                body.files = fromMulterFiles(flattenedFiles);
+            }
+        }
 
-    const arrayFile = fromMulterFile(req.file);
-    const processed = await Operations.updateMetadata(arrayFile, value)
-    const newFilename = appendToFilename(req.file.originalname, '_edited-metadata');
-    respondWithPdfFile(res, processed);
-});
-
-router.post('/rotate-pdf', upload.single("pdfFile"), async function(req: Request, res: Response) {
-    const schema = Joi.object({
-        angle: Joi.number().required()
+        console.log(req.body)
+        const { error, value } = joiSchema.validate(req.body);
+        if (error) {
+            res.status(400).send(error.details);
+            return;
+        }
+    
+        const processed = await operationFunction(value)
+        if (Array.isArray(processed)) {
+            // TODO zip multiple files
+        } else {
+            processed.filename = appendToFilename(processed.filename, nameToAppend);
+            respondWithPdfFile(res, processed);
+        }
     });
-    const { error, value } = schema.validate(req.body);
-    if (error) {
-        res.status(400).send(error.details);
-        return;
-    }
-    if (!req.file) {
-        response_mustHaveExactlyOneFile(res);
-        return;
-    }
-
-    const arrayFile = fromMulterFile(req.file);
-    const rotated = await Operations.rotatePages(arrayFile, value.angle)
-    rotated.filename = appendToFilename(arrayFile.filename, '_rotated');
-    respondWithPdfFile(res, rotated);
-});
-
-router.post('/update-metadata', upload.single("pdfFile"), async function(req: Request, res: Response) {
-    const schema = Joi.object({
-        deleteAll: Joi.string(),
-        author: Joi.string(),
-        creationDate: Joi.string(),
-        creator: Joi.string(),
-        keywords: Joi.string(),
-        modificationDate: Joi.string(),
-        producer: Joi.string(),
-        subject: Joi.string(),
-        title: Joi.string(),
-        trapped: Joi.string(),
-        allRequestParams: Joi.object().pattern(Joi.string(), Joi.string()),
-    }).required();
-    const { error, value } = schema.validate(req.body);
-    if (error) {
-        res.status(400).send(error.details);
-        return;
-    }
-    if (!req.file) {
-        response_mustHaveExactlyOneFile(res);
-        return;
-    }
-
-    const arrayFile = fromMulterFile(req.file);
-    const processed = await Operations.updateMetadata(arrayFile, value)
-    processed.filename = appendToFilename(arrayFile.filename, '_edited-metadata');
-    respondWithPdfFile(res, processed);
-});
+}
 
 /**
  * appends a string before the last '.' of the given filename
@@ -95,5 +52,29 @@ router.post('/update-metadata', upload.single("pdfFile"), async function(req: Re
 function appendToFilename(filename: string, str: string) {
     return filename.replace(/(\.[^.]+)$/, str+'$1')
 }
+
+registerEndpoint("/merge-pdfs", "_merged", upload.single("file"), Operations.mergePDFs, Joi.object({
+    files: Joi.array().items(PdfFileSchema).required(),
+}).required())
+
+registerEndpoint("/rotate-pdf", "_rotated", upload.single("file"), Operations.rotatePages, Joi.object({
+    file: PdfFileSchema.required(),
+    rotation: Joi.alternatives().try(Joi.number(), Joi.array().items(Joi.number())).required(),
+}).required())
+
+registerEndpoint("/update-metadata", "_edited-metadata", upload.single("file"), Operations.updateMetadata, Joi.object({
+    file: PdfFileSchema.required(),
+    deleteAll: Joi.string(),
+    author: Joi.string(),
+    creationDate: Joi.string(),
+    creator: Joi.string(),
+    keywords: Joi.string(),
+    modificationDate: Joi.string(),
+    producer: Joi.string(),
+    subject: Joi.string(),
+    title: Joi.string(),
+    trapped: Joi.string(),
+    allRequestParams: Joi.object().pattern(Joi.string(), Joi.string()),
+}).required())
 
 export default router;

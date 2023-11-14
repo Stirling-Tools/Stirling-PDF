@@ -1,10 +1,15 @@
 
 import { PDFDocument } from 'pdf-lib';
 import { PdfFile, convertAllToPdfLibFile, fromPdfLib } from '../wrappers/PdfFile';
+import Joi from 'joi';
 
-export async function mergePDFs(files: PdfFile[]): Promise<PdfFile> {
+export type MergeParamsType = {
+    files: PdfFile[];
+}
 
-    const pdfLibFiles = await convertAllToPdfLibFile(files);
+export async function mergePDFs(params: MergeParamsType): Promise<PdfFile> {
+
+    const pdfLibFiles = await convertAllToPdfLibFile(params.files);
 
     const mergedPdf = await PDFDocument.create(); 
 
@@ -14,5 +19,5 @@ export async function mergePDFs(files: PdfFile[]): Promise<PdfFile> {
         copiedPages.forEach((page) => mergedPdf.addPage(page));
     }
 
-    return fromPdfLib(mergedPdf, files[0].filename);
+    return fromPdfLib(mergedPdf, params.files[0].filename);
 };
