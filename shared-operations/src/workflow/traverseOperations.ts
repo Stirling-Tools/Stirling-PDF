@@ -1,5 +1,5 @@
 import { organizeWaitOperations } from "./organizeWaitOperations";
-import { Action } from "../../declarations/Action";
+import { Action, WaitAction } from "../../declarations/Action";
 import { OperationsType } from "../../src/index";
 import { PdfFile } from "../wrappers/PdfFile";
 
@@ -34,7 +34,7 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
             case "done": // Skip this, because it is a valid node.
                 break;
             case "wait":
-                const waitOperation = waitOperations[action.values.id];
+                const waitOperation = waitOperations[(action as WaitAction).values.id];
 
                 if(Array.isArray(input)) {
                     waitOperation.input.concat(input); // TODO: May have unexpected concequences. Needs further testing!
