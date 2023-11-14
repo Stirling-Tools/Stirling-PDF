@@ -1,7 +1,6 @@
 
 import { PDFDocument } from 'pdf-lib';
 import { PdfFile, convertAllToPdfLibFile, fromPdfLib } from '../wrappers/PdfFile';
-import Joi from 'joi';
 
 export type MergeParamsType = {
     files: PdfFile[];
