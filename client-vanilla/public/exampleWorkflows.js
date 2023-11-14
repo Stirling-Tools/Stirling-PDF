@@ -104,7 +104,7 @@ export const splitOnly = {
     operations: [
         {
             type: "split",
-            values: { "pagesToSplitAfterArray": [2, 10] },
+            values: { "splitAfterPageArray": [2, 10] },
             operations: []
         }
     ]
