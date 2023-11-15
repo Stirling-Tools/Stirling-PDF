@@ -62,22 +62,18 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
             case "impose":
                 yield* nToN(input, action, async (input) => {
                     const newPdf = await Operations.impose({file: input, nup: action.values["nup"], format: action.values["format"]});
-                    newPdf.filename += "_imposed";
-                    console.log("newPDF: ", newPdf);
                     return newPdf;
                 });
                 break;
             case "merge":
                 yield* nToOne(input, action, async (inputs) => {
                     const newPdf = await Operations.mergePDFs({files: inputs});
-                    newPdf.filename = inputs.map(input => input.filename).join("_and_") + "_merged";
                     return newPdf;
                 });
                 break;
             case "rotate":
                 yield* nToN(input, action, async (input) => {
                     const newPdf = await Operations.rotatePages({file: input, rotation: action.values["rotation"]});
-                    newPdf.filename += "_turned";
                     return newPdf;
                 });
                 break;

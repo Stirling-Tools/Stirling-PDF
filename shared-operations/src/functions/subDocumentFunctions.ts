@@ -21,9 +21,9 @@ export async function sortPagesWithPreset(params: SortPagesWithPresetParamsType)
         throw new Error("Operation not supported");
     }
 
-    const pdflibDocument = await file.pdflibDocument;
+    const pdfLibDocument = await file.pdfLibDocument;
     
-    const pageCount = pdflibDocument.getPageCount();
+    const pageCount = pdfLibDocument.getPageCount();
     const sortIndecies = sortFunction(pageCount);
     return selectPages({file: file, pagesToExtractArray: sortIndecies});
 }
@@ -36,9 +36,9 @@ export type RearrangePagesParamsType = {
 export async function rearrangePages(params: RearrangePagesParamsType): Promise<PdfFile> {
     const { file, fancyPageSelector } = params;
 
-    const pdflibDocument = await file.pdflibDocument;
+    const pdfLibDocument = await file.pdfLibDocument;
 
-    const pagesToExtractArray = parseFancyPageSelector(fancyPageSelector, pdflibDocument.getPageCount());
+    const pagesToExtractArray = parseFancyPageSelector(fancyPageSelector, pdfLibDocument.getPageCount());
     const newDocument = selectPages({file: file, pagesToExtractArray});
     return newDocument;
 };
@@ -50,16 +50,16 @@ export type SelectPagesParamsType = {
 export async function selectPages(params: SelectPagesParamsType): Promise<PdfFile> {
     const { file, pagesToExtractArray } = params;
 
-    const pdflibDocument = await file.pdflibDocument;
+    const pdfLibDocument = await file.pdfLibDocument;
 
     const subDocument = await PDFDocument.create();
 
     // Check that array max number is not larger pdf pages number
-    if(Math.max(...pagesToExtractArray) >= pdflibDocument.getPageCount()) {
-        throw new Error(`The PDF document only has ${pdflibDocument.getPageCount()} pages and you tried to extract page ${Math.max(...pagesToExtractArray)}`);
+    if(Math.max(...pagesToExtractArray) >= pdfLibDocument.getPageCount()) {
+        throw new Error(`The PDF document only has ${pdfLibDocument.getPageCount()} pages and you tried to extract page ${Math.max(...pagesToExtractArray)}`);
     }
 
-    const copiedPages = await subDocument.copyPages(pdflibDocument, pagesToExtractArray);
+    const copiedPages = await subDocument.copyPages(pdfLibDocument, pagesToExtractArray);
 
     for (let i = 0; i < copiedPages.length; i++) {
         subDocument.addPage(copiedPages[i]);
@@ -75,9 +75,9 @@ export type RemovePagesParamsType = {
 export async function removePages(params: RemovePagesParamsType): Promise<PdfFile> {
     const { file, pagesToRemoveArray } = params;
 
-    const pdflibDocument = await file.pdflibDocument;
+    const pdfLibDocument = await file.pdfLibDocument;
 
-    const pagesToExtractArray = invertSelection(pagesToRemoveArray, pdflibDocument.getPageIndices())
+    const pagesToExtractArray = invertSelection(pagesToRemoveArray, pdfLibDocument.getPageIndices())
     return selectPages({file: file, pagesToExtractArray});
 }
 
