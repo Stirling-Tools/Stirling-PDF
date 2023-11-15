@@ -12,7 +12,8 @@ export type ImposeParamsBaseType = {
     pdfcpuWrapper: any;
 }
 export async function impose(params: ImposeParamsBaseType): Promise<PdfFile> {
-    const result = new PdfFile(params.file.originalFilename, await params.pdfcpuWrapper.oneToOne([
+    const uint8Array = await params.pdfcpuWrapper.oneToOne(
+        [
             "pdfcpu.wasm",
             "nup",
             "-c",
@@ -21,7 +22,17 @@ export async function impose(params: ImposeParamsBaseType): Promise<PdfFile> {
             "/output.pdf",
             String(params.nup),
             "input.pdf",
-        ], await params.file.uint8Array), RepresentationType.Uint8Array, params.file.filename + "_imposed");
+        ],
+        await params.file.uint8Array
+    );
+
+    const result = new PdfFile(
+        params.file.originalFilename,
+        uint8Array,
+        RepresentationType.Uint8Array,
+        params.file.filename + "_imposed"
+    );
+    
     console.log("ImposeResult: ", result);
     return result;
 }

@@ -1,19 +1,64 @@
 
 import { Response } from 'express';
 import { PdfFile } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
+import Archiver from 'archiver';
 
-export async function respondWithFile(res: Response, bytes: Uint8Array, name: string, mimeType: string): Promise<void> {
+export async function respondWithFile(res: Response, uint8Array: Uint8Array, filename: string, mimeType: string): Promise<void> {
     res.writeHead(200, {
         'Content-Type': mimeType,
-        'Content-disposition': 'attachment;filename=' + name,
-        'Content-Length': bytes.length
+        'Content-disposition': `attachment; filename="${filename}"`,
+        'Content-Length': uint8Array.length
     });
-    res.end(bytes);
+    res.end(uint8Array);
 }
 
 export async function respondWithPdfFile(res: Response, file: PdfFile): Promise<void> {
     const byteArray = await file.uint8Array;
-    respondWithFile(res, byteArray, file.filename, "application/pdf");
+    respondWithFile(res, byteArray, file.filename+".pdf", "application/pdf");
+}
+
+export async function respondWithZip(res: Response, filename: string, files: {uint8Array: Uint8Array, filename: string}[]): Promise<void> {
+    if (files.length == 0) {
+        res.status(500).json({"warning": "The workflow had no outputs."});
+        return;
+    }
+
+    console.log(filename)
+    res.writeHead(200, {
+        'Content-Type': 'application/zip',
+        'Content-disposition': `attachment; filename="${filename}.zip"`,
+    });
+
+    // TODO: Also allow changing the compression level
+    var zip = Archiver('zip');
+
+    // Stream the file to the user.
+    zip.pipe(res);
+
+    console.log("Adding Files to ZIP...");
+
+    for (let i = 0; i < files.length; i++) {
+        zip.append(Buffer.from(files[i].uint8Array), { name: files[i].filename });   
+    }
+
+    zip.finalize();
+    console.log("Sent");
+}
+
+export async function respondWithPdfFiles(res: Response, pdfFiles: PdfFile|PdfFile[], filename: string) {
+    const pdfResults = Array.isArray(pdfFiles) ? pdfFiles : [pdfFiles];
+
+    if(pdfResults.length == 0) {
+        res.status(500).json({"warning": "The workflow had no outputs."});
+    }
+    else if (pdfResults.length == 1) {
+        respondWithPdfFile(res, pdfResults[0])
+    }
+    else {
+        const promises = pdfResults.map(async (pdf) => {return{uint8Array: await pdf.uint8Array, filename: pdf.filename + ".pdf"}})
+        const files = await Promise.all(promises);
+        respondWithZip(res, filename, files);
+    }
 }
 
 export function response_mustHaveExactlyOneFile(res: Response): void {

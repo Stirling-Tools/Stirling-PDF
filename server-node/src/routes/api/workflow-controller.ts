@@ -1,13 +1,12 @@
 import express, { Request, Response } from 'express';
 import crypto from 'crypto';
-import stream from "stream";
-import Archiver from 'archiver';
 import multer from 'multer'
 const upload = multer();
 
 import Operations from "../../utils/pdf-operations";
 import { traverseOperations } from "@stirling-pdf/shared-operations/src/workflow/traverseOperations";
 import { PdfFile, RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile';
+import { respondWithPdfFiles } from '../../utils/endpoint-utils';
 
 const activeWorkflows: any = {};
 
@@ -50,7 +49,7 @@ router.post("/:workflowUuid?", [
             }
 
             console.log("Download");
-            await downloadHandler(res, pdfResults);
+            await respondWithPdfFiles(res, pdfResults, "workflow-results");
         }
         else {
             console.log("Start Aync Workflow");
@@ -164,7 +163,7 @@ router.get("/result/:workflowUuid", async (req: Request, res: Response) => {
         return
     }
 
-    await downloadHandler(res, workflow.result);
+    await respondWithPdfFiles(res, workflow.result, "workflow-results");
     // Delete workflow / results when done.
     delete activeWorkflows[req.params.workflowUuid];
 });
@@ -185,45 +184,6 @@ router.post("/abort/:workflowUuid", (req: Request, res: Response) => {
 
 function generateWorkflowID() {
     return crypto.randomUUID();
-}
-
-async function downloadHandler(res: Response, pdfResults: PdfFile[]) {
-    if(pdfResults.length == 0) {
-        res.status(500).json({"warning": "The workflow had no outputs."});
-    } 
-    else if(pdfResults.length > 1) {
-        // TODO: Also allow the user to download multiple files without zip compressen, because this is kind of slow...
-        res.writeHead(200, {
-            'Content-Type': 'application/zip',
-            'Content-disposition': 'attachment; filename=workflow-results.zip'
-        });
-
-        var zip = Archiver('zip');
-
-        // Stream the file to the user.
-        zip.pipe(res);
-
-        console.log("Adding Files to ZIP...");
-
-        for (let i = 0; i < pdfResults.length; i++) {
-            // TODO: Implement other file types (mostly fro image & text extraction)
-            // TODO: Check for name collisions
-            zip.append(Buffer.from(await pdfResults[i].uint8Array), { name: pdfResults[i].filename + ".pdf" });   
-        }
-
-        zip.finalize();
-        console.log("Sent");
-    }
-    else {
-        const readStream = new stream.PassThrough();
-        readStream.end(await pdfResults[0].uint8Array);
-
-        // TODO: Implement other file types (mostly fro image & text extraction)
-        res.set("Content-disposition", 'attachment; filename=' + pdfResults[0].filename + ".pdf");
-        res.set("Content-Type", "application/pdf");
-
-        readStream.pipe(res);
-    }
 }
 
 export default router;

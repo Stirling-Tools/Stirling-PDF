@@ -1,6 +1,6 @@
 
 import { degrees } from 'pdf-lib';
-import { PdfFile } from '../wrappers/PdfFile';
+import { PdfFile, RepresentationType } from '../wrappers/PdfFile';
 
 export type RotateParamsType = {
     file: PdfFile;
@@ -10,7 +10,8 @@ export type RotateParamsType = {
 export async function rotatePages(params: RotateParamsType): Promise<PdfFile> {
     const { file, rotation } = params;
     
-    const pages = (await file.pdfLibDocument).getPages();
+    const pdfDoc = await file.pdfLibDocument;
+    const pages = pdfDoc.getPages();
 
     if (Array.isArray(rotation)) {
         if (rotation.length != pages.length) {
@@ -28,5 +29,5 @@ export async function rotatePages(params: RotateParamsType): Promise<PdfFile> {
         });
     }
 
-    return file;
+    return new PdfFile(file.originalFilename, pdfDoc, RepresentationType.PDFLibDocument, file.filename+"_rotated");
 };

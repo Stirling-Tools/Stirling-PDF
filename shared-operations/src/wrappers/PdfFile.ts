@@ -86,8 +86,13 @@ export class PdfFile {
     }
 
     constructor(originalFilename: string, representation: Uint8Array | PDFLibDocument | PDFJSDocument, representationType: RepresentationType, filename?: string) {
+        if (originalFilename.toLowerCase().endsWith(".pdf"))
+            originalFilename = originalFilename.slice(0, -4);
         this.originalFilename = originalFilename;
+        
         this.filename = filename ? filename : originalFilename;
+        if (this.filename.toLowerCase().endsWith(".pdf"))
+        this.filename = this.filename.slice(0, -4);
 
         this.representation = representation;
         this.representationType = representationType;

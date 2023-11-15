@@ -1,6 +1,6 @@
 
 import { PDFPage } from 'pdf-lib';
-import { PdfFile } from '../wrappers/PdfFile';
+import { PdfFile, RepresentationType } from '../wrappers/PdfFile';
 
 export type ScaleContentParamsType = {
     file: PdfFile;
@@ -24,7 +24,7 @@ export async function scaleContent(params: ScaleContentParamsType): Promise<PdfF
         pages.forEach(page => scalePage(page, scaleFactor));
     }
 
-    return file;
+    return new PdfFile(file.originalFilename, pdfDoc, RepresentationType.PDFLibDocument, file.filename+"_scaledContent");
 };
 
 function scalePage(page: PDFPage, scaleFactor: number) {

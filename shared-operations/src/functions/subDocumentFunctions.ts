@@ -21,7 +21,7 @@ export async function sortPagesWithPreset(params: SortPagesWithPresetParamsType)
         throw new Error("Operation not supported");
     }
 
-    const pdflibDocument = await file.pdfLibDocument;
+    const pdflibDocument = await file.pdflibDocument;
     
     const pageCount = pdflibDocument.getPageCount();
     const sortIndecies = sortFunction(pageCount);
@@ -36,7 +36,7 @@ export type RearrangePagesParamsType = {
 export async function rearrangePages(params: RearrangePagesParamsType): Promise<PdfFile> {
     const { file, fancyPageSelector } = params;
 
-    const pdflibDocument = await file.pdfLibDocument;
+    const pdflibDocument = await file.pdflibDocument;
 
     const pagesToExtractArray = parseFancyPageSelector(fancyPageSelector, pdflibDocument.getPageCount());
     const newDocument = selectPages({file: file, pagesToExtractArray});
@@ -50,7 +50,7 @@ export type SelectPagesParamsType = {
 export async function selectPages(params: SelectPagesParamsType): Promise<PdfFile> {
     const { file, pagesToExtractArray } = params;
 
-    const pdflibDocument = await file.pdfLibDocument;
+    const pdflibDocument = await file.pdflibDocument;
 
     const subDocument = await PDFDocument.create();
 
@@ -75,7 +75,7 @@ export type RemovePagesParamsType = {
 export async function removePages(params: RemovePagesParamsType): Promise<PdfFile> {
     const { file, pagesToRemoveArray } = params;
 
-    const pdflibDocument = await file.pdfLibDocument;
+    const pdflibDocument = await file.pdflibDocument;
 
     const pagesToExtractArray = invertSelection(pagesToRemoveArray, pdflibDocument.getPageIndices())
     return selectPages({file: file, pagesToExtractArray});

@@ -1,6 +1,6 @@
 
 import { PDFPage } from 'pdf-lib';
-import { PdfFile } from '../wrappers/PdfFile';
+import { PdfFile, RepresentationType } from '../wrappers/PdfFile';
 
 export type ScalePageParamsType = {
     file: PdfFile;
@@ -24,7 +24,7 @@ export async function scalePage(params: ScalePageParamsType): Promise<PdfFile> {
         pages.forEach(page => resize(page, pageSize));
     }
     
-    return file;
+    return new PdfFile(file.originalFilename, pdfDoc, RepresentationType.PDFLibDocument, file.filename+"_scaledPages");
 };
 
 function resize(page: PDFPage, newSize: {width?:number,height?:number}) {
