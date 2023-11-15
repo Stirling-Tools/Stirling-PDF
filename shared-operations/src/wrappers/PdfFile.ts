@@ -19,17 +19,17 @@ export class PdfFile {
     get uint8Array() : Promise<Uint8Array> {
         switch (this.representationType) {
             case RepresentationType.Uint8Array:
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     resolve(this.representation as Uint8Array);
                 });
             case RepresentationType.PDFLibDocument:
-                return new Promise(async (resolve, reject) => {
+                return new Promise(async (resolve) => {
                     var uint8Array = await (this.representation as PDFLibDocument).save();
                     this.uint8Array = uint8Array;
                     resolve(uint8Array);
                 });
             case RepresentationType.PDFJSDocument:
-                return new Promise(async (resolve, reject) => {
+                return new Promise(async (resolve) => {
                     var uint8Array = await (this.representation as PDFJSDocument).getData();
                     this.uint8Array = uint8Array;
                     resolve(uint8Array);
@@ -47,11 +47,11 @@ export class PdfFile {
     get pdfLibDocument() : Promise<PDFLibDocument> {
         switch (this.representationType) {
             case RepresentationType.PDFLibDocument:
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     resolve(this.representation as PDFLibDocument);
                 });
             default:
-                return new Promise(async (resolve, reject) => {
+                return new Promise(async (resolve) => {
                     var uint8Array = await this.uint8Array;
                     var pdfLibDoc = await PDFLibDocument.load(uint8Array, {
                         updateMetadata: false,
@@ -69,11 +69,11 @@ export class PdfFile {
     get pdfJsDocument() : Promise<PDFJSDocument> {
         switch (this.representationType) {
             case RepresentationType.PDFJSDocument:
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     resolve(this.representation as PDFJSDocument);
                 });
             default:
-                return new Promise(async (resolve, reject) => {
+                return new Promise(async (resolve) => {
                     const pdfjsDoc = await PDFJS.getDocument(await this.uint8Array).promise;
                     this.pdfJsDocument = pdfjsDoc;
                     resolve(pdfjsDoc);
@@ -126,7 +126,7 @@ export class PdfFile {
     }
 }
 
-export const PdfFileSchema = Joi.any().custom((value, helpers) => {
+export const PdfFileSchema = Joi.any().custom((value) => {
     if (!(value instanceof PdfFile)) {
         throw new Error('value is not a PdfFile');
     }

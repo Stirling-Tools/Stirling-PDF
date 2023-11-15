@@ -15,12 +15,19 @@ export async function fileToPdf(byteArray: Uint8Array, filename: string): Promis
     await writeBytesToFile(srcFile, byteArray);
 
     const messages = await runLibreOfficeCommand(randFolderName, ["--headless","--convert-to","pdf",srcFile,"--outdir",tempDir]);
-    const lastMessage = messages[messages.length-1]
-    const outputFilePath = lastMessage.split(" -> ")[1].split(".pdf")[0]+".pdf";
-    const outputFileName = path.parse(outputFilePath).base;
+
+    const files = fs.readdirSync(tempDir).filter(file => file.endsWith(".pdf"));
+    if (files.length > 1) {
+        console.warn("Ambiguous file to pdf outputs: Returning first result", files);
+    } else if (files.length == 0) {
+        throw new Error("File to pdf failed: no output files found. Messages: "+messages);
+    }
+
+    const outputFileName = files[0];
+    const outputFilePath = path.join(tempDir, outputFileName);
     const outputBytes = await readBytesFromFile(outputFilePath);
 
-    fs.rmdirSync(tempDir);
+    fs.rmdirSync(tempDir, {recursive: true});
 
     return new PdfFile(outputFileName, outputBytes, RepresentationType.Uint8Array);
 }
