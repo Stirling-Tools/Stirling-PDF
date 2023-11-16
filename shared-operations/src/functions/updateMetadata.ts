@@ -49,5 +49,6 @@ export async function updateMetadata(params: UpdateMetadataParams): Promise<PdfF
 
     // TODO add trapped and custom metadata. May need another library
 
+    params.file.filename += "_updatedMetadata";
     return params.file;
 };
