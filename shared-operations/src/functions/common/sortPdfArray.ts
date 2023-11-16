@@ -1,7 +1,7 @@
 
 import { PdfFile } from '../../wrappers/PdfFile';
 
-export async function sortPdfs(
+export async function sortPdfArray(
         files: PdfFile[],
         sortType: "orderProvided"|"byFileName"|"byDateModified"|"byDateCreated"|"byPDFTitle" = "orderProvided"
     ): Promise<PdfFile[]> {

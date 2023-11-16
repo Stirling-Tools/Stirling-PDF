@@ -29,7 +29,6 @@ router.post("/:workflowUuid?", [
             return new PdfFile(file.originalname.replace(/\.[^/.]+$/, ""), new Uint8Array(await file.buffer), RepresentationType.Uint8Array, file.originalname.replace(/\.[^/.]+$/, ""));
         }));
 
-        // TODO: Enable if traverse & organize migration is done.
         // Allow option to do it synchronously and just make a long request
         if(req.body.async === "false") {
             console.log("Don't do async");
