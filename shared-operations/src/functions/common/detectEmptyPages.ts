@@ -37,7 +37,7 @@ async function hasText(page: PDFPageProxy): Promise<boolean> {
 async function areImagesBlank(page: PDFPageProxy, threshold: number): Promise<boolean> {
     const images = await getImagesOnPage(page);
     for (const image of images) {
-        if(!await isImageBlank(image, threshold))
+        if(!await isImageBlank(image as any, threshold))
             return false;
     }
     return true;
