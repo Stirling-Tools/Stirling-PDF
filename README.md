@@ -25,7 +25,7 @@ To create your own, you have to understand a few key features first. You can als
     {
       "type": "extract",
       "values": {
-        "pagesToExtractArray": [0, 2]
+        "pageIndexes": [0, 2]
       },
       "operations": []
     }
@@ -46,7 +46,7 @@ You can also nest workflows like this:
     {
       "type": "extract",
       "values": {
-        "pagesToExtractArray": [0, 2]
+        "pageIndexes": [0, 2]
       },
       "operations": [
         {

@@ -3,7 +3,7 @@ import jsQR from "jsqr";
 
 import { detectEmptyPages } from "./common/detectEmptyPages.js";
 import { getImagesOnPage } from "./common/getImagesOnPage.js";
-import { selectPages } from "./subDocumentFunctions";
+import { getPages } from "./common/getPagesByIndex.js";
 import { PdfFile } from '../wrappers/PdfFile.js';
 
 export type SplitOnParamsType = {
@@ -52,7 +52,7 @@ export async function splitOn(params: SplitOnParamsType) {
         console.log(i);
         if(i == splitAfter) {
             if(pagesArray.length > 0) {
-                subDocuments.push(await selectPages({file, pagesToExtractArray:pagesArray}));
+                subDocuments.push(await getPages(file, pagesArray));
                 pagesArray = [];
             }
             splitAfter = splitAtPages.shift();
@@ -63,7 +63,7 @@ export async function splitOn(params: SplitOnParamsType) {
         }
     }
     if(pagesArray.length > 0) {
-        subDocuments.push(await selectPages({file, pagesToExtractArray:pagesArray}));
+        subDocuments.push(await getPages(file, pagesArray));
     }
     pagesArray = [];
 

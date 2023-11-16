@@ -13,8 +13,8 @@ export async function editMetadata(snapshot: string | Uint8Array | ArrayBuffer, 
     return dependantEditMetadata(snapshot, metadata);
 }
 
-export async function extractPages(snapshot: string | Uint8Array | ArrayBuffer, pagesToExtractArray: number[]) {
-    return dependantExtractPages(snapshot, pagesToExtractArray);
+export async function extractPages(snapshot: string | Uint8Array | ArrayBuffer, pageIndexes: number[]) {
+    return dependantExtractPages(snapshot, pageIndexes);
 }
 
 export async function mergePDFs(snapshots: (string | Uint8Array | ArrayBuffer)[]) {

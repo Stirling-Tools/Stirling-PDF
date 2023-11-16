@@ -90,7 +90,7 @@ export const extractOnly = {
     operations: [
         {
             type: "extract",
-            values: { "pagesToExtractArray": [0, 2] },
+            values: { "pageIndexes": [0, 2] },
             operations: []
         }
     ]

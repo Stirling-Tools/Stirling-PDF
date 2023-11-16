@@ -54,7 +54,7 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                 break;
             case "extract":
                 yield* nToN(input, action, async (input) => {
-                    const newPdf = await Operations.selectPages({file: input, pagesToExtractArray: action.values["pagesToExtractArray"]});
+                    const newPdf = await Operations.extractPages({file: input, pageIndexes: action.values["pageIndexes"]});
                     newPdf.filename += "_extractedPages";
                     return newPdf;
                 });
@@ -96,7 +96,7 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                 break;
             case "sortPagesWithPreset":
                 yield* nToN(input, action, async (input) => {
-                    const newPdf = await Operations.sortPagesWithPreset({file: input, sortPreset: action.values["sortPreset"], fancyPageSelector: action.values["fancyPageSelector"]});
+                    const newPdf = await Operations.sortPagesWithPreset({file: input, sortPreset: action.values["sortPreset"]});
                     newPdf.filename += "_pagesOrganized";
                     return newPdf;
                 });

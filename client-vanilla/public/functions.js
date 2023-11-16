@@ -20,8 +20,8 @@ import { splitOn as dependantSplitOn } from "./functions/splitOn.js";
 
 // TODO: Dynamic loading & undloading of libraries.
 
-export async function extractPages(snapshot, pagesToExtractArray) {
-    return dependantExtractPages(snapshot, pagesToExtractArray, PDFLib);
+export async function extractPages(snapshot, pageIndexes) {
+    return dependantExtractPages(snapshot, pageIndexes, PDFLib);
 }
 
 export async function impose(snapshot, nup, format) {
@@ -52,8 +52,8 @@ export async function editMetadata(snapshot, metadata) {
     return dependantEditMetadata(snapshot, metadata, PDFLib);
 }
 
-export async function sortPagesWithPreset(snapshot, operation, fancyPageSelector) {
-    return dependantSortPagesWithPreset(snapshot, operation, fancyPageSelector, PDFLib);
+export async function sortPagesWithPreset(snapshot, operation) {
+    return dependantSortPagesWithPreset(snapshot, operation, PDFLib);
 }
 
 export async function removeBlankPages(snapshot, whiteThreashold) {

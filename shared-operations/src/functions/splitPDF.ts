@@ -1,5 +1,5 @@
 
-import { selectPages } from "./subDocumentFunctions";
+import { getPages } from "./common/getPagesByIndex";
 import { PdfFile } from '../wrappers/PdfFile';
 
 export type SplitPdfParamsType = {
@@ -20,13 +20,13 @@ export async function splitPDF(params: SplitPdfParamsType): Promise<PdfFile[]> {
 
     for (let i = 0; i < numberOfPages; i++) {
         if(splitAfter && i > splitAfter && pagesArray.length > 0) {
-            subDocuments.push(await selectPages({file, pagesToExtractArray:pagesArray}));
+            subDocuments.push(await getPages(file, pagesArray));
             splitAfter = splitAfterPageArray.shift();
             pagesArray = [];
         }
         pagesArray.push(i);
     }
-    subDocuments.push(await selectPages({file, pagesToExtractArray:pagesArray}));
+    subDocuments.push(await getPages(file, pagesArray));
     pagesArray = [];
 
     return subDocuments;
