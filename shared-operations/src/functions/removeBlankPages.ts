@@ -14,5 +14,8 @@ export async function removeBlankPages(params: RemoveBlankPagesParamsType) {
     const emptyPages = await detectEmptyPages(file, whiteThreashold);
     console.debug("Empty Pages: ", emptyPages);
     const pagesToKeep = invertSelection(emptyPages, pageCount.getPageCount())
-    return getPages(file, pagesToKeep);
+
+    const newFile = await getPages(file, pagesToKeep);
+    newFile.filename += "_removedBlanks"
+    return newFile;
 }

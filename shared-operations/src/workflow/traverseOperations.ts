@@ -55,7 +55,6 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
             case "extract":
                 yield* nToN(input, action, async (input) => {
                     const newPdf = await Operations.extractPages({file: input, pageIndexes: action.values["pageIndexes"]});
-                    newPdf.filename += "_extractedPages";
                     return newPdf;
                 });
                 break;
@@ -71,9 +70,21 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                     return newPdf;
                 });
                 break;
+            case "removeBlankPages":
+                yield* nToN(input, action, async (input) => {
+                    const newPdf = await Operations.removeBlankPages({file: input, whiteThreashold: action.values["whiteThreashold"]});
+                    return newPdf;
+                });
+                break;
             case "rotate":
                 yield* nToN(input, action, async (input) => {
                     const newPdf = await Operations.rotatePages({file: input, rotation: action.values["rotation"]});
+                    return newPdf;
+                });
+                break;
+            case "sortPagesWithPreset":
+                yield* nToN(input, action, async (input) => {
+                    const newPdf = await Operations.sortPagesWithPreset({file: input, sortPreset: action.values["sortPreset"]});
                     return newPdf;
                 });
                 break;
@@ -87,27 +98,6 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                     return splitResult;
                 });
                 break;
-            case "updateMetadata":
-                yield* nToN(input, action, async (input) => {
-                    const newPdf = await Operations.updateMetadata({file: input, ...action.values["metadata"]});
-                    newPdf.filename += "_metadataEdited";
-                    return newPdf;
-                });
-                break;
-            case "sortPagesWithPreset":
-                yield* nToN(input, action, async (input) => {
-                    const newPdf = await Operations.sortPagesWithPreset({file: input, sortPreset: action.values["sortPreset"]});
-                    newPdf.filename += "_pagesOrganized";
-                    return newPdf;
-                });
-                break;
-            case "removeBlankPages":
-                yield* nToN(input, action, async (input) => {
-                    const newPdf = await Operations.removeBlankPages({file: input, whiteThreashold: action.values["whiteThreashold"]});
-                    newPdf.filename += "_removedBlanks";
-                    return newPdf;
-                });
-                break;
             case "splitOn":
                 yield* oneToN(input, action, async (input) => {
                     const splitResult = await Operations.splitOn({file: input, type: action.values["type"], whiteThreashold: action.values["whiteThreashold"]});
@@ -117,9 +107,14 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                     return splitResult;
                 });
                 break;
+            case "updateMetadata":
+                yield* nToN(input, action, async (input) => {
+                    const newPdf = await Operations.updateMetadata({file: input, ...action.values["metadata"]});
+                    return newPdf;
+                });
+                break;
             default:
                 throw new Error(`${action.type} not implemented yet.`);
-                break;
         }
     }
 

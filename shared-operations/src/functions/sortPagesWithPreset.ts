@@ -18,5 +18,8 @@ export async function sortPagesWithPreset(params: SortPagesWithPresetParamsType)
     const sortFunction = sorts[sortPreset];
     const pageCount = pdfLibDocument.getPageCount();
     const sortIndexes = sortFunction(pageCount);
-    return getPages(file, sortIndexes);
+    
+    const newFile = await getPages(file, sortIndexes);
+    newFile.filename += "_sortedPages"
+    return newFile;
 }

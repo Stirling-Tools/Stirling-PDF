@@ -6,7 +6,7 @@ export type ExtractPagesParamsType = {
     file: PdfFile;
     pageIndexes: string | number[];
 }
-export async function extractPages(params: ExtractPagesParamsType) {
+export async function extractPages(params: ExtractPagesParamsType): Promise<PdfFile> {
     const { file, pageIndexes } = params;
     const pdfLibDocument = await file.pdfLibDocument;
 
@@ -16,5 +16,7 @@ export async function extractPages(params: ExtractPagesParamsType) {
         indexes = parsePageIndexSpecification(indexes, pdfLibDocument.getPageCount());
     }
 
-    return getPages(file, indexes);
+    const newFile = await getPages(file, indexes);
+    newFile.filename += "_extractedPages"
+    return newFile;
 }
