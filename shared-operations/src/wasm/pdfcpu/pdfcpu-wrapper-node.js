@@ -74,12 +74,12 @@ export async function oneToOne(wasmArray, snapshot) {
     }
     console.log("Nuping Done");
     
+    /* TODO:
+     * Make this more elegant, this waits for the write to finish.
+     * Maybe replace wasmfs with https://github.com/streamich/memfs
+     */
     await checkExistsWithTimeout("/output.pdf", 1000);
     console.log("Write started...");
-
-
-    // TODO: Make this more elegant, this waits for the write to finish.
-    // Maybe replace wasmfs with https://github.com/streamich/memfs
     let fileSize;
     while (true) {
         fileSize = fs.statSync("/output.pdf").size;
