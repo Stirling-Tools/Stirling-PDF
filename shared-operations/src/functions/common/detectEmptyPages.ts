@@ -1,9 +1,9 @@
 
 import { PdfFile } from '../../wrappers/PdfFile';
 import { PDFPageProxy } from "pdfjs-dist/types/src/display/api.js";
-import { Image } from 'image-js';
+import { Image, ImageKind } from 'image-js';
 
-import { getImagesOnPage } from "./getImagesOnPage.js";
+import { getImagesOnPage, PDFJSImage } from "./getImagesOnPage.js";
 
 export async function detectEmptyPages(file: PdfFile, whiteThreashold: number): Promise<number[]> {
     const pdfDoc = await file.pdfJsDocument;
@@ -37,14 +37,15 @@ async function hasText(page: PDFPageProxy): Promise<boolean> {
 async function areImagesBlank(page: PDFPageProxy, threshold: number): Promise<boolean> {
     const images = await getImagesOnPage(page);
     for (const image of images) {
-        if(!await isImageBlank(image, threshold))
+        if(!await isImageBlank(image as any, threshold))
             return false;
     }
     return true;
 }
 
-async function isImageBlank(image: string | Uint8Array | ArrayBuffer, threshold: number): Promise<boolean> {
-    var img = await Image.load(image);
+// TODO: Fix this function
+async function isImageBlank(image: PDFJSImage, threshold: number): Promise<boolean> {
+    var img = new Image(image.width, image.height, image.data, { kind: "RGB" as ImageKind });
     var grey = img.grey();
     var mean = grey.getMean();
     return mean[0] <= threshold;

@@ -8,7 +8,7 @@ export type PDFJSImage = {
     height: number;
     interpolate?: any;
     kind: number;
-    data: Uint8Array;
+    data: Uint8ClampedArray;
 };
 
 export async function getImagesOnPage(page: PDFPageProxy): Promise<PDFJSImage[]> {
