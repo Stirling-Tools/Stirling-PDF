@@ -4,12 +4,12 @@ import { splitPagesByIndex } from "./common/splitPagesByIndex.js";
 import { detectEmptyPages } from "./common/detectEmptyPages.js";
 import { detectQRCodePages } from "./common/detectQRCodePages.js";
 
-export type SplitOnParamsType = {
+export type SplitPageByPresetParamsType = {
     file: PdfFile;
     type: "BAR_CODE"|"QR_CODE"|"BLANK_PAGE";
     whiteThreashold?: number;
 }
-export async function splitPagesByPreset(params: SplitOnParamsType): Promise<PdfFile[]> {
+export async function splitPagesByPreset(params: SplitPageByPresetParamsType): Promise<PdfFile[]> {
     const { file, type, whiteThreashold } = params;
 
     console.log("File: ", file);

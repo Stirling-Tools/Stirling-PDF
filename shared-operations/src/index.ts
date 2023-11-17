@@ -7,8 +7,8 @@ import { rotatePages, RotateParamsType } from './functions/rotatePages';
 import { scaleContent, ScaleContentParamsType} from './functions/scaleContent';
 import { scalePage, ScalePageParamsType } from './functions/scalePage';
 import { sortPagesWithPreset, SortPagesWithPresetParamsType } from './functions/sortPagesWithPreset'
-import { splitOn, SplitOnParamsType } from './functions/splitOn';
-import { splitPDF, SplitPdfParamsType } from './functions/splitPDF';
+import { splitPagesByPreset, SplitPageByPresetParamsType } from './functions/splitPagesByPreset';
+import { splitPdfByIndex, SplitPdfByIndexParamsType } from './functions/splitPdfByIndex';
 import { updateMetadata, UpdateMetadataParams } from "./functions/updateMetadata";
 import { PdfFile } from "./wrappers/PdfFile";
 
@@ -25,8 +25,8 @@ const toExport = {
     scaleContent,
     scalePage,
     sortPagesWithPreset,
-    splitOn,
-    splitPDF,
+    splitPagesByPreset,
+    splitPdfByIndex,
     updateMetadata,
 }
 export default toExport;
@@ -40,8 +40,8 @@ export type OperationsParametersBaseType = {
     scaleContent: ScaleContentParamsType;
     scalePage: ScalePageParamsType;
     sortPagesWithPreset: SortPagesWithPresetParamsType;
-    splitOn: SplitOnParamsType;
-    splitPDF: SplitPdfParamsType;
+    splitPagesByPreset: SplitPageByPresetParamsType;
+    splitPdfByIndex: SplitPdfByIndexParamsType;
     updateMetadata: UpdateMetadataParams;
 }
 

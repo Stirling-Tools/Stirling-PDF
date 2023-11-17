@@ -3,11 +3,11 @@ import { PdfFile } from '../wrappers/PdfFile.js';
 import { parsePageIndexSpecification } from './common/pageIndexesUtils'
 import { splitPagesByIndex } from './common/splitPagesByIndex.js';
 
-export type SplitPagesParamsType = {
+export type SplitPdfByIndexParamsType = {
     file: PdfFile;
     pageIndexes: string | number[];
 }
-export async function splitPdfByIndex(params: SplitPagesParamsType): Promise<PdfFile[]> {
+export async function splitPdfByIndex(params: SplitPdfByIndexParamsType): Promise<PdfFile[]> {
     const { file, pageIndexes } = params;
     const pdfLibDocument = await file.pdfLibDocument;
 

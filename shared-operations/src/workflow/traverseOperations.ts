@@ -91,7 +91,7 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
             case "split":
                 // TODO: A split might break the done condition, it may count multiple times. Needs further testing!
                 yield* oneToN(input, action, async (input) => {
-                    const splitResult = await Operations.splitPDF({file: input, splitAfterPageArray: action.values["splitAfterPageArray"]});
+                    const splitResult = await Operations.splitPdfByIndex({file: input, pageIndexes: action.values["splitAfterPageArray"]});
                     for (let j = 0; j < splitResult.length; j++) {
                         splitResult[j].filename = splitResult[j].filename + "_split" + j;
                     }
@@ -100,7 +100,7 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                 break;
             case "splitOn":
                 yield* oneToN(input, action, async (input) => {
-                    const splitResult = await Operations.splitOn({file: input, type: action.values["type"], whiteThreashold: action.values["whiteThreashold"]});
+                    const splitResult = await Operations.splitPagesByPreset({file: input, type: action.values["type"], whiteThreashold: action.values["whiteThreashold"]});
                     for (let j = 0; j < splitResult.length; j++) {
                         splitResult[j].filename = splitResult[j].filename + "_split" + j;
                     }

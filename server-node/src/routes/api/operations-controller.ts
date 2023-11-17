@@ -54,7 +54,7 @@ registerEndpoint("/merge-pdfs", "", upload.any(), Operations.mergePDFs, Joi.obje
     files: Joi.array().items(PdfFileSchema).required(),
 }).required());
 
-registerEndpoint("/split-pdf", "_split", upload.single("file"), Operations.splitPDF, Joi.object({
+registerEndpoint("/split-pdf", "_split", upload.single("file"), Operations.splitPdfByIndex, Joi.object({
     file: PdfFileSchema.required(),
     pageNumbers: Joi.string().required(),
 }).required());
