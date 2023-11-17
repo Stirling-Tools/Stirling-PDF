@@ -50,19 +50,70 @@ function registerEndpoint(endpoint: string,
     });
 }
 
+
+/////////////////////
+// Page Operations //
+/////////////////////
 registerEndpoint("/merge-pdfs", "", upload.any(), Operations.mergePDFs, Joi.object({
     files: Joi.array().items(PdfFileSchema).required(),
 }).required());
 
 registerEndpoint("/split-pdf", "_split", upload.single("file"), Operations.splitPdfByIndex, Joi.object({
     file: PdfFileSchema.required(),
-    pageNumbers: Joi.string().required(),
+    pageIndexes: Joi.string().required(),
 }).required());
+
+//organise/arrange
 
 registerEndpoint("/rotate-pdf", "", upload.single("file"), Operations.rotatePages, Joi.object({
     file: PdfFileSchema.required(),
     rotation: Joi.alternatives().try(Joi.number(), Joi.array().items(Joi.number())).required(),
 }).required());
+
+//Remove Pages
+//impose
+//Adjust page size/scale
+//Auto Split Pages
+//Adjust Colours/Contrast
+//Crop
+//Extract Pages
+//PDF to Single large Page
+
+
+/////////////////////
+//     Convert     //
+/////////////////////
+//Image to PDF
+//Convert file to PDF
+//URL to PDF
+//HTML to PDF
+//Markdown to PDF
+//PDF to Image
+//PDF to Word
+//PDF to Presentation
+//PDF to Text/RTF
+//PDF to HTML
+//PDF to PDF/A
+
+
+/////////////////////
+//    Security     //
+/////////////////////
+//Add Password
+//Remove Password
+//Change Permissions
+//Add Watermark
+//Sign with Certificate
+//Sanitize
+//Auto Redact
+
+/////////////////////
+//  Miscellaneous  //
+/////////////////////
+//OCR
+//Add image
+//Compress
+//Extract Images
 
 registerEndpoint("/update-metadata", "", upload.single("file"), Operations.updateMetadata, Joi.object({
     file: PdfFileSchema.required(),
@@ -78,5 +129,16 @@ registerEndpoint("/update-metadata", "", upload.single("file"), Operations.updat
     trapped: Joi.string(),
     allRequestParams: Joi.object().pattern(Joi.string(), Joi.string()),
 }).required());
+
+//Detect/Split Scanned photos
+//Sign
+//Flatten
+//Repair
+//Remove Blank Pages
+//Compare/Diff
+//Add Page Numbers
+//Auto Rename
+//Get info
+//Show JS
 
 export default router;
