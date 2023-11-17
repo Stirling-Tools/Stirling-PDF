@@ -109,7 +109,7 @@ export type SortFunction = (totalPages: number) => number[];
 type Sorts = {
     [key: string]: SortFunction;
 };
-export const sorts: Sorts = Object.freeze({
+export const Sorts: Sorts = Object.freeze({
     "REVERSE_ORDER": reverseSort,
     "DUPLEX_SORT": duplexSort,
     "BOOKLET_SORT": bookletSort,

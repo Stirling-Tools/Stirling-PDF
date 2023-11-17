@@ -4,7 +4,7 @@
  * @param pages A list of page indexes, or the number of total pages in the document (which will be converted into a list of page indexes).
  * @returns An inverted selection array of page indexes.
  */
-function invertSelection(selection: number[], pages: number|number[]): number[] {
+export function invertSelection(selection: number[], pages: number|number[]): number[] {
     const indexes = Array.isArray(pages) ? pages : [...Array(pages).keys()];
     const pageIndexesCopy = [...indexes];
     return pageIndexesCopy.filter(x => !selection.includes(x));
@@ -16,7 +16,7 @@ function invertSelection(selection: number[], pages: number|number[]): number[] 
  * @param totalPages 
  * @returns 
  */
-function parsePageIndexSpecification(specification: string, totalPages: number): number[] {
+export function parsePageIndexSpecification(specification: string, totalPages: number): number[] {
     // Translated to JS from the original Java function
     const pageOrderArr = specification.split(",")
     const newPageOrder: number[] = [];

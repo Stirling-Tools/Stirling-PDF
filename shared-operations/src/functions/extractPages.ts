@@ -1,6 +1,7 @@
 
 import { PdfFile } from '../wrappers/PdfFile.js';
 import { getPages } from './common/getPagesByIndex.js';
+import { parsePageIndexSpecification } from './common/pageIndexesUtils'
 
 export type ExtractPagesParamsType = {
     file: PdfFile;

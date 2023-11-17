@@ -2,6 +2,7 @@
 import { PdfFile } from '../wrappers/PdfFile.js';
 import { detectEmptyPages } from './common/detectEmptyPages.js';
 import { getPages } from './common/getPagesByIndex.js';
+import { invertSelection } from './common/pageIndexesUtils.js';
 
 export type RemoveBlankPagesParamsType = {
     file: PdfFile;
