@@ -63,7 +63,10 @@ registerEndpoint("/split-pdf", "_split", upload.single("file"), Operations.split
     pageIndexes: Joi.string().required(),
 }).required());
 
-//organise/arrange
+registerEndpoint("/rearrange-pages", "", upload.single("file"), Operations.arrangePages, Joi.object({
+    file: PdfFileSchema.required(),
+    arrangementConfig: Joi.string().required(),
+}).required());
 
 registerEndpoint("/rotate-pdf", "", upload.single("file"), Operations.rotatePages, Joi.object({
     file: PdfFileSchema.required(),

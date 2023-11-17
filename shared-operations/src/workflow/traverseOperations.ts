@@ -84,7 +84,7 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                 break;
             case "sortPagesWithPreset":
                 yield* nToN(input, action, async (input) => {
-                    const newPdf = await Operations.sortPagesWithPreset({file: input, sortPreset: action.values["sortPreset"]});
+                    const newPdf = await Operations.arrangePages({file: input, arrangementConfig: action.values["arrangementConfig"]});
                     return newPdf;
                 });
                 break;
