@@ -7,7 +7,7 @@ export type PDFJSImage = {
     width: number;
     height: number;
     interpolate?: any;
-    kind: number;
+    kind: number; // TODO: Document what this is, maybe hasAlpha?
     data: Uint8ClampedArray;
 };
 
