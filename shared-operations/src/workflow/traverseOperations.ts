@@ -54,7 +54,7 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                 break;
             case "extract":
                 yield* nToN(input, action, async (input) => {
-                    const newPdf = await Operations.extractPages({file: input, pageIndexes: action.values["pageIndexes"]});
+                    const newPdf = await Operations.extractPages({file: input, pageIndecies: action.values["pageIndecies"]});
                     return newPdf;
                 });
                 break;

@@ -1,7 +1,7 @@
 
 import { arrangePages, ArrangePagesParamsType } from './functions/arrangePages'
 import { extractPages, ExtractPagesParamsType } from "./functions/extractPages";
-import { impose, ImposeParamsBaseType, ImposeParamsType } from "./functions/impose";
+import { impose, ImposeParamsType } from "./functions/impose";
 import { mergePDFs, MergeParamsType } from './functions/mergePDFs';
 import { removeBlankPages, RemoveBlankPagesParamsType } from "./functions/removeBlankPages";
 import { rotatePages, RotateParamsType } from './functions/rotatePages';
@@ -34,7 +34,7 @@ export default toExport;
 export type OperationsParametersBaseType = {
     arrangePages: ArrangePagesParamsType
     extractPages: ExtractPagesParamsType;
-    impose: ImposeParamsBaseType;
+    impose: ImposeParamsType;
     mergePDFs: MergeParamsType;
     removeBlankPages: RemoveBlankPagesParamsType;
     rotatePages: RotateParamsType;

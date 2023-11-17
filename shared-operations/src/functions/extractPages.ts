@@ -5,19 +5,19 @@ import { parsePageIndexSpecification } from './common/pageIndexesUtils'
 
 export type ExtractPagesParamsType = {
     file: PdfFile;
-    pageIndexes: string | number[];
+    pageIndecies: string | number[];
 }
 export async function extractPages(params: ExtractPagesParamsType): Promise<PdfFile> {
-    const { file, pageIndexes } = params;
+    const { file, pageIndecies: pageIndecies } = params;
     const pdfLibDocument = await file.pdfLibDocument;
 
-    var indexes = pageIndexes;
+    var indecies = pageIndecies;
 
-    if (!Array.isArray(indexes)) {
-        indexes = parsePageIndexSpecification(indexes, pdfLibDocument.getPageCount());
+    if (!Array.isArray(indecies)) {
+        indecies = parsePageIndexSpecification(indecies, pdfLibDocument.getPageCount());
     }
 
-    const newFile = await getPages(file, indexes);
+    const newFile = await getPages(file, indecies);
     newFile.filename += "_extractedPages"
     return newFile;
 }

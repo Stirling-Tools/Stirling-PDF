@@ -7,8 +7,7 @@ import { PdfFile } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile"
 import * as pdfcpuWrapper from "@stirling-pdf/shared-operations/wasm/pdfcpu/pdfcpu-wrapper-browser.js";
 
 async function impose(params: ImposeParamsType): Promise<PdfFile> {
-    const paramsToUse = { ...params, pdfcpuWrapper: pdfcpuWrapper };
-    return SharedOperations.impose(paramsToUse);
+    return SharedOperations.impose(params, pdfcpuWrapper);
 }
 
 const toExport: OperationsType = {
