@@ -32,6 +32,8 @@ function duplexSort(pages: number|number[]): number[] {
 }
 
 /**
+ * TODO: This code is bugged. With even pages it is just duplexSort() and with odd pages, a page is duplicated!
+ * 
  * Arranges pages for booklet printing (last, first, second, second last, ...).
  * @param pages A list of page indexes, or the number of total pages in the document (which will be converted into a list of page indexes).
  * @returns A booklet-sorted list of page indexes.
