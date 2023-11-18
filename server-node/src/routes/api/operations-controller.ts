@@ -78,8 +78,12 @@ registerEndpoint("/remove-pages", "", upload.single("file"), Operations.removePa
     pageSelector: Joi.string().required(),
 }).required());
 
-//Remove Pages
-//impose
+registerEndpoint("/impose", "", upload.single("file"), Operations.impose, Joi.object({
+    file: PdfFileSchema.required(),
+    nup: Joi.number().valid(2, 3, 4, 8, 9, 12, 16).required(),
+    format: Joi.string().required(),
+}).required());
+
 //Adjust page size/scale
 //Auto Split Pages
 //Adjust Colours/Contrast
