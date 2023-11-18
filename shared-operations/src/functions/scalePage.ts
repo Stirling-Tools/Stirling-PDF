@@ -1,6 +1,32 @@
 
+import Joi from 'joi';
 import { PDFPage } from 'pdf-lib';
-import { PdfFile, RepresentationType } from '../wrappers/PdfFile';
+import { PdfFile, RepresentationType, PdfFileSchema } from '../wrappers/PdfFile';
+
+const whSchema = Joi.string().custom((value, helpers) => {
+    console.log("value.pageSize", typeof value)
+    try {
+        const obj = JSON.parse(value);
+        if (!obj.width && !obj.height) {
+            return helpers.error('any.required', { message: 'At least one of width/height must be present' });
+        }
+        if (typeof obj.width != 'number' && typeof obj.width != 'undefined') {
+            return helpers.error('any.invalid', { message: 'Width must be a number if present' });
+        }
+        if (typeof obj.height != 'number' && typeof obj.height != 'undefined') {
+            return helpers.error('any.invalid', { message: 'Height must be a number if present' });
+        }
+        return obj;
+    } catch (error) {
+        return helpers.error('any.invalid', { message: 'Value must be a valid JSON' });
+    }
+});
+
+export const ScalePageSchema = Joi.object({
+    file: PdfFileSchema.required(),
+    pageSize: Joi.alternatives().try(whSchema, Joi.array().items(whSchema)).required(),
+});
+
 
 export type ScalePageParamsType = {
     file: PdfFile;
@@ -29,10 +55,10 @@ export async function scalePage(params: ScalePageParamsType): Promise<PdfFile> {
 
 function resize(page: PDFPage, newSize: {width?:number,height?:number}) {
     const calculatedSize = calculateSize(page, newSize);
-    page.setSize(calculatedSize.width, calculatedSize.height);
-
     const xRatio = calculatedSize.width / page.getWidth();
     const yRatio = calculatedSize.height / page.getHeight();
+
+    page.setSize(calculatedSize.width, calculatedSize.height);
     page.scaleContent(xRatio, yRatio);
 }
 

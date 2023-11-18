@@ -2,6 +2,7 @@
 import Operations from '../../utils/pdf-operations';
 import { respondWithPdfFile, respondWithPdfFiles, response_mustHaveExactlyOneFile } from '../../utils/endpoint-utils';
 import { PdfFile, PdfFileSchema } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
+import { ScalePageSchema } from '@stirling-pdf/shared-operations/src/functions/scalePage'
 
 import express, { Request, Response, RequestHandler } from 'express';
 const router = express.Router();
@@ -84,7 +85,8 @@ registerEndpoint("/impose", "", upload.single("file"), Operations.impose, Joi.ob
     format: Joi.string().required(),
 }).required());
 
-//Adjust page size/scale
+registerEndpoint("/scale-pages", "", upload.single("file"), Operations.scalePage, ScalePageSchema.required());
+
 //Auto Split Pages
 //Adjust Colours/Contrast
 //Crop
