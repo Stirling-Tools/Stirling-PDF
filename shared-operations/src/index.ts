@@ -4,6 +4,7 @@ import { extractPages, ExtractPagesParamsType } from "./functions/extractPages";
 import { impose, ImposeParamsType } from "./functions/impose";
 import { mergePDFs, MergeParamsType } from './functions/mergePDFs';
 import { removeBlankPages, RemoveBlankPagesParamsType } from "./functions/removeBlankPages";
+import { removePages, RemovePagesParamsType } from "./functions/removePages";
 import { rotatePages, RotateParamsType } from './functions/rotatePages';
 import { scaleContent, ScaleContentParamsType} from './functions/scaleContent';
 import { scalePage, ScalePageParamsType } from './functions/scalePage';
@@ -22,6 +23,7 @@ const toExport = {
     impose,
     mergePDFs,
     removeBlankPages,
+    removePages,
     rotatePages,
     scaleContent,
     scalePage,
@@ -37,6 +39,7 @@ export type OperationsParametersBaseType = {
     impose: ImposeParamsType;
     mergePDFs: MergeParamsType;
     removeBlankPages: RemoveBlankPagesParamsType;
+    removePages: RemovePagesParamsType;
     rotatePages: RotateParamsType;
     scaleContent: ScaleContentParamsType;
     scalePage: ScalePageParamsType;

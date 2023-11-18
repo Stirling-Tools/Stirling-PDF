@@ -73,6 +73,11 @@ registerEndpoint("/rotate-pdf", "", upload.single("file"), Operations.rotatePage
     rotation: Joi.alternatives().try(Joi.number(), Joi.array().items(Joi.number())).required(),
 }).required());
 
+registerEndpoint("/remove-pages", "", upload.single("file"), Operations.removePages, Joi.object({
+    file: PdfFileSchema.required(),
+    pageSelector: Joi.string().required(),
+}).required());
+
 //Remove Pages
 //impose
 //Adjust page size/scale
