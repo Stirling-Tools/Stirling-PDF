@@ -9,7 +9,7 @@ export interface WaitAction extends Action {
 }
 
 export interface ExtractAction extends Action {
-    values: { indecies: string | number[] }
+    values: { indexes: string | number[] }
 }
 
 export interface ImposeAction extends Action {

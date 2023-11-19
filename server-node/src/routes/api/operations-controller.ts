@@ -90,7 +90,12 @@ registerEndpoint("/scale-pages", "", upload.single("file"), Operations.scalePage
 //Auto Split Pages
 //Adjust Colours/Contrast
 //Crop
-//Extract Pages
+
+registerEndpoint("/extract-pages", "", upload.single("file"), Operations.extractPages, Joi.object({
+    file: PdfFileSchema.required(),
+    pageIndexes: Joi.alternatives().try(Joi.string(), Joi.array().items(Joi.number())).required(),
+}).required());
+
 //PDF to Single large Page
 
 
