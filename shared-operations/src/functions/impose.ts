@@ -1,3 +1,4 @@
+
 import { PdfFile, RepresentationType } from "../wrappers/PdfFile";
 import { FieldConstraint, RecordConstraint } from '../dynamic-ui/OperatorConstraints'
 
@@ -10,9 +11,9 @@ export type ImposeParamsType = {
 }
 
 export const ImposeParamConstraints = new RecordConstraint({
-    file: new FieldConstraint("display", "file.pdf", true, "hint"),
-    nup: new FieldConstraint("display", [2, 3, 4, 8, 9, 12, 16], true, "hint"),
-    format: new FieldConstraint("display", "string", true, "hint"),
+    file: new FieldConstraint("display.key", "file.pdf", true, "hint.key"),
+    nup: new FieldConstraint("display.key", [2, 3, 4, 8, 9, 12, 16], true, "hint.key"),
+    format: new FieldConstraint("display.key", ["A0","A1","A2","A3","A4","A5","A6","A7","A8","A9","A10","Letter","Legal"], true, "hint.key"),
 })
 
 /** PDF-Imposition, PDF-N-Up: Put multiple pages of the input document into a single page of the output document. - see: {@link https://en.wikipedia.org/wiki/N-up}  */

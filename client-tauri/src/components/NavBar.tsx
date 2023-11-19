@@ -76,7 +76,7 @@ function NavBar() {
       { displayText: t('home.pdfOrganiser.title'), icon: BsSortNumericDown, dest: "/nothing-here", tooltip: t('home.pdfOrganiser.desc') },
       { displayText: t('home.rotate.title'), icon: BsArrowClockwise, dest: "/nothing-here", tooltip: t('home.rotate.desc') },
       { displayText: t('home.removePages.title'), icon: BsFileEarmarkX, dest: "/nothing-here", tooltip: t('home.removePages.desc') },
-      { displayText: t('home.pageLayout.title'), icon: BsGrid, dest: "/nothing-here", tooltip: t('home.pageLayout.desc') },
+      { displayText: t('home.pageLayout.title'), icon: BsGrid, dest: "/page-operations/impose", tooltip: t('home.pageLayout.desc') },
       { displayText: t('home.scalePages.title'), icon: BsArrowsFullscreen, dest: "/nothing-here", tooltip: t('home.scalePages.desc') },
       { displayText: t('home.autoSplitPDF.title'), icon: BsLayoutSplit, dest: "/nothing-here", tooltip: t('home.autoSplitPDF.desc') },
       { displayText: t('home.adjust-contrast.title'), icon: BsPalette, dest: "/nothing-here", tooltip: t('home.adjust-contrast.desc') },
@@ -86,7 +86,7 @@ function NavBar() {
     ]},
     {displayText: t('navbar.convert'), icon: BsArrowLeftRight, sublist: [
       { displayText: t('home.imageToPdf.title'), icon: BsFileEarmarkImage, dest: "/dashboard", tooltip: t('home.imageToPdf.desc') },
-      { displayText: t('home.fileToPDF.title'), icon: BsFileEarmark, dest: "/to-pdf", tooltip: t('home.fileToPDF.desc') },
+      { displayText: t('home.fileToPDF.title'), icon: BsFileEarmark, dest: "/convert/file-to-pdf", tooltip: t('home.fileToPDF.desc') },
       { displayText: t('home.HTMLToPDF.title'), icon: BsFiletypeHtml, dest: "/nothing-here", tooltip: t('home.HTMLToPDF.desc') },
       { displayText: t('home.URLToPDF.title'), icon: BsLink, dest: "/nothing-here", tooltip: t('home.URLToPDF.desc') },
       { displayText: t('home.MarkdownToPDF.title'), icon: BsFiletypeMd, dest: "/nothing-here", tooltip: t('home.MarkdownToPDF.desc') },

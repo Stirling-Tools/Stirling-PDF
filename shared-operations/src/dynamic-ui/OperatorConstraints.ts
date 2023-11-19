@@ -69,7 +69,7 @@ export class FieldConstraint {
                 default:
                     throw new Error(`UiConf type '${this.type}' not supported`)
             }
-        } else if (this.type instanceof FieldConstraint) {
+        } else if (this.type instanceof RecordConstraint) {
             schema = this.type.toJoiSchema()
         } else {
             throw new Error(`UiConf type '${this.type}' not supported`)
