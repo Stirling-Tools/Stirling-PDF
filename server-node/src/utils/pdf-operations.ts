@@ -1,17 +1,16 @@
 
-import SharedOperations, { OperationsType } from "@stirling-pdf/shared-operations/src"
-import { ImposeParamsType } from '@stirling-pdf/shared-operations/src/functions/impose'
+import SharedOperations, { OperatorsType, OperatorParametersType } from "@stirling-pdf/shared-operations/src"
 import { PdfFile } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile"
 
 // Import injected libraries here!
 import * as pdfcpuWrapper from "@stirling-pdf/shared-operations/src/wasm/pdfcpu/pdfcpu-wrapper-node.js";
 
-async function impose(params: ImposeParamsType): Promise<PdfFile> {
-    return SharedOperations.impose(params, pdfcpuWrapper);
+async function impose(params: OperatorParametersType["Impose"]): Promise<PdfFile> {
+    return SharedOperations.Impose.exec(params, pdfcpuWrapper);
 }
 
-const toExport: OperationsType = {
+const toExport: OperatorsType = {
     ...SharedOperations,
-    impose,
+    Impose: {exec: impose, spec: SharedOperations.Impose.spec},
 }
 export default toExport;

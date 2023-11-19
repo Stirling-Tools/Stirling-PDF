@@ -1,8 +1,9 @@
 
 import Operations from '../../utils/pdf-operations';
 import { respondWithPdfFile, respondWithPdfFiles, response_mustHaveExactlyOneFile } from '../../utils/endpoint-utils';
-import { PdfFile, PdfFileSchema } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
-import { ScalePageSchema } from '@stirling-pdf/shared-operations/src/functions/scalePage'
+import { PdfFile, /*PdfFileSchema*/ } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
+//import { ScalePageSchema } from '@stirling-pdf/shared-operations/src/functions/scalePage'
+import { OperatorType } from '@stirling-pdf/shared-operations/src';
 
 import express, { Request, Response, RequestHandler } from 'express';
 const router = express.Router();
@@ -13,8 +14,7 @@ import Joi from 'joi';
 function registerEndpoint(endpoint: string,
                           nameToAppend: string,
                           fileHandler: RequestHandler,
-                          operationFunction: (params: any) => Promise<PdfFile|PdfFile[]>,
-                          joiSchema: Joi.ObjectSchema<any>
+                          operator: OperatorType
         ): void {
     router.post(endpoint, fileHandler, async function(req: Request, res: Response) {
         const body = req.body;
@@ -31,13 +31,13 @@ function registerEndpoint(endpoint: string,
         }
 
         console.log(req.body)
-        const { error, value } = joiSchema.validate(req.body);
+        const { error, value } = operator.spec.toJoiSchema().validate(req.body);
         if (error) {
             res.status(400).send(error.details);
             return;
         }
     
-        const processed = await operationFunction(value)
+        const processed = await operator.exec(value)
 
         if (body.files && Array.isArray(processed)) { // MIMO
             respondWithPdfFiles(res, processed, nameToAppend);
@@ -55,7 +55,7 @@ function registerEndpoint(endpoint: string,
 /////////////////////
 // Page Operations //
 /////////////////////
-registerEndpoint("/merge-pdfs", "", upload.any(), Operations.mergePDFs, Joi.object({
+/*registerEndpoint("/merge-pdfs", "", upload.any(), Operations.mergePDFs, Joi.object({
     files: Joi.array().items(PdfFileSchema).required(),
 }).required());
 
@@ -78,13 +78,9 @@ registerEndpoint("/remove-pages", "", upload.single("file"), Operations.removePa
     file: PdfFileSchema.required(),
     pageSelector: Joi.string().required(),
 }).required());
-
-registerEndpoint("/impose", "", upload.single("file"), Operations.impose, Joi.object({
-    file: PdfFileSchema.required(),
-    nup: Joi.number().valid(2, 3, 4, 8, 9, 12, 16).required(),
-    format: Joi.string().required(),
-}).required());
-
+*/
+registerEndpoint("/impose", "", upload.single("file"), Operations.Impose);
+/*
 registerEndpoint("/scale-pages", "", upload.single("file"), Operations.scalePage, ScalePageSchema.required());
 
 //Auto Split Pages
@@ -159,5 +155,5 @@ registerEndpoint("/update-metadata", "", upload.single("file"), Operations.updat
 //Auto Rename
 //Get info
 //Show JS
-
+*/
 export default router;

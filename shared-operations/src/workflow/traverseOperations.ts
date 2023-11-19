@@ -1,9 +1,9 @@
 import { organizeWaitOperations } from "./organizeWaitOperations";
 import { Action, WaitAction } from "../../declarations/Action";
-import { OperationsType } from "../../src/index";
+import { OperatorsType } from "../../src/index";
 import { PdfFile } from "../wrappers/PdfFile";
 
-export async function * traverseOperations(operations: Action[], input: PdfFile[] | PdfFile, Operations: OperationsType): AsyncGenerator<string, PdfFile[], void> {
+export async function * traverseOperations(operations: Action[], input: PdfFile[] | PdfFile, Operators: OperatorsType): AsyncGenerator<string, PdfFile[], void> {
     const waitOperations = organizeWaitOperations(operations);
     let results: PdfFile[] = [];
     yield* nextOperation(operations, input);
@@ -52,19 +52,19 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                     yield* nextOperation(waitOperation.doneOperation.actions, waitOperation.input);
                 }
                 break;
-            case "extract":
+            /*case "extract":
                 yield* nToN(input, action, async (input) => {
                     const newPdf = await Operations.extractPages({file: input, pageIndexes: action.values["pageIndexes"]});
                     return newPdf;
                 });
-                break;
+                break;*/
             case "impose":
                 yield* nToN(input, action, async (input) => {
-                    const newPdf = await Operations.impose({file: input, nup: action.values["nup"], format: action.values["format"]});
+                    const newPdf = await Operators.Impose.exec({file: input, nup: action.values["nup"], format: action.values["format"]});
                     return newPdf;
                 });
                 break;
-            case "merge":
+            /*case "merge":
                 yield* nToOne(input, action, async (inputs) => {
                     const newPdf = await Operations.mergePDFs({files: inputs});
                     return newPdf;
@@ -112,7 +112,7 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                     const newPdf = await Operations.updateMetadata({file: input, ...action.values["metadata"]});
                     return newPdf;
                 });
-                break;
+                break;*/
             default:
                 throw new Error(`${action.type} not implemented yet.`);
         }
