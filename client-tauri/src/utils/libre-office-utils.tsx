@@ -1,7 +1,7 @@
 
 import { readBinaryFile, writeBinaryFile, removeDir, BaseDirectory } from '@tauri-apps/api/fs';
 import { PdfFile,RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
-import { runShell } from './tauri-wrapper';
+import { runShell, isTauriAvailable } from './tauri-wrapper';
 
 export async function fileToPdf(byteArray: Uint8Array, filename: string): Promise<PdfFile> {
     const randUuid = crypto.randomUUID();
@@ -30,6 +30,8 @@ export async function fileToPdf(byteArray: Uint8Array, filename: string): Promis
 }
 
 export async function isLibreOfficeInstalled() {
+    if (!isTauriAvailable()) return false;
+
     const messageList: string[] = [];
     try {
         await runShell("libreoffice-version", ["--version"], (message, stream) => {
