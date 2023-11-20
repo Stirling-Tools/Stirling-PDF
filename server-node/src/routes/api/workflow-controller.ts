@@ -20,8 +20,17 @@ router.post("/:workflowUuid?", [
             return;
         }
  
-        // TODO: Validate input further (json may be invalid or not be in workflow format)
-        const workflow = JSON.parse(req.body.workflow);
+        try {
+            var workflow = JSON.parse(req.body.workflow);
+        } catch (err) {
+            if (err instanceof Error) {
+                console.error("malformed workflow-json was provided", err.message);
+                res.status(400).json({error: "Malformed workflow-JSON was provided. See Server-Logs for more info", details: err.message});
+                return;
+            } else {
+                throw err;
+            }
+        }
 
         // TODO: Replace with static multer function of pdffile
         const inputs = await Promise.all((req.files as Express.Multer.File[]).map(async file => {
@@ -32,12 +41,17 @@ router.post("/:workflowUuid?", [
         if(req.body.async === "false") {
             console.log("Don't do async");
 
-            let pdfResults = await traverseOperations(workflow.operations, inputs, (state) => {
+            traverseOperations(workflow.operations, inputs, (state) => {
                 console.log("State: ", state);
+            }).then(async (pdfResults) => {
+                console.log("Download");
+                await respondWithPdfFiles(res, pdfResults, "workflow-results");
+            }).catch((err) => {
+                if(err.validationError)
+                    res.status(400).json({error: err});
+                else
+                    throw err;
             })
-
-            console.log("Download");
-            await respondWithPdfFiles(res, pdfResults, "workflow-results");
         }
         else {
             console.log("Start Aync Workflow");
@@ -63,6 +77,7 @@ router.post("/:workflowUuid?", [
                 }
             });
 
+            // TODO: Handle when this throws errors
             let pdfResults = await traverseOperations(workflow.operations, inputs, (state) => {
                 console.log("State: ", state);
                 if(activeWorkflow.eventStream)

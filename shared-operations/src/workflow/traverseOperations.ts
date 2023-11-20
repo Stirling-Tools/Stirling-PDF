@@ -6,11 +6,11 @@ import { validateOperations } from "./validateOperations";
 import { getOperatorByName } from "./getOperatorByName";
 
 export async function traverseOperations(operations: Action[], input: PdfFile[], progressCallback: (state: Progress) => void): Promise<PdfFile[]> {
-    
-    const validationResult = validateOperations(operations)
+    const validationResult = validateOperations(operations);
     if(!validationResult.valid) {
-        throw Error(validationResult.reason);
+        return Promise.reject({validationError: validationResult.reason});
     }
+    
     const waitOperations = organizeWaitOperations(operations);
 
     let results: PdfFile[] = [];
