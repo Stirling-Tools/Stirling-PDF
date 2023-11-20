@@ -32,19 +32,9 @@ router.post("/:workflowUuid?", [
         if(req.body.async === "false") {
             console.log("Don't do async");
 
-            const traverse = traverseOperations(workflow.operations, inputs);
-
-            let pdfResults;
-            let iteration;
-            while (true) {
-                iteration = await traverse.next();
-                if (iteration.done) {
-                    pdfResults = iteration.value;
-                    console.log("Done");
-                    break;
-                }
-                console.log(iteration.value);
-            }
+            let pdfResults = await traverseOperations(workflow.operations, inputs, (state) => {
+                console.log("State: ", state);
+            })
 
             console.log("Download");
             await respondWithPdfFiles(res, pdfResults, "workflow-results");
@@ -73,22 +63,15 @@ router.post("/:workflowUuid?", [
                 }
             });
 
-            const traverse = traverseOperations(workflow.operations, inputs);
-
-            let pdfResults;
-            let iteration;
-            while (true) {
-                iteration = await traverse.next();
-                if (iteration.done) {
-                    pdfResults = iteration.value;
-                    if(activeWorkflow.eventStream) {
-                        activeWorkflow.eventStream.write(`data: processing done\n\n`);
-                        activeWorkflow.eventStream.end();
-                    }
-                    break;
-                }
+            let pdfResults = await traverseOperations(workflow.operations, inputs, (state) => {
+                console.log("State: ", state);
                 if(activeWorkflow.eventStream)
-                    activeWorkflow.eventStream.write(`data: ${iteration.value}\n\n`);
+                    activeWorkflow.eventStream.write(`data: ${state}\n\n`);
+            })
+
+            if(activeWorkflow.eventStream) {
+                activeWorkflow.eventStream.write(`data: processing done\n\n`);
+                activeWorkflow.eventStream.end();
             }
 
             activeWorkflow.result = pdfResults;
