@@ -2,19 +2,15 @@ import { organizeWaitOperations } from "./organizeWaitOperations";
 import { Action, WaitAction } from "../../declarations/Action";
 import { PdfFile } from "../wrappers/PdfFile";
 import { Progress } from "../functions";
-import { Impose } from "../functions/impose";
+import { validateOperations } from "./validateOperations";
+import { getOperatorByName } from "./getOperatorByName";
 
 export async function traverseOperations(operations: Action[], input: PdfFile[], progressCallback: (state: Progress) => void): Promise<PdfFile[]> {
-    // TODO: Validate using inbuilt validators: 
-    /*
-        validationResult = impose.validate()
-        if(validationResult.valid) {
-            // Check Next
-        }
-        else {
-            return validationResult.reason
-        }
-    */
+    
+    const validationResult = validateOperations(operations)
+    if(!validationResult.valid) {
+        throw Error(validationResult.reason);
+    }
     const waitOperations = organizeWaitOperations(operations);
 
     let results: PdfFile[] = [];
@@ -63,15 +59,13 @@ export async function traverseOperations(operations: Action[], input: PdfFile[],
                     const newPdf = await Operations.extractPages({file: input, pageIndexes: action.values["pageIndexes"]});
                     return newPdf;
                 });
-                break;*/
+                break;
             case "impose":
                 let impose = new Impose(action);
-                input = await impose.run(input, (state: Progress) => {
-                    progressCallback(state);
-                });
+                input = await impose.run(input, progressCallback);
                 await nextOperation(action.actions, input, progressCallback);
                 break;
-            /*case "merge":
+            case "merge":
                 yield* nToOne(input, action, async (inputs) => {
                     const newPdf = await Operations.mergePDFs({files: inputs});
                     return newPdf;
@@ -121,7 +115,14 @@ export async function traverseOperations(operations: Action[], input: PdfFile[],
                 });
                 break;*/
             default:
-                throw new Error(`${action.type} not implemented yet.`);
+                const operator = getOperatorByName(action.type);
+                if(operator) {
+                    let opteration = new operator(action);
+                    input = await opteration.run(input, progressCallback);
+                    await nextOperation(action.actions, input, progressCallback);
+                }
+                else
+                    throw new Error(`${action.type} not implemented yet.`);
         }
     }
 }
