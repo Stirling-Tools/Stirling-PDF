@@ -190,7 +190,7 @@ router.get("/result/:workflowUuid", async (req: Request, res: Response) => {
 
     /* 
      * If workflow isn't done return error
-     * Send file, TODO: if there are multiple outputs return as zip
+     * Send file, if there are multiple outputs return as zip
      * If download is done, delete results / allow deletion within the next 5-60 mins
     */
     const workflow = activeWorkflows[req.params.workflowUuid];

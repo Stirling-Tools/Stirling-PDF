@@ -45,17 +45,15 @@ export async function respondWithZip(res: Response, filename: string, files: {ui
     console.log("Sent");
 }
 
-export async function respondWithPdfFiles(res: Response, pdfFiles: PdfFile|PdfFile[], filename: string) {
-    const pdfResults = Array.isArray(pdfFiles) ? pdfFiles : [pdfFiles];
-
-    if(pdfResults.length == 0) {
+export async function respondWithPdfFiles(res: Response, pdfFiles: PdfFile[] | undefined, filename: string) {
+    if(!pdfFiles || pdfFiles.length == 0) {
         res.status(500).json({"warning": "The workflow had no outputs."});
     }
-    else if (pdfResults.length == 1) {
-        respondWithPdfFile(res, pdfResults[0])
+    else if (pdfFiles.length == 1) {
+        respondWithPdfFile(res, pdfFiles[0])
     }
     else {
-        const promises = pdfResults.map(async (pdf) => {return{uint8Array: await pdf.uint8Array, filename: pdf.filename + ".pdf"}})
+        const promises = pdfFiles.map(async (pdf) => {return{uint8Array: await pdf.uint8Array, filename: pdf.filename + ".pdf"}})
         const files = await Promise.all(promises);
         respondWithZip(res, filename, files);
     }

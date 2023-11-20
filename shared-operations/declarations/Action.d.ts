@@ -1,5 +1,5 @@
 export interface Action {
-    protected values: any;
+    values: any;
     type: string;
     actions?: Action[];
 }
