@@ -4,10 +4,15 @@ export enum IOType {
     PDF, Image, Text // TODO: Extend with Document File Types
 }
 
+export interface ValidationResult { 
+    valid: boolean, 
+    reason?: string 
+}
+
 export interface Progress {
-    /** 0-1 */
+    /** A percentage between 0-1 describing the progress on the currently processed file */
     curFileProgress: number,
-    /** 0-1 */
+    /** A percentage between 0-1 describing the progress on all input files / operations */
     operationProgress: number,
 }
 
@@ -25,32 +30,36 @@ export class Operator {
         this.actionValues = action.values;
     }
 
-    // TODO: Type callback state, it should give updates on the progress of the current operator
     async run(input: any[], progressCallback: (progress: Progress) => void): Promise<any[]> {
         return [];
     }
 
-    validate(): { valid: boolean, reason?: string } {
+    validate(): ValidationResult {
         if(!this.actionValues) {
             return { valid: false, reason: "The Operators action values were empty."}
         }
         return { valid: true };
     }
 
+    /** This function should be used if the Operation may take multiple files as inputs and only outputs one file */
     protected async nToOne <I, O>(inputs: I[], callback: (input: I[]) => Promise<O>): Promise<O[]> {
         return [await callback(inputs)];
     }
 
+    /** This function should be used if the Operation takes one file as input and may output multiple files */
     protected async oneToN <I, O>(inputs: I[], callback: (input: I, index: number, max: number) => Promise<O[]>): Promise<O[]> {
-        return this.nToN(inputs, callback); // nToN is able to handle single inputs now.
-    }
-
-    protected async nToN <I, O>(inputs: I[], callback: (input: I, index: number, max: number) => Promise<O[]>): Promise<O[]> {
         let output: O[] = []
         for (let i = 0; i < inputs.length; i++) {
             output = output.concat(await callback(inputs[i], i, inputs.length));
         }
 
         return output;
+    }
+
+    /** This function should be used if the Operation takes one file as input and outputs only one file */
+    protected async oneToOne <I, O>(inputs: I[], callback: (input: I, index: number, max: number) => Promise<O>): Promise<O[]> {
+        return this.oneToN(inputs, async (input, index, max) => {
+            return [await callback(input, index, max)]
+        });
     }
 }

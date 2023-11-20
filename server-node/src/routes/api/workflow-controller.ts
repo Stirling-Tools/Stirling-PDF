@@ -7,7 +7,17 @@ import { traverseOperations } from "@stirling-pdf/shared-operations/src/workflow
 import { PdfFile, RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile';
 import { respondWithPdfFiles } from '../../utils/endpoint-utils';
 
-const activeWorkflows: any = {};
+interface Workflow {
+    eventStream?: express.Response<any, Record<string, any>>,
+    result?: PdfFile[],
+    finished: boolean,
+    createdAt: EpochTimeStamp,
+    finishedAt?: EpochTimeStamp,
+    error?: { type: number, error: string, stack?: string }
+    // TODO: When auth is implemented: owner
+}
+
+const activeWorkflows: Record<string, Workflow> = {};
 
 const router = express.Router();
 
@@ -47,10 +57,17 @@ router.post("/:workflowUuid?", [
                 console.log("Download");
                 await respondWithPdfFiles(res, pdfResults, "workflow-results");
             }).catch((err) => {
-                if(err.validationError)
+                if(err.validationError) {
+                    // Bad Request
                     res.status(400).json({error: err});
-                else
+                }
+                else if (err instanceof Error) {
+                    console.error("Internal Server Error", err);
+                    // Internal Server Error
+                    res.status(500).json({error: err.message, stack: err.stack});
+                } else {
                     throw err;
+                }
             })
         }
         else {
@@ -62,10 +79,7 @@ router.post("/:workflowUuid?", [
 
             activeWorkflows[workflowID] = {
                 createdAt: Date.now(),
-                finished: false, 
-                eventStream: null,
-                result: null,
-                // TODO: When auth is implemented: owner
+                finished: false
             }
             const activeWorkflow = activeWorkflows[workflowID];
 
@@ -77,20 +91,46 @@ router.post("/:workflowUuid?", [
                 }
             });
 
-            // TODO: Handle when this throws errors
-            let pdfResults = await traverseOperations(workflow.operations, inputs, (state) => {
+            traverseOperations(workflow.operations, inputs, (state) => {
                 console.log("State: ", state);
                 if(activeWorkflow.eventStream)
                     activeWorkflow.eventStream.write(`data: ${state}\n\n`);
-            })
+            }).then(async (pdfResults) => {
+                if(activeWorkflow.eventStream) {
+                    activeWorkflow.eventStream.write(`data: processing done\n\n`);
+                    activeWorkflow.eventStream.end();
+                }
+    
+                activeWorkflow.result = pdfResults;
+                activeWorkflow.finished = true;
+                activeWorkflow.finishedAt = Date.now();
+            }).catch((err) => {
+                if(err.validationError) {
+                    activeWorkflow.error = {type: 500, error: err};
+                    activeWorkflow.finished = true;
+                    activeWorkflow.finishedAt = Date.now();
 
-            if(activeWorkflow.eventStream) {
-                activeWorkflow.eventStream.write(`data: processing done\n\n`);
-                activeWorkflow.eventStream.end();
-            }
+                    // Bad Request
+                    if(activeWorkflow.eventStream) {
+                        activeWorkflow.eventStream.write(`data: ${activeWorkflow.error}\n\n`);
+                        activeWorkflow.eventStream.end();
+                    }
+                }
+                else if (err instanceof Error) {
+                    console.error("Internal Server Error", err);
+                    activeWorkflow.error = {type: 400, error: err.message, stack: err.stack};
+                    activeWorkflow.finished = true;
+                    activeWorkflow.finishedAt = Date.now();
 
-            activeWorkflow.result = pdfResults;
-            activeWorkflow.finished = true;
+                    // Internal Server Error
+                    if(activeWorkflow.eventStream) {
+                        activeWorkflow.eventStream.write(`data: ${activeWorkflow.error}\n\n`);
+                        activeWorkflow.eventStream.end();
+                    }
+                } else {
+                    throw err;
+                }
+            });
         }
     }
 ]);
@@ -107,7 +147,7 @@ router.get("/progress/:workflowUuid", (req: Request, res: Response) => {
 
     // Return current progress
     const workflow = activeWorkflows[req.params.workflowUuid];
-    res.status(200).json({ createdAt: workflow.createdAt, finished: workflow.finished });
+    res.status(200).json({ createdAt: workflow.createdAt, finished: workflow.finished, finishedAt: workflow.finishedAt, error: workflow.error });
 });
 
 router.get("/progress-stream/:workflowUuid", (req: Request, res: Response) => {

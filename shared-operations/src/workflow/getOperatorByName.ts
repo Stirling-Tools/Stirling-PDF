@@ -1,6 +1,6 @@
 import { Operator } from "../functions";
 
-// TODO: Import other Operators
+// TODO: Import other Operators (could make this dynamic?)
 import { Impose } from "../functions/impose";
 export const Operators = {
     Impose: Impose
@@ -23,4 +23,9 @@ export function getOperatorByName(name: string): typeof Operator {
     });
     
     return foundClass;
+}
+
+export function listOperatorNames(): string[] {
+    // TODO: Implement this
+    return
 }

@@ -21,7 +21,7 @@ export class Impose extends Operator {
 
     /** PDF-Imposition, PDF-N-Up: Put multiple pages of the input document into a single page of the output document. - see: {@link https://en.wikipedia.org/wiki/N-up}  */
     async run(input: PdfFile[], progressCallback: (state: Progress) => void): Promise<PdfFile[]> {
-        return this.nToN<PdfFile, PdfFile>(input, async (input, index, max) => {
+        return this.oneToOne<PdfFile, PdfFile>(input, async (input, index, max) => {
             // https://pdfcpu.io/generate/nup.html
             const uint8Array = await pdfcpuWrapper.oneToOne(
                 [
@@ -47,7 +47,7 @@ export class Impose extends Operator {
             progressCallback({ curFileProgress: 1, operationProgress: index/max })
             
             console.log("ImposeResult: ", result);
-            return [result];
+            return result;
         })
     }
 
