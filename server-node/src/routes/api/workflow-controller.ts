@@ -3,7 +3,6 @@ import crypto from 'crypto';
 import multer from 'multer'
 const upload = multer();
 
-import Operations from "../../utils/pdf-operations";
 import { traverseOperations } from "@stirling-pdf/shared-operations/src/workflow/traverseOperations";
 import { PdfFile, RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile';
 import { respondWithPdfFiles } from '../../utils/endpoint-utils';
@@ -33,7 +32,7 @@ router.post("/:workflowUuid?", [
         if(req.body.async === "false") {
             console.log("Don't do async");
 
-            const traverse = traverseOperations(workflow.operations, inputs, Operations);
+            const traverse = traverseOperations(workflow.operations, inputs);
 
             let pdfResults;
             let iteration;
@@ -74,7 +73,7 @@ router.post("/:workflowUuid?", [
                 }
             });
 
-            const traverse = traverseOperations(workflow.operations, inputs, Operations);
+            const traverse = traverseOperations(workflow.operations, inputs);
 
             let pdfResults;
             let iteration;

@@ -1,9 +1,7 @@
 
-import Operations from '../../utils/pdf-operations';
 import { respondWithPdfFile, respondWithPdfFiles, response_mustHaveExactlyOneFile } from '../../utils/endpoint-utils';
 import { PdfFile, /*PdfFileSchema*/ } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
 //import { ScalePageSchema } from '@stirling-pdf/shared-operations/src/functions/scalePage'
-import { OperatorType } from '@stirling-pdf/shared-operations/src';
 
 import express, { Request, Response, RequestHandler } from 'express';
 const router = express.Router();
@@ -14,7 +12,7 @@ import Joi from 'joi';
 function registerEndpoint(endpoint: string,
                           nameToAppend: string,
                           fileHandler: RequestHandler,
-                          operator: OperatorType
+                          operator: any
         ): void {
     router.post(endpoint, fileHandler, async function(req: Request, res: Response) {
         const body = req.body;
@@ -79,7 +77,7 @@ registerEndpoint("/remove-pages", "", upload.single("file"), Operations.removePa
     pageSelector: Joi.string().required(),
 }).required());
 */
-registerEndpoint("/impose", "", upload.single("file"), Operations.Impose);
+// registerEndpoint("/impose", "", upload.single("file"), Operations.Impose);
 /*
 registerEndpoint("/scale-pages", "", upload.single("file"), Operations.scalePage, ScalePageSchema.required());
 

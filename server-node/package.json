@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/index.js",
-    "dev": "nodemon"
+    "dev": "npx tsx watch src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,9 +21,11 @@
     "jsqr": "^1.4.0",
     "multer": "^1.4.5-lts.1",
     "nodemon": "^3.0.1",
-    "pdf-lib": "^1.17.1"
+    "pdf-lib": "^1.17.1",
+    "tsconfig-paths": "^4.2.0"
   },
   "devDependencies": {
+    "@types/archiver": "^6.0.1",
     "@types/express": "^4.17.21",
     "@types/multer": "^1.4.10",
     "ts-node-dev": "^2.0.0",

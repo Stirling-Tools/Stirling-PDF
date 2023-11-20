@@ -1,9 +1,11 @@
 import { organizeWaitOperations } from "./organizeWaitOperations";
 import { Action, WaitAction } from "../../declarations/Action";
-import { OperatorsType } from "../../src/index";
 import { PdfFile } from "../wrappers/PdfFile";
+import { Progress } from "../functions";
+import { Impose } from "../functions/impose";
 
-export async function * traverseOperations(operations: Action[], input: PdfFile[] | PdfFile, Operators: OperatorsType): AsyncGenerator<string, PdfFile[], void> {
+// TODO: Fix Operators Type
+export async function * traverseOperations(operations: Action[], input: PdfFile[] | PdfFile): AsyncGenerator<string, PdfFile[], void> {
     const waitOperations = organizeWaitOperations(operations);
     let results: PdfFile[] = [];
     yield* nextOperation(operations, input);
@@ -31,7 +33,7 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
         }
     }
     
-    async function * computeOperation(action: Action, input: PdfFile|PdfFile[]): AsyncGenerator<string, void, void> {
+    async function * computeOperation(action: Action, input: PdfFile[]): AsyncGenerator<string, void, void> {
         console.log("Input: ", input);
         yield "Starting: " + action.type;
         switch (action.type) {
@@ -59,10 +61,12 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                 });
                 break;*/
             case "impose":
-                yield* nToN(input, action, async (input) => {
-                    const newPdf = await Operators.Impose.exec({file: input, nup: action.values["nup"], format: action.values["format"]});
-                    return newPdf;
-                });
+                let impose = new Impose(action);
+                if(impose.validate().valid) {
+                    impose.run(input, (state: Progress) => {
+                        console.log(state);
+                    });
+                }
                 break;
             /*case "merge":
                 yield* nToOne(input, action, async (inputs) => {
@@ -115,55 +119,6 @@ export async function * traverseOperations(operations: Action[], input: PdfFile[
                 break;*/
             default:
                 throw new Error(`${action.type} not implemented yet.`);
-        }
-    }
-
-    /**
-     * 
-     * @param {PdfFile|PdfFile[]} input 
-     * @param {JSON} action
-     * @returns {undefined}
-     */
-    async function * nToOne(inputs: PdfFile|PdfFile[], action: Action, callback: (pdf: PdfFile[]) => Promise<PdfFile>): AsyncGenerator<string, void, void> {
-        const input = Array.isArray(inputs) ? inputs : [inputs]; // Convert single values to array, keep arrays as is.
-        
-        const newInputs = await callback(input);
-        yield* nextOperation(action.actions, newInputs);
-    }
-
-    /**
-     * 
-     * @param {PdfFile|PdfFile[]} input 
-     * @param {JSON} action
-     * @returns {undefined}
-     */
-    async function * oneToN(input: PdfFile|PdfFile[], action: Action, callback: (pdf: PdfFile) => Promise<PdfFile[]>): AsyncGenerator<string, void, void> {
-        if(Array.isArray(input)) {
-            let output: PdfFile[] = [];
-            for (let i = 0; i < input.length; i++) {
-                output = output.concat(await callback(input[i]));
-            }
-            yield* nextOperation(action.actions, output);
-        }
-        else {
-            const nextInput = await callback(input);
-            yield* nextOperation(action.actions, nextInput);
-        }
-    }
-
-    async function * nToN(input: PdfFile|PdfFile[], action: Action, callback: (pdf: PdfFile) => Promise<PdfFile|PdfFile[]>): AsyncGenerator<string, void, void> {
-        if(Array.isArray(input)) {
-            console.log("inputs", input);
-            let nextInputs: PdfFile[] = []
-            for (let i = 0; i < input.length; i++) {
-                nextInputs = nextInputs.concat(await callback(input[i]));
-            }
-            console.log("nextInputs", nextInputs);
-            yield* nextOperation(action.actions, nextInputs);
-        }
-        else {
-            const nextInput = await callback(input);
-            yield* nextOperation(action.actions, nextInput);
         }
     }
 }
