@@ -7,8 +7,8 @@ export const Operators = {
 }
 
 // TODO: Convert this to a map or similar
-export function getOperatorByName(name: string): typeof Operator {
-    let foundClass: typeof Operator = null;
+export function getOperatorByName(name: string): typeof Operator | undefined {
+    let foundClass: typeof Operator | undefined = undefined;
 
     // Loop over each default export
     Object.entries(Operators).some(([className, exportedClass]) => {
@@ -27,5 +27,5 @@ export function getOperatorByName(name: string): typeof Operator {
 
 export function listOperatorNames(): string[] {
     // TODO: Implement this
-    return
+    return [];
 }

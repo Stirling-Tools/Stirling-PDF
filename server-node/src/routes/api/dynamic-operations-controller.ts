@@ -29,7 +29,7 @@ function handleEndpoint(req: Request, res: Response) {
         pdfFiles = PdfFile.fromMulterFiles(Object.values(req.files).flatMap(va => va));
     }
 
-    const operator: typeof Operator = getOperatorByName(req.params.func);
+    const operator = getOperatorByName(req.params.func);
     if(operator) {
         const operation = new operator({type: req.params.func, values: req.body});
         const validationResults = operation.validate();

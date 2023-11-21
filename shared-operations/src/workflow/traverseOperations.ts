@@ -18,17 +18,14 @@ export async function traverseOperations(operations: Action[], input: PdfFile[],
     return results;
 
     async function nextOperation(actions: Action[] | undefined, input: PdfFile[], progressCallback: (state: Progress) => void): Promise<void> {
-        console.log("Next Operation");
-        if(actions === undefined || (Array.isArray(actions) && actions.length == 0)) { // isEmpty
-            console.log("Last Operation");
-            if(Array.isArray(input)) {
-                console.log("ArrayOut: ", input);
+        if(!actions || (Array.isArray(actions) && actions.length == 0)) { // isEmpty
+            if(input && Array.isArray(input)) {
                 console.log("operation done: " + input[0].filename + (input.length > 1 ? "+" : ""));
                 results = results.concat(input);
-                return;
             }
+            return;
         }
-    
+
         for (let i = 0; i < actions.length; i++) {
             await computeOperation(actions[i], Object.assign([], input), progressCallback); // structuredClone-like for ts TODO: test if this really works
         }
