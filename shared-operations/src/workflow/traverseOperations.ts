@@ -52,8 +52,8 @@ export async function traverseOperations(operations: Action[], input: PdfFile[],
             default:
                 const operator = getOperatorByName(action.type);
                 if(operator) {
-                    let opteration = new operator(action);
-                    input = await opteration.run(input, progressCallback);
+                    let operation = new operator(action);
+                    input = await operation.run(input, progressCallback);
                     await nextOperation(action.actions, input, progressCallback);
                 }
                 else

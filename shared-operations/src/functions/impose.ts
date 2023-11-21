@@ -58,7 +58,7 @@ export class Impose extends Operator {
 
         // TODO: This should be ported to SaudF's RecordValidator
         if(this.actionValues.nup) {
-            if(![2, 3, 4, 8, 9, 12, 16].includes(this.actionValues.nup)) {
+            if(![2, 3, 4, 8, 9, 12, 16].includes(parseInt(this.actionValues.nup))) {
                 return  { valid: false, reason: "NUp accepted values are 2, 3, 4, 8, 9, 12, 16 - see: https://pdfcpu.io/generate/nup.html#n-up-value"}
             }
         }
