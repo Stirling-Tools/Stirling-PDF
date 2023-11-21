@@ -20,7 +20,6 @@
     "joi": "^17.11.0",
     "jsqr": "^1.4.0",
     "multer": "^1.4.5-lts.1",
-    "nodemon": "^3.0.1",
     "pdf-lib": "^1.17.1",
     "tsconfig-paths": "^4.2.0"
   },
