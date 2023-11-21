@@ -1,5 +1,5 @@
 
-import * as Joi from 'joi';
+import Joi from 'joi';
 import { PdfFileSchema } from '../wrappers/PdfFile';
 
 export class RecordConstraint {

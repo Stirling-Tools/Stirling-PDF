@@ -1,6 +1,6 @@
 import { Operator } from "../functions";
 
-// TODO: Import other Operators (could make this dynamic?)
+// TODO: Import other Operators (could make this dynamic)
 import { Impose } from "../functions/impose";
 export const Operators = {
     Impose: Impose

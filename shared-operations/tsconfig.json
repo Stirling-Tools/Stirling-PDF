@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "esModuleInterop": true,
         "baseUrl": "./src",                                  /* Specify the base directory to resolve non-relative module names. */
         "paths": {
             "#pdfcpu": ["../../shared-operations/src/wasm/pdfcpu/pdfcpu-wrapper.server"],
