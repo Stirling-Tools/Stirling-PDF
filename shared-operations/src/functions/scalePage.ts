@@ -1,5 +1,5 @@
 
-import Joi from 'joi';
+import * as Joi from 'joi';
 import { PDFPage } from 'pdf-lib';
 import { PdfFile, RepresentationType, PdfFileSchema } from '../wrappers/PdfFile';
 
