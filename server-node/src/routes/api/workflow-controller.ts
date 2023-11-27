@@ -42,10 +42,7 @@ router.post("/:workflowUuid?", [
             }
         }
 
-        // TODO: Replace with static multer function of pdffile
-        const inputs = await Promise.all((req.files as Express.Multer.File[]).map(async file => {
-            return new PdfFile(file.originalname.replace(/\.[^/.]+$/, ""), new Uint8Array(await file.buffer), RepresentationType.Uint8Array, file.originalname.replace(/\.[^/.]+$/, ""));
-        }));
+        const inputs = PdfFile.fromMulterFiles(req.files as Express.Multer.File[]);
 
         // Allow option to do it synchronously and just make a long request
         if(req.body.async === "false") {

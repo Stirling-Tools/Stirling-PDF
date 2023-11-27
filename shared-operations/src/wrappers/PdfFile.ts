@@ -91,7 +91,7 @@ export class PdfFile {
         
         this.filename = filename ? filename : originalFilename;
         if (this.filename.toLowerCase().endsWith(".pdf"))
-        this.filename = this.filename.slice(0, -4);
+            this.filename = this.filename.slice(0, -4);
 
         this.representation = representation;
         this.representationType = representationType;
@@ -99,6 +99,7 @@ export class PdfFile {
 
     static fromMulterFile(value: Express.Multer.File): PdfFile {
         return new PdfFile(value.originalname, value.buffer as Uint8Array, RepresentationType.Uint8Array);
+
     }
     static fromMulterFiles(values: Express.Multer.File[]): PdfFile[] {
         return values.map(v => PdfFile.fromMulterFile(v));
@@ -129,10 +130,3 @@ export class PdfFile {
         return docCache;
     }
 }
-
-export const PdfFileSchema = Joi.any().custom((value) => {
-    if (!(value instanceof PdfFile)) {
-        throw new Error('value is not a PdfFile');
-    }
-    return value;
-}, "PdfFile validation");

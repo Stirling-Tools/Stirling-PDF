@@ -1,6 +1,6 @@
 
 import Joi from 'joi';
-import { PdfFileSchema } from '../wrappers/PdfFile';
+import { JoiPdfFileSchema } from '../wrappers/PdfFile';
 
 export class RecordConstraint {
 
@@ -55,10 +55,10 @@ export class FieldConstraint {
         } else if (typeof this.type == 'string') {
             switch (this.type) {
                 case "file.pdf":
-                    schema = PdfFileSchema;
+                    schema = JoiPdfFileSchema;
                     break;
                 case "files.pdf":
-                    schema = Joi.array().items(PdfFileSchema);
+                    schema = Joi.array().items(JoiPdfFileSchema);
                     break;
                 case "string":
                     schema = Joi.string();

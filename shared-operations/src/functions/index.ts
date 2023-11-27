@@ -1,8 +1,5 @@
 import { Action } from "../../declarations/Action";
-
-export enum IOType {
-    PDF, Image, Text // TODO: Extend with Document File Types
-}
+import Joi from "joi";
 
 export interface ValidationResult { 
     valid: boolean, 
@@ -17,12 +14,14 @@ export interface Progress {
 }
 
 export class Operator {
-    /** The type of the operator in camelCase (impose, merge, etc.) */
+    /** The internal name of the operator in camelCase (impose, merge, etc.) */
     static type: string;
 
-    // This will most likely be needed in the node Editor
-    static mayInput: IOType;
-    static willOutput: IOType;
+    /** The Joi validators & decorators */
+    static inputSchema: Joi.Schema;
+    static valueSchema: Joi.Schema;
+    static outputSchema: Joi.Schema;
+    static schema: Joi.Schema;
 
     actionValues: any;
 
@@ -40,26 +39,25 @@ export class Operator {
         }
         return { valid: true };
     }
+}
 
-    /** This function should be used if the Operation may take multiple files as inputs and only outputs one file */
-    protected async nToOne <I, O>(inputs: I[], callback: (input: I[]) => Promise<O>): Promise<O[]> {
-        return [await callback(inputs)];
+/** This function should be used if the Operation may take multiple files as inputs and only outputs one file */
+export async function nToOne <I, O>(inputs: I[], callback: (input: I[]) => Promise<O>): Promise<O[]> {
+    return [await callback(inputs)];
+}
+
+/** This function should be used if the Operation takes one file as input and may output multiple files */
+export async function oneToN <I, O>(inputs: I[], callback: (input: I, index: number, max: number) => Promise<O[]>): Promise<O[]> {
+    let output: O[] = []
+    for (let i = 0; i < inputs.length; i++) {
+        output = output.concat(await callback(inputs[i], i, inputs.length));
     }
+    return output;
+}
 
-    /** This function should be used if the Operation takes one file as input and may output multiple files */
-    protected async oneToN <I, O>(inputs: I[], callback: (input: I, index: number, max: number) => Promise<O[]>): Promise<O[]> {
-        let output: O[] = []
-        for (let i = 0; i < inputs.length; i++) {
-            output = output.concat(await callback(inputs[i], i, inputs.length));
-        }
-
-        return output;
-    }
-
-    /** This function should be used if the Operation takes one file as input and outputs only one file */
-    protected async oneToOne <I, O>(inputs: I[], callback: (input: I, index: number, max: number) => Promise<O>): Promise<O[]> {
-        return this.oneToN(inputs, async (input, index, max) => {
-            return [await callback(input, index, max)]
-        });
-    }
+/** This function should be used if the Operation takes one file as input and outputs only one file */
+export async function oneToOne <I, O>(inputs: I[], callback: (input: I, index: number, max: number) => Promise<O>): Promise<O[]> {
+    return oneToN(inputs, async (input, index, max) => {
+        return [await callback(input, index, max)]
+    });
 }
