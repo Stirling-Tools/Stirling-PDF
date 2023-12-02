@@ -20,7 +20,7 @@ Depending on your requirements, you can choose the appropriate language pack for
 1. Download the desired language pack(s) by selecting the `.traineddata` file(s) for the language(s) you need.
 2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tesseract-ocr/4.00/tessdata` (Debian) or `/usr/share/tesseract/tessdata` (Fedora)
 
-# DO NOT REMOVE EXISTING ENG.TRAINEDDATA, ITS REQUIRED.
+# DO NOT REMOVE EXISTING ENG.TRAINEDDATA, IT'S REQUIRED.
 
 #### Docker
 
