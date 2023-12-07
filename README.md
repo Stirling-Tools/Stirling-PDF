@@ -139,6 +139,12 @@ services:
 #      - /location/of/customFiles:/customFiles/
     environment:
       - DOCKER_ENABLE_SECURITY=false
+    healthcheck: # optional: remember to adapt the host:port to your environment
+        test: ["CMD-SHELL", "/bin/bash set -o pipefail; curl --insecure --silent -m 2 https://localhost:443/ | grep 'Your locally hosted one-stop-shop for all your PDF needs.' || exit 1"]
+        interval: 60s
+        timeout: 10s
+        retries: 3
+        start_period: 40s
 ```
 
 Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
