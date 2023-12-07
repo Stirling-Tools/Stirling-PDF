@@ -130,6 +130,7 @@ version: '3.3'
 services:
   stirling-pdf:
     image: frooodle/s-pdf:latest
+    container_name: stirling-pdf
     ports:
       - '8080:8080'
     volumes:
