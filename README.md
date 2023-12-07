@@ -140,7 +140,7 @@ services:
     environment:
       - DOCKER_ENABLE_SECURITY=false
     healthcheck: # optional: remember to adapt the host:port to your environment
-        test: ["CMD-SHELL", "/bin/bash set -o pipefail; curl --insecure --silent -m 2 https://localhost:443/ | grep 'Your locally hosted one-stop-shop for all your PDF needs.' || exit 1"]
+        test: ["CMD-SHELL", "/bin/bash set -o pipefail; curl --insecure --silent -m 2 http://localhost:8080/ | grep 'Your locally hosted one-stop-shop for all your PDF needs.' || exit 1"]
         interval: 60s
         timeout: 10s
         retries: 3
