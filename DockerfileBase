@@ -13,6 +13,16 @@ RUN apt-get update && \
         pngquant \
         unpaper \
         ocrmypdf && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir \
+        pillow==10.0.1 \
+        lxml==4.6.5 \
+        reportlab==3.6.13 \
+        setuptools==65.5.1 \
+        pikepdf==4.4.1 \
+        wheel==0.38.1 \
+        cryptography==39.0.1 \
+        opencv-python-headless && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir /usr/share/tesseract-ocr-original && \
     cp -r /usr/share/tesseract-ocr/* /usr/share/tesseract-ocr-original && \
@@ -20,18 +30,45 @@ RUN apt-get update && \
 
 # Python packages stage
 FROM base AS python-packages
+# Install build tools and Python libraries
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
         libffi-dev \
         libssl-dev \
         zlib1g-dev \
-        libjpeg-dev && \
-    pip install --upgrade pip && \
-    pip install --no-cache-dir \
-        opencv-python-headless WeasyPrint && \
-    rm -rf /var/lib/apt/lists/*
+        libjpeg-dev 
 
 # Final stage: Copy necessary files from the previous stage
 FROM base
 COPY --from=python-packages /usr/local /usr/local
+
+
+# Install wkhtmltopdf
+RUN apt-get update && \
+    apt-get install -y \
+        fontconfig \
+        libfontconfig1 \
+        libfreetype6 \
+        libx11-6 \
+        libxext6 \
+        libxrender1 \
+        xfonts-75dpi \
+        wget \
+        xfonts-base 
+
+# Set a default value for TARGETARCH if it's not provided
+ARG TARGETARCH=arm64
+
+# Conditional statement to choose the correct wkhtmltopdf package based on architecture
+RUN if [ "$TARGETARCH" = "amd64" ]; then \
+        wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bullseye_amd64.deb; \
+    elif [ "$TARGETARCH" = "arm64" ]; then \
+        wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bullseye_arm64.deb; \
+    else \
+        wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bullseye_amd64.deb; \
+    fi && \
+    dpkg -i wkhtmltox_0.12.6.1-3.bullseye_$TARGETARCH.deb && \
+    rm wkhtmltox_0.12.6.1-3.bullseye_$TARGETARCH.deb && \
+    rm -rf /var/lib/apt/lists/*
+    
