@@ -9,7 +9,7 @@ keywords:
 maintainers:
 - name: Frooodle
   url: https://github.com/Frooodle/Stirling-PDF
-name: stirling-pdf
+name: stirling-pdf-chart
 sources:
 - https://github.com/Frooodle/Stirling-PDF
 version: 1.0.0

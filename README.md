@@ -99,7 +99,7 @@ Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) h
 ### Locally
 Please view https://github.com/Frooodle/Stirling-PDF/blob/main/LocalRunGuide.md
 
-### Docker
+### Docker / Podman
 https://hub.docker.com/r/frooodle/s-pdf
 
 Stirling PDF has 3 different versions, a Full version, Lite, and ultra-Lite. Depending on the types of features you use you may want a smaller image to save on space.
@@ -140,6 +140,7 @@ services:
       - DOCKER_ENABLE_SECURITY=false
 ```
 
+Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
 
 ## Enable OCR/Compression feature
 Please view https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md
