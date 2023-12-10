@@ -7,12 +7,13 @@
 <body>
 <div id="page-container">
     <div id="content-wrap">
-
+		<div th:insert="~{fragments/navbar.html :: navbar}"></div>
+		</br></br>
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-md-6">
                     <h2 th:text="#{PDFToCSV.header}"></h2>
-                    <form id="PDFToCSVForm" th:action="@{api/v1/extract/pdf-to-csv}" method="post" enctype="multipart/form-data">
+                    <form id="PDFToCSVForm" th:action="@{api/v1/convert/pdf-to-csv}" method="post" enctype="multipart/form-data">
                         <input  id="pageId" type="hidden" name="pageId" />
                         <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                         <button type="submit" class="btn btn-primary" th:text="#{PDFToCSV.submit}"></button>
