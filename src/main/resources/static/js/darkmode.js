@@ -24,55 +24,86 @@ function getElements() {
   elements.navIcons = document.querySelectorAll("nav .icon, .navbar-icon")
   elements.navDropdownMenus = document.querySelectorAll("nav .dropdown-menu")
 }
-
 function setMode(mode) {
-  var event = new CustomEvent("modeChanged", { detail: mode })
-  document.dispatchEvent(event)
-  elements.lightModeStyles.disabled = mode !== "off"
-  elements.darkModeStyles.disabled = mode !== "on"
-  elements.rainbowModeStyles.disabled = mode !== "rainbow"
-  var jumbotron = document.getElementById("jumbotron")
+  var event = new CustomEvent("modeChanged", { detail: mode });
+  document.dispatchEvent(event);
+
+  if (elements && elements.lightModeStyles) {
+    elements.lightModeStyles.disabled = mode !== "off";
+  }
+  if (elements && elements.darkModeStyles) {
+    elements.darkModeStyles.disabled = mode !== "on";
+  }
+  if (elements && elements.rainbowModeStyles) {
+    elements.rainbowModeStyles.disabled = mode !== "rainbow";
+  }
+
+  var jumbotron = document.getElementById("jumbotron");
+
   if (mode === "on") {
-    elements.darkModeIcon.src = "moon.svg"
-    // Dark mode improvement
-    elements.searchBar.classList.add("dark-mode-search")
-    elements.formControls.forEach(input => input.classList.add("bg-dark", "text-white"))
-    // navbar toggle
-    elements.navbar.classList.remove("navbar-light", "bg-light")
-    elements.navbar.classList.add("navbar-dark", "bg-dark")
-    navDropdownMenus.forEach(menu => menu.classList.add("dropdown-menu-dark"))
-    navIcons.forEach(icon => (icon.style.filter = "invert(1)"))
-    // Add the table-dark class to tables for dark mode
-    var tables = document.querySelectorAll(".table")
+    if (elements && elements.darkModeIcon) {
+      elements.darkModeIcon.src = "moon.svg";
+    }
+    if (elements && elements.searchBar) {
+      elements.searchBar.classList.add("dark-mode-search");
+    }
+    if (elements && elements.formControls) {
+      elements.formControls.forEach(input => input.classList.add("bg-dark", "text-white"));
+    }
+    if (elements && elements.navbar) {
+      elements.navbar.forEach(navElement => {
+        navElement.classList.remove("navbar-light", "bg-light");
+        navElement.classList.add("navbar-dark", "bg-dark");
+      });
+    }
+    if (elements && elements.navDropdownMenus) {
+      elements.navDropdownMenus.forEach(menu => menu.classList.add("dropdown-menu-dark"));
+    }
+    if (elements && elements.navIcons) {
+      elements.navIcons.forEach(icon => (icon.style.filter = "invert(1)"));
+    }
+    var tables = document.querySelectorAll(".table");
     tables.forEach(table => {
-      table.classList.add("table-dark")
-    })
+      table.classList.add("table-dark");
+    });
     if (jumbotron) {
-      jumbotron.classList.add("bg-dark")
-      jumbotron.classList.remove("bg-light")
+      jumbotron.classList.add("bg-dark");
+      jumbotron.classList.remove("bg-light");
     }
   } else if (mode === "off") {
-    elements.darkModeIcon.src = "sun.svg"
-    // Dark Mode Improvement
-    elements.searchBar.classList.remove("dark-mode-search")
-    elements.formControls.forEach(input => input.classList.remove("bg-dark", "text-white"))
-    // navbar toggle
-    elements.navbar.classList.remove("navbar-dark", "bg-dark")
-    elements.navbar.classList.add("navbar-light", "bg-light")
-    navDropdownMenus.forEach(menu => menu.classList.remove("dropdown-menu-dark"))
-    navIcons.forEach(icon => (icon.style.filter = "none"))
-    // Remove the table-dark class for light mode
-    var tables = document.querySelectorAll(".table-dark")
+    if (elements && elements.darkModeIcon) {
+      elements.darkModeIcon.src = "sun.svg";
+    }
+    if (elements && elements.searchBar) {
+      elements.searchBar.classList.remove("dark-mode-search");
+    }
+    if (elements && elements.formControls) {
+      elements.formControls.forEach(input => input.classList.remove("bg-dark", "text-white"));
+    }
+    if (elements && elements.navbar) {
+      elements.navbar.forEach(navElement => {
+        navElement.classList.remove("navbar-dark", "bg-dark");
+        navElement.classList.add("navbar-light", "bg-light");
+      });
+    }
+    if (elements && elements.navDropdownMenus) {
+      elements.navDropdownMenus.forEach(menu => menu.classList.remove("dropdown-menu-dark"));
+    }
+    if (elements && elements.navIcons) {
+      elements.navIcons.forEach(icon => (icon.style.filter = "none"));
+    }
+    var tables = document.querySelectorAll(".table-dark");
     tables.forEach(table => {
-      table.classList.remove("table-dark")
-    })
+      table.classList.remove("table-dark");
+    });
     if (jumbotron) {
-      console.log(mode)
-      jumbotron.classList.remove("bg-dark")
-      jumbotron.classList.add("bg-light")
+      jumbotron.classList.remove("bg-dark");
+      jumbotron.classList.add("bg-light");
     }
   } else if (mode === "rainbow") {
-    elements.darkModeIcon.src = "rainbow.svg"
+    if (elements && elements.darkModeIcon) {
+      elements.darkModeIcon.src = "rainbow.svg";
+    }
   }
 }
 

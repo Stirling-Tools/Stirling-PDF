@@ -5,6 +5,10 @@ echo "Copying original files without overwriting existing files"
 mkdir -p /usr/share/tesseract-ocr
 cp -rn /usr/share/tesseract-ocr-original/* /usr/share/tesseract-ocr
 
+if [ -d /usr/share/tesseract-ocr/4.00/tessdata ]; then 
+	cp -r /usr/share/tesseract-ocr/4.00/tessdata/* /usr/share/tesseract-ocr/5/tessdata/ || true; 
+fi
+
 # Check if TESSERACT_LANGS environment variable is set and is not empty
 if [[ -n "$TESSERACT_LANGS" ]]; then
   # Convert comma-separated values to a space-separated list

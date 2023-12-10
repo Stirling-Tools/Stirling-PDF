@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'stirling.software'
-version = '0.15.2'
+version = '0.16.0'
 sourceCompatibility = '17'
 
 repositories {
@@ -80,6 +80,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.apache.pdfbox/jbig2-imageio
     implementation group: 'org.apache.pdfbox', name: 'jbig2-imageio', version: '3.0.4'
+    implementation 'com.github.jai-imageio:jai-imageio-core:1.4.0'
+	implementation 'com.github.jai-imageio:jai-imageio-jpeg2000:1.3.0'
     implementation 'commons-io:commons-io:2.13.0'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
