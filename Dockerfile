@@ -1,5 +1,5 @@
 # Use the base image
-FROM frooodle/stirling-pdf-base:beta4
+FROM frooodle/stirling-pdf-base:testDontUseMe
 
 ARG VERSION_TAG
 

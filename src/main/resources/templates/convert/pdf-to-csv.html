@@ -18,7 +18,7 @@
                         <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                         <button type="submit" class="btn btn-primary" th:text="#{PDFToCSV.submit}"></button>
                     </form>
-                    <p id="instruction-text" style="margin: 0; display: none">Choose page to extract table</p>
+                    <p id="instruction-text" style="margin: 0; display: none" th:text="#{PDFToCSV.prompt}"></p>
 
                     <div style="position: relative; display: inline-block;">
                         <div>
