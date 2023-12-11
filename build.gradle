@@ -69,7 +69,7 @@ dependencies {
 
     if (System.getenv('DOCKER_ENABLE_SECURITY') != 'false') {
         implementation 'org.springframework.boot:spring-boot-starter-security:3.1.6'
-        implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.6.RELEASE'
+        implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
         implementation "org.springframework.boot:spring-boot-starter-data-jpa"
         implementation "com.h2database:h2"
     }
