@@ -98,7 +98,7 @@ public class OtherWebController {
         return modelAndView;
     }
     
-
+    
     @GetMapping("/add-image")
     @Hidden
     public String overlayImage(Model model) {

@@ -155,6 +155,20 @@ public class GeneralWebController {
         return "scale-pages";
     }
     
+
+    @GetMapping("/split-by-size-or-count")
+    @Hidden
+    public String splitBySizeOrCount(Model model) {
+        model.addAttribute("currentPage", "split-by-size-or-count");
+        return "split-by-size-or-count";
+    }
+    
+    @GetMapping("/overlay-pdf")
+    @Hidden
+    public String overlayPdf(Model model) {
+        model.addAttribute("currentPage", "overlay-pdf");
+        return "overlay-pdf";
+    }
     
     
     @Autowired
