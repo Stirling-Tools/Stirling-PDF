@@ -113,7 +113,7 @@ Docker Run
 ```
 docker run -d \
   -p 8080:8080 \
-  -v /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata \
+  -v /location/of/trainingData:/usr/share/tesseract-ocr/5/tessdata \
   -v /location/of/extraConfigs:/configs \
   -e DOCKER_ENABLE_SECURITY=false \
   --name stirling-pdf \
@@ -134,7 +134,7 @@ services:
     ports:
       - '8080:8080'
     volumes:
-      - /location/of/trainingData:/usr/share/tesseract-ocr/4.00/tessdata #Required for extra OCR languages
+      - /location/of/trainingData:/usr/share/tesseract-ocr/5/tessdata #Required for extra OCR languages
       - /location/of/extraConfigs:/configs
 #      - /location/of/customFiles:/customFiles/
     environment:

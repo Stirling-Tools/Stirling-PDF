@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api;
+package stirling.software.SPDF.controller.api.converters;
 
 import com.opencsv.CSVWriter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,27 +12,28 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import stirling.software.SPDF.controller.api.CropController;
 import stirling.software.SPDF.controller.api.strippers.PDFTableStripper;
 import stirling.software.SPDF.model.api.extract.PDFFilePage;
 
 import java.awt.*;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/extract/pdf-to-csv")
+@RequestMapping("/api/v1/convert")
 @Tag(name = "General", description = "General APIs")
 public class ExtractController {
 
     private static final Logger logger = LoggerFactory.getLogger(CropController.class);
 
-    @PostMapping(consumes = "multipart/form-data")
+    @PostMapping(value = "/pdf-to-csv", consumes = "multipart/form-data")
     @Operation(summary = "Extracts a PDF document to csv", description = "This operation takes an input PDF file and returns CSV file of whole page. Input:PDF Output:CSV Type:SISO")
     public ResponseEntity<String> PdfToCsv(@ModelAttribute PDFFilePage form)
-            throws IOException {
+            throws Exception {
 
         ArrayList<String> tableData = new ArrayList<>();
         int columnsCount = 0;
@@ -40,13 +41,9 @@ public class ExtractController {
         try (PDDocument document = PDDocument.load(new ByteArrayInputStream(form.getFileInput().getBytes()))) {
             final double res = 72; // PDF units are at 72 DPI
             PDFTableStripper stripper = new PDFTableStripper();
-            stripper.setSortByPosition(true);
-            stripper.setRegion(new Rectangle((int) Math.round(1.0 * res), (int) Math.round(1 * res), (int) Math.round(6 * res), (int) Math.round(9.0 * res)));
-
             PDPage pdPage = document.getPage(form.getPageId() - 1);
             stripper.extractTable(pdPage);
             columnsCount = stripper.getColumns();
-
             for (int c = 0; c < columnsCount; ++c) {
                 for(int r=0; r<stripper.getRows(); ++r) {
                     tableData.add(stripper.getText(r, c));
@@ -71,8 +68,11 @@ public class ExtractController {
 
         ArrayList<String> headersList = getTableHeaders(columnsCount,fullTable);
         ArrayList<String> recordList = getRecordsList(rowsCount,fullTable);
-
-
+        
+        if(headersList.size() == 0 && recordList.size() == 0) {
+        	throw new Exception("No table detected, no headers or records found");
+        }
+        
         StringWriter writer = new StringWriter();
         try (CSVWriter csvWriter = new CSVWriter(writer)) {
             csvWriter.writeNext(headersList.toArray(new String[0]));
