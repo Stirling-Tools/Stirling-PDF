@@ -275,7 +275,7 @@
 							    document.getElementById('syncToAccount').addEventListener('click', function() {
 							        let form = document.createElement("form");
 							        form.method = "POST";
-							        form.action = "/updateUserSettings";  // Your endpoint URL
+							        form.action = "api/v1/user/updateUserSettings";  // Your endpoint URL
 
 							        for (let i = 0; i < localStorage.length; i++) {
 							            const key = localStorage.key(i);
