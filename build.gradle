@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'stirling.software'
-version = '0.16.0'
+version = '0.16.1'
 sourceCompatibility = '17'
 
 repositories {
@@ -64,17 +64,17 @@ launch4j {
 
 dependencies {
     implementation 'org.yaml:snakeyaml:2.1'
-    implementation 'org.springframework.boot:spring-boot-starter-web:3.1.2'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.1.2'
+    implementation 'org.springframework.boot:spring-boot-starter-web:3.1.6'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.1.6'
 
     if (System.getenv('DOCKER_ENABLE_SECURITY') != 'false') {
-        implementation 'org.springframework.boot:spring-boot-starter-security:3.1.2'
+        implementation 'org.springframework.boot:spring-boot-starter-security:3.1.6'
         implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
         implementation "org.springframework.boot:spring-boot-starter-data-jpa"
         implementation "com.h2database:h2"
     }
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.4'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.6'
 
 
 

@@ -8,7 +8,6 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     	openjdk-17-jre
     	
-    	
 # Doc conversion
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -18,6 +17,7 @@ RUN apt-get update && \
         libreoffice-calc-nogui \
         libreoffice-impress-nogui \
 		python3-uno \
+		curl \
 		unoconv
 		
 		
@@ -35,8 +35,8 @@ apt-get update && \
     pip install --no-cache-dir --upgrade pillow==10.0.1 reportlab==3.6.13 wheel==0.38.1 setuptools==65.5.1 pyjwt==2.4.0 cryptography==39.0.1
     
     
-#CV    
-RUN pip install --no-cache-dir opencv-python-headless
+#CV and HTML   
+RUN pip install --no-cache-dir opencv-python-headless WeasyPrint 
 
 
 # cleanup and etc
