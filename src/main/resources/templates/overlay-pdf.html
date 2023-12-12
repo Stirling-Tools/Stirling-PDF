@@ -45,31 +45,50 @@
 						<script>
 						    function updateCountsInputs() {
 						        const mode = document.getElementById('overlayMode').value;
+						        console.log("mode",mode);
 						        const countsContainer = document.getElementById('countsContainer');
+						        console.log("countsContainer",countsContainer);
 						        countsContainer.innerHTML = ''; // Clear previous inputs
 						
 						        if (mode === 'FixedRepeatOverlay') {
-						            const fileInput = document.getElementsByName('overlayFiles')[0];
-						            const fileCount = fileInput.files.length;
-						
-						            for (let i = 0; i < fileCount; i++) {
-						                const input = document.createElement('input');
-						                input.type = 'text';
-						                input.name = 'counts';
-						                input.classList.add('form-control');
-						                input.placeholder = 'Count for file ' + (i + 1);
-						                countsContainer.appendChild(input);
+						            const fileInput = document.getElementById('overlayFiles-input');
+						            console.log("fileInput",fileInput);
+						            if(fileInput){
+							            const files = fileInput.files
+							            console.log("files",files);
+							            if(files) {
+								            const fileCount = files.length;
+								
+								            for (let i = 0; i < fileCount; i++) {
+								                const input = document.createElement('input');
+								                input.type = 'text';
+								                input.name = 'counts';
+								                input.classList.add('form-control');
+								                input.placeholder = 'Count for file ' + (i + 1);
+								                countsContainer.appendChild(input);
+								            }
+								            countsContainer.style.display = 'block';
+							        	}
 						            }
-						
-						            countsContainer.style.display = 'block';
 						        } else {
 						            countsContainer.style.display = 'none';
 						        }
 						    }
-						
-						    // Update counts inputs when files are selected
-						    document.getElementsByName('overlayFiles')[0].addEventListener('change', updateCountsInputs);
-						</script>
+						    document.addEventListener('DOMContentLoaded', (event) => {
+						    	var fileInput = document.getElementById('overlayFiles-input');
+						    	console.log("fileInput2",fileInput);
+					    	    if (fileInput) {
+					    	        fileInput.addEventListener('change', updateCountsInputs);
+					    	    }
+						    });
+						    document.addEventListener('DOMContentLoaded', (event) => {
+						    	var overlay = document.getElementById('overlayMode');
+						    	console.log("overlay2",overlay);
+					    	    if (overlay) {
+					    	    	overlay.addEventListener('change', updateCountsInputs);
+					    	    }
+						    });
+						    </script>
 
 
                     </div>
