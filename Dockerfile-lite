@@ -2,11 +2,11 @@
 FROM bellsoft/liberica-openjdk-debian:17
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libreoffice-core-nogui \
+        libreoffice-core \
         libreoffice-common \
-        libreoffice-writer-nogui \
-        libreoffice-calc-nogui \
-        libreoffice-impress-nogui \
+        libreoffice-writer \
+        libreoffice-calc \
+        libreoffice-impress \
         unoconv && \
     rm -rf /var/lib/apt/lists/*
 

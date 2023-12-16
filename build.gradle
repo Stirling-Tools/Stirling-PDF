@@ -63,6 +63,10 @@ launch4j {
 }
 
 dependencies {
+	//security updates
+	implementation 'ch.qos.logback:logback-classic:1.4.14'
+	implementation 'ch.qos.logback:logback-core:1.4.14'
+	
     implementation 'org.yaml:snakeyaml:2.1'
     implementation 'org.springframework.boot:spring-boot-starter-web:3.1.6'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.1.6'
@@ -91,8 +95,8 @@ dependencies {
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.7.1'
     implementation 'org.apache.pdfbox:pdfbox:2.0.29'
     implementation 'org.apache.pdfbox:xmpbox:2.0.29'
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.77'
+    implementation 'org.bouncycastle:bcpkix-jdk18on:1.77'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-core'
     implementation group: 'com.google.zxing', name: 'core', version: '3.5.2'

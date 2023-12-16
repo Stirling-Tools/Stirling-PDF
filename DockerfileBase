@@ -11,11 +11,11 @@ RUN apt-get update && \
 # Doc conversion
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    	libreoffice-core-nogui \
+    	libreoffice-core \
         libreoffice-common \
-        libreoffice-writer-nogui \
-        libreoffice-calc-nogui \
-        libreoffice-impress-nogui \
+        libreoffice-writer \
+        libreoffice-calc \
+        libreoffice-impress \
 		python3-uno \
 		curl \
 		unoconv
