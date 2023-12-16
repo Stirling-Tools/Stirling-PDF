@@ -115,6 +115,7 @@ docker run -d \
   -p 8080:8080 \
   -v /location/of/trainingData:/usr/share/tesseract-ocr/5/tessdata \
   -v /location/of/extraConfigs:/configs \
+  -v /location/of/logs:/logs \
   -e DOCKER_ENABLE_SECURITY=false \
   --name stirling-pdf \
   frooodle/s-pdf:latest
@@ -136,6 +137,7 @@ services:
       - /location/of/trainingData:/usr/share/tesseract-ocr/5/tessdata #Required for extra OCR languages
       - /location/of/extraConfigs:/configs
 #      - /location/of/customFiles:/customFiles/
+#      - /location/of/logs:/logs/
     environment:
       - DOCKER_ENABLE_SECURITY=false
 ```
