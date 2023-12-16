@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{split-by-sections.title})}"></th:block>
+
+<body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{split-by-sections.header}"></h2>
+                        <form method="post" enctype="multipart/form-data" th:action="@{/api/v1/general/split-pdf-by-sections}">
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                            
+                            <label for="horizontalDivisions" th:text="#{split-by-sections.horizontal.label}">Horizontal Divisions</label>
+                            <input type="number" id="horizontalDivisions" name="horizontalDivisions" class="form-control" min="1" required th:placeholder="#{split-by-sections.horizontal.placeholder}">
+                            <br>
+
+                            <label for="verticalDivisions" th:text="#{split-by-sections.vertical.label}">Vertical Divisions</label>
+                            <input type="number" id="verticalDivisions" name="verticalDivisions" class="form-control" min="1" required th:placeholder="#{split-by-sections.vertical.placeholder}">
+                            <br>
+                        
+                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{split-by-sections.submit}">Submit</button>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
+</body>
+</html>

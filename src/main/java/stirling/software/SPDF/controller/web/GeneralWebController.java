@@ -74,6 +74,13 @@ public class GeneralWebController {
         model.addAttribute("currentPage", "merge-pdfs");
         return "merge-pdfs";
     }
+    
+    @GetMapping("/split-pdf-by-sections")
+    @Hidden
+    public String splitPdfBySections(Model model) {
+        model.addAttribute("currentPage", "split-pdf-by-sections");
+        return "split-pdf-by-sections";
+    }
 
     @GetMapping("/view-pdf")
     @Hidden
