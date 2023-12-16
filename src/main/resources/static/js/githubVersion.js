@@ -31,7 +31,11 @@ async function getLatestReleaseVersion() {
 
 async function checkForUpdate() {
     // Initialize the update button as hidden
-    document.getElementById("update-btn").style.display = "none";
+    var updateBtn = document.getElementById("update-btn");
+	if (updateBtn !== null) {
+	  updateBtn.style.display = "none";
+	}
+
 
     const latestVersion = await getLatestReleaseVersion();
     console.log("latestVersion=" + latestVersion)
@@ -45,4 +49,7 @@ async function checkForUpdate() {
     }
 }
 
-checkForUpdate();
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    checkForUpdate();
+});

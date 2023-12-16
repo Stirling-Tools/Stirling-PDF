@@ -140,8 +140,11 @@ document.addEventListener("DOMContentLoaded", function () {
     setMode("off")
   }
 
-  document.getElementById("dark-mode-toggle").addEventListener("click", function (event) {
-    event.preventDefault()
-    toggleDarkMode()
-  })
+  var darkModeToggle = document.getElementById("dark-mode-toggle");
+  if (darkModeToggle !== null) {
+	  darkModeToggle.addEventListener("click", function (event) {
+	    event.preventDefault();
+	    toggleDarkMode();
+	  });
+	}
 })
