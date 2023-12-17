@@ -55,8 +55,9 @@ public class PdfOverlayController {
 	            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 	            overlay.overlay(overlayGuide).save(outputStream);
 	            byte[] data = outputStream.toByteArray();
-	
-	            return WebResponseUtils.bytesToWebResponse(data, "overlaid.pdf", MediaType.APPLICATION_PDF);
+	            String outputFilename = baseFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_overlayed.pdf";  // Remove file extension and append .pdf
+		        
+	            return WebResponseUtils.bytesToWebResponse(data, outputFilename, MediaType.APPLICATION_PDF);
 	        } 
         } finally {
             for (File overlayPdfFile : overlayPdfFiles) {
@@ -84,16 +85,19 @@ public class PdfOverlayController {
     }
 
     private void sequentialOverlay(Map<Integer, String> overlayGuide, File[] overlayFiles, int basePageCount) throws IOException {
-        int currentPage = 1;
-        for (File overlayFile : overlayFiles) {
-            try (PDDocument overlayPdf = PDDocument.load(overlayFile)) {
-                for (int i = 0; i < overlayPdf.getNumberOfPages(); i++) {
-                    if (currentPage > basePageCount) break;
-                    overlayGuide.put(currentPage++, overlayFile.getAbsolutePath());
-                }
+        if (overlayFiles.length != 1 || basePageCount != PDDocument.load(overlayFiles[0]).getNumberOfPages()) {
+            throw new IllegalArgumentException("Overlay file count and base page count must match for sequential overlay.");
+        }
+
+        File overlayFile = overlayFiles[0];
+        try (PDDocument overlayPdf = PDDocument.load(overlayFile)) {
+            for (int i = 1; i <= overlayPdf.getNumberOfPages(); i++) {
+                if (i > basePageCount) break;
+                overlayGuide.put(i, overlayFile.getAbsolutePath());
             }
         }
     }
+
 
     private void interleavedOverlay(Map<Integer, String> overlayGuide, File[] overlayFiles, int basePageCount) throws IOException {
         for (int i = 0; i < basePageCount; i++) {
