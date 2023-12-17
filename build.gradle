@@ -94,8 +94,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.7.1'
-    implementation 'org.apache.pdfbox:pdfbox:2.0.29'
-    implementation 'org.apache.pdfbox:xmpbox:2.0.29'
+    implementation 'org.apache.pdfbox:pdfbox:3.0.1'
+    implementation 'org.apache.pdfbox:xmpbox:3.0.1'
     implementation 'org.bouncycastle:bcprov-jdk18on:1.77'
     implementation 'org.bouncycastle:bcpkix-jdk18on:1.77'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
