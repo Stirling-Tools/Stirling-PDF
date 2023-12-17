@@ -42,10 +42,10 @@ public class SplitPdfBySectionsController {
         PDDocument sourceDocument = PDDocument.load(file.getInputStream());
 
         // Process the PDF based on split parameters
-        int horiz = request.getHorizontalDivisions();
-        int verti = request.getVerticalDivisions();
+        int horiz = request.getHorizontalDivisions() + 1;
+        int verti = request.getVerticalDivisions() + 1;
 
-        List<PDDocument> splitDocuments = splitPdfPages(sourceDocument, horiz, verti);
+        List<PDDocument> splitDocuments = splitPdfPages(sourceDocument, verti, horiz);
         for (PDDocument doc : splitDocuments) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             doc.save(baos);
@@ -108,7 +108,7 @@ public class SplitPdfBySectionsController {
                     try (PDPageContentStream contentStream = new PDPageContentStream(subDoc, subPage)) {
                         // Set clipping area and position
                         float translateX = -subPageWidth * i;
-                        float translateY = height - subPageHeight * (j + 1) - subPageHeight;
+                        float translateY = height - subPageHeight * (verticalDivisions - j);
 
                         contentStream.saveGraphicsState();
                         contentStream.addRect(0, 0, subPageWidth, subPageHeight);
@@ -127,6 +127,7 @@ public class SplitPdfBySectionsController {
 
         return splitDocuments;
     }
+
 
 
     
