@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'stirling.software'
-version = '0.17.1'
+version = '0.17.2'
 sourceCompatibility = '17'
 
 repositories {
@@ -31,7 +31,6 @@ sourceSets {
         }
     }
 }
-
 
 openApi {
     apiDocsUrl = "http://localhost:8080/v1/api-docs"
@@ -93,9 +92,18 @@ dependencies {
     //general PDF
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
-    implementation group: 'com.opencsv', name: 'opencsv', version: '5.7.1'
-    implementation 'org.apache.pdfbox:pdfbox:2.0.29'
-    implementation 'org.apache.pdfbox:xmpbox:2.0.29'
+    implementation ('com.opencsv:opencsv:5.7.1') {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
+    
+    implementation ('org.apache.pdfbox:pdfbox:2.0.29'){
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
+    
+    implementation ('org.apache.pdfbox:xmpbox:2.0.29'){
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
+    
     implementation 'org.bouncycastle:bcprov-jdk18on:1.77'
     implementation 'org.bouncycastle:bcpkix-jdk18on:1.77'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'

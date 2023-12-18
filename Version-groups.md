@@ -19,6 +19,7 @@ add-image           |     ✔️      |  ✔️   |  ✔️
 add-watermark       |     ✔️      |  ✔️   |  ✔️
 adjust-contrast     |     ✔️      |  ✔️   |  ✔️
 auto-split-pdf      |     ✔️      |  ✔️   |  ✔️
+auto-redact         |     ✔️      |  ✔️   |  ✔️
 auto-rename         |     ✔️      |  ✔️   |  ✔️
 cert-sign           |     ✔️      |  ✔️   |  ✔️
 crop                |     ✔️      |  ✔️   |  ✔️
@@ -33,7 +34,9 @@ img-to-pdf          |     ✔️      |  ✔️   |  ✔️
 markdown-to-pdf     |     ✔️      |  ✔️   |  ✔️
 merge-pdfs          |     ✔️      |  ✔️   |  ✔️
 multi-page-layout   |     ✔️      |  ✔️   |  ✔️
+overlay-pdf         |     ✔️      |  ✔️   |  ✔️
 pdf-organizer       |     ✔️      |  ✔️   |  ✔️
+pdf-to-csv          |     ✔️      |  ✔️   |  ✔️
 pdf-to-img          |     ✔️      |  ✔️   |  ✔️
 pdf-to-single-page  |     ✔️      |  ✔️   |  ✔️
 remove-pages        |     ✔️      |  ✔️   |  ✔️
@@ -43,6 +46,8 @@ sanitize-pdf        |     ✔️      |  ✔️   |  ✔️
 scale-pages         |     ✔️      |  ✔️   |  ✔️
 sign                |     ✔️      |  ✔️   |  ✔️
 show-javascript     |     ✔️      |  ✔️   |  ✔️
+split-by-size-or-count |     ✔️      |  ✔️   |  ✔️
+split-pdf-by-sections  |     ✔️      |  ✔️   |  ✔️
 split-pdfs          |     ✔️      |  ✔️   |  ✔️
 file-to-pdf         |             |  ✔️   |  ✔️
 pdf-to-html         |             |  ✔️   |  ✔️

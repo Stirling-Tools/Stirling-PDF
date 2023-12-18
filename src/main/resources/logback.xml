@@ -16,7 +16,7 @@
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover and keep 7 days' worth of history -->
-            <fileNamePattern>auth-%d{MM-dd-yyyy}.log</fileNamePattern>
+            <fileNamePattern>logs/auth-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>1</maxHistory>
         </rollingPolicy>
     </appender>
@@ -30,7 +30,7 @@
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover and keep 7 days' worth of history -->
-            <fileNamePattern>info-%d{MM-dd-yyyy}.log</fileNamePattern>
+            <fileNamePattern>logs/info-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>1</maxHistory>
         </rollingPolicy>
     </appender>

@@ -81,6 +81,10 @@ public class EndpointConfiguration {
         addEndpointToGroup("PageOps", "auto-split-pdf");
         addEndpointToGroup("PageOps", "extract-page");
         addEndpointToGroup("PageOps", "pdf-to-single-page");
+        addEndpointToGroup("PageOps", "split-by-size-or-count");
+        addEndpointToGroup("PageOps", "overlay-pdf");
+        addEndpointToGroup("PageOps", "split-pdf-by-sections");
+        
         
         // Adding endpoints to "Convert" group
         addEndpointToGroup("Convert", "pdf-to-img");
@@ -96,6 +100,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "html-to-pdf");
         addEndpointToGroup("Convert", "url-to-pdf");
         addEndpointToGroup("Convert", "markdown-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-csv");
+        
         
         // Adding endpoints to "Security" group
         addEndpointToGroup("Security", "add-password");
@@ -104,6 +110,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "add-watermark");
         addEndpointToGroup("Security", "cert-sign");
         addEndpointToGroup("Security", "sanitize-pdf");
+        addEndpointToGroup("Security", "auto-redact");
         
         
         // Adding endpoints to "Other" group
@@ -197,6 +204,11 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-single-page");
         addEndpointToGroup("Java", "markdown-to-pdf");
         addEndpointToGroup("Java", "show-javascript");
+        addEndpointToGroup("Java", "auto-redact");
+        addEndpointToGroup("Java", "pdf-to-csv");
+        addEndpointToGroup("Java", "split-by-size-or-count");
+        addEndpointToGroup("Java", "overlay-pdf");
+        addEndpointToGroup("Java", "split-pdf-by-sections");
         
         //Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
