@@ -20,9 +20,12 @@ ENV DOCKER_ENABLE_SECURITY=false \
 
 RUN mkdir -p /scripts /usr/share/fonts/opentype/noto /configs /customFiles
 
+# Copy necessary files
+COPY ./scripts/* /scripts/
 COPY build/libs/*.jar app.jar
 
 # Set font cache and permissions
+RUN chmod +x /scripts/init.sh
 #RUN chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 # Expose the application port
