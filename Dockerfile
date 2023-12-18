@@ -30,7 +30,7 @@ COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
 COPY build/libs/*.jar app.jar
 
 # Set font cache and permissions
-RUN fc-cache -f -v && chmod +x /scripts/init.sh
+RUN fc-cache -f -v && chmod +x /scripts/*
 
 ##&& \
 ##    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
