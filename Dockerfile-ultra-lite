@@ -1,6 +1,8 @@
 # Build jbig2enc in a separate stage
 FROM bellsoft/liberica-openjdk-alpine:17
 
+ARG VERSION_TAG
+
 # Set Environment Variables
 ENV DOCKER_ENABLE_SECURITY=false \
     HOME=/home/stirlingpdfuser \

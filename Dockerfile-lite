@@ -1,5 +1,8 @@
 # Build jbig2enc in a separate stage
 FROM bellsoft/liberica-openjdk-debian:17
+
+ARG VERSION_TAG
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libreoffice-core \
