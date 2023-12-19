@@ -69,7 +69,7 @@ dependencies {
 	
     implementation 'org.yaml:snakeyaml:2.1'
     implementation 'org.springframework.boot:spring-boot-starter-web:3.1.6'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.1.6'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.2.0'
 
     if (System.getenv('DOCKER_ENABLE_SECURITY') != 'false') {
         implementation 'org.springframework.boot:spring-boot-starter-security:3.1.6'
