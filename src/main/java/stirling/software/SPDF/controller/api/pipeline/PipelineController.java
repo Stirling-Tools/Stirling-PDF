@@ -421,8 +421,11 @@ public class PipelineController {
 
 	@PostMapping("/handleData")
 	public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request) {
-	    MultipartFile[] files = request.getFileInputs();
-	    String jsonString = request.getJsonString();
+	    MultipartFile[] files = request.getFileInput();
+	    String jsonString = request.getJson();
+	    if(files == null) {
+	    	return null;
+	    }
 		logger.info("Received POST request to /handleData with {} files", files.length);
 		try {
 			List<Resource> outputFiles = handleFiles(files, jsonString);

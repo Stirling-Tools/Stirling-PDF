@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -51,11 +52,13 @@ public class SecurityConfiguration {
     	if(loginEnabledValue) {
     		
     		http.csrf(csrf -> csrf.disable());
-    		http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
+    		//http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
+    		//http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
 	        http
 	            .formLogin(formLogin -> formLogin
 	                .loginPage("/login")
-	                .defaultSuccessUrl("/")
+	               // .defaultSuccessUrl("/")
+	                .successHandler(new SavedRequestAwareAuthenticationSuccessHandler())
 	                .failureHandler(new CustomAuthenticationFailureHandler())
 	                .permitAll()
 	            )
@@ -85,7 +88,14 @@ public class SecurityConfiguration {
         return http.build();
     }
 
+    
+    @Bean
+    public IPRateLimitingFilter rateLimitingFilter() {
+        int maxRequestsPerIp = 10000; // Example limit
+        return new IPRateLimitingFilter(maxRequestsPerIp, maxRequestsPerIp);
+    }
 
+ 
     
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {

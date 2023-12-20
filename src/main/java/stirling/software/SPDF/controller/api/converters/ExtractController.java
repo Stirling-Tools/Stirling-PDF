@@ -28,7 +28,7 @@ import stirling.software.SPDF.model.api.extract.PDFFilePage;
 
 @RestController
 @RequestMapping("/api/v1/convert")
-@Tag(name = "General", description = "General APIs")
+@Tag(name = "Convert", description = "Convert APIs")
 public class ExtractController {
 
     private static final Logger logger = LoggerFactory.getLogger(CropController.class);

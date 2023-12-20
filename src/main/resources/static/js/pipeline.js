@@ -20,9 +20,20 @@ function validatePipeline() {
 		console.log("currentOperationDescription", currentOperationDescription);
 		console.log("nextOperationDescription", nextOperationDescription);
 
+		
+		// Strip off 'ZIP-' prefix
+		currentOperationDescription = currentOperationDescription.replace("ZIP-", '');
+		nextOperationDescription = nextOperationDescription.replace("ZIP-", '');
+
+		console.log("currentOperationDescription", currentOperationDescription);
+		console.log("nextOperationDescription", nextOperationDescription);
+		
 		let currentOperationOutput = currentOperationDescription.match(/Output:([A-Z\/]*)/)?.[1] || "";
 		let nextOperationInput = nextOperationDescription.match(/Input:([A-Z\/]*)/)?.[1] || "";
 
+
+		
+		
 		console.log("Operation " + currentOperation + " Output: " + currentOperationOutput);
 		console.log("Operation " + nextOperation + " Input: " + nextOperationInput);
 
@@ -99,7 +110,7 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 	formData.append('json', pipelineConfigJson);
 	console.log("formData", formData);
 
-	fetch('/handleData', {
+	fetch('/api/v1/pipeline/handleData', {
 		method: 'POST',
 		body: formData
 	})
@@ -120,16 +131,17 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 });
 
 let apiDocs = {};
-
+let apiSchemas = {};
 let operationSettings = {};
 
-fetch('v3/api-docs')
+fetch('v1/api-docs')
 	.then(response => response.json())
 	.then(data => {
 
 		apiDocs = data.paths;
+		apiSchemas = data.components.schemas;
 		let operationsDropdown = document.getElementById('operationsDropdown');
-		const ignoreOperations = ["/handleData", "operationToIgnore"]; // Add the operations you want to ignore here
+		const ignoreOperations = ["/api/v1/pipeline/handleData", "/api/v1/pipeline/operationToIgnore"]; // Add the operations you want to ignore here
 
 		operationsDropdown.innerHTML = '';
 
@@ -138,6 +150,9 @@ fetch('v3/api-docs')
 		// Group operations by tags
 		Object.keys(data.paths).forEach(operationPath => {
 			let operation = data.paths[operationPath].post;
+			if(!operation || !operation.description) {
+				console.log(operationPath);
+			}
 			if (operation && !ignoreOperations.includes(operationPath) && !operation.description.includes("Type:MISO")) {
 				let operationTag = operation.tags[0]; // This assumes each operation has exactly one tag
 				if (!operationsByTag[operationTag]) {
@@ -146,9 +161,9 @@ fetch('v3/api-docs')
 				operationsByTag[operationTag].push(operationPath);
 			}
 		});
-
+		console.log("operationsByTag", operationsByTag);
 		// Specify the order of tags
-		let tagOrder = ["General", "Security", "Convert", "Other", "Filter"];
+		let tagOrder = ["General", "Security", "Convert", "Misc", "Filter"];
 
 		// Create dropdown options
 		tagOrder.forEach(tag => {
@@ -158,8 +173,17 @@ fetch('v3/api-docs')
 
 				operationsByTag[tag].forEach(operationPath => {
 					let option = document.createElement('option');
-					let operationWithoutSlash = operationPath.replace(/\//g, ''); // Remove slashes
-					option.textContent = operationWithoutSlash;
+					console.log("operationPath", operationPath);
+					let operationPathDisplay = operationPath
+					operationPathDisplay = operationPath.replace(new RegExp("api/v1/" + tag.toLowerCase() + "/", 'i'), "");
+            
+					console.log("operationPath2", operationPath);
+					if(operationPath.includes("/convert")){
+						operationPathDisplay = operationPathDisplay.replaceAll("(?<!^)/", " to ");
+					} else {
+						operationPathDisplay = operationPathDisplay.replace(/\//g, ''); // Remove slashes
+					}
+					option.textContent = operationPathDisplay;
 					option.value = operationPath; // Keep the value with slashes for querying
 					group.appendChild(option);
 				});
@@ -176,25 +200,41 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 
 	let listItem = document.createElement('li');
 	listItem.className = "list-group-item";
-	let hasSettings = (apiDocs[selectedOperation] && apiDocs[selectedOperation].post &&
-		((apiDocs[selectedOperation].post.parameters && apiDocs[selectedOperation].post.parameters.length > 0) ||
-			(apiDocs[selectedOperation].post.requestBody &&
-				apiDocs[selectedOperation].post.requestBody.content['multipart/form-data'].schema.properties)));
+	let hasSettings = false;
+	if (apiDocs[selectedOperation] && apiDocs[selectedOperation].post) {
+	    const postMethod = apiDocs[selectedOperation].post;
+	
+	    // Check if parameters exist
+	    if (postMethod.parameters && postMethod.parameters.length > 0) {
+	        hasSettings = true;
+	    } else if (postMethod.requestBody && postMethod.requestBody.content['multipart/form-data']) {
+	        // Extract the reference key
+	        const refKey = postMethod.requestBody.content['multipart/form-data'].schema['$ref'].split('/').pop();
+			console.log("refKey", refKey);
+	        // Check if the referenced schema exists and has properties
+	        if (apiSchemas[refKey] && Object.keys(apiSchemas[refKey].properties).length > 0) {
+	            hasSettings = true;
+	        }
+	    }
+	}
 
 
 
 
 	listItem.innerHTML = `
-		<div class="d-flex justify-content-between align-items-center w-100">
-			<div class="operationName">${selectedOperation}</div>
-			<div class="arrows d-flex">
-				<button class="btn btn-secondary move-up btn-margin"><span>&uarr;</span></button>
-				<button class="btn btn-secondary move-down btn-margin"><span>&darr;</span></button>
-				<button class="btn btn-warning pipelineSettings btn-margin" ${hasSettings ? "" : "disabled"}><span style="color: ${hasSettings ? "black" : "grey"};">⚙️</span></button>
-				<button class="btn btn-danger remove"><span>X</span></button>
-			</div>
-		</div>
-	`;
+    <div class="d-flex justify-content-between align-items-center w-100">
+        <div class="operationName">${selectedOperation}</div>
+        <div class="arrows d-flex">
+            <button class="btn btn-secondary move-up ms-1"><span>&uarr;</span></button>
+            <button class="btn btn-secondary move-down ms-1"><span>&darr;</span></button>
+            <button class="btn ${hasSettings ? 'btn-warning' : 'btn-secondary'} pipelineSettings ms-1" ${hasSettings ? "" : "disabled"}>
+		        <span style="color: ${hasSettings ? "white" : "grey"};">⚙️</span>
+		    </button>
+            <button class="btn btn-danger remove ms-1"><span>X</span></button>
+        </div>
+    </div>
+`;
+
 
 	pipelineList.appendChild(listItem);
 
@@ -226,12 +266,15 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 		let pipelineSettingsModal = document.getElementById('pipelineSettingsModal');
 		let pipelineSettingsContent = document.getElementById('pipelineSettingsContent');
 		let operationData = apiDocs[operation].post.parameters || [];
-		let requestBodyData = apiDocs[operation].post.requestBody.content['multipart/form-data'].schema.properties || {};
 
+		// Resolve the $ref reference to get actual schema properties
+		let refKey = apiDocs[operation].post.requestBody.content['multipart/form-data'].schema['$ref'].split('/').pop();
+		let requestBodyData = apiSchemas[refKey].properties || {};
+		
 		// Combine operationData and requestBodyData into a single array
 		operationData = operationData.concat(Object.keys(requestBodyData).map(key => ({
-			name: key,
-			schema: requestBodyData[key]
+		    name: key,
+		    schema: requestBodyData[key]
 		})));
 
 		pipelineSettingsContent.innerHTML = '';
@@ -240,16 +283,21 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 			// If the parameter name is 'fileInput', return early to skip the rest of this iteration
     		if (parameter.name === 'fileInput') return;
     
+    		console.log("parameter", parameter);
 			let parameterDiv = document.createElement('div');
 			parameterDiv.className = "mb-3";
 
 			let parameterLabel = document.createElement('label');
 			parameterLabel.textContent = `${parameter.name} (${parameter.schema.type}): `;
-			parameterLabel.title = parameter.description;
+			parameterLabel.title = parameter.schema.description;
+			parameterLabel.setAttribute('for', parameter.name);
 			parameterDiv.appendChild(parameterLabel);
+			
+			let defaultValue =  parameter.schema.example;
+			if (defaultValue === undefined) defaultValue =  parameter.schema.default;
 
 			let parameterInput;
-
+			
 			// check if enum exists in schema
 			if (parameter.schema.enum) {
 				// if enum exists, create a select element
@@ -282,6 +330,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 							parameterInput = document.createElement('input');
 							parameterInput.type = 'text';
 							parameterInput.className = "form-control";
+							if (defaultValue !== undefined) parameterInput.value = defaultValue;
 						}
 						break;
 					case 'number':
@@ -289,10 +338,12 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 						parameterInput = document.createElement('input');
 						parameterInput.type = 'number';
 						parameterInput.className = "form-control";
+						if (defaultValue !== undefined) parameterInput.value = defaultValue;
 						break;
 					case 'boolean':
 						parameterInput = document.createElement('input');
 						parameterInput.type = 'checkbox';
+						if (defaultValue === true) parameterInput.checked = true;
 						break;
 					case 'array':
 					case 'object':
@@ -304,10 +355,13 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 						parameterInput = document.createElement('input');
 						parameterInput.type = 'text';
 						parameterInput.className = "form-control";
+						if (defaultValue !== undefined) parameterInput.value = defaultValue;
 				}
 			}
 			parameterInput.id = parameter.name;
 
+			console.log("defaultValue", defaultValue);
+			console.log("parameterInput", parameterInput);
 			if (operationSettings[operation] && operationSettings[operation][parameter.name] !== undefined) {
 				let savedValue = operationSettings[operation][parameter.name];
 
@@ -327,7 +381,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 						parameterInput.value = savedValue;
 				}
 			}
-
+			console.log("parameterInput2", parameterInput);
 			parameterDiv.appendChild(parameterInput);
 
 			pipelineSettingsContent.appendChild(parameterDiv);
@@ -340,50 +394,67 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 			event.preventDefault();
 			let settings = {};
 			operationData.forEach(parameter => {
-				let value = document.getElementById(parameter.name).value;
-				switch (parameter.schema.type) {
-					case 'number':
-					case 'integer':
-						settings[parameter.name] = Number(value);
-						break;
-					case 'boolean':
-						settings[parameter.name] = document.getElementById(parameter.name).checked;
-						break;
-					case 'array':
-					case 'object':
-						try {
-							settings[parameter.name] = JSON.parse(value);
-						} catch (err) {
-							console.error(`Invalid JSON format for ${parameter.name}`);
-						}
-						break;
-					default:
-						settings[parameter.name] = value;
+				console.log("parameter.name", parameter.name);
+				if(parameter.name !== "fileInput"){
+					let value = document.getElementById(parameter.name).value;
+					switch (parameter.schema.type) {
+						case 'number':
+						case 'integer':
+							settings[parameter.name] = Number(value);
+							break;
+						case 'boolean':
+							settings[parameter.name] = document.getElementById(parameter.name).checked;
+							break;
+						case 'array':
+						case 'object':
+							try {
+								settings[parameter.name] = JSON.parse(value);
+							} catch (err) {
+								console.error(`Invalid JSON format for ${parameter.name}`);
+							}
+							break;
+						default:
+							settings[parameter.name] = value;
+					}
 				}
 			});
 			operationSettings[operation] = settings;
 			console.log(settings);
-			pipelineSettingsModal.style.display = "none";
+			//pipelineSettingsModal.style.display = "none";
 		});
 		pipelineSettingsContent.appendChild(saveButton);
 
-		pipelineSettingsModal.style.display = "block";
+		//pipelineSettingsModal.style.display = "block";
 
-		pipelineSettingsModal.getElementsByClassName("close")[0].onclick = function() {
-			pipelineSettingsModal.style.display = "none";
-		}
+		//pipelineSettingsModal.getElementsByClassName("close")[0].onclick = function() {
+		//	pipelineSettingsModal.style.display = "none";
+		//}
 
-		window.onclick = function(event) {
-			if (event.target == pipelineSettingsModal) {
-				pipelineSettingsModal.style.display = "none";
-			}
-		}
+		//window.onclick = function(event) {
+		//	if (event.target == pipelineSettingsModal) {
+		//		pipelineSettingsModal.style.display = "none";
+		//	}
+		//}
 	}
+	
+});
+	
+	
+	
+	var saveBtn = document.getElementById('savePipelineBtn');
 
-	document.getElementById('savePipelineBtn').addEventListener('click', function() {
+	// Remove any existing event listeners
+	saveBtn.removeEventListener('click', savePipeline);
+	
+	// Add the event listener
+	saveBtn.addEventListener('click', savePipeline);
+	console.log("saveBtn", saveBtn)
+	function savePipeline() {
+		
 		if (validatePipeline() === false) {
 			return;
 		}
+		
 		var pipelineName = document.getElementById('pipelineName').value;
 		let pipelineList = document.getElementById('pipelineList').children;
 		let pipelineConfig = {
@@ -406,7 +477,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 				"parameters": parameters
 			});
 		}
-
+		console.log("Downloading..");
 		let a = document.createElement('a');
 		a.href = URL.createObjectURL(new Blob([JSON.stringify(pipelineConfig, null, 2)], {
 			type: 'application/json'
@@ -417,7 +488,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);
-	});
+	}
 
 	async function processPipelineConfig(configString) {
 		let pipelineConfig = JSON.parse(configString);
@@ -491,4 +562,3 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 	});
 
 
-});
