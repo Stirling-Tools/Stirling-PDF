@@ -99,9 +99,9 @@ export class Impose extends Operator {
     protected static outputSchema = JoiPDFFileSchema.label(translationObject.outputs.pdfFile.name).description(translationObject.outputs.pdfFile.description);
 
     static schema = Joi.object({
-        input: Impose.inputSchema.required(),
+        input: Impose.inputSchema,
         values: Impose.valueSchema.required(),
-        output: Impose.outputSchema.optional()
+        output: Impose.outputSchema
     }).label(translationObject.operators.nup.friendlyName).description(translationObject.operators.nup.description);
 
 
@@ -140,20 +140,5 @@ export class Impose extends Operator {
             console.log("ImposeResult: ", result);
             return result;
         })
-    }
-
-    validate(): { valid: boolean; reason?: string | undefined; } {
-        let baseValidationResults = super.validate();
-        if(!baseValidationResults.valid)
-            return baseValidationResults;
-
-        // TODO: Fully integrate joi in the base and remove this func
-
-        this.actionValues = Impose.valueSchema.validate(this.actionValues);
-
-        if(this.actionValues.error) 
-            return { valid: false, reason: this.actionValues }
-
-        return { valid: true }
     }
 }

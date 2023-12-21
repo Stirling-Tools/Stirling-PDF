@@ -7,6 +7,7 @@ import { Operator } from '@stirling-pdf/shared-operations/src/functions';
 
 import { PdfFile } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile';
 import { respondWithPdfFiles } from 'utils/endpoint-utils';
+import { Action } from '@stirling-pdf/shared-operations/declarations/Action';
 
 router.post('/:func', upload.array("file"), async function(req: Request, res: Response) {
     handleEndpoint(req, res);
@@ -31,15 +32,20 @@ function handleEndpoint(req: Request, res: Response) {
 
     const operator = getOperatorByName(req.params.func);
     if(operator) {
-        const operation = new operator({type: req.params.func, values: req.body});
-        const validationResults = operation.validate();
-        if(validationResults.valid) {
-            operation.run(pdfFiles, (progress) => {}).then(pdfFiles => {
-                respondWithPdfFiles(res, pdfFiles, req.params.func + "_result");
-            })
+        const action: Action = {type: req.params.func, values: req.body};
+
+        const validationResults = operator.schema.validate({input: pdfFiles, values: action.values});
+
+        if(validationResults.error) {
+            res.status(400).json(validationResults.error);
         }
         else {
-            res.status(400).json(validationResults);
+            action.values = validationResults.value.values;
+            const operation = new operator(action);
+
+            operation.run(validationResults.value.input, (progress) => {}).then(pdfFiles => {
+                respondWithPdfFiles(res, pdfFiles, req.params.func + "_result");
+            })
         }
     }
     else {

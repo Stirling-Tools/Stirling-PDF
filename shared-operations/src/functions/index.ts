@@ -22,9 +22,9 @@ export class Operator {
     protected static valueSchema: Joi.Schema;
     protected static outputSchema: Joi.Schema;
     static schema: Joi.ObjectSchema<{
-        input: Joi.Schema;
-        values: Joi.Schema;
-        output: Joi.Schema;
+        input: any;
+        values: any;
+        output: any;
     }>;
 
     actionValues: any;
@@ -35,13 +35,6 @@ export class Operator {
 
     async run(input: any[], progressCallback: (progress: Progress) => void): Promise<any[]> {
         return [];
-    }
-
-    validate(): ValidationResult {
-        if(!this.actionValues) {
-            return { valid: false, reason: "The Operators action values were empty."}
-        }
-        return { valid: true };
     }
 }
 

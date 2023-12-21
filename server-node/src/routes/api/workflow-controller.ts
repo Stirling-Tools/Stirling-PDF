@@ -48,6 +48,8 @@ router.post("/:workflowUuid?", [
         if(req.body.async === "false") {
             console.log("Don't do async");
 
+            // TODO: Check if file type == inputType for operator
+
             traverseOperations(workflow.actions, inputs, (state) => {
                 console.log("State: ", state);
             }).then(async (pdfResults) => {
@@ -87,6 +89,8 @@ router.post("/:workflowUuid?", [
                     "workflow": workflow
                 }
             });
+
+            // TODO: Check if file type == inputType for operator
 
             traverseOperations(workflow.actions, inputs, (state) => {
                 console.log("State: ", state);

@@ -19,10 +19,11 @@ export function validateOperations(actions: Action[]): { valid: boolean, reason?
         if(!operator) {
             return { valid: false, reason: `action.type ${action.type} does not exist` }
         }
-        const validationResult = new operator(action).validate();
+        const validationResult = operator.schema.validate({values: action.values});
 
-        if(!validationResult.valid) {
-            return validationResult;
+        // TODO: convert everything to joiresult format
+        if(validationResult.error) {
+            return { valid: false, reason: validationResult.error.message};
         }
 
         if (action.actions) {
