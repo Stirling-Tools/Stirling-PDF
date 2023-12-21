@@ -38,7 +38,7 @@ function handleEndpoint(req: Request, res: Response) {
         const validationResults = operator.schema.validate({input: pdfFiles, values: action.values});
 
         if(validationResults.error) {
-            res.status(400).json(validationResults.error);
+            res.status(400).json({error: "Value validation failed", details: validationResults.error.message});
         }
         else {
             action.values = validationResults.value.values;
