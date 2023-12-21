@@ -8,6 +8,7 @@ import { Operator } from '@stirling-pdf/shared-operations/src/functions';
 import { PdfFile } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile';
 import { respondWithPdfFiles } from 'utils/endpoint-utils';
 import { Action } from '@stirling-pdf/shared-operations/declarations/Action';
+import { JoiPDFFileSchema } from '@stirling-pdf/shared-operations/src/wrappers/PdfFileJoi';
 
 router.post('/:func', upload.array("file"), async function(req: Request, res: Response) {
     handleEndpoint(req, res);
@@ -23,12 +24,12 @@ function handleEndpoint(req: Request, res: Response) {
         return;
     }
 
-    let pdfFiles: PdfFile[] = [];
-    if (Array.isArray(req.files))
-        pdfFiles = PdfFile.fromMulterFiles(req.files);
-    else {
-        pdfFiles = PdfFile.fromMulterFiles(Object.values(req.files).flatMap(va => va));
+    const validationResults = JoiPDFFileSchema.validate(req.files);
+    if(validationResults.error) {
+        res.status(400).json({error: "PDF validation failed", details: validationResults.error.message});
+        return;
     }
+    const pdfFiles: PdfFile[] = validationResults.value;
 
     const operator = getOperatorByName(req.params.func);
     if(operator) {

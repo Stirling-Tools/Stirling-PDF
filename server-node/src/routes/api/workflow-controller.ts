@@ -6,6 +6,7 @@ const upload = multer();
 import { traverseOperations } from "@stirling-pdf/shared-operations/src/workflow/traverseOperations";
 import { PdfFile, RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile';
 import { respondWithPdfFiles } from '../../utils/endpoint-utils';
+import { JoiPDFFileSchema } from '@stirling-pdf/shared-operations/src/wrappers/PdfFileJoi';
 
 interface Workflow {
     eventStream?: express.Response<any, Record<string, any>>,
@@ -42,7 +43,12 @@ router.post("/:workflowUuid?", [
             }
         }
 
-        const inputs = PdfFile.fromMulterFiles(req.files as Express.Multer.File[]);
+        const validationResults = JoiPDFFileSchema.validate(req.files);
+        if(validationResults.error) {
+            res.status(400).json({error: "PDF validation failed", details: validationResults.error.message});
+            return;
+        }
+        const inputs: PdfFile[] = validationResults.value;
 
         // Allow option to do it synchronously and just make a long request
         if(req.body.async === "false") {

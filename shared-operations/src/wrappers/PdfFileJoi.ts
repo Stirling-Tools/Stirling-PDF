@@ -1,22 +1,27 @@
 import Joi from "joi";
 import { PdfFile } from "./PdfFile";
 
-export const JoiPDFFileSchema = Joi.binary().custom((value: Express.Multer.File[] | PdfFile | PdfFile[], helpers) => {
-    if (value instanceof PdfFile) {
-        return value;
-    }
-    else if (Array.isArray(value)) {
-        if(value.every((e) => e instanceof PdfFile))
+export const JoiPDFFileSchema = Joi.custom((value: Express.Multer.File | Express.Multer.File[] | PdfFile | PdfFile[], helpers) => {
+    if (Array.isArray(value)) {
+        if(isPdfFileArray(value))
             return value;
-        else
-            throw new Error("Some elements in the array are not of type PdfFile");
+        else { // File(s)
+            if(value.some(f => f.mimetype != "application/pdf")) 
+                throw new Error("at least one of the files provided doesn't seem to be a PDF.");
+
+            return PdfFile.fromMulterFiles(value);
+        }
     }
     else {
-        try {
-            return PdfFile.fromMulterFiles(value);
-        } catch (error) {
-            console.error(error);
-            throw new Error('value is not of type PdfFile');
+        if (value instanceof PdfFile) {
+            return value;
+        }
+        else { 
+            throw new Error("an invalid type (unhandeled, non-file-type) was provided to pdf validation process. Please report this to maintainers.");
         }
     }
 }, "pdffile validation");
+
+function isPdfFileArray(value: any): value is PdfFile[] {
+    return value.every((e) => e instanceof PdfFile)
+} 
