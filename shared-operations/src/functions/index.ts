@@ -18,10 +18,14 @@ export class Operator {
     static type: string;
 
     /** The Joi validators & decorators */
-    static inputSchema: Joi.Schema;
-    static valueSchema: Joi.Schema;
-    static outputSchema: Joi.Schema;
-    static schema: Joi.Schema;
+    protected static inputSchema: Joi.Schema;
+    protected static valueSchema: Joi.Schema;
+    protected static outputSchema: Joi.Schema;
+    static schema: Joi.ObjectSchema<{
+        input: Joi.Schema;
+        values: Joi.Schema;
+        output: Joi.Schema;
+    }>;
 
     actionValues: any;
 

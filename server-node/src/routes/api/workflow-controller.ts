@@ -48,7 +48,7 @@ router.post("/:workflowUuid?", [
         if(req.body.async === "false") {
             console.log("Don't do async");
 
-            traverseOperations(workflow.operations, inputs, (state) => {
+            traverseOperations(workflow.actions, inputs, (state) => {
                 console.log("State: ", state);
             }).then(async (pdfResults) => {
                 console.log("Download");
@@ -88,7 +88,7 @@ router.post("/:workflowUuid?", [
                 }
             });
 
-            traverseOperations(workflow.operations, inputs, (state) => {
+            traverseOperations(workflow.actions, inputs, (state) => {
                 console.log("State: ", state);
                 if(activeWorkflow.eventStream)
                     activeWorkflow.eventStream.write(`data: ${state}\n\n`);

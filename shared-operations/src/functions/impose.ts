@@ -45,11 +45,11 @@ export class Impose extends Operator {
     static type: string = "impose";
 
     /**
-     * Validation
+     * Validation & Localisation
      */
 
-    static inputSchema = JoiPDFFileSchema.label(translationObject.inputs.pdfFile.name).description(translationObject.inputs.pdfFile.description);
-    static valueSchema = Joi.object({
+    protected static inputSchema = JoiPDFFileSchema.label(translationObject.inputs.pdfFile.name).description(translationObject.inputs.pdfFile.description);
+    protected static valueSchema = Joi.object({
         nup: Joi.number().integer().valid(2, 3, 4, 8, 9, 12, 16).required()
             .label(translationObject.operators.nup.values.nup.friendlyName).description(translationObject.operators.nup.values.nup.description)
             .example("3").example("4"),
@@ -92,18 +92,18 @@ export class Impose extends Operator {
             "JIS-B0", "JIS-B1", "JIS-B2", "JIS-B3", "JIS-B4", "JIS-B5", "JIS-B6",
             "JIS-B7", "JIS-B8", "JIS-B9", "JIS-B10", "JIS-B11", "JIS-B12",
             "Shirokuban4", "Shirokuban5", "Shirokuban6", "Kiku4", "Kiku5", "AB", "B40", "Shikisen"
-        ].flatMap(size => [size, size + "P", size + "L"]))
-        .required()
+        ].flatMap(size => [size, size + "P", size + "L"])).required()
             .label(translationObject.operators.nup.values.format.friendlyName).description(translationObject.operators.nup.values.format.description)
             .example("A4").example("A3L")
     });
-    static outputSchema = JoiPDFFileSchema.label(translationObject.outputs.pdfFile.name).description(translationObject.outputs.pdfFile.description);
+    protected static outputSchema = JoiPDFFileSchema.label(translationObject.outputs.pdfFile.name).description(translationObject.outputs.pdfFile.description);
 
     static schema = Joi.object({
         input: Impose.inputSchema.required(),
         values: Impose.valueSchema.required(),
         output: Impose.outputSchema.optional()
     }).label(translationObject.operators.nup.friendlyName).description(translationObject.operators.nup.description);
+
 
     /**
      * Logic
