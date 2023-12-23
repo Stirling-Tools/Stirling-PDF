@@ -12,30 +12,16 @@ function validatePipeline() {
 		if (currentOperation === '/add-password') {
 			containsAddPassword = true;
 		}
-		console.log(currentOperation);
-		console.log(apiDocs[currentOperation]);
+
 		let currentOperationDescription = apiDocs[currentOperation]?.post?.description || "";
 		let nextOperationDescription = apiDocs[nextOperation]?.post?.description || "";
 
-		console.log("currentOperationDescription", currentOperationDescription);
-		console.log("nextOperationDescription", nextOperationDescription);
-
-		
 		// Strip off 'ZIP-' prefix
 		currentOperationDescription = currentOperationDescription.replace("ZIP-", '');
 		nextOperationDescription = nextOperationDescription.replace("ZIP-", '');
-
-		console.log("currentOperationDescription", currentOperationDescription);
-		console.log("nextOperationDescription", nextOperationDescription);
 		
 		let currentOperationOutput = currentOperationDescription.match(/Output:([A-Z\/]*)/)?.[1] || "";
 		let nextOperationInput = nextOperationDescription.match(/Input:([A-Z\/]*)/)?.[1] || "";
-
-
-		
-		
-		console.log("Operation " + currentOperation + " Output: " + currentOperationOutput);
-		console.log("Operation " + nextOperation + " Input: " + nextOperationInput);
 
 		// Splitting in case of multiple possible output/input
 		let currentOperationOutputArr = currentOperationOutput.split('/');
@@ -78,14 +64,14 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 		return;
 	}
 	let selectedOperation = document.getElementById('operationsDropdown').value;
-	let parameters = operationSettings[selectedOperation] || {};
 
+	
+
+	var pipelineName = document.getElementById('pipelineName').value;
+	let pipelineList = document.getElementById('pipelineList').children;
 	let pipelineConfig = {
-		"name": "uniquePipelineName",
-		"pipeline": [{
-			"operation": selectedOperation,
-			"parameters": parameters
-		}],
+		"name": pipelineName,
+		"pipeline": [],
 		"_examples": {
 			"outputDir": "{outputFolder}/{folderName}",
 			"outputFileName": "{filename}-{pipelineName}-{date}-{time}"
@@ -93,6 +79,28 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 		"outputDir": "httpWebRequest",
 		"outputFileName": "{filename}"
 	};
+
+	for (let i = 0; i < pipelineList.length; i++) {
+		let operationName = pipelineList[i].querySelector('.operationName').textContent;
+		let parameters = operationSettings[operationName] || {};
+
+		pipelineConfig.pipeline.push({
+			"operation": operationName,
+			"parameters": parameters
+		});
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 	let pipelineConfigJson = JSON.stringify(pipelineConfig, null, 2);
 
@@ -111,32 +119,35 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 	console.log("formData", formData);
 
 	fetch('/api/v1/pipeline/handleData', {
-		method: 'POST',
-		body: formData
+    method: 'POST',
+    body: formData
 	})
-		.then(response => response.blob())
-		.then(blob => {
+	.then(response => {
+	    // Save the response to use it later
+	    const responseToUseLater = response;
+	
+	    return response.blob().then(blob => {
+	        let url = window.URL.createObjectURL(blob);
+	        let a = document.createElement('a');
+	        a.href = url;
+	
+	        // Use responseToUseLater instead of response
+	        const contentDisposition = responseToUseLater.headers.get('Content-Disposition');
+	        let filename = 'download';
+	        if (contentDisposition && contentDisposition.indexOf('attachment') !== -1) {
+	            filename = decodeURIComponent(contentDisposition.split('filename=')[1].replace(/"/g, '')).trim();
+	        }
+	        a.download = filename;
+	        
+	        document.body.appendChild(a);
+	        a.click();
+	        a.remove();
+	    });
+	})
+	.catch((error) => {
+	    console.error('Error:', error);
+	});
 
-			let url = window.URL.createObjectURL(blob);
-			let a = document.createElement('a');
-			a.href = url;
-			
-
-			const contentDisposition = response.headers.get('Content-Disposition');
-			let filename = 'download';
-			if (contentDisposition && contentDisposition.indexOf('attachment') !== -1) {
-				filename = decodeURIComponent(contentDisposition.split('filename=')[1].replace(/"/g, '')).trim();
-			}
-			a.download = filename;
-			
-			
-			document.body.appendChild(a);
-			a.click();
-			a.remove();
-		})
-		.catch((error) => {
-			console.error('Error:', error);
-		});
 });
 
 let apiDocs = {};
@@ -170,7 +181,6 @@ fetch('v1/api-docs')
 				operationsByTag[operationTag].push(operationPath);
 			}
 		});
-		console.log("operationsByTag", operationsByTag);
 		// Specify the order of tags
 		let tagOrder = ["General", "Security", "Convert", "Misc", "Filter"];
 
@@ -188,10 +198,7 @@ fetch('v1/api-docs')
             
 					
 					if(operationPath.includes("/convert")){
-						console.log("operationPathDisplay", operationPathDisplay);
 						operationPathDisplay = operationPathDisplay.replace(/^\//, '').replaceAll("/", " to ");
-
-						console.log("operationPathDisplay2", operationPathDisplay);
 					} else {
 						operationPathDisplay = operationPathDisplay.replace(/\//g, ''); // Remove slashes
 					}
@@ -223,7 +230,6 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 	    } else if (postMethod.requestBody && postMethod.requestBody.content['multipart/form-data']) {
 	        // Extract the reference key
 	        const refKey = postMethod.requestBody.content['multipart/form-data'].schema['$ref'].split('/').pop();
-			console.log("refKey", refKey);
 	        // Check if the referenced schema exists and has properties
 	        if (apiSchemas[refKey] && Object.keys(apiSchemas[refKey].properties).length > 0) {
 	            hasSettings = true;
@@ -296,7 +302,6 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 			// If the parameter name is 'fileInput', return early to skip the rest of this iteration
     		if (parameter.name === 'fileInput') return;
     
-    		console.log("parameter", parameter);
 			let parameterDiv = document.createElement('div');
 			parameterDiv.className = "mb-3";
 
@@ -407,7 +412,6 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 			event.preventDefault();
 			let settings = {};
 			operationData.forEach(parameter => {
-				console.log("parameter.name", parameter.name);
 				if(parameter.name !== "fileInput"){
 					let value = document.getElementById(parameter.name).value;
 					switch (parameter.schema.type) {
@@ -432,7 +436,6 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 				}
 			});
 			operationSettings[operation] = settings;
-			console.log(settings);
 			//pipelineSettingsModal.style.display = "none";
 		});
 		pipelineSettingsContent.appendChild(saveButton);

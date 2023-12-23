@@ -18,12 +18,12 @@ ENV DOCKER_ENABLE_SECURITY=false \
 
 # Set up necessary directories and permissions
 #RUN mkdir -p /scripts /configs /customFiles && \
-#    chown -R stirlingpdfuser:stirlingpdfgroup /scripts /configs /customFiles
-
+#    chown -R stirlingpdfuser:stirlingpdfgroup /scripts /configs /customFiles /pipeline /pipeline/defaultWebUIConfigs  /pipeline/watchedFolders /pipeline/finishedFolders
+ 
 RUN mkdir -p /scripts /usr/share/fonts/opentype/noto /configs /customFiles
 COPY ./scripts/download-security-jar.sh /scripts/download-security-jar.sh
 COPY ./scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
-
+COPY ./pipeline/ /pipeline/
 COPY build/libs/*.jar app.jar
 
 # Set font cache and permissions

@@ -254,8 +254,10 @@ public class PipelineController {
 	List<Resource> processFiles(List<Resource> outputFiles, String jsonString) throws Exception {
 		
 		ObjectMapper mapper = new ObjectMapper();
+		logger.info("Running jsonString {}", jsonString);
+		
 		JsonNode jsonNode = mapper.readTree(jsonString);
-
+		logger.info("Running jsonNode {}", jsonNode);
 		JsonNode pipelineNode = jsonNode.get("pipeline");
 		logger.info("Running pipelineNode: {}", pipelineNode);
 		ByteArrayOutputStream logStream = new ByteArrayOutputStream();
@@ -364,12 +366,7 @@ public class PipelineController {
 			
 		logger.info("Handling files: {} files, with JSON string of length: {}", files.length, jsonString.length());
 		
-		ObjectMapper mapper = new ObjectMapper();
-		JsonNode jsonNode = mapper.readTree(jsonString);
-
-		JsonNode pipelineNode = jsonNode.get("pipeline");
-
-		boolean hasErrors = false;
+	
 		List<Resource> outputFiles = new ArrayList<>();
 
 		for (File file : files) {

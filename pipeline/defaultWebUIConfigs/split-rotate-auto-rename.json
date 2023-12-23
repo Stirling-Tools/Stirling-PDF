@@ -1,0 +1,30 @@
+{
+  "name": "split-rotate-auto-rename",
+  "pipeline": [
+    {
+      "operation": "/api/v1/general/split-pdf-by-sections",
+      "parameters": {
+        "horizontalDivisions": 2,
+        "verticalDivisions": 2
+      }
+    },
+    {
+      "operation": "/api/v1/general/rotate-pdf",
+      "parameters": {
+        "angle": 90
+      }
+    },
+    {
+      "operation": "/api/v1/misc/auto-rename",
+      "parameters": {
+        "useFirstTextAsFallback": false
+      }
+    }
+  ],
+  "_examples": {
+    "outputDir": "{outputFolder}/{folderName}",
+    "outputFileName": "{filename}-{pipelineName}-{date}-{time}"
+  },
+  "outputDir": "httpWebRequest",
+  "outputFileName": "{filename}"
+}

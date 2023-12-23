@@ -15,8 +15,8 @@ local.properties
 .classpath
 .project
 version.properties
-pipeline/
-
+pipeline/watchedFolders/
+pipeline/finishedFolders/
 #### Stirling-PDF Files ###
 customFiles/
 configs/
