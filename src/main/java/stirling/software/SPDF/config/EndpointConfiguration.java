@@ -124,6 +124,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "flatten");
         addEndpointToGroup("Other", "repair");
         addEndpointToGroup("Other", "remove-blanks");
+        addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "compare");
         addEndpointToGroup("Other", "add-page-numbers");
         addEndpointToGroup("Other", "auto-rename");
