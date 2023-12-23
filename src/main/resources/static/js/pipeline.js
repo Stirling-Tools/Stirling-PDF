@@ -120,7 +120,16 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 			let url = window.URL.createObjectURL(blob);
 			let a = document.createElement('a');
 			a.href = url;
-			a.download = 'outputfile';
+			
+
+			const contentDisposition = response.headers.get('Content-Disposition');
+			let filename = 'download';
+			if (contentDisposition && contentDisposition.indexOf('attachment') !== -1) {
+				filename = decodeURIComponent(contentDisposition.split('filename=')[1].replace(/"/g, '')).trim();
+			}
+			a.download = filename;
+			
+			
 			document.body.appendChild(a);
 			a.click();
 			a.remove();
@@ -173,16 +182,20 @@ fetch('v1/api-docs')
 
 				operationsByTag[tag].forEach(operationPath => {
 					let option = document.createElement('option');
-					console.log("operationPath", operationPath);
+					
 					let operationPathDisplay = operationPath
 					operationPathDisplay = operationPath.replace(new RegExp("api/v1/" + tag.toLowerCase() + "/", 'i'), "");
             
-					console.log("operationPath2", operationPath);
+					
 					if(operationPath.includes("/convert")){
-						operationPathDisplay = operationPathDisplay.replaceAll("(?<!^)/", " to ");
+						console.log("operationPathDisplay", operationPathDisplay);
+						operationPathDisplay = operationPathDisplay.replace(/^\//, '').replaceAll("/", " to ");
+
+						console.log("operationPathDisplay2", operationPathDisplay);
 					} else {
 						operationPathDisplay = operationPathDisplay.replace(/\//g, ''); // Remove slashes
 					}
+					operationPathDisplay = operationPathDisplay.replaceAll(" ","-");
 					option.textContent = operationPathDisplay;
 					option.value = operationPath; // Keep the value with slashes for querying
 					group.appendChild(option);
@@ -482,7 +495,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 		a.href = URL.createObjectURL(new Blob([JSON.stringify(pipelineConfig, null, 2)], {
 			type: 'application/json'
 		}));
-		a.download = 'pipelineConfig.json';
+		a.download = pipelineName + '.json';
 		a.style.display = 'none';
 
 		document.body.appendChild(a);
