@@ -147,7 +147,7 @@ Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "pod
 Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
-Stirling PDF currently supports 21!
+Stirling PDF currently supports 24!
 - English (English) (en_GB)
 - English (US) (en_US)
 - Arabic (العربية) (ar_AR)
@@ -170,6 +170,8 @@ Stirling PDF currently supports 21!
 - Turkish (Türkçe) (tr_TR)
 - Indonesia (Bahasa Indonesia) (id_ID)
 - Hindi (हिंदी) (hi_IN)
+- Hungarian (Magyar) (hu_HU)
+- Bulgarian (Български) (bg_BG)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToAddNewLanguage.md
