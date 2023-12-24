@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
+import java.net.URLConnection;
 
 import org.apache.pdfbox.rendering.ImageType;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
+
 @RestController
 @RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
@@ -89,15 +91,7 @@ public class ConvertImgPDFController {
     }
 
     private String getMediaType(String imageFormat) {
-        if (imageFormat.equalsIgnoreCase("PNG"))
-            return "image/png";
-        else if (imageFormat.equalsIgnoreCase("JPEG") || imageFormat.equalsIgnoreCase("JPG"))
-            return "image/jpeg";
-        else if (imageFormat.equalsIgnoreCase("GIF"))
-            return "image/gif";
-        else
-            return "application/octet-stream";
+        String mimeType = URLConnection.guessContentTypeFromName("." + imageFormat);
+        return mimeType.equals("null") ? "application/octet-stream" : mimeType;
     }
-
-
 }
