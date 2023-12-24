@@ -1,8 +1,9 @@
 package stirling.software.SPDF.config.security;
-import org.springframework.stereotype.Service;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import org.springframework.stereotype.Service;
+
 import stirling.software.SPDF.model.AttemptCounter;
 
 @Service
