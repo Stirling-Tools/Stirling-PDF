@@ -264,28 +264,10 @@ public class PdfUtils {
                         addImageToDocument(doc, pdImage, fitOption, autoRotate);
                     }
                 } else {
-                    File imageFile = Files.createTempFile("image", ".png").toFile();
-                    try (FileOutputStream fos = new FileOutputStream(imageFile); InputStream input = file.getInputStream()) {
-                        byte[] buffer = new byte[1024];
-                        int len;
-                        while ((len = input.read(buffer)) != -1) {
-                            fos.write(buffer, 0, len);
-                        }
-                        BufferedImage image = ImageIO.read(imageFile);
-                        BufferedImage convertedImage = ImageProcessingUtils.convertColorType(image, colorType);
-                        PDImageXObject pdImage;
-                        if (contentType != null && (contentType.equals("image/jpeg"))) {
-                            pdImage = JPEGFactory.createFromImage(doc, convertedImage);
-                        } else {
-                            pdImage = LosslessFactory.createFromImage(doc, convertedImage);
-                        }
-                        addImageToDocument(doc, pdImage, fitOption, autoRotate);
-                    } catch (IOException e) {
-                        logger.error("Error writing image to file: {}", imageFile.getAbsolutePath(), e);
-                        throw e;
-                    } finally {
-                        imageFile.delete();
-                    }
+                    BufferedImage image = ImageIO.read(file.getInputStream());
+                    BufferedImage convertedImage = ImageProcessingUtils.convertColorType(image, colorType);
+                    PDImageXObject pdImage = LosslessFactory.createFromImage(doc, convertedImage);
+                    addImageToDocument(doc, pdImage, fitOption, autoRotate);
                 }
             }
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
