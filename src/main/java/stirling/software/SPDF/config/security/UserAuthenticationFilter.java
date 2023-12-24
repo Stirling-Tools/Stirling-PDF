@@ -82,7 +82,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 	            response.getWriter().write("Authentication required. Please provide a X-API-KEY in request header.\nThis is found in Settings -> Account Settings -> API Key\nAlternativly you can disable authentication if this is unexpected");
 	            return;
             }
-        }
+        } 
 
         filterChain.doFilter(request, response);
     }

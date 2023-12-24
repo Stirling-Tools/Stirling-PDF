@@ -14,7 +14,10 @@ public enum Role {
     EXTRA_LIMITED_API_USER("ROLE_EXTRA_LIMITED_API_USER", 20, 20),
 
     // 0 API calls per day and 20 web calls
-    WEB_ONLY_USER("ROLE_WEB_ONLY_USER", 0, 20);
+    WEB_ONLY_USER("ROLE_WEB_ONLY_USER", 0, 20),
+	
+	
+	INTERNAL_API_USER("STIRLING-PDF-BACKEND-API-USER", Integer.MAX_VALUE, Integer.MAX_VALUE);
 
     private final String roleId;
     private final int apiCallsPerDay;

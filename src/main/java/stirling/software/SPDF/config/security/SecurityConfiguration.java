@@ -41,9 +41,13 @@ public class SecurityConfiguration {
     
     @Autowired
     private UserAuthenticationFilter userAuthenticationFilter;
-    
+
     @Autowired
-    private FirstLoginFilter firstLoginFilter;
+    private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    
+
+    @Autowired
+    private  LoginAttemptService loginAttemptService;
     
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception  {
@@ -57,9 +61,9 @@ public class SecurityConfiguration {
 	        http
 	            .formLogin(formLogin -> formLogin
 	                .loginPage("/login")
+	                .successHandler(customAuthenticationSuccessHandler)
 	               // .defaultSuccessUrl("/")
-	                .successHandler(new SavedRequestAwareAuthenticationSuccessHandler())
-	                .failureHandler(new CustomAuthenticationFailureHandler())
+	                .failureHandler(new CustomAuthenticationFailureHandler(loginAttemptService))
 	                .permitAll()
 	            )
 	            .logout(logout -> logout
@@ -87,6 +91,8 @@ public class SecurityConfiguration {
     	}
         return http.build();
     }
+    
+    
 
     
     @Bean
