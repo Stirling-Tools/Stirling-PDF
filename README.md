@@ -147,14 +147,15 @@ Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "pod
 Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Want to add your own language?
-Stirling PDF currently supports 24!
+Stirling PDF currently supports 25!
 - English (English) (en_GB)
 - English (US) (en_US)
 - Arabic (العربية) (ar_AR)
 - German (Deutsch) (de_DE)
 - French (Français) (fr_FR)
 - Spanish (Español) (es_ES)
-- Chinese (简体中文) (zh_CN)
+- Simplified Chinese (简体中文) (zh_CN)
+- Traditional Chinese (繁體中文) (zh_TW)
 - Catalan (Català) (ca_CA)
 - Italian (Italiano) (it_IT)
 - Swedish (Svenska) (sv_SE)
