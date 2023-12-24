@@ -266,7 +266,10 @@ public class PdfUtils {
                 } else {
                     BufferedImage image = ImageIO.read(file.getInputStream());
                     BufferedImage convertedImage = ImageProcessingUtils.convertColorType(image, colorType);
-                    PDImageXObject pdImage = LosslessFactory.createFromImage(doc, convertedImage);
+                    // Use JPEGFactory if it's JPEG since JPEG is lossy
+                    PDImageXObject pdImage = (contentType != null && contentType.equals("image/jpeg"))
+                                           ? JPEGFactory.createFromImage(doc, convertedImage)
+                                           : LosslessFactory.createFromImage(doc, convertedImage);
                     addImageToDocument(doc, pdImage, fitOption, autoRotate);
                 }
             }
