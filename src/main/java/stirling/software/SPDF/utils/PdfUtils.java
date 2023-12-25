@@ -16,7 +16,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
+import javax.imageio.IIOImage;
 import javax.imageio.ImageReader;
+import javax.imageio.ImageWriter;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.stream.ImageOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -206,21 +210,43 @@ public class PdfUtils {
                 images.add(pdfRenderer.renderImageWithDPI(i, DPI, colorType));
             }
 
-            if (singleImage) {
-                // Combine all images into a single big image
-                BufferedImage combined = new BufferedImage(images.get(0).getWidth(), images.get(0).getHeight() * pageCount, BufferedImage.TYPE_INT_RGB);
-                Graphics g = combined.getGraphics();
-                for (int i = 0; i < images.size(); i++) {
-                    g.drawImage(images.get(i), 0, i * images.get(0).getHeight(), null);
-                }
-                images = Arrays.asList(combined);
-            }
-
             // Create a ByteArrayOutputStream to save the image(s) to
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
             if (singleImage) {
-                // Write the image to the output stream
-                ImageIO.write(images.get(0), imageType, baos);
+                if (imageType.toLowerCase().equals("tiff") || imageType.toLowerCase().equals("tif")) {
+                    // Write the images to the output stream as a TIFF with multiple frames
+                    ImageWriter writer = ImageIO.getImageWritersByFormatName("tiff").next();
+                    ImageWriteParam param = writer.getDefaultWriteParam();
+                    param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                    param.setCompressionType("ZLib");
+                    param.setCompressionQuality(1.0f);
+
+                    try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
+                        writer.setOutput(ios);
+                        writer.prepareWriteSequence(null);
+
+                        for (int i = 0; i < images.size(); ++i) {
+                            BufferedImage image = images.get(i);
+                            writer.writeToSequence(new IIOImage(image, null, null), param);
+                        }
+
+                        writer.endWriteSequence();
+                    }
+
+                    writer.dispose();
+                } else {
+                    // Combine all images into a single big image
+                    BufferedImage combined = new BufferedImage(images.get(0).getWidth(), images.get(0).getHeight() * pageCount, BufferedImage.TYPE_INT_RGB);
+                    Graphics g = combined.getGraphics();
+
+                    for (int i = 0; i < images.size(); i++) {
+                        g.drawImage(images.get(i), 0, i * images.get(0).getHeight(), null);
+                    }
+
+                    // Write the image to the output stream
+                    ImageIO.write(combined, imageType, baos);
+                }
 
                 // Log that the image was successfully written to the byte array
                 logger.info("Image successfully written to byte array");
