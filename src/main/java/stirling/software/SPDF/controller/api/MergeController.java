@@ -1,34 +1,31 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/general")
@@ -93,7 +90,6 @@ public class MergeController {
     @Operation(summary = "Merge multiple PDF files into one",
             description = "This endpoint merges multiple PDF files into a single PDF file. The merged file will contain all pages from the input files in the order they were provided. Input:PDF Output:PDF Type:MISO")
     public ResponseEntity<byte[]> mergePdfs(@ModelAttribute MergePdfsRequest form) throws IOException {
-
         try {
             MultipartFile[] files = form.getFileInput();
             Arrays.sort(files, getSortComparator(form.getSortType()));
@@ -105,17 +101,11 @@ public class MergeController {
                 mergedDoc.addSource(new ByteArrayInputStream(file.getBytes()));
             }
 
-            mergedDoc.setDestinationFileName(files[0].getOriginalFilename().replaceFirst("[.][^.]+$", ""));
+            mergedDoc.setDestinationFileName(files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_merged.pdf");
             mergedDoc.setDestinationStream(docOutputstream);
             mergedDoc.mergeDocuments(MemoryUsageSetting.setupMainMemoryOnly());
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
-
-            // Here you have to set the actual filename of your pdf
-            headers.setContentDispositionFormData(mergedDoc.getDestinationFileName(), mergedDoc.getDestinationFileName());
-            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-            return new ResponseEntity<>(docOutputstream.toByteArray(), headers, HttpStatus.OK);
+            return WebResponseUtils.bytesToWebResponse(docOutputstream.toByteArray(), mergedDoc.getDestinationFileName());
         } catch (Exception ex) {
             logger.error("Error in merge pdf process", ex);
            throw ex;
