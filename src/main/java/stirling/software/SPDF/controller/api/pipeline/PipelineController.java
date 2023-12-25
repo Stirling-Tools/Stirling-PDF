@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -64,16 +66,14 @@ public class PipelineController {
 	@Autowired
 	private ObjectMapper objectMapper;
 
-	final String jsonFileName = "pipelineConfig.json";
 	final String watchedFoldersDir = "./pipeline/watchedFolders/";
 	final String finishedFoldersDir = "./pipeline/finishedFolders/";
 	
 	@Autowired
 	private ApiDocService apiDocService;
 	
-	@Scheduled(fixedRate = 25000)
+	@Scheduled(fixedRate = 60000)
 	public void scanFolders() {
-		logger.info("Scanning folders...");
 		Path watchedFolderPath = Paths.get(watchedFoldersDir);
 		if (!Files.exists(watchedFolderPath)) {
 			try {
@@ -113,19 +113,31 @@ public class PipelineController {
 	
 	private void handleDirectory(Path dir) throws Exception {
 		logger.info("Handling directory: {}", dir);
-		Path jsonFile = dir.resolve(jsonFileName);
+
 		Path processingDir = dir.resolve("processing"); // Directory to move files during processing
 		if (!Files.exists(processingDir)) {
 			Files.createDirectory(processingDir);
 			logger.info("Created processing directory: {}", processingDir);
 		}
-
-		if (Files.exists(jsonFile)) {
+		
+		Path jsonFile;
+		Optional<Path> jsonFileOptional;
+		// Find any JSON file in the directory
+	    try (Stream<Path> paths = Files.list(dir)) {
+	    	jsonFileOptional = paths
+	                .filter(file -> file.toString().endsWith(".json"))
+	                .findFirst();
+	    }
+	            
+	            
+		
+	    if (jsonFileOptional.isPresent()) {
+            jsonFile = jsonFileOptional.get();
 			// Read JSON file
 			String jsonString;
 			try {
 				jsonString = new String(Files.readAllBytes(jsonFile));
-				logger.info("Read JSON file: {}", jsonFile);
+				logger.info("Reading JSON file: {}", jsonFile);
 			} catch (IOException e) {
 				logger.error("Error reading JSON file: {}", jsonFile, e);
 				return;
@@ -265,6 +277,8 @@ public class PipelineController {
 					throw e;
 				}
 			}
+		} else {
+			logger.warn("No .JSON settings file found. No processing will happen for dir {}.", dir);
 		}
 	}
 

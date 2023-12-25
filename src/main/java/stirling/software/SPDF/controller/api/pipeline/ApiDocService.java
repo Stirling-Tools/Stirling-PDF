@@ -68,6 +68,7 @@ public class ApiDocService {
     }
 
     public boolean isValidOperation(String operationName, Map<String, Object> parameters) {
+    	System.out.println(apiDocumentation);
         if (!apiDocumentation.containsKey(operationName)) {
             return false;
         }

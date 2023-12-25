@@ -26,4 +26,11 @@ public class ApiEndpoint {
         }
         return true;
     }
+
+	@Override
+	public String toString() {
+		return "ApiEndpoint [name=" + name + ", parameters=" + parameters + "]";
+	}
+    
+    
 }
