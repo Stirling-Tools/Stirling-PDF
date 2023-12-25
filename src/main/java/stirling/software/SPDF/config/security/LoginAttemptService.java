@@ -9,17 +9,15 @@ import stirling.software.SPDF.model.AttemptCounter;
 @Service
 public class LoginAttemptService {
 
-    private final int MAX_ATTEMPTS = 2;
+    private final int MAX_ATTEMPTS = 10;
     private final long ATTEMPT_INCREMENT_TIME = TimeUnit.MINUTES.toMillis(1);
     private final ConcurrentHashMap<String, AttemptCounter> attemptsCache = new ConcurrentHashMap<>();
 
     public void loginSucceeded(String key) {
-    	System.out.println("here3 reset ");
         attemptsCache.remove(key);
     }
 
     public boolean loginAttemptCheck(String key) {
-        System.out.println("here");
         attemptsCache.compute(key, (k, attemptCounter) -> {
             if (attemptCounter == null || attemptCounter.shouldReset(ATTEMPT_INCREMENT_TIME)) {
                 return new AttemptCounter();
@@ -28,7 +26,6 @@ public class LoginAttemptService {
                 return attemptCounter;
             }
         });
-        System.out.println("here2 = " + attemptsCache.get(key).getAttemptCount());
         return attemptsCache.get(key).getAttemptCount() >= MAX_ATTEMPTS;
     }
 

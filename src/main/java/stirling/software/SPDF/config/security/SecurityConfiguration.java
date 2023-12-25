@@ -96,7 +96,7 @@ public class SecurityConfiguration {
     
     @Bean
     public IPRateLimitingFilter rateLimitingFilter() {
-        int maxRequestsPerIp = 10000; // Example limit
+        int maxRequestsPerIp = 1000000; // Example limit TODO add config level
         return new IPRateLimitingFilter(maxRequestsPerIp, maxRequestsPerIp);
     }
 
