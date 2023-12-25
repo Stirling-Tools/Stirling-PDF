@@ -69,6 +69,9 @@ public class PipelineController {
 	final String watchedFoldersDir = "./pipeline/watchedFolders/";
 	final String finishedFoldersDir = "./pipeline/finishedFolders/";
 	
+	@Autowired
+	private ApiDocService apiDocService;
+	
 	@Scheduled(fixedRate = 25000)
 	public void scanFolders() {
 		logger.info("Scanning folders...");
@@ -145,6 +148,11 @@ public class PipelineController {
 
 			// For each operation in the pipeline
 			for (PipelineOperation operation : config.getOperations()) {
+				if (!apiDocService.isValidOperation(operation.getOperation(), operation.getParameters())) {
+		            logger.error("Invalid operation: " + operation.getOperation());
+		            // Handle invalid operation
+		            throw new Exception("Invalid operation: " + operation.getOperation());
+		        }
 				// Collect all files based on fileInput
 				File[] files;
 				String fileInput = (String) operation.getParameters().get("fileInput");
