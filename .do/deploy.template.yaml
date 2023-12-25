@@ -3,7 +3,7 @@ spec:
   services:
     - name: stirling-pdf
       git:
-        branch: deployScripts
+        branch: digitalOcean
         repo_clone_url: https://github.com/Frooodle/Stirling-PDF.git
       dockerfile_path: Dockerfile2
       envs:
