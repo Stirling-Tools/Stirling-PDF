@@ -32,7 +32,6 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         String username = request.getParameter("username");
         if(loginAttemptService.loginAttemptCheck(username)) {
         	setDefaultFailureUrl("/login?error=locked");
-        	System.out.println("test?");
         	
         } else {
 	        if (exception.getClass().isAssignableFrom(BadCredentialsException.class)) {

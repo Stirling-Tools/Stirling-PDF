@@ -44,7 +44,6 @@ public class IPRateLimitingFilter implements Filter {
 	        
 	        String clientIp = request.getRemoteAddr();
 	        requestCounts.computeIfAbsent(clientIp, k -> new AtomicInteger(0));
-	        System.out.println(requestCounts.get(clientIp).get() + ", " + requestURI );
 	        if (!"GET".equalsIgnoreCase(method)) {
 	        	
 		        if (requestCounts.get(clientIp).incrementAndGet() > maxRequests) {
