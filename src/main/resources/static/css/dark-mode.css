@@ -1,5 +1,5 @@
 /* Dark Mode Styles */
-body {
+body, select, textarea {
     --body-background-color: 51, 51, 51;
     --base-font-color: 255, 255, 255;
     background-color: rgb(var(--body-background-color)) !important;
@@ -42,3 +42,75 @@ body {
 .favorite-icon img {
     filter: brightness(0) invert(1) !important;
 }
+table thead {
+    background-color: #333 !important;
+    border: 1px solid #444;
+}
+table th, table td {
+    border: 1px solid #444 !important;
+   color: white;
+}
+.btn {
+    background-color: #444 !important;
+    border: none;
+    color: #fff !important;
+}
+.btn-primary {
+    background-color: #007bff !important;
+    border: none;
+    color: #fff !important;
+}
+.btn-secondary {
+    background-color: #6c757d !important;
+    border: none;
+    color: #fff !important;
+}
+.btn-info {
+    background-color: #17a2b8 !important;
+    border: none;
+    color: #fff !important;
+}
+.btn-danger {
+    background-color: #dc3545 !important;
+    border: none;
+    color: #fff !important;
+}
+.btn-outline-secondary {
+    color: #fff !important;
+    border-color: #fff;
+}
+.btn-outline-secondary:hover {
+    background-color: #444 !important;
+    color: #007bff !important;
+    border-color: #007bff;
+}
+.blackwhite-icon {
+    filter: brightness(0) invert(1);
+}
+hr {
+    border-color: rgba(255, 255, 255, 0.6); /* semi-transparent white */
+    background-color: rgba(255, 255, 255, 0.6); /* for some browsers that might use background instead of border for <hr> */
+}
+
+#global-buttons-container input {
+    background-color: #323948;
+    caret-color: #ffffff;
+    color: #ffffff;
+}
+#global-buttons-container input::placeholder {
+    color: #ffffff;
+}
+
+#global-buttons-container input:disabled::-webkit-input-placeholder { /* WebKit browsers */
+    color:    #6E6865;
+}
+#global-buttons-container input:disabled:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    color:    #6E6865;
+}
+#global-buttons-container input:disabled::-moz-placeholder { /* Mozilla Firefox 19+ */
+    color:    #6E6865;
+}
+#global-buttons-container input:disabled:-ms-input-placeholder { /* Internet Explorer 10+ */
+    color:    #6E6865;
+}
+

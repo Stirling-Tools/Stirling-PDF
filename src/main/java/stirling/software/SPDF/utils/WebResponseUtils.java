@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+
 public class WebResponseUtils {
 
 	public static ResponseEntity<byte[]> boasToWebResponse(ByteArrayOutputStream baos, String docName) throws IOException {
@@ -57,5 +58,7 @@ public class WebResponseUtils {
 	
 	    return boasToWebResponse(baos, docName);
 	}
+	
+
 
 }

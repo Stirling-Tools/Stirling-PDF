@@ -1,6 +1,9 @@
 package stirling.software.SPDF.utils;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.FileVisitResult;
@@ -12,6 +15,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
 public class GeneralUtils {
 
 	public static void deleteDirectory(Path path) throws IOException {
@@ -48,6 +52,18 @@ public class GeneralUtils {
 	    }
 	}
 
+	public static File multipartToFile(MultipartFile multipart) throws IOException {
+        Path tempFile = Files.createTempFile("overlay-", ".pdf");
+        try (InputStream in = multipart.getInputStream(); 
+             FileOutputStream out = new FileOutputStream(tempFile.toFile())) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+        }
+        return tempFile.toFile();
+    }
 	
 	public static Long convertSizeToBytes(String sizeStr) {
 	    if (sizeStr == null) {
@@ -65,7 +81,8 @@ public class GeneralUtils {
 	        } else if (sizeStr.endsWith("B")) {
 	            return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));
 	        } else {
-	            // Input string does not have a valid format, handle this case
+	        	// Assume MB if no unit is specified
+	            return (long) (Double.parseDouble(sizeStr) * 1024 * 1024);
 	        }
 	    } catch (NumberFormatException e) {
 	        // The numeric part of the input string cannot be parsed, handle this case
@@ -74,6 +91,9 @@ public class GeneralUtils {
 	    return null;
 	}
 
+	public static List<Integer> parsePageString(String pageOrder, int totalPages) {
+		return parsePageList(pageOrder.split(","), totalPages);
+	}
 	public static List<Integer> parsePageList(String[] pageOrderArr, int totalPages) {
 	    List<Integer> newPageOrder = new ArrayList<>();
 

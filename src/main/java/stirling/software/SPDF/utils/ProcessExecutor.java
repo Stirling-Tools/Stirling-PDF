@@ -37,11 +37,12 @@ public class ProcessExecutor {
     private ProcessExecutor(int semaphoreLimit) {
         this.semaphore = new Semaphore(semaphoreLimit);
     }
-    public int runCommandWithOutputHandling(List<String> command) throws IOException, InterruptedException {
+    public ProcessExecutorResult runCommandWithOutputHandling(List<String> command) throws IOException, InterruptedException {
     	return runCommandWithOutputHandling(command, null);
     }
-    public int runCommandWithOutputHandling(List<String> command, File workingDirectory) throws IOException, InterruptedException {
+    public ProcessExecutorResult runCommandWithOutputHandling(List<String> command, File workingDirectory) throws IOException, InterruptedException {
         int exitCode = 1;
+        String messages = "";
         semaphore.acquire();
         try {
 
@@ -89,14 +90,16 @@ public class ProcessExecutor {
             // Wait for the reader threads to finish
             errorReaderThread.join();
             outputReaderThread.join();
-
+           
             if (outputLines.size() > 0) {
                 String outputMessage = String.join("\n", outputLines);
+                messages += outputMessage;
                 System.out.println("Command output:\n" + outputMessage);
             }
 
             if (errorLines.size() > 0) {
                 String errorMessage = String.join("\n", errorLines);
+                messages += errorMessage;
                 System.out.println("Command error output:\n" + errorMessage);
                 if (exitCode != 0) {
                     throw new IOException("Command process failed with exit code " + exitCode + ". Error message: " + errorMessage);
@@ -105,7 +108,28 @@ public class ProcessExecutor {
         } finally {
             semaphore.release();
         }
-        return exitCode;
+        return new ProcessExecutorResult(exitCode, messages);
     }
-
+    public class ProcessExecutorResult{
+    	int rc;
+    	String messages;
+    	public ProcessExecutorResult(int rc, String messages) {
+    		this.rc = rc;
+    		this.messages = messages;
+    	}
+		public int getRc() {
+			return rc;
+		}
+		public void setRc(int rc) {
+			this.rc = rc;
+		}
+		public String getMessages() {
+			return messages;
+		}
+		public void setMessages(String messages) {
+			this.messages = messages;
+		}
+    	
+    	
+    }
 }

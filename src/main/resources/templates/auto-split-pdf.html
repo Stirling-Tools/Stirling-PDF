@@ -22,12 +22,12 @@
 						    <li th:text="#{autoSplitPDF.selectText.3}"></li>
 						    <li th:text="#{autoSplitPDF.selectText.4}"></li>
 						</ul>
-						<form method="post" enctype="multipart/form-data">
+						<form method="post" enctype="multipart/form-data" th:action="@{api/v1/misc/auto-split-pdf}">
 						    <p th:text="#{autoSplitPDF.formPrompt}"></p>
 						    <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
 						    <div class="form-check">
                                 <input type="checkbox" class="form-check-input" name="duplexMode" id="duplexMode"> 
-                                <label class="ml-3" for="duplexMode" th:text=#{autoSplitPDF.duplexMode}></label>
+                                <label class="ms-3" for="duplexMode" th:text=#{autoSplitPDF.duplexMode}></label>
                             </div>
 						    <p><a th:href="@{files/Auto Splitter Divider (minimal).pdf}" download th:text="#{autoSplitPDF.dividerDownload1}"></a></p>
 						    <p><a th:href="@{files/Auto Splitter Divider (with instructions).pdf}" download th:text="#{autoSplitPDF.dividerDownload2}"></a></p>

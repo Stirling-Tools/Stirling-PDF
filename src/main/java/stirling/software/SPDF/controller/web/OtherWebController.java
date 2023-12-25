@@ -15,42 +15,50 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Controller
-@Tag(name = "Other", description = "Other APIs")
+@Tag(name = "Misc", description = "Miscellaneous APIs")
 public class OtherWebController {
     @GetMapping("/compress-pdf")
     @Hidden
     public String compressPdfForm(Model model) {
         model.addAttribute("currentPage", "compress-pdf");
-        return "other/compress-pdf";
+        return "misc/compress-pdf";
     }
     
     @GetMapping("/extract-image-scans")
     @Hidden
     public ModelAndView extractImageScansForm() {
-        ModelAndView modelAndView = new ModelAndView("other/extract-image-scans");
+        ModelAndView modelAndView = new ModelAndView("misc/extract-image-scans");
         modelAndView.addObject("currentPage", "extract-image-scans");
         return modelAndView;
     }
-
+    
+    @GetMapping("/show-javascript")
+    @Hidden
+    public String extractJavascriptForm(Model model) {
+        model.addAttribute("currentPage", "show-javascript");
+        return "misc/show-javascript";
+    }
+    
+    
     @GetMapping("/add-page-numbers")
     @Hidden
     public String addPageNumbersForm(Model model) {
         model.addAttribute("currentPage", "add-page-numbers");
-        return "other/add-page-numbers";
+        return "misc/add-page-numbers";
     }
     
     @GetMapping("/extract-images")
     @Hidden
     public String extractImagesForm(Model model) {
         model.addAttribute("currentPage", "extract-images");
-        return "other/extract-images";
+        return "misc/extract-images";
     }
     
     @GetMapping("/flatten")
     @Hidden
     public String flattenForm(Model model) {
         model.addAttribute("currentPage", "flatten");
-        return "other/flatten";
+        return "misc/flatten";
     }
     
     
@@ -59,18 +67,18 @@ public class OtherWebController {
     @Hidden
     public String addWatermarkForm(Model model) {
         model.addAttribute("currentPage", "change-metadata");
-        return "other/change-metadata";
+        return "misc/change-metadata";
     }
     
     @GetMapping("/compare")
     @Hidden
     public String compareForm(Model model) {
         model.addAttribute("currentPage", "compare");
-        return "other/compare";
+        return "misc/compare";
     }
     
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = "/usr/share/tesseract-ocr/4.00/tessdata";
+        String tessdataDir = "/usr/share/tesseract-ocr/5/tessdata";
         File[] files = new File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();
@@ -82,7 +90,7 @@ public class OtherWebController {
     @GetMapping("/ocr-pdf")
     @Hidden
     public ModelAndView ocrPdfPage() {
-        ModelAndView modelAndView = new ModelAndView("other/ocr-pdf");
+        ModelAndView modelAndView = new ModelAndView("misc/ocr-pdf");
         List<String> languages = getAvailableTesseractLanguages();
         Collections.sort(languages);
         modelAndView.addObject("languages", languages);
@@ -90,61 +98,54 @@ public class OtherWebController {
         return modelAndView;
     }
     
-
+    
     @GetMapping("/add-image")
     @Hidden
     public String overlayImage(Model model) {
         model.addAttribute("currentPage", "add-image");
-        return "other/add-image";
+        return "misc/add-image";
     }
     
     @GetMapping("/adjust-contrast")
     @Hidden
     public String contrast(Model model) {
         model.addAttribute("currentPage", "adjust-contrast");
-        return "other/adjust-contrast";
+        return "misc/adjust-contrast";
     }
     
     @GetMapping("/repair")
     @Hidden
     public String repairForm(Model model) {
         model.addAttribute("currentPage", "repair");
-        return "other/repair";
+        return "misc/repair";
     }
     
     @GetMapping("/remove-blanks")
     @Hidden
     public String removeBlanksForm(Model model) {
         model.addAttribute("currentPage", "remove-blanks");
-        return "other/remove-blanks";
+        return "misc/remove-blanks";
     }
-    
-    @GetMapping("/multi-page-layout")
+
+    @GetMapping("/remove-annotations")
     @Hidden
-    public String multiPageLayoutForm(Model model) {
-        model.addAttribute("currentPage", "multi-page-layout");
-        return "other/multi-page-layout";
+    public String removeAnnotationsForm(Model model) {
+        model.addAttribute("currentPage", "remove-annotations");
+        return "misc/remove-annotations";
     }
-    
-    @GetMapping("/scale-pages")
-    @Hidden
-    public String scalePagesFrom(Model model) {
-        model.addAttribute("currentPage", "scale-pages");
-        return "other/scale-pages";
-    }
-    
+
     @GetMapping("/auto-crop")
     @Hidden
     public String autoCropForm(Model model) {
         model.addAttribute("currentPage", "auto-crop");
-        return "other/auto-crop";
+        return "misc/auto-crop";
     }
     
     @GetMapping("/auto-rename")
     @Hidden
     public String autoRenameForm(Model model) {
         model.addAttribute("currentPage", "auto-rename");
-        return "other/auto-rename";
+        return "misc/auto-rename";
     }
     
 

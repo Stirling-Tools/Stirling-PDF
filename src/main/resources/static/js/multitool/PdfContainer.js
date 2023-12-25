@@ -3,16 +3,21 @@ class PdfContainer {
     pagesContainer;
     pagesContainerWrapper;
     pdfAdapters;
+    downloadLink;
 
     constructor(id, wrapperId, pdfAdapters) {
-        this.fileName = null;
         this.pagesContainer = document.getElementById(id)
         this.pagesContainerWrapper = document.getElementById(wrapperId);
+        this.downloadLink = null;
         this.movePageTo = this.movePageTo.bind(this);
         this.addPdfs = this.addPdfs.bind(this);
+        this.addPdfsFromFiles = this.addPdfsFromFiles.bind(this);
         this.rotateElement = this.rotateElement.bind(this);
         this.rotateAll = this.rotateAll.bind(this);
         this.exportPdf = this.exportPdf.bind(this);
+        this.updateFilename = this.updateFilename.bind(this);
+        this.setDownloadAttribute = this.setDownloadAttribute.bind(this);
+        this.preventIllegalChars = this.preventIllegalChars.bind(this);
 
         this.pdfAdapters = pdfAdapters;
 
@@ -27,6 +32,15 @@ class PdfContainer {
         window.addPdfs = this.addPdfs;
         window.exportPdf = this.exportPdf;
         window.rotateAll = this.rotateAll;
+
+        const filenameInput = document.getElementById('filename-input');
+        const downloadBtn = document.getElementById('export-button');
+
+        filenameInput.onkeyup = this.updateFilename;
+        filenameInput.onkeydown = this.preventIllegalChars;
+        filenameInput.disabled = true;
+        filenameInput.innerText = "";
+        downloadBtn.disabled = true;
     }
 
     movePageTo(startElement, endElement, scrollTo = false) {
@@ -57,20 +71,46 @@ class PdfContainer {
         input.type = 'file';
         input.multiple = true;
         input.setAttribute("accept", "application/pdf");
-
         input.onchange = async(e) => {
             const files = e.target.files;
-            this.fileName = files[0].name;
-            for (var i=0; i < files.length; i++) {
-                await this.addPdfFile(files[i], nextSiblingElement);
+            if (files.length > 0) {
+                const filenameInput = document.getElementById('filename-input');
+                const pagesContainer = document.getElementById('pages-container');
+                const downloadBtn = document.getElementById('export-button');
+
+                filenameInput.disabled = false;
+
+                if (pagesContainer.childElementCount === 0) {
+                    filenameInput.value = "";
+                    this.filename = null;
+                    downloadBtn.disabled = true;
+                } else {
+                    this.filename = filenameInput.value;
+                }
+
+                if (this.filename === null || this.filename === undefined) {
+                    filenameInput.value = files[0].name;
+                } else {
+                    filenameInput.value = this.filename;
+                }
+
             }
 
-            document.querySelectorAll(".enable-on-file").forEach(element => {
-                element.disabled = false;
-            });
+            this.addPdfsFromFiles(files, nextSiblingElement);
         }
 
         input.click();
+    }
+
+    async addPdfsFromFiles(files, nextSiblingElement) {
+        this.fileName = files[0].name;
+        for (var i=0; i < files.length; i++) {
+            await this.addPdfFile(files[i], nextSiblingElement);
+        }
+
+        document.querySelectorAll(".enable-on-file").forEach(element => {
+            element.disabled = false;
+        });
     }
 
     rotateElement(element, deg) {
@@ -188,6 +228,27 @@ class PdfContainer {
         const url = URL.createObjectURL(pdfBlob);
         const downloadOption = localStorage.getItem('downloadOption');
 
+        const filenameInput = document.getElementById('filename-input');
+
+        let inputArr = filenameInput.value.split('.');
+
+        if (inputArr !== null && inputArr !== undefined && inputArr.length > 0) {
+
+            inputArr = inputArr.filter(n => n); // remove all empty strings, nulls or undefined
+
+            if (inputArr.length > 1) {
+                inputArr.pop(); // remove right part after last dot
+            }
+
+            filenameInput.value = inputArr.join('');
+            this.filename = filenameInput.value;
+        }
+
+        if (!filenameInput.value.includes('.pdf')) {
+            filenameInput.value = filenameInput.value + '.pdf';
+            this.filename = filenameInput.value;
+        }
+
         if (downloadOption === 'sameWindow') {
             // Open the file in the same window
             window.location.href = url;
@@ -196,11 +257,44 @@ class PdfContainer {
             window.open(url, '_blank');
         } else {
             // Download the file
-            const downloadLink = document.createElement('a');
-            downloadLink.href = url;
-            downloadLink.download = this.fileName ? this.fileName : 'managed.pdf';
-            downloadLink.click();
+            this.downloadLink = document.createElement('a');
+            this.downloadLink.id = 'download-link';
+            this.downloadLink.href = url;
+            // downloadLink.download = this.fileName ? this.fileName : 'managed.pdf';
+            // downloadLink.download = this.fileName;
+            this.downloadLink.setAttribute('download', this.filename ? this.fileName : 'managed.pdf');
+            this.downloadLink.setAttribute('target', '_blank');
+            this.downloadLink.onclick = this.setDownloadAttribute;
+            this.downloadLink.click();
         }
+    }
+
+    setDownloadAttribute() {
+        this.downloadLink.setAttribute("download", this.filename ? this.filename : 'managed.pdf');
+    }
+
+    updateFilename() {
+       const filenameInput = document.getElementById('filename-input');
+        const downloadBtn = document.getElementById('export-button');
+
+        if (filenameInput.value === "") {
+            downloadBtn.disabled = true;
+            return;
+        }
+
+        downloadBtn.disabled = false;
+        this.filename = filenameInput.value;
+    }
+
+    preventIllegalChars(e) {
+        // const filenameInput = document.getElementById('filename-input');
+        //
+        // filenameInput.value = filenameInput.value.replace('.pdf', '');
+        //
+        // // prevent .
+        // if (filenameInput.value.includes('.')) {
+        //     filenameInput.value.replace('.','');
+        // }
     }
 }
 

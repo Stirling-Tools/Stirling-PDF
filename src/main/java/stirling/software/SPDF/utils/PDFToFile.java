@@ -20,6 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
+
 public class PDFToFile {
     public ResponseEntity<byte[]> processPdfToOfficeFormat(MultipartFile inputFile, String outputFormat, String libreOfficeFilter) throws IOException, InterruptedException {
 
@@ -53,7 +55,7 @@ public class PDFToFile {
             // Run the LibreOffice command
             List<String> command = new ArrayList<>(
                     Arrays.asList("soffice", "--infilter=" + libreOfficeFilter, "--convert-to", outputFormat, "--outdir", tempOutputDir.toString(), tempInputFile.toString()));
-            int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE).runCommandWithOutputHandling(command);
+            ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE).runCommandWithOutputHandling(command);
 
             // Get output files
             List<File> outputFiles = Arrays.asList(tempOutputDir.toFile().listFiles());

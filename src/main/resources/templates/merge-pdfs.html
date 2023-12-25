@@ -13,16 +13,18 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <h2 th:text="#{merge.header}"></h2>
-                        <form action="merge-pdfs" method="post" enctype="multipart/form-data">
-                            <div class="form-group">
+                        <form action="api/v1/general/merge-pdfs" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
                                 <label th:text="#{multiPdfDropPrompt}"></label>
                                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=true, accept='application/pdf')}"></div>
 
                             </div>
-                            <div class="form-group">
+                            <div class="mb-3">
                                 <ul id="selectedFiles" class="list-group"></ul>
                             </div>
-                            <div class="form-group text-center">
+                            <div class="mb-3 text-center">
+                            	<button type="button" id="sortByNameBtn" class="btn btn-info" th:text="#{merge.sortByName}"></button>
+    							<button type="button" id="sortByDateBtn" class="btn btn-info" th:text="#{merge.sortByDate}"></button>
                                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{merge.submit}"></button>
                             </div>
                         </form>

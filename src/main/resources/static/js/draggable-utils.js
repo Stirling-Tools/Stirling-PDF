@@ -13,12 +13,12 @@ const DraggableUtils = {
             listeners: {
                 move: (event) => {
                     const target = event.target;
-                    const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-                    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+                    const x = (parseFloat(target.getAttribute('data-bs-x')) || 0) + event.dx;
+                    const y = (parseFloat(target.getAttribute('data-bs-y')) || 0) + event.dy;
 
                     target.style.transform = `translate(${x}px, ${y}px)`;
-                    target.setAttribute('data-x', x);
-                    target.setAttribute('data-y', y);
+                    target.setAttribute('data-bs-x', x);
+                    target.setAttribute('data-bs-y', y);
 
                     this.onInteraction(target);
                 },
@@ -29,8 +29,8 @@ const DraggableUtils = {
     listeners: {
         move: (event) => {
             var target = event.target
-            var x = (parseFloat(target.getAttribute('data-x')) || 0)
-            var y = (parseFloat(target.getAttribute('data-y')) || 0)
+            var x = (parseFloat(target.getAttribute('data-bs-x')) || 0)
+            var y = (parseFloat(target.getAttribute('data-bs-y')) || 0)
 
             // check if control key is pressed
             if (event.ctrlKey) {
@@ -58,8 +58,8 @@ const DraggableUtils = {
 
             target.style.transform = 'translate(' + x + 'px,' + y + 'px)'
 
-            target.setAttribute('data-x', x)
-            target.setAttribute('data-y', y)
+            target.setAttribute('data-bs-x', x)
+            target.setAttribute('data-bs-y', y)
             target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
 
             this.onInteraction(target);
@@ -86,8 +86,8 @@ const DraggableUtils = {
         const x = 0;
         const y = 20;
         createdCanvas.style.transform = `translate(${x}px, ${y}px)`;
-        createdCanvas.setAttribute('data-x', x);
-        createdCanvas.setAttribute('data-y', y);
+        createdCanvas.setAttribute('data-bs-x', x);
+        createdCanvas.setAttribute('data-bs-y', y);
 
         createdCanvas.onclick = e => this.onInteraction(e.target);
 

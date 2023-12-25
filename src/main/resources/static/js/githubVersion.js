@@ -16,26 +16,40 @@ function compareVersions(version1, version2) {
 	return 0;
 }
 
-async function getLatestReleaseVersion() {
-	const url = "https://api.github.com/repos/Frooodle/Stirling-PDF/releases/latest";
-	const response = await fetch(url);
-	const data = await response.json();
-	return data.tag_name.substring(1);
-}
 
+async function getLatestReleaseVersion() {
+    const url = "https://api.github.com/repos/Frooodle/Stirling-PDF/releases/latest";
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.tag_name ? data.tag_name.substring(1) : "";
+    } catch (error) {
+        console.error("Failed to fetch latest version:", error);
+        return ""; // Return an empty string if the fetch fails
+    }
+}
 
 async function checkForUpdate() {
-	const latestVersion = await getLatestReleaseVersion();
-	console.log("latestVersion=" + latestVersion)
-	console.log("currentVersion=" + currentVersion)
-	console.log("compareVersions(latestVersion, currentVersion) > 0)=" + compareVersions(latestVersion, currentVersion))
-	if (latestVersion != null && latestVersion != "" && compareVersions(latestVersion, currentVersion) > 0) {
-		document.getElementById("update-btn").style.display = "block";
-		console.log("visible")
-	} else {
-		document.getElementById("update-btn").style.display = "none";
-		console.log("hidden")
+    // Initialize the update button as hidden
+    var updateBtn = document.getElementById("update-btn");
+	if (updateBtn !== null) {
+	  updateBtn.style.display = "none";
 	}
+
+
+    const latestVersion = await getLatestReleaseVersion();
+    console.log("latestVersion=" + latestVersion)
+    console.log("currentVersion=" + currentVersion)
+    console.log("compareVersions(latestVersion, currentVersion) > 0)=" + compareVersions(latestVersion, currentVersion))
+    if (latestVersion && compareVersions(latestVersion, currentVersion) > 0) {
+        document.getElementById("update-btn").style.display = "block";
+        console.log("visible")
+    } else {
+        console.log("hidden")
+    }
 }
 
-checkForUpdate();
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    checkForUpdate();
+});

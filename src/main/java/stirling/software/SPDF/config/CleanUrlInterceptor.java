@@ -1,38 +1,27 @@
 package stirling.software.SPDF.config;
 
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.Arrays;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class CleanUrlInterceptor implements HandlerInterceptor {
 
-	private static final List<String> ALLOWED_PARAMS = Arrays.asList("lang", "endpoint", "endpoints");
+	private static final List<String> ALLOWED_PARAMS = Arrays.asList("lang", "endpoint", "endpoints", "logout", "error", "file", "messageType");
 
+	
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
 		String queryString = request.getQueryString();
 		if (queryString != null && !queryString.isEmpty()) {
 			String requestURI = request.getRequestURI();
-
 			Map<String, String> parameters = new HashMap<>();
 
 			// Keep only the allowed parameters

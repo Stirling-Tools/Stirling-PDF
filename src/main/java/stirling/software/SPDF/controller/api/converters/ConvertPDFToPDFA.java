@@ -1,36 +1,37 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToPDFA {
 
-	@PostMapping(consumes = "multipart/form-data", value = "/pdf-to-pdfa")
+	@PostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
 	@Operation(
 	    summary = "Convert a PDF to a PDF/A",
 	    description = "This endpoint converts a PDF file to a PDF/A file. PDF/A is a format designed for long-term archiving of digital documents. Input:PDF Output:PDF Type:SISO"
 	)
-	public ResponseEntity<byte[]> pdfToPdfA(
-	    @RequestPart(required = true, value = "fileInput")
-	    @Parameter(description = "The input PDF file to be converted to a PDF/A file", required = true)
-	        MultipartFile inputFile) throws IOException, InterruptedException {
+	public ResponseEntity<byte[]> pdfToPdfA(@ModelAttribute PDFFile request) 
+	        throws Exception {
+		MultipartFile inputFile = request.getFileInput();
 
         // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");
@@ -49,7 +50,7 @@ public class ConvertPDFToPDFA {
         command.add(tempInputFile.toString());
         command.add(tempOutputFile.toString());
 
-        int returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
+        ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
 
         // Read the optimized PDF file
         byte[] pdfBytes = Files.readAllBytes(tempOutputFile);

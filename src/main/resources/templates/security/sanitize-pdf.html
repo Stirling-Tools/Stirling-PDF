@@ -13,8 +13,8 @@
                     <div class="col-md-6">
                         <h2 th:text="#{sanitizePDF.header}"></h2>
 
-                        <form action="sanitize-pdf" method="post" enctype="multipart/form-data">
-                            <div class="form-group">
+                        <form action="api/v1/security/sanitize-pdf" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
                                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             </div>
                             <div class="form-check">
@@ -30,15 +30,15 @@
                                 <label class="form-check-label" for="removeMetadata" th:text="#{sanitizePDF.selectText.3}"></label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="removeLinks" name="removeLinks" checked>
+                                <input class="form-check-input" type="checkbox" id="removeLinks" name="removeLinks">
                                 <label class="form-check-label" for="removeLinks" th:text="#{sanitizePDF.selectText.4}"></label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="removeFonts" name="removeFonts" checked>
+                                <input class="form-check-input" type="checkbox" id="removeFonts" name="removeFonts">
                                 <label class="form-check-label" for="removeFonts" th:text="#{sanitizePDF.selectText.5}"></label>
                             </div>
                             <br />
-                            <div class="form-group text-center">
+                            <div class="mb-3 text-center">
                                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{sanitizePDF.submit}"></button>
                             </div>
 
