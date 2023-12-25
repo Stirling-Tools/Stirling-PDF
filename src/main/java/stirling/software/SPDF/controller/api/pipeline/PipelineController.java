@@ -26,6 +26,7 @@ import java.util.zip.ZipOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
@@ -51,6 +52,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
+import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -98,7 +100,13 @@ public class PipelineController {
 	@Autowired
 	ApplicationProperties applicationProperties;
 	
+	@Autowired
+	private UserServiceInterface userService;
 
+	private String getApiKeyForUser() {
+		return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
+	}
+	
 	private void handleDirectory(Path dir) throws Exception {
 		logger.info("Handling directory: {}", dir);
 		Path jsonFile = dir.resolve(jsonFileName);
@@ -292,6 +300,10 @@ public class PipelineController {
 					}
 
 					HttpHeaders headers = new HttpHeaders();
+					
+					String apiKey = getApiKeyForUser();
+					headers.add("X-API-Key", apiKey);
+					
 					headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
 					HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);

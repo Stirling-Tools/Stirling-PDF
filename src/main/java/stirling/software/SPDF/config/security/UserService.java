@@ -16,11 +16,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.UserRepository;
 @Service
-public class UserService {
+public class UserService  implements UserServiceInterface{
     
     @Autowired
     private UserRepository userRepository;
