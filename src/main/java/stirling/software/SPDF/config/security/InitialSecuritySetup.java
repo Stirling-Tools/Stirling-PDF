@@ -38,7 +38,7 @@ public class InitialSecuritySetup {
 				userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId(), true);
 			}
 			
-			userService.saveUser(Role.INTERNAL_API_USER.getRoleId(), UUID.randomUUID().toString(), Role.USER.getRoleId());
+			userService.saveUser(Role.INTERNAL_API_USER.getRoleId(), UUID.randomUUID().toString(), Role.INTERNAL_API_USER.getRoleId());
 			userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
 		}
 	}

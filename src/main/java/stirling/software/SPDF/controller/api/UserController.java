@@ -23,6 +23,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
 
 @Controller
@@ -182,6 +183,18 @@ public class UserController {
     	if(userService.usernameExists(username)) {
     		return new RedirectView("/addUsers?messageType=usernameExists");
     	}
+    	try {
+            // Validate the role
+            Role roleEnum = Role.fromString(role);
+            if (roleEnum == Role.INTERNAL_API_USER) {
+                // If the role is INTERNAL_API_USER, reject the request
+                return new RedirectView("/addUsers?messageType=invalidRole");
+            }
+        } catch (IllegalArgumentException e) {
+            // If the role ID is not valid, redirect with an error message
+            return new RedirectView("/addUsers?messageType=invalidRole");
+        }
+    	
         userService.saveUser(username, password, role, forceChange);
         return new RedirectView("/addUsers");  // Redirect to account page after adding the user
     }

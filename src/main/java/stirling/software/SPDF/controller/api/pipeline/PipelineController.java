@@ -100,10 +100,12 @@ public class PipelineController {
 	@Autowired
 	ApplicationProperties applicationProperties;
 	
-	@Autowired
+	@Autowired(required=false)
 	private UserServiceInterface userService;
 
 	private String getApiKeyForUser() {
+		if(userService == null)
+			return "";
 		return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
 	}
 	

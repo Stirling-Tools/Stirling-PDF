@@ -1,4 +1,5 @@
 package stirling.software.SPDF.controller.web;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import stirling.software.SPDF.model.Authority;
+import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.UserRepository;
 @Controller
@@ -46,7 +49,21 @@ public class AccountWebController {
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@GetMapping("/addUsers")
 	public String showAddUserForm(Model model,  Authentication authentication) {
-	    List<User> allUsers = userRepository.findAll();
+		List<User> allUsers = userRepository.findAll();
+		Iterator<User> iterator = allUsers.iterator();
+
+		while(iterator.hasNext()) {
+		    User user = iterator.next();
+		    if(user != null) {
+		    	 for (Authority authority : user.getAuthorities()) {
+		             if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
+		                 iterator.remove();
+		                 break; // Break out of the inner loop once the user is removed
+		             }
+		         }
+		    }
+		}
+
 	    model.addAttribute("users", allUsers);
 	    model.addAttribute("currentUsername", authentication.getName());
 	    return "addUsers";

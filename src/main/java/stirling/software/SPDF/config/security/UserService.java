@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.Authority;
+import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.UserRepository;
 @Service
@@ -137,6 +138,11 @@ public class UserService  implements UserServiceInterface{
     public void deleteUser(String username) {
     	 Optional<User> userOpt = userRepository.findByUsername(username);
          if (userOpt.isPresent()) {
+        	 for (Authority authority : userOpt.get().getAuthorities()) {
+	             if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
+	                 return;
+	             }
+	         }
         	 userRepository.delete(userOpt.get());
          }
     }
