@@ -18,7 +18,7 @@ ENV DOCKER_ENABLE_SECURITY=false \
 ##    mkdir -p $HOME && chown stirlingpdfuser:stirlingpdfgroup $HOME
 
 # Set up necessary directories and permissions
-RUN mkdir -p /scripts /usr/share/fonts/opentype/noto /usr/share/tesseract-ocr /configs /customFiles /pipeline /pipeline/defaultWebUIConfigs  /pipeline/watchedFolders /pipeline/finishedFolders
+RUN mkdir -p /scripts /usr/share/fonts/opentype/noto /usr/share/tesseract-ocr /configs /logs /customFiles /pipeline /pipeline/defaultWebUIConfigs  /pipeline/watchedFolders /pipeline/finishedFolders
 ##&& \
 ##    chown -R stirlingpdfuser:stirlingpdfgroup /scripts /usr/share/fonts/opentype/noto /usr/share/tesseract-ocr /configs /customFiles && \
 ##    chown -R stirlingpdfuser:stirlingpdfgroup /usr/share/tesseract-ocr-original

@@ -18,7 +18,7 @@ ENV DOCKER_ENABLE_SECURITY=false \
 
 # Set up necessary directories and permissions
 #RUN mkdir -p /scripts /configs /customFiles && \
-#    chown -R stirlingpdfuser:stirlingpdfgroup /scripts /configs /customFiles /pipeline /pipeline/defaultWebUIConfigs  /pipeline/watchedFolders /pipeline/finishedFolders
+#    chown -R stirlingpdfuser:stirlingpdfgroup /scripts /configs /customFiles /logs /pipeline /pipeline/defaultWebUIConfigs  /pipeline/watchedFolders /pipeline/finishedFolders
  
 RUN mkdir -p /scripts /usr/share/fonts/opentype/noto /configs /customFiles
 COPY ./scripts/download-security-jar.sh /scripts/download-security-jar.sh
