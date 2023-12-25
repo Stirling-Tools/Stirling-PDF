@@ -126,7 +126,13 @@ public class OtherWebController {
         model.addAttribute("currentPage", "remove-blanks");
         return "misc/remove-blanks";
     }
-    
+
+    @GetMapping("/remove-annotations")
+    @Hidden
+    public String removeAnnotationsForm(Model model) {
+        model.addAttribute("currentPage", "remove-annotations");
+        return "misc/remove-annotations";
+    }
 
     @GetMapping("/auto-crop")
     @Hidden
