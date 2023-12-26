@@ -27,9 +27,10 @@
             <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}">
             <div class="features-container ">
 
-
-                <div th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', svgPath='images/pipeline.svg')}"></div>
-
+				<th:block th:if="${@enableAlphaFunctionality}">
+                <div  th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', svgPath='images/pipeline.svg')}"></div>
+				</th:block>
+				
                 <div th:replace="~{fragments/card :: card(id='view-pdf', cardTitle=#{home.viewPdf.title}, cardText=#{home.viewPdf.desc}, cardLink='view-pdf', svgPath='images/book-opened.svg')}"></div>
                 <div th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', svgPath='images/tools.svg')}"></div>
                 <div th:replace="~{fragments/card :: card(id='merge-pdfs', cardTitle=#{home.merge.title}, cardText=#{home.merge.desc}, cardLink='merge-pdfs', svgPath='images/union.svg')}"></div>
