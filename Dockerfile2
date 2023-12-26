@@ -1,8 +1,22 @@
+# Intermediate stage for running dos2unix
+FROM alpine:3.14 AS dos2unix-converter
+
+# Install dos2unix
+RUN apk add --no-cache dos2unix
+
+# Copy script files
+COPY ./scripts/* /dos2unix-scripts/
+
+# Convert line endings
+RUN dos2unix /dos2unix-scripts/*
+
+
+
 # Build stage
 FROM alpine:3.14 AS downloader
 
 # Install necessary utilities
-RUN apk add --no-cache curl jq
+RUN apk add --no-cache curl jq 
 
 # Set work directory
 WORKDIR /downloader
@@ -39,8 +53,9 @@ RUN mkdir -p /scripts /usr/share/fonts/opentype/noto /usr/share/tesseract-ocr /c
 ##    chown -R stirlingpdfuser:stirlingpdfgroup /scripts /usr/share/fonts/opentype/noto /usr/share/tesseract-ocr /configs /customFiles && \
 ##    chown -R stirlingpdfuser:stirlingpdfgroup /usr/share/tesseract-ocr-original
 
+# Copy the already-converted scripts from the dos2unix stage
+COPY --from=dos2unix-converter /dos2unix-scripts/ /scripts/
 # Copy necessary files
-COPY ./scripts/* /scripts/
 COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
 COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
 
@@ -61,4 +76,3 @@ EXPOSE 8080
 ##USER stirlingpdfuser
 ENTRYPOINT ["/scripts/init.sh"]
 CMD ["java", "-jar", "/app.jar"]
-
