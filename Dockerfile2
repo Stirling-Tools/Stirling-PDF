@@ -45,7 +45,7 @@ COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
 COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
 
 # Copy the application JAR file from the download stage
-COPY --from=downloader /downloader/*.jar /app.jar
+COPY --from=downloader /downloader/Stirling-PDF.jar /app.jar
 
 # Set font cache and permissions
 RUN fc-cache -f -v && chmod +x /scripts/*
