@@ -175,6 +175,19 @@ public class ApplicationProperties {
 		private String rootURIPath;
 		private String customStaticFilePath;
 		private Integer maxFileSize;
+		
+		private Boolean  enableAlphaFunctionality;
+		
+		
+		
+
+		public Boolean getEnableAlphaFunctionality() {
+			return enableAlphaFunctionality;
+		}
+
+		public void setEnableAlphaFunctionality(Boolean enableAlphaFunctionality) {
+			this.enableAlphaFunctionality = enableAlphaFunctionality;
+		}
 
 		public String getDefaultLocale() {
 			return defaultLocale;
@@ -218,11 +231,12 @@ public class ApplicationProperties {
 
 		@Override
 		public String toString() {
-			return "System [defaultLocale=" + defaultLocale + ", googlevisibility=" + googlevisibility + ", rootURIPath="
-					+ rootURIPath + ", customStaticFilePath=" + customStaticFilePath + ", maxFileSize=" + maxFileSize
-					+ "]";
+			return "System [defaultLocale=" + defaultLocale + ", googlevisibility=" + googlevisibility
+					+ ", rootURIPath=" + rootURIPath + ", customStaticFilePath=" + customStaticFilePath
+					+ ", maxFileSize=" + maxFileSize + ", enableAlphaFunctionality=" + enableAlphaFunctionality + "]";
 		}
 
+		
 		
 	}
 

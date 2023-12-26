@@ -56,9 +56,8 @@ public class ApiDocService {
                 JsonNode pathNode = entry.getValue();
                 if (pathNode.has("post")) {
                     JsonNode postNode = pathNode.get("post");
-                    String operation = path.substring(1); // Assuming operation name is the path without leading '/'
-                    ApiEndpoint endpoint = new ApiEndpoint(operation, postNode);
-                    apiDocumentation.put(operation, endpoint);
+                    ApiEndpoint endpoint = new ApiEndpoint(path, postNode);
+                    apiDocumentation.put(path, endpoint);
                 }
             });
         } catch (Exception e) {
@@ -68,7 +67,6 @@ public class ApiDocService {
     }
 
     public boolean isValidOperation(String operationName, Map<String, Object> parameters) {
-    	System.out.println(apiDocumentation);
         if (!apiDocumentation.containsKey(operationName)) {
             return false;
         }

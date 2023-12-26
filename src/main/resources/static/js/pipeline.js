@@ -343,7 +343,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 							parameterInput = document.createElement('input');
 							parameterInput.type = 'text';
 							parameterInput.className = "form-control";
-							parameterInput.value = "automatedFileInput";
+							parameterInput.value = "FileInputPathToBeInputtedManuallyOffline";
 						} else {
 							parameterInput = document.createElement('input');
 							parameterInput.type = 'text';
@@ -480,14 +480,16 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 				"outputDir": "{outputFolder}/{folderName}",
 				"outputFileName": "{filename}-{pipelineName}-{date}-{time}"
 			},
-			"outputDir": "httpWebRequest",
+			"outputDir": "{outputFolder}",
 			"outputFileName": "{filename}"
 		};
 
 		for (let i = 0; i < pipelineList.length; i++) {
 			let operationName = pipelineList[i].querySelector('.operationName').textContent;
 			let parameters = operationSettings[operationName] || {};
-
+			
+			parameters['fileInput'] = 'automated';
+			
 			pipelineConfig.pipeline.push({
 				"operation": operationName,
 				"parameters": parameters

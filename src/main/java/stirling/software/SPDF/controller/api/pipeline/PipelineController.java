@@ -72,8 +72,14 @@ public class PipelineController {
 	@Autowired
 	private ApiDocService apiDocService;
 	
+
+	
+	
 	@Scheduled(fixedRate = 60000)
 	public void scanFolders() {
+		if(!Boolean.TRUE.equals(applicationProperties.getSystem().getEnableAlphaFunctionality())) {
+			return;
+		}
 		Path watchedFolderPath = Paths.get(watchedFoldersDir);
 		if (!Files.exists(watchedFolderPath)) {
 			try {
@@ -453,6 +459,10 @@ public class PipelineController {
 
 	@PostMapping("/handleData")
 	public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request) {
+		if(!Boolean.TRUE.equals(applicationProperties.getSystem().getEnableAlphaFunctionality())) {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+		
 	    MultipartFile[] files = request.getFileInput();
 	    String jsonString = request.getJson();
 	    if(files == null) {
