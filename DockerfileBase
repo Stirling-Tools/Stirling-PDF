@@ -1,37 +1,50 @@
 # Main stage
-FROM bellsoft/liberica-openjdk-debian:17 AS base
+FROM ubuntu:latest AS base
+
+
+
+# JDK for app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libreoffice-core-nogui \
+    	openjdk-17-jre
+    	
+# Doc conversion
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    	libreoffice-core \
         libreoffice-common \
-        libreoffice-writer-nogui \
-        libreoffice-calc-nogui \
-        libreoffice-impress-nogui \
-        python3-uno \
+        libreoffice-writer \
+        libreoffice-calc \
+        libreoffice-impress \
+		python3-uno \
+		curl \
+		unoconv
+		
+		
+# OCR MY PDF (unpaper for descew and other advanced featues)
+RUN apt-get update && apt-get install -y --no-install-recommends software-properties-common gnupg2 && \
+add-apt-repository ppa:alex-p/tesseract-ocr5 && apt install -y --no-install-recommends tesseract-ocr && \
+apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ghostscript \
         python3-pip \
-        unoconv \
-        pngquant \
-        unpaper \
-        ocrmypdf && \
-    rm -rf /var/lib/apt/lists/* && \
+        ocrmypdf \
+        unpaper && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir --upgrade ocrmypdf && \
+    pip install --no-cache-dir --upgrade pillow==10.0.1 reportlab==3.6.13 wheel==0.38.1 setuptools==65.5.1 pyjwt==2.4.0 cryptography==39.0.1
+    
+    
+#CV and HTML   
+RUN pip install --no-cache-dir opencv-python-headless WeasyPrint 
+
+
+# cleanup and etc
+RUN rm -rf /var/lib/apt/lists/* && \
     mkdir /usr/share/tesseract-ocr-original && \
     cp -r /usr/share/tesseract-ocr/* /usr/share/tesseract-ocr-original && \
     rm -rf /usr/share/tesseract-ocr
 
-# Python packages stage
-FROM base AS python-packages
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        build-essential \
-        libffi-dev \
-        libssl-dev \
-        zlib1g-dev \
-        libjpeg-dev && \
-    pip install --upgrade pip && \
-    pip install --no-cache-dir \
-        opencv-python-headless WeasyPrint && \
-    rm -rf /var/lib/apt/lists/*
 
-# Final stage: Copy necessary files from the previous stage
-FROM base
-COPY --from=python-packages /usr/local /usr/local
+
+    

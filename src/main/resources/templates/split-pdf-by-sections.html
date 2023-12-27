@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:insert="~{fragments/common :: head(title=#{split-by-sections.title})}"></th:block>
+
+<body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <h2 th:text="#{split-by-sections.header}"></h2>
+                        <form method="post" enctype="multipart/form-data" th:action="@{/api/v1/general/split-pdf-by-sections}">
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                            
+                            <label for="horizontalDivisions" th:text="#{split-by-sections.horizontal.label}">Horizontal Divisions</label>
+                            <input type="number" id="horizontalDivisions" name="horizontalDivisions" class="form-control" min="0" max="300" value="0" required th:placeholder="#{split-by-sections.horizontal.placeholder}">
+                            <br>
+
+                            <label for="verticalDivisions" th:text="#{split-by-sections.vertical.label}">Vertical Divisions</label>
+                            <input type="number" id="verticalDivisions" name="verticalDivisions" class="form-control" min="0" max="300" required value="1" th:placeholder="#{split-by-sections.vertical.placeholder}">
+                            <br>
+                        	<style>
+                        	.pdf-visual-aid {
+							    width: 150px; /* Adjust as needed */
+							    height: 200px; /* Adjust as needed */
+							    border: 1px solid black; /* Represents the PDF page */
+							    position: relative;
+							}
+							.line {
+							    position: absolute;
+							    background-color: red; /* Line color */
+							}
+                        	
+                        	</style>
+                        	
+                        	<div id="pdfVisualAid" class="pdf-visual-aid"></div>
+                        	<Script>
+                        	function updateVisualAid() {
+                        	    const horizontalDivisions = document.getElementById('horizontalDivisions').value;
+                        	    const verticalDivisions = document.getElementById('verticalDivisions').value;
+                        	    const aid = document.getElementById('pdfVisualAid');
+								
+                        	    if(horizontalDivisions > 300)
+                        	    	horizontalDivisions = 300
+                       	    	if(verticalDivisions > 300)
+                       	    		verticalDivisions = 300
+                        	    // Clear existing lines
+                        	    aid.innerHTML = '';
+
+                        	 // Add horizontal lines
+                        	    for (let i = 0; i < horizontalDivisions; i++) {
+                        	        const line = document.createElement('div');
+                        	        line.classList.add('line');
+                        	        line.style.width = '100%';
+                        	        line.style.height = '1px';
+                        	        line.style.top = `${((i + 1) / (parseInt(horizontalDivisions) + 1)) * 100}%`;
+                        	        aid.appendChild(line);
+                        	    }
+
+                        	    // Add vertical lines
+                        	    for (let i = 0; i < verticalDivisions; i++) {
+                        	        const line = document.createElement('div');
+                        	        line.classList.add('line');
+                        	        line.style.height = '100%';
+                        	        line.style.width = '1px';
+                        	        line.style.left = `${((i + 1) / (parseInt(verticalDivisions) + 1)) * 100}%`;
+                        	        aid.appendChild(line);
+                        	    }
+                        	}
+
+                        	// Event listeners
+                        	document.getElementById('horizontalDivisions').addEventListener('input', updateVisualAid);
+                        	document.getElementById('verticalDivisions').addEventListener('input', updateVisualAid);
+
+                        	// Initial draw
+                        	updateVisualAid();
+
+                        	</Script>
+                        	</br>
+                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{split-by-sections.submit}">Submit</button>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
+</body>
+</html>

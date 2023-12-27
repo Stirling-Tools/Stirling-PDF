@@ -104,16 +104,8 @@ public class ApplicationProperties {
 	}
 	public static class Security {
 		private Boolean enableLogin;
-		private InitialLogin initialLogin;
 		private Boolean csrfDisabled;
-
-		public Boolean getEnableLogin() {
-			return enableLogin;
-		}
-
-		public void setEnableLogin(Boolean enableLogin) {
-			this.enableLogin = enableLogin;
-		}
+		private InitialLogin initialLogin;
 
 		public InitialLogin getInitialLogin() {
 			return initialLogin != null ? initialLogin : new InitialLogin();
@@ -121,6 +113,14 @@ public class ApplicationProperties {
 
 		public void setInitialLogin(InitialLogin initialLogin) {
 			this.initialLogin = initialLogin;
+		}
+		
+		public Boolean getEnableLogin() {
+			return enableLogin;
+		}
+
+		public void setEnableLogin(Boolean enableLogin) {
+			this.enableLogin = enableLogin;
 		}
 
 		public Boolean getCsrfDisabled() {
@@ -134,16 +134,15 @@ public class ApplicationProperties {
 		
 		@Override
 		public String toString() {
-			return "Security [enableLogin=" + enableLogin + ", initialLogin=" + initialLogin + ", csrfDisabled="
+			return "Security [enableLogin=" + enableLogin + ", initialLogin=" + initialLogin + ",  csrfDisabled="
 					+ csrfDisabled + "]";
 		}
-
-
+		
 		public static class InitialLogin {
 
 			private String username;
 			private String password;
-			
+
 			public String getUsername() {
 				return username;
 			}
@@ -166,7 +165,7 @@ public class ApplicationProperties {
 			}
 
 
-			
+
 		}
 	}
 
@@ -233,6 +232,8 @@ public class ApplicationProperties {
 	    private String appNameNavbar;
 
 	    public String getAppName() {
+	    	if(appName != null && appName.trim().length() == 0)
+	    		return null;
 	        return appName;
 	    }
 
@@ -241,6 +242,8 @@ public class ApplicationProperties {
 	    }
 
 	    public String getHomeDescription() {
+	    	if(homeDescription != null && homeDescription.trim().length() == 0)
+	    		return null;
 	        return homeDescription;
 	    }
 
@@ -249,6 +252,8 @@ public class ApplicationProperties {
 	    }
 
 	    public String getAppNameNavbar() {
+	    	if(appNameNavbar != null && appNameNavbar.trim().length() == 0)
+	    		return null;
 	        return appNameNavbar;
 	    }
 

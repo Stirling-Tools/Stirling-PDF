@@ -10,15 +10,16 @@
 <th:block th:each="font : ${fonts}">
     <style th:inline="text">
         @font-face {
-            font-family: "[[${font}]]";
-            src: url('fonts/[[${font}]].woff2') format('woff2');
+            font-family: "[[${font.name}]]";
+            src: url('fonts/[[${font.name}]].[[${font.extension}]]') format('[[${font.type}]]');
         }
 
-        #font-select option[value="[[${font}]]"] {
-            font-family: "[[${font}]]", cursive;
+        #font-select option[value="[[${font.name}]]"] {
+            font-family: "[[${font.name}]]", cursive;
         }
     </style>
 </th:block>
+
 <style>
 select#font-select, select#font-select option {
         height: 60px;    /* Adjust as needed */
@@ -178,11 +179,14 @@ select#font-select, select#font-select option {
                             </div>
                             <div class="tab-container" th:title="#{sign.text}">
                                 <label class="form-check-label" for="sigText" th:text="#{text}"></label> 
-                                <input type="text" class="form-control" id="sigText" name="sigText">
+                                <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
                                 <label th:text="#{font}"></label> 
                                 <select class="form-control" name="font" id="font-select">
-								    <option th:each="font : ${fonts}" th:value="${font}" th:text="${font}" th:class="${font.toLowerCase()+'-font'}"></option>
-
+								    <option th:each="font : ${fonts}" 
+								            th:value="${font.name}" 
+								            th:text="${font.name}" 
+								            th:class="${font.name.toLowerCase()+'-font'}">
+								    </option>
 								</select>
                                 <div class="margin-auto-parent">
                                     <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
@@ -199,10 +203,20 @@ select#font-select, select#font-select option {
                                         const textWidth = ctx.measureText(sigText).width;
                                         const textHeight = fontSize;
 
+                                        let paragraphs = sigText.split(/\r?\n/);
+
                                         canvas.width = textWidth;
-                                        canvas.height = textHeight*1.35; //for tails
+                                        canvas.height = paragraphs.length * textHeight*1.35; //for tails
                                         ctx.font = `${fontSize}px ${font}`;
-                                        ctx.fillText(sigText, 0, fontSize);
+
+                                        ctx.textBaseline = 'top';
+
+                                        let y = 0;
+
+                                        paragraphs.forEach(paragraph => {
+                                            ctx.fillText(paragraph, 0, y);
+                                            y += fontSize;
+                                        });
 
                                         const dataURL = canvas.toDataURL();
                                         DraggableUtils.createDraggableCanvasFromUrl(dataURL);
@@ -231,13 +245,14 @@ select#font-select, select#font-select option {
 </script>
 
           
-                                <th:block th:each="font : ${fonts}">
+<th:block th:each="font : ${fonts}">
     <style th:inline="text">
-        #font-select option[value="/*[[${font}]]*/"] {
-            font-family: '/*[[${font}]]*/', cursive;
+        #font-select option[value='/*[[${font.name}]]*/'] {
+            font-family: '/*[[${font.name}]]*/', cursive;
         }
     </style>
 </th:block>
+
 
                             </div>
                         </div>

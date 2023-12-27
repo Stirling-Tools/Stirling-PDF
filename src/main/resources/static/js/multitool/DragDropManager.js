@@ -1,5 +1,3 @@
-
-
 class DragDropManager {
     dragContainer;
     wrapper;
@@ -47,16 +45,15 @@ class DragDropManager {
         const img = div.querySelector('img');
         div.classList.add('drag-manager_dragging');
         const imageSrc = img.src;
-    
+
         const imgEl = document.createElement('img');
         imgEl.classList.add('dragged-img');
         imgEl.src = imageSrc;
         this.draggedImageEl = imgEl;
-        imgEl.style.left = screenX;
-        imgEl.style.right = screenY;
+        imgEl.style.visibility = 'hidden';
         imgEl.style.transform = `rotate(${img.style.rotate === '' ? '0deg' : img.style.rotate}) translate(-50%, -50%)`;
         this.dragContainer.appendChild(imgEl);
-    
+
         window.addEventListener('mouseup', this.stopDraggingPage)
         window.addEventListener('mousemove', this.onDragEl)
         this.wrapper.classList.add('drag-manager_dragging-container');
@@ -66,12 +63,13 @@ class DragDropManager {
     onDragEl(mouseEvent) {
         const { clientX, clientY } = mouseEvent;
         if(this.draggedImageEl) {
+            this.draggedImageEl.style.visibility = 'visible';
             this.draggedImageEl.style.left = `${clientX}px`;
-            this.draggedImageEl.style.top = `${clientY}px`;           
+            this.draggedImageEl.style.top = `${clientY}px`;
         }
     }
 
-    
+
     stopDraggingPage() {
         window.removeEventListener('mousemove', this.onDragEl);
         this.wrapper.classList.remove('drag-manager_dragging-container');
@@ -103,7 +101,7 @@ class DragDropManager {
         const onDragStart = () => {
             this.startDraggingPage(div);
         }
-        
+
         const onMouseEnter = () => {
             if (this.pageDragging) {
                 this.hoveredEl = div;

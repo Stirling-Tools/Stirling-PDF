@@ -4,75 +4,83 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.apache.pdfbox.multipdf.LayerUtility;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfPage;
-import com.itextpdf.kernel.pdf.PdfReader;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
-import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
+@RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class CropController {
 
-    private static final Logger logger = LoggerFactory.getLogger(CropController.class);
-
+	private static final Logger logger = LoggerFactory.getLogger(CropController.class);
 
 	@PostMapping(value = "/crop", consumes = "multipart/form-data")
 	@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")
-	public ResponseEntity<byte[]> cropPdf(
-	        @Parameter(description = "The input PDF file", required = true) @RequestParam("fileInput") MultipartFile file,
-	        @Parameter(description = "The x-coordinate of the top-left corner of the crop area", required = true, schema = @Schema(type = "number")) @RequestParam("x") float x,
-	        @Parameter(description = "The y-coordinate of the top-left corner of the crop area", required = true, schema = @Schema(type = "number")) @RequestParam("y") float y,
-	        @Parameter(description = "The width of the crop area", required = true, schema = @Schema(type = "number")) @RequestParam("width") float width,
-	        @Parameter(description = "The height of the crop area", required = true, schema = @Schema(type = "number")) @RequestParam("height") float height) throws IOException {
-	    byte[] bytes = file.getBytes();
-	    System.out.println("x=" + x + ", " + "y=" + y + ", " + "width=" + width + ", " +"height=" + height  );
-	    PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
-	    PdfDocument pdfDoc = new PdfDocument(reader);
-	
-	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	    PdfWriter writer = new PdfWriter(baos);
-	    PdfDocument outputPdf = new PdfDocument(writer);
-	
-	    int totalPages = pdfDoc.getNumberOfPages();
-	
-	    for (int i = 1; i <= totalPages; i++) {
-	        PdfPage page = outputPdf.addNewPage(new PageSize(width, height));
-	        PdfCanvas pdfCanvas = new PdfCanvas(page);
+	public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm form)
+			throws IOException {
 
-	        PdfFormXObject formXObject = pdfDoc.getPage(i).copyAsFormXObject(outputPdf);
 
-	        // Save the graphics state, apply the transformations, add the object, and then
-	        // restore the graphics state
-	        pdfCanvas.saveState();
-	        pdfCanvas.rectangle(x, y, width, height);
-	        pdfCanvas.clip();
-	        pdfCanvas.addXObject(formXObject, -x, -y);
-	        pdfCanvas.restoreState();
-	    }
-	
+		
 
-	    outputPdf.close();
-		byte[] pdfContent = baos.toByteArray();
-		pdfDoc.close();
-		return WebResponseUtils.bytesToWebResponse(pdfContent,
-				file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_cropped.pdf");
+PDDocument sourceDocument = PDDocument.load(new ByteArrayInputStream(form.getFileInput().getBytes()));
+
+PDDocument newDocument = new PDDocument();
+
+int totalPages = sourceDocument.getNumberOfPages();
+
+LayerUtility layerUtility = new LayerUtility(newDocument);
+
+for (int i = 0; i < totalPages; i++) {
+    PDPage sourcePage = sourceDocument.getPage(i);
+    
+    // Create a new page with the size of the source page
+    PDPage newPage = new PDPage(sourcePage.getMediaBox());
+    newDocument.addPage(newPage);
+    PDPageContentStream contentStream = new PDPageContentStream(newDocument, newPage);
+
+    // Import the source page as a form XObject
+    PDFormXObject formXObject = layerUtility.importPageAsForm(sourceDocument, i);
+
+    contentStream.saveGraphicsState();
+    
+    // Define the crop area
+    contentStream.addRect(form.getX(), form.getY(), form.getWidth(), form.getHeight());
+    contentStream.clip();
+
+    // Draw the entire formXObject
+    contentStream.drawForm(formXObject);
+
+    contentStream.restoreGraphicsState();
+
+    contentStream.close();
+    
+    // Now, set the new page's media box to the cropped size
+    newPage.setMediaBox(new PDRectangle(form.getX(), form.getY(), form.getWidth(), form.getHeight()));
+}
+
+ByteArrayOutputStream baos = new ByteArrayOutputStream();
+newDocument.save(baos);
+newDocument.close();
+sourceDocument.close();
+
+byte[] pdfContent = baos.toByteArray();
+return WebResponseUtils.bytesToWebResponse(pdfContent, form.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_cropped.pdf");
 	}
 
 }

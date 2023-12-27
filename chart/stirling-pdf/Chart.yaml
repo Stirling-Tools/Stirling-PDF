@@ -1,0 +1,15 @@
+apiVersion: v2
+appVersion: 0.14.2
+description: locally hosted web application that allows you to perform various operations on PDF files
+home: https://github.com/Frooodle/Stirling-PDF
+keywords:
+- stirling-pdf
+- helm
+- charts repo
+maintainers:
+- name: Frooodle
+  url: https://github.com/Frooodle/Stirling-PDF
+name: stirling-pdf-chart
+sources:
+- https://github.com/Frooodle/Stirling-PDF
+version: 1.0.0

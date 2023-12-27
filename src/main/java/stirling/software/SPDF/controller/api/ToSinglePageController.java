@@ -1,30 +1,29 @@
 package stirling.software.SPDF.controller.api;
 
+import java.awt.geom.AffineTransform;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.apache.pdfbox.multipdf.LayerUtility;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.kernel.geom.Rectangle;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfReader;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Image;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
+@RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class ToSinglePageController {
 
@@ -36,45 +35,52 @@ public class ToSinglePageController {
         summary = "Convert a multi-page PDF into a single long page PDF",
         description = "This endpoint converts a multi-page PDF document into a single paged PDF document. The width of the single page will be same as the input's width, but the height will be the sum of all the pages' heights. Input:PDF Output:PDF Type:SISO"
     )
-    public ResponseEntity<byte[]> pdfToSinglePage(
-        @RequestPart(required = true, value = "fileInput")
-        @Parameter(description = "The input multi-page PDF file to be converted into a single page", required = true)
-            MultipartFile file) throws IOException {
+    public ResponseEntity<byte[]> pdfToSinglePage(@ModelAttribute PDFFile request) throws IOException {
 
-        PdfReader reader = new PdfReader(file.getInputStream());
-        PdfDocument sourceDocument = new PdfDocument(reader);
-        
-        float totalHeight = 0;
-        float width = 0;
+    	// Load the source document
+    	PDDocument sourceDocument = PDDocument.load(request.getFileInput().getInputStream());
 
-        for (int i = 1; i <= sourceDocument.getNumberOfPages(); i++) {
-            Rectangle pageSize = sourceDocument.getPage(i).getPageSize();
-            totalHeight += pageSize.getHeight();
-            if(width < pageSize.getWidth())
-            	width = pageSize.getWidth();
-        }
+    	// Calculate total height and max width
+    	float totalHeight = 0;
+    	float maxWidth = 0;
+    	for (PDPage page : sourceDocument.getPages()) {
+    	    PDRectangle pageSize = page.getMediaBox();
+    	    totalHeight += pageSize.getHeight();
+    	    maxWidth = Math.max(maxWidth, pageSize.getWidth());
+    	}
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PdfWriter writer = new PdfWriter(baos);
-        PdfDocument newDocument = new PdfDocument(writer);
-        PageSize newPageSize = new PageSize(width, totalHeight);
-        newDocument.addNewPage(newPageSize);
+    	// Create new document and page with calculated dimensions
+    	PDDocument newDocument = new PDDocument();
+    	PDPage newPage = new PDPage(new PDRectangle(maxWidth, totalHeight));
+    	newDocument.addPage(newPage);
 
-        Document layoutDoc = new Document(newDocument);
-        float yOffset = totalHeight;
+    	// Initialize the content stream of the new page
+    	PDPageContentStream contentStream = new PDPageContentStream(newDocument, newPage);
+    	contentStream.close();
+    	
+    	LayerUtility layerUtility = new LayerUtility(newDocument);
+    	float yOffset = totalHeight;
 
-        for (int i = 1; i <= sourceDocument.getNumberOfPages(); i++) {
-            PdfFormXObject pageCopy = sourceDocument.getPage(i).copyAsFormXObject(newDocument);
-            Image copiedPage = new Image(pageCopy);
-            copiedPage.setFixedPosition(0, yOffset - sourceDocument.getPage(i).getPageSize().getHeight());
-            yOffset -= sourceDocument.getPage(i).getPageSize().getHeight();
-            layoutDoc.add(copiedPage);
-        }
+    	// For each page, copy its content to the new page at the correct offset
+    	for (PDPage page : sourceDocument.getPages()) {
+    	    PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, sourceDocument.getPages().indexOf(page));
+    	    AffineTransform af = AffineTransform.getTranslateInstance(0, yOffset - page.getMediaBox().getHeight());
+    	    layerUtility.wrapInSaveRestore(newPage);
+    	    String defaultLayerName = "Layer" + sourceDocument.getPages().indexOf(page);
+    	    layerUtility.appendFormAsLayer(newPage, form, af, defaultLayerName);
+    	    yOffset -= page.getMediaBox().getHeight();
+    	}
 
-        layoutDoc.close();
-        sourceDocument.close();
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	newDocument.save(baos);
+    	newDocument.close();
+    	sourceDocument.close();
 
-        byte[] result = baos.toByteArray();
-        return WebResponseUtils.bytesToWebResponse(result, file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_singlePage.pdf");
+    	byte[] result = baos.toByteArray();
+    	return WebResponseUtils.bytesToWebResponse(result, request.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_singlePage.pdf");
+
+
+
+       
     }
 }

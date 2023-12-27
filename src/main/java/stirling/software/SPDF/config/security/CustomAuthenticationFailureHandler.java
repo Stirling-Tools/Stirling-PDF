@@ -16,6 +16,8 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) 
       throws IOException, ServletException {
+    	String ip = request.getRemoteAddr();
+        logger.error("Failed login attempt from IP: " + ip);
         if (exception.getClass().isAssignableFrom(BadCredentialsException.class)) {
         	setDefaultFailureUrl("/login?error=badcredentials");
         } else if (exception.getClass().isAssignableFrom(LockedException.class)) {

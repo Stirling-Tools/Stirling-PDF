@@ -1,17 +1,52 @@
 # Build jbig2enc in a separate stage
 FROM bellsoft/liberica-openjdk-debian:17
+
+ARG VERSION_TAG
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libreoffice-core-nogui \
+        libreoffice-core \
         libreoffice-common \
-        libreoffice-writer-nogui \
-        libreoffice-calc-nogui \
-        libreoffice-impress-nogui \
+        libreoffice-writer \
+        libreoffice-calc \
+        libreoffice-impress \
         unoconv && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy the application JAR file
+
+# Set Environment Variables
+ENV DOCKER_ENABLE_SECURITY=false \
+    HOME=/home/stirlingpdfuser \
+    VERSION_TAG=$VERSION_TAG 
+#	PUID=1000 \
+#   PGID=1000 \
+#   UMASK=022 \
+
+# Create user and group
+#RUN groupadd -g $PGID stirlingpdfgroup && \
+#    useradd -u $PUID -g stirlingpdfgroup -s /bin/sh stirlingpdfuser && \
+#    mkdir -p $HOME && chown stirlingpdfuser:stirlingpdfgroup $HOME
+
+# Set up necessary directories and permissions
+RUN mkdir -p /scripts /usr/share/fonts/opentype/noto /configs /customFiles
+
+#    chown -R stirlingpdfuser:stirlingpdfgroup /usr/share/fonts/opentype/noto /configs /customFiles
+
+# Copy necessary files
+COPY ./scripts/download-security-jar.sh /scripts/download-security-jar.sh
+COPY ./scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
+COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
+COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
 COPY build/libs/*.jar app.jar
+
+# Set font cache and permissions
+RUN fc-cache -f -v && \
+chmod +x /scripts/init-without-ocr.sh && \
+chmod +x /scripts/download-security-jar.sh
+
+
+#    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+
 
 
 
@@ -19,8 +54,10 @@ COPY build/libs/*.jar app.jar
 EXPOSE 8080
 
 # Set environment variables
-ENV GROUPS_TO_REMOVE=Python,OpenCV,OCRmyPDF
+ENV ENDPOINTS_GROUPS_TO_REMOVE=Python,OpenCV,OCRmyPDF
 ENV DOCKER_ENABLE_SECURITY=false
 
 # Run the application
+#USER stirlingpdfuser
+ENTRYPOINT ["/scripts/init-without-ocr.sh"]
 CMD ["java", "-jar", "/app.jar"]

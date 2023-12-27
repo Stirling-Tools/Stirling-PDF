@@ -11,15 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
-import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Role;
-
 @Component
 public class InitialSecuritySetup {
 
 	@Autowired
 	private UserService userService;
+
 
 	@Autowired
 	ApplicationProperties applicationProperties;
@@ -27,12 +26,19 @@ public class InitialSecuritySetup {
 	@PostConstruct
 	public void init() {
 		if (!userService.hasUsers()) {
+			
+			
 			String initialUsername = applicationProperties.getSecurity().getInitialLogin().getUsername();
 			String initialPassword = applicationProperties.getSecurity().getInitialLogin().getPassword();
 			if (initialUsername != null && initialPassword != null) {
 				userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
+			} else {
+				initialUsername = "admin";
+			    initialPassword = "stirling";
+				userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId(), true);
 			}
-
+			
+	        
 		}
 	}
 

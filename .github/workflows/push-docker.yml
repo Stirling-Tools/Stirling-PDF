@@ -139,4 +139,10 @@ jobs:
         cache-to: type=gha,mode=max
         tags: ${{ steps.meta3.outputs.tags }}
         labels: ${{ steps.meta3.outputs.labels }}
+        build-args: 
+          VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
         platforms: linux/amd64,linux/arm64/v8
+    - name: Build and Push Helm Chart
+      run: |
+        helm package chart/stirling-pdf
+        helm push stirling-pdf-chart-1.0.0.tgz oci://registry-1.docker.io/frooodle

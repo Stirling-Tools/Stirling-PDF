@@ -8,12 +8,12 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Configuration
 public class AppConfig {
 
+    
     @Autowired
     ApplicationProperties applicationProperties;
     
     @Bean(name = "loginEnabled")
     public boolean loginEnabled() {
-        System.out.println(applicationProperties.toString());
         return applicationProperties.getSecurity().getEnableLogin();
     }
 
