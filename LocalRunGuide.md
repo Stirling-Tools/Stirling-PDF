@@ -20,7 +20,7 @@ Install the following software, if not already installed:
 
 - Git
 
-- Python 3 (with pip)
+- Python 3.8 (with pip)
 
 - Make
 
