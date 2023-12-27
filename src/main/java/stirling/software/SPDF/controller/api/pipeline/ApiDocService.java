@@ -33,8 +33,8 @@ public class ApiDocService {
 		return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
 	}
 	
-	@EventListener(ApplicationReadyEvent.class)
-	private void loadApiDocumentation() {
+	//@EventListener(ApplicationReadyEvent.class)
+	private synchronized void loadApiDocumentation() {
         try {
             HttpHeaders headers = new HttpHeaders();
             String apiKey = getApiKeyForUser();
@@ -67,6 +67,9 @@ public class ApiDocService {
     }
 
     public boolean isValidOperation(String operationName, Map<String, Object> parameters) {
+    	if(apiDocumentation.size() == 0) {
+    		loadApiDocumentation();
+    	}
         if (!apiDocumentation.containsKey(operationName)) {
             return false;
         }

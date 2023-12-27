@@ -332,7 +332,6 @@ public class PipelineController {
 					
 					String apiKey = getApiKeyForUser();
 					headers.add("X-API-Key", apiKey);
-					
 					headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
 					HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
