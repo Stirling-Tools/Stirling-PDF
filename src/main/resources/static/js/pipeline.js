@@ -32,6 +32,7 @@ function validatePipeline() {
 			console.log(`Intersection: ${intersection}`);
 
 			if (intersection.length === 0) {
+				updateValidateButton(false);
 				isValid = false;
 				console.log(`Incompatible operations: The output of operation '${currentOperation}' (${currentOperationOutput}) is not compatible with the input of the following operation '${nextOperation}' (${nextOperationInput}).`);
 				alert(`Incompatible operations: The output of operation '${currentOperation}' (${currentOperationOutput}) is not compatible with the input of the following operation '${nextOperation}' (${nextOperationInput}).`);
@@ -40,6 +41,7 @@ function validatePipeline() {
 		}
 	}
 	if (containsAddPassword && pipelineListItems[pipelineListItems.length - 1].querySelector('.operationName').textContent !== '/add-password') {
+		updateValidateButton(false);
 		alert('The "add-password" operation should be at the end of the operations sequence. Please adjust the operations order.');
 		return false;
 	}
@@ -50,10 +52,20 @@ function validatePipeline() {
 		console.error('Pipeline is not valid');
 		// Stop operation, maybe display an error to the user
 	}
-
+	updateValidateButton(isValid);
 	return isValid;
 }
 
+function updateValidateButton(isValid) {
+    var validateButton = document.getElementById('validateButton');
+    if (isValid) {
+        validateButton.classList.remove('btn-danger');
+        validateButton.classList.add('btn-success');
+    } else {
+        validateButton.classList.remove('btn-success');
+        validateButton.classList.add('btn-danger');
+    }
+}
 
 
 
