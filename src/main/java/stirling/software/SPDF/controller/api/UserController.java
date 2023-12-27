@@ -33,6 +33,7 @@ public class UserController {
     @Autowired
     private UserService userService;
     
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
     public String register(@RequestParam String username, @RequestParam String password, Model model) {
         if(userService.usernameExists(username)) {
@@ -44,6 +45,7 @@ public class UserController {
         return "redirect:/login?registered=true";
     }
     
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-username-and-password")
     public RedirectView changeUsernameAndPassword(Principal principal,
                                                  @RequestParam String currentPassword, 
@@ -86,7 +88,7 @@ public class UserController {
     }
 
 
-    
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-username")
     public RedirectView changeUsername(Principal principal,
                                        @RequestParam String currentPassword, 
@@ -123,7 +125,8 @@ public class UserController {
 
         return new RedirectView("/login?messageType=credsUpdated");
     }
-
+    
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password")
     public RedirectView changePassword(Principal principal, 
                                        @RequestParam String currentPassword, 
@@ -155,7 +158,7 @@ public class UserController {
         return new RedirectView("/login?messageType=credsUpdated");
     }
 
-    
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/updateUserSettings")
 	public String updateUserSettings(HttpServletRequest request, Principal principal) {
 	    Map<String, String[]> paramMap = request.getParameterMap();
@@ -216,6 +219,7 @@ public class UserController {
         return "redirect:/addUsers";
     }
     
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/get-api-key")
     public ResponseEntity<String> getApiKey(Principal principal) {
         if (principal == null) {
@@ -229,6 +233,7 @@ public class UserController {
         return ResponseEntity.ok(apiKey);
     }
 
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/update-api-key")
     public ResponseEntity<String> updateApiKey(Principal principal) {
         if (principal == null) {

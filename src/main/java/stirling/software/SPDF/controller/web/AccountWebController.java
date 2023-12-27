@@ -70,7 +70,7 @@ public class AccountWebController {
 	}
 
 	
-	
+	@PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
 	@GetMapping("/account")
 	public String account(HttpServletRequest request, Model model, Authentication authentication) {
 		if (authentication == null || !authentication.isAuthenticated()) {
@@ -117,7 +117,7 @@ public class AccountWebController {
 	}
 	 
 	
-	
+	@PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
 	@GetMapping("/change-creds")
 	public String changeCreds(HttpServletRequest request, Model model, Authentication authentication) {
 		if (authentication == null || !authentication.isAuthenticated()) {
