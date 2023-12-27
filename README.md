@@ -14,7 +14,7 @@ This is a powerful locally hosted web based PDF manipulation tool using docker t
 
 Stirling PDF makes no outbound calls for any record keeping or tracking.
 
-All files and PDFs are either purely client side, in server memory only during the execution of the task or within a temporay file only for execution of the task.
+All files and PDFs are either purely client side, in server memory only during the execution of the task or within a temporary file only for execution of the task.
 Any file which has been downloaded by the user will have already been deleted from the server by that time.
 
 Feel free to request any features or bug fixes either in github issues or our [Discord](https://discord.gg/Cn8pWhQRxZ)
