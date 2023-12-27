@@ -202,6 +202,57 @@ EOF
 
 Note: Currently the app will run in the background until manually closed.
 
+### Optional: Run Stirling-PDF as a service
+
+Create a new file where we store our service settings and open it with nano editor:
+```
+nano /etc/systemd/system/stirlingpdf.service
+```
+
+Paste this content, make sure to update the filename of the jar-file. Press Ctrl+S and Ctrl+X to save and exit the nano editor:
+```
+[Unit]
+Description=Stirling-PDF service
+After=syslog.target network.target
+
+[Service]
+SuccessExitStatus=143
+
+User=root
+Group=root
+
+Type=simple
+
+WorkingDirectory=/opt/Stirling-PDF
+ExecStart=/usr/bin/java -jar Stirling-PDF-0.17.2.jar
+ExecStop=/bin/kill -15 $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Notify systemd that it has to rebuild its internal service database (you have to run this command every time you make a change in the service file):
+```
+sudo systemctl daemon-reload
+```
+
+Enable the service to tell the service to start it automatically:
+```
+sudo systemctl enable stirlingpdf.service
+```
+
+See the status of the service:
+```
+sudo systemctl status stirlingpdf.service
+```
+
+Manually start/stop/restart the service:
+```
+sudo systemctl start stirlingpdf.service
+sudo systemctl stop stirlingpdf.service
+sudo systemctl restart stirlingpdf.service
+```
+
 ---
 
 Remember to set the necessary environment variables before running the project if you want to customize the application the list can be seen in the main readme.
