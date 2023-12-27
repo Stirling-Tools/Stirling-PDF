@@ -5,19 +5,22 @@
       "operation": "/api/v1/general/split-pdf-by-sections",
       "parameters": {
         "horizontalDivisions": 2,
-        "verticalDivisions": 2
+        "verticalDivisions": 2,
+        "fileInput": "automated"
       }
     },
     {
       "operation": "/api/v1/general/rotate-pdf",
       "parameters": {
-        "angle": 90
+        "angle": 90,
+        "fileInput": "automated"
       }
     },
     {
       "operation": "/api/v1/misc/auto-rename",
       "parameters": {
-        "useFirstTextAsFallback": false
+        "useFirstTextAsFallback": false,
+        "fileInput": "automated"
       }
     }
   ],
@@ -25,6 +28,6 @@
     "outputDir": "{outputFolder}/{folderName}",
     "outputFileName": "{filename}-{pipelineName}-{date}-{time}"
   },
-  "outputDir": "httpWebRequest",
+  "outputDir": "{outputFolder}",
   "outputFileName": "{filename}"
 }

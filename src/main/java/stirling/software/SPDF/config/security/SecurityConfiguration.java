@@ -48,6 +48,9 @@ public class SecurityConfiguration {
     @Autowired
     private  LoginAttemptService loginAttemptService;
     
+    @Autowired
+    private FirstLoginFilter firstLoginFilter;
+    
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception  {
     	http.addFilterBefore(userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -55,8 +58,8 @@ public class SecurityConfiguration {
     	if(loginEnabledValue) {
     		
     		http.csrf(csrf -> csrf.disable());
-    		//http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
-    		//http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
+    		http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
+    		http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
 	        http
 	            .formLogin(formLogin -> formLogin
 	                .loginPage("/login")

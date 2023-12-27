@@ -76,6 +76,12 @@
 					    <li>For reuse, download the config file and re-upload it when needed, or place it in /pipeline/defaultWebUIConfigs/ to auto-load in the web UI for all users</li>
 					</ul>
 					
+					<h3>How to use config for folder scanning</h3>
+					<ul>
+					    <li>Download config files</li>
+					    <li>For reuse, download the config file and re-upload it when needed, or place it in /pipeline/defaultWebUIConfigs/ to auto-load in the web UI for all users</li>
+					</ul>
+					
 					<h3>Todo</h3>
 					<ul>
 					    <li>fix initial config selected not loading</li>
@@ -83,9 +89,44 @@
 					    <li>multiInput support</li>
 					    <li>Translation support</li>
 					    <li>offline mode checks and testing</li>
-					    
+					    <li>Improve operation config settings UI</li>
 					</ul>
 					
+					
+					<h2>User Guide for Local Directory Scanning and File Processing</h2>
+
+        <h3>Setting Up Watched Folders:</h3>
+        <p>Create a folder where you want your files to be monitored. This is your 'watched folder'.</p>
+        <p>The default directory for this is <code>./pipeline/watchedFolders/</code></p>
+        <p>Place any directories you want to be scanned into this folder, this folder should contain multiple folders each for their own tasks and pipelines.</p>
+
+        <h3>Configuring Processing with JSON Files:</h3>
+        <p>In each directory you want processed (e.g <code>./pipeline/watchedFolders/officePrinter</code>), include a JSON configuration file.</p>
+        <p>This JSON file should specify how you want the files in the directory to be handled (e.g., what operations to perform on them) which can be made, configured and downloaded from Stirling-PDF Pipeline interface.</p>
+
+        <h3>Automatic Scanning and Processing:</h3>
+        <p>The system automatically checks the watched folder every minute for new directories and files to process.</p>
+        <p>When a directory with a valid JSON configuration file is found, it begins processing the files inside as per the configuration.</p>
+
+        <h3>Processing Steps:</h3>
+        <p>Files in each directory are processed according to the instructions in the JSON file.</p>
+        <p>This might involve file conversions, data filtering, renaming files, etc. If the output of a step is a zip, this zip will be automatically unzipped as it passes to next process.</p>
+
+        <h3>Results and Output:</h3>
+        <p>After processing, the results are saved in a specified output location. This could be a different folder or location as defined in the JSON file or the default location <code>./pipeline/finishedFolders/</code>.</p>
+        <p>Each processed file is named and organized according to the rules set in the JSON configuration.</p>
+
+        <h3>Completion and Cleanup:</h3>
+        <p>Once processing is complete, the original files in the watched folder's directory are removed.</p>
+        <p>You can find the processed files in the designated output location.</p>
+
+        <h3>Error Handling:</h3>
+        <p>If there's an error during processing, the system will not delete the original files, allowing you to check and retry if necessary.</p>
+
+        <h3>User Interaction:</h3>
+        <p>As a user, your main tasks are to set up the watched folders, place directories with files for processing, and create the corresponding JSON configuration files.</p>
+        <p>The system handles the rest, including scanning, processing, and outputting results.</p>
+   
 					
 						<!-- The Modal -->
 						<div class="modal" id="pipelineSettingsModal">
