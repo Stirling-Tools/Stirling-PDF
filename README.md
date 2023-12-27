@@ -169,6 +169,7 @@ Stirling PDF currently supports 20!
 - Dutch (Nederlands) (nl_NL)
 - Greek (el_GR)
 - Turkish (Türkçe) (tr_TR)
+- Indonesia (Bahasa Indonesia) (id_ID)
 
 If you want to add your own language to Stirling-PDF please refer
 https://github.com/Frooodle/Stirling-PDF/blob/main/HowToAddNewLanguage.md
