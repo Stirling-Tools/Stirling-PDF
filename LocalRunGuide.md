@@ -204,6 +204,12 @@ Note: Currently the app will run in the background until manually closed.
 
 ### Optional: Run Stirling-PDF as a service
 
+First create a .env file, where you can store environment variables:
+```
+touch /opt/Stirling-PDF/.env
+```
+In this file you can add all variables, one variable per line, as stated in the main readme (for example SYSTEM_DEFAULTLOCALE="de-DE").
+
 Create a new file where we store our service settings and open it with nano editor:
 ```
 nano /etc/systemd/system/stirlingpdf.service
@@ -223,6 +229,7 @@ Group=root
 
 Type=simple
 
+EnvironmentFile=/opt/Stirling-PDF/.env
 WorkingDirectory=/opt/Stirling-PDF
 ExecStart=/usr/bin/java -jar Stirling-PDF-0.17.2.jar
 ExecStop=/bin/kill -15 $MAINPID
