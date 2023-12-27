@@ -176,7 +176,7 @@ rpm -qa | grep tesseract-langpack | sed 's/tesseract-langpack-//g'
 ```bash
 ./gradlew bootRun
 or
-java -jar build/libs/app.jar
+java -jar /opt/Stirling-PDF/Stirling-PDF-*.jar
 ```
 
 ### Step 8: Adding a Desktop icon
