@@ -1,6 +1,5 @@
 
 import { PdfFile, RepresentationType } from "../wrappers/PdfFile";
-import { FieldConstraint, RecordConstraint } from '../dynamic-ui/OperatorConstraints'
 import { Operator, Progress, oneToOne } from ".";
 
 import * as pdfcpuWrapper from "#pdfcpu"; // This is updated by tsconfig.json/paths for the context (browser, node, etc.) this module is used in.

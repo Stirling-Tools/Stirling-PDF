@@ -160,9 +160,7 @@ A: Available in the internal API, S: Available on the node server, C: Available 
 
 For initial instructions look at [CONTRIBUTE.md](./CONTRIBUTE.md)
 
-
-
-/*
+<!--
 ///// CONVERT 2 pdf
 file2pdf
 url2pdf
@@ -221,3 +219,4 @@ add image
 add watermark
 sign
 */
+-->
