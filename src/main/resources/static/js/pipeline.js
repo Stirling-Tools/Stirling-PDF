@@ -274,11 +274,13 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 	listItem.querySelector('.remove').addEventListener('click', function(event) {
 		event.preventDefault();
 		pipelineList.removeChild(listItem);
+		hideOrShowPipelineHeader();
 	});
 
 	listItem.querySelector('.pipelineSettings').addEventListener('click', function(event) {
 		event.preventDefault();
 		showpipelineSettingsModal(selectedOperation);
+		hideOrShowPipelineHeader();
 	});
 
 	function showpipelineSettingsModal(operation) {
@@ -452,7 +454,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 		//	}
 		//}
 	}
-	
+	hideOrShowPipelineHeader();
 });
 	
 	
@@ -572,6 +574,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 			processPipelineConfig(event.target.result);
 		};
 		reader.readAsText(e.target.files[0]);
+		hideOrShowPipelineHeader();
 	});
 
 	document.getElementById('pipelineSelect').addEventListener('change', function(e) {
@@ -580,3 +583,15 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 	});
 
 
+	function hideOrShowPipelineHeader() {
+	    var pipelineHeader = document.getElementById('pipelineHeader');
+	    var pipelineList = document.getElementById('pipelineList');
+	
+	    if (pipelineList.children.length === 0) {
+	        // Hide the pipeline header if there are no items in the pipeline list
+	        pipelineHeader.style.display = 'none';
+	    } else {
+	        // Show the pipeline header if there are items in the pipeline list
+	        pipelineHeader.style.display = 'block';
+	    }
+	}
