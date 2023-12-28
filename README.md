@@ -14,10 +14,9 @@ This is a powerful locally hosted web based PDF manipulation tool using docker t
 
 Stirling PDF makes no outbound calls for any record keeping or tracking.
 
-All files and PDFs are either purely client side, in server memory only during the execution of the task or within a temporay file only for execution of the task.
-Any file which has been downloaded by the user will have already been deleted from the server by that time.
+All files and PDFs exist either exclusively on the client side, reside in server memory only during task execution, or temporarily reside in a file solely for the execution of the task. Any file downloaded by the user will have been deleted from the server by that point.
 
-Feel free to request any features or bug fixes either in github issues or our [Discord](https://discord.gg/Cn8pWhQRxZ)
+Please feel free to submit feature requests or report bugs either through GitHub issues or on our [Discord](https://discord.gg/Cn8pWhQRxZ)
 
 ![stirling-home](images/stirling-home.png)
 
@@ -268,7 +267,7 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 - Fill forms mannual and automatic 
 
 ### Q2: Why is my application downloading .htm files?
-This is a issue caused commonly by your NGINX congifuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. ``client_max_body_size SIZE;`` Where "SIZE" is 50M for example for 50MB files.
+This is a issue caused commonly by your NGINX configuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. ``client_max_body_size SIZE;`` Where "SIZE" is 50M for example for 50MB files.
 
 ### Q3: Why is my download timing out
 NGINX has timeout values by default so if you are running Stirling-PDF behind NGINX you may need to set a timeout value such as adding the config ``proxy_read_timeout 3600;``

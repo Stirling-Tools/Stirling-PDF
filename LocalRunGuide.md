@@ -20,7 +20,7 @@ Install the following software, if not already installed:
 
 - Git
 
-- Python 3 (with pip)
+- Python 3.8 (with pip)
 
 - Make
 
@@ -95,14 +95,14 @@ For Debian-based systems, you can use the following command:
 
 ```bash
 sudo apt-get install -y libreoffice-writer libreoffice-calc libreoffice-impress unpaper ocrmypdf
-pip3 install uno opencv-python-headless unoconv pngquant 
+pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint 
 ```
 
 For Fedora:
 
 ```bash
 sudo dnf install -y libreoffice-writer libreoffice-calc libreoffice-impress unpaper ocrmypdf
-pip3 install uno opencv-python-headless unoconv pngquant 
+pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint 
 ```
 
 ### Step 4: Clone and Build Stirling-PDF
@@ -176,7 +176,7 @@ rpm -qa | grep tesseract-langpack | sed 's/tesseract-langpack-//g'
 ```bash
 ./gradlew bootRun
 or
-java -jar build/libs/app.jar
+java -jar /opt/Stirling-PDF/Stirling-PDF-*.jar
 ```
 
 ### Step 8: Adding a Desktop icon
@@ -201,6 +201,64 @@ EOF
 ```
 
 Note: Currently the app will run in the background until manually closed.
+
+### Optional: Run Stirling-PDF as a service
+
+First create a .env file, where you can store environment variables:
+```
+touch /opt/Stirling-PDF/.env
+```
+In this file you can add all variables, one variable per line, as stated in the main readme (for example SYSTEM_DEFAULTLOCALE="de-DE").
+
+Create a new file where we store our service settings and open it with nano editor:
+```
+nano /etc/systemd/system/stirlingpdf.service
+```
+
+Paste this content, make sure to update the filename of the jar-file. Press Ctrl+S and Ctrl+X to save and exit the nano editor:
+```
+[Unit]
+Description=Stirling-PDF service
+After=syslog.target network.target
+
+[Service]
+SuccessExitStatus=143
+
+User=root
+Group=root
+
+Type=simple
+
+EnvironmentFile=/opt/Stirling-PDF/.env
+WorkingDirectory=/opt/Stirling-PDF
+ExecStart=/usr/bin/java -jar Stirling-PDF-0.17.2.jar
+ExecStop=/bin/kill -15 $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Notify systemd that it has to rebuild its internal service database (you have to run this command every time you make a change in the service file):
+```
+sudo systemctl daemon-reload
+```
+
+Enable the service to tell the service to start it automatically:
+```
+sudo systemctl enable stirlingpdf.service
+```
+
+See the status of the service:
+```
+sudo systemctl status stirlingpdf.service
+```
+
+Manually start/stop/restart the service:
+```
+sudo systemctl start stirlingpdf.service
+sudo systemctl stop stirlingpdf.service
+sudo systemctl restart stirlingpdf.service
+```
 
 ---
 
