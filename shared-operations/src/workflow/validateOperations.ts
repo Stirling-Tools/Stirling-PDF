@@ -36,8 +36,8 @@ export function validateOperations(actions: Action[]): { valid: boolean, reason?
 
                     for (const afterDoneChild of done[childAction.values.id]?.actions || []) {
                         const receivingOperator = getOperatorByName(afterDoneChild.type);
-                        if (!receivingOperator) {
-                            return { valid: false, reason: `The receiving operator ${afterDoneChild.type} does not exist.` };
+                        if (receivingOperator === undefined) {
+                            return { valid: false, reason: `action.type ${afterDoneChild.type} does not exist.` };
                         } else if (!ioCompatible(operator, receivingOperator)) {
                             return { valid: false, reason: `Ouput of action ${action.type} is not compatible with input of action ${afterDoneChild.type}` };
                         }
@@ -48,8 +48,8 @@ export function validateOperations(actions: Action[]): { valid: boolean, reason?
                 }
                 else {
                     const receivingOperator = getOperatorByName(childAction.type);
-                    if (!receivingOperator) {
-                        return { valid: false, reason: `The receiving operator ${childAction.type} does not exist.` };
+                    if (receivingOperator === undefined) {
+                        return { valid: false, reason: `action.type ${childAction.type} does not exist.` };
                     } else if (!ioCompatible(operator, receivingOperator)) {
                         return { valid: false, reason: `Ouput of action ${action.type} is not compatible with input of action ${childAction.type}` };
                     }

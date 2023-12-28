@@ -22,6 +22,6 @@ export const JoiPDFFileSchema = Joi.custom((value: Express.Multer.File[] /* <- a
     }
 }, "pdffile validation");
 
-function isPdfFileArray(value: any): value is PdfFile[] {
-    return value.every((e: PdfFile) => e instanceof PdfFile)
+function isPdfFileArray(value: any[]): value is PdfFile[] { // "is" is a ts-typeguard - https://www.typescriptlang.org/docs/handbook/advanced-types.html#user-defined-type-guards
+    return value.every((e) => e instanceof PdfFile)
 } 
