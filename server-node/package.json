@@ -8,6 +8,9 @@
   "imports": {
     "#pdfcpu": "../../shared-operations/src/wasm/pdfcpu/pdfcpu-wrapper.server.js"
   },
+  "optionalDependencies": {
+    "canvas": "^2.11.2"
+  },
   "files": [
     "/shared-operations/src/wasm/pdfcpu/pdfcpu.wasm"
   ],
