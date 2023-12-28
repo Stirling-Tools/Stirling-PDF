@@ -267,7 +267,7 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 - Fill forms mannual and automatic 
 
 ### Q2: Why is my application downloading .htm files?
-This is a issue caused commonly by your NGINX configuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. ``client_max_body_size SIZE;`` Where "SIZE" is 50M for example for 50MB files.
+This is an issue caused commonly by your NGINX configuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. ``client_max_body_size SIZE;`` Where "SIZE" is 50M for example for 50MB files.
 
 ### Q3: Why is my download timing out
 NGINX has timeout values by default so if you are running Stirling-PDF behind NGINX you may need to set a timeout value such as adding the config ``proxy_read_timeout 3600;``
