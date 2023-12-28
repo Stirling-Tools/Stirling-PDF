@@ -27,8 +27,8 @@ import stirling.software.SPDF.config.StartupApplicationListener;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @RestController
-@RequestMapping("/api/v1")
-@Tag(name = "API", description = "Info APIs")
+@RequestMapping("/api/v1/info")
+@Tag(name = "Info", description = "Info APIs")
 public class MetricsController {
 
 	
@@ -181,6 +181,7 @@ public class MetricsController {
             for (Meter meter : meterRegistry.getMeters()) {
                 if (meter.getId().getName().equals("http.requests")) {
                     String method = meter.getId().getTag("method");
+                    System.out.println("method=" + method + ", endpont=" + endpoint.get());
                     if (method != null && method.equals("POST")) {
                         if (endpoint.isPresent() && !endpoint.get().isBlank()) {
                             if (!endpoint.get().startsWith("/")) {
@@ -217,10 +218,15 @@ public class MetricsController {
             Map<String, Double> counts = new HashMap<>();
 
             for (Meter meter : meterRegistry.getMeters()) {
+            	
+            	System.out.println("meter.getId().getName()=" + meter.getId().getName());
                 if (meter.getId().getName().equals("http.requests")) {
                     String method = meter.getId().getTag("method");
+                    System.out.println("method=" + method );
                     if (method != null && method.equals("POST")) {
-                        String uri = meter.getId().getTag("uri");
+                        String uri = meter.getId().getTag("uri");                    	
+                        System.out.println("method=" + method + ", endpont=" + meter.getId());
+
                         if (uri != null) {
                             double currentCount = counts.getOrDefault(uri, 0.0);
                             if (meter instanceof Counter) {

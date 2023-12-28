@@ -157,7 +157,7 @@ public class GeneralWebController {
     @GetMapping("/add-elements")
     @Hidden
     public String addElements(Model model) {
-        model.addAttribute("currentPage", "sign");
+        model.addAttribute("currentPage", "add-elements");
         model.addAttribute("fonts", getFontNames());
         return "add-elements";
     }

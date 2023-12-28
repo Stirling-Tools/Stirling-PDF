@@ -182,7 +182,7 @@
                                 <input type="text" class="form-control" id="sigText" name="sigText">
                                 <label th:text="#{font}"></label>
                                 <select class="form-control" name="font" id="font-select">
-                                    <option th:each="font : ${fonts}" th:value="${font}" th:text="${font}" th:class="${font.toLowerCase()+'-font'}"></option>
+                                    <option th:each="font : ${fonts}" th:value="${font}" th:text="${font}" th:class="${font + '-font'}"></option>
 
                                 </select>
                                 <div class="margin-auto-parent">
