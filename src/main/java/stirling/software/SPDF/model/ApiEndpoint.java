@@ -8,7 +8,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class ApiEndpoint {
     private String name;
     private Map<String, JsonNode> parameters;
-
+    private String description;
+    
     public ApiEndpoint(String name, JsonNode postNode) {
         this.name = name;
         this.parameters = new HashMap<>();
@@ -16,6 +17,7 @@ public class ApiEndpoint {
             String paramName = paramNode.path("name").asText();
             parameters.put(paramName, paramNode);
         });
+        this.description = postNode.path("description").asText();
     }
 
     public boolean areParametersValid(Map<String, Object> providedParams) {
@@ -27,6 +29,10 @@ public class ApiEndpoint {
         return true;
     }
 
+    public String getDescription() {
+        return description;
+    }
+    
 	@Override
 	public String toString() {
 		return "ApiEndpoint [name=" + name + ", parameters=" + parameters + "]";

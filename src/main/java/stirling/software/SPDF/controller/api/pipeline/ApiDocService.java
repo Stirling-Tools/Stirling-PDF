@@ -1,6 +1,8 @@
 package stirling.software.SPDF.controller.api.pipeline;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -41,6 +43,9 @@ public class ApiDocService {
 		return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
 	}
 	
+	JsonNode apiDocsJsonRootNode;
+	
+	
 	//@EventListener(ApplicationReadyEvent.class)
 	private synchronized void loadApiDocumentation() {
         try {
@@ -56,9 +61,9 @@ public class ApiDocService {
             String apiDocsJson = response.getBody();
 
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(apiDocsJson);
+            apiDocsJsonRootNode = mapper.readTree(apiDocsJson);
 
-            JsonNode paths = root.path("paths");
+            JsonNode paths = apiDocsJsonRootNode.path("paths");
             paths.fields().forEachRemaining(entry -> {
                 String path = entry.getKey();
                 JsonNode pathNode = entry.getValue();
@@ -83,6 +88,27 @@ public class ApiDocService {
         }
         ApiEndpoint endpoint = apiDocumentation.get(operationName);
         return endpoint.areParametersValid(parameters);
+    }
+    
+    public boolean isMultiInput(String operationName) {
+    	if(apiDocsJsonRootNode == null || apiDocumentation.size() == 0) {
+    		loadApiDocumentation();
+    	}
+    	if (!apiDocumentation.containsKey(operationName)) {
+            return false;
+        }
+
+        ApiEndpoint endpoint = apiDocumentation.get(operationName);
+        String description = endpoint.getDescription(); 
+
+        Pattern pattern = Pattern.compile("Type:(\\w+)");
+        Matcher matcher = pattern.matcher(description);
+        if (matcher.find()) {
+            String type = matcher.group(1);
+            return type.startsWith("MI");
+        }
+
+        return false;    	
     }
 }
 
