@@ -203,7 +203,6 @@ public class PdfUtils {
         try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputStream))) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             int pageCount = document.getNumberOfPages();
-            List<BufferedImage> images = new ArrayList<>();
 
             // Create a ByteArrayOutputStream to save the image(s) to
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -232,7 +231,8 @@ public class PdfUtils {
                     writer.dispose();
                 } else {
                     // Combine all images into a single big image
-                    BufferedImage combined = new BufferedImage(images.get(0).getWidth(), images.get(0).getHeight() * pageCount, BufferedImage.TYPE_INT_RGB);
+                    BufferedImage image = pdfRenderer.renderImageWithDPI(0, DPI, colorType);
+                    BufferedImage combined = new BufferedImage(image.getWidth(), image.getHeight() * pageCount, BufferedImage.TYPE_INT_RGB);
                     Graphics g = combined.getGraphics();
 
                     for (int i = 0; i < pageCount; ++i) {
