@@ -236,7 +236,9 @@ public class PdfUtils {
                     Graphics g = combined.getGraphics();
 
                     for (int i = 0; i < pageCount; ++i) {
-                        BufferedImage image = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                        if (i != 0) {
+                            image = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+			}
                         g.drawImage(image, 0, i * image.getHeight(), null);
                     }
 
