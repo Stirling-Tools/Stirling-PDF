@@ -17,7 +17,8 @@ RUN apt-get update && \
 # Set Environment Variables
 ENV DOCKER_ENABLE_SECURITY=false \
     HOME=/home/stirlingpdfuser \
-    VERSION_TAG=$VERSION_TAG 
+    VERSION_TAG=$VERSION_TAG \
+    JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS -XX:MaxRAMPercentage=75"
 #	PUID=1000 \
 #   PGID=1000 \
 #   UMASK=022 \
