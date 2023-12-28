@@ -16,8 +16,8 @@
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
-  "engines" : {
-    "npm" : ">=7.24.2"
+  "engines": {
+    "npm": ">=7.24.2"
   },
-  "engineStrict" : true
+  "engineStrict": true
 }

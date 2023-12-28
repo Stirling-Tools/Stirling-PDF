@@ -6,11 +6,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "imports": {
+    "#pdfcpu": "./src/wasm/pdfcpu/pdfcpu-wrapper.server.js"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "image-js": "^0.35.5",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^4.0.189"
+    "pdfjs-dist": "^4.0.269"
   }
 }

@@ -2,17 +2,29 @@
   "name": "@stirling-pdf/server-node",
   "version": "0.0.0",
   "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "npx tsc",
-    "start": "node dist/index.js",
+  "//": "start pkgroll config",
+  "type": "module",
+  "exports": "./dist/index.js",
+  "imports": {
+    "#pdfcpu": "../../shared-operations/src/wasm/pdfcpu/pdfcpu-wrapper.server.js"
+  },
+  "files": [
+    "/shared-operations/src/wasm/pdfcpu/pdfcpu.wasm"
+  ],
+  "//": "end pkgroll config",
+  "scripts": { 
+    "build": "pkgroll",
+    "start": "node ./dist/index.js",
     "dev": "npx tsx watch src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@stirling-pdf/shared-operations": "*",
+    "@esbuild/win32-x64": "^0.19.10",
+    "@types/archiver": "^6.0.1",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.10",
     "@wasmer/wasmfs": "^0.12.0",
     "archiver": "^6.0.1",
     "express": "^4.18.2",
@@ -24,12 +36,8 @@
     "tsconfig-paths": "^4.2.0"
   },
   "devDependencies": {
-    "@types/archiver": "^6.0.1",
-    "@types/express": "^4.17.21",
-    "@types/multer": "^1.4.10",
+    "pkgroll": "^2.0.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.2.2"
-  },
-  "exports": "./dist/index.js",
-  "type": "module"
+  }
 }
