@@ -48,7 +48,7 @@ launch4j {
 
   errTitle="Encountered error, Do you have Java 17?"
   downloadUrl="https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.exe"
-  variables=["BROWSER_OPEN=true"]
+  variables=["BROWSER_OPEN=true", "ENDPOINTS_GROUPS_TO_REMOVE=CLI"]
   jreMinVersion="17"
 
   mutexName="Stirling-PDF"
