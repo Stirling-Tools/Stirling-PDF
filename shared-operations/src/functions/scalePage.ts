@@ -1,7 +1,7 @@
 
 import Joi from 'joi';
 import { PDFPage } from 'pdf-lib';
-import { PdfFile, RepresentationType, JoiPdfFileSchema } from '../wrappers/PdfFile';
+import { PdfFile, RepresentationType, JoiPDFFileSchema } from '../wrappers/PdfFileJoi';
 
 const whSchema = Joi.string().custom((value, helpers) => {
     console.log("value.pageSize", typeof value)
@@ -23,7 +23,7 @@ const whSchema = Joi.string().custom((value, helpers) => {
 });
 
 export const ScalePageSchema = Joi.object({
-    file: JoiPdfFileSchema.required(),
+    file: JoiPDFFileSchema.required(),
     pageSize: Joi.alternatives().try(whSchema, Joi.array().items(whSchema)).required(),
 });
 
