@@ -1,7 +1,0 @@
-{
-  "name": "StirlingPDF",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "react-vite"
-}

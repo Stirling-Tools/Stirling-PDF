@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { PdfFile } from "./PdfFile";
 
-export const JoiPDFFileSchema = Joi.custom((value: Express.Multer.File | Express.Multer.File[] | PdfFile | PdfFile[], helpers) => {
+export const JoiPDFFileSchema = Joi.custom((value: Express.Multer.File[] /* <- also handles single files */ | PdfFile[] | PdfFile, helpers) => {
     if (Array.isArray(value)) {
         if(isPdfFileArray(value))
             return value;
