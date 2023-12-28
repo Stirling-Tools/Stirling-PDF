@@ -20,7 +20,7 @@ Please feel free to submit feature requests or report bugs either through GitHub
 
 ![stirling-home](images/stirling-home.png)
 
-## Features
+# Características
 - Dark mode support.
 - Custom download options (see [here](https://github.com/Frooodle/Stirling-PDF/blob/main/images/settings.png) for example)
 - Parallel file processing and downloads
