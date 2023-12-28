@@ -293,7 +293,7 @@
                     </a>
                 </div>
                 <div class="modal-footer">
-                    <a th:if="${@loginEnabled}" href="/logout">
+                    <a th:if="${@loginEnabled}" href="logout">
                         <button type="button" class="btn btn-danger" th:text="#{settings.signOut}">Sign Out</button>
                     </a>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>

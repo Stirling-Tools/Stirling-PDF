@@ -130,7 +130,7 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 	formData.append('json', pipelineConfigJson);
 	console.log("formData", formData);
 
-	fetch('/api/v1/pipeline/handleData', {
+	fetch('api/v1/pipeline/handleData', {
     method: 'POST',
     body: formData
 	})

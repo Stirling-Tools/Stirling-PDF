@@ -15,14 +15,22 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.servlet.ServletContext;
 import stirling.software.SPDF.model.ApiEndpoint;
 import stirling.software.SPDF.model.Role;
 @Service
 public class ApiDocService {
 
     private final Map<String, ApiEndpoint> apiDocumentation = new HashMap<>();
-    private final String apiDocsUrl = "http://localhost:8080/v1/api-docs"; // URL to your API documentation
 
+    @Autowired
+    private ServletContext servletContext;
+
+    private String getApiDocsUrl() {
+        String contextPath = servletContext.getContextPath();
+        return "http://localhost:8080" + contextPath + "/v1/api-docs";
+    }
+    
 
     @Autowired(required=false)
 	private UserServiceInterface userService;
@@ -44,7 +52,7 @@ public class ApiDocService {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<String> response = restTemplate.exchange(apiDocsUrl, HttpMethod.GET, entity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(getApiDocsUrl(), HttpMethod.GET, entity, String.class);
             String apiDocsJson = response.getBody();
 
             ObjectMapper mapper = new ObjectMapper();

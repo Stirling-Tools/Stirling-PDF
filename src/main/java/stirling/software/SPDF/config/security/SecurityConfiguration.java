@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,12 +16,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 @Configuration
 @EnableWebSecurity()
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 public class SecurityConfiguration {
 
     @Autowired
@@ -41,9 +43,7 @@ public class SecurityConfiguration {
     @Autowired
     private UserAuthenticationFilter userAuthenticationFilter;
 
-    @Autowired
-    private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
-    
+
 
     @Autowired
     private  LoginAttemptService loginAttemptService;
@@ -63,11 +63,13 @@ public class SecurityConfiguration {
 	        http
 	            .formLogin(formLogin -> formLogin
 	                .loginPage("/login")
-	                .successHandler(customAuthenticationSuccessHandler)
-	               // .defaultSuccessUrl("/")
+	                .successHandler(new CustomAuthenticationSuccessHandler())
+	                .defaultSuccessUrl("/")
 	                .failureHandler(new CustomAuthenticationFailureHandler(loginAttemptService))
 	                .permitAll()
-	            )
+	            ).requestCache(requestCache -> requestCache
+	                    .requestCache(new NullRequestCache())
+	            	    )
 	            .logout(logout -> logout
 	            		.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
 	                    .logoutSuccessUrl("/login?logout=true")
@@ -79,8 +81,19 @@ public class SecurityConfiguration {
                     .tokenValiditySeconds(1209600) // 2 weeks
                 )
 	            .authorizeHttpRequests(authz -> authz
-	                    .requestMatchers(req -> req.getRequestURI().startsWith("/login") || req.getRequestURI().endsWith(".svg") || req.getRequestURI().startsWith("/register") || req.getRequestURI().startsWith("/error") || req.getRequestURI().startsWith("/images/") ||  req.getRequestURI().startsWith("/public/") || req.getRequestURI().startsWith("/css/") || req.getRequestURI().startsWith("/js/"))
-	                    .permitAll()
+	                    .requestMatchers(req ->  {
+	                        String uri = req.getRequestURI();
+	                        String contextPath = req.getContextPath();
+
+	                        // Remove the context path from the URI
+	                        String trimmedUri = uri.startsWith(contextPath) ? uri.substring(contextPath.length()) : uri;
+
+	                        return trimmedUri.startsWith("/login") || trimmedUri.endsWith(".svg") || 
+	                               trimmedUri.startsWith("/register") || trimmedUri.startsWith("/error") || 
+	                               trimmedUri.startsWith("/images/") || trimmedUri.startsWith("/public/") || 
+	                               trimmedUri.startsWith("/css/") || trimmedUri.startsWith("/js/");
+	                    }
+	                    ).permitAll()
 	                    .anyRequest().authenticated()
 	                )
 	            .userDetailsService(userDetailsService)

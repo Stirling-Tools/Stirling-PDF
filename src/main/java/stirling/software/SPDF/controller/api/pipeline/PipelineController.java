@@ -50,6 +50,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.ServletContext;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
@@ -117,6 +118,14 @@ public class PipelineController {
 		return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
 	}
 	
+	 @Autowired
+	    private ServletContext servletContext;
+
+	    private String getBaseUrl() {
+	        String contextPath = servletContext.getContextPath();
+	        return "http://localhost:8080" + contextPath + "/";
+	    }
+	    
 	private void handleDirectory(Path dir) throws Exception {
 		logger.info("Handling directory: {}", dir);
 
@@ -337,7 +346,7 @@ public class PipelineController {
 					HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
 
 					RestTemplate restTemplate = new RestTemplate();
-					String url = "http://localhost:8080/" + operation;
+					String url = getBaseUrl() + operation;
 
 					ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
 
