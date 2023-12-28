@@ -1,4 +1,4 @@
-import { Operator } from "functions";
+import { Operator } from "../functions";
 import { Action } from "../../declarations/Action";
 import { getOperatorByName } from "./getOperatorByName";
 
@@ -34,8 +34,11 @@ export function validateOperations(actions: Action[]): { valid: boolean, reason?
                         return { valid: false, reason: "There is a wait action that does not have an associated done action." };
                     }
 
-                    for (const afterDoneChild of done[childAction.values.id].actions) {
-                        if(!ioCompatible(operator, getOperatorByName(afterDoneChild.type))) {
+                    for (const afterDoneChild of done[childAction.values.id]?.actions || []) {
+                        const receivingOperator = getOperatorByName(afterDoneChild.type);
+                        if (!receivingOperator) {
+                            return { valid: false, reason: `The receiving operator ${afterDoneChild.type} does not exist.` };
+                        } else if (!ioCompatible(operator, receivingOperator)) {
                             return { valid: false, reason: `Ouput of action ${action.type} is not compatible with input of action ${afterDoneChild.type}` };
                         }
                     }
@@ -44,7 +47,10 @@ export function validateOperations(actions: Action[]): { valid: boolean, reason?
                     return { valid: false, reason: `There shouldn't be a done action here.` };
                 }
                 else {
-                    if(!ioCompatible(operator, getOperatorByName(childAction.type))) {
+                    const receivingOperator = getOperatorByName(childAction.type);
+                    if (!receivingOperator) {
+                        return { valid: false, reason: `The receiving operator ${childAction.type} does not exist.` };
+                    } else if (!ioCompatible(operator, receivingOperator)) {
                         return { valid: false, reason: `Ouput of action ${action.type} is not compatible with input of action ${childAction.type}` };
                     }
                 }
@@ -60,8 +66,8 @@ export function validateOperations(actions: Action[]): { valid: boolean, reason?
     return { valid: true };
 }
 
-function ioCompatible(outputingOperator: typeof Operator, recievingOperator: typeof Operator): boolean {
+function ioCompatible(outputingOperator: typeof Operator, receivingOperator: typeof Operator): boolean {
     const outputType = outputingOperator.schema.describe().keys.output.label;
-    const inputType = recievingOperator.schema.describe().keys.input.label;
+    const inputType = receivingOperator.schema.describe().keys.input.label;
     return outputType == inputType;
 }

@@ -2,6 +2,7 @@
 import { PdfFile, RepresentationType } from "../wrappers/PdfFile";
 import { Operator, Progress, oneToOne } from ".";
 
+// @ts-expect-error
 import * as pdfcpuWrapper from "#pdfcpu"; // This is updated by tsconfig.json/paths for the context (browser, node, etc.) this module is used in.
 
 import Joi from "joi";
