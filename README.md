@@ -10,9 +10,9 @@
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Frooodle/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
 
-This is a powerful locally hosted web based PDF manipulation tool using docker that allows you to perform various operations on PDF files, such as splitting merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application started as a 100% ChatGPT-made application and has evolved to include a wide range of features to handle all your PDF needs.
+This is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. Originally developed entirely by ChatGPT, this locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
 
-Stirling PDF makes no outbound calls for any record keeping or tracking.
+Stirling PDF does not initiate any outbound calls for record-keeping or tracking purposes.
 
 All files and PDFs are either purely client side, in server memory only during the execution of the task or within a temporary file only for execution of the task.
 Any file which has been downloaded by the user will have already been deleted from the server by that time.
