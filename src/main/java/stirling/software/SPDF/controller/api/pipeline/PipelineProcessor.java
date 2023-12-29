@@ -43,8 +43,6 @@ public class PipelineProcessor {
 
 	private static final Logger logger = LoggerFactory.getLogger(PipelineProcessor.class);
 
-	final String watchedFoldersDir = "./pipeline/watchedFolders/";
-	final String finishedFoldersDir = "./pipeline/finishedFolders/";
 
 	@Autowired
 	private ApiDocService apiDocService;

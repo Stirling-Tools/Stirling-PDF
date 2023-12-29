@@ -64,6 +64,9 @@ public class PipelineController {
 		logger.info("Received POST request to /handleData with {} files", files.length);
 		try {
 			List<Resource> inputFiles = processor.generateInputFiles(files);
+			if(inputFiles == null  || inputFiles.size() == 0) {
+            	return null;
+            }
 			List<Resource> outputFiles = processor.runPipelineAgainstFiles(inputFiles, config);
 			if (outputFiles != null && outputFiles.size() == 1) {
 				// If there is only one file, return it directly

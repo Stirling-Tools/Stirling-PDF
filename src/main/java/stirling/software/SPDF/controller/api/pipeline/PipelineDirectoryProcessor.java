@@ -17,9 +17,11 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,20 +31,52 @@ import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 
 @Service
-public class DirectoryProcessor {
+public class PipelineDirectoryProcessor {
 
-    private Logger logger;
+	private static final Logger logger = LoggerFactory.getLogger(PipelineDirectoryProcessor.class);
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
     private ApiDocService apiDocService;
+    @Autowired
     private ApplicationProperties applicationProperties;
-    private String finishedFoldersDir;
-
+    
+    final String watchedFoldersDir = "./pipeline/watchedFolders/";
+	final String finishedFoldersDir = "./pipeline/finishedFolders/";
+	
     @Autowired
 	PipelineProcessor processor;
-    
-    // Constructor and other necessary initializations...
 
+    @Scheduled(fixedRate = 60000)
+	public void scanFolders() {
+		if (!Boolean.TRUE.equals(applicationProperties.getSystem().getEnableAlphaFunctionality())) {
+			return;
+		}
+		Path watchedFolderPath = Paths.get(watchedFoldersDir);
+		if (!Files.exists(watchedFolderPath)) {
+			try {
+				Files.createDirectories(watchedFolderPath);
+				logger.info("Created directory: {}", watchedFolderPath);
+			} catch (IOException e) {
+				logger.error("Error creating directory: {}", watchedFolderPath, e);
+				return;
+			}
+		}
+		try (Stream<Path> paths = Files.walk(watchedFolderPath)) {
+			paths.filter(Files::isDirectory).forEach(t -> {
+				try {
+					if (!t.equals(watchedFolderPath) && !t.endsWith("processing")) {
+						handleDirectory(t);
+					}
+				} catch (Exception e) {
+					logger.error("Error handling directory: {}", t, e);
+				}
+			});
+		} catch (Exception e) {
+			logger.error("Error walking through directory: {}", watchedFolderPath, e);
+		}
+	}
+    
     public void handleDirectory(Path dir) throws IOException {
         logger.info("Handling directory: {}", dir);
         Path processingDir = createProcessingDirectory(dir);
@@ -110,22 +144,47 @@ public class DirectoryProcessor {
     private List<File> prepareFilesForProcessing(File[] files, Path processingDir) throws IOException {
         List<File> filesToProcess = new ArrayList<>();
         for (File file : files) {
-            Path targetPath = processingDir.resolve(file.getName());
+            Path targetPath = resolveUniqueFilePath(processingDir, file.getName());
             Files.move(file.toPath(), targetPath);
             filesToProcess.add(targetPath.toFile());
         }
         return filesToProcess;
     }
 
+    private Path resolveUniqueFilePath(Path directory, String originalFileName) {
+        Path filePath = directory.resolve(originalFileName);
+        int counter = 1;
+
+        while (Files.exists(filePath)) {
+            String newName = appendSuffixToFileName(originalFileName, "(" + counter + ")");
+            filePath = directory.resolve(newName);
+            counter++;
+        }
+
+        return filePath;
+    }
+
+    private String appendSuffixToFileName(String originalFileName, String suffix) {
+        int dotIndex = originalFileName.lastIndexOf('.');
+        if (dotIndex == -1) {
+            return originalFileName + suffix;
+        } else {
+            return originalFileName.substring(0, dotIndex) + suffix + originalFileName.substring(dotIndex);
+        }
+    }
+
     private void runPipelineAgainstFiles(List<File> filesToProcess, PipelineConfig config, Path dir, Path processingDir) throws IOException {
         try {
             List<Resource> inputFiles = processor.generateInputFiles(filesToProcess.toArray(new File[0]));
-            
+            if(inputFiles == null  || inputFiles.size() == 0) {
+            	return;
+            }
             List<Resource> outputFiles =  processor.runPipelineAgainstFiles(inputFiles, config);
             if (outputFiles == null) return;
             moveAndRenameFiles(outputFiles, config, dir);
             deleteOriginalFiles(filesToProcess, processingDir);
         } catch (Exception e) {
+        	logger.error("error during processing", e);
             moveFilesBack(filesToProcess, processingDir);
         }
     }
@@ -166,7 +225,7 @@ public class DirectoryProcessor {
 
     private Path determineOutputPath(PipelineConfig config, Path dir) {
         String outputDir = config.getOutputDir()
-            .replace("{outputFolder}", applicationProperties.getAutoPipeline().getOutputFolder())
+            .replace("{outputFolder}", finishedFoldersDir)
             .replace("{folderName}", dir.toString())
             .replaceAll("\\\\?watchedFolders", "");
 
@@ -184,7 +243,7 @@ public class DirectoryProcessor {
         for (File file : filesToProcess) {
             try {
                 Files.move(processingDir.resolve(file.getName()), file.toPath());
-                logger.info("Moved file back to original location: {}", file.getName());
+                logger.info("Moved file back to original location: {} , {}",file.toPath(), file.getName());
             } catch (IOException e) {
                 logger.error("Error moving file back to original location: {}", file.getName(), e);
             }
