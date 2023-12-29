@@ -27,8 +27,8 @@ import stirling.software.SPDF.config.StartupApplicationListener;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @RestController
-@RequestMapping("/api/v1")
-@Tag(name = "API", description = "Info APIs")
+@RequestMapping("/api/v1/info")
+@Tag(name = "Info", description = "Info APIs")
 public class MetricsController {
 
 	
