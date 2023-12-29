@@ -1,61 +1,31 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.ServletContext;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.PipelineConfig;
-import stirling.software.SPDF.model.PipelineOperation;
-import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -65,456 +35,22 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class PipelineController {
 
 	private static final Logger logger = LoggerFactory.getLogger(PipelineController.class);
-	@Autowired
-	private ObjectMapper objectMapper;
 
 	final String watchedFoldersDir = "./pipeline/watchedFolders/";
 	final String finishedFoldersDir = "./pipeline/finishedFolders/";
-
 	@Autowired
-	private ApiDocService apiDocService;
-
-	@Scheduled(fixedRate = 60000)
-	public void scanFolders() {
-		if (!Boolean.TRUE.equals(applicationProperties.getSystem().getEnableAlphaFunctionality())) {
-			return;
-		}
-		Path watchedFolderPath = Paths.get(watchedFoldersDir);
-		if (!Files.exists(watchedFolderPath)) {
-			try {
-				Files.createDirectories(watchedFolderPath);
-				logger.info("Created directory: {}", watchedFolderPath);
-			} catch (IOException e) {
-				logger.error("Error creating directory: {}", watchedFolderPath, e);
-				return;
-			}
-		}
-		try (Stream<Path> paths = Files.walk(watchedFolderPath)) {
-			paths.filter(Files::isDirectory).forEach(t -> {
-				try {
-					if (!t.equals(watchedFolderPath) && !t.endsWith("processing")) {
-						handleDirectory(t);
-					}
-				} catch (Exception e) {
-					logger.error("Error handling directory: {}", t, e);
-				}
-			});
-		} catch (Exception e) {
-			logger.error("Error walking through directory: {}", watchedFolderPath, e);
-		}
-	}
-
-	private void handleDirectory(Path dir) throws Exception {
-		logger.info("Handling directory: {}", dir);
-
-		Path processingDir = dir.resolve("processing"); // Directory to move files during processing
-		if (!Files.exists(processingDir)) {
-			Files.createDirectory(processingDir);
-			logger.info("Created processing directory: {}", processingDir);
-		}
-
-		Path jsonFile;
-		Optional<Path> jsonFileOptional;
-		// Find any JSON file in the directory
-		try (Stream<Path> paths = Files.list(dir)) {
-			jsonFileOptional = paths.filter(file -> file.toString().endsWith(".json")).findFirst();
-		}
-
-		if (jsonFileOptional.isPresent()) {
-			jsonFile = jsonFileOptional.get();
-			// Read JSON file
-			String jsonString;
-			try {
-				jsonString = new String(Files.readAllBytes(jsonFile));
-				logger.info("Reading JSON file: {}", jsonFile);
-			} catch (IOException e) {
-				logger.error("Error reading JSON file: {}", jsonFile, e);
-				return;
-			}
-
-			// Decode JSON to PipelineConfig
-			PipelineConfig config;
-			try {
-				config = objectMapper.readValue(jsonString, PipelineConfig.class);
-				// Assuming your PipelineConfig class has getters for all necessary fields, you
-				// can perform checks here
-				if (config.getOperations() == null || config.getOutputDir() == null || config.getName() == null) {
-					throw new IOException("Invalid JSON format");
-				}
-			} catch (IOException e) {
-				logger.error("Error parsing PipelineConfig: {}", jsonString, e);
-				return;
-			}
-
-			// For each operation in the pipeline
-			for (PipelineOperation operation : config.getOperations()) {
-				if (!apiDocService.isValidOperation(operation.getOperation(), operation.getParameters())) {
-					logger.error("Invalid operation: " + operation.getOperation());
-					// Handle invalid operation
-					throw new Exception("Invalid operation: " + operation.getOperation());
-				}
-				// Collect all files based on fileInput
-				File[] files;
-				String fileInput = (String) operation.getParameters().get("fileInput");
-				if ("automated".equals(fileInput)) {
-					// If fileInput is "automated", process all files in the directory
-					try (Stream<Path> paths = Files.list(dir)) {
-						files = paths.filter(path -> !Files.isDirectory(path)) // exclude directories
-								.filter(path -> !path.equals(jsonFile)) // exclude jsonFile
-								.map(Path::toFile).toArray(File[]::new);
-
-					} catch (IOException e) {
-						e.printStackTrace();
-						return;
-					}
-				} else {
-					// If fileInput contains a path, process only this file
-					files = new File[] { new File(fileInput) };
-				}
-
-				// Prepare the files for processing
-				List<File> filesToProcess = new ArrayList<>();
-				for (File file : files) {
-					logger.info(file.getName());
-					logger.info("{} to {}", file.toPath(), processingDir.resolve(file.getName()));
-					Files.move(file.toPath(), processingDir.resolve(file.getName()));
-					filesToProcess.add(processingDir.resolve(file.getName()).toFile());
-				}
-
-				// Process the files
-				try {
-					List<Resource> resources = handleFiles(filesToProcess.toArray(new File[0]), jsonString);
-
-					if (resources == null) {
-						return;
-					}
-					// Move resultant files and rename them as per config in JSON file
-					for (Resource resource : resources) {
-						String resourceName = resource.getFilename();
-						String baseName = resourceName.substring(0, resourceName.lastIndexOf("."));
-						String extension = resourceName.substring(resourceName.lastIndexOf(".") + 1);
-
-						String outputFileName = config.getOutputPattern().replace("{filename}", baseName);
-
-						outputFileName = outputFileName.replace("{pipelineName}", config.getName());
-						DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-						outputFileName = outputFileName.replace("{date}", LocalDate.now().format(dateFormatter));
-						DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
-						outputFileName = outputFileName.replace("{time}", LocalTime.now().format(timeFormatter));
-
-						outputFileName += "." + extension;
-						// {filename} {folder} {date} {tmime} {pipeline}
-						String outputDir = config.getOutputDir();
-
-						String outputFolder = applicationProperties.getAutoPipeline().getOutputFolder();
-
-						if (outputFolder == null || outputFolder.isEmpty()) {
-							// If the environment variable is not set, use the default value
-							outputFolder = finishedFoldersDir;
-						}
-						logger.info("outputDir 0={}", outputDir);
-						// Replace the placeholders in the outputDir string
-						outputDir = outputDir.replace("{outputFolder}", outputFolder);
-						outputDir = outputDir.replace("{folderName}", dir.toString());
-						logger.info("outputDir 1={}", outputDir);
-						outputDir = outputDir.replace("\\watchedFolders", "");
-						outputDir = outputDir.replace("//watchedFolders", "");
-						outputDir = outputDir.replace("\\\\watchedFolders", "");
-						outputDir = outputDir.replace("/watchedFolders", "");
-
-						Path outputPath;
-						logger.info("outputDir 2={}", outputDir);
-						if (Paths.get(outputDir).isAbsolute()) {
-							// If it's an absolute path, use it directly
-							outputPath = Paths.get(outputDir);
-						} else {
-							// If it's a relative path, make it relative to the current working directory
-							outputPath = Paths.get(".", outputDir);
-						}
-
-						logger.info("outputPath={}", outputPath);
-
-						if (!Files.exists(outputPath)) {
-							try {
-								Files.createDirectories(outputPath);
-								logger.info("Created directory: {}", outputPath);
-							} catch (IOException e) {
-								logger.error("Error creating directory: {}", outputPath, e);
-								return;
-							}
-						}
-						logger.info("outputPath {}", outputPath);
-						logger.info("outputPath.resolve(outputFileName).toString() {}",
-								outputPath.resolve(outputFileName).toString());
-						File newFile = new File(outputPath.resolve(outputFileName).toString());
-						OutputStream os = new FileOutputStream(newFile);
-						os.write(((ByteArrayResource) resource).getByteArray());
-						os.close();
-						logger.info("made {}", outputPath.resolve(outputFileName));
-					}
-
-					// If successful, delete the original files
-					for (File file : filesToProcess) {
-						Files.deleteIfExists(processingDir.resolve(file.getName()));
-					}
-				} catch (Exception e) {
-					// If an error occurs, move the original files back
-					for (File file : filesToProcess) {
-						Files.move(processingDir.resolve(file.getName()), file.toPath());
-					}
-					throw e;
-				}
-			}
-		} else {
-			logger.warn("No .JSON settings file found. No processing will happen for dir {}.", dir);
-		}
-	}
+	PipelineProcessor processor;
+	
 
 	@Autowired
 	ApplicationProperties applicationProperties;
-
-	@Autowired(required = false)
-	private UserServiceInterface userService;
-
-	private String getApiKeyForUser() {
-		if (userService == null)
-			return "";
-		return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
-	}
-
-	@Autowired
-	private ServletContext servletContext;
-
-	private String getBaseUrl() {
-		String contextPath = servletContext.getContextPath();
-		return "http://localhost:8080" + contextPath + "/";
-	}
-
-	List<Resource> processFiles(List<Resource> outputFiles, String jsonString) throws Exception {
-
-		ObjectMapper mapper = new ObjectMapper();
-		logger.info("Running jsonString {}", jsonString);
-
-		JsonNode jsonNode = mapper.readTree(jsonString);
-		logger.info("Running jsonNode {}", jsonNode);
-		JsonNode pipelineNode = jsonNode.get("pipeline");
-		logger.info("Running pipelineNode: {}", pipelineNode);
-		ByteArrayOutputStream logStream = new ByteArrayOutputStream();
-		PrintStream logPrintStream = new PrintStream(logStream);
-
-		boolean hasErrors = false;
-
-		for (JsonNode operationNode : pipelineNode) {
-			String operation = operationNode.get("operation").asText();
-			boolean isMultiInputOperation = apiDocService.isMultiInput(operation);
-
-			logger.info("Running operation: {} isMultiInputOperation {}", operation, isMultiInputOperation);
-			JsonNode parametersNode = operationNode.get("parameters");
-			String inputFileExtension = "";
-			if (operationNode.has("inputFileType")) {
-				inputFileExtension = operationNode.get("inputFileType").asText();
-			} else {
-				inputFileExtension = ".pdf";
-			}
-			final String finalInputFileExtension = inputFileExtension;
-			
-			String url = getBaseUrl() + operation;
-			
-			List<Resource> newOutputFiles = new ArrayList<>();
-			if (!isMultiInputOperation) {
-				for (Resource file : outputFiles) {
-					boolean hasInputFileType = false;
-					if (file.getFilename().endsWith(inputFileExtension)) {
-						hasInputFileType = true;
-						MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-						body.add("fileInput", file);
-
-						Iterator<Map.Entry<String, JsonNode>> parameters = parametersNode.fields();
-						while (parameters.hasNext()) {
-							Map.Entry<String, JsonNode> parameter = parameters.next();
-							body.add(parameter.getKey(), parameter.getValue().asText());
-						}
-
-						ResponseEntity<byte[]> response = sendWebRequest(url, body);
-
-						// If the operation is filter and the response body is null or empty, skip this
-						// file
-						if (operation.startsWith("filter-")
-								&& (response.getBody() == null || response.getBody().length == 0)) {
-							logger.info("Skipping file due to failing {}", operation);
-							continue;
-						}
-
-						if (!response.getStatusCode().equals(HttpStatus.OK)) {
-							logPrintStream.println("Error: " + response.getBody());
-							hasErrors = true;
-							continue;
-						}
-						processOutputFiles(operation, file.getFilename(), response, newOutputFiles);
-						
-					}
-
-					if (!hasInputFileType) {
-						logPrintStream.println(
-								"No files with extension " + inputFileExtension + " found for operation " + operation);
-						hasErrors = true;
-					}
-
-					outputFiles = newOutputFiles;
-				}
-
-			} else {
-				 // Filter and collect all files that match the inputFileExtension
-			    List<Resource> matchingFiles = outputFiles.stream()
-			                                              .filter(file -> file.getFilename().endsWith(finalInputFileExtension))
-			                                              .collect(Collectors.toList());
-
-			    // Check if there are matching files
-			    if (!matchingFiles.isEmpty()) {
-			        // Create a new MultiValueMap for the request body
-			        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-
-			        // Add all matching files to the body
-			        for (Resource file : matchingFiles) {
-			            body.add("fileInput", file);
-			        }
-
-			        // Add other parameters from the JSON node
-			        Iterator<Map.Entry<String, JsonNode>> parameters = parametersNode.fields();
-			        while (parameters.hasNext()) {
-			            Map.Entry<String, JsonNode> parameter = parameters.next();
-			            body.add(parameter.getKey(), parameter.getValue().asText());
-			        }
-		        
-			        ResponseEntity<byte[]> response = sendWebRequest(url, body);
-
-			        // Handle the response
-			        if (response.getStatusCode().equals(HttpStatus.OK)) {
-			        	processOutputFiles(operation, matchingFiles.get(0).getFilename(), response, newOutputFiles);
-			        } else {
-			            // Log error if the response status is not OK
-			            logPrintStream.println("Error in multi-input operation: " + response.getBody());
-			            hasErrors = true;
-			        }
-			    } else {
-			        logPrintStream.println("No files with extension " + inputFileExtension + " found for multi-input operation " + operation);
-			        hasErrors = true;
-			    }
-			}
-			logPrintStream.close();
-
-		}
-		if (hasErrors) {
-			logger.error("Errors occurred during processing. Log: {}", logStream.toString());
-		}
-		return outputFiles;
-	}
-
-	private ResponseEntity<byte[]> sendWebRequest(String url, MultiValueMap<String, Object> body ){
-		RestTemplate restTemplate = new RestTemplate();
-		
-		 // Set up headers, including API key
-        HttpHeaders headers = new HttpHeaders();
-        String apiKey = getApiKeyForUser();
-        headers.add("X-API-Key", apiKey);
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-        // Create HttpEntity with the body and headers
-        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
-
-        // Make the request to the REST endpoint
-        return restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
-	}
 	
-	private List<Resource> processOutputFiles(String operation, String fileName, ResponseEntity<byte[]> response, List<Resource> newOutputFiles) throws IOException{
-		// Define filename
-		String newFilename;
-		if ("auto-rename".equals(operation)) {
-			// If the operation is "auto-rename", generate a new filename.
-			// This is a simple example of generating a filename using current timestamp.
-			// Modify as per your needs.
-			newFilename = "file_" + System.currentTimeMillis();
-		} else {
-			// Otherwise, keep the original filename.
-			newFilename = fileName;
-		}
-
-		// Check if the response body is a zip file
-		if (isZip(response.getBody())) {
-			// Unzip the file and add all the files to the new output files
-			newOutputFiles.addAll(unzip(response.getBody()));
-		} else {
-			Resource outputResource = new ByteArrayResource(response.getBody()) {
-				@Override
-				public String getFilename() {
-					return newFilename;
-				}
-			};
-			newOutputFiles.add(outputResource);
-		}
-		
-		return newOutputFiles;
-		
-	}
-	List<Resource> handleFiles(File[] files, String jsonString) throws Exception {
-		if (files == null || files.length == 0) {
-			logger.info("No files");
-			return null;
-		}
-
-		logger.info("Handling files: {} files, with JSON string of length: {}", files.length, jsonString.length());
-
-		List<Resource> outputFiles = new ArrayList<>();
-
-		for (File file : files) {
-			Path path = Paths.get(file.getAbsolutePath());
-			System.out.println("Reading file: " + path); // debug statement
-
-			if (Files.exists(path)) {
-				Resource fileResource = new ByteArrayResource(Files.readAllBytes(path)) {
-					@Override
-					public String getFilename() {
-						return file.getName();
-					}
-				};
-				outputFiles.add(fileResource);
-			} else {
-				System.out.println("File not found: " + path); // debug statement
-			}
-		}
-		logger.info("Files successfully loaded. Starting processing...");
-		return processFiles(outputFiles, jsonString);
-	}
-
-	List<Resource> handleFiles(MultipartFile[] files, String jsonString) throws Exception {
-		if (files == null || files.length == 0) {
-			logger.info("No files");
-			return null;
-		}
-		logger.info("Handling files: {} files, with JSON string of length: {}", files.length, jsonString.length());
-		ObjectMapper mapper = new ObjectMapper();
-		JsonNode jsonNode = mapper.readTree(jsonString);
-
-		JsonNode pipelineNode = jsonNode.get("pipeline");
-
-		boolean hasErrors = false;
-		List<Resource> outputFiles = new ArrayList<>();
-
-		for (MultipartFile file : files) {
-			Resource fileResource = new ByteArrayResource(file.getBytes()) {
-				@Override
-				public String getFilename() {
-					return file.getOriginalFilename();
-				}
-			};
-			outputFiles.add(fileResource);
-		}
-		logger.info("Files successfully loaded. Starting processing...");
-		return processFiles(outputFiles, jsonString);
-	}
+	@Autowired
+	private ObjectMapper objectMapper;
+	
 
 	@PostMapping("/handleData")
-	public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request) {
+	public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request) throws JsonMappingException, JsonProcessingException {
 		if (!Boolean.TRUE.equals(applicationProperties.getSystem().getEnableAlphaFunctionality())) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
@@ -524,10 +60,11 @@ public class PipelineController {
 		if (files == null) {
 			return null;
 		}
+		PipelineConfig config = objectMapper.readValue(jsonString, PipelineConfig.class);
 		logger.info("Received POST request to /handleData with {} files", files.length);
 		try {
-			List<Resource> outputFiles = handleFiles(files, jsonString);
-
+			List<Resource> inputFiles = processor.generateInputFiles(files);
+			List<Resource> outputFiles = processor.runPipelineAgainstFiles(inputFiles, config);
 			if (outputFiles != null && outputFiles.size() == 1) {
 				// If there is only one file, return it directly
 				Resource singleFile = outputFiles.get(0);
@@ -572,54 +109,6 @@ public class PipelineController {
 			logger.error("Error handling data: ", e);
 			return null;
 		}
-	}
-
-	private boolean isZip(byte[] data) {
-		if (data == null || data.length < 4) {
-			return false;
-		}
-
-		// Check the first four bytes of the data against the standard zip magic number
-		return data[0] == 0x50 && data[1] == 0x4B && data[2] == 0x03 && data[3] == 0x04;
-	}
-
-	private List<Resource> unzip(byte[] data) throws IOException {
-		logger.info("Unzipping data of length: {}", data.length);
-		List<Resource> unzippedFiles = new ArrayList<>();
-
-		try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
-				ZipInputStream zis = new ZipInputStream(bais)) {
-
-			ZipEntry entry;
-			while ((entry = zis.getNextEntry()) != null) {
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				byte[] buffer = new byte[1024];
-				int count;
-
-				while ((count = zis.read(buffer)) != -1) {
-					baos.write(buffer, 0, count);
-				}
-
-				final String filename = entry.getName();
-				Resource fileResource = new ByteArrayResource(baos.toByteArray()) {
-					@Override
-					public String getFilename() {
-						return filename;
-					}
-				};
-
-				// If the unzipped file is a zip file, unzip it
-				if (isZip(baos.toByteArray())) {
-					logger.info("File {} is a zip file. Unzipping...", filename);
-					unzippedFiles.addAll(unzip(baos.toByteArray()));
-				} else {
-					unzippedFiles.add(fileResource);
-				}
-			}
-		}
-
-		logger.info("Unzipping completed. {} files were unzipped.", unzippedFiles.size());
-		return unzippedFiles;
 	}
 
 }
