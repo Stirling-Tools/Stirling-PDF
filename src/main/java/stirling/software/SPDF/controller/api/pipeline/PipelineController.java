@@ -317,14 +317,11 @@ public class PipelineController {
 				inputFileExtension = ".pdf";
 			}
 			final String finalInputFileExtension = inputFileExtension;
-			RestTemplate restTemplate = new RestTemplate();
+			
 			String url = getBaseUrl() + operation;
 			
 			List<Resource> newOutputFiles = new ArrayList<>();
 			if (!isMultiInputOperation) {
-				
-				
-
 				for (Resource file : outputFiles) {
 					boolean hasInputFileType = false;
 					if (file.getFilename().endsWith(inputFileExtension)) {
@@ -338,16 +335,7 @@ public class PipelineController {
 							body.add(parameter.getKey(), parameter.getValue().asText());
 						}
 
-						HttpHeaders headers = new HttpHeaders();
-
-						String apiKey = getApiKeyForUser();
-						headers.add("X-API-Key", apiKey);
-						headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-						HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
-
-						ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.POST, entity,
-								byte[].class);
+						ResponseEntity<byte[]> response = sendWebRequest(url, body);
 
 						// If the operation is filter and the response body is null or empty, skip this
 						// file
@@ -362,32 +350,8 @@ public class PipelineController {
 							hasErrors = true;
 							continue;
 						}
-
-						// Define filename
-						String filename;
-						if ("auto-rename".equals(operation)) {
-							// If the operation is "auto-rename", generate a new filename.
-							// This is a simple example of generating a filename using current timestamp.
-							// Modify as per your needs.
-							filename = "file_" + System.currentTimeMillis();
-						} else {
-							// Otherwise, keep the original filename.
-							filename = file.getFilename();
-						}
-
-						// Check if the response body is a zip file
-						if (isZip(response.getBody())) {
-							// Unzip the file and add all the files to the new output files
-							newOutputFiles.addAll(unzip(response.getBody()));
-						} else {
-							Resource outputResource = new ByteArrayResource(response.getBody()) {
-								@Override
-								public String getFilename() {
-									return filename;
-								}
-							};
-							newOutputFiles.add(outputResource);
-						}
+						processOutputFiles(operation, file.getFilename(), response, newOutputFiles);
+						
 					}
 
 					if (!hasInputFileType) {
@@ -421,46 +385,12 @@ public class PipelineController {
 			            Map.Entry<String, JsonNode> parameter = parameters.next();
 			            body.add(parameter.getKey(), parameter.getValue().asText());
 			        }
-
-			        // Set up headers, including API key
-			        HttpHeaders headers = new HttpHeaders();
-			        String apiKey = getApiKeyForUser();
-			        headers.add("X-API-Key", apiKey);
-			        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-			        // Create HttpEntity with the body and headers
-			        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
-
-			        // Make the request to the REST endpoint
-			        ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
+		        
+			        ResponseEntity<byte[]> response = sendWebRequest(url, body);
 
 			        // Handle the response
 			        if (response.getStatusCode().equals(HttpStatus.OK)) {
-			        	// Define filename
-						String filename;
-						if ("auto-rename".equals(operation)) {
-							// If the operation is "auto-rename", generate a new filename.
-							// This is a simple example of generating a filename using current timestamp.
-							// Modify as per your needs.
-							filename = "file_" + System.currentTimeMillis();
-						} else {
-							// Otherwise, keep the original filename.
-							filename = matchingFiles.get(0).getFilename();
-						}
-
-						// Check if the response body is a zip file
-						if (isZip(response.getBody())) {
-							// Unzip the file and add all the files to the new output files
-							newOutputFiles.addAll(unzip(response.getBody()));
-						} else {
-							Resource outputResource = new ByteArrayResource(response.getBody()) {
-								@Override
-								public String getFilename() {
-									return filename;
-								}
-							};
-							newOutputFiles.add(outputResource);
-						}
+			        	processOutputFiles(operation, matchingFiles.get(0).getFilename(), response, newOutputFiles);
 			        } else {
 			            // Log error if the response status is not OK
 			            logPrintStream.println("Error in multi-input operation: " + response.getBody());
@@ -480,6 +410,52 @@ public class PipelineController {
 		return outputFiles;
 	}
 
+	private ResponseEntity<byte[]> sendWebRequest(String url, MultiValueMap<String, Object> body ){
+		RestTemplate restTemplate = new RestTemplate();
+		
+		 // Set up headers, including API key
+        HttpHeaders headers = new HttpHeaders();
+        String apiKey = getApiKeyForUser();
+        headers.add("X-API-Key", apiKey);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        // Create HttpEntity with the body and headers
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        // Make the request to the REST endpoint
+        return restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
+	}
+	
+	private List<Resource> processOutputFiles(String operation, String fileName, ResponseEntity<byte[]> response, List<Resource> newOutputFiles) throws IOException{
+		// Define filename
+		String newFilename;
+		if ("auto-rename".equals(operation)) {
+			// If the operation is "auto-rename", generate a new filename.
+			// This is a simple example of generating a filename using current timestamp.
+			// Modify as per your needs.
+			newFilename = "file_" + System.currentTimeMillis();
+		} else {
+			// Otherwise, keep the original filename.
+			newFilename = fileName;
+		}
+
+		// Check if the response body is a zip file
+		if (isZip(response.getBody())) {
+			// Unzip the file and add all the files to the new output files
+			newOutputFiles.addAll(unzip(response.getBody()));
+		} else {
+			Resource outputResource = new ByteArrayResource(response.getBody()) {
+				@Override
+				public String getFilename() {
+					return newFilename;
+				}
+			};
+			newOutputFiles.add(outputResource);
+		}
+		
+		return newOutputFiles;
+		
+	}
 	List<Resource> handleFiles(File[] files, String jsonString) throws Exception {
 		if (files == null || files.length == 0) {
 			logger.info("No files");
