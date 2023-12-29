@@ -37,8 +37,10 @@ public class InitialSecuritySetup {
 			    initialPassword = "stirling";
 				userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId(), true);
 			}
-			
-	        
+		}
+		if(!userService.usernameExists(Role.INTERNAL_API_USER.getRoleId())) {
+			userService.saveUser(Role.INTERNAL_API_USER.getRoleId(), UUID.randomUUID().toString(), Role.INTERNAL_API_USER.getRoleId());
+			userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
 		}
 	}
 

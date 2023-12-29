@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.web;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -41,31 +42,44 @@ public class GeneralWebController {
 	    model.addAttribute("currentPage", "pipeline");
 
 	    List<String> pipelineConfigs = new ArrayList<>();
-	    try (Stream<Path> paths = Files.walk(Paths.get("./pipeline/defaultWebUIConfigs/"))) {
-	        List<Path> jsonFiles = paths
-	            .filter(Files::isRegularFile)
-	            .filter(p -> p.toString().endsWith(".json"))
-	            .collect(Collectors.toList());
-
-	        for (Path jsonFile : jsonFiles) {
-	            String content = Files.readString(jsonFile, StandardCharsets.UTF_8);
-	            pipelineConfigs.add(content);
-	        }
-	        List<Map<String, String>> pipelineConfigsWithNames = new ArrayList<>();
-	        for (String config : pipelineConfigs) {
-	        	Map<String, Object> jsonContent = new ObjectMapper().readValue(config, new TypeReference<Map<String, Object>>(){});
-
-	            String name = (String) jsonContent.get("name");
-	            Map<String, String> configWithName = new HashMap<>();
-	            configWithName.put("json", config);
-	            configWithName.put("name", name);
+	    List<Map<String, String>> pipelineConfigsWithNames = new ArrayList<>();
+	    
+	    if(new File("./pipeline/defaultWebUIConfigs/").exists()) {
+		    try (Stream<Path> paths = Files.walk(Paths.get("./pipeline/defaultWebUIConfigs/"))) {
+		        List<Path> jsonFiles = paths
+		            .filter(Files::isRegularFile)
+		            .filter(p -> p.toString().endsWith(".json"))
+		            .collect(Collectors.toList());
+	
+		        for (Path jsonFile : jsonFiles) {
+		            String content = Files.readString(jsonFile, StandardCharsets.UTF_8);
+		            pipelineConfigs.add(content);
+		        }
+		        
+		        for (String config : pipelineConfigs) {
+		        	Map<String, Object> jsonContent = new ObjectMapper().readValue(config, new TypeReference<Map<String, Object>>(){});
+	
+		            String name = (String) jsonContent.get("name");
+		            Map<String, String> configWithName = new HashMap<>();
+		            configWithName.put("json", config);
+		            configWithName.put("name", name);
+		            pipelineConfigsWithNames.add(configWithName);
+		        }
+		        
+		        
+		        
+	
+		    } catch (IOException e) {
+		        e.printStackTrace();
+		    }
+		}
+	    if(pipelineConfigsWithNames.size() == 0) {
+	    	 Map<String, String> configWithName = new HashMap<>();
+	            configWithName.put("json", "");
+	            configWithName.put("name", "No preloaded configs found");
 	            pipelineConfigsWithNames.add(configWithName);
-	        }
-	        model.addAttribute("pipelineConfigsWithNames", pipelineConfigsWithNames);
-
-	    } catch (IOException e) {
-	        e.printStackTrace();
 	    }
+	    model.addAttribute("pipelineConfigsWithNames", pipelineConfigsWithNames);
 
 	    model.addAttribute("pipelineConfigs", pipelineConfigs);
 

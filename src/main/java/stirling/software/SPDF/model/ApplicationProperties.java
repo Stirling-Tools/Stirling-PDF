@@ -106,6 +106,25 @@ public class ApplicationProperties {
 		private Boolean enableLogin;
 		private Boolean csrfDisabled;
 		private InitialLogin initialLogin;
+		private int loginAttemptCount;
+		private long loginResetTimeMinutes;
+
+		
+		public int getLoginAttemptCount() {
+			return loginAttemptCount;
+		}
+
+		public void setLoginAttemptCount(int loginAttemptCount) {
+			this.loginAttemptCount = loginAttemptCount;
+		}
+
+		public long getLoginResetTimeMinutes() {
+			return loginResetTimeMinutes;
+		}
+
+		public void setLoginResetTimeMinutes(long loginResetTimeMinutes) {
+			this.loginResetTimeMinutes = loginResetTimeMinutes;
+		}
 
 		public InitialLogin getInitialLogin() {
 			return initialLogin != null ? initialLogin : new InitialLogin();
@@ -175,6 +194,19 @@ public class ApplicationProperties {
 		private String rootURIPath;
 		private String customStaticFilePath;
 		private Integer maxFileSize;
+		
+		private Boolean  enableAlphaFunctionality;
+		
+		
+		
+
+		public Boolean getEnableAlphaFunctionality() {
+			return enableAlphaFunctionality;
+		}
+
+		public void setEnableAlphaFunctionality(Boolean enableAlphaFunctionality) {
+			this.enableAlphaFunctionality = enableAlphaFunctionality;
+		}
 
 		public String getDefaultLocale() {
 			return defaultLocale;
@@ -218,11 +250,12 @@ public class ApplicationProperties {
 
 		@Override
 		public String toString() {
-			return "System [defaultLocale=" + defaultLocale + ", googlevisibility=" + googlevisibility + ", rootURIPath="
-					+ rootURIPath + ", customStaticFilePath=" + customStaticFilePath + ", maxFileSize=" + maxFileSize
-					+ "]";
+			return "System [defaultLocale=" + defaultLocale + ", googlevisibility=" + googlevisibility
+					+ ", rootURIPath=" + rootURIPath + ", customStaticFilePath=" + customStaticFilePath
+					+ ", maxFileSize=" + maxFileSize + ", enableAlphaFunctionality=" + enableAlphaFunctionality + "]";
 		}
 
+		
 		
 	}
 

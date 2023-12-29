@@ -15,6 +15,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.utils.RequestUriUtils;
 
 @Component
 public class FirstLoginFilter extends OncePerRequestFilter {
@@ -28,11 +29,7 @@ public class FirstLoginFilter extends OncePerRequestFilter {
     	String method = request.getMethod();
     	String requestURI = request.getRequestURI(); 
     	 // Check if the request is for static resources
-        boolean isStaticResource = requestURI.startsWith("/css/") 
-                                || requestURI.startsWith("/js/")
-                                || requestURI.startsWith("/images/")
-                                || requestURI.startsWith("/public/")
-                                || requestURI.endsWith(".svg");
+        boolean isStaticResource = RequestUriUtils.isStaticResource(requestURI);
 
         // If it's a static resource, just continue the filter chain and skip the logic below
         if (isStaticResource) {
