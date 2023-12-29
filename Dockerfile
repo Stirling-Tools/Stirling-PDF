@@ -42,4 +42,4 @@ EXPOSE 8080
 # Set user and run command
 ##USER stirlingpdfuser
 ENTRYPOINT ["/scripts/init.sh"]
-CMD ["java", "-jar", "/app.jar"]
+CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/app.jar"]

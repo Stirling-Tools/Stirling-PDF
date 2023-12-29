@@ -60,4 +60,4 @@ ENV DOCKER_ENABLE_SECURITY=false
 # Run the application
 #USER stirlingpdfuser
 ENTRYPOINT ["/scripts/init-without-ocr.sh"]
-CMD ["java", "-jar", "/app.jar"]
+CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/app.jar"]
