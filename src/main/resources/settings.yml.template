@@ -5,7 +5,9 @@
 security:
   enableLogin: false # set to 'true' to enable login
   csrfDisabled: true
-
+  loginAttemptCount: 5 # lock user account after 5 tries
+  loginResetTimeMinutes : 120 # lock account for 2 hours after x attempts
+  
 system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow

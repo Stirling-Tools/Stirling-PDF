@@ -28,7 +28,12 @@ public class ApiDocService {
 
     private String getApiDocsUrl() {
         String contextPath = servletContext.getContextPath();
-        return "http://localhost:8080" + contextPath + "/v1/api-docs";
+        String port = System.getProperty("local.server.port");
+        if(port == null || port.length() == 0) {
+        	port="8080";
+        }
+        
+        return "http://localhost:"+ port + contextPath + "/v1/api-docs";
     }
     
 

@@ -12,6 +12,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import stirling.software.SPDF.utils.RequestUriUtils;
 
 @Component
 public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
@@ -28,7 +29,7 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
         // Get the saved request
         HttpSession session = request.getSession(false);
         SavedRequest savedRequest = session != null ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST") : null;
-        if (savedRequest != null && !isStaticResource(savedRequest)) {
+        if (savedRequest != null && !RequestUriUtils.isStaticResource(savedRequest.getRedirectUrl())) {
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {
@@ -38,15 +39,6 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
         
         //super.onAuthenticationSuccess(request, response, authentication);
     }
-    
-    private boolean isStaticResource(SavedRequest savedRequest) {
-        String requestURI = savedRequest.getRedirectUrl();
-        return requestURI.startsWith("/css/") 
-        		|| requestURI.startsWith("/js/")
-        		|| requestURI.startsWith("/images/")
-        		|| requestURI.startsWith("/public/")
-        		|| requestURI.startsWith("/pdfjs/")
-        		|| requestURI.endsWith(".svg");
-    }
+
     
 }

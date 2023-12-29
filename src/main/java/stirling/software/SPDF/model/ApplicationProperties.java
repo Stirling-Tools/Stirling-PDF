@@ -106,6 +106,25 @@ public class ApplicationProperties {
 		private Boolean enableLogin;
 		private Boolean csrfDisabled;
 		private InitialLogin initialLogin;
+		private int loginAttemptCount;
+		private long loginResetTimeMinutes;
+
+		
+		public int getLoginAttemptCount() {
+			return loginAttemptCount;
+		}
+
+		public void setLoginAttemptCount(int loginAttemptCount) {
+			this.loginAttemptCount = loginAttemptCount;
+		}
+
+		public long getLoginResetTimeMinutes() {
+			return loginResetTimeMinutes;
+		}
+
+		public void setLoginResetTimeMinutes(long loginResetTimeMinutes) {
+			this.loginResetTimeMinutes = loginResetTimeMinutes;
+		}
 
 		public InitialLogin getInitialLogin() {
 			return initialLogin != null ? initialLogin : new InitialLogin();

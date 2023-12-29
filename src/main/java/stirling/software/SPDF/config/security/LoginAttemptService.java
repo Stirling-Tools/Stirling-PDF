@@ -2,15 +2,30 @@ package stirling.software.SPDF.config.security;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.AttemptCounter;
 
 @Service
 public class LoginAttemptService {
 
-    private final int MAX_ATTEMPTS = 10;
-    private final long ATTEMPT_INCREMENT_TIME = TimeUnit.MINUTES.toMillis(1);
+	
+	@Autowired
+	ApplicationProperties applicationProperties;
+	
+    private int MAX_ATTEMPTS;
+    private long ATTEMPT_INCREMENT_TIME;
+    
+    
+    @PostConstruct
+    public void init() {
+    	MAX_ATTEMPTS = applicationProperties.getSecurity().getLoginAttemptCount();
+    	ATTEMPT_INCREMENT_TIME = TimeUnit.MINUTES.toMillis(applicationProperties.getSecurity().getLoginResetTimeMinutes());
+    }
+    
     private final ConcurrentHashMap<String, AttemptCounter> attemptsCache = new ConcurrentHashMap<>();
 
     public void loginSucceeded(String key) {

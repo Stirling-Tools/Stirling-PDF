@@ -109,7 +109,7 @@ public class PipelineDirectoryProcessor {
 
     private PipelineConfig readAndParseJson(Path jsonFile) throws IOException {
         String jsonString = new String(Files.readAllBytes(jsonFile), StandardCharsets.UTF_8);
-        logger.info("Reading JSON file: {}", jsonFile);
+        logger.debug("Reading JSON file: {}", jsonFile);
         return objectMapper.readValue(jsonString, PipelineConfig.class);
     }
 
@@ -118,7 +118,7 @@ public class PipelineDirectoryProcessor {
             validateOperation(operation);
             File[] files = collectFilesForProcessing(dir, jsonFile, operation);
             if(files == null || files.length == 0) {
-            	logger.info("No files detected for {} ", dir);
+            	logger.debug("No files detected for {} ", dir);
             	return;
             }
             List<File> filesToProcess = prepareFilesForProcessing(files, processingDir);

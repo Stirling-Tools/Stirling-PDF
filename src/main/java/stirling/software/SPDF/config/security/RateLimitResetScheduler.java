@@ -11,7 +11,7 @@ public class RateLimitResetScheduler {
         this.rateLimitingFilter = rateLimitingFilter;
     }
 
-    @Scheduled(cron = "0 0 0 * * MON") // At 00:00 every Monday
+    @Scheduled(cron = "0 0 0 * * MON") // At 00:00 every Monday TODO: configurable 
     public void resetRateLimit() {
         rateLimitingFilter.resetRequestCounts();
     }

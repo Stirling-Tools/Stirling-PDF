@@ -9,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import stirling.software.SPDF.utils.RequestUriUtils;
 
 public class IPRateLimitingFilter implements Filter {
 
@@ -29,12 +30,7 @@ public class IPRateLimitingFilter implements Filter {
 	        String method = httpRequest.getMethod();
 	        String requestURI = httpRequest.getRequestURI(); 
 	    	 // Check if the request is for static resources
-	        boolean isStaticResource = requestURI.startsWith("/css/") 
-	                                || requestURI.startsWith("/js/")
-	                                || requestURI.startsWith("/images/")
-	                                || requestURI.startsWith("/public/")
-	                                || requestURI.startsWith("/pdfjs/")
-	                                || requestURI.endsWith(".svg");
+	        boolean isStaticResource = RequestUriUtils.isStaticResource(requestURI);
 
 	        // If it's a static resource, just continue the filter chain and skip the logic below
 	        if (isStaticResource) {
