@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -25,6 +26,7 @@ public class ShowJavascript {
 
     private static final Logger logger = LoggerFactory.getLogger(ShowJavascript.class);
     @PostMapping(consumes = "multipart/form-data", value = "/show-javascript")
+    @Operation(summary = "Grabs all JS from a PDF and returns a single JS file with all code", description = "desc. Input:PDF Output:JS Type:SISO")
     public ResponseEntity<byte[]> extractHeader(@ModelAttribute PDFFile request) throws Exception {
     	MultipartFile inputFile = request.getFileInput();
         String script = "";

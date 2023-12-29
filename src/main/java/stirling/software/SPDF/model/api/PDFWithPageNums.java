@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,7 +19,7 @@ public class PDFWithPageNums extends PDFFile {
 	@Schema(description = "The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')\"")
     private String pageNumbers;
 	
-	
+	@Hidden
 	public List<Integer> getPageNumbersList(){
 		int pageCount = 0;
 		try {
@@ -30,6 +31,8 @@ public class PDFWithPageNums extends PDFFile {
 		return GeneralUtils.parsePageString(pageNumbers, pageCount);
 		
 	}
+	
+	@Hidden
 	public List<Integer> getPageNumbersList(PDDocument doc){
 		int pageCount = 0;
 		pageCount = doc.getNumberOfPages();

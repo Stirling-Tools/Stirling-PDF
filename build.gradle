@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'stirling.software'
-version = '0.17.2'
+version = '0.18.0'
 sourceCompatibility = '17'
 
 repositories {
@@ -48,7 +48,7 @@ launch4j {
 
   errTitle="Encountered error, Do you have Java 17?"
   downloadUrl="https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.exe"
-  variables=["BROWSER_OPEN=true"]
+  variables=["BROWSER_OPEN=true", "ENDPOINTS_GROUPS_TO_REMOVE=CLI"]
   jreMinVersion="17"
 
   mutexName="Stirling-PDF"
@@ -68,17 +68,17 @@ dependencies {
 	implementation 'org.springframework:spring-webmvc:6.0.15'
 	
     implementation 'org.yaml:snakeyaml:2.1'
-    implementation 'org.springframework.boot:spring-boot-starter-web:3.1.6'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.1.6'
+    implementation 'org.springframework.boot:spring-boot-starter-web:3.2.1'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.2.1'
 
     if (System.getenv('DOCKER_ENABLE_SECURITY') != 'false') {
-        implementation 'org.springframework.boot:spring-boot-starter-security:3.1.6'
+        implementation 'org.springframework.boot:spring-boot-starter-security:3.2.1'
         implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
         implementation "org.springframework.boot:spring-boot-starter-data-jpa"
         implementation "com.h2database:h2"
     }
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.6'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.1'
 
     // Batik
     implementation 'org.apache.xmlgraphics:batik-all:1.17'

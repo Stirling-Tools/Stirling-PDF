@@ -1,5 +1,5 @@
 #searchBar {
-	background-image: url('/images/search.svg');
+	background-image: url('../images/search.svg');
 	background-position: 16px 16px;
 	background-repeat: no-repeat;
 	width: 100%;

@@ -74,15 +74,17 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         // If we still don't have any authentication, deny the request
         if (authentication == null || !authentication.isAuthenticated()) {
         	String method = request.getMethod();
-        	if ("GET".equalsIgnoreCase(method) && !"/login".equals(requestURI)) {
-        		 response.sendRedirect("/login");  // redirect to the login page
+        	String contextPath = request.getContextPath();
+        	
+        	if ("GET".equalsIgnoreCase(method) && !  (contextPath + "/login").equals(requestURI)) {
+        		 response.sendRedirect(contextPath + "/login");  // redirect to the login page
         	     return;
             } else {
 	            response.setStatus(HttpStatus.UNAUTHORIZED.value());
 	            response.getWriter().write("Authentication required. Please provide a X-API-KEY in request header.\nThis is found in Settings -> Account Settings -> API Key\nAlternativly you can disable authentication if this is unexpected");
 	            return;
             }
-        }
+        } 
 
         filterChain.doFilter(request, response);
     }
@@ -90,15 +92,17 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String uri = request.getRequestURI();
-
+        String contextPath = request.getContextPath();
         String[] permitAllPatterns = {
-            "/login",
-            "/register",
-            "/error",
-            "/images/",
-            "/public/",
-            "/css/",
-            "/js/"
+        		contextPath + "/login",
+        		contextPath + "/register",
+        		contextPath + "/error",
+        		contextPath + "/images/",
+        		contextPath + "/public/",
+        		contextPath + "/css/",
+        		contextPath + "/js/",
+        		contextPath +  "/pdfjs/",
+        		contextPath +  "/site.webmanifest"
         };
 
         for (String pattern : permitAllPatterns) {

@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 public class HandleDataRequest {
 
     @Schema(description = "The input files")
-    private MultipartFile[] fileInputs;
+    private MultipartFile[] fileInput;
 
     @Schema(description = "JSON String")
-    private String jsonString;
+    private String json;
 }

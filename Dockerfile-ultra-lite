@@ -6,7 +6,8 @@ ARG VERSION_TAG
 # Set Environment Variables
 ENV DOCKER_ENABLE_SECURITY=false \
     HOME=/home/stirlingpdfuser \
-    VERSION_TAG=$VERSION_TAG 
+    VERSION_TAG=$VERSION_TAG \
+    JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS -XX:MaxRAMPercentage=75"
 #	PUID=1000 \
 #   PGID=1000 \
 #   UMASK=022 \
@@ -18,12 +19,12 @@ ENV DOCKER_ENABLE_SECURITY=false \
 
 # Set up necessary directories and permissions
 #RUN mkdir -p /scripts /configs /customFiles && \
-#    chown -R stirlingpdfuser:stirlingpdfgroup /scripts /configs /customFiles
-
+#    chown -R stirlingpdfuser:stirlingpdfgroup /scripts /configs /customFiles /logs /pipeline /pipeline/defaultWebUIConfigs  /pipeline/watchedFolders /pipeline/finishedFolders
+ 
 RUN mkdir -p /scripts /usr/share/fonts/opentype/noto /configs /customFiles
 COPY ./scripts/download-security-jar.sh /scripts/download-security-jar.sh
 COPY ./scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
-
+COPY ./pipeline/ /pipeline/
 COPY build/libs/*.jar app.jar
 
 # Set font cache and permissions

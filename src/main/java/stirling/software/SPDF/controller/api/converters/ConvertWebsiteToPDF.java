@@ -28,7 +28,7 @@ public class ConvertWebsiteToPDF {
 	@PostMapping(consumes = "multipart/form-data", value = "/url/pdf")
 	@Operation(
 	    summary = "Convert a URL to a PDF",
-	    description = "This endpoint fetches content from a URL and converts it to a PDF format."
+	    description = "This endpoint fetches content from a URL and converts it to a PDF format. Input:N/A Output:PDF Type:SISO"
 	)
 	public ResponseEntity<byte[]> urlToPdf(@ModelAttribute UrlToPdfRequest request) throws IOException, InterruptedException {
 	    String URL = request.getUrlInput();
