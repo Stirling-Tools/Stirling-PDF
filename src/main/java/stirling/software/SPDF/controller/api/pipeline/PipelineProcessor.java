@@ -34,6 +34,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.ServletContext;
+
+import stirling.software.SPDF.SPdfApplication;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.Role;
@@ -65,7 +67,9 @@ public class PipelineProcessor {
 
 	private String getBaseUrl() {
 		String contextPath = servletContext.getContextPath();
-		return "http://localhost:8080" + contextPath + "/";
+		String port = SPdfApplication.getPort();
+
+		return "http://localhost:" + port + contextPath + "/";
 	}
 
 	 

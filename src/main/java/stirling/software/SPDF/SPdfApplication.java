@@ -17,7 +17,7 @@ import stirling.software.SPDF.utils.GeneralUtils;
 
 @EnableScheduling
 public class SPdfApplication {
-	
+
 	@Autowired
     private Environment env;
 
@@ -29,11 +29,7 @@ public class SPdfApplication {
 
         if (browserOpen) {
             try {
-                String port = env.getProperty("local.server.port");
-                if(port == null || port.length() == 0) {
-                	port="8080";
-                }
-                String url = "http://localhost:" + port;
+                String url = "http://localhost:" + getPort();
 
                 String os = System.getProperty("os.name").toLowerCase();
                 Runtime rt = Runtime.getRuntime();
@@ -46,7 +42,7 @@ public class SPdfApplication {
             }
         }
     }
-	
+
     public static void main(String[] args) {
     	SpringApplication app = new SpringApplication(SPdfApplication.class);
     	app.addInitializers(new ConfigInitializer());
@@ -56,28 +52,28 @@ public class SPdfApplication {
             System.out.println("External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
         }
         app.run(args);
-        
+
         try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        
+
         GeneralUtils.createDir("customFiles/static/");
         GeneralUtils.createDir("customFiles/templates/");
-        
-        
-        
+
         System.out.println("Stirling-PDF Started.");
-        
-        String port = System.getProperty("local.server.port");
-        if(port == null || port.length() == 0) {
-        	port="8080";
-        }
-        String url = "http://localhost:" + port;
+
+        String url = "http://localhost:" + getPort();
         System.out.println("Navigate to " + url);
     }
-    
-    
+
+    public static String getPort() {
+        String port = System.getProperty("local.server.port");
+        if (port == null || port.isEmpty()) {
+            port = "8080";
+        }
+        return port;
+    }
 }
