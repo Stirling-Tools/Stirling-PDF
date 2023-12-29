@@ -51,7 +51,6 @@ public class AppConfig {
         String appName = System.getProperty("rateLimit");
         if (appName == null) 
             appName = System.getenv("rateLimit");
-        System.out.println("rateLimit=" + appName);
         return (appName != null) ? Boolean.valueOf(appName) : false;
     }
 	
