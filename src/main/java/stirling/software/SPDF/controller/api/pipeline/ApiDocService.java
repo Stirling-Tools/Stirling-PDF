@@ -16,8 +16,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.ServletContext;
+
+import stirling.software.SPDF.SPdfApplication;
 import stirling.software.SPDF.model.ApiEndpoint;
 import stirling.software.SPDF.model.Role;
+
 @Service
 public class ApiDocService {
 
@@ -28,11 +31,8 @@ public class ApiDocService {
 
     private String getApiDocsUrl() {
         String contextPath = servletContext.getContextPath();
-        String port = System.getProperty("local.server.port");
-        if(port == null || port.length() == 0) {
-        	port="8080";
-        }
-        
+        String port = SPdfApplication.getPort();
+
         return "http://localhost:"+ port + contextPath + "/v1/api-docs";
     }
     
