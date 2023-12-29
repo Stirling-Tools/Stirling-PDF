@@ -43,4 +43,4 @@ ENV ENDPOINTS_GROUPS_TO_REMOVE=CLI
 ENTRYPOINT ["/scripts/init-without-ocr.sh"]
 
 # Run the application
-CMD ["java", "-jar", "/app.jar"]
+CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/app.jar"]
