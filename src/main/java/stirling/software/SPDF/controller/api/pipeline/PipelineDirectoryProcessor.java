@@ -117,6 +117,10 @@ public class PipelineDirectoryProcessor {
         for (PipelineOperation operation : config.getOperations()) {
             validateOperation(operation);
             File[] files = collectFilesForProcessing(dir, jsonFile, operation);
+            if(files == null || files.length == 0) {
+            	logger.info("No files detected for {} ", dir);
+            	return;
+            }
             List<File> filesToProcess = prepareFilesForProcessing(files, processingDir);
             runPipelineAgainstFiles(filesToProcess, config, dir, processingDir);
         }
