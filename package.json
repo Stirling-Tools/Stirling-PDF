@@ -2,7 +2,6 @@
   "name": "stirling-pdf",
   "private": "true",
   "workspaces": [
-    "client-ionic",
     "client-tauri",
     "server-node",
     "shared-operations"
