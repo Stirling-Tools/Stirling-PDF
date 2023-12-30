@@ -28,7 +28,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     @Autowired @Lazy private UserService userService;
 
     @Autowired
-    @Qualifier("loginEnabled") public boolean loginEnabledValue;
+    @Qualifier("loginEnabled")
+    public boolean loginEnabledValue;
 
     @Override
     protected void doFilterInternal(

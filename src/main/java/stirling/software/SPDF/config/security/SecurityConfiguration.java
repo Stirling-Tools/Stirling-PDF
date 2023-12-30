@@ -35,7 +35,8 @@ public class SecurityConfiguration {
     @Autowired @Lazy private UserService userService;
 
     @Autowired
-    @Qualifier("loginEnabled") public boolean loginEnabledValue;
+    @Qualifier("loginEnabled")
+    public boolean loginEnabledValue;
 
     @Autowired private UserAuthenticationFilter userAuthenticationFilter;
 

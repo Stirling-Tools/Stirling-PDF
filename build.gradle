@@ -70,7 +70,6 @@ spotless {
 
         importOrder('java', 'javax', 'org', 'com', 'net', 'io')
         toggleOffOn()
-        formatAnnotations()
         trimTrailingWhitespace()
         indentWithSpaces()
         endWithNewline()
