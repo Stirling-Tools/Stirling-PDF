@@ -42,7 +42,7 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class AutoSplitPdfController {
 
-    private static final String QR_CONTENT = "https://github.com/Frooodle/Stirling-PDF";
+    private static final String QR_CONTENT = "https://github.com/Stirling-Tools/Stirling-PDF";
 
     @PostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
     @Operation(
