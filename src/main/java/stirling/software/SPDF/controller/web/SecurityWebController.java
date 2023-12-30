@@ -10,20 +10,21 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @Tag(name = "Security", description = "Security APIs")
 public class SecurityWebController {
-	
-	@GetMapping("/auto-redact")
+
+    @GetMapping("/auto-redact")
     @Hidden
     public String autoRedactForm(Model model) {
         model.addAttribute("currentPage", "auto-redact");
         return "security/auto-redact";
     }
-	
+
     @GetMapping("/add-password")
     @Hidden
     public String addPasswordForm(Model model) {
         model.addAttribute("currentPage", "add-password");
         return "security/add-password";
     }
+
     @GetMapping("/change-permissions")
     @Hidden
     public String permissionsForm(Model model) {
@@ -44,21 +45,21 @@ public class SecurityWebController {
         model.addAttribute("currentPage", "add-watermark");
         return "security/add-watermark";
     }
-    
+
     @GetMapping("/cert-sign")
     @Hidden
     public String certSignForm(Model model) {
         model.addAttribute("currentPage", "cert-sign");
         return "security/cert-sign";
     }
-    
+
     @GetMapping("/sanitize-pdf")
     @Hidden
     public String sanitizeForm(Model model) {
         model.addAttribute("currentPage", "sanitize-pdf");
         return "security/sanitize-pdf";
     }
-    
+
     @GetMapping("/get-info-on-pdf")
     @Hidden
     public String getInfo(Model model) {

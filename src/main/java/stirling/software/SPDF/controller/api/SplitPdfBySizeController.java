@@ -1,4 +1,5 @@
 package stirling.software.SPDF.controller.api;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,31 +21,33 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.api.general.SplitPdfBySizeOrCountRequest;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
-@Tag(name = "Misc", description = "Miscellaneous APIs")
+@Tag(name = "General", description = "General APIs")
 public class SplitPdfBySizeController {
 
-
     @PostMapping(value = "/split-by-size-or-count", consumes = "multipart/form-data")
-    @Operation(summary = "Auto split PDF pages into separate documents based on size or count", description = "split PDF into multiple paged documents based on size/count, ie if 20 pages and split into 5, it does 5 documents each 4 pages\r\n"
-    		+ " if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF Output:ZIP Type:SIMO")
-    public ResponseEntity<byte[]> autoSplitPdf(@ModelAttribute SplitPdfBySizeOrCountRequest request) throws Exception {
-    	List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<ByteArrayOutputStream>();
-        
-        
-    	
+    @Operation(
+            summary = "Auto split PDF pages into separate documents based on size or count",
+            description =
+                    "split PDF into multiple paged documents based on size/count, ie if 20 pages and split into 5, it does 5 documents each 4 pages\r\n"
+                            + " if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF Output:ZIP-PDF Type:SISO")
+    public ResponseEntity<byte[]> autoSplitPdf(@ModelAttribute SplitPdfBySizeOrCountRequest request)
+            throws Exception {
+        List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<ByteArrayOutputStream>();
+
         MultipartFile file = request.getFileInput();
         PDDocument sourceDocument = PDDocument.load(file.getInputStream());
-        
-        //0 = size, 1 = page count, 2 = doc count
+
+        // 0 = size, 1 = page count, 2 = doc count
         int type = request.getSplitType();
         String value = request.getSplitValue();
-        
+
         if (type == 0) { // Split by size
             long maxBytes = GeneralUtils.convertSizeToBytes(value);
             long currentSize = 0;
@@ -93,7 +96,7 @@ public class SplitPdfBySizeController {
                 splitDocumentsBoas.add(currentDocToByteArray(currentDoc));
             }
         } else if (type == 2) { // Split by doc count
-        	int documentCount = Integer.parseInt(value);
+            int documentCount = Integer.parseInt(value);
             int totalPageCount = sourceDocument.getNumberOfPages();
             int pagesPerDocument = totalPageCount / documentCount;
             int extraPages = totalPageCount % documentCount;
@@ -114,9 +117,7 @@ public class SplitPdfBySizeController {
         }
 
         sourceDocument.close();
-        
-        
-        
+
         Path zipFile = Files.createTempFile("split_documents", ".zip");
         String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
         byte[] data;
@@ -135,19 +136,18 @@ public class SplitPdfBySizeController {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-        	data = Files.readAllBytes(zipFile);
+            data = Files.readAllBytes(zipFile);
             Files.delete(zipFile);
         }
 
-        return WebResponseUtils.bytesToWebResponse(data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.bytesToWebResponse(
+                data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
     }
-    
+
     private ByteArrayOutputStream currentDocToByteArray(PDDocument document) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         document.save(baos);
         document.close();
         return baos;
     }
-    
-
 }

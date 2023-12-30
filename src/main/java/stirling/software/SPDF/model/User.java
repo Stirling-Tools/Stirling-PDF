@@ -19,15 +19,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+
 @Entity
 @Table(name = "users")
 public class User {
 
-	@Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long id;
-	
+
     @Column(name = "username", unique = true)
     private String username;
 
@@ -36,13 +37,13 @@ public class User {
 
     @Column(name = "apiKey")
     private String apiKey;
-    
+
     @Column(name = "enabled")
     private boolean enabled;
 
     @Column(name = "isFirstLogin")
     private Boolean isFirstLogin = false;
-    
+
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> authorities = new HashSet<>();
 
@@ -50,85 +51,83 @@ public class User {
     @MapKeyColumn(name = "setting_key")
     @Column(name = "setting_value")
     @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "user_id"))
-    private Map<String, String> settings = new HashMap<>();  // Key-value pairs of settings.
+    private Map<String, String> settings = new HashMap<>(); // Key-value pairs of settings.
 
-    
-	public boolean isFirstLogin() {
-		return isFirstLogin != null && isFirstLogin;
-	}
+    public boolean isFirstLogin() {
+        return isFirstLogin != null && isFirstLogin;
+    }
 
-	public void setFirstLogin(boolean isFirstLogin) {
-		this.isFirstLogin = isFirstLogin;
-	}
+    public void setFirstLogin(boolean isFirstLogin) {
+        this.isFirstLogin = isFirstLogin;
+    }
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public String getApiKey() {
-		return apiKey;
-	}
+    public String getApiKey() {
+        return apiKey;
+    }
 
-	public void setApiKey(String apiKey) {
-		this.apiKey = apiKey;
-	}
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
 
-	public Map<String, String> getSettings() {
-		return settings;
-	}
+    public Map<String, String> getSettings() {
+        return settings;
+    }
 
-	public void setSettings(Map<String, String> settings) {
-		this.settings = settings;
-	}
+    public void setSettings(Map<String, String> settings) {
+        this.settings = settings;
+    }
 
-	public String getUsername() {
-		return username;
-	}
+    public String getUsername() {
+        return username;
+    }
 
-	public void setUsername(String username) {
-		this.username = username;
-	}
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-	public String getPassword() {
-		return password;
-	}
+    public String getPassword() {
+        return password;
+    }
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-	public boolean isEnabled() {
-		return enabled;
-	}
+    public boolean isEnabled() {
+        return enabled;
+    }
 
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 
-	public Set<Authority> getAuthorities() {
-		return authorities;
-	}
+    public Set<Authority> getAuthorities() {
+        return authorities;
+    }
 
-	public void setAuthorities(Set<Authority> authorities) {
-		this.authorities = authorities;
-	}
-	
-	public void addAuthorities(Set<Authority> authorities) {
-		this.authorities.addAll(authorities);
-	}
-	public void addAuthority(Authority authorities) {
-		this.authorities.add(authorities);
-	}
-	
-	public String getRolesAsString() {
-	    return this.authorities.stream()
-	                           .map(Authority::getAuthority)
-	                           .collect(Collectors.joining(", "));
-	}
+    public void setAuthorities(Set<Authority> authorities) {
+        this.authorities = authorities;
+    }
 
+    public void addAuthorities(Set<Authority> authorities) {
+        this.authorities.addAll(authorities);
+    }
 
+    public void addAuthority(Authority authorities) {
+        this.authorities.add(authorities);
+    }
+
+    public String getRolesAsString() {
+        return this.authorities.stream()
+                .map(Authority::getAuthority)
+                .collect(Collectors.joining(", "));
+    }
 }

@@ -1,4 +1,5 @@
 package stirling.software.SPDF.model;
+
 public class PDFText {
     private final int pageIndex;
     private final float x1;

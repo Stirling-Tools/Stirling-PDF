@@ -1,4 +1,5 @@
 package stirling.software.SPDF.config.security;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,41 +17,40 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.Authority;
+import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.UserRepository;
-@Service
-public class UserService {
-    
-    @Autowired
-    private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+@Service
+public class UserService implements UserServiceInterface {
+
+    @Autowired private UserRepository userRepository;
+
+    @Autowired private PasswordEncoder passwordEncoder;
 
     public Authentication getAuthentication(String apiKey) {
         User user = getUserByApiKey(apiKey);
         if (user == null) {
             throw new UsernameNotFoundException("API key is not valid");
         }
-        
+
         // Convert the user into an Authentication object
         return new UsernamePasswordAuthenticationToken(
-            user,                       // principal (typically the user)
-            null,                       // credentials (we don't expose the password or API key here)
-            getAuthorities(user)        // user's authorities (roles/permissions)
-        );
+                user, // principal (typically the user)
+                null, // credentials (we don't expose the password or API key here)
+                getAuthorities(user) // user's authorities (roles/permissions)
+                );
     }
-    
+
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
         // Convert each Authority object into a SimpleGrantedAuthority object.
-    	return user.getAuthorities().stream()
-    		    .map((Authority authority) -> new SimpleGrantedAuthority(authority.getAuthority()))
-    		    .collect(Collectors.toList());
-
-
+        return user.getAuthorities().stream()
+                .map((Authority authority) -> new SimpleGrantedAuthority(authority.getAuthority()))
+                .collect(Collectors.toList());
     }
-    
+
     private String generateApiKey() {
         String apiKey;
         do {
@@ -60,9 +60,11 @@ public class UserService {
     }
 
     public User addApiKeyToUser(String username) {
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        
+        User user =
+                userRepository
+                        .findByUsername(username)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
         user.setApiKey(generateApiKey());
         return userRepository.save(user);
     }
@@ -72,8 +74,10 @@ public class UserService {
     }
 
     public String getApiKeyForUser(String username) {
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findByUsername(username)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return user.getApiKey();
     }
 
@@ -84,27 +88,25 @@ public class UserService {
     public User getUserByApiKey(String apiKey) {
         return userRepository.findByApiKey(apiKey);
     }
-    
+
     public UserDetails loadUserByApiKey(String apiKey) {
         User userOptional = userRepository.findByApiKey(apiKey);
         if (userOptional != null) {
             User user = userOptional;
             // Convert your User entity to a UserDetails object with authorities
             return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(), // you might not need this for API key auth
-                getAuthorities(user)
-            );
+                    user.getUsername(),
+                    user.getPassword(), // you might not need this for API key auth
+                    getAuthorities(user));
         }
-        return null;  // or throw an exception
+        return null; // or throw an exception
     }
-    
 
     public boolean validateApiKeyForUser(String username, String apiKey) {
         Optional<User> userOpt = userRepository.findByUsername(username);
         return userOpt.isPresent() && userOpt.get().getApiKey().equals(apiKey);
     }
-    
+
     public void saveUser(String username, String password) {
         User user = new User();
         user.setUsername(username);
@@ -122,7 +124,7 @@ public class UserService {
         user.setFirstLogin(firstLogin);
         userRepository.save(user);
     }
-    
+
     public void saveUser(String username, String password, String role) {
         User user = new User();
         user.setUsername(username);
@@ -132,37 +134,42 @@ public class UserService {
         user.setFirstLogin(false);
         userRepository.save(user);
     }
-    
+
     public void deleteUser(String username) {
-    	 Optional<User> userOpt = userRepository.findByUsername(username);
-         if (userOpt.isPresent()) {
-        	 userRepository.delete(userOpt.get());
-         }
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isPresent()) {
+            for (Authority authority : userOpt.get().getAuthorities()) {
+                if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
+                    return;
+                }
+            }
+            userRepository.delete(userOpt.get());
+        }
     }
-    
+
     public boolean usernameExists(String username) {
         return userRepository.findByUsername(username).isPresent();
     }
-    
+
     public boolean hasUsers() {
         return userRepository.count() > 0;
     }
-    
+
     public void updateUserSettings(String username, Map<String, String> updates) {
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             Map<String, String> settingsMap = user.getSettings();
 
-            if(settingsMap == null) {
-                settingsMap = new HashMap<String,String>();
-            } 
+            if (settingsMap == null) {
+                settingsMap = new HashMap<String, String>();
+            }
             settingsMap.clear();
             settingsMap.putAll(updates);
             user.setSettings(settingsMap);
 
             userRepository.save(user);
-        } 
+        }
     }
 
     public Optional<User> findByUsername(String username) {
@@ -178,13 +185,12 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
-    
+
     public void changeFirstUse(User user, boolean firstUse) {
         user.setFirstLogin(firstUse);
         userRepository.save(user);
     }
-    
-    
+
     public boolean isPasswordCorrect(User user, String currentPassword) {
         return passwordEncoder.matches(currentPassword, user.getPassword());
     }
