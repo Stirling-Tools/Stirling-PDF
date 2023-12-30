@@ -5,13 +5,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import stirling.software.SPDF.model.ApplicationProperties;
+
 @Configuration
 public class AppConfig {
 
-    
-    @Autowired
-    ApplicationProperties applicationProperties;
-    
+    @Autowired ApplicationProperties applicationProperties;
+
     @Bean(name = "loginEnabled")
     public boolean loginEnabled() {
         return applicationProperties.getSecurity().getEnableLogin();
@@ -19,7 +18,7 @@ public class AppConfig {
 
     @Bean(name = "appName")
     public String appName() {
-        String homeTitle =  applicationProperties.getUi().getAppName();
+        String homeTitle = applicationProperties.getUi().getAppName();
         return (homeTitle != null) ? homeTitle : "Stirling PDF";
     }
 
@@ -31,28 +30,31 @@ public class AppConfig {
 
     @Bean(name = "homeText")
     public String homeText() {
-    	return (applicationProperties.getUi().getHomeDescription() != null) ? applicationProperties.getUi().getHomeDescription() : "null";
+        return (applicationProperties.getUi().getHomeDescription() != null)
+                ? applicationProperties.getUi().getHomeDescription()
+                : "null";
     }
-
 
     @Bean(name = "navBarText")
     public String navBarText() {
-        String defaultNavBar = applicationProperties.getUi().getAppNameNavbar() != null ? applicationProperties.getUi().getAppNameNavbar() : applicationProperties.getUi().getAppName();
+        String defaultNavBar =
+                applicationProperties.getUi().getAppNameNavbar() != null
+                        ? applicationProperties.getUi().getAppNameNavbar()
+                        : applicationProperties.getUi().getAppName();
         return (defaultNavBar != null) ? defaultNavBar : "Stirling PDF";
     }
-	
+
     @Bean(name = "enableAlphaFunctionality")
-    public boolean enableAlphaFunctionality() { 
-        return applicationProperties.getSystem().getEnableAlphaFunctionality() != null ? applicationProperties.getSystem().getEnableAlphaFunctionality() : false;
+    public boolean enableAlphaFunctionality() {
+        return applicationProperties.getSystem().getEnableAlphaFunctionality() != null
+                ? applicationProperties.getSystem().getEnableAlphaFunctionality()
+                : false;
     }
-    
-	@Bean(name = "rateLimit")
+
+    @Bean(name = "rateLimit")
     public boolean rateLimit() {
         String appName = System.getProperty("rateLimit");
-        if (appName == null) 
-            appName = System.getenv("rateLimit");
+        if (appName == null) appName = System.getenv("rateLimit");
         return (appName != null) ? Boolean.valueOf(appName) : false;
     }
-	
-	
 }

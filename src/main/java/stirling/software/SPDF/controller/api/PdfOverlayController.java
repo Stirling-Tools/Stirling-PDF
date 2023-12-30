@@ -1,11 +1,13 @@
 package stirling.software.SPDF.controller.api;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
+
 import org.apache.pdfbox.multipdf.Overlay;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.MediaType;
@@ -18,36 +20,49 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
+
 @RestController
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class PdfOverlayController {
 
-	@PostMapping(value = "/overlay-pdfs", consumes = "multipart/form-data")
-    @Operation(summary = "Overlay PDF files in various modes", description = "Overlay PDF files onto a base PDF with different modes: Sequential, Interleaved, or Fixed Repeat. Input:PDF Output:PDF Type:MIMO")
-    public ResponseEntity<byte[]> overlayPdfs(@ModelAttribute OverlayPdfsRequest request) throws IOException {
+    @PostMapping(value = "/overlay-pdfs", consumes = "multipart/form-data")
+    @Operation(
+            summary = "Overlay PDF files in various modes",
+            description =
+                    "Overlay PDF files onto a base PDF with different modes: Sequential, Interleaved, or Fixed Repeat. Input:PDF Output:PDF Type:MIMO")
+    public ResponseEntity<byte[]> overlayPdfs(@ModelAttribute OverlayPdfsRequest request)
+            throws IOException {
         MultipartFile baseFile = request.getFileInput();
         int overlayPos = request.getOverlayPosition();
-        
+
         MultipartFile[] overlayFiles = request.getOverlayFiles();
         File[] overlayPdfFiles = new File[overlayFiles.length];
         List<File> tempFiles = new ArrayList<>(); // List to keep track of temporary files
 
-        try { 
+        try {
             for (int i = 0; i < overlayFiles.length; i++) {
                 overlayPdfFiles[i] = GeneralUtils.multipartToFile(overlayFiles[i]);
             }
-            
-            String mode = request.getOverlayMode(); // "SequentialOverlay", "InterleavedOverlay", "FixedRepeatOverlay"
+
+            String mode = request.getOverlayMode(); // "SequentialOverlay", "InterleavedOverlay",
+            // "FixedRepeatOverlay"
             int[] counts = request.getCounts(); // Used for FixedRepeatOverlay mode
 
             try (PDDocument basePdf = PDDocument.load(baseFile.getInputStream());
                     Overlay overlay = new Overlay()) {
-                Map<Integer, String> overlayGuide = prepareOverlayGuide(basePdf.getNumberOfPages(), overlayPdfFiles, mode, counts, tempFiles);
-                
+                Map<Integer, String> overlayGuide =
+                        prepareOverlayGuide(
+                                basePdf.getNumberOfPages(),
+                                overlayPdfFiles,
+                                mode,
+                                counts,
+                                tempFiles);
+
                 overlay.setInputPDF(basePdf);
                 if (overlayPos == 0) {
                     overlay.setOverlayPosition(Overlay.Position.FOREGROUND);
@@ -58,10 +73,13 @@ public class PdfOverlayController {
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 overlay.overlay(overlayGuide).save(outputStream);
                 byte[] data = outputStream.toByteArray();
-                String outputFilename = baseFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_overlayed.pdf";  // Remove file extension and append .pdf
-                
-                return WebResponseUtils.bytesToWebResponse(data, outputFilename, MediaType.APPLICATION_PDF);
-            } 
+                String outputFilename =
+                        baseFile.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                                + "_overlayed.pdf"; // Remove file extension and append .pdf
+
+                return WebResponseUtils.bytesToWebResponse(
+                        data, outputFilename, MediaType.APPLICATION_PDF);
+            }
         } finally {
             for (File overlayPdfFile : overlayPdfFiles) {
                 if (overlayPdfFile != null) {
@@ -76,7 +94,9 @@ public class PdfOverlayController {
         }
     }
 
-    private Map<Integer, String> prepareOverlayGuide(int basePageCount, File[] overlayFiles, String mode, int[] counts, List<File> tempFiles) throws IOException {
+    private Map<Integer, String> prepareOverlayGuide(
+            int basePageCount, File[] overlayFiles, String mode, int[] counts, List<File> tempFiles)
+            throws IOException {
         Map<Integer, String> overlayGuide = new HashMap<>();
         switch (mode) {
             case "SequentialOverlay":
@@ -94,12 +114,19 @@ public class PdfOverlayController {
         return overlayGuide;
     }
 
-    private void sequentialOverlay(Map<Integer, String> overlayGuide, File[] overlayFiles, int basePageCount, List<File> tempFiles) throws IOException {
+    private void sequentialOverlay(
+            Map<Integer, String> overlayGuide,
+            File[] overlayFiles,
+            int basePageCount,
+            List<File> tempFiles)
+            throws IOException {
         int overlayFileIndex = 0;
         int pageCountInCurrentOverlay = 0;
 
         for (int basePageIndex = 1; basePageIndex <= basePageCount; basePageIndex++) {
-            if (pageCountInCurrentOverlay == 0 || pageCountInCurrentOverlay >= getNumberOfPages(overlayFiles[overlayFileIndex])) {
+            if (pageCountInCurrentOverlay == 0
+                    || pageCountInCurrentOverlay
+                            >= getNumberOfPages(overlayFiles[overlayFileIndex])) {
                 pageCountInCurrentOverlay = 0;
                 overlayFileIndex = (overlayFileIndex + 1) % overlayFiles.length;
             }
@@ -125,13 +152,9 @@ public class PdfOverlayController {
         }
     }
 
-
-
-
-
-
-
-    private void interleavedOverlay(Map<Integer, String> overlayGuide, File[] overlayFiles, int basePageCount) throws IOException {
+    private void interleavedOverlay(
+            Map<Integer, String> overlayGuide, File[] overlayFiles, int basePageCount)
+            throws IOException {
         for (int basePageIndex = 1; basePageIndex <= basePageCount; basePageIndex++) {
             File overlayFile = overlayFiles[(basePageIndex - 1) % overlayFiles.length];
 
@@ -145,10 +168,12 @@ public class PdfOverlayController {
         }
     }
 
-
-    private void fixedRepeatOverlay(Map<Integer, String> overlayGuide, File[] overlayFiles, int[] counts, int basePageCount) throws IOException {
+    private void fixedRepeatOverlay(
+            Map<Integer, String> overlayGuide, File[] overlayFiles, int[] counts, int basePageCount)
+            throws IOException {
         if (overlayFiles.length != counts.length) {
-            throw new IllegalArgumentException("Counts array length must match the number of overlay files");
+            throw new IllegalArgumentException(
+                    "Counts array length must match the number of overlay files");
         }
         int currentPage = 1;
         for (int i = 0; i < overlayFiles.length; i++) {
@@ -167,7 +192,7 @@ public class PdfOverlayController {
             }
         }
     }
-
 }
 
-// Additional classes like OverlayPdfsRequest, WebResponseUtils, etc. are assumed to be defined elsewhere.
+// Additional classes like OverlayPdfsRequest, WebResponseUtils, etc. are assumed to be defined
+// elsewhere.

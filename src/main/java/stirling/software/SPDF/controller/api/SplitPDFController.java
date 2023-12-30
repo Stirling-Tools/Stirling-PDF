@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -36,19 +37,24 @@ public class SplitPDFController {
     private static final Logger logger = LoggerFactory.getLogger(SplitPDFController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/split-pages")
-    @Operation(summary = "Split a PDF file into separate documents",
-            description = "This endpoint splits a given PDF file into separate documents based on the specified page numbers or ranges. Users can specify pages using individual numbers, ranges, or 'all' for every page. Input:PDF Output:PDF Type:SIMO")
-    public ResponseEntity<byte[]> splitPdf(@ModelAttribute PDFWithPageNums request) throws IOException {
-    	MultipartFile file = request.getFileInput();
+    @Operation(
+            summary = "Split a PDF file into separate documents",
+            description =
+                    "This endpoint splits a given PDF file into separate documents based on the specified page numbers or ranges. Users can specify pages using individual numbers, ranges, or 'all' for every page. Input:PDF Output:PDF Type:SIMO")
+    public ResponseEntity<byte[]> splitPdf(@ModelAttribute PDFWithPageNums request)
+            throws IOException {
+        MultipartFile file = request.getFileInput();
         String pages = request.getPageNumbers();
         // open the pdf document
         InputStream inputStream = file.getInputStream();
         PDDocument document = PDDocument.load(inputStream);
 
         List<Integer> pageNumbers = request.getPageNumbersList(document);
-        if(!pageNumbers.contains(document.getNumberOfPages() - 1))
-        	pageNumbers.add(document.getNumberOfPages()- 1);
-        logger.info("Splitting PDF into pages: {}", pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
+        if (!pageNumbers.contains(document.getNumberOfPages() - 1))
+            pageNumbers.add(document.getNumberOfPages() - 1);
+        logger.info(
+                "Splitting PDF into pages: {}",
+                pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
         // split the document
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
@@ -71,7 +77,6 @@ public class SplitPDFController {
                 throw e;
             }
         }
-
 
         // closing the original document
         document.close();
@@ -104,8 +109,7 @@ public class SplitPDFController {
         Files.delete(zipFile);
 
         // return the Resource in the response
-        return WebResponseUtils.bytesToWebResponse(data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
-        
+        return WebResponseUtils.bytesToWebResponse(
+                data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
     }
-
 }
