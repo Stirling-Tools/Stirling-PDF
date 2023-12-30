@@ -20,6 +20,7 @@ function displayFiles(files) {
                 <div class="arrows d-flex">
                     <button class="btn btn-secondary move-up"><span>&uarr;</span></button>
                     <button class="btn btn-secondary move-down"><span>&darr;</span></button>
+                    <button class="btn btn-danger remove-file"><span>&times;</span></button>
                 </div>
             </div>
         `;
@@ -54,6 +55,16 @@ function attachMoveButtons() {
                 updateFiles();
             }
         });
+    }
+
+    var removeButtons = document.querySelectorAll(".remove-file");
+    for (var i = 0; i < removeButtons.length; i++) {
+         removeButtons[i].addEventListener("click", function (event) {
+              event.preventDefault();
+              var parent = this.closest(".list-group-item");
+              parent.remove();
+              updateFiles();
+         });
     }
 }
 
