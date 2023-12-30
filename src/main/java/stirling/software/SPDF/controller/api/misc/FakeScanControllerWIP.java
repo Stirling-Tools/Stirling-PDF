@@ -3,21 +3,21 @@ package stirling.software.SPDF.controller.api.misc;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
-//Required for image manipulation
+
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 import java.awt.image.RescaleOp;
 import java.io.ByteArrayOutputStream;
-//Required for file input/output
+
 import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
-//Other required classes
+
 import java.util.Random;
 
-//Required for image input/output
+
 import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
