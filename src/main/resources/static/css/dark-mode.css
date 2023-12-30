@@ -75,6 +75,13 @@ table th, table td {
     border: none;
     color: #fff !important;
 }
+
+.btn-warning {
+    background-color: #ffc107 !important;
+    border: none;
+    color: #000 !important;
+}
+
 .btn-outline-secondary {
     color: #fff !important;
     border-color: #fff;
@@ -90,6 +97,11 @@ table th, table td {
 hr {
     border-color: rgba(255, 255, 255, 0.6); /* semi-transparent white */
     background-color: rgba(255, 255, 255, 0.6); /* for some browsers that might use background instead of border for <hr> */
+}
+
+.modal-content {
+	color: #fff !important;
+    border-color: #fff;
 }
 
 #global-buttons-container input {

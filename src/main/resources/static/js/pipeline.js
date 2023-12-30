@@ -12,19 +12,16 @@ function validatePipeline() {
 		if (currentOperation === '/add-password') {
 			containsAddPassword = true;
 		}
-		console.log(currentOperation);
-		console.log(apiDocs[currentOperation]);
+
 		let currentOperationDescription = apiDocs[currentOperation]?.post?.description || "";
 		let nextOperationDescription = apiDocs[nextOperation]?.post?.description || "";
 
-		console.log("currentOperationDescription", currentOperationDescription);
-		console.log("nextOperationDescription", nextOperationDescription);
-
+		// Strip off 'ZIP-' prefix
+		currentOperationDescription = currentOperationDescription.replace("ZIP-", '');
+		nextOperationDescription = nextOperationDescription.replace("ZIP-", '');
+		
 		let currentOperationOutput = currentOperationDescription.match(/Output:([A-Z\/]*)/)?.[1] || "";
 		let nextOperationInput = nextOperationDescription.match(/Input:([A-Z\/]*)/)?.[1] || "";
-
-		console.log("Operation " + currentOperation + " Output: " + currentOperationOutput);
-		console.log("Operation " + nextOperation + " Input: " + nextOperationInput);
 
 		// Splitting in case of multiple possible output/input
 		let currentOperationOutputArr = currentOperationOutput.split('/');
@@ -35,6 +32,7 @@ function validatePipeline() {
 			console.log(`Intersection: ${intersection}`);
 
 			if (intersection.length === 0) {
+				updateValidateButton(false);
 				isValid = false;
 				console.log(`Incompatible operations: The output of operation '${currentOperation}' (${currentOperationOutput}) is not compatible with the input of the following operation '${nextOperation}' (${nextOperationInput}).`);
 				alert(`Incompatible operations: The output of operation '${currentOperation}' (${currentOperationOutput}) is not compatible with the input of the following operation '${nextOperation}' (${nextOperationInput}).`);
@@ -43,6 +41,7 @@ function validatePipeline() {
 		}
 	}
 	if (containsAddPassword && pipelineListItems[pipelineListItems.length - 1].querySelector('.operationName').textContent !== '/add-password') {
+		updateValidateButton(false);
 		alert('The "add-password" operation should be at the end of the operations sequence. Please adjust the operations order.');
 		return false;
 	}
@@ -53,10 +52,20 @@ function validatePipeline() {
 		console.error('Pipeline is not valid');
 		// Stop operation, maybe display an error to the user
 	}
-
+	updateValidateButton(isValid);
 	return isValid;
 }
 
+function updateValidateButton(isValid) {
+    var validateButton = document.getElementById('validateButton');
+    if (isValid) {
+        validateButton.classList.remove('btn-danger');
+        validateButton.classList.add('btn-success');
+    } else {
+        validateButton.classList.remove('btn-success');
+        validateButton.classList.add('btn-danger');
+    }
+}
 
 
 
@@ -67,14 +76,14 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 		return;
 	}
 	let selectedOperation = document.getElementById('operationsDropdown').value;
-	let parameters = operationSettings[selectedOperation] || {};
 
+	
+
+	var pipelineName = document.getElementById('pipelineName').value;
+	let pipelineList = document.getElementById('pipelineList').children;
 	let pipelineConfig = {
-		"name": "uniquePipelineName",
-		"pipeline": [{
-			"operation": selectedOperation,
-			"parameters": parameters
-		}],
+		"name": pipelineName,
+		"pipeline": [],
 		"_examples": {
 			"outputDir": "{outputFolder}/{folderName}",
 			"outputFileName": "{filename}-{pipelineName}-{date}-{time}"
@@ -82,6 +91,28 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 		"outputDir": "httpWebRequest",
 		"outputFileName": "{filename}"
 	};
+
+	for (let i = 0; i < pipelineList.length; i++) {
+		let operationName = pipelineList[i].querySelector('.operationName').textContent;
+		let parameters = operationSettings[operationName] || {};
+
+		pipelineConfig.pipeline.push({
+			"operation": operationName,
+			"parameters": parameters
+		});
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 	let pipelineConfigJson = JSON.stringify(pipelineConfig, null, 2);
 
@@ -99,37 +130,50 @@ document.getElementById('submitConfigBtn').addEventListener('click', function() 
 	formData.append('json', pipelineConfigJson);
 	console.log("formData", formData);
 
-	fetch('/handleData', {
-		method: 'POST',
-		body: formData
+	fetch('api/v1/pipeline/handleData', {
+    method: 'POST',
+    body: formData
 	})
-		.then(response => response.blob())
-		.then(blob => {
+	.then(response => {
+	    // Save the response to use it later
+	    const responseToUseLater = response;
+	
+	    return response.blob().then(blob => {
+	        let url = window.URL.createObjectURL(blob);
+	        let a = document.createElement('a');
+	        a.href = url;
+	
+	        // Use responseToUseLater instead of response
+	        const contentDisposition = responseToUseLater.headers.get('Content-Disposition');
+	        let filename = 'download';
+	        if (contentDisposition && contentDisposition.indexOf('attachment') !== -1) {
+	            filename = decodeURIComponent(contentDisposition.split('filename=')[1].replace(/"/g, '')).trim();
+	        }
+	        a.download = filename;
+	        
+	        document.body.appendChild(a);
+	        a.click();
+	        a.remove();
+	    });
+	})
+	.catch((error) => {
+	    console.error('Error:', error);
+	});
 
-			let url = window.URL.createObjectURL(blob);
-			let a = document.createElement('a');
-			a.href = url;
-			a.download = 'outputfile';
-			document.body.appendChild(a);
-			a.click();
-			a.remove();
-		})
-		.catch((error) => {
-			console.error('Error:', error);
-		});
 });
 
 let apiDocs = {};
-
+let apiSchemas = {};
 let operationSettings = {};
 
-fetch('v3/api-docs')
+fetch('v1/api-docs')
 	.then(response => response.json())
 	.then(data => {
 
 		apiDocs = data.paths;
+		apiSchemas = data.components.schemas;
 		let operationsDropdown = document.getElementById('operationsDropdown');
-		const ignoreOperations = ["/handleData", "operationToIgnore"]; // Add the operations you want to ignore here
+		const ignoreOperations = ["/api/v1/pipeline/handleData", "/api/v1/pipeline/operationToIgnore"]; // Add the operations you want to ignore here
 
 		operationsDropdown.innerHTML = '';
 
@@ -138,6 +182,9 @@ fetch('v3/api-docs')
 		// Group operations by tags
 		Object.keys(data.paths).forEach(operationPath => {
 			let operation = data.paths[operationPath].post;
+			if(!operation || !operation.description) {
+				console.log(operationPath);
+			}
 			if (operation && !ignoreOperations.includes(operationPath) && !operation.description.includes("Type:MISO")) {
 				let operationTag = operation.tags[0]; // This assumes each operation has exactly one tag
 				if (!operationsByTag[operationTag]) {
@@ -146,9 +193,8 @@ fetch('v3/api-docs')
 				operationsByTag[operationTag].push(operationPath);
 			}
 		});
-
 		// Specify the order of tags
-		let tagOrder = ["General", "Security", "Convert", "Other", "Filter"];
+		let tagOrder = ["General", "Security", "Convert", "Misc", "Filter"];
 
 		// Create dropdown options
 		tagOrder.forEach(tag => {
@@ -158,8 +204,18 @@ fetch('v3/api-docs')
 
 				operationsByTag[tag].forEach(operationPath => {
 					let option = document.createElement('option');
-					let operationWithoutSlash = operationPath.replace(/\//g, ''); // Remove slashes
-					option.textContent = operationWithoutSlash;
+					
+					let operationPathDisplay = operationPath
+					operationPathDisplay = operationPath.replace(new RegExp("api/v1/" + tag.toLowerCase() + "/", 'i'), "");
+            
+					
+					if(operationPath.includes("/convert")){
+						operationPathDisplay = operationPathDisplay.replace(/^\//, '').replaceAll("/", " to ");
+					} else {
+						operationPathDisplay = operationPathDisplay.replace(/\//g, ''); // Remove slashes
+					}
+					operationPathDisplay = operationPathDisplay.replaceAll(" ","-");
+					option.textContent = operationPathDisplay;
 					option.value = operationPath; // Keep the value with slashes for querying
 					group.appendChild(option);
 				});
@@ -176,25 +232,40 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 
 	let listItem = document.createElement('li');
 	listItem.className = "list-group-item";
-	let hasSettings = (apiDocs[selectedOperation] && apiDocs[selectedOperation].post &&
-		((apiDocs[selectedOperation].post.parameters && apiDocs[selectedOperation].post.parameters.length > 0) ||
-			(apiDocs[selectedOperation].post.requestBody &&
-				apiDocs[selectedOperation].post.requestBody.content['multipart/form-data'].schema.properties)));
+	let hasSettings = false;
+	if (apiDocs[selectedOperation] && apiDocs[selectedOperation].post) {
+	    const postMethod = apiDocs[selectedOperation].post;
+	
+	    // Check if parameters exist
+	    if (postMethod.parameters && postMethod.parameters.length > 0) {
+	        hasSettings = true;
+	    } else if (postMethod.requestBody && postMethod.requestBody.content['multipart/form-data']) {
+	        // Extract the reference key
+	        const refKey = postMethod.requestBody.content['multipart/form-data'].schema['$ref'].split('/').pop();
+	        // Check if the referenced schema exists and has properties
+	        if (apiSchemas[refKey] && Object.keys(apiSchemas[refKey].properties).length > 0) {
+	            hasSettings = true;
+	        }
+	    }
+	}
 
 
 
 
 	listItem.innerHTML = `
-		<div class="d-flex justify-content-between align-items-center w-100">
-			<div class="operationName">${selectedOperation}</div>
-			<div class="arrows d-flex">
-				<button class="btn btn-secondary move-up btn-margin"><span>&uarr;</span></button>
-				<button class="btn btn-secondary move-down btn-margin"><span>&darr;</span></button>
-				<button class="btn btn-warning pipelineSettings btn-margin" ${hasSettings ? "" : "disabled"}><span style="color: ${hasSettings ? "black" : "grey"};">⚙️</span></button>
-				<button class="btn btn-danger remove"><span>X</span></button>
-			</div>
-		</div>
-	`;
+    <div class="d-flex justify-content-between align-items-center w-100">
+        <div class="operationName">${selectedOperation}</div>
+        <div class="arrows d-flex">
+            <button class="btn btn-secondary move-up ms-1"><span>&uarr;</span></button>
+            <button class="btn btn-secondary move-down ms-1"><span>&darr;</span></button>
+            <button class="btn ${hasSettings ? 'btn-warning' : 'btn-secondary'} pipelineSettings ms-1" ${hasSettings ? "" : "disabled"}>
+		        <span style="color: ${hasSettings ? "white" : "grey"};">⚙️</span>
+		    </button>
+            <button class="btn btn-danger remove ms-1"><span>X</span></button>
+        </div>
+    </div>
+`;
+
 
 	pipelineList.appendChild(listItem);
 
@@ -215,23 +286,28 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 	listItem.querySelector('.remove').addEventListener('click', function(event) {
 		event.preventDefault();
 		pipelineList.removeChild(listItem);
+		hideOrShowPipelineHeader();
 	});
 
 	listItem.querySelector('.pipelineSettings').addEventListener('click', function(event) {
 		event.preventDefault();
 		showpipelineSettingsModal(selectedOperation);
+		hideOrShowPipelineHeader();
 	});
 
 	function showpipelineSettingsModal(operation) {
 		let pipelineSettingsModal = document.getElementById('pipelineSettingsModal');
 		let pipelineSettingsContent = document.getElementById('pipelineSettingsContent');
 		let operationData = apiDocs[operation].post.parameters || [];
-		let requestBodyData = apiDocs[operation].post.requestBody.content['multipart/form-data'].schema.properties || {};
 
+		// Resolve the $ref reference to get actual schema properties
+		let refKey = apiDocs[operation].post.requestBody.content['multipart/form-data'].schema['$ref'].split('/').pop();
+		let requestBodyData = apiSchemas[refKey].properties || {};
+		
 		// Combine operationData and requestBodyData into a single array
 		operationData = operationData.concat(Object.keys(requestBodyData).map(key => ({
-			name: key,
-			schema: requestBodyData[key]
+		    name: key,
+		    schema: requestBodyData[key]
 		})));
 
 		pipelineSettingsContent.innerHTML = '';
@@ -245,11 +321,15 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 
 			let parameterLabel = document.createElement('label');
 			parameterLabel.textContent = `${parameter.name} (${parameter.schema.type}): `;
-			parameterLabel.title = parameter.description;
+			parameterLabel.title = parameter.schema.description;
+			parameterLabel.setAttribute('for', parameter.name);
 			parameterDiv.appendChild(parameterLabel);
+			
+			let defaultValue =  parameter.schema.example;
+			if (defaultValue === undefined) defaultValue =  parameter.schema.default;
 
 			let parameterInput;
-
+			
 			// check if enum exists in schema
 			if (parameter.schema.enum) {
 				// if enum exists, create a select element
@@ -277,11 +357,12 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 							parameterInput = document.createElement('input');
 							parameterInput.type = 'text';
 							parameterInput.className = "form-control";
-							parameterInput.value = "automatedFileInput";
+							parameterInput.value = "FileInputPathToBeInputtedManuallyOffline";
 						} else {
 							parameterInput = document.createElement('input');
 							parameterInput.type = 'text';
 							parameterInput.className = "form-control";
+							if (defaultValue !== undefined) parameterInput.value = defaultValue;
 						}
 						break;
 					case 'number':
@@ -289,10 +370,12 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 						parameterInput = document.createElement('input');
 						parameterInput.type = 'number';
 						parameterInput.className = "form-control";
+						if (defaultValue !== undefined) parameterInput.value = defaultValue;
 						break;
 					case 'boolean':
 						parameterInput = document.createElement('input');
 						parameterInput.type = 'checkbox';
+						if (defaultValue === true) parameterInput.checked = true;
 						break;
 					case 'array':
 					case 'object':
@@ -304,10 +387,13 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 						parameterInput = document.createElement('input');
 						parameterInput.type = 'text';
 						parameterInput.className = "form-control";
+						if (defaultValue !== undefined) parameterInput.value = defaultValue;
 				}
 			}
 			parameterInput.id = parameter.name;
 
+			console.log("defaultValue", defaultValue);
+			console.log("parameterInput", parameterInput);
 			if (operationSettings[operation] && operationSettings[operation][parameter.name] !== undefined) {
 				let savedValue = operationSettings[operation][parameter.name];
 
@@ -327,7 +413,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 						parameterInput.value = savedValue;
 				}
 			}
-
+			console.log("parameterInput2", parameterInput);
 			parameterDiv.appendChild(parameterInput);
 
 			pipelineSettingsContent.appendChild(parameterDiv);
@@ -340,50 +426,65 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 			event.preventDefault();
 			let settings = {};
 			operationData.forEach(parameter => {
-				let value = document.getElementById(parameter.name).value;
-				switch (parameter.schema.type) {
-					case 'number':
-					case 'integer':
-						settings[parameter.name] = Number(value);
-						break;
-					case 'boolean':
-						settings[parameter.name] = document.getElementById(parameter.name).checked;
-						break;
-					case 'array':
-					case 'object':
-						try {
-							settings[parameter.name] = JSON.parse(value);
-						} catch (err) {
-							console.error(`Invalid JSON format for ${parameter.name}`);
-						}
-						break;
-					default:
-						settings[parameter.name] = value;
+				if(parameter.name !== "fileInput"){
+					let value = document.getElementById(parameter.name).value;
+					switch (parameter.schema.type) {
+						case 'number':
+						case 'integer':
+							settings[parameter.name] = Number(value);
+							break;
+						case 'boolean':
+							settings[parameter.name] = document.getElementById(parameter.name).checked;
+							break;
+						case 'array':
+						case 'object':
+							try {
+								settings[parameter.name] = JSON.parse(value);
+							} catch (err) {
+								console.error(`Invalid JSON format for ${parameter.name}`);
+							}
+							break;
+						default:
+							settings[parameter.name] = value;
+					}
 				}
 			});
 			operationSettings[operation] = settings;
-			console.log(settings);
-			pipelineSettingsModal.style.display = "none";
+			//pipelineSettingsModal.style.display = "none";
 		});
 		pipelineSettingsContent.appendChild(saveButton);
 
-		pipelineSettingsModal.style.display = "block";
+		//pipelineSettingsModal.style.display = "block";
 
-		pipelineSettingsModal.getElementsByClassName("close")[0].onclick = function() {
-			pipelineSettingsModal.style.display = "none";
-		}
+		//pipelineSettingsModal.getElementsByClassName("close")[0].onclick = function() {
+		//	pipelineSettingsModal.style.display = "none";
+		//}
 
-		window.onclick = function(event) {
-			if (event.target == pipelineSettingsModal) {
-				pipelineSettingsModal.style.display = "none";
-			}
-		}
+		//window.onclick = function(event) {
+		//	if (event.target == pipelineSettingsModal) {
+		//		pipelineSettingsModal.style.display = "none";
+		//	}
+		//}
 	}
+	hideOrShowPipelineHeader();
+});
+	
+	
+	
+	var saveBtn = document.getElementById('savePipelineBtn');
 
-	document.getElementById('savePipelineBtn').addEventListener('click', function() {
+	// Remove any existing event listeners
+	saveBtn.removeEventListener('click', savePipeline);
+	
+	// Add the event listener
+	saveBtn.addEventListener('click', savePipeline);
+	console.log("saveBtn", saveBtn)
+	function savePipeline() {
+		
 		if (validatePipeline() === false) {
 			return;
 		}
+		
 		var pipelineName = document.getElementById('pipelineName').value;
 		let pipelineList = document.getElementById('pipelineList').children;
 		let pipelineConfig = {
@@ -393,31 +494,33 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 				"outputDir": "{outputFolder}/{folderName}",
 				"outputFileName": "{filename}-{pipelineName}-{date}-{time}"
 			},
-			"outputDir": "httpWebRequest",
+			"outputDir": "{outputFolder}",
 			"outputFileName": "{filename}"
 		};
 
 		for (let i = 0; i < pipelineList.length; i++) {
 			let operationName = pipelineList[i].querySelector('.operationName').textContent;
 			let parameters = operationSettings[operationName] || {};
-
+			
+			parameters['fileInput'] = 'automated';
+			
 			pipelineConfig.pipeline.push({
 				"operation": operationName,
 				"parameters": parameters
 			});
 		}
-
+		console.log("Downloading..");
 		let a = document.createElement('a');
 		a.href = URL.createObjectURL(new Blob([JSON.stringify(pipelineConfig, null, 2)], {
 			type: 'application/json'
 		}));
-		a.download = 'pipelineConfig.json';
+		a.download = pipelineName + '.json';
 		a.style.display = 'none';
 
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);
-	});
+	}
 
 	async function processPipelineConfig(configString) {
 		let pipelineConfig = JSON.parse(configString);
@@ -483,6 +586,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 			processPipelineConfig(event.target.result);
 		};
 		reader.readAsText(e.target.files[0]);
+		hideOrShowPipelineHeader();
 	});
 
 	document.getElementById('pipelineSelect').addEventListener('change', function(e) {
@@ -491,4 +595,15 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 	});
 
 
-});
+	function hideOrShowPipelineHeader() {
+	    var pipelineHeader = document.getElementById('pipelineHeader');
+	    var pipelineList = document.getElementById('pipelineList');
+	
+	    if (pipelineList.children.length === 0) {
+	        // Hide the pipeline header if there are no items in the pipeline list
+	        pipelineHeader.style.display = 'none';
+	    } else {
+	        // Show the pipeline header if there are items in the pipeline list
+	        pipelineHeader.style.display = 'block';
+	    }
+	}

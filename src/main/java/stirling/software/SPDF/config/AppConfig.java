@@ -41,12 +41,16 @@ public class AppConfig {
         return (defaultNavBar != null) ? defaultNavBar : "Stirling PDF";
     }
 	
+    @Bean(name = "enableAlphaFunctionality")
+    public boolean enableAlphaFunctionality() { 
+        return applicationProperties.getSystem().getEnableAlphaFunctionality() != null ? applicationProperties.getSystem().getEnableAlphaFunctionality() : false;
+    }
+    
 	@Bean(name = "rateLimit")
     public boolean rateLimit() {
         String appName = System.getProperty("rateLimit");
         if (appName == null) 
             appName = System.getenv("rateLimit");
-        System.out.println("rateLimit=" + appName);
         return (appName != null) ? Boolean.valueOf(appName) : false;
     }
 	

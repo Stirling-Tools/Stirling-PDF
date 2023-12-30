@@ -26,13 +26,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
-@Tag(name = "Misc", description = "Miscellaneous APIs")
+@Tag(name = "General", description = "General APIs")
 public class SplitPdfBySizeController {
 
 
     @PostMapping(value = "/split-by-size-or-count", consumes = "multipart/form-data")
     @Operation(summary = "Auto split PDF pages into separate documents based on size or count", description = "split PDF into multiple paged documents based on size/count, ie if 20 pages and split into 5, it does 5 documents each 4 pages\r\n"
-    		+ " if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF Output:ZIP Type:SIMO")
+    		+ " if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF Output:ZIP-PDF Type:SISO")
     public ResponseEntity<byte[]> autoSplitPdf(@ModelAttribute SplitPdfBySizeOrCountRequest request) throws Exception {
     	List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<ByteArrayOutputStream>();
         
