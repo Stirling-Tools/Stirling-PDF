@@ -15,30 +15,33 @@ import jakarta.servlet.http.HttpSession;
 import stirling.software.SPDF.utils.RequestUriUtils;
 
 @Component
-public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
+public class CustomAuthenticationSuccessHandler
+        extends SavedRequestAwareAuthenticationSuccessHandler {
 
-    @Autowired
-    private LoginAttemptService loginAttemptService;
+    @Autowired private LoginAttemptService loginAttemptService;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
-    	String username = request.getParameter("username");
+    public void onAuthenticationSuccess(
+            HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+            throws ServletException, IOException {
+        String username = request.getParameter("username");
         loginAttemptService.loginSucceeded(username);
-        
-        
+
         // Get the saved request
         HttpSession session = request.getSession(false);
-        SavedRequest savedRequest = session != null ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST") : null;
-        if (savedRequest != null && !RequestUriUtils.isStaticResource(savedRequest.getRedirectUrl())) {
+        SavedRequest savedRequest =
+                session != null
+                        ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
+                        : null;
+        if (savedRequest != null
+                && !RequestUriUtils.isStaticResource(savedRequest.getRedirectUrl())) {
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {
             // Redirect to the root URL (considering context path)
             getRedirectStrategy().sendRedirect(request, response, "/");
         }
-        
-        //super.onAuthenticationSuccess(request, response, authentication);
-    }
 
-    
+        // super.onAuthenticationSuccess(request, response, authentication);
+    }
 }

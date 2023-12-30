@@ -20,33 +20,38 @@ import stirling.software.SPDF.repository.UserRepository;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private LoginAttemptService loginAttemptService;
-    
+    @Autowired private LoginAttemptService loginAttemptService;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("No user found with username: " + username));
+        User user =
+                userRepository
+                        .findByUsername(username)
+                        .orElseThrow(
+                                () ->
+                                        new UsernameNotFoundException(
+                                                "No user found with username: " + username));
 
         if (loginAttemptService.isBlocked(username)) {
-            throw new LockedException("Your account has been locked due to too many failed login attempts.");
+            throw new LockedException(
+                    "Your account has been locked due to too many failed login attempts.");
         }
-        
+
         return new org.springframework.security.core.userdetails.User(
-            user.getUsername(),
-            user.getPassword(),
-            user.isEnabled(),
-            true, true, true,
-            getAuthorities(user.getAuthorities())
-        );
+                user.getUsername(),
+                user.getPassword(),
+                user.isEnabled(),
+                true,
+                true,
+                true,
+                getAuthorities(user.getAuthorities()));
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(Set<Authority> authorities) {
         return authorities.stream()
-            .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
-            .collect(Collectors.toList());
+                .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
+                .collect(Collectors.toList());
     }
 }

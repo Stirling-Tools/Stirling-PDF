@@ -13,13 +13,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.config.ConfigInitializer;
 import stirling.software.SPDF.utils.GeneralUtils;
-@SpringBootApplication
 
+@SpringBootApplication
 @EnableScheduling
 public class SPdfApplication {
 
-	@Autowired
-    private Environment env;
+    @Autowired private Environment env;
 
     @PostConstruct
     public void init() {
@@ -44,21 +43,24 @@ public class SPdfApplication {
     }
 
     public static void main(String[] args) {
-    	SpringApplication app = new SpringApplication(SPdfApplication.class);
-    	app.addInitializers(new ConfigInitializer());
-    	if (Files.exists(Paths.get("configs/settings.yml"))) {
-            app.setDefaultProperties(Collections.singletonMap("spring.config.additional-location", "file:configs/settings.yml"));
+        SpringApplication app = new SpringApplication(SPdfApplication.class);
+        app.addInitializers(new ConfigInitializer());
+        if (Files.exists(Paths.get("configs/settings.yml"))) {
+            app.setDefaultProperties(
+                    Collections.singletonMap(
+                            "spring.config.additional-location", "file:configs/settings.yml"));
         } else {
-            System.out.println("External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
+            System.out.println(
+                    "External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
         }
         app.run(args);
 
         try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
         GeneralUtils.createDir("customFiles/static/");
         GeneralUtils.createDir("customFiles/templates/");

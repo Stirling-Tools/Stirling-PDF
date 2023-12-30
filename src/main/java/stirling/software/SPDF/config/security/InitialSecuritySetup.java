@@ -13,75 +13,76 @@ import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Role;
+
 @Component
 public class InitialSecuritySetup {
 
-	@Autowired
-	private UserService userService;
+    @Autowired private UserService userService;
 
+    @Autowired ApplicationProperties applicationProperties;
 
-	@Autowired
-	ApplicationProperties applicationProperties;
-	
-	@PostConstruct
-	public void init() {
-		if (!userService.hasUsers()) {
-			
-			
-			String initialUsername = applicationProperties.getSecurity().getInitialLogin().getUsername();
-			String initialPassword = applicationProperties.getSecurity().getInitialLogin().getPassword();
-			if (initialUsername != null && initialPassword != null) {
-				userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
-			} else {
-				initialUsername = "admin";
-			    initialPassword = "stirling";
-				userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId(), true);
-			}
-		}
-		if(!userService.usernameExists(Role.INTERNAL_API_USER.getRoleId())) {
-			userService.saveUser(Role.INTERNAL_API_USER.getRoleId(), UUID.randomUUID().toString(), Role.INTERNAL_API_USER.getRoleId());
-			userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
-		}
-	}
+    @PostConstruct
+    public void init() {
+        if (!userService.hasUsers()) {
 
+            String initialUsername =
+                    applicationProperties.getSecurity().getInitialLogin().getUsername();
+            String initialPassword =
+                    applicationProperties.getSecurity().getInitialLogin().getPassword();
+            if (initialUsername != null && initialPassword != null) {
+                userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
+            } else {
+                initialUsername = "admin";
+                initialPassword = "stirling";
+                userService.saveUser(
+                        initialUsername, initialPassword, Role.ADMIN.getRoleId(), true);
+            }
+        }
+        if (!userService.usernameExists(Role.INTERNAL_API_USER.getRoleId())) {
+            userService.saveUser(
+                    Role.INTERNAL_API_USER.getRoleId(),
+                    UUID.randomUUID().toString(),
+                    Role.INTERNAL_API_USER.getRoleId());
+            userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
+        }
+    }
 
+    @PostConstruct
+    public void initSecretKey() throws IOException {
+        String secretKey = applicationProperties.getAutomaticallyGenerated().getKey();
+        if (secretKey == null || secretKey.isEmpty()) {
+            secretKey = UUID.randomUUID().toString(); // Generating a random UUID as the secret key
+            saveKeyToConfig(secretKey);
+        }
+    }
 
-	@PostConstruct
-	public void initSecretKey() throws IOException {
-		String secretKey = applicationProperties.getAutomaticallyGenerated().getKey();
-		if (secretKey == null || secretKey.isEmpty()) {
-			secretKey = UUID.randomUUID().toString(); // Generating a random UUID as the secret key
-			saveKeyToConfig(secretKey);
-		}
-	}
+    private void saveKeyToConfig(String key) throws IOException {
+        Path path = Paths.get("configs", "settings.yml"); // Target the configs/settings.yml
+        List<String> lines = Files.readAllLines(path);
+        boolean keyFound = false;
 
-	private void saveKeyToConfig(String key) throws IOException {
-		Path path = Paths.get("configs", "settings.yml"); // Target the configs/settings.yml
-		List<String> lines = Files.readAllLines(path);
-		boolean keyFound = false;
+        // Search for the existing key to replace it or place to add it
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).startsWith("AutomaticallyGenerated:")) {
+                keyFound = true;
+                if (i + 1 < lines.size() && lines.get(i + 1).trim().startsWith("key:")) {
+                    lines.set(i + 1, "  key: " + key);
+                    break;
+                } else {
+                    lines.add(i + 1, "  key: " + key);
+                    break;
+                }
+            }
+        }
 
-		// Search for the existing key to replace it or place to add it
-		for (int i = 0; i < lines.size(); i++) {
-			if (lines.get(i).startsWith("AutomaticallyGenerated:")) {
-				keyFound = true;
-				if (i + 1 < lines.size() && lines.get(i + 1).trim().startsWith("key:")) {
-					lines.set(i + 1, "  key: " + key);
-					break;
-				} else {
-					lines.add(i + 1, "  key: " + key);
-					break;
-				}
-			}
-		}
+        // If the section doesn't exist, append it
+        if (!keyFound) {
+            lines.add("# Automatically Generated Settings (Do Not Edit Directly)");
+            lines.add("AutomaticallyGenerated:");
+            lines.add("  key: " + key);
+        }
 
-		// If the section doesn't exist, append it
-		if (!keyFound) {
-			lines.add("# Automatically Generated Settings (Do Not Edit Directly)");
-			lines.add("AutomaticallyGenerated:");
-			lines.add("  key: " + key);
-		}
-
-		// Write back to the file
-		Files.write(path, lines);
-	}
+        // Write back to the file
+        Files.write(path, lines);
+    }
 }

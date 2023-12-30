@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -28,59 +29,62 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "General", description = "General APIs")
 public class CropController {
 
-	private static final Logger logger = LoggerFactory.getLogger(CropController.class);
+    private static final Logger logger = LoggerFactory.getLogger(CropController.class);
 
-	@PostMapping(value = "/crop", consumes = "multipart/form-data")
-	@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")
-	public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm form)
-			throws IOException {
+    @PostMapping(value = "/crop", consumes = "multipart/form-data")
+    @Operation(
+            summary = "Crops a PDF document",
+            description =
+                    "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")
+    public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm form) throws IOException {
 
+        PDDocument sourceDocument =
+                PDDocument.load(new ByteArrayInputStream(form.getFileInput().getBytes()));
 
-		
+        PDDocument newDocument = new PDDocument();
 
-PDDocument sourceDocument = PDDocument.load(new ByteArrayInputStream(form.getFileInput().getBytes()));
+        int totalPages = sourceDocument.getNumberOfPages();
 
-PDDocument newDocument = new PDDocument();
+        LayerUtility layerUtility = new LayerUtility(newDocument);
 
-int totalPages = sourceDocument.getNumberOfPages();
+        for (int i = 0; i < totalPages; i++) {
+            PDPage sourcePage = sourceDocument.getPage(i);
 
-LayerUtility layerUtility = new LayerUtility(newDocument);
+            // Create a new page with the size of the source page
+            PDPage newPage = new PDPage(sourcePage.getMediaBox());
+            newDocument.addPage(newPage);
+            PDPageContentStream contentStream = new PDPageContentStream(newDocument, newPage);
 
-for (int i = 0; i < totalPages; i++) {
-    PDPage sourcePage = sourceDocument.getPage(i);
-    
-    // Create a new page with the size of the source page
-    PDPage newPage = new PDPage(sourcePage.getMediaBox());
-    newDocument.addPage(newPage);
-    PDPageContentStream contentStream = new PDPageContentStream(newDocument, newPage);
+            // Import the source page as a form XObject
+            PDFormXObject formXObject = layerUtility.importPageAsForm(sourceDocument, i);
 
-    // Import the source page as a form XObject
-    PDFormXObject formXObject = layerUtility.importPageAsForm(sourceDocument, i);
+            contentStream.saveGraphicsState();
 
-    contentStream.saveGraphicsState();
-    
-    // Define the crop area
-    contentStream.addRect(form.getX(), form.getY(), form.getWidth(), form.getHeight());
-    contentStream.clip();
+            // Define the crop area
+            contentStream.addRect(form.getX(), form.getY(), form.getWidth(), form.getHeight());
+            contentStream.clip();
 
-    // Draw the entire formXObject
-    contentStream.drawForm(formXObject);
+            // Draw the entire formXObject
+            contentStream.drawForm(formXObject);
 
-    contentStream.restoreGraphicsState();
+            contentStream.restoreGraphicsState();
 
-    contentStream.close();
-    
-    // Now, set the new page's media box to the cropped size
-    newPage.setMediaBox(new PDRectangle(form.getX(), form.getY(), form.getWidth(), form.getHeight()));
-}
+            contentStream.close();
 
-ByteArrayOutputStream baos = new ByteArrayOutputStream();
-newDocument.save(baos);
-newDocument.close();
-sourceDocument.close();
+            // Now, set the new page's media box to the cropped size
+            newPage.setMediaBox(
+                    new PDRectangle(form.getX(), form.getY(), form.getWidth(), form.getHeight()));
+        }
 
-byte[] pdfContent = baos.toByteArray();
-return WebResponseUtils.bytesToWebResponse(pdfContent, form.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_cropped.pdf");
-	}
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        newDocument.save(baos);
+        newDocument.close();
+        sourceDocument.close();
 
+        byte[] pdfContent = baos.toByteArray();
+        return WebResponseUtils.bytesToWebResponse(
+                pdfContent,
+                form.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                        + "_cropped.pdf");
+    }
 }
