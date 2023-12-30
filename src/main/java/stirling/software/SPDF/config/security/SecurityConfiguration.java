@@ -90,7 +90,8 @@ public class SecurityConfiguration {
 	                        return trimmedUri.startsWith("/login") || trimmedUri.endsWith(".svg") || 
 	                               trimmedUri.startsWith("/register") || trimmedUri.startsWith("/error") || 
 	                               trimmedUri.startsWith("/images/") || trimmedUri.startsWith("/public/") || 
-	                               trimmedUri.startsWith("/css/") || trimmedUri.startsWith("/js/");
+	                               trimmedUri.startsWith("/css/") || trimmedUri.startsWith("/js/")   ||
+	                               trimmedUri.startsWith("api/v1/info/status");
 	                    }
 	                    ).permitAll()
 	                    .anyRequest().authenticated()
