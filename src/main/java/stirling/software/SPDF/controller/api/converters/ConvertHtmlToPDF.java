@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.api.GeneralFile;
 import stirling.software.SPDF.utils.FileToPdf;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -18,35 +19,30 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 public class ConvertHtmlToPDF {
 
+    @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
+    @Operation(
+            summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
+            description =
+                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format.")
+    public ResponseEntity<byte[]> HtmlToPdf(@ModelAttribute GeneralFile request) throws Exception {
+        MultipartFile fileInput = request.getFileInput();
 
-	 @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
-	    @Operation(
-	        summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
-	        description = "This endpoint takes an HTML or ZIP file input and converts it to a PDF format."
-	    )
-	    public ResponseEntity<byte[]> HtmlToPdf(
-	    		@ModelAttribute GeneralFile request) 
-	    		        throws Exception {
-	    			MultipartFile fileInput = request.getFileInput();
+        if (fileInput == null) {
+            throw new IllegalArgumentException(
+                    "Please provide an HTML or ZIP file for conversion.");
+        }
 
-	        if (fileInput == null) {
-	            throw new IllegalArgumentException("Please provide an HTML or ZIP file for conversion.");
-	        }
+        String originalFilename = fileInput.getOriginalFilename();
+        if (originalFilename == null
+                || (!originalFilename.endsWith(".html") && !originalFilename.endsWith(".zip"))) {
+            throw new IllegalArgumentException("File must be either .html or .zip format.");
+        }
+        byte[] pdfBytes = FileToPdf.convertHtmlToPdf(fileInput.getBytes(), originalFilename);
 
-	        String originalFilename = fileInput.getOriginalFilename();
-	        if (originalFilename == null || (!originalFilename.endsWith(".html") && !originalFilename.endsWith(".zip"))) {
-	            throw new IllegalArgumentException("File must be either .html or .zip format.");
-	        }byte[] pdfBytes = FileToPdf.convertHtmlToPdf( fileInput.getBytes(), originalFilename);
-	        
-	        String outputFilename = originalFilename.replaceFirst("[.][^.]+$", "") + ".pdf";  // Remove file extension and append .pdf
-	        
-	        return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
-	    }
+        String outputFilename =
+                originalFilename.replaceFirst("[.][^.]+$", "")
+                        + ".pdf"; // Remove file extension and append .pdf
 
-	   
-
-    
-   
-	    
-
+        return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+    }
 }

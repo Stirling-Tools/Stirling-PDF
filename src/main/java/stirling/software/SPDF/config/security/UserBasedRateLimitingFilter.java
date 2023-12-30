@@ -20,28 +20,28 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.Refill;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.SPDF.model.Role;
+
 @Component
 public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
 
-	private final Map<String, Bucket> apiBuckets = new ConcurrentHashMap<>();
+    private final Map<String, Bucket> apiBuckets = new ConcurrentHashMap<>();
     private final Map<String, Bucket> webBuckets = new ConcurrentHashMap<>();
 
-    @Autowired
-    private UserDetailsService userDetailsService;
+    @Autowired private UserDetailsService userDetailsService;
 
     @Autowired
-    @Qualifier("rateLimit")
-    public boolean rateLimit;
+    @Qualifier("rateLimit") public boolean rateLimit;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         if (!rateLimit) {
             // If rateLimit is not enabled, just pass all requests without rate limiting
             filterChain.doFilter(request, response);
@@ -60,7 +60,8 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
         // Check for API key in the request headers
         String apiKey = request.getHeader("X-API-Key");
         if (apiKey != null && !apiKey.trim().isEmpty()) {
-            identifier = "API_KEY_" + apiKey; // Prefix to distinguish between API keys and usernames
+            identifier =
+                    "API_KEY_" + apiKey; // Prefix to distinguish between API keys and usernames
         } else {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.isAuthenticated()) {
@@ -74,14 +75,27 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
             identifier = request.getRemoteAddr();
         }
 
-        Role userRole = getRoleFromAuthentication(SecurityContextHolder.getContext().getAuthentication());
+        Role userRole =
+                getRoleFromAuthentication(SecurityContextHolder.getContext().getAuthentication());
 
         if (request.getHeader("X-API-Key") != null) {
             // It's an API call
-            processRequest(userRole.getApiCallsPerDay(), identifier, apiBuckets, request, response, filterChain);
+            processRequest(
+                    userRole.getApiCallsPerDay(),
+                    identifier,
+                    apiBuckets,
+                    request,
+                    response,
+                    filterChain);
         } else {
             // It's a Web UI call
-            processRequest(userRole.getWebCallsPerDay(), identifier, webBuckets, request, response, filterChain);
+            processRequest(
+                    userRole.getWebCallsPerDay(),
+                    identifier,
+                    webBuckets,
+                    request,
+                    response,
+                    filterChain);
         }
     }
 
@@ -98,8 +112,13 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
         throw new IllegalStateException("User does not have a valid role.");
     }
 
-    private void processRequest(int limitPerDay, String identifier, Map<String, Bucket> buckets,
-                                HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    private void processRequest(
+            int limitPerDay,
+            String identifier,
+            Map<String, Bucket> buckets,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws IOException, ServletException {
         Bucket userBucket = buckets.computeIfAbsent(identifier, k -> createUserBucket(limitPerDay));
         ConsumptionProbe probe = userBucket.tryConsumeAndReturnRemaining(1);
@@ -116,10 +135,8 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
     }
 
     private Bucket createUserBucket(int limitPerDay) {
-        Bandwidth limit = Bandwidth.classic(limitPerDay, Refill.intervally(limitPerDay, Duration.ofDays(1)));
+        Bandwidth limit =
+                Bandwidth.classic(limitPerDay, Refill.intervally(limitPerDay, Duration.ofDays(1)));
         return Bucket.builder().addLimit(limit).build();
     }
 }
-
-
-

@@ -10,11 +10,11 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class EndpointInterceptor implements HandlerInterceptor {
 
-    @Autowired
-    private EndpointConfiguration endpointConfiguration;
+    @Autowired private EndpointConfiguration endpointConfiguration;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+    public boolean preHandle(
+            HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
         String requestURI = request.getRequestURI();
         if (!endpointConfiguration.isEndpointEnabled(requestURI)) {

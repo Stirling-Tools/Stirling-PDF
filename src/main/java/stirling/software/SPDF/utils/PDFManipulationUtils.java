@@ -1,5 +1,3 @@
 package stirling.software.SPDF.utils;
 
-public class PDFManipulationUtils {
-
-}
+public class PDFManipulationUtils {}

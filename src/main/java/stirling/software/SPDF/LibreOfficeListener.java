@@ -22,14 +22,14 @@ public class LibreOfficeListener {
 
     private Process process;
 
-    private LibreOfficeListener() {
-    }
+    private LibreOfficeListener() {}
 
     private boolean isListenerRunning() {
         try {
             System.out.println("waiting for listener to start");
             Socket socket = new Socket();
-            socket.connect(new InetSocketAddress("localhost", 2002), 1000); // Timeout after 1 second
+            socket.connect(
+                    new InetSocketAddress("localhost", 2002), 1000); // Timeout after 1 second
             socket.close();
             return true;
         } catch (IOException e) {
@@ -49,21 +49,22 @@ public class LibreOfficeListener {
 
         // Start a background thread to monitor the activity timeout
         executorService = Executors.newSingleThreadExecutor();
-        executorService.submit(() -> {
-            while (true) {
-                long idleTime = System.currentTimeMillis() - lastActivityTime;
-                if (idleTime >= ACTIVITY_TIMEOUT) {
-                    // If there has been no activity for too long, tear down the listener
-                    process.destroy();
-                    break;
-                }
-                try {
-                    Thread.sleep(5000); // Check for inactivity every 5 seconds
-                } catch (InterruptedException e) {
-                    break;
-                }
-            }
-        });
+        executorService.submit(
+                () -> {
+                    while (true) {
+                        long idleTime = System.currentTimeMillis() - lastActivityTime;
+                        if (idleTime >= ACTIVITY_TIMEOUT) {
+                            // If there has been no activity for too long, tear down the listener
+                            process.destroy();
+                            break;
+                        }
+                        try {
+                            Thread.sleep(5000); // Check for inactivity every 5 seconds
+                        } catch (InterruptedException e) {
+                            break;
+                        }
+                    }
+                });
 
         // Wait for the listener to start up
         long startTime = System.currentTimeMillis();
@@ -92,5 +93,4 @@ public class LibreOfficeListener {
             process.destroy();
         }
     }
-
 }
