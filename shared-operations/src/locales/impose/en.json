@@ -1,0 +1,14 @@
+{
+    "friendlyName": "PDF-Imposition / PDF-N-Up",
+    "description": "Put multiple pages of the input document into a single page of the output document.",
+    "values": {
+        "nup": {
+            "friendlyName": "Page Format",
+            "description": "The Page Size of the ouput document. Append L or P to force Landscape or Portrait."
+        },
+        "format": {
+            "friendlyName": "N-Up-Value",
+            "description": "How many pages should be in one output page"
+        }
+    }
+}

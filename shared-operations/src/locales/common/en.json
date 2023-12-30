@@ -1,0 +1,14 @@
+{
+    "inputs": {
+        "pdffile": {
+            "name": "PDF-File(s)",
+            "description": "This operator takes a PDF-File(s) as input"
+        }
+    },
+    "outputs": {
+        "pdffile": {
+            "name": "PDF-File(s)",
+            "description": "This operator outputs PDF-File(s)"
+        }
+    }
+}

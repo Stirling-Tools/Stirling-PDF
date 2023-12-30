@@ -7,38 +7,8 @@ import * as pdfcpuWrapper from "#pdfcpu"; // This is updated by tsconfig.json/pa
 import Joi from "joi";
 import { JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
 
-
-// TODO: This will be replaced by a real translator
-const translationObject = {
-    operators: {
-        nup: {
-            friendlyName: "PDF-Imposition / PDF-N-Up",
-            description: "Put multiple pages of the input document into a single page of the output document.",
-            values: {
-                nup: {
-                    friendlyName: "Page Format",
-                    description: "The Page Size of the ouput document. Append L or P to force Landscape or Portrait."
-                },
-                format: {
-                    friendlyName: "N-Up-Value",
-                    description: "How many pages should be in one output page"
-                }
-            }
-        }
-    },
-    inputs: {
-        pdfFile: {
-            name: "PDF-File(s)",
-            description: "This operator takes a PDF-File(s) as input"
-        }
-    },
-    outputs: {
-        pdfFile: {
-            name: "PDF-File(s)",
-            description: "This operator outputs PDF-File(s)"
-        }
-    }
-} 
+import i18next from 'i18next';
+i18next.loadNamespaces('impose', (err, t) => { if (err) throw err; });
 
 export class Impose extends Operator {
     static type: string = "impose";
@@ -47,10 +17,10 @@ export class Impose extends Operator {
      * Validation & Localisation
      */
 
-    protected static inputSchema = JoiPDFFileSchema.label(translationObject.inputs.pdfFile.name).description(translationObject.inputs.pdfFile.description);
+    protected static inputSchema = JoiPDFFileSchema.label(i18next.t('inputs.pdffile.name')).description(i18next.t('inputs.pdffile.description'));
     protected static valueSchema = Joi.object({
         nup: Joi.number().integer().valid(2, 3, 4, 8, 9, 12, 16).required()
-            .label(translationObject.operators.nup.values.nup.friendlyName).description(translationObject.operators.nup.values.nup.description)
+            .label(i18next.t('values.nup.friendlyName', { ns: 'impose' })).description(i18next.t('values.nup.description', { ns: 'impose' }))
             .example("3").example("4"),
         format: Joi.string().valid(...[
             // ISO 216:1975 A
@@ -92,16 +62,16 @@ export class Impose extends Operator {
             "JIS-B7", "JIS-B8", "JIS-B9", "JIS-B10", "JIS-B11", "JIS-B12",
             "Shirokuban4", "Shirokuban5", "Shirokuban6", "Kiku4", "Kiku5", "AB", "B40", "Shikisen"
         ].flatMap(size => [size, size + "P", size + "L"])).required()
-            .label(translationObject.operators.nup.values.format.friendlyName).description(translationObject.operators.nup.values.format.description)
+            .label(i18next.t('values.format.friendlyName', { ns: 'impose' })).description(i18next.t('values.format.description', { ns: 'impose' }))
             .example("A4").example("A3L")
     });
-    protected static outputSchema = JoiPDFFileSchema.label(translationObject.outputs.pdfFile.name).description(translationObject.outputs.pdfFile.description);
+    protected static outputSchema = JoiPDFFileSchema.label(i18next.t('outputs.pdffile.name')).description(i18next.t('outputs.pdffile.description'));
 
     static schema = Joi.object({
         input: Impose.inputSchema,
         values: Impose.valueSchema.required(),
         output: Impose.outputSchema
-    }).label(translationObject.operators.nup.friendlyName).description(translationObject.operators.nup.description);
+    }).label(i18next.t('friendlyName', { ns: 'impose' })).description(i18next.t('description', { ns: 'impose' }));
 
 
     /**

@@ -12,7 +12,7 @@
 	// - Parcel
 	// - Webpack
 
-	console.log("imported")
+	console.log("pdfcpu wasm_exec imported")
 	if (typeof global !== "undefined") {
 		// global already exists
 	} else if (typeof window !== "undefined") {

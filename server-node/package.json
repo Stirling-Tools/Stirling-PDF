@@ -2,7 +2,7 @@
   "name": "@stirling-pdf/server-node",
   "version": "0.0.0",
   "description": "",
-  "//": "start pkgroll config",
+  "//": "end pkgroll config",
   "type": "module",
   "exports": "./dist/index.js",
   "imports": {
@@ -14,8 +14,7 @@
   "files": [
     "/shared-operations/src/wasm/pdfcpu/pdfcpu.wasm"
   ],
-  "//": "end pkgroll config",
-  "scripts": { 
+  "scripts": {
     "build": "pkgroll",
     "start": "node ./dist/index.js",
     "dev": "npx tsx watch src/index.ts"
