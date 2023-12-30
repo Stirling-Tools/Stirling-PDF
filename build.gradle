@@ -150,6 +150,9 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.28'
 }
 
+tasks.withType(JavaCompile) {
+    dependsOn 'spotlessApply'
+}
 
 task writeVersion {
     def propsFile = file('src/main/resources/version.properties')
