@@ -26,10 +26,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.pdf.TextFinder;
 import stirling.software.SPDF.utils.WebResponseUtils;
+
 @RestController
 @RequestMapping("/api/v1/security")
 @Tag(name = "Security", description = "Security APIs")
@@ -37,11 +39,13 @@ public class RedactController {
 
     private static final Logger logger = LoggerFactory.getLogger(RedactController.class);
 
-
     @PostMapping(value = "/auto-redact", consumes = "multipart/form-data")
-    @Operation(summary = "Redacts listOfText in a PDF document", 
-               description = "This operation takes an input PDF file and redacts the provided listOfText. Input:PDF, Output:PDF, Type:SISO")
-    public ResponseEntity<byte[]> redactPdf(@ModelAttribute RedactPdfRequest request) throws Exception {
+    @Operation(
+            summary = "Redacts listOfText in a PDF document",
+            description =
+                    "This operation takes an input PDF file and redacts the provided listOfText. Input:PDF, Output:PDF, Type:SISO")
+    public ResponseEntity<byte[]> redactPdf(@ModelAttribute RedactPdfRequest request)
+            throws Exception {
         MultipartFile file = request.getFileInput();
         String listOfTextString = request.getListOfText();
         boolean useRegex = request.isUseRegex();
@@ -49,15 +53,15 @@ public class RedactController {
         String colorString = request.getRedactColor();
         float customPadding = request.getCustomPadding();
         boolean convertPDFToImage = request.isConvertPDFToImage();
-        
-    	System.out.println(listOfTextString);
-    	String[] listOfText = listOfTextString.split("\n");
+
+        System.out.println(listOfTextString);
+        String[] listOfText = listOfTextString.split("\n");
         byte[] bytes = file.getBytes();
         PDDocument document = PDDocument.load(new ByteArrayInputStream(bytes));
-        
+
         Color redactColor;
         try {
-        	if (!colorString.startsWith("#")) {
+            if (!colorString.startsWith("#")) {
                 colorString = "#" + colorString;
             }
             redactColor = Color.decode(colorString);
@@ -66,18 +70,14 @@ public class RedactController {
             redactColor = Color.BLACK;
         }
 
-
-        
         for (String text : listOfText) {
-        	text = text.trim();
-        	System.out.println(text);
-        	TextFinder textFinder = new TextFinder(text, useRegex, wholeWordSearchBool);
+            text = text.trim();
+            System.out.println(text);
+            TextFinder textFinder = new TextFinder(text, useRegex, wholeWordSearchBool);
             List<PDFText> foundTexts = textFinder.getTextLocations(document);
-            redactFoundText(document, foundTexts, customPadding,redactColor);
+            redactFoundText(document, foundTexts, customPadding, redactColor);
         }
-        
-        
-        
+
         if (convertPDFToImage) {
             PDDocument imageDocument = new PDDocument();
             PDFRenderer pdfRenderer = new PDFRenderer(document);
@@ -97,27 +97,33 @@ public class RedactController {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         document.save(baos);
         document.close();
-        
+
         byte[] pdfContent = baos.toByteArray();
-        return WebResponseUtils.bytesToWebResponse(pdfContent,
+        return WebResponseUtils.bytesToWebResponse(
+                pdfContent,
                 file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_redacted.pdf");
     }
 
-    
-    private void redactFoundText(PDDocument document, List<PDFText> blocks, float customPadding, Color redactColor) throws IOException {
+    private void redactFoundText(
+            PDDocument document, List<PDFText> blocks, float customPadding, Color redactColor)
+            throws IOException {
         var allPages = document.getDocumentCatalog().getPages();
 
         for (PDFText block : blocks) {
             var page = allPages.get(block.getPageIndex());
-            PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+            PDPageContentStream contentStream =
+                    new PDPageContentStream(
+                            document, page, PDPageContentStream.AppendMode.APPEND, true, true);
             contentStream.setNonStrokingColor(redactColor);
             float padding = (block.getY2() - block.getY1()) * 0.3f + customPadding;
             PDRectangle pageBox = page.getBBox();
-            contentStream.addRect(block.getX1(), pageBox.getHeight() - block.getY1() - padding, block.getX2() - block.getX1(), block.getY2() - block.getY1() + 2 * padding);
+            contentStream.addRect(
+                    block.getX1(),
+                    pageBox.getHeight() - block.getY1() - padding,
+                    block.getX2() - block.getX1(),
+                    block.getY2() - block.getY1() + 2 * padding);
             contentStream.fill();
             contentStream.close();
         }
     }
-
-
 }

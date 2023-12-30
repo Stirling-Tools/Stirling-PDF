@@ -1,4 +1,5 @@
 package stirling.software.SPDF.controller.api;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,17 +26,22 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.api.SplitPdfBySectionsRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
+
 @RestController
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class SplitPdfBySectionsController {
 
-
-	@PostMapping(value = "/split-pdf-by-sections", consumes = "multipart/form-data")
-    @Operation(summary = "Split PDF pages into smaller sections", description = "Split each page of a PDF into smaller sections based on the user's choice (halves, thirds, quarters, etc.), both vertically and horizontally. Input:PDF Output:ZIP-PDF Type:SISO")
-    public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfBySectionsRequest request) throws Exception {
+    @PostMapping(value = "/split-pdf-by-sections", consumes = "multipart/form-data")
+    @Operation(
+            summary = "Split PDF pages into smaller sections",
+            description =
+                    "Split each page of a PDF into smaller sections based on the user's choice (halves, thirds, quarters, etc.), both vertically and horizontally. Input:PDF Output:ZIP-PDF Type:SISO")
+    public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfBySectionsRequest request)
+            throws Exception {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
 
         MultipartFile file = request.getFileInput();
@@ -59,8 +65,6 @@ public class SplitPdfBySectionsController {
         String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
         byte[] data;
 
-
-        
         try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
             int pageNum = 1;
             for (int i = 0; i < splitDocumentsBoas.size(); i++) {
@@ -82,10 +86,13 @@ public class SplitPdfBySectionsController {
             Files.delete(zipFile);
         }
 
-        return WebResponseUtils.bytesToWebResponse(data, filename + "_split.zip", MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.bytesToWebResponse(
+                data, filename + "_split.zip", MediaType.APPLICATION_OCTET_STREAM);
     }
-    
-    public List<PDDocument> splitPdfPages(PDDocument document, int horizontalDivisions, int verticalDivisions) throws IOException {
+
+    public List<PDDocument> splitPdfPages(
+            PDDocument document, int horizontalDivisions, int verticalDivisions)
+            throws IOException {
         List<PDDocument> splitDocuments = new ArrayList<>();
 
         for (PDPage originalPage : document.getPages()) {
@@ -103,9 +110,12 @@ public class SplitPdfBySectionsController {
                     PDPage subPage = new PDPage(new PDRectangle(subPageWidth, subPageHeight));
                     subDoc.addPage(subPage);
 
-                    PDFormXObject form = layerUtility.importPageAsForm(document, document.getPages().indexOf(originalPage));
+                    PDFormXObject form =
+                            layerUtility.importPageAsForm(
+                                    document, document.getPages().indexOf(originalPage));
 
-                    try (PDPageContentStream contentStream = new PDPageContentStream(subDoc, subPage)) {
+                    try (PDPageContentStream contentStream =
+                            new PDPageContentStream(subDoc, subPage)) {
                         // Set clipping area and position
                         float translateX = -subPageWidth * i;
                         float translateY = height - subPageHeight * (verticalDivisions - j);
@@ -127,9 +137,4 @@ public class SplitPdfBySectionsController {
 
         return splitDocuments;
     }
-
-
-
-    
-
 }

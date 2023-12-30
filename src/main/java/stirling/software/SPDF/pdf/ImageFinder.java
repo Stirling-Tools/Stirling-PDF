@@ -48,83 +48,84 @@ public class ImageFinder extends org.apache.pdfbox.contentstream.PDFGraphicsStre
         super.processOperator(operator, operands);
     }
 
-	@Override
-	public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) throws IOException {
+        // TODO Auto-generated method stub
 
-	@Override
-	public void drawImage(PDImage pdImage) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
+    }
 
-	@Override
-	public void clip(int windingRule) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void drawImage(PDImage pdImage) throws IOException {
+        // TODO Auto-generated method stub
 
-	@Override
-	public void moveTo(float x, float y) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
+    }
 
-	@Override
-	public void lineTo(float x, float y) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void clip(int windingRule) throws IOException {
+        // TODO Auto-generated method stub
 
-	@Override
-	public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
+    }
 
-	@Override
-	public Point2D getCurrentPoint() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public void moveTo(float x, float y) throws IOException {
+        // TODO Auto-generated method stub
 
-	@Override
-	public void closePath() throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
+    }
 
-	@Override
-	public void endPath() throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void lineTo(float x, float y) throws IOException {
+        // TODO Auto-generated method stub
 
-	@Override
-	public void strokePath() throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
+    }
 
-	@Override
-	public void fillPath(int windingRule) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3)
+            throws IOException {
+        // TODO Auto-generated method stub
 
-	@Override
-	public void fillAndStrokePath(int windingRule) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
+    }
 
-	@Override
-	public void shadingFill(COSName shadingName) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public Point2D getCurrentPoint() throws IOException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void closePath() throws IOException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void endPath() throws IOException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void strokePath() throws IOException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void fillPath(int windingRule) throws IOException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void fillAndStrokePath(int windingRule) throws IOException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void shadingFill(COSName shadingName) throws IOException {
+        // TODO Auto-generated method stub
+
+    }
 
     // ... rest of the overridden methods
 }

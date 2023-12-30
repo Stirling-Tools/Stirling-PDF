@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.api.HandleDataRequest;
@@ -34,84 +35,80 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Pipeline", description = "Pipeline APIs")
 public class PipelineController {
 
-	private static final Logger logger = LoggerFactory.getLogger(PipelineController.class);
+    private static final Logger logger = LoggerFactory.getLogger(PipelineController.class);
 
-	final String watchedFoldersDir = "./pipeline/watchedFolders/";
-	final String finishedFoldersDir = "./pipeline/finishedFolders/";
-	@Autowired
-	PipelineProcessor processor;
-	
+    final String watchedFoldersDir = "./pipeline/watchedFolders/";
+    final String finishedFoldersDir = "./pipeline/finishedFolders/";
+    @Autowired PipelineProcessor processor;
 
-	@Autowired
-	ApplicationProperties applicationProperties;
-	
-	@Autowired
-	private ObjectMapper objectMapper;
-	
+    @Autowired ApplicationProperties applicationProperties;
 
-	@PostMapping("/handleData")
-	public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request) throws JsonMappingException, JsonProcessingException {
-		if (!Boolean.TRUE.equals(applicationProperties.getSystem().getEnableAlphaFunctionality())) {
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-		}
+    @Autowired private ObjectMapper objectMapper;
 
-		MultipartFile[] files = request.getFileInput();
-		String jsonString = request.getJson();
-		if (files == null) {
-			return null;
-		}
-		PipelineConfig config = objectMapper.readValue(jsonString, PipelineConfig.class);
-		logger.info("Received POST request to /handleData with {} files", files.length);
-		try {
-			List<Resource> inputFiles = processor.generateInputFiles(files);
-			if(inputFiles == null  || inputFiles.size() == 0) {
-            	return null;
+    @PostMapping("/handleData")
+    public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request)
+            throws JsonMappingException, JsonProcessingException {
+        if (!Boolean.TRUE.equals(applicationProperties.getSystem().getEnableAlphaFunctionality())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        MultipartFile[] files = request.getFileInput();
+        String jsonString = request.getJson();
+        if (files == null) {
+            return null;
+        }
+        PipelineConfig config = objectMapper.readValue(jsonString, PipelineConfig.class);
+        logger.info("Received POST request to /handleData with {} files", files.length);
+        try {
+            List<Resource> inputFiles = processor.generateInputFiles(files);
+            if (inputFiles == null || inputFiles.size() == 0) {
+                return null;
             }
-			List<Resource> outputFiles = processor.runPipelineAgainstFiles(inputFiles, config);
-			if (outputFiles != null && outputFiles.size() == 1) {
-				// If there is only one file, return it directly
-				Resource singleFile = outputFiles.get(0);
-				InputStream is = singleFile.getInputStream();
-				byte[] bytes = new byte[(int) singleFile.contentLength()];
-				is.read(bytes);
-				is.close();
+            List<Resource> outputFiles = processor.runPipelineAgainstFiles(inputFiles, config);
+            if (outputFiles != null && outputFiles.size() == 1) {
+                // If there is only one file, return it directly
+                Resource singleFile = outputFiles.get(0);
+                InputStream is = singleFile.getInputStream();
+                byte[] bytes = new byte[(int) singleFile.contentLength()];
+                is.read(bytes);
+                is.close();
 
-				logger.info("Returning single file response...");
-				return WebResponseUtils.bytesToWebResponse(bytes, singleFile.getFilename(),
-						MediaType.APPLICATION_OCTET_STREAM);
-			} else if (outputFiles == null) {
-				return null;
-			}
+                logger.info("Returning single file response...");
+                return WebResponseUtils.bytesToWebResponse(
+                        bytes, singleFile.getFilename(), MediaType.APPLICATION_OCTET_STREAM);
+            } else if (outputFiles == null) {
+                return null;
+            }
 
-			// Create a ByteArrayOutputStream to hold the zip
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ZipOutputStream zipOut = new ZipOutputStream(baos);
+            // Create a ByteArrayOutputStream to hold the zip
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ZipOutputStream zipOut = new ZipOutputStream(baos);
 
-			// Loop through each file and add it to the zip
-			for (Resource file : outputFiles) {
-				ZipEntry zipEntry = new ZipEntry(file.getFilename());
-				zipOut.putNextEntry(zipEntry);
+            // Loop through each file and add it to the zip
+            for (Resource file : outputFiles) {
+                ZipEntry zipEntry = new ZipEntry(file.getFilename());
+                zipOut.putNextEntry(zipEntry);
 
-				// Read the file into a byte array
-				InputStream is = file.getInputStream();
-				byte[] bytes = new byte[(int) file.contentLength()];
-				is.read(bytes);
+                // Read the file into a byte array
+                InputStream is = file.getInputStream();
+                byte[] bytes = new byte[(int) file.contentLength()];
+                is.read(bytes);
 
-				// Write the bytes of the file to the zip
-				zipOut.write(bytes, 0, bytes.length);
-				zipOut.closeEntry();
+                // Write the bytes of the file to the zip
+                zipOut.write(bytes, 0, bytes.length);
+                zipOut.closeEntry();
 
-				is.close();
-			}
+                is.close();
+            }
 
-			zipOut.close();
+            zipOut.close();
 
-			logger.info("Returning zipped file response...");
-			return WebResponseUtils.boasToWebResponse(baos, "output.zip", MediaType.APPLICATION_OCTET_STREAM);
-		} catch (Exception e) {
-			logger.error("Error handling data: ", e);
-			return null;
-		}
-	}
-
+            logger.info("Returning zipped file response...");
+            return WebResponseUtils.boasToWebResponse(
+                    baos, "output.zip", MediaType.APPLICATION_OCTET_STREAM);
+        } catch (Exception e) {
+            logger.error("Error handling data: ", e);
+            return null;
+        }
+    }
 }

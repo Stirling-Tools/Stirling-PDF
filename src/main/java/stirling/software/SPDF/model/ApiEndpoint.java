@@ -9,14 +9,16 @@ public class ApiEndpoint {
     private String name;
     private Map<String, JsonNode> parameters;
     private String description;
-    
+
     public ApiEndpoint(String name, JsonNode postNode) {
         this.name = name;
         this.parameters = new HashMap<>();
-        postNode.path("parameters").forEach(paramNode -> {
-            String paramName = paramNode.path("name").asText();
-            parameters.put(paramName, paramNode);
-        });
+        postNode.path("parameters")
+                .forEach(
+                        paramNode -> {
+                            String paramName = paramNode.path("name").asText();
+                            parameters.put(paramName, paramNode);
+                        });
         this.description = postNode.path("description").asText();
     }
 
@@ -32,11 +34,9 @@ public class ApiEndpoint {
     public String getDescription() {
         return description;
     }
-    
-	@Override
-	public String toString() {
-		return "ApiEndpoint [name=" + name + ", parameters=" + parameters + "]";
-	}
-    
-    
+
+    @Override
+    public String toString() {
+        return "ApiEndpoint [name=" + name + ", parameters=" + parameters + "]";
+    }
 }
