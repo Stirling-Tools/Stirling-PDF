@@ -49,7 +49,7 @@ public class PipelineProcessor {
 	@Autowired
 	private ApiDocService apiDocService;
     
-	@Autowired
+	@Autowired(required=false)
     private UserServiceInterface userService;
 	
 	@Autowired
