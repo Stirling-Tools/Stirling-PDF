@@ -9,7 +9,8 @@ public class RequestUriUtils {
         || requestURI.startsWith("/images/")
         || requestURI.startsWith("/public/")
         || requestURI.startsWith("/pdfjs/")
-        || requestURI.endsWith(".svg");
+        || requestURI.endsWith(".svg") 
+        || requestURI.startsWith("/api/v1/info/status");
 		
 	}
 
