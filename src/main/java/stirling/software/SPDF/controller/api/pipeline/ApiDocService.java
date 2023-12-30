@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -20,12 +21,14 @@ import jakarta.servlet.ServletContext;
 import stirling.software.SPDF.SPdfApplication;
 import stirling.software.SPDF.model.ApiEndpoint;
 import stirling.software.SPDF.model.Role;
-
+import org.slf4j.Logger;
 @Service
 public class ApiDocService {
 
     private final Map<String, ApiEndpoint> apiDocumentation = new HashMap<>();
 
+    private static final Logger logger = LoggerFactory.getLogger(ApiDocService.class);
+    
     @Autowired
     private ServletContext servletContext;
 
@@ -51,6 +54,7 @@ public class ApiDocService {
 	
 	//@EventListener(ApplicationReadyEvent.class)
 	private synchronized void loadApiDocumentation() {
+		String apiDocsJson = "";
         try {
             HttpHeaders headers = new HttpHeaders();
             String apiKey = getApiKeyForUser();
@@ -61,7 +65,7 @@ public class ApiDocService {
 
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<String> response = restTemplate.exchange(getApiDocsUrl(), HttpMethod.GET, entity, String.class);
-            String apiDocsJson = response.getBody();
+            apiDocsJson = response.getBody();
 
             ObjectMapper mapper = new ObjectMapper();
             apiDocsJsonRootNode = mapper.readTree(apiDocsJson);
@@ -78,7 +82,7 @@ public class ApiDocService {
             });
         } catch (Exception e) {
             // Handle exceptions
-            e.printStackTrace();
+        	logger.error("Error grabbing swagger doc, body result {}", apiDocsJson);
         }
     }
 
