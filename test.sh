@@ -6,16 +6,17 @@ check_health() {
     local compose_file=$2
     local end=$((SECONDS+60))
 
-    echo "Waiting for $service_name to become healthy..."
-    until [ "$(docker inspect --format='{{json .State.Health.Status}}' "$service_name")" == '"healthy"' ] || [ $SECONDS -ge $end ]; do
-        sleep 10
-        echo "Waiting..."
-        if [ $SECONDS -ge $end ]; then
-            echo "$service_name health check timed out after 80 seconds."
-            return 1
-        fi
-    done
-    echo "$service_name is healthy!"
+    echo -n "Waiting for $service_name to become healthy..."
+	until [ "$(docker inspect --format='{{json .State.Health.Status}}' "$service_name")" == '"healthy"' ] || [ $SECONDS -ge $end ]; do
+		sleep 3
+		echo -n "."
+		if [ $SECONDS -ge $end ]; then
+			echo -e "\n$service_name health check timed out after 80 seconds."
+			return 1
+		fi
+	done
+	echo -e "\n$service_name is healthy!"
+
     return 0
 }
 
@@ -63,6 +64,8 @@ run_tests() {
 
 # Main testing routine
 main() {
+	SECONDS=0
+	
     export DOCKER_ENABLE_SECURITY=false
     ./gradlew clean build
 
@@ -90,8 +93,7 @@ main() {
     run_tests "Stirling-PDF-Security" "./exampleYmlFiles/docker-compose-latest-security.yml"
 
     # Report results
-    echo "All tests completed."
-    
+    echo "All tests completed in $SECONDS seconds."
 	
 	
 	if [ ${#passed_tests[@]} -ne 0 ]; then
@@ -108,6 +110,8 @@ main() {
         echo -e "\e[31m$test\e[0m"  # Red color for failed tests
     done
 
+	
+	
     # Check if there are any failed tests and exit with an error code if so
     if [ ${#failed_tests[@]} -ne 0 ]; then
         echo "Some tests failed."

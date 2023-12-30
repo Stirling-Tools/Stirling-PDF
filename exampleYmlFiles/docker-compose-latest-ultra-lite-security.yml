@@ -9,9 +9,9 @@ services:
           memory: 1G
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP' && curl -fL http://localhost:8080/ | grep -q 'Please sign in'"]
-      interval: 30s
+      interval: 5s
       timeout: 10s
-      retries: 3
+      retries: 16
     ports:
       - 8080:8080
     volumes:
