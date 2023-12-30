@@ -36,7 +36,8 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
     @Autowired private UserDetailsService userDetailsService;
 
     @Autowired
-    @Qualifier("rateLimit") public boolean rateLimit;
+    @Qualifier("rateLimit")
+    public boolean rateLimit;
 
     @Override
     protected void doFilterInternal(
