@@ -2,8 +2,8 @@
 
 # Copy the original tesseract-ocr files to the volume directory without overwriting existing files
 echo "Copying original files without overwriting existing files"
-mkdir -p /usr/share/tesseract-ocr
-cp -rn /usr/share/tesseract-ocr-original/* /usr/share/tesseract-ocr
+mkdir -p /usr/share/tessdata
+cp -rn /usr/share/tessdata-original/* /usr/share/tessdata
 
 if [ -d /usr/share/tesseract-ocr/4.00/tessdata ]; then
         cp -r /usr/share/tesseract-ocr/4.00/tessdata/* /usr/share/tessdata || true;

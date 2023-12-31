@@ -1,5 +1,5 @@
 # use alpine
-FROM alpine:latest
+FROM alpine:3.19.0
 
 ARG VERSION_TAG
 
@@ -34,7 +34,8 @@ RUN mkdir /configs /logs /customFiles && \
         tzdata \
         tini \
         bash \
-        curl
+        curl \
+        openjdk17-jre
 
 # Set environment variables
 ENV ENDPOINTS_GROUPS_TO_REMOVE=CLI

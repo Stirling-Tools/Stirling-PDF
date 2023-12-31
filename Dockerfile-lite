@@ -1,5 +1,5 @@
 # use alpine
-FROM alpine:latest
+FROM alpine:3.19.0
 
 ARG VERSION_TAG
 
@@ -28,15 +28,12 @@ RUN apk add --no-cache \
         curl \
         openjdk17-jre \
 # Doc conversion
-        libreoffice-common \
-        libreoffice-writer \
-        libreoffice-calc \
-        libreoffice-impress \
+        libreoffice \
 # python and pip
         python3 && \
         wget https://bootstrap.pypa.io/get-pip.py -qO - | python3 - --break-system-packages --no-cache-dir --upgrade && \
 # uno unoconv and HTML
-    pip install --break-system-packages --no-cache-dir --upgrade uno unoconv WeasyPrint && \
+    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint && \
 # Create user and group
 #RUN groupadd -g $PGID stirlingpdfgroup && \
 #    useradd -u $PUID -g stirlingpdfgroup -s /bin/sh stirlingpdfuser && \
