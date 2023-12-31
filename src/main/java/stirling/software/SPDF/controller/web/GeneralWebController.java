@@ -60,7 +60,14 @@ public class GeneralWebController {
 		        	Map<String, Object> jsonContent = new ObjectMapper().readValue(config, new TypeReference<Map<String, Object>>(){});
 	
 		            String name = (String) jsonContent.get("name");
+		            if(name == null || name.length() < 1) {
+		            	 String filename = jsonFiles.get(pipelineConfigs.indexOf(config)).getFileName().toString();
+		                 name = filename.substring(0, filename.lastIndexOf('.'));
+		            }
 		            Map<String, String> configWithName = new HashMap<>();
+		            System.out.println("json" + config);
+		            
+		            System.out.println("name" + name);
 		            configWithName.put("json", config);
 		            configWithName.put("name", name);
 		            pipelineConfigsWithNames.add(configWithName);
