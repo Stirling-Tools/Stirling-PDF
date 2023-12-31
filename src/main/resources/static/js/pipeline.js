@@ -194,6 +194,12 @@
 					operationsByTag[operationTag].push(operationPath);
 				}
 			});
+			
+			 // Sort operations within each tag alphabetically
+	        Object.keys(operationsByTag).forEach(tag => {
+	            operationsByTag[tag].sort();
+	        });
+        
 			// Specify the order of tags
 			let tagOrder = ["General", "Security", "Convert", "Misc", "Filter"];
 	
