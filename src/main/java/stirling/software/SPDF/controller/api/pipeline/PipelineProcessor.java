@@ -49,145 +49,153 @@ public class PipelineProcessor {
     @Autowired(required = false)
     private UserServiceInterface userService;
 
-	@Autowired
-    private ServletContext servletContext;
+    @Autowired private ServletContext servletContext;
 
-    
+    private String getApiKeyForUser() {
+        if (userService == null) return "";
+        return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
+    }
 
+    private String getBaseUrl() {
+        String contextPath = servletContext.getContextPath();
+        String port = SPdfApplication.getPort();
 
-	private String getApiKeyForUser() {
-		if (userService == null)
-			return "";
-		return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
-	}
+        return "http://localhost:" + port + contextPath + "/";
+    }
 
+    List<Resource> runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config)
+            throws Exception {
 
-	private String getBaseUrl() {
-		String contextPath = servletContext.getContextPath();
-		String port = SPdfApplication.getPort();
+        ByteArrayOutputStream logStream = new ByteArrayOutputStream();
+        PrintStream logPrintStream = new PrintStream(logStream);
 
-		return "http://localhost:" + port + contextPath + "/";
-	}
+        boolean hasErrors = false;
 
-	 
-	 
-	List<Resource> runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config) throws Exception {
+        for (PipelineOperation pipelineOperation : config.getOperations()) {
+            String operation = pipelineOperation.getOperation();
+            boolean isMultiInputOperation = apiDocService.isMultiInput(operation);
 
-		ByteArrayOutputStream logStream = new ByteArrayOutputStream();
-		PrintStream logPrintStream = new PrintStream(logStream);
+            logger.info(
+                    "Running operation: {} isMultiInputOperation {}",
+                    operation,
+                    isMultiInputOperation);
+            Map<String, Object> parameters = pipelineOperation.getParameters();
+            String inputFileExtension = "";
 
-		boolean hasErrors = false;
+            // TODO
+            // if (operationNode.has("inputFileType")) {
+            //	inputFileExtension = operationNode.get("inputFileType").asText();
+            // } else {
+            inputFileExtension = ".pdf";
+            // }
+            final String finalInputFileExtension = inputFileExtension;
 
-		for (PipelineOperation pipelineOperation : config.getOperations()) {
-			String operation = pipelineOperation.getOperation();
-			boolean isMultiInputOperation = apiDocService.isMultiInput(operation);
+            String url = getBaseUrl() + operation;
 
-			logger.info("Running operation: {} isMultiInputOperation {}", operation, isMultiInputOperation);
-			Map<String, Object> parameters = pipelineOperation.getParameters();
-			String inputFileExtension = "";
-			
-			//TODO
-			//if (operationNode.has("inputFileType")) {
-			//	inputFileExtension = operationNode.get("inputFileType").asText();
-			//} else {
-				inputFileExtension = ".pdf";
-			//}
-			final String finalInputFileExtension = inputFileExtension;
-			
-			String url = getBaseUrl() + operation;
-			
-			List<Resource> newOutputFiles = new ArrayList<>();
-			if (!isMultiInputOperation) {
-				for (Resource file : outputFiles) {
-					boolean hasInputFileType = false;
-					if (file.getFilename().endsWith(inputFileExtension)) {
-						hasInputFileType = true;
-						MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-						body.add("fileInput", file);
+            List<Resource> newOutputFiles = new ArrayList<>();
+            if (!isMultiInputOperation) {
+                for (Resource file : outputFiles) {
+                    boolean hasInputFileType = false;
+                    if (file.getFilename().endsWith(inputFileExtension)) {
+                        hasInputFileType = true;
+                        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+                        body.add("fileInput", file);
 
-						
-						for(Entry<String, Object> entry : parameters.entrySet()) {
-							body.add(entry.getKey(), entry.getValue());
-						}
+                        for (Entry<String, Object> entry : parameters.entrySet()) {
+                            body.add(entry.getKey(), entry.getValue());
+                        }
 
-						ResponseEntity<byte[]> response = sendWebRequest(url, body);
+                        ResponseEntity<byte[]> response = sendWebRequest(url, body);
 
-						// If the operation is filter and the response body is null or empty, skip this
-						// file
-						if (operation.startsWith("filter-")
-								&& (response.getBody() == null || response.getBody().length == 0)) {
-							logger.info("Skipping file due to failing {}", operation);
-							continue;
-						}
+                        // If the operation is filter and the response body is null or empty, skip
+                        // this
+                        // file
+                        if (operation.startsWith("filter-")
+                                && (response.getBody() == null || response.getBody().length == 0)) {
+                            logger.info("Skipping file due to failing {}", operation);
+                            continue;
+                        }
 
-						if (!response.getStatusCode().equals(HttpStatus.OK)) {
-							logPrintStream.println("Error: " + response.getBody());
-							hasErrors = true;
-							continue;
-						}
-						processOutputFiles(operation, file.getFilename(), response, newOutputFiles);
-						
-					}
+                        if (!response.getStatusCode().equals(HttpStatus.OK)) {
+                            logPrintStream.println("Error: " + response.getBody());
+                            hasErrors = true;
+                            continue;
+                        }
+                        processOutputFiles(operation, file.getFilename(), response, newOutputFiles);
+                    }
 
-					if (!hasInputFileType) {
-						logPrintStream.println(
-								"No files with extension " + inputFileExtension + " found for operation " + operation);
-						hasErrors = true;
-					}
+                    if (!hasInputFileType) {
+                        logPrintStream.println(
+                                "No files with extension "
+                                        + inputFileExtension
+                                        + " found for operation "
+                                        + operation);
+                        hasErrors = true;
+                    }
+                }
 
-					
-				}
+            } else {
+                // Filter and collect all files that match the inputFileExtension
+                List<Resource> matchingFiles =
+                        outputFiles.stream()
+                                .filter(
+                                        file ->
+                                                file.getFilename()
+                                                        .endsWith(finalInputFileExtension))
+                                .collect(Collectors.toList());
 
-			} else {
-				 // Filter and collect all files that match the inputFileExtension
-			    List<Resource> matchingFiles = outputFiles.stream()
-			                                              .filter(file -> file.getFilename().endsWith(finalInputFileExtension))
-			                                              .collect(Collectors.toList());
+                // Check if there are matching files
+                if (!matchingFiles.isEmpty()) {
+                    // Create a new MultiValueMap for the request body
+                    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
-			    // Check if there are matching files
-			    if (!matchingFiles.isEmpty()) {
-			        // Create a new MultiValueMap for the request body
-			        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+                    // Add all matching files to the body
+                    for (Resource file : matchingFiles) {
+                        body.add("fileInput", file);
+                    }
 
-			        // Add all matching files to the body
-			        for (Resource file : matchingFiles) {
-			            body.add("fileInput", file);
-			        }
+                    for (Entry<String, Object> entry : parameters.entrySet()) {
+                        body.add(entry.getKey(), entry.getValue());
+                    }
 
-			        for(Entry<String, Object> entry : parameters.entrySet()) {
-						body.add(entry.getKey(), entry.getValue());
-					}
-		        
-			        ResponseEntity<byte[]> response = sendWebRequest(url, body);
+                    ResponseEntity<byte[]> response = sendWebRequest(url, body);
 
-			        // Handle the response
-			        if (response.getStatusCode().equals(HttpStatus.OK)) {
-			        	processOutputFiles(operation, matchingFiles.get(0).getFilename(), response, newOutputFiles);
-			        } else {
-			            // Log error if the response status is not OK
-			            logPrintStream.println("Error in multi-input operation: " + response.getBody());
-			            hasErrors = true;
-			        }
-			    } else {
-			        logPrintStream.println("No files with extension " + inputFileExtension + " found for multi-input operation " + operation);
-			        hasErrors = true;
-			    }
-			}
-			logPrintStream.close();
-			outputFiles = newOutputFiles;
+                    // Handle the response
+                    if (response.getStatusCode().equals(HttpStatus.OK)) {
+                        processOutputFiles(
+                                operation,
+                                matchingFiles.get(0).getFilename(),
+                                response,
+                                newOutputFiles);
+                    } else {
+                        // Log error if the response status is not OK
+                        logPrintStream.println(
+                                "Error in multi-input operation: " + response.getBody());
+                        hasErrors = true;
+                    }
+                } else {
+                    logPrintStream.println(
+                            "No files with extension "
+                                    + inputFileExtension
+                                    + " found for multi-input operation "
+                                    + operation);
+                    hasErrors = true;
+                }
+            }
+            logPrintStream.close();
+            outputFiles = newOutputFiles;
+        }
+        if (hasErrors) {
+            logger.error("Errors occurred during processing. Log: {}", logStream.toString());
+        }
 
-		}
-		if (hasErrors) {
-			logger.error("Errors occurred during processing. Log: {}", logStream.toString());
-		}
-		
-		return outputFiles;
-	}
+        return outputFiles;
+    }
 
-	private ResponseEntity<byte[]> sendWebRequest(String url, MultiValueMap<String, Object> body ){
-		RestTemplate restTemplate = new RestTemplate();
-		
-		 // Set up headers, including API key
+    private ResponseEntity<byte[]> sendWebRequest(String url, MultiValueMap<String, Object> body) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        // Set up headers, including API key
 
         HttpHeaders headers = new HttpHeaders();
         String apiKey = getApiKeyForUser();
