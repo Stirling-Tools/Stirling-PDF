@@ -38,13 +38,16 @@
 			<div class="container">
 				<div class="row justify-content-center">
 
-					<h1>(Alpha) Pipeline Menu (Huge work in progress, very buggy!)</h1>
+					<h1 th:text="#{pipeline.header}"></h1>
+					<h2 th:text="#{WorkInProgess}"> </h2>
 					<div class="bordered-box">
 						<div class="text-end text-top">
-							<button id="uploadPipelineBtn" class="btn btn-primary">Upload
-								Custom</button>
+							<button id="uploadPipelineBtn" class="btn btn-primary"
+								th:text="#{pipeline.uploadButton}"></button>
 							<button type="button" class="btn btn-primary"
-								data-bs-toggle="modal" data-bs-target="#pipelineSettingsModal">Configure</button>
+								data-bs-toggle="modal" data-bs-target="#pipelineSettingsModal"
+								th:text="#{pipeline.configureButton}"></button>
+
 						</div>
 
 						<div class="center-element">
@@ -52,7 +55,8 @@
 								<select id="pipelineSelect" class="custom-select">
 									<option
 										value="{&quot;name&quot;:&quot;Custom&quot;,&quot;pipeline&quot;:[],&quot;_examples&quot;:{&quot;outputDir&quot;:&quot;{outputFolder}/{folderName}&quot;,&quot;outputFileName&quot;:&quot;{filename}-{pipelineName}-{date}-{time}&quot;},&quot;outputDir&quot;:&quot;{outputFolder}&quot;,&quot;outputFileName&quot;:&quot;{filename}&quot;}"
-										th:text="Custom"></option>
+										th:text="#{pipeline.defaultOption}"></option>
+
 
 									<th:block th:each="config : ${pipelineConfigsWithNames}">
 										<option th:value="${config.json}" th:text="${config.name}"></option>
@@ -64,7 +68,9 @@
 									th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=true)}"></div>
 							</div>
 							<div class="element-margin">
-								<button class="btn btn-primary" id="submitConfigBtn">Submit</button>
+								<button class="btn btn-primary" id="submitConfigBtn"
+									th:text="#{pipeline.submitButton}"></button>
+
 							</div>
 						</div>
 					</div>
@@ -181,18 +187,18 @@
 
 								<!-- Modal Header -->
 								<div class="modal-header">
-									<h2 class="modal-title">Pipeline Configuration</h2>
+									<h2 class="modal-title" th:text="#{pipelineOptions.header}"></h2>
 									<button type="button" class="btn-close" data-bs-dismiss="modal"
 										aria-label="Close"></button>
-
 								</div>
 
 								<!-- Modal body -->
 								<div class="modal-body">
 									<div class="mb-3">
-										<label for="pipelineName" class="form-label">Pipeline
-											Name</label> <input type="text" id="pipelineName"
-											class="form-control" placeholder="Enter pipeline name here">
+										<label for="pipelineName" class="form-label"
+											th:text="#{pipelineOptions.pipelineNameLabel}"></label> <input
+											type="text" id="pipelineName" class="form-control"
+											placeholder="Enter pipeline name here">
 									</div>
 									<div class="mb-3">
 										<select id="operationsDropdown" class="form-select">
@@ -200,10 +206,13 @@
 										</select>
 									</div>
 									<div class="mb-3">
-										<button id="addOperationBtn" class="btn btn-primary">Add
-											operation</button>
+										<button id="addOperationBtn" class="btn btn-primary"
+											th:text="#{pipelineOptions.addOperationButton}"></button>
+
 									</div>
-									<h3 id="pipelineHeader" style="display: none;">Pipeline:</h3>
+									<h3 id="pipelineHeader" style="display: none;"
+										th:text="#{pipelineOptions.pipelineHeader}"></h3>
+
 									<ol id="pipelineList" class="list-group">
 										<!-- Pipeline operations will be dynamically populated here -->
 									</ol>
@@ -214,8 +223,11 @@
 
 								<!-- Modal footer -->
 								<div class="modal-footer">
-									<button id="savePipelineBtn" class="btn btn-success">Download</button>
-									<button id="validateButton" class="btn btn-success">Validate</button>
+									<button id="savePipelineBtn" class="btn btn-success"
+										th:text="#{pipelineOptions.saveButton}"></button>
+									<button id="validateButton" class="btn btn-success"
+										th:text="#{pipelineOptions.validateButton}"></button>
+
 									<div class="btn-group">
 										<input type="file" id="uploadPipelineInput" accept=".json"
 											style="display: none;">
