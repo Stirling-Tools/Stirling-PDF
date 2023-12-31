@@ -138,7 +138,7 @@ public class PipelineProcessor {
 						hasErrors = true;
 					}
 
-					outputFiles = newOutputFiles;
+					
 				}
 
 			} else {
@@ -177,11 +177,13 @@ public class PipelineProcessor {
 			    }
 			}
 			logPrintStream.close();
+			outputFiles = newOutputFiles;
 
 		}
 		if (hasErrors) {
 			logger.error("Errors occurred during processing. Log: {}", logStream.toString());
 		}
+		
 		return outputFiles;
 	}
 

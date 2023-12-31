@@ -48,6 +48,8 @@
                         <div class="center-element">
                             <div class="element-margin">
 							    <select id="pipelineSelect" class="custom-select">
+							    	<option value="{&quot;name&quot;:&quot;Custom&quot;,&quot;pipeline&quot;:[],&quot;_examples&quot;:{&quot;outputDir&quot;:&quot;{outputFolder}/{folderName}&quot;,&quot;outputFileName&quot;:&quot;{filename}-{pipelineName}-{date}-{time}&quot;},&quot;outputDir&quot;:&quot;{outputFolder}&quot;,&quot;outputFileName&quot;:&quot;{filename}&quot;}" th:text="Custom"></option>
+
 							        <th:block th:each="config : ${pipelineConfigsWithNames}">
 							            <option th:value="${config.json}" th:text="${config.name}"></option>
 							        </th:block>
