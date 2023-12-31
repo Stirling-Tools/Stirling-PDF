@@ -68,9 +68,6 @@ public class GeneralWebController {
                         name = filename.substring(0, filename.lastIndexOf('.'));
                     }
                     Map<String, String> configWithName = new HashMap<>();
-                    System.out.println("json" + config);
-
-                    System.out.println("name" + name);
                     configWithName.put("json", config);
                     configWithName.put("name", name);
                     pipelineConfigsWithNames.add(configWithName);
