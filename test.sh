@@ -12,6 +12,8 @@ check_health() {
 		echo -n "."
 		if [ $SECONDS -ge $end ]; then
 			echo -e "\n$service_name health check timed out after 80 seconds."
+			echo "Printing logs for $service_name:"
+            docker logs "$service_name"
 			return 1
 		fi
 	done
