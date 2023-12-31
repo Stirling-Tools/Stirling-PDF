@@ -12,6 +12,5 @@ public class RequestUriUtils {
         || requestURI.endsWith(".svg") 
         || requestURI.startsWith("/api/v1/info/status");
 		
-	}
-
+    }
 }

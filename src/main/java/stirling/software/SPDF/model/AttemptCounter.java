@@ -1,4 +1,5 @@
 package stirling.software.SPDF.model;
+
 public class AttemptCounter {
     private int attemptCount;
     private long lastAttemptTime;

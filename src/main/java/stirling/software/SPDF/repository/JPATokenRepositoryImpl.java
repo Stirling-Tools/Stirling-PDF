@@ -10,8 +10,7 @@ import stirling.software.SPDF.model.PersistentLogin;
 
 public class JPATokenRepositoryImpl implements PersistentTokenRepository {
 
-    @Autowired
-    private PersistentLoginRepository persistentLoginRepository;
+    @Autowired private PersistentLoginRepository persistentLoginRepository;
 
     @Override
     public void createNewToken(PersistentRememberMeToken token) {
@@ -37,7 +36,8 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
     public PersistentRememberMeToken getTokenForSeries(String seriesId) {
         PersistentLogin token = persistentLoginRepository.findById(seriesId).orElse(null);
         if (token != null) {
-            return new PersistentRememberMeToken(token.getUsername(), token.getSeries(), token.getToken(), token.getLastUsed());
+            return new PersistentRememberMeToken(
+                    token.getUsername(), token.getSeries(), token.getToken(), token.getLastUsed());
         }
         return null;
     }

@@ -25,14 +25,14 @@ public class ConverterWebController {
         model.addAttribute("currentPage", "html-to-pdf");
         return "convert/html-to-pdf";
     }
+
     @GetMapping("/markdown-to-pdf")
     @Hidden
     public String convertMarkdownToPdfForm(Model model) {
         model.addAttribute("currentPage", "markdown-to-pdf");
         return "convert/markdown-to-pdf";
     }
-    
-    
+
     @GetMapping("/url-to-pdf")
     @Hidden
     public String convertURLToPdfForm(Model model) {
@@ -40,25 +40,22 @@ public class ConverterWebController {
         return "convert/url-to-pdf";
     }
 
-    
     @GetMapping("/pdf-to-img")
     @Hidden
     public String pdfToimgForm(Model model) {
         model.addAttribute("currentPage", "pdf-to-img");
         return "convert/pdf-to-img";
     }
-    
+
     @GetMapping("/file-to-pdf")
     @Hidden
     public String convertToPdfForm(Model model) {
         model.addAttribute("currentPage", "file-to-pdf");
         return "convert/file-to-pdf";
     }
-    
 
-    
-    //PDF TO......
-    
+    // PDF TO......
+
     @GetMapping("/pdf-to-html")
     @Hidden
     public ModelAndView pdfToHTML() {
@@ -106,7 +103,6 @@ public class ConverterWebController {
         modelAndView.addObject("currentPage", "pdf-to-csv");
         return modelAndView;
     }
-
 
     @GetMapping("/pdf-to-pdfa")
     @Hidden
