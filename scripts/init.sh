@@ -3,10 +3,14 @@
 # Copy the original tesseract-ocr files to the volume directory without overwriting existing files
 echo "Copying original files without overwriting existing files"
 mkdir -p /usr/share/tesseract-ocr
-cp -rn /usr/share/tesseract-ocr-original/* /usr/share/tesseract-ocr 
+cp -rn /usr/share/tesseract-ocr-original/* /usr/share/tesseract-ocr
 
-if [ -d /usr/share/tesseract-ocr/4.00/tessdata ]; then 
-	cp -r /usr/share/tesseract-ocr/4.00/tessdata/* /usr/share/tesseract-ocr/5/tessdata/ || true; 
+if [ -d /usr/share/tesseract-ocr/4.00/tessdata ]; then
+        cp -r /usr/share/tesseract-ocr/4.00/tessdata/* /usr/share/tessdata || true;
+fi
+
+if [ -d /usr/share/tesseract-ocr/5/tessdata ]; then
+        cp -r /usr/share/tesseract-ocr/5/tessdata/* /usr/share/tessdata || true;
 fi
 
 # Check if TESSERACT_LANGS environment variable is set and is not empty

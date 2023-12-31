@@ -1,43 +1,24 @@
 # Main stage
-FROM ubuntu:latest AS base
-
-
+FROM alpine:3.19.0
 
 # JDK for app
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    	openjdk-17-jre && \
-    rm -rf /var/lib/apt/lists/*
-    	
+RUN apk add --no-cache \
+        ca-certificates \
+        tzdata \
+        tini \
+        bash \
+        curl \
+        openjdk17-jre \
 # Doc conversion
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    	libreoffice-core \
-        libreoffice-common \
-        libreoffice-writer \
-        libreoffice-calc \
-        libreoffice-impress \
-		python3-uno \
-		curl \
-		unoconv && \
-    rm -rf /var/lib/apt/lists/*
-		
-		
+        libreoffice \
 # OCR MY PDF (unpaper for descew and other advanced featues)
-RUN apt-get update && apt-get install -y --no-install-recommends software-properties-common gnupg2 && \
-add-apt-repository ppa:alex-p/tesseract-ocr5 && apt install -y --no-install-recommends tesseract-ocr && \
-apt-get update && \
-    apt-get install -y --no-install-recommends \
-        ghostscript \
-        python3-pip \
         ocrmypdf \
-        unpaper && \
-    rm -rf /var/lib/apt/lists/* && \
-    mv /usr/share/tesseract-ocr /usr/share/tesseract-ocr-original && \
-    pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir --upgrade ocrmypdf && \
-    pip install --no-cache-dir --upgrade pillow==10.0.1 reportlab==3.6.13 wheel==0.38.1 setuptools==65.5.1 pyjwt==2.4.0 cryptography==39.0.1
-    
-    
-#CV and HTML   
-RUN pip install --no-cache-dir opencv-python-headless WeasyPrint 
+        tesseract-ocr-data-eng \
+# CV
+        py3-opencv \
+# python3/pip
+        python3 && \
+    wget https://bootstrap.pypa.io/get-pip.py -qO - | python3 - --break-system-packages --no-cache-dir --upgrade && \
+# uno unoconv and HTML
+    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint && \
+    mv /usr/share/tessdata /usr/share/tessdata-original
