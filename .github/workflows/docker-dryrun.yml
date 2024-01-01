@@ -44,7 +44,7 @@ jobs:
       uses: docker/build-push-action@v4.0.0
       with:
         context: .
-        dockerfile: ./Dockerfile
+        file: ./Dockerfile
         push: false
         load: true
         cache-from: type=gha
@@ -54,21 +54,7 @@ jobs:
           VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
         platforms: linux/amd64
 
-    - name: Build Dockerfile-ultra-lite
-      uses: docker/build-push-action@v4.0.0
-      with:
-        context: .
-        file: ./Dockerfile-ultra-lite
-        push: false
-        load: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        tags: s-pdf:ultra-lite
-        build-args: 
-          VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-        platforms: linux/amd64         
-
-    - name: Build Dockerfile-lite
+    - name: Build lite Dockerfile
       uses: docker/build-push-action@v4.0.0
       with:
         context: .
@@ -81,55 +67,33 @@ jobs:
         build-args: 
           VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
         platforms: linux/amd64
+    
+    - name: Build ultra-lite Dockerfile
+      uses: docker/build-push-action@v4.0.0
+      with:
+        context: .
+        file: ./Dockerfile-ultra-lite
+        push: false
+        load: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        tags: s-pdf:ultra-lite
+        build-args: 
+          VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+        platforms: linux/amd64
 
-    #       - name: Build main Dockerfile
-    #   uses: docker/build-push-action@v4.0.0
-    #   with:
-    #     context: .
-    #     dockerfile: ./Dockerfile
-    #     push: false
-    #     cache-from: type=gha
-    #     cache-to: type=gha,mode=max
-    #     tags: s-pdf:standard
-    #     build-args: 
-    #       VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-    #     platforms: linux/arm64
-
-    # - name: Build Dockerfile-ultra-lite
-    #   uses: docker/build-push-action@v4.0.0
-    #   with:
-    #     context: .
-    #     file: ./Dockerfile-ultra-lite
-    #     push: false
-    #     cache-from: type=gha
-    #     cache-to: type=gha,mode=max
-    #     tags: s-pdf:ultra-lite
-    #     build-args: 
-    #       VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-    #     platforms: linux/arm64         
-
-    # - name: Build Dockerfile-lite
-    #   uses: docker/build-push-action@v4.0.0
-    #   with:
-    #     context: .
-    #     file: ./Dockerfile-lite
-    #     push: false
-    #     cache-from: type=gha
-    #     cache-to: type=gha,mode=max
-    #     tags: s-pdf:lite
-    #     build-args: 
-    #       VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-    #     platforms: linux/arm64
 
     - name: Run and check Docker image s-pdf:standard without auth
       run: |
         IMAGE="s-pdf:standard"
         AUTH=false
-        HEALTH_CMD="curl -f http://localhost:8080/api/v1/status | grep -q UP && curl -fL http://localhost:8080/ | grep -qv 'Please sign in'"
+        HEALTH_CMD="curl -f http://localhost:8080/api/v1/info/status | grep -q UP && curl -fL http://localhost:8080/ | grep -qv 'Please sign in'"
         CONTAINER_ID=$(docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE)
+        echo "docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE"
         for i in {1..12}
         do
           HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_ID)
+          echo "Health Status: $HEALTH_STATUS"
           if [ "$HEALTH_STATUS" = "healthy" ]
           then
             echo "Container is healthy"
@@ -151,9 +115,11 @@ jobs:
         AUTH=true
         HEALTH_CMD="curl -fL http://localhost:8080/ | grep -q 'Please sign in'"
         CONTAINER_ID=$(docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE)
+        echo "docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE"
         for i in {1..12}
         do
           HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_ID)
+          echo "Health Status: $HEALTH_STATUS"
           if [ "$HEALTH_STATUS" = "healthy" ]
           then
             echo "Container is healthy"
@@ -173,11 +139,13 @@ jobs:
       run: |
         IMAGE="s-pdf:lite"
         AUTH=false
-        HEALTH_CMD="curl -f http://localhost:8080/api/v1/status | grep -q UP && curl -fL http://localhost:8080/ | grep -qv 'Please sign in'"
+        HEALTH_CMD="curl -f http://localhost:8080/api/v1/info/status | grep -q UP && curl -fL http://localhost:8080/ | grep -qv 'Please sign in'"
         CONTAINER_ID=$(docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE)
+        echo "docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE"
         for i in {1..12}
         do
           HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_ID)
+          echo "Health Status: $HEALTH_STATUS"
           if [ "$HEALTH_STATUS" = "healthy" ]
           then
             echo "Container is healthy"
@@ -199,9 +167,11 @@ jobs:
         AUTH=true
         HEALTH_CMD="curl -fL http://localhost:8080/ | grep -q 'Please sign in'"
         CONTAINER_ID=$(docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE)
+        echo "docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE"
         for i in {1..12}
         do
           HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_ID)
+          echo "Health Status: $HEALTH_STATUS"
           if [ "$HEALTH_STATUS" = "healthy" ]
           then
             echo "Container is healthy"
@@ -221,11 +191,13 @@ jobs:
       run: |
         IMAGE="s-pdf:ultra-lite"
         AUTH=false
-        HEALTH_CMD="curl -f http://localhost:8080/api/v1/status | grep -q UP && curl -fL http://localhost:8080/ | grep -qv 'Please sign in'"
+        HEALTH_CMD="curl -f http://localhost:8080/api/v1/info/status | grep -q UP && curl -fL http://localhost:8080/ | grep -qv 'Please sign in'"
         CONTAINER_ID=$(docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE)
+        echo "docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE"
         for i in {1..12}
         do
           HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_ID)
+          echo "Health Status: $HEALTH_STATUS"
           if [ "$HEALTH_STATUS" = "healthy" ]
           then
             echo "Container is healthy"
@@ -247,9 +219,11 @@ jobs:
         AUTH=true
         HEALTH_CMD="curl -fL http://localhost:8080/ | grep -q 'Please sign in'"
         CONTAINER_ID=$(docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE)
+        echo "docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE"
         for i in {1..12}
         do
           HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_ID)
+          echo "Health Status: $HEALTH_STATUS"
           if [ "$HEALTH_STATUS" = "healthy" ]
           then
             echo "Container is healthy"
@@ -264,3 +238,5 @@ jobs:
           docker logs $CONTAINER_ID
           exit 1
         fi
+
+
