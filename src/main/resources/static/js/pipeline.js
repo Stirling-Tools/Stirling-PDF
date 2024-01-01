@@ -243,15 +243,12 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 	if (apiDocs[selectedOperation] && apiDocs[selectedOperation].post) {
 		const postMethod = apiDocs[selectedOperation].post;
 
-		console.log("hasSettings", hasSettings);
 		// Check if parameters exist
 		if (postMethod.parameters && postMethod.parameters.length > 0) {
 			hasSettings = true;
-			console.log("hasSettings2", hasSettings);
 		} else if (postMethod.requestBody && postMethod.requestBody.content['multipart/form-data']) {
 			// Extract the reference key
 			const refKey = postMethod.requestBody.content['multipart/form-data'].schema['$ref'].split('/').pop();
-			console.log("hasSettings3 ", hasSettings, refKey);
 			// Check if the referenced schema exists and has properties more than just its input file
 			if (apiSchemas[refKey]) {
 			    const properties = apiSchemas[refKey].properties;
@@ -260,7 +257,6 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 			    // Check if there's more than one property or if there's exactly one property and its format is not 'binary'
 			    if (propertyKeys.length > 1 || (propertyKeys.length === 1 && properties[propertyKeys[0]].format !== 'binary')) {
 			        hasSettings = true;
-			        console.log("hasSettings4", hasSettings);
 			    }
 			}
 		}
