@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,28 +82,46 @@ public class PipelineController {
                 return null;
             }
 
-            // Create a ByteArrayOutputStream to hold the zip
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ZipOutputStream zipOut = new ZipOutputStream(baos);
 
-            // Loop through each file and add it to the zip
-            for (Resource file : outputFiles) {
-                ZipEntry zipEntry = new ZipEntry(file.getFilename());
-                zipOut.putNextEntry(zipEntry);
+         // Create a ByteArrayOutputStream to hold the zip
+         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ZipOutputStream zipOut = new ZipOutputStream(baos);
 
-                // Read the file into a byte array
-                InputStream is = file.getInputStream();
-                byte[] bytes = new byte[(int) file.contentLength()];
-                is.read(bytes);
+         // A map to keep track of filenames and their counts
+         Map<String, Integer> filenameCount = new HashMap<>();
 
-                // Write the bytes of the file to the zip
-                zipOut.write(bytes, 0, bytes.length);
-                zipOut.closeEntry();
+         // Loop through each file and add it to the zip
+         for (Resource file : outputFiles) {
+             String originalFilename = file.getFilename();
+             String filename = originalFilename;
 
-                is.close();
-            }
+             // Check if the filename already exists, and modify it if necessary
+             if (filenameCount.containsKey(originalFilename)) {
+                 int count = filenameCount.get(originalFilename);
+                 String baseName = originalFilename.replaceAll("\\.[^.]*$", "");
+                 String extension = originalFilename.replaceAll("^.*\\.", "");
+                 filename = baseName + "(" + count + ")." + extension;
+                 filenameCount.put(originalFilename, count + 1);
+             } else {
+                 filenameCount.put(originalFilename, 1);
+             }
 
-            zipOut.close();
+             ZipEntry zipEntry = new ZipEntry(filename);
+             zipOut.putNextEntry(zipEntry);
+
+             // Read the file into a byte array
+             InputStream is = file.getInputStream();
+             byte[] bytes = new byte[(int) file.contentLength()];
+             is.read(bytes);
+
+             // Write the bytes of the file to the zip
+             zipOut.write(bytes, 0, bytes.length);
+             zipOut.closeEntry();
+
+             is.close();
+         }
+
+         zipOut.close();
 
             logger.info("Returning zipped file response...");
             return WebResponseUtils.boasToWebResponse(

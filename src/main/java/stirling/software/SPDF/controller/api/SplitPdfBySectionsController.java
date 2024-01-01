@@ -70,7 +70,7 @@ public class SplitPdfBySectionsController {
             for (int i = 0; i < splitDocumentsBoas.size(); i++) {
                 ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
                 int sectionNum = (i % (horiz * verti)) + 1;
-                String fileName = filename + "_" + pageNum + "_" + sectionNum + ".pdf";
+                String fileName = filename + "_" + pageNum + "_" + sectionNum +  ".pdf";
                 byte[] pdf = baos.toByteArray();
                 ZipEntry pdfEntry = new ZipEntry(fileName);
                 zipOut.putNextEntry(pdfEntry);
@@ -118,7 +118,7 @@ public class SplitPdfBySectionsController {
                             new PDPageContentStream(subDoc, subPage)) {
                         // Set clipping area and position
                         float translateX = -subPageWidth * i;
-                        float translateY = height - subPageHeight * (verticalDivisions - j);
+                        float translateY = -subPageHeight * (verticalDivisions - 1 - j);
 
                         contentStream.saveGraphicsState();
                         contentStream.addRect(0, 0, subPageWidth, subPageHeight);
@@ -137,4 +137,7 @@ public class SplitPdfBySectionsController {
 
         return splitDocuments;
     }
+
+
+
 }
