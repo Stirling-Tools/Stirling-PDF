@@ -25,11 +25,20 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 
+    - name: Run Docker Compose Tests
+      run: |
+        chmod +x ./gradlew
+        
+    - name: Get version number
+      id: versionNumber
+      run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet | tail -1)"
+
+
     - name: Cache Docker layers
       uses: actions/cache@v2
       with:
         path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        key: ${{ runner.os }}-buildx-${{ steps.versionNumber.outputs.versionNumber }}
         restore-keys: |
           ${{ runner.os }}-buildx-
 
@@ -41,6 +50,5 @@ jobs:
 
     - name: Run Docker Compose Tests
       run: |
-        chmod +x ./gradlew
         chmod +x ./test.sh
         ./test.sh
