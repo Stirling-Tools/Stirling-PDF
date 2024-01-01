@@ -11,10 +11,6 @@ on:
 
 jobs:
   Build:
-    strategy:
-      matrix:
-        image: ['s-pdf:standard', 's-pdf:standard with auth', 's-pdf:ultra-lite', 's-pdf:ultra-lite with auth', 's-pdf:lite', 's-pdf:lite with auth']
-        
     runs-on: ubuntu-latest
     steps:
 
@@ -125,16 +121,121 @@ jobs:
     #       VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
     #     platforms: linux/arm64
 
-    - name: Run and check Docker image ${{ matrix.image }}
+    - name: Run and check Docker image s-pdf:standard without auth
       run: |
-        IMAGE=${{ matrix.image }}
+        IMAGE="s-pdf:standard"
         AUTH=false
         HEALTH_CMD="curl -f http://localhost:8080/api/v1/status | grep -q UP && curl -fL http://localhost:8080/ | grep -qv 'Please sign in'"
-        if [[ $IMAGE == *"with auth"* ]]; then
-          AUTH=true
-          HEALTH_CMD="curl -fL http://localhost:8080/ | grep -q 'Please sign in'"
-          IMAGE=${IMAGE% with auth}
+        CONTAINER_ID=$(docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE)
+        for i in {1..12}
+        do
+          HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_ID)
+          if [ "$HEALTH_STATUS" = "healthy" ]
+          then
+            echo "Container is healthy"
+            docker rm -f $CONTAINER_ID
+            break
+          fi
+          sleep 5
+        done
+        if [ "$HEALTH_STATUS" != "healthy" ]
+        then
+          exit 1
         fi
+
+    - name: Run and check Docker image s-pdf:standard with auth
+      run: |
+        IMAGE="s-pdf:standard"
+        AUTH=true
+        HEALTH_CMD="curl -fL http://localhost:8080/ | grep -q 'Please sign in'"
+        CONTAINER_ID=$(docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE)
+        for i in {1..12}
+        do
+          HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_ID)
+          if [ "$HEALTH_STATUS" = "healthy" ]
+          then
+            echo "Container is healthy"
+            docker rm -f $CONTAINER_ID
+            break
+          fi
+          sleep 5
+        done
+        if [ "$HEALTH_STATUS" != "healthy" ]
+        then
+          exit 1
+        fi
+
+    - name: Run and check Docker image s-pdf:lite without auth
+      run: |
+        IMAGE="s-pdf:lite"
+        AUTH=false
+        HEALTH_CMD="curl -f http://localhost:8080/api/v1/status | grep -q UP && curl -fL http://localhost:8080/ | grep -qv 'Please sign in'"
+        CONTAINER_ID=$(docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE)
+        for i in {1..12}
+        do
+          HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_ID)
+          if [ "$HEALTH_STATUS" = "healthy" ]
+          then
+            echo "Container is healthy"
+            docker rm -f $CONTAINER_ID
+            break
+          fi
+          sleep 5
+        done
+        if [ "$HEALTH_STATUS" != "healthy" ]
+        then
+          exit 1
+        fi
+
+    - name: Run and check Docker image s-pdf:lite with auth
+      run: |
+        IMAGE="s-pdf:lite"
+        AUTH=true
+        HEALTH_CMD="curl -fL http://localhost:8080/ | grep -q 'Please sign in'"
+        CONTAINER_ID=$(docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE)
+        for i in {1..12}
+        do
+          HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_ID)
+          if [ "$HEALTH_STATUS" = "healthy" ]
+          then
+            echo "Container is healthy"
+            docker rm -f $CONTAINER_ID
+            break
+          fi
+          sleep 5
+        done
+        if [ "$HEALTH_STATUS" != "healthy" ]
+        then
+          exit 1
+        fi
+
+    - name: Run and check Docker image s-pdf:ultra-lite without auth
+      run: |
+        IMAGE="s-pdf:ultra-lite"
+        AUTH=false
+        HEALTH_CMD="curl -f http://localhost:8080/api/v1/status | grep -q UP && curl -fL http://localhost:8080/ | grep -qv 'Please sign in'"
+        CONTAINER_ID=$(docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE)
+        for i in {1..12}
+        do
+          HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_ID)
+          if [ "$HEALTH_STATUS" = "healthy" ]
+          then
+            echo "Container is healthy"
+            docker rm -f $CONTAINER_ID
+            break
+          fi
+          sleep 5
+        done
+        if [ "$HEALTH_STATUS" != "healthy" ]
+        then
+          exit 1
+        fi
+
+    - name: Run and check Docker image s-pdf:ultra-lite with auth
+      run: |
+        IMAGE="s-pdf:ultra-lite"
+        AUTH=true
+        HEALTH_CMD="curl -fL http://localhost:8080/ | grep -q 'Please sign in'"
         CONTAINER_ID=$(docker run -d -e DOCKER_ENABLE_SECURITY=$AUTH -e SECURITY_ENABLE_LOGIN=$AUTH --health-cmd="$HEALTH_CMD" --health-interval=5s --health-timeout=5s --health-retries=6 $IMAGE)
         for i in {1..12}
         do
