@@ -2,7 +2,7 @@ version: '3.3'
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Security
-    image: frooodle/s-pdf:latest-local
+    image: frooodle/s-pdf:latest
     deploy:
       resources:
         limits:
@@ -23,7 +23,7 @@ services:
       SECURITY_ENABLELOGIN: "true"
       SYSTEM_DEFAULTLOCALE: en_US
       UI_APPNAME: Stirling-PDF
-      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest
+      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest with Security
       UI_APPNAMENAVBAR: Stirling-PDF Latest
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"

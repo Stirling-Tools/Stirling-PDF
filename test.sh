@@ -72,9 +72,9 @@ main() {
     ./gradlew clean build
 
     # Building Docker images
-    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-local -f ./Dockerfile .
-    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-lite-local -f ./Dockerfile-lite .
-    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-ultra-lite-local -f ./Dockerfile-ultra-lite .
+    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest -f ./Dockerfile .
+    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-lite -f ./Dockerfile-lite .
+    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
 
     # Test each configuration
     run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
@@ -85,9 +85,9 @@ main() {
     ./gradlew clean build
 
     # Building Docker images with security enabled
-    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-local -f ./Dockerfile .
-    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-lite-local -f ./Dockerfile-lite .
-    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-ultra-lite-local -f ./Dockerfile-ultra-lite .
+    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest -f ./Dockerfile .
+    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-lite -f ./Dockerfile-lite .
+    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
 
     # Test each configuration with security
     run_tests "Stirling-PDF-Ultra-Lite-Security" "./exampleYmlFiles/docker-compose-latest-ultra-lite-security.yml"

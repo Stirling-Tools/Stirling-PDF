@@ -2,7 +2,7 @@ version: '3.3'
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Lite-Security
-    image: frooodle/s-pdf:latest-lite-local
+    image: frooodle/s-pdf:latest-lite
     deploy:
       resources:
         limits:
@@ -22,9 +22,9 @@ services:
       DOCKER_ENABLE_SECURITY: "true"
       SECURITY_ENABLELOGIN: "true"
       SYSTEM_DEFAULTLOCALE: en_US
-      UI_APPNAME: Stirling-PDF
-      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest
-      UI_APPNAMENAVBAR: Stirling-PDF Latest
+      UI_APPNAME: Stirling-PDF-Lite
+      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF-Lite Latest with Security
+      UI_APPNAMENAVBAR: Stirling-PDF-Lite Latest
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
