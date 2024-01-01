@@ -223,7 +223,7 @@ public class PipelineProcessor {
             // If the operation is "auto-rename", generate a new filename.
             // This is a simple example of generating a filename using current timestamp.
             // Modify as per your needs.
-        	
+
             newFilename = extractFilename(response);
         } else {
             // Otherwise, keep the original filename.
@@ -248,28 +248,27 @@ public class PipelineProcessor {
         return newOutputFiles;
     }
 
+    public String extractFilename(ResponseEntity<byte[]> response) {
+        String filename = "default-filename.ext"; // Default filename if not found
 
-public String extractFilename(ResponseEntity<byte[]> response) {
-    String filename = "default-filename.ext"; // Default filename if not found
+        HttpHeaders headers = response.getHeaders();
+        String contentDisposition = headers.getFirst(HttpHeaders.CONTENT_DISPOSITION);
 
-    HttpHeaders headers = response.getHeaders();
-    String contentDisposition = headers.getFirst(HttpHeaders.CONTENT_DISPOSITION);
+        if (contentDisposition != null && !contentDisposition.isEmpty()) {
+            String[] parts = contentDisposition.split(";");
+            for (String part : parts) {
+                if (part.trim().startsWith("filename")) {
+                    // Extracts filename and removes quotes if present
+                    filename = part.split("=")[1].trim().replace("\"", "");
+                    filename = URLDecoder.decode(filename, StandardCharsets.UTF_8);
 
-    if (contentDisposition != null && !contentDisposition.isEmpty()) {
-        String[] parts = contentDisposition.split(";");
-        for (String part : parts) {
-            if (part.trim().startsWith("filename")) {
-                // Extracts filename and removes quotes if present
-                filename = part.split("=")[1].trim().replace("\"", "");
-                filename = URLDecoder.decode(filename, StandardCharsets.UTF_8);
-
-                break;
+                    break;
+                }
             }
         }
-    }
 
-    return filename;
-}
+        return filename;
+    }
 
     List<Resource> generateInputFiles(File[] files) throws Exception {
         if (files == null || files.length == 0) {

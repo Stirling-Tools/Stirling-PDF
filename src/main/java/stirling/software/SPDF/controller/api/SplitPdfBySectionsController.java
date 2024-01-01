@@ -70,7 +70,7 @@ public class SplitPdfBySectionsController {
             for (int i = 0; i < splitDocumentsBoas.size(); i++) {
                 ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
                 int sectionNum = (i % (horiz * verti)) + 1;
-                String fileName = filename + "_" + pageNum + "_" + sectionNum +  ".pdf";
+                String fileName = filename + "_" + pageNum + "_" + sectionNum + ".pdf";
                 byte[] pdf = baos.toByteArray();
                 ZipEntry pdfEntry = new ZipEntry(fileName);
                 zipOut.putNextEntry(pdfEntry);
@@ -137,7 +137,4 @@ public class SplitPdfBySectionsController {
 
         return splitDocuments;
     }
-
-
-
 }
