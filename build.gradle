@@ -80,7 +80,7 @@ dependencies {
     //security updates
     implementation 'ch.qos.logback:logback-classic:1.4.14'
     implementation 'ch.qos.logback:logback-core:1.4.14'
-    implementation 'org.springframework:spring-webmvc:6.0.15'
+    implementation 'org.springframework:spring-webmvc:6.1.2'
 
     implementation 'org.yaml:snakeyaml:2.1'
     implementation 'org.springframework.boot:spring-boot-starter-web:3.2.1'
