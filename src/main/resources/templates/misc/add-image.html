@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <th:block th:insert="~{fragments/common :: head(title=#{addImage.title})}"></th:block>
+    <th:block th:insert="~{fragments/common :: head(title=#{addImage.title}, header=#{addImage.header})}"></th:block>
     <script src="js/thirdParty/interact.min.js"></script>
 
 </head>

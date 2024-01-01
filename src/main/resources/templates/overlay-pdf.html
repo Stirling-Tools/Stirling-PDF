@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{split-by-size-or-count.title})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{split-by-size-or-count.title}, header=#{split-by-size-or-count.header})}"></th:block>
 
 
 <body>
