@@ -243,15 +243,25 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 	if (apiDocs[selectedOperation] && apiDocs[selectedOperation].post) {
 		const postMethod = apiDocs[selectedOperation].post;
 
+		console.log("hasSettings", hasSettings);
 		// Check if parameters exist
 		if (postMethod.parameters && postMethod.parameters.length > 0) {
 			hasSettings = true;
+			console.log("hasSettings2", hasSettings);
 		} else if (postMethod.requestBody && postMethod.requestBody.content['multipart/form-data']) {
 			// Extract the reference key
 			const refKey = postMethod.requestBody.content['multipart/form-data'].schema['$ref'].split('/').pop();
-			// Check if the referenced schema exists and has properties
-			if (apiSchemas[refKey] && Object.keys(apiSchemas[refKey].properties).length > 0) {
-				hasSettings = true;
+			console.log("hasSettings3 ", hasSettings, refKey);
+			// Check if the referenced schema exists and has properties more than just its input file
+			if (apiSchemas[refKey]) {
+			    const properties = apiSchemas[refKey].properties;
+			    const propertyKeys = Object.keys(properties);
+			
+			    // Check if there's more than one property or if there's exactly one property and its format is not 'binary'
+			    if (propertyKeys.length > 1 || (propertyKeys.length === 1 && properties[propertyKeys[0]].format !== 'binary')) {
+			        hasSettings = true;
+			        console.log("hasSettings4", hasSettings);
+			    }
 			}
 		}
 	}
@@ -430,46 +440,48 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 
 			pipelineSettingsContent.appendChild(parameterDiv);
 		});
-
-		let saveButton = document.createElement('button');
-		saveButton.textContent = "Save Settings";
-		saveButton.className = "btn btn-primary";
-		saveButton.addEventListener('click', function(event) {
-			event.preventDefault();
-			let settings = {};
-			operationData.forEach(parameter => {
-				if (parameter.name !== "fileInput") {
-					let value = document.getElementById(parameter.name).value;
-					switch (parameter.schema.type) {
-						case 'number':
-						case 'integer':
-							settings[parameter.name] = Number(value);
-							break;
-						case 'boolean':
-							settings[parameter.name] = document.getElementById(parameter.name).checked;
-							break;
-						case 'array':
-						case 'object':
-							if (value === null || value === '') {
-								settings[parameter.name] = '';
-							} else {
-								try {
-									settings[parameter.name] = JSON.parse(value);
-								} catch (err) {
-									console.error(`Invalid JSON format for ${parameter.name}`);
+ 
+ 		if(hasSettings) {
+			let saveButton = document.createElement('button');
+			saveButton.textContent = "Save Settings";
+			saveButton.className = "btn btn-primary";
+			saveButton.addEventListener('click', function(event) {
+				event.preventDefault();
+				let settings = {};
+				operationData.forEach(parameter => {
+					if (parameter.name !== "fileInput") {
+						let value = document.getElementById(parameter.name).value;
+						switch (parameter.schema.type) {
+							case 'number':
+							case 'integer':
+								settings[parameter.name] = Number(value);
+								break;
+							case 'boolean':
+								settings[parameter.name] = document.getElementById(parameter.name).checked;
+								break;
+							case 'array':
+							case 'object':
+								if (value === null || value === '') {
+									settings[parameter.name] = '';
+								} else {
+									try {
+										settings[parameter.name] = JSON.parse(value);
+									} catch (err) {
+										console.error(`Invalid JSON format for ${parameter.name}`);
+									}
 								}
-							}
-							break;
-						default:
-							settings[parameter.name] = value;
+								break;
+							default:
+								settings[parameter.name] = value;
+						}
 					}
-				}
+				});
+				operationSettings[operation] = settings;
+				//pipelineSettingsModal.style.display = "none";
 			});
-			operationSettings[operation] = settings;
-			//pipelineSettingsModal.style.display = "none";
-		});
-		pipelineSettingsContent.appendChild(saveButton);
-		saveButton.click();
+			pipelineSettingsContent.appendChild(saveButton);
+			saveButton.click();
+		}
 		//pipelineSettingsModal.style.display = "block";
 
 		//pipelineSettingsModal.getElementsByClassName("close")[0].onclick = function() {

@@ -79,7 +79,7 @@ public class ConvertOfficeController {
     @Operation(
             summary = "Convert a file to a PDF using LibreOffice",
             description =
-                    "This endpoint converts a given file to a PDF using LibreOffice API  Input:Any Output:PDF Type:SISO")
+                    "This endpoint converts a given file to a PDF using LibreOffice API  Input:ANY Output:PDF Type:SISO")
     public ResponseEntity<byte[]> processFileToPDF(@ModelAttribute GeneralFile request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
