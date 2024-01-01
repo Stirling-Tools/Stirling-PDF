@@ -1,5 +1,5 @@
 # Build jbig2enc in a separate stage
-FROM bellsoft/liberica-openjdk-alpine:17
+FROM bellsoft/liberica-openjdk-alpine:21
 
 ARG VERSION_TAG
 
