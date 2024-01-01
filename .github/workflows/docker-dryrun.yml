@@ -46,6 +46,7 @@ jobs:
         context: .
         dockerfile: ./Dockerfile
         push: false
+        load: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
         tags: standard
@@ -59,6 +60,7 @@ jobs:
         context: .
         file: ./Dockerfile-ultra-lite
         push: false
+        load: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
         tags: ultra-lite
@@ -72,6 +74,7 @@ jobs:
         context: .
         file: ./Dockerfile-lite
         push: false
+        load: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
         tags: lite
