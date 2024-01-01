@@ -102,7 +102,9 @@ public class SecurityConfiguration {
                                                                 || trimmedUri.startsWith("/images/")
                                                                 || trimmedUri.startsWith("/public/")
                                                                 || trimmedUri.startsWith("/css/")
-                                                                || trimmedUri.startsWith("/js/");
+                                                                || trimmedUri.startsWith("/js/")
+                                                                || trimmedUri.startsWith(
+                                                                        "/api/v1/info/status");
                                                     })
                                             .permitAll()
                                             .anyRequest()
@@ -113,6 +115,7 @@ public class SecurityConfiguration {
             http.csrf(csrf -> csrf.disable())
                     .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
+
         return http.build();
     }
 
