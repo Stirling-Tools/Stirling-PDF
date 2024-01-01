@@ -118,8 +118,12 @@ public class SplitPdfBySectionsController {
                             new PDPageContentStream(subDoc, subPage)) {
                         // Set clipping area and position
                         float translateX = -subPageWidth * i;
-                        float translateY = -subPageHeight * (verticalDivisions - 1 - j);
-
+                        float translateY = height - subPageHeight * (verticalDivisions - j);
+                        
+                        
+                        //Code for google Docs pdfs..
+                        //float translateY = -subPageHeight * (verticalDivisions - 1 - j);
+                        
                         contentStream.saveGraphicsState();
                         contentStream.addRect(0, 0, subPageWidth, subPageHeight);
                         contentStream.clip();
