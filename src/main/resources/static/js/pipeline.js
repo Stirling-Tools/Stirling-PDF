@@ -443,7 +443,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
  
  		if(hasSettings) {
 			let saveButton = document.createElement('button');
-			saveButton.textContent = "Save Settings";
+			saveButton.textContent = saveSettings;
 			saveButton.className = "btn btn-primary";
 			saveButton.addEventListener('click', function(event) {
 				event.preventDefault();
