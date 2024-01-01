@@ -11,6 +11,10 @@ on:
 
 jobs:
   Build:
+    strategy:
+      matrix:
+        image: ['s-pdf:standard', 's-pdf:standard with auth', 's-pdf:ultra-lite', 's-pdf:ultra-lite with auth', 's-pdf:lite', 's-pdf:lite with auth']
+        
     runs-on: ubuntu-latest
     steps:
 
@@ -121,13 +125,6 @@ jobs:
     #       VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
     #     platforms: linux/arm64
 
-  HealthCheck:
-    runs-on: ubuntu-latest
-    needs: Build
-    strategy:
-      matrix:
-        image: ['s-pdf:standard', 's-pdf:standard with auth', 's-pdf:ultra-lite', 's-pdf:ultra-lite with auth', 's-pdf:lite', 's-pdf:lite with auth']
-    steps:
     - name: Run and check Docker image ${{ matrix.image }}
       run: |
         IMAGE=${{ matrix.image }}
