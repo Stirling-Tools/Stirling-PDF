@@ -52,7 +52,7 @@ jobs:
         tags: standard
         build-args: 
           VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-        platforms: linux/amd64,linux/arm64/v8
+        platforms: linux/amd64
 
     - name: Build Dockerfile-ultra-lite
       uses: docker/build-push-action@v4.0.0
@@ -66,7 +66,7 @@ jobs:
         tags: ultra-lite
         build-args: 
           VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-        platforms: linux/amd64,linux/arm64/v8         
+        platforms: linux/amd64         
 
     - name: Build Dockerfile-lite
       uses: docker/build-push-action@v4.0.0
@@ -80,7 +80,46 @@ jobs:
         tags: lite
         build-args: 
           VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-        platforms: linux/amd64,linux/arm64/v8
+        platforms: linux/amd64
+
+    #       - name: Build main Dockerfile
+    #   uses: docker/build-push-action@v4.0.0
+    #   with:
+    #     context: .
+    #     dockerfile: ./Dockerfile
+    #     push: false
+    #     cache-from: type=gha
+    #     cache-to: type=gha,mode=max
+    #     tags: standard
+    #     build-args: 
+    #       VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+    #     platforms: linux/arm64
+
+    # - name: Build Dockerfile-ultra-lite
+    #   uses: docker/build-push-action@v4.0.0
+    #   with:
+    #     context: .
+    #     file: ./Dockerfile-ultra-lite
+    #     push: false
+    #     cache-from: type=gha
+    #     cache-to: type=gha,mode=max
+    #     tags: ultra-lite
+    #     build-args: 
+    #       VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+    #     platforms: linux/arm64         
+
+    # - name: Build Dockerfile-lite
+    #   uses: docker/build-push-action@v4.0.0
+    #   with:
+    #     context: .
+    #     file: ./Dockerfile-lite
+    #     push: false
+    #     cache-from: type=gha
+    #     cache-to: type=gha,mode=max
+    #     tags: lite
+    #     build-args: 
+    #       VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+    #     platforms: linux/arm64
 
   HealthCheck:
     runs-on: ubuntu-latest
