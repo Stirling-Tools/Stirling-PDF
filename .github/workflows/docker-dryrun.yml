@@ -163,8 +163,9 @@ jobs:
           sleep 5
         done
         if [ "$HEALTH_STATUS" != "healthy" ]
-        thas  afo
-          docker logs 
+        then
+          echo "Container has failed to start after 60 seconds"
+          docker logs $CONTAINER_ID
           exit 1
         fi
 
@@ -186,8 +187,9 @@ jobs:
           sleep 5
         done
         if [ "$HEALTH_STATUS" != "healthy" ]
-        thas  afo
-          docker logs 
+        then
+          echo "Container has failed to start after 60 seconds"
+          docker logs $CONTAINER_ID
           exit 1
         fi
 
@@ -209,8 +211,9 @@ jobs:
           sleep 5
         done
         if [ "$HEALTH_STATUS" != "healthy" ]
-        thas  afo
-          docker logs 
+        then
+          echo "Container has failed to start after 60 seconds"
+          docker logs $CONTAINER_ID
           exit 1
         fi
 
@@ -232,8 +235,9 @@ jobs:
           sleep 5
         done
         if [ "$HEALTH_STATUS" != "healthy" ]
-        thas  afo
-          docker logs 
+        then
+          echo "Container has failed to start after 60 seconds"
+          docker logs $CONTAINER_ID
           exit 1
         fi
 
@@ -255,7 +259,8 @@ jobs:
           sleep 5
         done
         if [ "$HEALTH_STATUS" != "healthy" ]
-        thas  afo
-          docker logs 
+        then
+          echo "Container has failed to start after 60 seconds"
+          docker logs $CONTAINER_ID
           exit 1
         fi
