@@ -103,6 +103,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             contextPath + "/css/",
             contextPath + "/js/",
             contextPath + "/pdfjs/",
+            contextPath + "/api/v1/info/status",
             contextPath + "/site.webmanifest"
         };
 

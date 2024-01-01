@@ -5,6 +5,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -132,8 +134,6 @@ public class PipelineProcessor {
                                         + operation);
                         hasErrors = true;
                     }
-
-                    outputFiles = newOutputFiles;
                 }
 
             } else {
@@ -185,10 +185,12 @@ public class PipelineProcessor {
                 }
             }
             logPrintStream.close();
+            outputFiles = newOutputFiles;
         }
         if (hasErrors) {
             logger.error("Errors occurred during processing. Log: {}", logStream.toString());
         }
+
         return outputFiles;
     }
 
@@ -196,6 +198,7 @@ public class PipelineProcessor {
         RestTemplate restTemplate = new RestTemplate();
 
         // Set up headers, including API key
+
         HttpHeaders headers = new HttpHeaders();
         String apiKey = getApiKeyForUser();
         headers.add("X-API-Key", apiKey);
@@ -216,11 +219,12 @@ public class PipelineProcessor {
             throws IOException {
         // Define filename
         String newFilename;
-        if ("auto-rename".equals(operation)) {
+        if (operation.contains("auto-rename")) {
             // If the operation is "auto-rename", generate a new filename.
             // This is a simple example of generating a filename using current timestamp.
             // Modify as per your needs.
-            newFilename = "file_" + System.currentTimeMillis();
+
+            newFilename = extractFilename(response);
         } else {
             // Otherwise, keep the original filename.
             newFilename = fileName;
@@ -242,6 +246,28 @@ public class PipelineProcessor {
         }
 
         return newOutputFiles;
+    }
+
+    public String extractFilename(ResponseEntity<byte[]> response) {
+        String filename = "default-filename.ext"; // Default filename if not found
+
+        HttpHeaders headers = response.getHeaders();
+        String contentDisposition = headers.getFirst(HttpHeaders.CONTENT_DISPOSITION);
+
+        if (contentDisposition != null && !contentDisposition.isEmpty()) {
+            String[] parts = contentDisposition.split(";");
+            for (String part : parts) {
+                if (part.trim().startsWith("filename")) {
+                    // Extracts filename and removes quotes if present
+                    filename = part.split("=")[1].trim().replace("\"", "");
+                    filename = URLDecoder.decode(filename, StandardCharsets.UTF_8);
+
+                    break;
+                }
+            }
+        }
+
+        return filename;
     }
 
     List<Resource> generateInputFiles(File[] files) throws Exception {
