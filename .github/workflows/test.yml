@@ -32,5 +32,6 @@ jobs:
 
     - name: Run Docker Compose Tests
       run: |
+        chmod +x ./gradlew
         chmod +x ./test.sh
         ./test.sh
