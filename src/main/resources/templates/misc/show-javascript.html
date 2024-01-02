@@ -3,7 +3,7 @@
 	th:lang-direction="#{language.direction}"
 	xmlns:th="http://www.thymeleaf.org">
 <th:block
-	th:insert="~{fragments/common :: head(title=#{showJS.title})}"></th:block>
+	th:insert="~{fragments/common :: head(title=#{showJS.title}, header=#{showJS.header})}"></th:block>
 <body>
 	<link href="css/prism.css" rel="stylesheet" />
 	<script src="js/thirdParty/prism.js"></script>

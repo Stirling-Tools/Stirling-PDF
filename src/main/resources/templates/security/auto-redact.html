@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{autoRedact.title})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{autoRedact.title}, header=#{autoRedact.header})}"></th:block>
 <body>
   <div id="page-container">
     <div id="content-wrap">
