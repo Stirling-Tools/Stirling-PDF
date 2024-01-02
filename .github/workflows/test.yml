@@ -5,9 +5,14 @@ on:
     branches:
       - githubActionTest
   pull_request:
-    branches:
-      - githubActionTest
-
+    paths:
+      - 'src/**'
+      - '**.gradle'
+      - 'exampleYmlFiles/**'
+      - 'Dockerfile'
+      - 'Dockerfile**' # If you have Dockerfiles in a docker directory
+    paths-ignore:
+      - 'src/main/java/resources/messages*'
 jobs:
   test:
     runs-on: ubuntu-latest
