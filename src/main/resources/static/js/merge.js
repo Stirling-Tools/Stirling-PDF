@@ -10,7 +10,6 @@ document.getElementById("fileInput-input").addEventListener("change", function()
 
 function displayFiles(files) {
     var list = document.getElementById("selectedFiles");
-    list.innerHTML = "";
 
     for (var i = 0; i < files.length; i++) {
         var item = document.createElement("li");

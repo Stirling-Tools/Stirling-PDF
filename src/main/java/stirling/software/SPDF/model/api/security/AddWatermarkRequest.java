@@ -3,17 +3,19 @@ package stirling.software.SPDF.model.api.security;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import stirling.software.SPDF.model.api.PDFFile;
 
 @Data
-@EqualsAndHashCode(callSuper=true)
+@EqualsAndHashCode(callSuper = true)
 public class AddWatermarkRequest extends PDFFile {
 
-    @Schema(description = "The watermark type (text or image)",
-    		allowableValues = {"text", "image"}, 
-    		required = true)
+    @Schema(
+            description = "The watermark type (text or image)",
+            allowableValues = {"text", "image"},
+            required = true)
     private String watermarkType;
 
     @Schema(description = "The watermark text")
@@ -22,8 +24,9 @@ public class AddWatermarkRequest extends PDFFile {
     @Schema(description = "The watermark image")
     private MultipartFile watermarkImage;
 
-    @Schema(description = "The selected alphabet", 
-            allowableValues = {"roman", "arabic", "japanese", "korean", "chinese"}, 
+    @Schema(
+            description = "The selected alphabet",
+            allowableValues = {"roman", "arabic", "japanese", "korean", "chinese"},
             defaultValue = "roman")
     private String alphabet = "roman";
 

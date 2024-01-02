@@ -16,9 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
+
 @RestController
 @RequestMapping("/api/v1/security")
 @Tag(name = "Security", description = "Security APIs")
@@ -26,29 +28,31 @@ public class PasswordController {
 
     private static final Logger logger = LoggerFactory.getLogger(PasswordController.class);
 
-
     @PostMapping(consumes = "multipart/form-data", value = "/remove-password")
     @Operation(
-        summary = "Remove password from a PDF file",
-        description = "This endpoint removes the password from a protected PDF file. Users need to provide the existing password. Input:PDF Output:PDF Type:SISO"
-    )
-    public ResponseEntity<byte[]> removePassword(@ModelAttribute PDFPasswordRequest request) throws IOException {
+            summary = "Remove password from a PDF file",
+            description =
+                    "This endpoint removes the password from a protected PDF file. Users need to provide the existing password. Input:PDF Output:PDF Type:SISO")
+    public ResponseEntity<byte[]> removePassword(@ModelAttribute PDFPasswordRequest request)
+            throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
-    	
-    	
-    	
+
         PDDocument document = PDDocument.load(fileInput.getBytes(), password);
         document.setAllSecurityToBeRemoved(true);
-        return WebResponseUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_password_removed.pdf");
+        return WebResponseUtils.pdfDocToWebResponse(
+                document,
+                fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                        + "_password_removed.pdf");
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-password")
     @Operation(
-        summary = "Add password to a PDF file",
-        description = "This endpoint adds password protection to a PDF file. Users can specify a set of permissions that should be applied to the file. Input:PDF Output:PDF"
-    )
-    public ResponseEntity<byte[]> addPassword(@ModelAttribute AddPasswordRequest request) throws IOException {
+            summary = "Add password to a PDF file",
+            description =
+                    "This endpoint adds password protection to a PDF file. Users can specify a set of permissions that should be applied to the file. Input:PDF Output:PDF")
+    public ResponseEntity<byte[]> addPassword(@ModelAttribute AddPasswordRequest request)
+            throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String ownerPassword = request.getOwnerPassword();
         String password = request.getPassword();
@@ -74,16 +78,19 @@ public class PasswordController {
         ap.setCanPrintFaithful(!canPrintFaithful);
         StandardProtectionPolicy spp = new StandardProtectionPolicy(ownerPassword, password, ap);
 
-        if(!"".equals(ownerPassword) || !"".equals(password)) {
-        	spp.setEncryptionKeyLength(keyLength);
+        if (!"".equals(ownerPassword) || !"".equals(password)) {
+            spp.setEncryptionKeyLength(keyLength);
         }
         spp.setPermissions(ap);
         document.protect(spp);
 
-        if("".equals(ownerPassword) && "".equals(password))
-        	return WebResponseUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_permissions.pdf");
-        return WebResponseUtils.pdfDocToWebResponse(document, fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_passworded.pdf");
+        if ("".equals(ownerPassword) && "".equals(password))
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                            + "_permissions.pdf");
+        return WebResponseUtils.pdfDocToWebResponse(
+                document,
+                fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_passworded.pdf");
     }
-
-
 }
