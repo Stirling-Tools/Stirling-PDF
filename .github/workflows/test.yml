@@ -1,9 +1,6 @@
 name: Docker Compose Tests
 
 on:
-  push:
-    branches:
-      - githubActionTest
   pull_request:
     paths:
       - 'src/**'
