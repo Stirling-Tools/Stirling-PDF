@@ -7,7 +7,7 @@ on:
       - '**.gradle'
       - 'exampleYmlFiles/**'
       - 'Dockerfile'
-      - 'Dockerfile**' # If you have Dockerfiles in a docker directory
+      - 'Dockerfile**'
     paths-ignore:
       - 'src/main/java/resources/messages*'
 jobs:
