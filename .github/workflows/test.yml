@@ -5,11 +5,11 @@ on:
     paths:
       - 'src/**'
       - '**.gradle'
+      - '!src/main/java/resources/messages*'
       - 'exampleYmlFiles/**'
       - 'Dockerfile'
       - 'Dockerfile**'
-    paths-ignore:
-      - 'src/main/java/resources/messages*'
+
 jobs:
   test:
     runs-on: ubuntu-latest
