@@ -13,7 +13,14 @@
                 <div class="row justify-content-center">
                     <h2 th:text="#{multiTool.header}"></h2>
                     <div class="col-md-12" id="pages-container-wrapper">
-                        <div id="pages-container"></div>
+                        <div id="pages-container">
+                            <div class="page-container" th:each="pdf, status: ${pdfList}" th:id="'page-container-' + ${status.index}">
+                                <div class="page-number-container">
+                                    <span th:text="${status.index + 1}"></span>
+                                </div>
+                                <img th:src="${pdf.imageUrl}" alt="PDF Page">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -206,6 +213,18 @@
 
         #add-pdf-button {
             margin: 0 auto;
+        }
+
+        .page-number {
+            position: absolute;
+            top: 5px;
+            right:5px;
+            color:white;
+            background-color: #007bff; /* Primary blue color */
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index:2;
         }
     </style>
 </body>
