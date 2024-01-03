@@ -1,21 +1,37 @@
 package stirling.software.SPDF.controller.api.security;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.Security;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.util.Calendar;
 
 import org.apache.pdfbox.examples.signature.CreateSignatureBase;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMDecryptorProvider;
+import org.bouncycastle.openssl.PEMEncryptedKeyPair;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
+import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
+import org.bouncycastle.operator.InputDecryptorProvider;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
+import org.bouncycastle.pkcs.PKCSException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -76,34 +92,32 @@ public class CertSignController {
             throw new IllegalArgumentException("Cert type must be provided");
         }
 
-        InputStream ksInputStream = null;
+        KeyStore ks = null;
 
         switch (certType) {
             case "PKCS12":
-                ksInputStream = p12File.getInputStream();
+                ks = KeyStore.getInstance("PKCS12");
+                ks.load(p12File.getInputStream(), password.toCharArray());
                 break;
             case "PEM":
-                throw new IllegalArgumentException("TODO: PEM not supported yet");
-                // ksInputStream = privateKeyFile.getInputStream();
-                // break;
+                ks = KeyStore.getInstance("JKS");
+                ks.load(null);
+                PrivateKey privateKey = getPrivateKeyFromPEM(privateKeyFile.getBytes(), password);
+                Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
+                ks.setKeyEntry(
+                        "alias", privateKey, password.toCharArray(), new Certificate[] {cert});
+                break;
             default:
                 throw new IllegalArgumentException("Invalid cert type: " + certType);
         }
 
         // TODO: page number
 
-        KeyStore ks = getKeyStore(ksInputStream, password);
         CreateSignature createSignature = new CreateSignature(ks, password.toCharArray());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         sign(pdf.getBytes(), baos, createSignature, name, location, reason);
         return WebResponseUtils.boasToWebResponse(
                 baos, pdf.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_signed.pdf");
-    }
-
-    private static KeyStore getKeyStore(InputStream is, String password) throws Exception {
-        KeyStore ks = KeyStore.getInstance("PKCS12");
-        ks.load(is, password.toCharArray());
-        return ks;
     }
 
     private static void sign(
@@ -129,14 +143,35 @@ public class CertSignController {
         }
     }
 
-    // private byte[] parsePEM(byte[] content) throws IOException {
-    //     PemReader pemReader =
-    //             new PemReader(new InputStreamReader(new ByteArrayInputStream(content)));
-    //     return pemReader.readPemObject().getContent();
-    // }
+    private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
+            throws IOException, OperatorCreationException, PKCSException {
+        try (PEMParser pemParser =
+                new PEMParser(new InputStreamReader(new ByteArrayInputStream(pemBytes)))) {
+            Object pemObject = pemParser.readObject();
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+            PrivateKeyInfo pkInfo;
+            if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo) {
+                InputDecryptorProvider decProv =
+                        new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
+                pkInfo = ((PKCS8EncryptedPrivateKeyInfo) pemObject).decryptPrivateKeyInfo(decProv);
+            } else if (pemObject instanceof PEMEncryptedKeyPair) {
+                PEMDecryptorProvider decProv =
+                        new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
+                pkInfo =
+                        ((PEMEncryptedKeyPair) pemObject)
+                                .decryptKeyPair(decProv)
+                                .getPrivateKeyInfo();
+            } else {
+                pkInfo = ((PEMKeyPair) pemObject).getPrivateKeyInfo();
+            }
+            return converter.getPrivateKey(pkInfo);
+        }
+    }
 
-    // private boolean isPEM(byte[] content) {
-    //     String contentStr = new String(content);
-    //     return contentStr.contains("-----BEGIN") && contentStr.contains("-----END");
-    // }
+    private Certificate getCertificateFromPEM(byte[] pemBytes)
+            throws IOException, CertificateException {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(pemBytes)) {
+            return CertificateFactory.getInstance("X.509").generateCertificate(bis);
+        }
+    }
 }
