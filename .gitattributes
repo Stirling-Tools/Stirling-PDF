@@ -1,3 +1,5 @@
+* text=auto eol=lf
+
 # Ignore all JavaScript files in a directory
 src/main/resources/static/pdfjs/* linguist-vendored
 src/main/resources/static/pdfjs/** linguist-vendored
