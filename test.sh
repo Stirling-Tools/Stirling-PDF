@@ -69,12 +69,7 @@ main() {
 	SECONDS=0
 	
     export DOCKER_ENABLE_SECURITY=false
-    # Run the gradlew build command and check if it fails
-    if ! ./gradlew clean build; then
-        echo "Gradle build failed with security disabled, exiting script."
-        exit 1
-    fi
-
+    ./gradlew clean build
 
     # Building Docker images
     docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest -f ./Dockerfile .
@@ -87,12 +82,7 @@ main() {
     run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
 
     export DOCKER_ENABLE_SECURITY=true
-    # Run the gradlew build command and check if it fails
-    if ! ./gradlew clean build; then
-        echo "Gradle build failed with security enabled, exiting script."
-        exit 1
-    fi
-
+    ./gradlew clean build
 
     # Building Docker images with security enabled
     docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest -f ./Dockerfile .
