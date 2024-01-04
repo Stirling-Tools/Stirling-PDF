@@ -1,41 +1,57 @@
-<div th:fragment="footer">	
+<div th:fragment="footer">
 	<footer id="footer" class="text-center py-3">
-	 <div class="footer-center">
-	 
-        <a href="https://github.com/Stirling-Tools/Stirling-PDF" target="_blank" class="mx-1" title="Visit Github Repository"><img src="images/github.svg"></img></a>
-		<a href="https://hub.docker.com/r/frooodle/s-pdf" target="_blank" class="mx-1" title="See Docker Hub"><img src="images/docker.svg"></img></a>
-		<a href="https://discord.gg/Cn8pWhQRxZ" target="_blank" class="mx-1" title="Join Discord Channel"><img src="images/discord.svg"></img></a>
-		<a href="https://github.com/sponsors/Frooodle" target="_blank" class="mx-1" title="Donate"><img src="images/suit-heart-fill.svg"></img></a>
+		<div class="footer-center">
+
+			<a href="https://github.com/Stirling-Tools/Stirling-PDF"
+				target="_blank" class="mx-1" title="Visit Github Repository"><img
+				src="images/github.svg"></img></a> <a
+				href="https://hub.docker.com/r/frooodle/s-pdf" target="_blank"
+				class="mx-1" title="See Docker Hub"><img src="images/docker.svg"></img></a>
+			<a href="https://discord.gg/Cn8pWhQRxZ" target="_blank" class="mx-1"
+				title="Join Discord Channel"><img src="images/discord.svg"></img></a>
+			<a href="https://github.com/sponsors/Frooodle" target="_blank"
+				class="mx-1" title="Donate"><img
+				src="images/suit-heart-fill.svg"></img></a>
 		</div>
-         <div class="right-link-container">
-         
-        <a href="https://example.com" target="_blank" class="mx-1" title="Visit Example Site">
-            Licenses
-        </a>
-    </div>
+		<div class="right-link-container">
 
-        <div th:if="${@appName} != 'Stirling PDF'" class="mt-2 footer-center" style="color: grey;">Powered by Stirling PDF</div>
-        
-        <style>
-      #footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
+			<a href="licenses" id="licenses" target="_blank" class="mx-1"
+				title=""> About </a> <a href="licenses" id="licenses"
+				target="_blank" class="mx-1" title=""> Licenses </a>
+		</div>
+
+		<div th:if="${@appName} != 'Stirling PDF'" class="mt-2 footer-center"
+			style="color: grey;">Powered by Stirling PDF</div>
+
+		<style>
+#licenses {
+	text-decoration: none;
 }
+
+#licenses:hover, #licenses:focus {
+	text-decoration: underline;
+	/* Adds underline on hover/focus for clarity */
+}
+
+#footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	width: 100%;
+}
+
 .footer-center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-grow: 1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-grow: 1;
 }
-
 
 .right-link-container {
-    margin-left: auto; /* Push the link to the far right */
+	margin-left: auto; /* Push the link to the far right */
+	padding-right: 20px;
 }
-
 </style>
-    </footer>
+	</footer>
 
 </div>
