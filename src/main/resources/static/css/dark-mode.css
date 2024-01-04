@@ -11,6 +11,13 @@ body, select, textarea {
   color: rgb(var(--base-font-color)) !important;
 }
 
+ a {
+    color: #add8e6;
+ }
+ a:hover {
+    color: #87ceeb; /* Slightly brighter blue on hover for accessibility */
+}
+
 .dark-card {
   background-color: rgb(var(--body-background-color)) !important;
   color: rgb(var(--base-font-color)) !important;
