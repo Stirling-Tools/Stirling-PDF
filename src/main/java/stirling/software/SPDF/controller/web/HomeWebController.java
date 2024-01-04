@@ -43,7 +43,6 @@ public class HomeWebController {
             model.addAttribute("dependencies", data.get("dependencies"));
         } catch (IOException e) {
             e.printStackTrace();
-            // Handle exceptions, possibly return an error view
         }
         return "licenses";
     }
