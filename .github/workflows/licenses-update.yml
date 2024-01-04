@@ -32,10 +32,17 @@ jobs:
         run: |
           mv build/reports/dependency-license/index.json src/main/resources/static/3rdPartyLicenses.json
 
+      - name: Check for Changes
+        id: git-check
+        run: |
+          git add src/main/resources/static/3rdPartyLicenses.json
+          git diff --staged --exit-code || echo "changes=true" >> $GITHUB_ENV
+
       - name: Commit and Push Changes
+        if: env.changes == 'true'
         run: |
           git config --global user.name 'Stirling-PDF-Bot'
           git config --global user.email 'Stirling-PDF-Bot@stirlingtools.com'
-          git add src/main/resources/static/3rdPartyLicenses.json
           git commit -m "Update 3rd Party Licenses"
           git push
+

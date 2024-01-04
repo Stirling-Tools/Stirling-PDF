@@ -1,8 +1,8 @@
 <div th:fragment="footer">
-	<footer id="footer" class="text-center py-3">
-		<div class="footer-center">
-
-			<a href="https://github.com/Stirling-Tools/Stirling-PDF"
+    <footer id="footer" class="text-center py-3">
+        <div class="footer-center">
+      
+           <a href="https://github.com/Stirling-Tools/Stirling-PDF"
 				target="_blank" class="mx-1" title="Visit Github Repository"><img
 				src="images/github.svg"></img></a> <a
 				href="https://hub.docker.com/r/frooodle/s-pdf" target="_blank"
@@ -12,47 +12,47 @@
 			<a href="https://github.com/sponsors/Frooodle" target="_blank"
 				class="mx-1" title="Donate"><img
 				src="images/suit-heart-fill.svg"></img></a>
-		</div>
-		<div class="right-link-container">
+            
 
-			<!--<a href="licenses" id="licenses" target="_blank" class="mx-1"
-				title=""> About </a> -->
-				
-			 <a href="licenses" id="licenses" target="_blank" class="mx-1" title=""> Licenses </a> 
-		</div>
+           
+            <div style="color: grey;" th:if="${@appName} != 'Stirling PDF'" class="footer-powered-by" th:text="#{poweredBy} + ' Stirling PDF'"></div>
+        </div>
 
-		<div th:if="${@appName} != 'Stirling PDF'" class="mt-2 footer-center"
-			style="color: grey;">Powered by Stirling PDF</div>
+        
+            <a href="licenses" id="licenses" target="_blank" class="mx-1" title="" th:text="#{licenses.nav}">Licenses</a> 
+        
+    </footer>
+</div>
 
-		<style>
-#licenses {
-	text-decoration: none;
-}
-
-#licenses:hover, #licenses:focus {
-	text-decoration: underline;
-	/* Adds underline on hover/focus for clarity */
-}
-
-#footer {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	width: 100%;
+	<style>
+	
+	#footer {
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+    justify-content: center;
+    align-items: center;
+    width: 100%;
 }
 
 .footer-center {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex-grow: 1;
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    justify-content: center; /* Center children vertically */
+    align-items: center; /* Center children horizontally */
+    flex-grow: 1;
+}
+
+.footer-powered-by {
+    margin-top: auto; /* Pushes the text to the bottom */
+    color: grey;
+    text-align: center; /* Centers the text inside the div */
+    width: 100%; /* Full width to center the text properly */
 }
 
 .right-link-container {
-	margin-left: auto; /* Push the link to the far right */
-	padding-right: 20px;
+    align-self: flex-end; /* Align to the end of the flex container */
+    padding-right: 20px;
 }
+	
 </style>
-	</footer>
-
-</div>
+	
