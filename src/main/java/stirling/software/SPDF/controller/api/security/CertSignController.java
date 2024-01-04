@@ -81,6 +81,7 @@ public class CertSignController {
         MultipartFile privateKeyFile = request.getPrivateKeyFile();
         MultipartFile certFile = request.getCertFile();
         MultipartFile p12File = request.getP12File();
+        MultipartFile jksfile = request.getJksFile();
         String password = request.getPassword();
         Boolean showSignature = request.isShowSignature();
         String reason = request.getReason();
@@ -95,10 +96,6 @@ public class CertSignController {
         KeyStore ks = null;
 
         switch (certType) {
-            case "PKCS12":
-                ks = KeyStore.getInstance("PKCS12");
-                ks.load(p12File.getInputStream(), password.toCharArray());
-                break;
             case "PEM":
                 ks = KeyStore.getInstance("JKS");
                 ks.load(null);
@@ -106,6 +103,14 @@ public class CertSignController {
                 Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
                 ks.setKeyEntry(
                         "alias", privateKey, password.toCharArray(), new Certificate[] {cert});
+                break;
+            case "PKCS12":
+                ks = KeyStore.getInstance("PKCS12");
+                ks.load(p12File.getInputStream(), password.toCharArray());
+                break;
+            case "JKS":
+                ks = KeyStore.getInstance("JKS");
+                ks.load(jksfile.getInputStream(), password.toCharArray());
                 break;
             default:
                 throw new IllegalArgumentException("Invalid cert type: " + certType);
