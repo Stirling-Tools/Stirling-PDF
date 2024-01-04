@@ -9,5 +9,4 @@ public class Dependency {
     private String moduleVersion;
     private String moduleLicense;
     private String moduleLicenseUrl;
-
 }
