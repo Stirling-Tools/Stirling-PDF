@@ -33,6 +33,7 @@ apt-get update && \
         ocrmypdf \
         unpaper && \
     rm -rf /var/lib/apt/lists/* && \
+    mv /usr/share/tesseract-ocr /usr/share/tesseract-ocr-original && \
     pip install --upgrade pip && \
     pip install --no-cache-dir --upgrade ocrmypdf && \
     pip install --no-cache-dir --upgrade pillow==10.0.1 reportlab==3.6.13 wheel==0.38.1 setuptools==65.5.1 pyjwt==2.4.0 cryptography==39.0.1
@@ -40,13 +41,3 @@ apt-get update && \
     
 #CV and HTML   
 RUN pip install --no-cache-dir opencv-python-headless WeasyPrint 
-
-
-# cleanup and etc
-RUN mkdir /usr/share/tesseract-ocr-original && \
-    cp -r /usr/share/tesseract-ocr/* /usr/share/tesseract-ocr-original && \
-    rm -rf /usr/share/tesseract-ocr
-
-
-
-    
