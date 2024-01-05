@@ -13,7 +13,10 @@
     "update-frontend-dependencies": "npm i --workspace=client-tauri --workspace=shared-operation"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.56.0"
   },
   "engines": {
     "npm": ">=7.24.2"
