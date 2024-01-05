@@ -61,9 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	//Sort languages by alphabet
 	const list = Array.from(document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').children).filter(child => child.matches('a'));
 	list.sort(function(a, b) {
-	    var A = a.textContent.toUpperCase();
-	    var B = b.textContent.toUpperCase();
-	    return (A < B) ? -1 : (A > B) ? 1 : 0;
+		return a.textContent.toUpperCase().localeCompare(b.textContent.toUpperCase());
 	}).forEach(node => document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').appendChild(node));
 
 });
