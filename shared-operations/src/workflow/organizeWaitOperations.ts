@@ -4,8 +4,8 @@ import { PdfFile } from "../wrappers/PdfFile";
 export function organizeWaitOperations(actions: Action[]) {
 
     // Initialize an object to store the counts and associated "done" operations
-    const waitCounts: {[key: string]: number} = {};
-    const doneOperations: {[key: string]: Action} = {};
+    const waitCounts: Record<string, number> = {};
+    const doneOperations: Record<string, Action> = {};
 
     // Function to count "type: wait" operations and associate "done" operations per id
     function countWaitOperationsAndDone(actions: Action[]) {
@@ -43,10 +43,8 @@ export function organizeWaitOperations(actions: Action[]) {
     return result;
 }
 
-export type ResultType = {
-    [key: string]: {
+export type ResultType = Record<string, {
         waitCount: number,
         doneOperation: Action,
         input: PdfFile[]
-    }
-}
+    }>;

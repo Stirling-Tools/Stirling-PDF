@@ -1,7 +1,7 @@
-import * as PDFJS from 'pdfjs-dist';
-import type { PDFDocumentProxy as PDFJSDocument } from 'pdfjs-dist/types/src/display/api';
-import { PDFDocument as PDFLibDocument } from 'pdf-lib';
-import Joi from 'joi';
+import * as PDFJS from "pdfjs-dist";
+import type { PDFDocumentProxy as PDFJSDocument } from "pdfjs-dist/types/src/display/api";
+import { PDFDocument as PDFLibDocument } from "pdf-lib";
+import Joi from "joi";
 
 export enum RepresentationType {
     Uint8Array,
@@ -17,25 +17,25 @@ export class PdfFile {
 
     get uint8Array() : Promise<Uint8Array> {
         switch (this.representationType) {
-            case RepresentationType.Uint8Array:
-                return new Promise((resolve) => {
-                    resolve(this.representation as Uint8Array);
-                });
-            case RepresentationType.PDFLibDocument:
-                return new Promise(async (resolve) => {
-                    var uint8Array = await (this.representation as PDFLibDocument).save();
-                    this.uint8Array = uint8Array;
-                    resolve(uint8Array);
-                });
-            case RepresentationType.PDFJSDocument:
-                return new Promise(async (resolve) => {
-                    var uint8Array = await (this.representation as PDFJSDocument).getData();
-                    this.uint8Array = uint8Array;
-                    resolve(uint8Array);
-                });
-            default:
-                console.error("unhandeled PDF type: " + typeof this.representation as string);
-                throw Error("unhandeled PDF type");
+        case RepresentationType.Uint8Array:
+            return new Promise((resolve) => {
+                resolve(this.representation as Uint8Array);
+            });
+        case RepresentationType.PDFLibDocument:
+            return new Promise(async (resolve) => {
+                const uint8Array = await (this.representation as PDFLibDocument).save();
+                this.uint8Array = uint8Array;
+                resolve(uint8Array);
+            });
+        case RepresentationType.PDFJSDocument:
+            return new Promise(async (resolve) => {
+                const uint8Array = await (this.representation as PDFJSDocument).getData();
+                this.uint8Array = uint8Array;
+                resolve(uint8Array);
+            });
+        default:
+            console.error("unhandeled PDF type: " + typeof this.representation );
+            throw Error("unhandeled PDF type");
         } 
     }
     set uint8Array(value: Uint8Array) {
@@ -45,19 +45,19 @@ export class PdfFile {
 
     get pdfLibDocument() : Promise<PDFLibDocument> {
         switch (this.representationType) {
-            case RepresentationType.PDFLibDocument:
-                return new Promise((resolve) => {
-                    resolve(this.representation as PDFLibDocument);
+        case RepresentationType.PDFLibDocument:
+            return new Promise((resolve) => {
+                resolve(this.representation as PDFLibDocument);
+            });
+        default:
+            return new Promise(async (resolve) => {
+                const uint8Array = await this.uint8Array;
+                const pdfLibDoc = await PDFLibDocument.load(uint8Array, {
+                    updateMetadata: false,
                 });
-            default:
-                return new Promise(async (resolve) => {
-                    var uint8Array = await this.uint8Array;
-                    var pdfLibDoc = await PDFLibDocument.load(uint8Array, {
-                        updateMetadata: false,
-                    });
-                    this.pdfLibDocument = pdfLibDoc;
-                    resolve(pdfLibDoc);
-                });
+                this.pdfLibDocument = pdfLibDoc;
+                resolve(pdfLibDoc);
+            });
         } 
     }
     set pdfLibDocument(value: PDFLibDocument) {
@@ -67,16 +67,16 @@ export class PdfFile {
 
     get pdfJsDocument() : Promise<PDFJSDocument> {
         switch (this.representationType) {
-            case RepresentationType.PDFJSDocument:
-                return new Promise((resolve) => {
-                    resolve(this.representation as PDFJSDocument);
-                });
-            default:
-                return new Promise(async (resolve) => {
-                    const pdfjsDoc = await PDFJS.getDocument(await this.uint8Array).promise;
-                    this.pdfJsDocument = pdfjsDoc;
-                    resolve(pdfjsDoc);
-                });
+        case RepresentationType.PDFJSDocument:
+            return new Promise((resolve) => {
+                resolve(this.representation as PDFJSDocument);
+            });
+        default:
+            return new Promise(async (resolve) => {
+                const pdfjsDoc = await PDFJS.getDocument(await this.uint8Array).promise;
+                this.pdfJsDocument = pdfjsDoc;
+                resolve(pdfjsDoc);
+            });
         } 
     }
     set pdfJsDocument(value: PDFJSDocument) {

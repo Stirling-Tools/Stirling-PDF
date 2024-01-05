@@ -45,7 +45,7 @@ export async function nToOne <I, O>(inputs: I[], callback: (input: I[]) => Promi
 
 /** This function should be used if the Operation takes one file as input and may output multiple files */
 export async function oneToN <I, O>(inputs: I[], callback: (input: I, index: number, max: number) => Promise<O[]>): Promise<O[]> {
-    let output: O[] = []
+    let output: O[] = [];
     for (let i = 0; i < inputs.length; i++) {
         output = output.concat(await callback(inputs[i], i, inputs.length));
     }
@@ -55,6 +55,6 @@ export async function oneToN <I, O>(inputs: I[], callback: (input: I, index: num
 /** This function should be used if the Operation takes one file as input and outputs only one file */
 export async function oneToOne <I, O>(inputs: I[], callback: (input: I, index: number, max: number) => Promise<O>): Promise<O[]> {
     return oneToN(inputs, async (input, index, max) => {
-        return [await callback(input, index, max)]
+        return [await callback(input, index, max)];
     });
 }

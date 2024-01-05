@@ -55,11 +55,11 @@ function bookletSort(totalPages: number): number[] {
 function sideStitchBooklet(totalPages: number): number[] {
     const newPageOrder: number[] = [];
     for (let i = 0; i < (totalPages + 3) / 4; i++) {
-      const begin = i * 4;
-      newPageOrder.push(Math.min(begin + 3, totalPages - 1));
-      newPageOrder.push(Math.min(begin, totalPages - 1));
-      newPageOrder.push(Math.min(begin + 1, totalPages - 1));
-      newPageOrder.push(Math.min(begin + 2, totalPages - 1));
+        const begin = i * 4;
+        newPageOrder.push(Math.min(begin + 3, totalPages - 1));
+        newPageOrder.push(Math.min(begin, totalPages - 1));
+        newPageOrder.push(Math.min(begin + 1, totalPages - 1));
+        newPageOrder.push(Math.min(begin + 2, totalPages - 1));
     }
     return newPageOrder;
 }
@@ -72,10 +72,10 @@ function sideStitchBooklet(totalPages: number): number[] {
 function oddEvenSplit(totalPages: number): number[] {
     const newPageOrder: number[] = [];
     for (let i = 1; i <= totalPages; i += 2) {
-      newPageOrder.push(i - 1);
+        newPageOrder.push(i - 1);
     }
     for (let i = 2; i <= totalPages; i += 2) {
-      newPageOrder.push(i - 1);
+        newPageOrder.push(i - 1);
     }
     return newPageOrder;
 }
@@ -108,9 +108,7 @@ function removeFirstAndLast(totalPages: number): number[] {
 }
 
 export type SortFunction = (totalPages: number) => number[];
-type Sorts = {
-    [key: string]: SortFunction;
-};
+type Sorts = Record<string, SortFunction>;
 export const Sorts: Sorts = Object.freeze({
     "REVERSE_ORDER": reverseSort,
     "DUPLEX_SORT": duplexSort,

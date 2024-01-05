@@ -1,9 +1,9 @@
 
-import { PdfFile } from '../wrappers/PdfFile.js';
-import { getPages } from './common/getPagesByIndex.js';
-import { invertSelection, parsePageIndexSpecification } from './common/pageIndexesUtils.js';
+import { PdfFile } from "../wrappers/PdfFile.js";
+import { getPages } from "./common/getPagesByIndex.js";
+import { invertSelection, parsePageIndexSpecification } from "./common/pageIndexesUtils.js";
 
-export type RemovePagesParamsType = {
+export interface RemovePagesParamsType {
     file: PdfFile;
     pageSelector: string;
 }
@@ -16,6 +16,6 @@ export async function removePages(params: RemovePagesParamsType) {
     const pagesToKeep = invertSelection(pageSelection, pageCount);
 
     const newFile = await getPages(file, pagesToKeep);
-    newFile.filename += "_removedPages"
+    newFile.filename += "_removedPages";
     return newFile;
 }

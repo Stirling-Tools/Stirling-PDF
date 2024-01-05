@@ -34,27 +34,27 @@ export async function traverseOperations(operations: Action[], input: PdfFile[],
     async function computeOperation(action: Action, input: PdfFile[], progressCallback: (state: Progress) => void): Promise<void> {
         console.log("Input: ", input);
         switch (action.type) {
-            case "done": // Skip this, because it is a valid node.
-                break;
-            case "wait":
-                const waitOperation = waitOperations[(action as WaitAction).values.id];
+        case "done": // Skip this, because it is a valid node.
+            break;
+        case "wait":
+            const waitOperation = waitOperations[(action as WaitAction).values.id];
 
-                waitOperation.input.concat(input); // TODO: May have unexpected concequences. Needs further testing!
+            waitOperation.input.concat(input); // TODO: May have unexpected concequences. Needs further testing!
 
-                waitOperation.waitCount--;
-                if(waitOperation.waitCount == 0 && waitOperation.doneOperation.actions) {
-                    await nextOperation(waitOperation.doneOperation.actions, waitOperation.input, progressCallback);
-                }
-                break;
-            default:
-                const operator = getOperatorByName(action.type);
-                if(operator) {
-                    let operation = new operator(action);
-                    input = await operation.run(input, progressCallback);
-                    await nextOperation(action.actions, input, progressCallback);
-                }
-                else
-                    throw new Error(`${action.type} not implemented yet.`);
+            waitOperation.waitCount--;
+            if(waitOperation.waitCount == 0 && waitOperation.doneOperation.actions) {
+                await nextOperation(waitOperation.doneOperation.actions, waitOperation.input, progressCallback);
+            }
+            break;
+        default:
+            const operator = getOperatorByName(action.type);
+            if(operator) {
+                const operation = new operator(action);
+                input = await operation.run(input, progressCallback);
+                await nextOperation(action.actions, input, progressCallback);
+            }
+            else
+                throw new Error(`${action.type} not implemented yet.`);
         }
     }
 }

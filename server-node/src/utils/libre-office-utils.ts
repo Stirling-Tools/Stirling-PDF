@@ -1,9 +1,9 @@
 
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import { exec, spawn } from 'child_process'
-import { PdfFile, RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
+import fs from "fs";
+import os from "os";
+import path from "path";
+import { exec, spawn } from "child_process";
+import { PdfFile, RepresentationType } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
 
 export async function fileToPdf(byteArray: Uint8Array, filename: string): Promise<PdfFile> {
     const parentDir = path.join(os.tmpdir(), "StirlingPDF");
@@ -46,14 +46,14 @@ export function isLibreOfficeInstalled() {
             const result = stdout.match("LibreOffice ([0-9]+\.){4}.*");
             resolve(result ? true : false);
         });
-    })
+    });
 }
 
 function writeBytesToFile(filePath: string, bytes: Uint8Array): Promise<void> {
     return new Promise((resolve, reject) => {
         fs.writeFile(filePath, bytes, function(err) {
             if(err) {
-                reject(err)
+                reject(err);
                 return;
             }
             resolve();
@@ -80,17 +80,17 @@ function runLibreOfficeCommand(idKey: string, args: string[]): Promise<string[]>
 
         const process = spawn("libreoffice", args);
 
-        process.stdout.on('data', (data) => {
+        process.stdout.on("data", (data) => {
             const dataStr = data.toString();
             console.log(`Progress ${idKey}:`, dataStr);
             messageList.push(dataStr);
         });
 
-        process.stderr.on('data', (data) => {
+        process.stderr.on("data", (data) => {
             console.error(`stderr ${idKey}:`, data.toString());
         });
 
-        process.on('exit', (code) => {
+        process.on("exit", (code) => {
             if (code === 0) {
                 resolve(messageList);
             } else {
@@ -98,7 +98,7 @@ function runLibreOfficeCommand(idKey: string, args: string[]): Promise<string[]>
             }
         });
 
-        process.on('error', (err) => {
+        process.on("error", (err) => {
             reject(err);
         });
         

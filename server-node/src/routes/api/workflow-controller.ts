@@ -1,15 +1,15 @@
-import express, { Request, Response } from 'express';
-import crypto from 'crypto';
-import multer from 'multer'
+import express, { Request, Response } from "express";
+import crypto from "crypto";
+import multer from "multer";
 const upload = multer();
 
 import { traverseOperations } from "@stirling-pdf/shared-operations/src/workflow/traverseOperations";
-import { PdfFile, RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile';
-import { respondWithPdfFiles } from '../../utils/endpoint-utils';
-import { JoiPDFFileSchema } from '@stirling-pdf/shared-operations/src/wrappers/PdfFileJoi';
+import { PdfFile, RepresentationType } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
+import { respondWithPdfFiles } from "../../utils/endpoint-utils";
+import { JoiPDFFileSchema } from "@stirling-pdf/shared-operations/src/wrappers/PdfFileJoi";
 
 interface Workflow {
-    eventStream?: express.Response<any, Record<string, any>>,
+    eventStream?: express.Response,
     result?: PdfFile[],
     finished: boolean,
     createdAt: EpochTimeStamp,
@@ -73,19 +73,19 @@ router.post("/:workflowUuid?", [
                 } else {
                     throw err;
                 }
-            })
+            });
         }
         else {
             console.log("Start Aync Workflow");
             // TODO: UUID collision checks
-            let workflowID = req.params.workflowUuid
+            let workflowID = req.params.workflowUuid;
             if(!workflowID)
                 workflowID = generateWorkflowID();
 
             activeWorkflows[workflowID] = {
                 createdAt: Date.now(),
                 finished: false
-            }
+            };
             const activeWorkflow = activeWorkflows[workflowID];
 
             res.status(200).json({
@@ -104,7 +104,7 @@ router.post("/:workflowUuid?", [
                     activeWorkflow.eventStream.write(`data: ${state}\n\n`);
             }).then(async (pdfResults) => {
                 if(activeWorkflow.eventStream) {
-                    activeWorkflow.eventStream.write(`data: processing done\n\n`);
+                    activeWorkflow.eventStream.write("data: processing done\n\n");
                     activeWorkflow.eventStream.end();
                 }
     
@@ -170,16 +170,16 @@ router.get("/progress-stream/:workflowUuid", (req: Request, res: Response) => {
     // TODO: Check if already done
 
     // Send realtime updates
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Connection', 'keep-alive');
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Connection", "keep-alive");
     res.flushHeaders(); // flush the headers to establish SSE with client
 
     const workflow = activeWorkflows[req.params.workflowUuid];
     workflow.eventStream = res;
 
-    res.on('close', () => {
+    res.on("close", () => {
         res.end();
         // TODO: Abort if not already done?
     });
@@ -203,7 +203,7 @@ router.get("/result/:workflowUuid", async (req: Request, res: Response) => {
     const workflow = activeWorkflows[req.params.workflowUuid];
     if(!workflow.finished) {
         res.status(202).json({ message: "Workflow hasn't finished yet. Check progress or connect to progress-steam to get notified when its done." });
-        return
+        return;
     }
 
     await respondWithPdfFiles(res, workflow.result, "workflow-results");

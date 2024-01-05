@@ -1,8 +1,8 @@
 
-import { PDFPage } from 'pdf-lib';
-import { PdfFile, RepresentationType } from '../wrappers/PdfFile';
+import { PDFPage } from "pdf-lib";
+import { PdfFile, RepresentationType } from "../wrappers/PdfFile";
 
-export type ScaleContentParamsType = {
+export interface ScaleContentParamsType {
     file: PdfFile;
     scaleFactor: number|number[];
 }
@@ -15,17 +15,17 @@ export async function scaleContent(params: ScaleContentParamsType): Promise<PdfF
 
     if (Array.isArray(scaleFactor)) {
         if (scaleFactor.length != pages.length) {
-            throw new Error(`Number of given scale factors '${scaleFactor.length}' is not the same as the number of pages '${pages.length}'`)
+            throw new Error(`Number of given scale factors '${scaleFactor.length}' is not the same as the number of pages '${pages.length}'`);
         }
         for (let i=0; i<scaleFactor.length; i++) {
             scalePage(pages[i], scaleFactor[i]);
         }
     } else {
-        pages.forEach(page => scalePage(page, scaleFactor));
+        pages.forEach(page => { scalePage(page, scaleFactor) });
     }
 
     return new PdfFile(file.originalFilename, pdfDoc, RepresentationType.PDFLibDocument, file.filename+"_scaledContent");
-};
+}
 
 function scalePage(page: PDFPage, scaleFactor: number) {
     const width = page.getWidth();

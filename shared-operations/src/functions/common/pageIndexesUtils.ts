@@ -18,7 +18,7 @@ export function invertSelection(selection: number[], pages: number|number[]): nu
  */
 export function parsePageIndexSpecification(specification: string, totalPages: number): number[] {
     // Translated to JS from the original Java function
-    const pageOrderArr = specification.split(",")
+    const pageOrderArr = specification.split(",");
     const newPageOrder: number[] = [];
 
     // loop through the page order array
@@ -32,13 +32,13 @@ export function parsePageIndexSpecification(specification: string, totalPages: n
         }
         else if (element.match("\\d*n\\+?-?\\d*|\\d*\\+?n")) {
             // Handle page order as a function
-            var coefficient = 0;
-            var constant = 0;
-            var coefficientExists = false;
-            var constantExists = false;
+            let coefficient = 0;
+            let constant = 0;
+            let coefficientExists = false;
+            let constantExists = false;
 
             if (element.includes("n")) {
-                var parts = element.split("n");
+                const parts = element.split("n");
                 if (!parts[0]) {
                     coefficient = parseInt(parts[0]);
                     coefficientExists = true;
@@ -53,7 +53,7 @@ export function parsePageIndexSpecification(specification: string, totalPages: n
             }
 
             for (var i = 1; i <= totalPages; i++) {
-                var pageNum = coefficientExists ? coefficient * i : i;
+                let pageNum = coefficientExists ? coefficient * i : i;
                 pageNum += constantExists ? constant : 0;
 
                 if (pageNum <= totalPages && pageNum > 0) {
@@ -64,13 +64,13 @@ export function parsePageIndexSpecification(specification: string, totalPages: n
             // split the range into start and end page
             const range = element.split("-");
             const start = parseInt(range[0]);
-            var end = parseInt(range[1]);
+            let end = parseInt(range[1]);
             // check if the end page is greater than total pages
             if (end > totalPages) {
                 end = totalPages;
             }
             // loop through the range of pages
-            for (var j = start; j <= end; j++) {
+            for (let j = start; j <= end; j++) {
                 // print the current index
                 newPageOrder.push(j - 1);
             }

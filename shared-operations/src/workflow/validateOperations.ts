@@ -17,7 +17,7 @@ export function validateOperations(actions: Action[]): { valid: boolean, reason?
         
         const operator = getOperatorByName(action.type);
         if(!operator) {
-            return { valid: false, reason: `action.type ${action.type} does not exist` }
+            return { valid: false, reason: `action.type ${action.type} does not exist` };
         }
         const validationResult = operator.schema.validate({values: action.values});
 
@@ -44,7 +44,7 @@ export function validateOperations(actions: Action[]): { valid: boolean, reason?
                     }
                 }
                 else if (action.type === "done") {
-                    return { valid: false, reason: `There shouldn't be a done action here.` };
+                    return { valid: false, reason: "There shouldn't be a done action here." };
                 }
                 else {
                     const receivingOperator = getOperatorByName(childAction.type);

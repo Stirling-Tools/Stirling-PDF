@@ -1,9 +1,9 @@
 
-import { open, save } from '@tauri-apps/api/dialog';
-import { readBinaryFile, writeBinaryFile } from '@tauri-apps/api/fs';
-import { Command } from '@tauri-apps/api/shell'
+import { open, save } from "@tauri-apps/api/dialog";
+import { readBinaryFile, writeBinaryFile } from "@tauri-apps/api/fs";
+import { Command } from "@tauri-apps/api/shell";
 
-export type TauriBrowserFile = {
+export interface TauriBrowserFile {
     name: string,
     relativePath?: string,
     data: Uint8Array,
@@ -29,13 +29,13 @@ export function isTauriAvailable() {
 }
 
 // [*] = Not available in browser
-type SelectFilesDialogOptions = {
+interface SelectFilesDialogOptions {
     defaultPath?: string, // [*] the default path to open the dialog on
     directory?: boolean,  // should the dialog be a directory dialog
-    filters?: Array<{     // list of file type filters 
+    filters?: {     // list of file type filters 
         name: string,        // category name eg. 'Images'
         extensions: string[] // list of extensions eg ['png', 'jpeg', 'jpg'] 
-    }>,
+    }[],
     multiple?: boolean,   // allow multiple selections
     recursive?: boolean,  // [*] If directory is true, indicates that it will be read recursively later. Defines whether subdirectories will be allowed on the scope or not.
     title?: string        // [*] the title of the dialog
@@ -43,7 +43,7 @@ type SelectFilesDialogOptions = {
 export function openFiles(options: SelectFilesDialogOptions): Promise<TauriBrowserFile[] | null> {
     return new Promise(async (resolve) => {
         if (isTauriAvailable()) {
-            var selected = await open(options);
+            let selected = await open(options);
             if (!selected) {
                 resolve(null);
                 return;
@@ -65,15 +65,15 @@ export function openFiles(options: SelectFilesDialogOptions): Promise<TauriBrows
             resolve(files);
             return;
         } else {
-            var input = document.createElement('input');
-            input.type = 'file';
+            const input = document.createElement("input");
+            input.type = "file";
             if (options.directory) input.setAttribute("webkitdirectory", "");
             if (options.filters) input.setAttribute("accept", options.filters.flatMap(f => f.extensions).map(ext => "."+ext).join(", "));
             if (options.multiple) input.setAttribute("multiple", "");
         
             input.onchange = async () => {
                 if (input.files && input.files.length) { 
-                    console.log("input.files", input.files)
+                    console.log("input.files", input.files);
                     const files: TauriBrowserFile[] = [];
                     for (const f of input.files) {
                         const contents = new Uint8Array(await f.arrayBuffer());
@@ -91,8 +91,8 @@ export function openFiles(options: SelectFilesDialogOptions): Promise<TauriBrows
 
             // detect the user clicking cancel
             document.body.onfocus = () => {
-                setTimeout(()=>resolve(null), 200); // the timeout is needed because 'document.body.onfocus' is called before 'input.onchange'
-            }
+                setTimeout(()=>{ resolve(null) }, 200); // the timeout is needed because 'document.body.onfocus' is called before 'input.onchange'
+            };
 
             input.click();
         }
@@ -100,40 +100,40 @@ export function openFiles(options: SelectFilesDialogOptions): Promise<TauriBrows
 }
 
 // [*] = Not available in browser
-type DownloadFilesDialogOptions = {
+interface DownloadFilesDialogOptions {
     defaultPath?: string, // the default path to open the dialog on
-    filters?: Array<{     // [*] list of file type filters 
+    filters?: {     // [*] list of file type filters 
         name: string,        // category name eg. 'Images'
         extensions: string[] // list of extensions eg ['png', 'jpeg', 'jpg'] 
-    }>,
+    }[],
     title?: string        // [*] the title of the dialog
 }
 export async function downloadFile(fileData: Uint8Array, options: DownloadFilesDialogOptions): Promise<undefined> {
     if (isTauriAvailable()) {
         const pathToSave = await save(options);
-        console.log("pathToSave", pathToSave)
+        console.log("pathToSave", pathToSave);
         if (pathToSave) {
             await writeBinaryFile(pathToSave, fileData);
         }
     } else {
-        const pdfBlob = new Blob([fileData], { type: 'application/pdf' });
+        const pdfBlob = new Blob([fileData], { type: "application/pdf" });
         const url = URL.createObjectURL(pdfBlob);
-        const downloadOption = localStorage.getItem('downloadOption');
+        const downloadOption = localStorage.getItem("downloadOption");
 
         // ensure filename is not a path
         const separator = options.defaultPath?.includes("\\") ? "\\" : "/";
         const filename = options.defaultPath?.split(separator).pop();
-        const filenameToUse = filename ? filename : 'edited.pdf';
+        const filenameToUse = filename ? filename : "edited.pdf";
 
-        if (downloadOption === 'sameWindow') {
+        if (downloadOption === "sameWindow") {
             // Open the file in the same window
             window.location.href = url;
-        } else if (downloadOption === 'newWindow') {
+        } else if (downloadOption === "newWindow") {
             // Open the file in a new window
-            window.open(url, '_blank');
+            window.open(url, "_blank");
         } else {
             // Download the file
-            const downloadLink = document.createElement('a');
+            const downloadLink = document.createElement("a");
             downloadLink.href = url;
             downloadLink.download = filenameToUse;
             downloadLink.click();
@@ -152,18 +152,18 @@ export function runShell(commandName: string, args: string[], callback: (message
     return new Promise(async (resolve, reject) => {
 
         const comm = new Command(commandName, args);
-        comm.on('close', data => {
+        comm.on("close", data => {
             if (data.code === 0) {
                 resolve();
             } else {
                 reject(new Error(`Command failed with exit code ${data.code} and signal ${data.signal}`));
             }
         });
-        comm.on('error', error => callback(error, "error"));
-        comm.stdout.on('data', line => callback(line, "stdout"));
-        comm.stderr.on('data', line => callback(line, "stderr"));
+        comm.on("error", error => { callback(error, "error") });
+        comm.stdout.on("data", line => { callback(line, "stdout") });
+        comm.stderr.on("data", line => { callback(line, "stderr") });
 
         const child = await comm.spawn();
-        console.debug(`Started child process with pid: ${child.pid}`)
+        console.debug(`Started child process with pid: ${child.pid}`);
     });
 }

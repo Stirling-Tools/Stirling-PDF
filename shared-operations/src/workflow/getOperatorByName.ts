@@ -4,7 +4,7 @@ import { Operator } from "../functions";
 import { Impose } from "../functions/impose";
 export const Operators = {
     Impose: Impose
-}
+};
 
 // TODO: Convert this to a map or similar
 export function getOperatorByName(name: string): typeof Operator | undefined {
@@ -13,7 +13,7 @@ export function getOperatorByName(name: string): typeof Operator | undefined {
     // Loop over each default export
     Object.entries(Operators).some(([className, exportedClass]) => {
         // Check if the exported item is a class
-        if (typeof exportedClass === 'function' && exportedClass.prototype) {
+        if (typeof exportedClass === "function" && exportedClass.prototype) {
             if (exportedClass.type === name) {
                 foundClass = exportedClass;
                 return true; // Stop the iteration

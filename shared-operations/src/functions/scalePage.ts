@@ -1,24 +1,24 @@
 
-import Joi from 'joi';
-import { PDFPage } from 'pdf-lib';
-import { PdfFile, RepresentationType, JoiPDFFileSchema } from '../wrappers/PdfFileJoi';
+import Joi from "joi";
+import { PDFPage } from "pdf-lib";
+import { PdfFile, RepresentationType, JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
 
 const whSchema = Joi.string().custom((value, helpers) => {
-    console.log("value.pageSize", typeof value)
+    console.log("value.pageSize", typeof value);
     try {
         const obj = JSON.parse(value);
         if (!obj.width && !obj.height) {
-            return helpers.error('any.required', { message: 'At least one of width/height must be present' });
+            return helpers.error("any.required", { message: "At least one of width/height must be present" });
         }
-        if (typeof obj.width != 'number' && typeof obj.width != 'undefined') {
-            return helpers.error('any.invalid', { message: 'Width must be a number if present' });
+        if (typeof obj.width != "number" && typeof obj.width != "undefined") {
+            return helpers.error("any.invalid", { message: "Width must be a number if present" });
         }
-        if (typeof obj.height != 'number' && typeof obj.height != 'undefined') {
-            return helpers.error('any.invalid', { message: 'Height must be a number if present' });
+        if (typeof obj.height != "number" && typeof obj.height != "undefined") {
+            return helpers.error("any.invalid", { message: "Height must be a number if present" });
         }
         return obj;
     } catch (error) {
-        return helpers.error('any.invalid', { message: 'Value must be a valid JSON' });
+        return helpers.error("any.invalid", { message: "Value must be a valid JSON" });
     }
 });
 
@@ -28,7 +28,7 @@ export const ScalePageSchema = Joi.object({
 });
 
 
-export type ScalePageParamsType = {
+export interface ScalePageParamsType {
     file: PdfFile;
     pageSize: { width?:number,height?:number }|{ width?:number,height?:number }[];
 }
@@ -41,17 +41,17 @@ export async function scalePage(params: ScalePageParamsType): Promise<PdfFile> {
 
     if (Array.isArray(pageSize)) {
         if (pageSize.length != pages.length) {
-            throw new Error(`Number of given sizes '${pageSize.length}' is not the same as the number of pages '${pages.length}'`)
+            throw new Error(`Number of given sizes '${pageSize.length}' is not the same as the number of pages '${pages.length}'`);
         }
         for (let i=0; i<pageSize.length; i++) {
             resize(pages[i], pageSize[i]);
         }
     } else {
-        pages.forEach(page => resize(page, pageSize));
+        pages.forEach(page => { resize(page, pageSize) });
     }
     
     return new PdfFile(file.originalFilename, pdfDoc, RepresentationType.PDFLibDocument, file.filename+"_scaledPages");
-};
+}
 
 function resize(page: PDFPage, newSize: {width?:number,height?:number}) {
     const calculatedSize = calculateSize(page, newSize);
@@ -74,7 +74,7 @@ function calculateSize(page: PDFPage, newSize: {width?:number,height?:number}): 
         const ratio = oldSize.height / oldSize.width;
         return { width: newSize.width, height: newSize.width * ratio };
     }
-    return { width: newSize.width!, height: newSize.height! };
+    return { width: newSize.width, height: newSize.height };
 }
 
 export const PageSize = Object.freeze({

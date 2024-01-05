@@ -1,10 +1,10 @@
 
-import { PdfFile } from '../wrappers/PdfFile.js';
+import { PdfFile } from "../wrappers/PdfFile.js";
 import { splitPagesByIndex } from "./common/splitPagesByIndex.js";
 import { detectEmptyPages } from "./common/detectEmptyPages.js";
 import { detectQRCodePages } from "./common/detectQRCodePages.js";
 
-export type SplitPageByPresetParamsType = {
+export interface SplitPageByPresetParamsType {
     file: PdfFile;
     type: "BAR_CODE"|"QR_CODE"|"BLANK_PAGE";
     whiteThreashold?: number;
@@ -16,22 +16,22 @@ export async function splitPagesByPreset(params: SplitPageByPresetParamsType): P
 
     let splitAtPages: number[];
     switch (type) {
-        case "BAR_CODE":
-            // TODO: Implement
-            throw new Error("This split-type has not been implemented yet");
+    case "BAR_CODE":
+        // TODO: Implement
+        throw new Error("This split-type has not been implemented yet");
 
-        case "QR_CODE":
-            splitAtPages = await detectQRCodePages(file);
-            break;
+    case "QR_CODE":
+        splitAtPages = await detectQRCodePages(file);
+        break;
 
-        case "BLANK_PAGE":
-            if (!whiteThreashold)
-                throw new Error("White threshold not provided");
-            splitAtPages = await detectEmptyPages(file, whiteThreashold);
-            break;
+    case "BLANK_PAGE":
+        if (!whiteThreashold)
+            throw new Error("White threshold not provided");
+        splitAtPages = await detectEmptyPages(file, whiteThreashold);
+        break;
     
-        default:
-            throw new Error("An invalid split-type was provided.");
+    default:
+        throw new Error("An invalid split-type was provided.");
     }
 
     console.debug("Split At Pages: ", splitAtPages);
@@ -41,4 +41,4 @@ export async function splitPagesByPreset(params: SplitPageByPresetParamsType): P
         newFiles[i].filename += "_split-"+i;
     }
     return newFiles;
-};
+}

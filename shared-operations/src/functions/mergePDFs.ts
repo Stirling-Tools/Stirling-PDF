@@ -1,8 +1,8 @@
 
-import { PDFDocument } from 'pdf-lib';
-import { PdfFile, RepresentationType } from '../wrappers/PdfFile';
+import { PDFDocument } from "pdf-lib";
+import { PdfFile, RepresentationType } from "../wrappers/PdfFile";
 
-export type MergeParamsType = {
+export interface MergeParamsType {
     files: PdfFile[];
 }
 
@@ -15,6 +15,6 @@ export async function mergePDFs(params: MergeParamsType): Promise<PdfFile> {
         copiedPages.forEach((page) => mergedPdf.addPage(page));
     }
 
-    const newName = "("+params.files.map(input => input.filename).join("_and_") + ")_merged"
+    const newName = "("+params.files.map(input => input.filename).join("_and_") + ")_merged";
     return new PdfFile("mergedPDF", mergedPdf, RepresentationType.PDFLibDocument, newName);
-};
+}

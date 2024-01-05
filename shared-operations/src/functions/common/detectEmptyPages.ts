@@ -1,7 +1,7 @@
 
-import { PdfFile } from '../../wrappers/PdfFile';
+import { PdfFile } from "../../wrappers/PdfFile";
 import { PDFPageProxy } from "pdfjs-dist/types/src/display/api.js";
-import { Image, ImageKind } from 'image-js';
+import { Image, ImageKind } from "image-js";
 
 import { getImagesOnPage, PDFJSImage } from "./getImagesOnPage.js";
 
@@ -45,8 +45,8 @@ async function areImagesBlank(page: PDFPageProxy, threshold: number): Promise<bo
 
 // TODO: Fix this function
 async function isImageBlank(image: PDFJSImage, threshold: number): Promise<boolean> {
-    var img = new Image(image.width, image.height, image.data, { kind: "RGB" as ImageKind }); // TODO: Maybe respect image.kind and convert accordingly, needs to be tested with a pdf with alpha-image
-    var grey = img.grey();
-    var mean = grey.getMean();
+    const img = new Image(image.width, image.height, image.data, { kind: "RGB" as ImageKind }); // TODO: Maybe respect image.kind and convert accordingly, needs to be tested with a pdf with alpha-image
+    const grey = img.grey();
+    const mean = grey.getMean();
     return mean[0] <= threshold;
 }

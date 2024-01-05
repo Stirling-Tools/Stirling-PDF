@@ -1,26 +1,26 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response } from "express";
 const router = express.Router();
-import multer from 'multer';
+import multer from "multer";
 const upload = multer();
-import { getOperatorByName } from '@stirling-pdf/shared-operations/src/workflow/getOperatorByName';
-import { Operator } from '@stirling-pdf/shared-operations/src/functions';
+import { getOperatorByName } from "@stirling-pdf/shared-operations/src/workflow/getOperatorByName";
+import { Operator } from "@stirling-pdf/shared-operations/src/functions";
 
-import { PdfFile } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile';
-import { respondWithPdfFiles } from '../../utils/endpoint-utils';
-import { Action } from '@stirling-pdf/shared-operations/declarations/Action';
-import { JoiPDFFileSchema } from '@stirling-pdf/shared-operations/src/wrappers/PdfFileJoi';
+import { PdfFile } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
+import { respondWithPdfFiles } from "../../utils/endpoint-utils";
+import { Action } from "@stirling-pdf/shared-operations/declarations/Action";
+import { JoiPDFFileSchema } from "@stirling-pdf/shared-operations/src/wrappers/PdfFileJoi";
 
-router.post('/:func', upload.array("file"), async function(req: Request, res: Response) {
+router.post("/:func", upload.array("file"), async function(req: Request, res: Response) {
     handleEndpoint(req, res);
 });
 
-router.post('/:dir/:func', upload.array("file"), async function(req: Request, res: Response) {
+router.post("/:dir/:func", upload.array("file"), async function(req: Request, res: Response) {
     handleEndpoint(req, res);
 });
 
 function handleEndpoint(req: Request, res: Response) {
     if(!req.files || req.files.length == 0) {
-        res.status(400).json({error: "no input file(s) were provided"})
+        res.status(400).json({error: "no input file(s) were provided"});
         return;
     }
 
@@ -46,11 +46,11 @@ function handleEndpoint(req: Request, res: Response) {
 
             operation.run(validationResults.value.input, (progress) => {}).then(pdfFiles => {
                 respondWithPdfFiles(res, pdfFiles, req.params.func + "_result");
-            })
+            });
         }
     }
     else {
-        res.status(400).json({error: `the operator of type ${req.params.func} does not exist`})
+        res.status(400).json({error: `the operator of type ${req.params.func} does not exist`});
     }
 }
 

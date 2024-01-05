@@ -1,9 +1,9 @@
 
-import { PdfFile } from '../wrappers/PdfFile.js';
-import { parsePageIndexSpecification } from './common/pageIndexesUtils'
-import { splitPagesByIndex } from './common/splitPagesByIndex.js';
+import { PdfFile } from "../wrappers/PdfFile.js";
+import { parsePageIndexSpecification } from "./common/pageIndexesUtils";
+import { splitPagesByIndex } from "./common/splitPagesByIndex.js";
 
-export type SplitPdfByIndexParamsType = {
+export interface SplitPdfByIndexParamsType {
     file: PdfFile;
     pageIndexes: string | number[];
 }
@@ -11,7 +11,7 @@ export async function splitPdfByIndex(params: SplitPdfByIndexParamsType): Promis
     const { file, pageIndexes } = params;
     const pdfLibDocument = await file.pdfLibDocument;
 
-    var indexes = pageIndexes;
+    let indexes = pageIndexes;
 
     if (!Array.isArray(indexes)) {
         indexes = parsePageIndexSpecification(indexes, pdfLibDocument.getPageCount());

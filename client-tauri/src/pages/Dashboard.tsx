@@ -1,8 +1,8 @@
 
 function Dashboard() {
-  return (
-    <div>
-      <h2>Dashboard</h2>
+    return (
+        <div>
+            <h2>Dashboard</h2>
       Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis aliquet felis in ornare molestie. Quisque et dolor gravida, vulputate libero ultricies, suscipit diam. Pellentesque semper eget purus et rutrum. Duis fringilla elementum tellus, ut egestas nisi ultrices sed. Fusce id elit ipsum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nulla facilisi. Duis varius, orci vel tempor cursus, elit tellus interdum sem, at vulputate lorem ex et dolor. Vestibulum purus mauris, consequat viverra gravida eget, fermentum a lacus. Phasellus eu varius dolor. Etiam a vulputate sapien. Etiam pulvinar, neque eu elementum imperdiet, nibh ex lobortis magna, ut varius lectus ante tristique massa.
 
 Nullam quis porttitor sapien. Suspendisse dictum enim vitae tristique aliquet. Nunc imperdiet pellentesque quam, sit amet luctus dui dignissim non. Vivamus eleifend sagittis mauris, at imperdiet nisl. Morbi rutrum magna ut tortor euismod efficitur. Pellentesque quis tortor consectetur, lobortis turpis eget, tincidunt turpis. Nulla consectetur massa ex. Donec lectus purus, interdum sit amet sapien eu, maximus dapibus diam. Suspendisse potenti. In lacinia augue massa, et vulputate eros convallis id. Suspendisse bibendum sagittis posuere. Integer ullamcorper odio eget risus venenatis, non mollis arcu lacinia. Vestibulum feugiat arcu elit, eu varius enim fermentum vitae.
@@ -42,8 +42,8 @@ Proin faucibus efficitur sollicitudin. Curabitur pharetra lectus ut metus molest
 Aenean tincidunt scelerisque ante non vestibulum. Curabitur eleifend ipsum sem, elementum ornare enim ornare eu. In molestie sodales mattis. Morbi ac posuere lorem. Aliquam in nisi ac ipsum euismod bibendum eget id urna. Quisque suscipit lectus non magna varius venenatis sed sit amet lectus. Nam leo nisl, imperdiet at lorem fringilla, lacinia bibendum lacus. Nunc auctor mauris at orci condimentum venenatis at non augue. Donec iaculis aliquam risus. Suspendisse vel massa leo.
 
 Mauris sed est turpis. Nullam ut magna eu elit vehicula tempus. Sed mollis ultrices eleifend. Curabitur metus felis, sodales a turpis accumsan, ultricies feugiat arcu. Donec sit amet dui commodo, lacinia sem facilisis, lobortis urna. Donec cursus arcu ex, ac imperdiet lorem rutrum at. Curabitur faucibus erat in dolor placerat, vel blandit ligula eleifend. Morbi blandit nisl ut arcu semper consequat. Nulla malesuada convallis lectus a egestas. Sed volutpat metus vitae libero pulvinar, ut pretium magna malesuada.
-    </div>
-  );
+        </div>
+    );
 }
 
 export default Dashboard;

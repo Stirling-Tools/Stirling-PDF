@@ -1,7 +1,7 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response } from "express";
 
-import workflow from './workflow-controller';
-import dynamicOperations from './dynamic-operations-controller';
+import workflow from "./workflow-controller";
+import dynamicOperations from "./dynamic-operations-controller";
 
 const router = express.Router();
 

@@ -2,7 +2,7 @@
 import { isLibreOfficeInstalled } from "../../utils/libre-office-utils";
 
 const hasLibreOffice = await isLibreOfficeInstalled();
-console.log(hasLibreOffice)
+console.log(hasLibreOffice);
 
 function About() {
     return (

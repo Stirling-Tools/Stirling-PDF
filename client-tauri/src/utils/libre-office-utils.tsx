@@ -1,7 +1,7 @@
 
-import { readBinaryFile, writeBinaryFile, removeDir, BaseDirectory } from '@tauri-apps/api/fs';
-import { PdfFile,RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
-import { runShell, isTauriAvailable } from './tauri-wrapper';
+import { readBinaryFile, writeBinaryFile, removeDir, BaseDirectory } from "@tauri-apps/api/fs";
+import { PdfFile,RepresentationType } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
+import { runShell, isTauriAvailable } from "./tauri-wrapper";
 
 export async function fileToPdf(byteArray: Uint8Array, filename: string): Promise<PdfFile> {
     const randUuid = crypto.randomUUID();
@@ -18,9 +18,9 @@ export async function fileToPdf(byteArray: Uint8Array, filename: string): Promis
         }
         console.debug(`${stream}, ${randUuid}: ${message}`);
     });
-    const lastMessage = messageList[messageList.length-1]
+    const lastMessage = messageList[messageList.length-1];
     const outputFilePath = lastMessage.split(" -> ")[1].split(".pdf")[0]+".pdf";
-    const outputFilePathSplit = outputFilePath.toString().split("[\\/]")
+    const outputFilePathSplit = outputFilePath.toString().split("[\\/]");
     const outputFileName = outputFilePathSplit[outputFilePathSplit.length-1];
     const outputBytes = await readBinaryFile(outputFilePath);
 
@@ -42,7 +42,7 @@ export async function isLibreOfficeInstalled() {
     } catch (error) {
         return false;
     }
-    console.log("messageList", messageList)
+    console.log("messageList", messageList);
     const result = messageList[0].match("LibreOffice ([0-9]+\.){4}.*");
     return result ? true : false;
 }

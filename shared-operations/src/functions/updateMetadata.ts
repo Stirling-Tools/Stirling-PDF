@@ -1,7 +1,7 @@
 
-import { PdfFile } from '../wrappers/PdfFile';
+import { PdfFile } from "../wrappers/PdfFile";
 
-export type UpdateMetadataParams = {
+export interface UpdateMetadataParams {
     file: PdfFile,
     deleteAll?: boolean,        // Delete all metadata if set to true
     author?: string,            // The author of the document
@@ -21,34 +21,34 @@ export async function updateMetadata(params: UpdateMetadataParams): Promise<PdfF
 
     if (params.deleteAll) {
         pdfDoc.setAuthor("");
-        pdfDoc.setCreationDate(new Date(0))
-        pdfDoc.setCreator("")
-        pdfDoc.setKeywords([])
-        pdfDoc.setModificationDate(new Date(0))
-        pdfDoc.setProducer("")
-        pdfDoc.setSubject("")
-        pdfDoc.setTitle("")
+        pdfDoc.setCreationDate(new Date(0));
+        pdfDoc.setCreator("");
+        pdfDoc.setKeywords([]);
+        pdfDoc.setModificationDate(new Date(0));
+        pdfDoc.setProducer("");
+        pdfDoc.setSubject("");
+        pdfDoc.setTitle("");
     }
 
     if(params.author)
         pdfDoc.setAuthor(params.author);
     if(params.creationDate)
-        pdfDoc.setCreationDate(params.creationDate)
+        pdfDoc.setCreationDate(params.creationDate);
     if(params.creator)
-        pdfDoc.setCreator(params.creator)
+        pdfDoc.setCreator(params.creator);
     if(params.keywords)
-        pdfDoc.setKeywords(params.keywords.split(","))
+        pdfDoc.setKeywords(params.keywords.split(","));
     if(params.modificationDate)
-        pdfDoc.setModificationDate(params.modificationDate)
+        pdfDoc.setModificationDate(params.modificationDate);
     if(params.producer)
-        pdfDoc.setProducer(params.producer)
+        pdfDoc.setProducer(params.producer);
     if(params.subject)
-        pdfDoc.setSubject(params.subject)
+        pdfDoc.setSubject(params.subject);
     if(params.title)
-        pdfDoc.setTitle(params.title)
+        pdfDoc.setTitle(params.title);
 
     // TODO add trapped and custom metadata. May need another library
 
     params.file.filename += "_updatedMetadata";
     return params.file;
-};
+}

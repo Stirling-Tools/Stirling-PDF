@@ -7,20 +7,20 @@ import * as pdfcpuWrapper from "#pdfcpu"; // This is updated by tsconfig.json/pa
 import Joi from "joi";
 import { JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
 
-import i18next from 'i18next';
-i18next.loadNamespaces('impose', (err, t) => { if (err) throw err; });
+import i18next from "i18next";
+i18next.loadNamespaces("impose", (err, t) => { if (err) throw err; });
 
 export class Impose extends Operator {
-    static type: string = "impose";
+    static type = "impose";
 
     /**
      * Validation & Localisation
      */
 
-    protected static inputSchema = JoiPDFFileSchema.label(i18next.t('inputs.pdffile.name')).description(i18next.t('inputs.pdffile.description'));
+    protected static inputSchema = JoiPDFFileSchema.label(i18next.t("inputs.pdffile.name")).description(i18next.t("inputs.pdffile.description"));
     protected static valueSchema = Joi.object({
         nup: Joi.number().integer().valid(2, 3, 4, 8, 9, 12, 16).required()
-            .label(i18next.t('values.nup.friendlyName', { ns: 'impose' })).description(i18next.t('values.nup.description', { ns: 'impose' }))
+            .label(i18next.t("values.nup.friendlyName", { ns: "impose" })).description(i18next.t("values.nup.description", { ns: "impose" }))
             .example("3").example("4"),
         format: Joi.string().valid(...[
             // ISO 216:1975 A
@@ -62,16 +62,16 @@ export class Impose extends Operator {
             "JIS-B7", "JIS-B8", "JIS-B9", "JIS-B10", "JIS-B11", "JIS-B12",
             "Shirokuban4", "Shirokuban5", "Shirokuban6", "Kiku4", "Kiku5", "AB", "B40", "Shikisen"
         ].flatMap(size => [size, size + "P", size + "L"])).required()
-            .label(i18next.t('values.format.friendlyName', { ns: 'impose' })).description(i18next.t('values.format.description', { ns: 'impose' }))
+            .label(i18next.t("values.format.friendlyName", { ns: "impose" })).description(i18next.t("values.format.description", { ns: "impose" }))
             .example("A4").example("A3L")
     });
-    protected static outputSchema = JoiPDFFileSchema.label(i18next.t('outputs.pdffile.name')).description(i18next.t('outputs.pdffile.description'));
+    protected static outputSchema = JoiPDFFileSchema.label(i18next.t("outputs.pdffile.name")).description(i18next.t("outputs.pdffile.description"));
 
     static schema = Joi.object({
         input: Impose.inputSchema,
         values: Impose.valueSchema.required(),
         output: Impose.outputSchema
-    }).label(i18next.t('friendlyName', { ns: 'impose' })).description(i18next.t('description', { ns: 'impose' }));
+    }).label(i18next.t("friendlyName", { ns: "impose" })).description(i18next.t("description", { ns: "impose" }));
 
 
     /**
@@ -89,7 +89,7 @@ export class Impose extends Operator {
                     "nup",
                     "-c",
                     "disable",
-                    'f:' + this.actionValues.format,
+                    "f:" + this.actionValues.format,
                     "/output.pdf",
                     String(this.actionValues.nup),
                     "input.pdf",
@@ -104,10 +104,10 @@ export class Impose extends Operator {
                 input.filename + "_imposed"
             );
 
-            progressCallback({ curFileProgress: 1, operationProgress: index/max })
+            progressCallback({ curFileProgress: 1, operationProgress: index/max });
             
             console.log("ImposeResult: ", result);
             return result;
-        })
+        });
     }
 }

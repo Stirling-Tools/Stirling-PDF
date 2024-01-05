@@ -4,7 +4,9 @@ module.exports = {
         "es2021": true
     },
     "extends": [
-        "plugin:@typescript-eslint/strict"
+        "eslint:recommended",
+        "plugin:@typescript-eslint/strict-type-checked",
+        "plugin:@typescript-eslint/stylistic-type-checked"
     ],
     "overrides": [
         {
@@ -22,7 +24,12 @@ module.exports = {
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "ecmaVersion": "latest",
-        "sourceType": "module"
+        "sourceType": "module",
+        "project": [
+            "./client-tauri/tsconfig.json",
+            "./server-node/tsconfig.json",
+            "./shared-operations/tsconfig.json"
+        ]
     },
     "plugins": [
         "@typescript-eslint"
@@ -47,7 +54,11 @@ module.exports = {
         ],
         "semi": [
             "error",
-            "always"
+            "always",
+            {
+                "omitLastInOneLineBlock": true,
+                "omitLastInOneLineClassBody": true
+            }
         ]
     }
 };

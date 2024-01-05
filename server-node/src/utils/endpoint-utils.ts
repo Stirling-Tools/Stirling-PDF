@@ -1,13 +1,13 @@
 
-import { Response } from 'express';
-import { PdfFile } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile'
-import Archiver from 'archiver';
+import { Response } from "express";
+import { PdfFile } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
+import Archiver from "archiver";
 
 export async function respondWithFile(res: Response, uint8Array: Uint8Array, filename: string, mimeType: string): Promise<void> {
     res.writeHead(200, {
-        'Content-Type': mimeType,
-        'Content-disposition': `attachment; filename="${filename}"`,
-        'Content-Length': uint8Array.length
+        "Content-Type": mimeType,
+        "Content-disposition": `attachment; filename="${filename}"`,
+        "Content-Length": uint8Array.length
     });
     res.end(uint8Array);
 }
@@ -23,14 +23,14 @@ export async function respondWithZip(res: Response, filename: string, files: {ui
         return;
     }
 
-    console.log(filename)
+    console.log(filename);
     res.writeHead(200, {
-        'Content-Type': 'application/zip',
-        'Content-disposition': `attachment; filename="${filename}.zip"`,
+        "Content-Type": "application/zip",
+        "Content-disposition": `attachment; filename="${filename}.zip"`,
     });
 
     // TODO: Also allow changing the compression level
-    var zip = Archiver('zip');
+    const zip = Archiver("zip");
 
     // Stream the file to the user.
     zip.pipe(res);
@@ -50,10 +50,10 @@ export async function respondWithPdfFiles(res: Response, pdfFiles: PdfFile[] | u
         res.status(500).json({"warning": "The workflow had no outputs."});
     }
     else if (pdfFiles.length == 1) {
-        respondWithPdfFile(res, pdfFiles[0])
+        respondWithPdfFile(res, pdfFiles[0]);
     }
     else {
-        const promises = pdfFiles.map(async (pdf) => {return{uint8Array: await pdf.uint8Array, filename: pdf.filename + ".pdf"}})
+        const promises = pdfFiles.map(async (pdf) => {return{uint8Array: await pdf.uint8Array, filename: pdf.filename + ".pdf"}});
         const files = await Promise.all(promises);
         respondWithZip(res, filename, files);
     }

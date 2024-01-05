@@ -1,7 +1,7 @@
 
 import jsQR from "jsqr";
 
-import { PdfFile } from '../../wrappers/PdfFile.js';
+import { PdfFile } from "../../wrappers/PdfFile.js";
 import { getImagesOnPage, PDFJSImage } from "./getImagesOnPage.js";
 
 export async function detectQRCodePages(file: PdfFile) {
@@ -24,7 +24,7 @@ export async function detectQRCodePages(file: PdfFile) {
         }
     }
     if(pagesWithQR.length == 0) {
-        console.warn("Could not find any QR Codes in the provided PDF.")
+        console.warn("Could not find any QR Codes in the provided PDF.");
     }
     return pagesWithQR;
 }
