@@ -6,7 +6,8 @@ FROM ubuntu:latest AS base
 # JDK for app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    	openjdk-17-jre
+    	openjdk-17-jre && \
+    rm -rf /var/lib/apt/lists/*
     	
 # Doc conversion
 RUN apt-get update && \
@@ -18,7 +19,8 @@ RUN apt-get update && \
         libreoffice-impress \
 		python3-uno \
 		curl \
-		unoconv
+		unoconv && \
+    rm -rf /var/lib/apt/lists/*
 		
 		
 # OCR MY PDF (unpaper for descew and other advanced featues)
@@ -30,21 +32,12 @@ apt-get update && \
         python3-pip \
         ocrmypdf \
         unpaper && \
-    pip install --upgrade pip && \
+    rm -rf /var/lib/apt/lists/* && \
+    mv /usr/share/tesseract-ocr /usr/share/tesseract-ocr-original && \
+    pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --upgrade ocrmypdf && \
     pip install --no-cache-dir --upgrade pillow==10.0.1 reportlab==3.6.13 wheel==0.38.1 setuptools==65.5.1 pyjwt==2.4.0 cryptography==39.0.1
     
     
 #CV and HTML   
 RUN pip install --no-cache-dir opencv-python-headless WeasyPrint 
-
-
-# cleanup and etc
-RUN rm -rf /var/lib/apt/lists/* && \
-    mkdir /usr/share/tesseract-ocr-original && \
-    cp -r /usr/share/tesseract-ocr/* /usr/share/tesseract-ocr-original && \
-    rm -rf /usr/share/tesseract-ocr
-
-
-
-    
