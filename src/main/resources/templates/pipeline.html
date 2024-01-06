@@ -80,6 +80,7 @@
 					</div>
 
 
+					<p>Below info is Alpha only, will be removed and hence not translated</p>
 					<h3>Current Limitations</h3>
 					<ul>
 						<li>Cannot have more than one of the same operation</li>
@@ -106,9 +107,8 @@
 
 					<h3>Todo</h3>
 					<ul>
-						<li>Translation support</li>
 						<li>Save to browser/Account</li>
-						<li>offline mode checks and testing</li>
+						<li>offline folder scan mode checks and testing for unique usecases</li>
 						<li>Improve operation config settings UI</li>
 					</ul>
 
@@ -203,6 +203,7 @@
 											th:placeholder="#{pipelineOptions.pipelineNamePrompt}">
 									</div>
 									<div class="mb-3">
+										<label for="operationsDropdown" th:text="#{pipelineOptions.selectOperation}"></label>
 										<select id="operationsDropdown" class="form-select">
 											<!-- Options will be dynamically populated here -->
 										</select>
