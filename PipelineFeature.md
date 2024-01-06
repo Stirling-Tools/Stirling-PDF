@@ -1,5 +1,14 @@
 # Pipeline Configuration and Usage Tutorial
 
+## Whilst Pipelines are in alpha...
+You must enable this alpha functionality by setting
+```
+system:
+  enableAlphaFunctionality: true
+```
+To true like in the above for your `/config/settings.yml` file, after restarting Stirling-PDF you should see both UI and folder scanning enabled.
+
+
 ## Steps to Configure and Use Your Pipeline
 
 1. **Access Configuration**
