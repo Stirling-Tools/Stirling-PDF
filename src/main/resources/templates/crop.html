@@ -28,18 +28,18 @@
 			</div>
 
             <script>
-            
+
             let pdfCanvas  = document.getElementById('crop-pdf-canvas');
             let overlayCanvas = document.getElementById('overlayCanvas');
 
             let context = pdfCanvas.getContext('2d');
             let overlayContext = overlayCanvas.getContext('2d');
-            
+
             overlayCanvas.width = pdfCanvas.width;
             overlayCanvas.height = pdfCanvas.height;
-            
+
             let isDrawing = false; // New flag to check if drawing is ongoing
-            
+
             let cropForm = document.getElementById('cropForm');
             let fileInput = document.getElementById('fileInput-input');
             let xInput = document.getElementById('x');
@@ -89,7 +89,7 @@
             overlayCanvas.addEventListener('mousemove', function(e) {
                 if (!isDrawing) return;
                 overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); // Clear previous rectangle
-                
+
                 rectWidth = e.offsetX - startX;
                 rectHeight = e.offsetY - startY;
                 overlayContext.strokeStyle = 'red';
@@ -98,7 +98,7 @@
 
             overlayCanvas.addEventListener('mouseup', function(e) {
                 isDrawing = false;
-                
+
                 rectWidth = e.offsetX - startX;
                 rectHeight = e.offsetY - startY;
 
@@ -108,11 +108,11 @@
                 yInput.value = flippedY;
                 widthInput.value = rectWidth;
                 heightInput.value = rectHeight;
-                
+
                 // Draw the final rectangle on the main canvas
                 context.strokeStyle = 'red';
                 context.strokeRect(startX, startY, rectWidth, rectHeight);
-                
+
                 overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); // Clear the overlay
             });
 
@@ -122,22 +122,22 @@
                     let viewport = page.getViewport({ scale: 1.0 });
                     pdfCanvas.width = viewport.width;
                     pdfCanvas.height = viewport.height;
-                    
+
                     overlayCanvas.width = viewport.width;  // Match overlay canvas size with PDF canvas
                     overlayCanvas.height = viewport.height;
-                    
+
                     let renderContext = { canvasContext: context, viewport: viewport };
                     page.render(renderContext);
                     pdfCanvas.classList.add("shadow-canvas");
                 });
             }
-           
 
 
 
-            
+
+
             </script>
-            
+
           </div>
         </div>
       </div>

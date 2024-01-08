@@ -13,13 +13,13 @@
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-md-6">
-                    
-                    
+
+
                         <h2 th:text="#{overlay-pdfs.header}"></h2>
 						<form id="overlayForm" method="post" enctype="multipart/form-data" th:action="@{/api/v1/general/overlay-pdfs}">
 						    <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
 						    <div th:replace="~{fragments/common :: fileSelector(name='overlayFiles', multiple=true, accept='application/pdf')}"></div>
-						    
+
 						    <label for="overlayMode" th:text="#{overlay-pdfs.mode.label}">Overlay Mode</label>
 						    <select id="overlayMode" name="overlayMode" class="form-control">
 						        <option value="SequentialOverlay" th:text="#{overlay-pdfs.mode.sequential}">Sequential Overlay</option>
@@ -37,11 +37,11 @@
 						        <label th:text="#{overlay-pdfs.counts.label}">Overlay Counts</label>
 						        <!-- Inputs for counts will be dynamically added here -->
 						    </div>
-						
+
 						    <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{overlay-pdfs.submit}">Submit</button>
 						</form>
-						
-						
+
+
 						<script>
 						    function updateCountsInputs() {
 						        const mode = document.getElementById('overlayMode').value;
@@ -49,7 +49,7 @@
 						        const countsContainer = document.getElementById('countsContainer');
 						        console.log("countsContainer",countsContainer);
 						        countsContainer.innerHTML = ''; // Clear previous inputs
-						
+
 						        if (mode === 'FixedRepeatOverlay') {
 						            const fileInput = document.getElementById('overlayFiles-input');
 						            console.log("fileInput",fileInput);
@@ -58,7 +58,7 @@
 							            console.log("files",files);
 							            if(files) {
 								            const fileCount = files.length;
-								
+
 								            for (let i = 0; i < fileCount; i++) {
 								                const input = document.createElement('input');
 								                input.type = 'text';

@@ -17,10 +17,10 @@
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <input type="hidden" id="customMode" name="customMode" value="">
                             <div class="mb-3">
-                                <label for="pageOrder" th:text="#{pageOrderPrompt}"></label> 
+                                <label for="pageOrder" th:text="#{pageOrderPrompt}"></label>
                                 <input type="text" class="form-control" id="pageOrder" name="pageNumbers" placeholder="(e.g. 1,2,8 or 4,7,12-16 or 2n-1)" required>
                             </div>
-                            
+
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pageExtracter.submit}"></button>
                         </form>
                     </div>

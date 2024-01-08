@@ -121,7 +121,7 @@
 			<script>
 			let cells = document.querySelectorAll('.pageNumber');
 			let inputField = document.getElementById('numberInput');
-			
+
 			cells.forEach(cell => {
 			  cell.addEventListener('click', function(e) {
 			    cells.forEach(cell => {
@@ -133,19 +133,19 @@
 			    e.target.classList.add('selectedPosition'); // Add selected class to clicked cell
 			    e.target.classList.add('selectedHovered'); // Add selectedHovered class
 			  });
-		
+
 			  cell.addEventListener('mouseenter', function(e) {
 			    if(e.target.classList.contains('selectedPosition')) {
 			      e.target.classList.add('selectedHovered');
 			    }
 			  });
-		
+
 			  cell.addEventListener('mouseleave', function(e) {
 			    if(e.target.classList.contains('selectedPosition')) {
 			      e.target.classList.remove('selectedHovered');
 			    }
 			  });
-			});	
+			});
 		</script>
 
 		</div>

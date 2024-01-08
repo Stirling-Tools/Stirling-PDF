@@ -17,9 +17,9 @@
                         <h2 th:text="#{imageToPDF.header}"></h2>
 
                         <form method="post" enctype="multipart/form-data" th:action="@{api/v1/convert/img/pdf}">
-                        
-                           
-                            
+
+
+
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*', inputText=#{imgPrompt})}"></div>
 
                             <div class="mb-3">
@@ -33,11 +33,11 @@
 
 
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input" name="autoRotate" id="autoRotate"> 
+                                <input type="checkbox" class="form-check-input" name="autoRotate" id="autoRotate">
                                 <label class="ms-3" for="autoRotate" th:text=#{imageToPDF.selectText.2}></label>
                             </div>
                             <div class="mb-3">
-                                <label th:text="#{pdfToImage.colorType}"></label> 
+                                <label th:text="#{pdfToImage.colorType}"></label>
                                 <select class="form-control" id="colorType" name="colorType">
                                     <option value="color" th:text="#{pdfToImage.color}"></option>
                                     <option value="greyscale" th:text="#{pdfToImage.grey}"></option>
@@ -47,13 +47,13 @@
                             <br>
                             <input type="hidden" id="override" name="override" value="multi">
                             <div class="mb-3">
-                                <label th:text=#{imageToPDF.selectText.3}></label> 
+                                <label th:text=#{imageToPDF.selectText.3}></label>
                                 <select class="form-control" id="conversionType" name="conversionType" disabled>
                                     <option value="merge" th:text=#{imageToPDF.selectText.4}></option>
                                     <option value="convert" th:text=#{imageToPDF.selectText.5} selected></option>
                                 </select>
                             </div>
-                            
+
                             <br> <br>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
                             <script>
@@ -67,20 +67,20 @@
                                         conversionType.disabled = true;
                                     }
                                  });
-                                
+
                                 $('#conversionType').change(function() {
                                     var selectedValue = $(this).val();
-                                    var override = document.getElementById("override");    
+                                    var override = document.getElementById("override");
                                     console.log("selectedValue=" + selectedValue)
                                     if (selectedValue === 'merge') {
-                                        override.value = "single";                          
+                                        override.value = "single";
                                     } else if (selectedValue === 'convert') {
                                         override.value = "multi";
                                     }
                                 });
-                                
+
                             </script>
-                                
+
                         </form>
                     </div>
                 </div>

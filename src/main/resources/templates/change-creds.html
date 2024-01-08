@@ -33,7 +33,7 @@
 						<!-- At the top of the user settings -->
 						<h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>
 
-						
+
                         <!-- Change Username Form -->
                         <h4></h4>
                         <h4 th:text="#{changeCreds.changeUserAndPassword}">Change Username and password</h4>
@@ -58,11 +58,11 @@
                                 <button type="submit" class="btn btn-primary" th:text="#{changeCreds.submit}">Change credentials!</button>
                             </div>
                         </form>
-						
+
 			<script>
 			document.addEventListener("DOMContentLoaded", function() {
 		        const form = document.querySelector('form[action="api/v1/user/change-username-and-password"]');
-		        
+
 		        form.addEventListener('submit', function(event) {
 		            const newPassword = document.getElementById('newPassword').value;
 		            const confirmNewPassword = document.getElementById('confirmNewPassword').value;

@@ -14,7 +14,7 @@ body {
 	padding-top: 40px;
 	padding-bottom: 40px;
 	background-color: #f5f5f5;
-	
+
 }
 
 .form-signin {
@@ -54,7 +54,7 @@ body {
     margin-top: auto;
 }
 body.light-mode input:-webkit-autofill,
-body.light-mode input:-webkit-autofill:hover, 
+body.light-mode input:-webkit-autofill:hover,
 body.light-mode input:-webkit-autofill:focus,
 body.light-mode input:-webkit-autofill:active {
     -webkit-text-fill-color: #212529;  /* Dark font color */
@@ -63,7 +63,7 @@ body.light-mode input:-webkit-autofill:active {
 
 /* Dark Mode */
 body.dark-mode input:-webkit-autofill,
-body.dark-mode input:-webkit-autofill:hover, 
+body.dark-mode input:-webkit-autofill:hover,
 body.dark-mode input:-webkit-autofill:focus,
 body.dark-mode input:-webkit-autofill:active {
     -webkit-text-fill-color: #f8f9fa;  /* Light font color */
@@ -142,7 +142,7 @@ function setInputMode(elementId, mode) {
             break;
         case "rainbow":
             // Assuming you have defined some classes for rainbow mode
-           
+
             break;
     }
 }
@@ -151,7 +151,7 @@ function setInputMode(elementId, mode) {
 
 document.addEventListener('modeChanged', function(e) {
     var mode = e.detail;
-    
+
     setInputMode("username", mode);
     setInputMode("password", mode);
     document.body.classList.remove("light-mode", "dark-mode", "rainbow-mode"); // remove all mode classes first
@@ -167,11 +167,11 @@ document.addEventListener('modeChanged', function(e) {
             document.body.classList.add("rainbow-mode");
             break;
     }
-    
+
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-	
+
 	const defaultLocale = document.documentElement.lang || 'en_GB';
     const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
 
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = currentURL.toString();
         return;
     }
-    
+
     const dropdown = document.getElementById('languageDropdown');
     const dropdownItems = document.querySelectorAll('.lang_dropdown-item');
 
@@ -230,7 +230,7 @@ function handleDropdownItemClick(event) {
     event.preventDefault();
     const languageCode = event.currentTarget.dataset.bsLanguageCode;
     const dropdown = document.getElementById('languageDropdown');
-    
+
     if (languageCode) {
     	localStorage.setItem('languageCode', languageCode);
     	const currentLang = document.documentElement.getAttribute('lang');
@@ -292,22 +292,22 @@ function handleDropdownItemClick(event) {
 	        </div>
 	    </div>
 	</div>
-			
-		
-		
+
+
+
 		<div class="text-danger text-center">
 			<div th:if="${error == 'badcredentials'}" th:text="#{login.invalid}">Invalid username or
 				password.</div>
 			<div th:if="${error == 'locked'}" th:text="#{login.locked}">Your account has been locked.
 			</div>
 		</div>
-	
+
 	</main>
-    
-       
+
+
         <div  th:insert="~{fragments/footer.html :: footer}"></div>
  </div>
-    
-    
+
+
 </body>
 </html>

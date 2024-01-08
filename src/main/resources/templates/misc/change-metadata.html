@@ -19,57 +19,57 @@
                             <p class="text-muted" th:text="#{changeMetadata.selectText.1}"></p>
 
                             <div class="mb-3-inline form-check">
-                                <input type="checkbox" class="form-check-input" id="deleteAll" name="deleteAll"> 
+                                <input type="checkbox" class="form-check-input" id="deleteAll" name="deleteAll">
                                 <label class="ms-3" for="deleteAll"  th:text="#{changeMetadata.selectText.2}" ></label>
                             </div>
 
                             <div class="mb-3-inline form-check">
-                                <input type="checkbox" class="form-check-input" id="customModeCheckbox"> 
+                                <input type="checkbox" class="form-check-input" id="customModeCheckbox">
                                 <label class="ms-3" for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-check-label" for="author" th:text="#{changeMetadata.author}"></label> 
+                                <label class="form-check-label" for="author" th:text="#{changeMetadata.author}"></label>
                                 <input type="text" class="form-control" id="author" name="author">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-check-label" for="creationDate" th:text="#{changeMetadata.creationDate}"></label> 
+                                <label class="form-check-label" for="creationDate" th:text="#{changeMetadata.creationDate}"></label>
                                 <input type="text" class="form-control" id="creationDate" name="creationDate" placeholder="2020/12/25 18:30:59">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-check-label" for="creator" th:text="#{changeMetadata.creator}"></label> 
+                                <label class="form-check-label" for="creator" th:text="#{changeMetadata.creator}"></label>
                                 <input type="text" class="form-control" id="creator" name="creator">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-check-label" for="keywords" th:text="#{changeMetadata.keywords}"></label> 
+                                <label class="form-check-label" for="keywords" th:text="#{changeMetadata.keywords}"></label>
                                 <input type="text" class="form-control" id="keywords" name="keywords">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-check-label" for="modificationDate" th:text="#{changeMetadata.modDate}"></label> 
+                                <label class="form-check-label" for="modificationDate" th:text="#{changeMetadata.modDate}"></label>
                                 <input type="text" class="form-control" id="modificationDate" name="modificationDate" placeholder="2020/12/25 18:30:59">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-check-label" for="producer" th:text="#{changeMetadata.producer}"></label> 
+                                <label class="form-check-label" for="producer" th:text="#{changeMetadata.producer}"></label>
                                 <input type="text" class="form-control" id="producer" name="producer">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-check-label" for="subject" th:text="#{changeMetadata.subject}"></label> 
+                                <label class="form-check-label" for="subject" th:text="#{changeMetadata.subject}"></label>
                                 <input type="text" class="form-control" id="subject" name="subject">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-check-label" for="title" th:text="#{changeMetadata.title}"></label> 
+                                <label class="form-check-label" for="title" th:text="#{changeMetadata.title}"></label>
                                 <input type="text" class="form-control" id="title" name="title">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-check-label" for="trapped" th:text="#{changeMetadata.trapped}"></label> 
+                                <label class="form-check-label" for="trapped" th:text="#{changeMetadata.trapped}"></label>
                                 <select class="form-control" id="trapped" name="trapped">
                                     <option value="True" th:text="#{true}"></option>
                                     <option value="False"  th:text="#{false}" selected></option>
@@ -86,12 +86,12 @@
                             <br>
                             <button class="btn btn-primary" type="submit" id="submitBtn" th:text="#{changeMetadata.submit}"></button>
                             <script>
-  
+
     const deleteAllCheckbox = document.querySelector("#deleteAll");
     let inputs = document.querySelectorAll("input");
     const customMetadataDiv = document.getElementById('customMetadata');
     const otherMetadataEntriesDiv = document.getElementById('otherMetadataEntries');
-    
+
     deleteAllCheckbox.addEventListener("change", function(event) {
       inputs.forEach(input => {
           // If it's the deleteAllCheckbox or any file input, skip
@@ -102,20 +102,20 @@
           input.disabled = deleteAllCheckbox.checked;
       });
     });
-                            
-                            
-  const customModeCheckbox = document.getElementById('customModeCheckbox');
-  
-  
 
-  
-  
+
+  const customModeCheckbox = document.getElementById('customModeCheckbox');
+
+
+
+
+
   const addMetadataBtn = document.getElementById("addMetadataBtn");
   const customMetadataFormContainer = document.getElementById("customMetadataEntries");
   var count = 1;
-  
 
-  
+
+
 
   const fileInput = document.querySelector("#fileInput-input");
   const authorInput = document.querySelector("#author");
@@ -127,21 +127,21 @@
   const subjectInput = document.querySelector("#subject");
   const titleInput = document.querySelector("#title");
   const trappedInput = document.querySelector("#trapped");
-  
+
   var lastPDFFileMeta = null;
   fileInput.addEventListener("change", async function() {
-	  
-	  
-	  
+
+
+
 	  while (otherMetadataEntriesDiv.firstChild) {
 		  otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
 	  }
 	  while (customMetadataFormContainer.firstChild) {
 		  customMetadataFormContainer.removeChild(customMetadataFormContainer.firstChild);
       }
-	  
-	  
-	  
+
+
+
     const file = this.files[0];
     var url = URL.createObjectURL(file)
 	pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
@@ -173,31 +173,31 @@
         options[i].selected = true;
         break;
       }
-    }  
+    }
     addExtra();
   });
-  
+
   addMetadataBtn.addEventListener("click", () => {
-	  
+
 	    const keyInput = document.createElement("input");
 	    keyInput.type = "text";
 	    keyInput.placeholder = 'Key';
 	    keyInput.className = "form-control";
 	    keyInput.name = "customKey" + count;
-	    
+
 	    const valueInput = document.createElement("input");
 	    valueInput.type = "text";
 	    valueInput.placeholder = 'Value';
 	    valueInput.className = "form-control";
 	    valueInput.name = "customValue" + count;
 	    count = count + 1;
-	    
+
 	    const formGroup = document.createElement("div");
 	    formGroup.className = "mb-3";
 	    formGroup.appendChild(keyInput);
 	    formGroup.appendChild(valueInput);
-	    
-	    
+
+
 	    customMetadataFormContainer.appendChild(formGroup);
 	  });
   function convertDateFormat(dateTimeString) {
@@ -214,11 +214,11 @@
 
 	  return year + "/" + month + "/" + day + " " + hour + ":" + minute + ":" + second;
 	}
-  
+
     function addExtra() {
          const event = document.getElementById("customModeCheckbox");
-        
-    
+
+
         if (event.checked && lastPDFFile.Custom != null) {
           customMetadataDiv.style.display = 'block';
           for (const [key, value] of Object.entries(lastPDFFile.Custom)) {
@@ -227,9 +227,9 @@
             }
             const entryDiv = document.createElement('div');
             entryDiv.className = 'mb-3';
-            
-            
-          
+
+
+
             entryDiv.innerHTML = `<div class="mb-3"><label class="form-check-label" for="${key}">${key}:</label><input name="${key}" value="${value}" type="text" class="form-control" id="${key}"></div>`;
             otherMetadataEntriesDiv.appendChild(entryDiv);
           }
@@ -239,15 +239,15 @@
             otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
           }
         }
-        
-    
+
+
     }
-    
+
   customModeCheckbox.addEventListener('change', (event) => {
-     
+
       addExtra();
       });
-  
+
 
 </script>
                         </form>

@@ -144,8 +144,8 @@ select#font-select, select#font-select option {
                                         // some browsers report devicePixelRatio as less than 1
                                         // and only part of the canvas is cleared then.
                                         var ratio = Math.max(window.devicePixelRatio || 1, 1);
-									    var additionalFactor = 10;  
-									
+									    var additionalFactor = 10;
+
 									    signaturePadCanvas.width = signaturePadCanvas.offsetWidth * ratio * additionalFactor;
 									    signaturePadCanvas.height = signaturePadCanvas.offsetHeight * ratio * additionalFactor;
 									    signaturePadCanvas.getContext("2d").scale(ratio * additionalFactor, ratio * additionalFactor);
@@ -178,13 +178,13 @@ select#font-select, select#font-select option {
                                 </style>
                             </div>
                             <div class="tab-container" th:title="#{sign.text}">
-                                <label class="form-check-label" for="sigText" th:text="#{text}"></label> 
+                                <label class="form-check-label" for="sigText" th:text="#{text}"></label>
                                 <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
-                                <label th:text="#{font}"></label> 
+                                <label th:text="#{font}"></label>
                                 <select class="form-control" name="font" id="font-select">
-								    <option th:each="font : ${fonts}" 
-								            th:value="${font.name}" 
-								            th:text="${font.name}" 
+								    <option th:each="font : ${fonts}"
+								            th:value="${font.name}"
+								            th:text="${font.name}"
 								            th:class="${font.name.toLowerCase()+'-font'}">
 								    </option>
 								</select>
@@ -244,7 +244,7 @@ select#font-select, select#font-select option {
     fontSelect.dispatchEvent(new Event('change'));
 </script>
 
-          
+
 <th:block th:each="font : ${fonts}">
     <style th:inline="text">
         #font-select option[value='/*[[${font.name}]]*/'] {
@@ -311,7 +311,7 @@ select#font-select, select#font-select option {
                         <div class="margin-auto-parent">
                             <button id="download-pdf" class="btn btn-primary mb-2 show-on-file-selected margin-center">Download PDF</button>
                         </div>
-                        
+
                         <script>
                             document.getElementById("download-pdf").addEventListener('click', async() => {
                                 const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
