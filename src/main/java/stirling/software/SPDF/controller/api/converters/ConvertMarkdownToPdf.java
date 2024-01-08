@@ -1,11 +1,14 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.util.List;
+import java.util.Map;
 
 import org.commonmark.Extension;
+import org.commonmark.ext.gfm.tables.TableBlock;
 import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.AttributeProvider;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -53,9 +56,16 @@ public class ConvertMarkdownToPdf {
         // Convert Markdown to HTML using CommonMark
         List<Extension> extensions = List.of(TablesExtension.create());
         Parser parser = Parser.builder().extensions(extensions).build();
+
         Node document = parser.parse(new String(fileInput.getBytes()));
-        HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
+        HtmlRenderer renderer =
+                HtmlRenderer.builder()
+                        .attributeProviderFactory(context -> new TableAttributeProvider())
+                        .extensions(extensions)
+                        .build();
+
         String htmlContent = renderer.render(document);
+        System.out.println(htmlContent);
 
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
@@ -65,5 +75,14 @@ public class ConvertMarkdownToPdf {
                 originalFilename.replaceFirst("[.][^.]+$", "")
                         + ".pdf"; // Remove file extension and append .pdf
         return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+    }
+}
+
+class TableAttributeProvider implements AttributeProvider {
+    @Override
+    public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
+        if (node instanceof TableBlock) {
+            attributes.put("class", "table table-striped");
+        }
     }
 }
