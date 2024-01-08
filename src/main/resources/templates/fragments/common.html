@@ -1,56 +1,56 @@
 <head th:fragment="head">
 
-<!-- Title -->
-<title th:text="${@appName} + (${title} != null and ${title} != '' ? ' - ' + ${title} : '')"></title>
+    <!-- Title -->
+    <title th:text="${@appName} + (${title} != null and ${title} != '' ? ' - ' + ${title} : '')"></title>
 
-<!-- Metadata -->
-<meta charset="UTF-8">
-<meta name="description" th:content="${@appName} + (${header} != null and ${header} != '' ? ' - ' + ${header} : '')"/>
-<meta name="msapplication-TileColor" content="#2d89ef">
-<meta name="theme-color" content="#ffffff">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Metadata -->
+    <meta charset="UTF-8">
+    <meta name="description" th:content="${@appName} + (${header} != null and ${header} != '' ? ' - ' + ${header} : '')" />
+    <meta name="msapplication-TileColor" content="#2d89ef">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Icons -->
-<link rel="shortcut icon" href="favicon.svg">
-<link rel="apple-touch-icon" sizes="57x57" href="apple-touch-icon-57x57.png">
-<link rel="apple-touch-icon" sizes="60x60" href="apple-touch-icon-60x60.png">
-<link rel="apple-touch-icon" sizes="72x72" href="apple-touch-icon-72x72.png">
-<link rel="apple-touch-icon" sizes="76x76" href="apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" sizes="114x114" href="apple-touch-icon-114x114.png">
-<link rel="apple-touch-icon" sizes="120x120" href="apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" sizes="144x144" href="apple-touch-icon-144x144.png">
-<link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152x152.png">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-180x180.png">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-<link rel="manifest" href="site.webmanifest">
-<link rel="mask-icon" href="safari-pinned-tab.svg" color="#ca2b2a">
+    <!-- Icons -->
+    <link rel="shortcut icon" href="favicon.svg">
+    <link rel="apple-touch-icon" sizes="57x57" href="apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="mask-icon" href="safari-pinned-tab.svg" color="#ca2b2a">
 
-<!-- jQuery -->
-<script src="js/thirdParty/jquery.min.js"></script>
-<script src="js/thirdParty/jszip.min.js"></script>
+    <!-- jQuery -->
+    <script src="js/thirdParty/jquery.min.js"></script>
+    <script src="js/thirdParty/jszip.min.js"></script>
 
-<!-- Bootstrap -->
-<script src="js/thirdParty/popper.min.js"></script>
-<script src="js/thirdParty/bootstrap.min.js"></script>
-<link rel="stylesheet" href="css/bootstrap.min.css">
+    <!-- Bootstrap -->
+    <script src="js/thirdParty/popper.min.js"></script>
+    <script src="js/thirdParty/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
 
-<!-- Bootstrap Icons -->
-<link rel="stylesheet" href="css/bootstrap-icons.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="css/bootstrap-icons.min.css">
 
-<!-- PDF.js -->
-<script src="pdfjs/pdf.js"></script>
+    <!-- PDF.js -->
+    <script src="pdfjs/pdf.js"></script>
 
-<!-- PDF-Lib -->
-<script src="js/thirdParty/pdf-lib.min.js"></script>
+    <!-- PDF-Lib -->
+    <script src="js/thirdParty/pdf-lib.min.js"></script>
 
-<!-- Custom -->
-<link rel="stylesheet" href="css/general.css">
-<link rel="stylesheet" th:href="@{css/light-mode.css}" id="light-mode-styles">
-<link rel="stylesheet" th:href="@{css/dark-mode.css}" id="dark-mode-styles">
-<link rel="stylesheet" th:href="@{css/rainbow-mode.css}" id="rainbow-mode-styles" disabled="true">
-<link rel="stylesheet" href="css/tab-container.css">
-<script src="js/tab-container.js"></script>
+    <!-- Custom -->
+    <link rel="stylesheet" href="css/general.css">
+    <link rel="stylesheet" th:href="@{css/light-mode.css}" id="light-mode-styles">
+    <link rel="stylesheet" th:href="@{css/dark-mode.css}" id="dark-mode-styles">
+    <link rel="stylesheet" th:href="@{css/rainbow-mode.css}" id="rainbow-mode-styles" disabled="true">
+    <link rel="stylesheet" href="css/tab-container.css">
+    <script src="js/tab-container.js"></script>
 
 
 </head>
@@ -95,6 +95,7 @@
                     }
                 })
             })
+
         </script>
         <div id="game-container">
             <div id="lives">Lives: 3</div>
@@ -107,23 +108,23 @@
     </dialog>
 </th:block>
 
-<th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, notRequired=${notRequired} ?: false">
+<th:block th:fragment="fileSelector(name, multiple)" th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, notRequired=${notRequired} ?: false">
     <script th:inline="javascript">
-		const pdfPasswordPrompt =/*[[#{error.pdfPassword}]]*/ '';
-		const multiple = [[${multiple}]] || false;
-		const remoteCall = [[${remoteCall}]] || true;
-	</script>
+        const pdfPasswordPrompt = /*[[#{error.pdfPassword}]]*/ '';
+        const multiple = [[${multiple}]] || false;
+        const remoteCall = [[${remoteCall}]] || true;
+    </script>
     <script src="js/downloader.js"></script>
 
     <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, 
 	          data-bs-element-id=${name+'-input'}, 
 	          data-bs-files-selected=#{filesSelected}, 
 	          data-bs-pdf-prompt=#{pdfPrompt}">
-	    <div class="mb-3">
-	        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:classappend="${notRequired ? '' : 'required'}">
-	    </div>
-	    <div class="selected-files"></div>
-	</div>
+        <div class="mb-3">
+            <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:classappend="${notRequired ? '' : 'required'}">
+        </div>
+        <div class="selected-files"></div>
+    </div>
 
     <div id="progressBarContainer" style="display: none; position: relative;">
         <div class="progress" style="height: 1rem;">
@@ -135,7 +136,7 @@
     <button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">Bored waiting?</button>
 
 
-	
+
     <script src="js/fileInput.js"></script>
     <link rel="stylesheet" href="css/fileSelect.css">
 </th:block>
