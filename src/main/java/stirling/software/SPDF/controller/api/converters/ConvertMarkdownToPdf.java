@@ -1,5 +1,9 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import java.util.List;
+
+import org.commonmark.Extension;
+import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
@@ -47,9 +51,10 @@ public class ConvertMarkdownToPdf {
         }
 
         // Convert Markdown to HTML using CommonMark
-        Parser parser = Parser.builder().build();
+        List<Extension> extensions = List.of(TablesExtension.create());
+        Parser parser = Parser.builder().extensions(extensions).build();
         Node document = parser.parse(new String(fileInput.getBytes()));
-        HtmlRenderer renderer = HtmlRenderer.builder().build();
+        HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
         String htmlContent = renderer.render(document);
 
         byte[] pdfBytes =
