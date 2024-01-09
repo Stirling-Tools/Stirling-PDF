@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +21,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 public class ConvertHtmlToPDF {
 
+    @Autowired
+    @Qualifier("htmlFormatsInstalled")
+    private boolean htmlFormatsInstalled;
+
     @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
@@ -37,7 +43,9 @@ public class ConvertHtmlToPDF {
                 || (!originalFilename.endsWith(".html") && !originalFilename.endsWith(".zip"))) {
             throw new IllegalArgumentException("File must be either .html or .zip format.");
         }
-        byte[] pdfBytes = FileToPdf.convertHtmlToPdf(fileInput.getBytes(), originalFilename);
+        byte[] pdfBytes =
+                FileToPdf.convertHtmlToPdf(
+                        fileInput.getBytes(), originalFilename, htmlFormatsInstalled);
 
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")

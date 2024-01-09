@@ -1,5 +1,8 @@
 package stirling.software.SPDF.config;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,5 +59,39 @@ public class AppConfig {
         String appName = System.getProperty("rateLimit");
         if (appName == null) appName = System.getenv("rateLimit");
         return (appName != null) ? Boolean.valueOf(appName) : false;
+    }
+
+    @Bean(name = "RunningInDocker")
+    public boolean runningInDocker() {
+        return Files.exists(Paths.get("/.dockerenv"));
+    }
+
+    @Bean(name = "bookFormatsInstalled")
+    public boolean bookFormatsInstalled() {
+        System.out.println("astirli " + applicationProperties.getSystem());
+        System.out.println("astirli2 " + applicationProperties.getSystem().getCustomApplications());
+        System.out.println(
+                "astirli3 "
+                        + applicationProperties
+                                .getSystem()
+                                .getCustomApplications()
+                                .isInstallBookFormats());
+        return applicationProperties.getSystem().getCustomApplications().isInstallBookFormats();
+    }
+
+    @Bean(name = "htmlFormatsInstalled")
+    public boolean htmlFormatsInstalled() {
+        System.out.println("astirli4 " + applicationProperties.getSystem());
+        System.out.println("astirli5 " + applicationProperties.getSystem().getCustomApplications());
+        System.out.println(
+                "astirli6 "
+                        + applicationProperties
+                                .getSystem()
+                                .getCustomApplications()
+                                .isInstallAdvancedHtmlToPDF());
+        return applicationProperties
+                .getSystem()
+                .getCustomApplications()
+                .isInstallAdvancedHtmlToPDF();
     }
 }

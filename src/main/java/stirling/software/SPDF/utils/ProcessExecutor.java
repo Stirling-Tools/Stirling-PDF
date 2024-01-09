@@ -18,12 +18,18 @@ public class ProcessExecutor {
         OCR_MY_PDF,
         PYTHON_OPENCV,
         GHOSTSCRIPT,
-        WEASYPRINT
+        WEASYPRINT,
+        INSTALL_APP,
+        CALIBRE
     }
 
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
 
     public static ProcessExecutor getInstance(Processes processType) {
+        return getInstance(processType, false);
+    }
+
+    public static ProcessExecutor getInstance(Processes processType, boolean liveUpdates) {
         return instances.computeIfAbsent(
                 processType,
                 key -> {
@@ -34,15 +40,19 @@ public class ProcessExecutor {
                                 case PYTHON_OPENCV -> 8;
                                 case GHOSTSCRIPT -> 16;
                                 case WEASYPRINT -> 16;
+                                case INSTALL_APP -> 1;
+                                case CALIBRE -> 1;
                             };
-                    return new ProcessExecutor(semaphoreLimit);
+                    return new ProcessExecutor(semaphoreLimit, liveUpdates);
                 });
     }
 
     private final Semaphore semaphore;
+    private final boolean liveUpdates;
 
-    private ProcessExecutor(int semaphoreLimit) {
+    private ProcessExecutor(int semaphoreLimit, boolean liveUpdates) {
         this.semaphore = new Semaphore(semaphoreLimit);
+        this.liveUpdates = liveUpdates;
     }
 
     public ProcessExecutorResult runCommandWithOutputHandling(List<String> command)
@@ -81,6 +91,7 @@ public class ProcessExecutor {
                                     String line;
                                     while ((line = errorReader.readLine()) != null) {
                                         errorLines.add(line);
+                                        if (liveUpdates) System.out.println(line);
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
@@ -98,6 +109,7 @@ public class ProcessExecutor {
                                     String line;
                                     while ((line = outputReader.readLine()) != null) {
                                         outputLines.add(line);
+                                        if (liveUpdates) System.out.println(line);
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
@@ -114,23 +126,27 @@ public class ProcessExecutor {
             errorReaderThread.join();
             outputReaderThread.join();
 
-            if (outputLines.size() > 0) {
-                String outputMessage = String.join("\n", outputLines);
-                messages += outputMessage;
-                System.out.println("Command output:\n" + outputMessage);
-            }
-
-            if (errorLines.size() > 0) {
-                String errorMessage = String.join("\n", errorLines);
-                messages += errorMessage;
-                System.out.println("Command error output:\n" + errorMessage);
-                if (exitCode != 0) {
-                    throw new IOException(
-                            "Command process failed with exit code "
-                                    + exitCode
-                                    + ". Error message: "
-                                    + errorMessage);
+            if (!liveUpdates) {
+                if (outputLines.size() > 0) {
+                    String outputMessage = String.join("\n", outputLines);
+                    messages += outputMessage;
+                    System.out.println("Command output:\n" + outputMessage);
                 }
+
+                if (errorLines.size() > 0) {
+                    String errorMessage = String.join("\n", errorLines);
+                    messages += errorMessage;
+                    System.out.println("Command error output:\n" + errorMessage);
+                    if (exitCode != 0) {
+                        throw new IOException(
+                                "Command process failed with exit code "
+                                        + exitCode
+                                        + ". Error message: "
+                                        + errorMessage);
+                    }
+                }
+            } else if (exitCode != 0) {
+                throw new IOException("Command process failed with exit code " + exitCode);
             }
         } finally {
             semaphore.release();
