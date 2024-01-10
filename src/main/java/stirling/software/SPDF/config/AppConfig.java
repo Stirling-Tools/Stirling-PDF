@@ -68,27 +68,11 @@ public class AppConfig {
 
     @Bean(name = "bookFormatsInstalled")
     public boolean bookFormatsInstalled() {
-        System.out.println("astirli " + applicationProperties.getSystem());
-        System.out.println("astirli2 " + applicationProperties.getSystem().getCustomApplications());
-        System.out.println(
-                "astirli3 "
-                        + applicationProperties
-                                .getSystem()
-                                .getCustomApplications()
-                                .isInstallBookFormats());
         return applicationProperties.getSystem().getCustomApplications().isInstallBookFormats();
     }
 
     @Bean(name = "htmlFormatsInstalled")
     public boolean htmlFormatsInstalled() {
-        System.out.println("astirli4 " + applicationProperties.getSystem());
-        System.out.println("astirli5 " + applicationProperties.getSystem().getCustomApplications());
-        System.out.println(
-                "astirli6 "
-                        + applicationProperties
-                                .getSystem()
-                                .getCustomApplications()
-                                .isInstallAdvancedHtmlToPDF());
         return applicationProperties
                 .getSystem()
                 .getCustomApplications()

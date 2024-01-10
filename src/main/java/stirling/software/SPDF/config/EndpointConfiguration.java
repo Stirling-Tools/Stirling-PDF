@@ -229,7 +229,6 @@ public class EndpointConfiguration {
     private void processEnvironmentConfigs() {
         List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
         List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
-        System.out.println("ASTIRLI7 bookFormatsInstalled=" + bookFormatsInstalled);
         if (!bookFormatsInstalled) {
             groupsToRemove.add("Calibre");
         }

@@ -1,8 +1,12 @@
 package stirling.software.SPDF.config;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -29,11 +33,11 @@ public class PostStartupProcesses {
     @Qualifier("htmlFormatsInstalled")
     private boolean htmlFormatsInstalled;
 
+    private static final Logger logger = LoggerFactory.getLogger(PostStartupProcesses.class);
+
     @PostConstruct
     public void runInstallCommandBasedOnEnvironment() throws IOException, InterruptedException {
         List<List<String>> commands = new ArrayList<>();
-        System.out.println("astirli bookFormatsInstalled=" + bookFormatsInstalled);
-        System.out.println("astirli htmlFormatsInstalled=" + htmlFormatsInstalled);
         // Checking for DOCKER_INSTALL_BOOK_FORMATS environment variable
         if (bookFormatsInstalled) {
             List<String> tmpList = new ArrayList<>();
@@ -77,18 +81,17 @@ public class PostStartupProcesses {
                     ProcessExecutorResult returnCode =
                             ProcessExecutor.getInstance(ProcessExecutor.Processes.INSTALL_APP, true)
                                     .runCommandWithOutputHandling(list);
-                    System.out.println("astirli RC for app installs " + returnCode.getRc());
+                    logger.info("RC for app installs {}", returnCode.getRc());
                 }
             } else {
-                System.out.println(
-                        "astirli Not running inside Docker so skipping automated install process with command.");
+
+                logger.info(
+                        "Not running inside Docker so skipping automated install process with command.");
             }
 
         } else {
             if (runningInDocker) {
-                System.out.println("astirli No custom apps to install.");
-            } else {
-                System.out.println("astirli No custom apps to install. and not docker");
+                logger.info("No custom apps to install.");
             }
         }
     }
