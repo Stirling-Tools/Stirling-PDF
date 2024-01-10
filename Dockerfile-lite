@@ -26,10 +26,11 @@ RUN apk add --no-cache \
         tini \
         bash \
         curl \
-        openjdk17-jre \
+        openjdk17-jre && \
 # Doc conversion
-        libreoffice \
+    apk add --no-cache libreoffice --repository http://dl-cdn.alpinelinux.org/alpine/edge/community && \
 # python and pip
+    apk add --no-cache \
         python3 && \
         wget https://bootstrap.pypa.io/get-pip.py -qO - | python3 - --break-system-packages --no-cache-dir --upgrade && \
 # uno unoconv and HTML

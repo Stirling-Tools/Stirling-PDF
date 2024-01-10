@@ -8,10 +8,11 @@ RUN apk add --no-cache \
         tini \
         bash \
         curl \
-        openjdk17-jre \
+        openjdk17-jre && \
 # Doc conversion
-        libreoffice \
+    apk add --no-cache libreoffice --repository http://dl-cdn.alpinelinux.org/alpine/edge/community && \
 # OCR MY PDF (unpaper for descew and other advanced featues)
+    apk add --no-cache \
         ocrmypdf \
         tesseract-ocr-data-eng \
 # CV
