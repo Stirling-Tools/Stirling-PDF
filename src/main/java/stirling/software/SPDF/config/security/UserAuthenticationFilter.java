@@ -1,12 +1,9 @@
 package stirling.software.SPDF.config.security;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -21,7 +18,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpServletResponseWrapper;
 import stirling.software.SPDF.model.ApiKeyAuthenticationToken;
 
 @Component
@@ -35,28 +31,14 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     @Qualifier("loginEnabled")
     public boolean loginEnabledValue;
 
-    @Value("${redirect.port:}") // Default to empty if not set
-    private String redirectPort;
-
     @Override
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Custom response wrapper to modify the redirect location
-        HttpServletResponseWrapper responseWrapper =
-                new HttpServletResponseWrapper(response) {
-                    @Override
-                    public void sendRedirect(String location) throws IOException {
-                        // Modify the location to include the correct port
-                        String modifiedLocation = modifyLocation(location, request);
-                        super.sendRedirect(modifiedLocation);
-                    }
-                };
-
         if (!loginEnabledValue) {
             // If login is not enabled, just pass all requests without authentication
-            filterChain.doFilter(request, responseWrapper);
+            filterChain.doFilter(request, response);
             return;
         }
         String requestURI = request.getRequestURI();
@@ -71,8 +53,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     // provider for API keys.
                     UserDetails userDetails = userService.loadUserByApiKey(apiKey);
                     if (userDetails == null) {
-                        responseWrapper.setStatus(HttpStatus.UNAUTHORIZED.value());
-                        responseWrapper.getWriter().write("Invalid API Key.");
+                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                        response.getWriter().write("Invalid API Key.");
                         return;
                     }
                     authentication =
@@ -81,8 +63,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } catch (AuthenticationException e) {
                     // If API key authentication fails, deny the request
-                    responseWrapper.setStatus(HttpStatus.UNAUTHORIZED.value());
-                    responseWrapper.getWriter().write("Invalid API Key.");
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.getWriter().write("Invalid API Key.");
                     return;
                 }
             }
@@ -94,37 +76,18 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             String contextPath = request.getContextPath();
 
             if ("GET".equalsIgnoreCase(method) && !(contextPath + "/login").equals(requestURI)) {
-                responseWrapper.sendRedirect(contextPath + "/login"); // redirect to the login page
+                response.sendRedirect(contextPath + "/login"); // redirect to the login page
                 return;
             } else {
-                responseWrapper.setStatus(HttpStatus.UNAUTHORIZED.value());
-                responseWrapper
-                        .getWriter()
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                response.getWriter()
                         .write(
                                 "Authentication required. Please provide a X-API-KEY in request header.\nThis is found in Settings -> Account Settings -> API Key\nAlternativly you can disable authentication if this is unexpected");
                 return;
             }
         }
 
-        filterChain.doFilter(request, responseWrapper);
-    }
-
-    private String modifyLocation(String location, HttpServletRequest request) {
-        if (!location.matches("https?://[^/]+:\\d+.*")
-                && redirectPort != null
-                && redirectPort.length() > 0) {
-            try {
-                int port = Integer.parseInt(redirectPort); // Parse the port
-                URL url = new URL(location);
-                String modifiedUrl =
-                        new URL(url.getProtocol(), url.getHost(), port, url.getFile()).toString();
-                return modifiedUrl;
-            } catch (MalformedURLException | NumberFormatException e) {
-                // Log error and return the original location if URL parsing fails
-                e.printStackTrace();
-            }
-        }
-        return location;
+        filterChain.doFilter(request, response);
     }
 
     @Override
