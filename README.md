@@ -109,7 +109,7 @@ For people that don't mind about space optimization just use the latest tag.
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
 
 Docker Run
-```
+```bash
 docker run -d \
   -p 8080:8080 \
   -v /location/of/trainingData:/usr/share/tesseract-ocr/5/tessdata \
@@ -125,7 +125,7 @@ docker run -d \
   -v /location/of/customFiles:/customFiles \
 ```
 Docker Compose
-```
+```yaml
 version: '3.3'
 services:
   stirling-pdf:
@@ -197,7 +197,7 @@ This file is located in the ``/configs`` directory and follows standard YAML for
 
 Environment variables are also supported and would override the settings file
 For example in the settings.yml you have
-```
+```yaml
 system:
   defaultLocale: 'en-US'
 ```
@@ -205,7 +205,7 @@ system:
 To have this via an environment variable you would have ``SYSTEM_DEFAULTLOCALE``
 
 The Current list of settings is
-```
+```yaml
 security:
   enableLogin: false # set to 'true' to enable login
   csrfDisabled: true
