@@ -1,5 +1,8 @@
 package stirling.software.SPDF.config;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,5 +59,23 @@ public class AppConfig {
         String appName = System.getProperty("rateLimit");
         if (appName == null) appName = System.getenv("rateLimit");
         return (appName != null) ? Boolean.valueOf(appName) : false;
+    }
+
+    @Bean(name = "RunningInDocker")
+    public boolean runningInDocker() {
+        return Files.exists(Paths.get("/.dockerenv"));
+    }
+
+    @Bean(name = "bookFormatsInstalled")
+    public boolean bookFormatsInstalled() {
+        return applicationProperties.getSystem().getCustomApplications().isInstallBookFormats();
+    }
+
+    @Bean(name = "htmlFormatsInstalled")
+    public boolean htmlFormatsInstalled() {
+        return applicationProperties
+                .getSystem()
+                .getCustomApplications()
+                .isInstallAdvancedHtmlToPDF();
     }
 }

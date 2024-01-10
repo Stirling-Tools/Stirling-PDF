@@ -209,20 +209,21 @@ class PdfContainer {
 
     async exportPdf() {
         const pdfDoc = await PDFLib.PDFDocument.create();
-        for (var i=0; i<this.pagesContainer.childNodes.length; i++) {
-            const img = this.pagesContainer.childNodes[i].querySelector("img");
-            if (!img) continue;
-            const pages = await pdfDoc.copyPages(img.doc, [img.pageIdx])
-            const page = pages[0];
-
-            const rotation = img.style.rotate;
-            if (rotation) {
-                const rotationAngle = parseInt(rotation.replace(/[^\d-]/g, ''));
-                page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle))
-            }
-            
-            pdfDoc.addPage(page);
-        }
+	    const pageContainers = this.pagesContainer.querySelectorAll('.page-container'); // Select all .page-container elements
+	    for (var i = 0; i < pageContainers.length; i++) {
+	        const img = pageContainers[i].querySelector("img"); // Find the img element within each .page-container
+	        if (!img) continue;
+	        const pages = await pdfDoc.copyPages(img.doc, [img.pageIdx])
+	        const page = pages[0];
+	
+	        const rotation = img.style.rotate;
+	        if (rotation) {
+	            const rotationAngle = parseInt(rotation.replace(/[^\d-]/g, ''));
+	            page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle))
+	        }
+	        
+	        pdfDoc.addPage(page);
+	    }
         const pdfBytes = await pdfDoc.save();
         const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
         const url = URL.createObjectURL(pdfBlob);
