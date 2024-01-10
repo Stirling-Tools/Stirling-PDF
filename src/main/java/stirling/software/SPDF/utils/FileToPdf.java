@@ -35,15 +35,17 @@ public class FileToPdf {
                 command.add("weasyprint");
             } else {
                 command.add("wkhtmltopdf");
+                command.add("--enable-local-file-access");
             }
+
             command.add(tempInputFile.toString());
             command.add(tempOutputFile.toString());
             ProcessExecutorResult returnCode;
             if (fileName.endsWith(".zip")) {
 
                 if (htmlFormatsInstalled) {
-                    command.add("--allow");
-                    command.add(tempOutputFile.getParent().toString());
+                    // command.add(1, "--allow");
+                    // command.add(2, tempInputFile.getParent().toString());
                 }
                 returnCode =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
