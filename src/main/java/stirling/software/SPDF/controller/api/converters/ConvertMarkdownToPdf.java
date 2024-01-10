@@ -3,6 +3,8 @@ package stirling.software.SPDF.controller.api.converters;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +23,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Convert", description = "Convert APIs")
 @RequestMapping("/api/v1/convert")
 public class ConvertMarkdownToPdf {
+
+    @Autowired
+    @Qualifier("htmlFormatsInstalled")
+    private boolean htmlFormatsInstalled;
 
     @PostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
     @Operation(
@@ -46,7 +52,9 @@ public class ConvertMarkdownToPdf {
         HtmlRenderer renderer = HtmlRenderer.builder().build();
         String htmlContent = renderer.render(document);
 
-        byte[] pdfBytes = FileToPdf.convertHtmlToPdf(htmlContent.getBytes(), "converted.html");
+        byte[] pdfBytes =
+                FileToPdf.convertHtmlToPdf(
+                        htmlContent.getBytes(), "converted.html", htmlFormatsInstalled);
 
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")

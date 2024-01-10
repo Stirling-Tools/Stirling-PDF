@@ -14,7 +14,9 @@ import java.util.zip.ZipInputStream;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 
 public class FileToPdf {
-    public static byte[] convertHtmlToPdf(byte[] fileBytes, String fileName)
+
+    public static byte[] convertHtmlToPdf(
+            byte[] fileBytes, String fileName, boolean htmlFormatsInstalled)
             throws IOException, InterruptedException {
 
         Path tempOutputFile = Files.createTempFile("output_", ".pdf");
@@ -29,11 +31,22 @@ public class FileToPdf {
             }
 
             List<String> command = new ArrayList<>();
-            command.add("weasyprint");
+            if (!htmlFormatsInstalled) {
+                command.add("weasyprint");
+            } else {
+                command.add("wkhtmltopdf");
+                command.add("--enable-local-file-access");
+            }
+
             command.add(tempInputFile.toString());
             command.add(tempOutputFile.toString());
             ProcessExecutorResult returnCode;
             if (fileName.endsWith(".zip")) {
+
+                if (htmlFormatsInstalled) {
+                    // command.add(1, "--allow");
+                    // command.add(2, tempInputFile.getParent().toString());
+                }
                 returnCode =
                         ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
                                 .runCommandWithOutputHandling(
@@ -95,6 +108,40 @@ public class FileToPdf {
             }
 
             return htmlFiles.get(0);
+        }
+    }
+
+    public static byte[] convertBookTypeToPdf(byte[] bytes, String originalFilename)
+            throws IOException, InterruptedException {
+        if (originalFilename == null || originalFilename.lastIndexOf('.') == -1) {
+            throw new IllegalArgumentException("Invalid original filename.");
+        }
+
+        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+        List<String> command = new ArrayList<>();
+        Path tempOutputFile = Files.createTempFile("output_", ".pdf");
+        Path tempInputFile = null;
+
+        try {
+            // Create temp file with appropriate extension
+            tempInputFile = Files.createTempFile("input_", fileExtension);
+            Files.write(tempInputFile, bytes);
+
+            command.add("ebook-convert");
+            command.add(tempInputFile.toString());
+            command.add(tempOutputFile.toString());
+
+            ProcessExecutorResult returnCode =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
+                            .runCommandWithOutputHandling(command);
+
+            return Files.readAllBytes(tempOutputFile);
+        } finally {
+            // Clean up temporary files
+            if (tempInputFile != null) {
+                Files.deleteIfExists(tempInputFile);
+            }
+            Files.deleteIfExists(tempOutputFile);
         }
     }
 }
