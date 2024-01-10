@@ -65,7 +65,6 @@ public class ConvertMarkdownToPdf {
                         .build();
 
         String htmlContent = renderer.render(document);
-        System.out.println(htmlContent);
 
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
