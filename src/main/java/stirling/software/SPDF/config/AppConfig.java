@@ -1,11 +1,15 @@
 package stirling.software.SPDF.config;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 import stirling.software.SPDF.model.ApplicationProperties;
 
@@ -27,8 +31,15 @@ public class AppConfig {
 
     @Bean(name = "appVersion")
     public String appVersion() {
-        String version = getClass().getPackage().getImplementationVersion();
-        return (version != null) ? version : "0.0.0";
+        Resource resource = new ClassPathResource("version.properties");
+        Properties props = new Properties();
+        try {
+            props.load(resource.getInputStream());
+            return props.getProperty("version");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "0.0.0";
     }
 
     @Bean(name = "homeText")
