@@ -25,34 +25,6 @@ Please make sure your Pull Request adheres to the following guidelines:
 
 ## Translations
 
-Stirling PDF currently supports 26!
-- English (English) (en_GB)
-- English (US) (en_US)
-- Arabic (العربية) (ar_AR)
-- German (Deutsch) (de_DE)
-- French (Français) (fr_FR)
-- Spanish (Español) (es_ES)
-- Simplified Chinese (简体中文) (zh_CN)
-- Traditional Chinese (繁體中文) (zh_TW)
-- Catalan (Català) (ca_CA)
-- Italian (Italiano) (it_IT)
-- Swedish (Svenska) (sv_SE)
-- Polish (Polski) (pl_PL)
-- Romanian (Română) (ro_RO)
-- Korean (한국어) (ko_KR)
-- Portuguese Brazilian (Português) (pt_BR)
-- Russian (Русский) (ru_RU)
-- Basque (Euskara) (eu_ES)
-- Japanese (日本語) (ja_JP)
-- Dutch (Nederlands) (nl_NL)
-- Greek (el_GR)
-- Turkish (Türkçe) (tr_TR)
-- Indonesia (Bahasa Indonesia) (id_ID)
-- Hindi (हिंदी) (hi_IN)
-- Hungarian (Magyar) (hu_HU)
-- Bulgarian (Български) (bg_BG)
-- Sebian Latin alphabet (Srpski) (sr-Latn-RS)
-
 If you would like to add or modify a translation, please see [How to add new languages to Stirling-PDF](HowToAddNewLanguage.md). Also, please create a Pull Request so others can use it!
 
 ## Fixing Bugs or Adding a New Feature
