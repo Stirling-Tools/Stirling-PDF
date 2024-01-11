@@ -356,22 +356,22 @@
         },
         {
             "moduleName": "org.apache.pdfbox:fontbox",
-            "moduleUrl": "http://pdfbox.apache.org/",
-            "moduleVersion": "2.0.29",
+            "moduleUrl": "https://pdfbox.apache.org",
+            "moduleVersion": "2.0.30",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.pdfbox:pdfbox",
-            "moduleUrl": "http://pdfbox.apache.org",
-            "moduleVersion": "2.0.29",
+            "moduleUrl": "https://pdfbox.apache.org",
+            "moduleVersion": "2.0.30",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.pdfbox:xmpbox",
-            "moduleUrl": "http://pdfbox.apache.org",
-            "moduleVersion": "2.0.29",
+            "moduleUrl": "https://pdfbox.apache.org",
+            "moduleVersion": "2.0.30",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
