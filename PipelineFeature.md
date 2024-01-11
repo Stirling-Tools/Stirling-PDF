@@ -2,7 +2,7 @@
 
 ## Whilst Pipelines are in alpha...
 You must enable this alpha functionality by setting
-```
+```yaml
 system:
   enableAlphaFunctionality: true
 ```

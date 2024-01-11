@@ -16,7 +16,7 @@ If your language isnt represented by a flag just find whichever closely matches 
 
 
 For example to add Polish you would add 
-```
+```html
 <a class="dropdown-item lang_dropdown-item" href="" data-language-code="pl_PL">
     <img src="images/flags/pl.svg" alt="icon" width="20" height="15"> Polski
 </a>
