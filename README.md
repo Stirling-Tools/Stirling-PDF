@@ -81,7 +81,7 @@ Please feel free to submit feature requests or report bugs either through GitHub
 
 
 For a overview of the tasks and the technology each uses please view [Endpoint-groups.md](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
-Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) hosted by the team at adminforge.de
+Demo of the app is available [here](https://stirlingpdf.io). username: demo, password: demo
 
 ## Technologies used
 - Spring Boot + Thymeleaf
