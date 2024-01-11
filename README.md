@@ -16,15 +16,13 @@ Stirling PDF makes no outbound calls for any record keeping or tracking.
 
 All files and PDFs exist either exclusively on the client side, reside in server memory only during task execution, or temporarily reside in a file solely for the execution of the task. Any file downloaded by the user will have been deleted from the server by that point.
 
-Please feel free to submit feature requests or report bugs either through GitHub issues or on our [Discord](https://discord.gg/Cn8pWhQRxZ)
-
 ![stirling-home](images/stirling-home.png)
 
 ## Features
 - Dark mode support.
 - Custom download options (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/images/settings.png) for example)
 - Parallel file processing and downloads
-- API for integration with external scripts 
+- API for integration with external scripts
 - Optional Login and Authentication support (see [here](https://github.com/Stirling-Tools/Stirling-PDF/tree/main#login-authentication) for documentation)
 
 
@@ -32,52 +30,52 @@ Please feel free to submit feature requests or report bugs either through GitHub
 
 ### **Page Operations**
 - View and modify PDFs - View multi page PDFs with custom viewing sorting and searching. Plus on page edit features like annotate, draw and adding text and images. (Using PDF.js with Joxit and Liberation.Liberation fonts)
-- Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages. 
-- Merge multiple PDFs together into a single resultant file. 
-- Split PDFs into multiple files at specified page numbers or extract all pages as individual files. 
-- Reorganize PDF pages into different orders. 
-- Rotate PDFs in 90-degree increments. 
-- Remove pages. 
-- Multi-page layout (Format PDFs into a multi-paged page). 
-- Scale page contents size by set %. 
-- Adjust Contrast. 
-- Crop PDF. 
-- Auto Split PDF (With physically scanned page dividers). 
-- Extract page(s). 
-- Convert PDF to a single page. 
+- Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages.
+- Merge multiple PDFs together into a single resultant file.
+- Split PDFs into multiple files at specified page numbers or extract all pages as individual files.
+- Reorganize PDF pages into different orders.
+- Rotate PDFs in 90-degree increments.
+- Remove pages.
+- Multi-page layout (Format PDFs into a multi-paged page).
+- Scale page contents size by set %.
+- Adjust Contrast.
+- Crop PDF.
+- Auto Split PDF (With physically scanned page dividers).
+- Extract page(s).
+- Convert PDF to a single page.
 
 ### **Conversion Operations**
-- Convert PDFs to and from images. 
-- Convert any common file to PDF (using LibreOffice). 
-- Convert PDF to Word/Powerpoint/Others (using LibreOffice). 
-- Convert HTML to PDF. 
-- URL to PDF. 
-- Markdown to PDF. 
+- Convert PDFs to and from images.
+- Convert any common file to PDF (using LibreOffice).
+- Convert PDF to Word/Powerpoint/Others (using LibreOffice).
+- Convert HTML to PDF.
+- URL to PDF.
+- Markdown to PDF.
 
 ### **Security & Permissions**
-- Add and remove passwords. 
-- Change/set PDF Permissions. 
-- Add watermark(s). 
-- Certify/sign PDFs. 
-- Sanitize PDFs. 
-- Auto-redact text. 
+- Add and remove passwords.
+- Change/set PDF Permissions.
+- Add watermark(s).
+- Certify/sign PDFs.
+- Sanitize PDFs.
+- Auto-redact text.
 
 ### **Other Operations**
-- Add/Generate/Write signatures. 
-- Repair PDFs. 
-- Detect and remove blank pages. 
-- Compare 2 PDFs and show differences in text. 
-- Add images to PDFs. 
-- Compress PDFs to decrease their filesize (Using OCRMyPDF). 
-- Extract images from PDF. 
-- Extract images from Scans. 
-- Add page numbers. 
-- Auto rename file by detecting PDF header text. 
-- OCR on PDF (Using OCRMyPDF). 
-- PDF/A conversion (Using OCRMyPDF). 
-- Edit metadata. 
-- Flatten PDFs. 
-- Get all information on a PDF to view or export as JSON. 
+- Add/Generate/Write signatures.
+- Repair PDFs.
+- Detect and remove blank pages.
+- Compare 2 PDFs and show differences in text.
+- Add images to PDFs.
+- Compress PDFs to decrease their filesize (Using OCRMyPDF).
+- Extract images from PDF.
+- Extract images from Scans.
+- Add page numbers.
+- Auto rename file by detecting PDF header text.
+- OCR on PDF (Using OCRMyPDF).
+- PDF/A conversion (Using OCRMyPDF).
+- Edit metadata.
+- Flatten PDFs.
+- Get all information on a PDF to view or export as JSON.
 
 
 For a overview of the tasks and the technology each uses please view [Endpoint-groups.md](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
@@ -118,10 +116,10 @@ docker run -d \
   -e DOCKER_ENABLE_SECURITY=false \
   --name stirling-pdf \
   frooodle/s-pdf:latest
-  
-  
+
+
   Can also add these for customisation but are not required
-  
+
   -v /location/of/customFiles:/customFiles \
 ```
 Docker Compose
@@ -146,7 +144,8 @@ Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "pod
 ## Enable OCR/Compression feature
 Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md
 
-## Want to add your own language?
+## Supported Languages
+
 Stirling PDF currently supports 26!
 - English (English) (en_GB)
 - English (US) (en_US)
@@ -175,15 +174,9 @@ Stirling PDF currently supports 26!
 - Bulgarian (Български) (bg_BG)
 - Sebian Latin alphabet (Srpski) (sr-Latn-RS)
 
-If you want to add your own language to Stirling-PDF please refer
-https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToAddNewLanguage.md
+## Contributing (creating issues, translations, fixing bugs, etc.)
 
-And please create a PR to merge it back in so others can use it! 
-
-## How to View
-1. Open a web browser and navigate to `http://localhost:8080/`
-2. Use the application by following the instructions on the website.
-
+Please see our [Contributing Guide](CONTRIBUTING.md)!
 
 ## Customisation
 Stirling PDF allows easy customization of the app.
@@ -243,9 +236,9 @@ For those wanting to use Stirling-PDFs backend API to link with their own custom
 
 ## Login authentication
 ![stirling-login](images/login-light.png)
-### Prerequisites: 
+### Prerequisites:
 - User must have the folder ./configs volumed within docker so that it is retained during updates.
-- Docker uses must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables. 
+- Docker uses must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables.
 - Then either enable login via the settings.yml file or via setting ``SECURITY_ENABLE_LOGIN`` to ``true``
 - Now the initial user will be generated with username ``admin`` and password ``stirling``. On login you will be forced to change the password to a new one. You can also use the environment variables ``SECURITY_INITIALLOGIN_USERNAME`` and  ``SECURITY_INITIALLOGIN_PASSWORD`` to set your own straight away (Recommended to remove them after user creation).
 
@@ -266,10 +259,10 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 - Progress bar/Tracking
 - Full custom logic pipelines to combine multiple operations together.
 - Folder support with auto scanning to perform operations on
-- Redact text (Via UI not just automated way) 
+- Redact text (Via UI not just automated way)
 - Add Forms
-- Multi page layout (Stich PDF pages together) support x rows y columns and custom page sizing 
-- Fill forms mannual and automatic 
+- Multi page layout (Stich PDF pages together) support x rows y columns and custom page sizing
+- Fill forms mannual and automatic
 
 ### Q2: Why is my application downloading .htm files?
 This is an issue caused commonly by your NGINX configuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. ``client_max_body_size SIZE;`` Where "SIZE" is 50M for example for 50MB files.
