@@ -79,7 +79,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 
 
 For a overview of the tasks and the technology each uses please view [Endpoint-groups.md](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
-Hosted instance/demo of the app can be seen [here](https://pdf.adminforge.de/) hosted by the team at adminforge.de
+Demo of the app is available [here](https://stirlingpdf.io). username: demo, password: demo
 
 ## Technologies used
 - Spring Boot + Thymeleaf
@@ -107,7 +107,7 @@ For people that don't mind about space optimization just use the latest tag.
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
 
 Docker Run
-```
+```bash
 docker run -d \
   -p 8080:8080 \
   -v /location/of/trainingData:/usr/share/tesseract-ocr/5/tessdata \
@@ -123,7 +123,7 @@ docker run -d \
   -v /location/of/customFiles:/customFiles \
 ```
 Docker Compose
-```
+```yaml
 version: '3.3'
 services:
   stirling-pdf:
@@ -190,7 +190,7 @@ This file is located in the ``/configs`` directory and follows standard YAML for
 
 Environment variables are also supported and would override the settings file
 For example in the settings.yml you have
-```
+```yaml
 system:
   defaultLocale: 'en-US'
 ```
@@ -198,7 +198,7 @@ system:
 To have this via an environment variable you would have ``SYSTEM_DEFAULTLOCALE``
 
 The Current list of settings is
-```
+```yaml
 security:
   enableLogin: false # set to 'true' to enable login
   csrfDisabled: true
