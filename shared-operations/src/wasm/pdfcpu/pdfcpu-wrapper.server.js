@@ -1,7 +1,8 @@
 import { WasmFs } from '@wasmer/wasmfs';
 import path from "path";
+import { fileURLToPath } from 'url';
 
-let nodeWasmLocation = "../shared-operations/src/wasm/pdfcpu/"; // TODO: Replace with __dirname
+let nodeWasmLocation = path.dirname(fileURLToPath(import.meta.url));
 
 let fs;
 const wasmfs = new WasmFs();

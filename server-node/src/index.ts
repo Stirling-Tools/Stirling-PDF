@@ -1,4 +1,4 @@
-import "@stirling-pdf/shared-operations/src/locales/i18next.config";
+import "@stirling-pdf/shared-operations/src/i18next.config";
 
 import express from "express";
 const app = express();
