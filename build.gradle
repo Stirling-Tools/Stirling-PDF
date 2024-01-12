@@ -28,7 +28,7 @@ licenseReport {
 sourceSets {
     main {
         java {
-            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false') {
+            if (System.getenv('DOCKER_ENABLE_SECURITY') != 'falsesss') {
                 exclude 'stirling/software/SPDF/config/security/**'
                 exclude 'stirling/software/SPDF/controller/api/UserController.java'
                 exclude 'stirling/software/SPDF/controller/web/AccountWebController.java'
@@ -85,6 +85,11 @@ spotless {
     }
 }
 
+compileJava {
+    options.compilerArgs += '-parameters'
+}
+
+
 dependencies {
     //security updates
     implementation 'ch.qos.logback:logback-classic:1.4.14'
@@ -95,7 +100,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web:3.2.1'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.2.1'
 
-    if (System.getenv('DOCKER_ENABLE_SECURITY') != 'false') {
+    if (System.getenv('DOCKER_ENABLE_SECURITY') == 'falseee') {
         implementation 'org.springframework.boot:spring-boot-starter-security:3.2.1'
         implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:3.2.1"
@@ -137,11 +142,11 @@ dependencies {
         exclude group: 'commons-logging', module: 'commons-logging'
     }
     
-    implementation ('org.apache.pdfbox:pdfbox:2.0.30'){
+    implementation ('org.apache.pdfbox:pdfbox:3.0.1'){
         exclude group: 'commons-logging', module: 'commons-logging'
     }
     
-    implementation ('org.apache.pdfbox:xmpbox:2.0.30'){
+    implementation ('org.apache.pdfbox:xmpbox:3.0.1'){
         exclude group: 'commons-logging', module: 'commons-logging'
     }
     

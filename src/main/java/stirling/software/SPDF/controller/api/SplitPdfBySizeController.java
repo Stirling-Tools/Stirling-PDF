@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.springframework.http.MediaType;
@@ -42,7 +43,7 @@ public class SplitPdfBySizeController {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<ByteArrayOutputStream>();
 
         MultipartFile file = request.getFileInput();
-        PDDocument sourceDocument = PDDocument.load(file.getInputStream());
+        PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
 
         // 0 = size, 1 = page count, 2 = doc count
         int type = request.getSplitType();

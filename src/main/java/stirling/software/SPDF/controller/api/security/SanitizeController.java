@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.io.IOException;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -52,7 +53,7 @@ public class SanitizeController {
         boolean removeLinks = request.isRemoveLinks();
         boolean removeFonts = request.isRemoveFonts();
 
-        try (PDDocument document = PDDocument.load(inputFile.getInputStream())) {
+        try (PDDocument document = Loader.loadPDF(inputFile.getBytes())) {
             if (removeJavaScript) {
                 sanitizeJavaScript(document);
             }

@@ -2,14 +2,15 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -57,7 +58,7 @@ public class RedactController {
         System.out.println(listOfTextString);
         String[] listOfText = listOfTextString.split("\n");
         byte[] bytes = file.getBytes();
-        PDDocument document = PDDocument.load(new ByteArrayInputStream(bytes));
+        PDDocument document = Loader.loadPDF(bytes);
 
         Color redactColor;
         try {
@@ -86,7 +87,9 @@ public class RedactController {
                 PDPage newPage = new PDPage(new PDRectangle(bim.getWidth(), bim.getHeight()));
                 imageDocument.addPage(newPage);
                 PDImageXObject pdImage = LosslessFactory.createFromImage(imageDocument, bim);
-                PDPageContentStream contentStream = new PDPageContentStream(imageDocument, newPage);
+                PDPageContentStream contentStream =
+                        new PDPageContentStream(
+                                imageDocument, newPage, AppendMode.APPEND, true, true);
                 contentStream.drawImage(pdImage, 0, 0);
                 contentStream.close();
             }

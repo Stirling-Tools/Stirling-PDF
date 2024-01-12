@@ -16,6 +16,7 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -57,7 +58,7 @@ public class FakeScanControllerWIP {
     public ResponseEntity<byte[]> repairPdf(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();
 
-        PDDocument document = PDDocument.load(inputFile.getBytes());
+        PDDocument document = Loader.loadPDF(inputFile.getBytes());
         PDFRenderer pdfRenderer = new PDFRenderer(document);
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             BufferedImage image = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);

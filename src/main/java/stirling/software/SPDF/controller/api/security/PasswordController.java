@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.io.IOException;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
@@ -38,7 +39,7 @@ public class PasswordController {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
 
-        PDDocument document = PDDocument.load(fileInput.getBytes(), password);
+        PDDocument document = Loader.loadPDF(fileInput.getBytes(), password);
         document.setAllSecurityToBeRemoved(true);
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
@@ -66,7 +67,7 @@ public class PasswordController {
         boolean canPrint = request.isCanPrint();
         boolean canPrintFaithful = request.isCanPrintFaithful();
 
-        PDDocument document = PDDocument.load(fileInput.getBytes());
+        PDDocument document = Loader.loadPDF(fileInput.getBytes());
         AccessPermission ap = new AccessPermission();
         ap.setCanAssembleDocument(!canAssembleDocument);
         ap.setCanExtractContent(!canExtractContent);

@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.filters;
 
 import java.io.IOException;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -39,7 +40,7 @@ public class FilterController {
         String text = request.getText();
         String pageNumber = request.getPageNumbers();
 
-        PDDocument pdfDocument = PDDocument.load(inputFile.getInputStream());
+        PDDocument pdfDocument = Loader.loadPDF(inputFile.getBytes());
         if (PdfUtils.hasText(pdfDocument, pageNumber, text))
             return WebResponseUtils.pdfDocToWebResponse(
                     pdfDocument, inputFile.getOriginalFilename());
@@ -56,7 +57,7 @@ public class FilterController {
         MultipartFile inputFile = request.getFileInput();
         String pageNumber = request.getPageNumbers();
 
-        PDDocument pdfDocument = PDDocument.load(inputFile.getInputStream());
+        PDDocument pdfDocument = Loader.loadPDF(inputFile.getBytes());
         if (PdfUtils.hasImages(pdfDocument, pageNumber))
             return WebResponseUtils.pdfDocToWebResponse(
                     pdfDocument, inputFile.getOriginalFilename());
@@ -73,7 +74,7 @@ public class FilterController {
         String pageCount = request.getPageCount();
         String comparator = request.getComparator();
         // Load the PDF
-        PDDocument document = PDDocument.load(inputFile.getInputStream());
+        PDDocument document = Loader.loadPDF(inputFile.getBytes());
         int actualPageCount = document.getNumberOfPages();
 
         boolean valid = false;
@@ -107,7 +108,7 @@ public class FilterController {
         String comparator = request.getComparator();
 
         // Load the PDF
-        PDDocument document = PDDocument.load(inputFile.getInputStream());
+        PDDocument document = Loader.loadPDF(inputFile.getBytes());
 
         PDPage firstPage = document.getPage(0);
         PDRectangle actualPageSize = firstPage.getMediaBox();
@@ -183,7 +184,7 @@ public class FilterController {
         String comparator = request.getComparator();
 
         // Load the PDF
-        PDDocument document = PDDocument.load(inputFile.getInputStream());
+        PDDocument document = Loader.loadPDF(inputFile.getBytes());
 
         // Get the rotation of the first page
         PDPage firstPage = document.getPage(0);

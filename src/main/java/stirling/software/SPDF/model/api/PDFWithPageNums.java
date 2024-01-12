@@ -3,6 +3,7 @@ package stirling.software.SPDF.model.api;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -27,7 +28,7 @@ public class PDFWithPageNums extends PDFFile {
     public List<Integer> getPageNumbersList() {
         int pageCount = 0;
         try {
-            pageCount = PDDocument.load(getFileInput().getInputStream()).getNumberOfPages();
+            pageCount = Loader.loadPDF(getFileInput().getBytes()).getNumberOfPages();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

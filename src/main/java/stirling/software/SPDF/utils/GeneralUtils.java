@@ -19,6 +19,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 public class GeneralUtils {
 
+    public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
+        File tempFile = File.createTempFile("temp", null);
+        try (FileOutputStream os = new FileOutputStream(tempFile)) {
+            os.write(multipartFile.getBytes());
+        }
+        return tempFile;
+    }
+
     public static void deleteDirectory(Path path) throws IOException {
         Files.walkFileTree(
                 path,
