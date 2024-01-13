@@ -39,7 +39,7 @@
                         <h4 th:text="#{changeCreds.changeUserAndPassword}">Change Username and password</h4>
                         <form action="api/v1/user/change-username-and-password" method="post">
                             <div class="mb-3">
-                                <label for="username" th:text="#{changeCreds.username}">New Username</label>
+                                <label for="username" th:text="#{changeCreds.newUsername}">New Username</label>
                                 <input type="text" class="form-control" name="username" id="username" th:placeholder="${username}">
                             </div>
                             <div class="mb-3">
