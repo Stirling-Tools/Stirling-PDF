@@ -28,7 +28,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
-import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.SPDF.model.api.user.UpdateUserDetails;
 import stirling.software.SPDF.model.api.user.UsernameAndPass;
 
@@ -41,8 +40,7 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
-    public String register(
-    		@ModelAttribute UsernameAndPass requestModel, Model model) {
+    public String register(@ModelAttribute UsernameAndPass requestModel, Model model) {
         if (userService.usernameExists(requestModel.getUsername())) {
             model.addAttribute("error", "Username already exists");
             return "register";
@@ -61,11 +59,10 @@ public class UserController {
             HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
 
-    	
-    	String currentPassword = requestModel.getPassword();
-    	String newPassword = requestModel.getNewPassword();
-    	String newUsername = requestModel.getNewUsername();
-    			
+        String currentPassword = requestModel.getPassword();
+        String newPassword = requestModel.getNewPassword();
+        String newUsername = requestModel.getNewUsername();
+
         if (principal == null) {
             return new RedirectView("/change-creds?messageType=notAuthenticated");
         }

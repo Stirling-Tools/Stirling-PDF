@@ -165,7 +165,7 @@ tasks.withType(JavaCompile) {
     dependsOn 'spotlessApply'
 }
 compileJava {
-    options.compilerArgs << ' -parameters'
+    options.compilerArgs << '-parameters'
 }
 
 task writeVersion {
