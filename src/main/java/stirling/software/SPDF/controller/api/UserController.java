@@ -66,8 +66,6 @@ public class UserController {
     	String newPassword = requestModel.getNewPassword();
     	String newUsername = requestModel.getNewUsername();
     			
-        System.out.println(currentPassword);
-        System.out.println(newPassword);
         if (principal == null) {
             return new RedirectView("/change-creds?messageType=notAuthenticated");
         }
