@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,13 +21,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
+import stirling.software.SPDF.model.api.user.UpdateUserDetails;
+import stirling.software.SPDF.model.api.user.UsernameAndPass;
 
 @Controller
+@Tag(name = "User", description = "User APIs")
 @RequestMapping("/api/v1/user")
 public class UserController {
 
@@ -35,13 +42,13 @@ public class UserController {
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
     public String register(
-            @RequestParam String username, @RequestParam String password, Model model) {
-        if (userService.usernameExists(username)) {
+    		@ModelAttribute UsernameAndPass requestModel, Model model) {
+        if (userService.usernameExists(requestModel.getUsername())) {
             model.addAttribute("error", "Username already exists");
             return "register";
         }
 
-        userService.saveUser(username, password);
+        userService.saveUser(requestModel.getUsername(), requestModel.getPassword());
         return "redirect:/login?registered=true";
     }
 
@@ -49,12 +56,18 @@ public class UserController {
     @PostMapping("/change-username-and-password")
     public RedirectView changeUsernameAndPassword(
             Principal principal,
-            @RequestParam String currentPassword,
-            @RequestParam String newUsername,
-            @RequestParam String newPassword,
+            @ModelAttribute UpdateUserDetails requestModel,
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
+
+    	
+    	String currentPassword = requestModel.getPassword();
+    	String newPassword = requestModel.getNewPassword();
+    	String newUsername = requestModel.getNewUsername();
+    			
+        System.out.println(currentPassword);
+        System.out.println(newPassword);
         if (principal == null) {
             return new RedirectView("/change-creds?messageType=notAuthenticated");
         }

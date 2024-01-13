@@ -28,7 +28,7 @@ licenseReport {
 sourceSets {
     main {
         java {
-            if (System.getenv('DOCKER_ENABLE_SECURITY') != 'falsesss') {
+            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false') {
                 exclude 'stirling/software/SPDF/config/security/**'
                 exclude 'stirling/software/SPDF/controller/api/UserController.java'
                 exclude 'stirling/software/SPDF/controller/web/AccountWebController.java'
@@ -85,11 +85,6 @@ spotless {
     }
 }
 
-compileJava {
-    options.compilerArgs += '-parameters'
-}
-
-
 dependencies {
     //security updates
     implementation 'ch.qos.logback:logback-classic:1.4.14'
@@ -100,7 +95,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web:3.2.1'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.2.1'
 
-    if (System.getenv('DOCKER_ENABLE_SECURITY') == 'falseee') {
+    if (System.getenv('DOCKER_ENABLE_SECURITY') != 'false') {
         implementation 'org.springframework.boot:spring-boot-starter-security:3.2.1'
         implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:3.2.1"
@@ -168,6 +163,9 @@ dependencies {
 
 tasks.withType(JavaCompile) {
     dependsOn 'spotlessApply'
+}
+compileJava {
+    options.compilerArgs << ' -parameters'
 }
 
 task writeVersion {
