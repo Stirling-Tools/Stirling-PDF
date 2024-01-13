@@ -12,7 +12,7 @@ plugins {
 import com.github.jk1.license.render.*
 
 group = 'stirling.software'
-version = '0.19.1'
+version = '0.20.0'
 sourceCompatibility = '17'
 
 repositories {
@@ -137,11 +137,11 @@ dependencies {
         exclude group: 'commons-logging', module: 'commons-logging'
     }
     
-    implementation ('org.apache.pdfbox:pdfbox:2.0.30'){
+    implementation ('org.apache.pdfbox:pdfbox:3.0.1'){
         exclude group: 'commons-logging', module: 'commons-logging'
     }
     
-    implementation ('org.apache.pdfbox:xmpbox:2.0.30'){
+    implementation ('org.apache.pdfbox:xmpbox:3.0.1'){
         exclude group: 'commons-logging', module: 'commons-logging'
     }
     
@@ -163,6 +163,9 @@ dependencies {
 
 tasks.withType(JavaCompile) {
     dependsOn 'spotlessApply'
+}
+compileJava {
+    options.compilerArgs << '-parameters'
 }
 
 task writeVersion {

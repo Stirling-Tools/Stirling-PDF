@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -57,7 +58,7 @@ public class MultiPageLayoutController {
                         : (int) Math.sqrt(pagesPerSheet);
         int rows = pagesPerSheet == 2 || pagesPerSheet == 3 ? 1 : (int) Math.sqrt(pagesPerSheet);
 
-        PDDocument sourceDocument = PDDocument.load(file.getInputStream());
+        PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
         PDDocument newDocument = new PDDocument();
         PDPage newPage = new PDPage(PDRectangle.A4);
         newDocument.addPage(newPage);

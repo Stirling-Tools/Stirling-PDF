@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
@@ -43,7 +44,7 @@ public class AutoRenameController {
         MultipartFile file = request.getFileInput();
         Boolean useFirstTextAsFallback = request.isUseFirstTextAsFallback();
 
-        PDDocument document = PDDocument.load(file.getInputStream());
+        PDDocument document = Loader.loadPDF(file.getBytes());
         PDFTextStripper reader =
                 new PDFTextStripper() {
                     class LineInfo {

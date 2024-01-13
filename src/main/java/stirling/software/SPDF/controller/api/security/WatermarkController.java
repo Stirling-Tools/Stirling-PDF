@@ -10,12 +10,14 @@ import java.io.InputStream;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
@@ -58,7 +60,7 @@ public class WatermarkController {
         int heightSpacer = request.getHeightSpacer();
 
         // Load the input PDF
-        PDDocument document = PDDocument.load(pdfFile.getInputStream());
+        PDDocument document = Loader.loadPDF(pdfFile.getBytes());
 
         // Create a page in the document
         for (PDPage page : document.getPages()) {
@@ -66,7 +68,7 @@ public class WatermarkController {
             // Get the page's content stream
             PDPageContentStream contentStream =
                     new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true);
+                            document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
             // Set transparency
             PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
@@ -117,7 +119,7 @@ public class WatermarkController {
             String alphabet)
             throws IOException {
         String resourceDir = "";
-        PDFont font = PDType1Font.HELVETICA_BOLD;
+        PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
         switch (alphabet) {
             case "arabic":
                 resourceDir = "static/fonts/NotoSansArabic-Regular.ttf";

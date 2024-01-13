@@ -5,7 +5,6 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.http.MediaType;
@@ -54,8 +54,7 @@ public class AutoSplitPdfController {
         MultipartFile file = request.getFileInput();
         boolean duplexMode = request.isDuplexMode();
 
-        InputStream inputStream = file.getInputStream();
-        PDDocument document = PDDocument.load(inputStream);
+        PDDocument document = Loader.loadPDF(file.getBytes());
         PDFRenderer pdfRenderer = new PDFRenderer(document);
 
         List<PDDocument> splitDocuments = new ArrayList<>();

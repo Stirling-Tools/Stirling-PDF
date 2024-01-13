@@ -1,10 +1,10 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.slf4j.Logger;
@@ -44,8 +44,7 @@ public class ExtractController {
         ArrayList<String> tableData = new ArrayList<>();
         int columnsCount = 0;
 
-        try (PDDocument document =
-                PDDocument.load(new ByteArrayInputStream(form.getFileInput().getBytes()))) {
+        try (PDDocument document = Loader.loadPDF(form.getFileInput().getBytes())) {
             final double res = 72; // PDF units are at 72 DPI
             PDFTableStripper stripper = new PDFTableStripper();
             PDPage pdPage = document.getPage(form.getPageId() - 1);

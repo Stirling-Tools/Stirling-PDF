@@ -2,7 +2,6 @@ package stirling.software.SPDF.utils;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -16,9 +15,11 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
@@ -190,7 +191,7 @@ public class PdfUtils {
             int DPI,
             String filename)
             throws IOException, Exception {
-        try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputStream))) {
+        try (PDDocument document = Loader.loadPDF(inputStream)) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             int pageCount = document.getNumberOfPages();
 
@@ -335,7 +336,8 @@ public class PdfUtils {
         float pageWidth = page.getMediaBox().getWidth();
         float pageHeight = page.getMediaBox().getHeight();
 
-        try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
+        try (PDPageContentStream contentStream =
+                new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
             if ("fillPage".equals(fitOption) || "fitDocumentToImage".equals(fitOption)) {
                 contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
             } else if ("maintainAspectRatio".equals(fitOption)) {
@@ -368,7 +370,7 @@ public class PdfUtils {
             byte[] pdfBytes, byte[] imageBytes, float x, float y, boolean everyPage)
             throws IOException {
 
-        PDDocument document = PDDocument.load(new ByteArrayInputStream(pdfBytes));
+        PDDocument document = Loader.loadPDF(pdfBytes);
 
         // Get the first page of the PDF
         int pages = document.getNumberOfPages();
@@ -376,7 +378,7 @@ public class PdfUtils {
             PDPage page = document.getPage(i);
             try (PDPageContentStream contentStream =
                     new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true)) {
+                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 // Create an image object from the image bytes
                 PDImageXObject image = PDImageXObject.createFromByteArray(document, imageBytes, "");
                 // Draw the image onto the page at the specified x and y coordinates

@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,6 +16,7 @@ import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.slf4j.Logger;
@@ -76,8 +76,7 @@ public class ExtractImageScansController {
         // Check if input file is a PDF
         if (extension.equalsIgnoreCase("pdf")) {
             // Load PDF document
-            try (PDDocument document =
-                    PDDocument.load(new ByteArrayInputStream(form.getFileInput().getBytes()))) {
+            try (PDDocument document = Loader.loadPDF(form.getFileInput().getBytes())) {
                 PDFRenderer pdfRenderer = new PDFRenderer(document);
                 int pageCount = document.getNumberOfPages();
                 images = new ArrayList<>();

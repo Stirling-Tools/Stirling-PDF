@@ -14,6 +14,7 @@ import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -53,7 +54,7 @@ public class ExtractImagesController {
 
         System.out.println(
                 System.currentTimeMillis() + "file=" + file.getName() + ", format=" + format);
-        PDDocument document = PDDocument.load(file.getBytes());
+        PDDocument document = Loader.loadPDF(file.getBytes());
 
         // Create ByteArrayOutputStream to write zip file to byte array
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

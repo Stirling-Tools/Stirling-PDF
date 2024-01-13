@@ -13,6 +13,7 @@ import java.util.stream.IntStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
@@ -53,7 +54,7 @@ public class BlankPageController {
 
         PDDocument document = null;
         try {
-            document = PDDocument.load(inputFile.getInputStream());
+            document = Loader.loadPDF(inputFile.getBytes());
             PDPageTree pages = document.getDocumentCatalog().getPages();
             PDFTextStripper textStripper = new PDFTextStripper();
 
