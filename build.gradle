@@ -5,7 +5,7 @@ plugins {
     id 'org.springdoc.openapi-gradle-plugin' version '1.8.0'
     id "io.swagger.swaggerhub" version "1.3.2"
     id 'edu.sc.seis.launch4j' version '3.0.5'
-    id 'com.diffplug.spotless' version '6.23.3'
+    id 'com.diffplug.spotless' version '6.24.0'
     id 'com.github.jk1.dependency-license-report' version '2.5'
 }
 
