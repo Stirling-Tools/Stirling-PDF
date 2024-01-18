@@ -63,7 +63,13 @@ public class FileToPdf {
             }
 
             pdfBytes = Files.readAllBytes(tempOutputFile);
+        } catch (IOException e) {
+            pdfBytes = Files.readAllBytes(tempOutputFile);
+            if (pdfBytes.length < 1) {
+                throw e;
+            }
         } finally {
+
             // Clean up temporary files
             Files.delete(tempOutputFile);
             Files.delete(tempInputFile);

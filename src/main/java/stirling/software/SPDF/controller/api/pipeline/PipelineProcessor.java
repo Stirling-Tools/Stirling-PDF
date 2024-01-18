@@ -84,12 +84,10 @@ public class PipelineProcessor {
                     isMultiInputOperation);
             Map<String, Object> parameters = pipelineOperation.getParameters();
             List<String> inputFileTypes = apiDocService.getExtensionTypes(false, operation);
-            if(inputFileTypes == null) {
-            	inputFileTypes = new ArrayList<String>(Arrays.asList("ALL"));
+            if (inputFileTypes == null) {
+                inputFileTypes = new ArrayList<String>(Arrays.asList("ALL"));
             }
-            //List outputFileTypes = apiDocService.getExtensionTypes(true, operation);
-            
-
+            // List outputFileTypes = apiDocService.getExtensionTypes(true, operation);
 
             String url = getBaseUrl() + operation;
 
@@ -98,33 +96,35 @@ public class PipelineProcessor {
                 for (Resource file : outputFiles) {
                     boolean hasInputFileType = false;
                     for (String extension : inputFileTypes) {
-	                    if (extension.equals("ALL") || file.getFilename().endsWith(extension)) {
-	                        hasInputFileType = true;
-	                        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-	                        body.add("fileInput", file);
-	
-	                        for (Entry<String, Object> entry : parameters.entrySet()) {
-	                            body.add(entry.getKey(), entry.getValue());
-	                        }
-	
-	                        ResponseEntity<byte[]> response = sendWebRequest(url, body);
-	
-	                        // If the operation is filter and the response body is null or empty, skip
-	                        // this
-	                        // file
-	                        if (operation.startsWith("filter-")
-	                                && (response.getBody() == null || response.getBody().length == 0)) {
-	                            logger.info("Skipping file due to failing {}", operation);
-	                            continue;
-	                        }
-	
-	                        if (!response.getStatusCode().equals(HttpStatus.OK)) {
-	                            logPrintStream.println("Error: " + response.getBody());
-	                            hasErrors = true;
-	                            continue;
-	                        }
-	                        processOutputFiles(operation, response, newOutputFiles);
-	                    }
+                        if (extension.equals("ALL") || file.getFilename().endsWith(extension)) {
+                            hasInputFileType = true;
+                            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+                            body.add("fileInput", file);
+
+                            for (Entry<String, Object> entry : parameters.entrySet()) {
+                                body.add(entry.getKey(), entry.getValue());
+                            }
+
+                            ResponseEntity<byte[]> response = sendWebRequest(url, body);
+
+                            // If the operation is filter and the response body is null or empty,
+                            // skip
+                            // this
+                            // file
+                            if (operation.startsWith("filter-")
+                                    && (response.getBody() == null
+                                            || response.getBody().length == 0)) {
+                                logger.info("Skipping file due to failing {}", operation);
+                                continue;
+                            }
+
+                            if (!response.getStatusCode().equals(HttpStatus.OK)) {
+                                logPrintStream.println("Error: " + response.getBody());
+                                hasErrors = true;
+                                continue;
+                            }
+                            processOutputFiles(operation, response, newOutputFiles);
+                        }
                     }
 
                     if (!hasInputFileType) {
@@ -139,16 +139,19 @@ public class PipelineProcessor {
 
             } else {
                 // Filter and collect all files that match the inputFileExtension
-            	List<Resource> matchingFiles;
-            	if (inputFileTypes.contains("ALL")) {
-            	    matchingFiles = new ArrayList<>(outputFiles);
-            	} else {
-            		final List<String> finalinputFileTypes = inputFileTypes;
-            	    matchingFiles =
-            	        outputFiles.stream()
-            	                   .filter(file -> finalinputFileTypes.stream().anyMatch(file.getFilename()::endsWith))
-            	                   .collect(Collectors.toList());
-            	}
+                List<Resource> matchingFiles;
+                if (inputFileTypes.contains("ALL")) {
+                    matchingFiles = new ArrayList<>(outputFiles);
+                } else {
+                    final List<String> finalinputFileTypes = inputFileTypes;
+                    matchingFiles =
+                            outputFiles.stream()
+                                    .filter(
+                                            file ->
+                                                    finalinputFileTypes.stream()
+                                                            .anyMatch(file.getFilename()::endsWith))
+                                    .collect(Collectors.toList());
+                }
 
                 // Check if there are matching files
                 if (!matchingFiles.isEmpty()) {
@@ -168,10 +171,7 @@ public class PipelineProcessor {
 
                     // Handle the response
                     if (response.getStatusCode().equals(HttpStatus.OK)) {
-                        processOutputFiles(
-                                operation,
-                                response,
-                                newOutputFiles);
+                        processOutputFiles(operation, response, newOutputFiles);
                     } else {
                         // Log error if the response status is not OK
                         logPrintStream.println(
@@ -213,7 +213,7 @@ public class PipelineProcessor {
         // Make the request to the REST endpoint
         return restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
     }
-    
+
     public static String removeTrailingNaming(String filename) {
         // Splitting filename into name and extension
         int dotIndex = filename.lastIndexOf(".");
@@ -236,9 +236,7 @@ public class PipelineProcessor {
     }
 
     private List<Resource> processOutputFiles(
-            String operation,
-            ResponseEntity<byte[]> response,
-            List<Resource> newOutputFiles)
+            String operation, ResponseEntity<byte[]> response, List<Resource> newOutputFiles)
             throws IOException {
         // Define filename
         String newFilename;
@@ -250,9 +248,9 @@ public class PipelineProcessor {
             newFilename = extractFilename(response);
         } else {
             // Otherwise, keep the original filename.
-            newFilename = removeTrailingNaming(extractFilename(response));  
+            newFilename = removeTrailingNaming(extractFilename(response));
         }
-        
+
         // Check if the response body is a zip file
         if (isZip(response.getBody())) {
             // Unzip the file and add all the files to the new output files

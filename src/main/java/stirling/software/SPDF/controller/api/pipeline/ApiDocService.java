@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.pipeline;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,7 +24,7 @@ import jakarta.servlet.ServletContext;
 import stirling.software.SPDF.SPdfApplication;
 import stirling.software.SPDF.model.ApiEndpoint;
 import stirling.software.SPDF.model.Role;
-import java.util.List;
+
 @Service
 public class ApiDocService {
 
@@ -39,25 +40,37 @@ public class ApiDocService {
 
         return "http://localhost:" + port + contextPath + "/v1/api-docs";
     }
+
     Map<String, List<String>> outputToFileTypes = new HashMap<>();
-    
-    public  List getExtensionTypes(boolean output, String operationName) {
-    	if(outputToFileTypes.size() == 0) {
-	        outputToFileTypes.put("PDF", Arrays.asList("pdf"));
-	        outputToFileTypes.put("IMAGE", Arrays.asList("png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff", "svg", "psd", "ai", "eps"));
-	        outputToFileTypes.put("ZIP", Arrays.asList("zip", "rar", "7z", "tar", "gz", "bz2", "xz", "lz", "lzma", "z"));
-	        outputToFileTypes.put("WORD", Arrays.asList("doc", "docx", "odt", "rtf"));
-	        outputToFileTypes.put("CSV", Arrays.asList("csv"));
-	        outputToFileTypes.put("JS", Arrays.asList("js", "jsx"));
-	        outputToFileTypes.put("HTML", Arrays.asList("html", "htm", "xhtml"));
-	        outputToFileTypes.put("JSON", Arrays.asList("json"));
-	        outputToFileTypes.put("TXT", Arrays.asList("txt", "text", "md", "markdown"));
-	        outputToFileTypes.put("PPT", Arrays.asList("ppt", "pptx", "odp"));
-	        outputToFileTypes.put("XML", Arrays.asList("xml", "xsd", "xsl"));
-	        outputToFileTypes.put("BOOK", Arrays.asList("epub", "mobi", "azw3", "fb2", "txt", "docx")); // As noted before, "Boolean" isn't a file type but a value type.
-    	}
-        
-    	if (apiDocsJsonRootNode == null || apiDocumentation.size() == 0) {
+
+    public List getExtensionTypes(boolean output, String operationName) {
+        if (outputToFileTypes.size() == 0) {
+            outputToFileTypes.put("PDF", Arrays.asList("pdf"));
+            outputToFileTypes.put(
+                    "IMAGE",
+                    Arrays.asList(
+                            "png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff", "svg", "psd",
+                            "ai", "eps"));
+            outputToFileTypes.put(
+                    "ZIP",
+                    Arrays.asList("zip", "rar", "7z", "tar", "gz", "bz2", "xz", "lz", "lzma", "z"));
+            outputToFileTypes.put("WORD", Arrays.asList("doc", "docx", "odt", "rtf"));
+            outputToFileTypes.put("CSV", Arrays.asList("csv"));
+            outputToFileTypes.put("JS", Arrays.asList("js", "jsx"));
+            outputToFileTypes.put("HTML", Arrays.asList("html", "htm", "xhtml"));
+            outputToFileTypes.put("JSON", Arrays.asList("json"));
+            outputToFileTypes.put("TXT", Arrays.asList("txt", "text", "md", "markdown"));
+            outputToFileTypes.put("PPT", Arrays.asList("ppt", "pptx", "odp"));
+            outputToFileTypes.put("XML", Arrays.asList("xml", "xsd", "xsl"));
+            outputToFileTypes.put(
+                    "BOOK",
+                    Arrays.asList(
+                            "epub", "mobi", "azw3", "fb2", "txt",
+                            "docx")); // As noted before, "Boolean" isn't a file type but a value
+            // type.
+        }
+
+        if (apiDocsJsonRootNode == null || apiDocumentation.size() == 0) {
             loadApiDocumentation();
         }
         if (!apiDocumentation.containsKey(operationName)) {
@@ -67,16 +80,16 @@ public class ApiDocService {
         ApiEndpoint endpoint = apiDocumentation.get(operationName);
         String description = endpoint.getDescription();
         Pattern pattern = null;
-        if(output) {
-        	pattern = Pattern.compile("Output:(\\w+)");
+        if (output) {
+            pattern = Pattern.compile("Output:(\\w+)");
         } else {
-        	pattern = Pattern.compile("Input:(\\w+)");
+            pattern = Pattern.compile("Input:(\\w+)");
         }
         Matcher matcher = pattern.matcher(description);
         while (matcher.find()) {
             String type = matcher.group(1).toUpperCase();
-            if(outputToFileTypes.containsKey(type)) {
-            	return outputToFileTypes.get(type);
+            if (outputToFileTypes.containsKey(type)) {
+                return outputToFileTypes.get(type);
             }
         }
         return null;
