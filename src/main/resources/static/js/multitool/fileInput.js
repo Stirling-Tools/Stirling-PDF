@@ -1,3 +1,5 @@
+import PdfContainer from "./PdfContainer";
+
 const addFileDragListener = (callback) => {
     let overlay;
     let dragCounter = 0;
@@ -43,10 +45,14 @@ const addFileDragListener = (callback) => {
             console.error(err);
             //maybe
         }).finally(() => {
+            // Hide and remove the overlay
             if (overlay) {
                 overlay.remove();
                 overlay = null;
             }
+
+            // Enable/disable filename input
+            PdfContainer.updateFilenameInput()
         });
     };
 
