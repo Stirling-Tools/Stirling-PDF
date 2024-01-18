@@ -74,32 +74,35 @@ class PdfContainer {
         input.onchange = async(e) => {
             const files = e.target.files;
             if (files.length > 0) {
-                const filenameInput = document.getElementById('filename-input');
-                const pagesContainer = document.getElementById('pages-container');
-                const downloadBtn = document.getElementById('export-button');
-
-                filenameInput.disabled = false;
-
-                if (pagesContainer.childElementCount === 0) {
-                    filenameInput.value = "";
-                    this.filename = null;
-                    downloadBtn.disabled = true;
-                } else {
-                    this.filename = filenameInput.value;
-                }
-
-                if (this.filename === null || this.filename === undefined) {
-                    filenameInput.value = files[0].name;
-                } else {
-                    filenameInput.value = this.filename;
-                }
-
+                updateFilenameInput()
             }
 
             this.addPdfsFromFiles(files, nextSiblingElement);
         }
 
         input.click();
+    }
+
+    updateFilenameInput() {
+        const filenameInput = document.getElementById('filename-input');
+        const pagesContainer = document.getElementById('pages-container');
+        const downloadBtn = document.getElementById('export-button');
+
+        filenameInput.disabled = false;
+
+        if (pagesContainer.childElementCount === 0) {
+            filenameInput.value = "";
+            this.filename = null;
+            downloadBtn.disabled = true;
+        } else {
+            this.filename = filenameInput.value;
+        }
+
+        if (this.filename === null || this.filename === undefined) {
+            filenameInput.value = files[0].name;
+        } else {
+            filenameInput.value = this.filename;
+        }
     }
 
     async addPdfsFromFiles(files, nextSiblingElement) {
@@ -275,7 +278,7 @@ class PdfContainer {
     }
 
     updateFilename() {
-       const filenameInput = document.getElementById('filename-input');
+        const filenameInput = document.getElementById('filename-input');
         const downloadBtn = document.getElementById('export-button');
 
         if (filenameInput.value === "") {
