@@ -26,6 +26,7 @@ class PdfContainer {
                 movePageTo: this.movePageTo,
                 addPdfs: this.addPdfs,
                 rotateElement: this.rotateElement,
+                updateFilename: this.updateFilename
             })
         })
 
@@ -38,7 +39,7 @@ class PdfContainer {
 
         filenameInput.onkeyup = this.updateFilename;
         filenameInput.onkeydown = this.preventIllegalChars;
-        filenameInput.disabled = true;
+        filenameInput.disabled = false;
         filenameInput.innerText = "";
         downloadBtn.disabled = true;
     }
@@ -59,7 +60,7 @@ class PdfContainer {
             const vector = (endIndex !== -1 && startIndex > endIndex)
                 ?  0-width
                 : width;
-            
+
             this.pagesContainerWrapper.scroll({
                 left: this.pagesContainerWrapper.scrollLeft + vector,
             })
@@ -73,36 +74,12 @@ class PdfContainer {
         input.setAttribute("accept", "application/pdf");
         input.onchange = async(e) => {
             const files = e.target.files;
-            if (files.length > 0) {
-                updateFilenameInput()
-            }
 
             this.addPdfsFromFiles(files, nextSiblingElement);
+            this.updateFilename(files ? files[0].name : "");
         }
 
         input.click();
-    }
-
-    updateFilenameInput() {
-        const filenameInput = document.getElementById('filename-input');
-        const pagesContainer = document.getElementById('pages-container');
-        const downloadBtn = document.getElementById('export-button');
-
-        filenameInput.disabled = false;
-
-        if (pagesContainer.childElementCount === 0) {
-            filenameInput.value = "";
-            this.filename = null;
-            downloadBtn.disabled = true;
-        } else {
-            this.filename = filenameInput.value;
-        }
-
-        if (this.filename === null || this.filename === undefined) {
-            filenameInput.value = files[0].name;
-        } else {
-            filenameInput.value = this.filename;
-        }
     }
 
     async addPdfsFromFiles(files, nextSiblingElement) {
@@ -200,7 +177,7 @@ class PdfContainer {
         return pdfDoc;
     }
 
-    
+
 
     rotateAll(deg) {
         for (var i=0; i<this.pagesContainer.childNodes.length; i++) {
@@ -218,13 +195,13 @@ class PdfContainer {
 	        if (!img) continue;
 	        const pages = await pdfDoc.copyPages(img.doc, [img.pageIdx])
 	        const page = pages[0];
-	
+
 	        const rotation = img.style.rotate;
 	        if (rotation) {
 	            const rotationAngle = parseInt(rotation.replace(/[^\d-]/g, ''));
 	            page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle))
 	        }
-	        
+
 	        pdfDoc.addPage(page);
 	    }
         const pdfBytes = await pdfDoc.save();
@@ -245,12 +222,12 @@ class PdfContainer {
             }
 
             filenameInput.value = inputArr.join('');
-            this.filename = filenameInput.value;
+            this.fileName = filenameInput.value;
         }
 
         if (!filenameInput.value.includes('.pdf')) {
             filenameInput.value = filenameInput.value + '.pdf';
-            this.filename = filenameInput.value;
+            this.fileName = filenameInput.value;
         }
 
         if (downloadOption === 'sameWindow') {
@@ -266,7 +243,7 @@ class PdfContainer {
             this.downloadLink.href = url;
             // downloadLink.download = this.fileName ? this.fileName : 'managed.pdf';
             // downloadLink.download = this.fileName;
-            this.downloadLink.setAttribute('download', this.filename ? this.fileName : 'managed.pdf');
+            this.downloadLink.setAttribute('download', this.fileName ? this.fileName : 'managed.pdf');
             this.downloadLink.setAttribute('target', '_blank');
             this.downloadLink.onclick = this.setDownloadAttribute;
             this.downloadLink.click();
@@ -274,20 +251,23 @@ class PdfContainer {
     }
 
     setDownloadAttribute() {
-        this.downloadLink.setAttribute("download", this.filename ? this.filename : 'managed.pdf');
+        this.downloadLink.setAttribute("download", this.fileName ? this.fileName : 'managed.pdf');
     }
 
-    updateFilename() {
+    updateFilename(fileName = "") {
         const filenameInput = document.getElementById('filename-input');
+        const pagesContainer = document.getElementById('pages-container');
         const downloadBtn = document.getElementById('export-button');
 
-        if (filenameInput.value === "") {
-            downloadBtn.disabled = true;
-            return;
+        downloadBtn.disabled = pagesContainer.childElementCount === 0
+
+        if (!this.fileName) {
+            this.fileName = fileName;
         }
 
-        downloadBtn.disabled = false;
-        this.filename = filenameInput.value;
+        if (!filenameInput.value) {
+            filenameInput.value = this.fileName;
+        }
     }
 
     preventIllegalChars(e) {
