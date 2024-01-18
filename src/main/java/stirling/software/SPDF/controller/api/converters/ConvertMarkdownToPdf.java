@@ -39,7 +39,7 @@ public class ConvertMarkdownToPdf {
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =
-                    "This endpoint takes a Markdown file input, converts it to HTML, and then to PDF format.")
+                    "This endpoint takes a Markdown file input, converts it to HTML, and then to PDF format. Input:MARKDOWN Output:PDF Type:SISO")
     public ResponseEntity<byte[]> markdownToPdf(@ModelAttribute GeneralFile request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();

@@ -36,6 +36,10 @@ public class FileToPdf {
             } else {
                 command.add("wkhtmltopdf");
                 command.add("--enable-local-file-access");
+                command.add("--load-error-handling");
+                command.add("ignore");
+                command.add("--load-media-error-handling");
+                command.add("ignore");
             }
 
             command.add(tempInputFile.toString());
@@ -130,7 +134,6 @@ public class FileToPdf {
             command.add("ebook-convert");
             command.add(tempInputFile.toString());
             command.add(tempOutputFile.toString());
-
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
                             .runCommandWithOutputHandling(command);
