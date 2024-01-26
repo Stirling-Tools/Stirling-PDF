@@ -11,14 +11,9 @@
         "canvas": "^2.11.2"
     },
     "scripts": {
-        "dev-rollup": "rollup -c -w",
-        "dev": "npx tsx watch src/index.ts",
-        "build": "npm run prebuild && pkgroll && npm run postbuild",
-        "start": "node ./dist/index.js",
-        "prebuild": "rimraf ./dist",
-        "postbuild": "npm run copy-locales && npm run copy-pdfcpu",
-        "copy-locales": "copyfiles -u 3 ../shared-operations/src/locales/**/*.json dist",
-        "copy-pdfcpu": "copyfiles -u 5 ../shared-operations/src/wasm/pdfcpu/pdfcpu.wasm dist"
+        "dev": "rollup -c -w",
+        "build": "rollup -c --forceExit",
+        "start": "node ./dist/bundle.js"
     },
     "keywords": [],
     "author": "",
