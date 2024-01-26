@@ -7,6 +7,7 @@ function generateSublist() {
     const { i18n } = useTranslation();
     const out: JSX.Element[] = [];
     const languages = i18n.options.resources;
+   
     for (const key in languages) {
         const lang: any = languages[key].translation;
         const staticKey = key;

@@ -12,21 +12,15 @@ import NavBar from "./components/NavBar";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Container } from "react-bootstrap";
 
-import i18n from "i18next";
 import { useTranslation, initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import ar from "./locales/ar.json";
-import en from "./locales/en.json";
+
+import i18n, { options } from "@stirling-pdf/shared-operations/src/i18next.config";
+
+i18n.use(LanguageDetector)
+    .use(initReactI18next).init(options) // passes i18n down to react-i18next
 
 import "./general.css";
-
-i18n
-    .use(LanguageDetector)
-    .use(initReactI18next) // passes i18n down to react-i18next
-    .init({
-        fallbackLng: "en",
-        resources: { ar,en },
-    });
 
 export default function App() {
 
