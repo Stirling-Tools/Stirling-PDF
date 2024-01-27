@@ -5,45 +5,48 @@
     "type": "module",
     "exports": "./dist/index.js",
     "imports": {
-      "#pdfcpu": "../../shared-operations/src/wasm/pdfcpu/pdfcpu-wrapper.server.js"
+        "#pdfcpu": "@stirling-pdf/shared-operations/src/wasm/pdfcpu/pdfcpu-wrapper.server.js"
     },
     "optionalDependencies": {
-      "canvas": "^2.11.2"
+        "canvas": "^2.11.2"
     },
     "scripts": {
-      "dev": "npx tsx watch src/index.ts",
-      "build": "npm run prebuild && pkgroll && npm run postbuild",
-      "start": "node ./dist/index.js",
-  
-      "prebuild": "rimraf ./dist",
-      "postbuild": "npm run copy-locales && npm run copy-pdfcpu",
-      "copy-locales": "copyfiles -u 3 ../shared-operations/src/locales/**/*.json dist",
-      "copy-pdfcpu": "copyfiles -u 5 ../shared-operations/src/wasm/pdfcpu/pdfcpu.wasm dist"
+        "dev": "rollup -c -w",
+        "build": "rollup -c --forceExit",
+        "start": "node ./dist/bundle.js"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "dependencies": {
-      "@esbuild/win32-x64": "^0.19.10",
-      "@types/archiver": "^6.0.1",
-      "@types/express": "^4.17.21",
-      "@types/multer": "^1.4.10",
-      "@wasmer/wasmfs": "^0.12.0",
-      "archiver": "^6.0.1",
-      "express": "^4.18.2",
-      "express-fileupload": "^1.4.2",
-      "joi": "^17.11.0",
-      "jsqr": "^1.4.0",
-      "multer": "^1.4.5-lts.1",
-      "pdf-lib": "^1.17.1",
-      "tsconfig-paths": "^4.2.0"
+        "@esbuild/win32-x64": "^0.19.10",
+        "@rollup/plugin-alias": "^5.1.0",
+        "@rollup/plugin-commonjs": "^25.0.7",
+        "@rollup/plugin-json": "^6.1.0",
+        "@types/archiver": "^6.0.1",
+        "@types/express": "^4.17.21",
+        "@types/multer": "^1.4.10",
+        "@wasmer/wasmfs": "^0.12.0",
+        "archiver": "^6.0.1",
+        "express": "^4.18.2",
+        "express-fileupload": "^1.4.2",
+        "joi": "^17.11.0",
+        "jsqr": "^1.4.0",
+        "multer": "^1.4.5-lts.1",
+        "pdf-lib": "^1.17.1",
+        "rollup-plugin-copy": "^3.5.0",
+        "tsconfig-paths": "^4.2.0",
+        "vite-plugin-node-polyfills": "^0.19.0",
+        "vite-plugin-top-level-await": "^1.4.1"
     },
     "devDependencies": {
-      "copyfiles": "^2.4.1",
-      "pkgroll": "^2.0.1",
-      "rimraf": "^5.0.5",
-      "ts-node-dev": "^2.0.0",
-      "typescript": "^5.2.2"
+        "@rollup/plugin-run": "^3.0.2",
+        "@rollup/plugin-typescript": "^11.1.6",
+        "copyfiles": "^2.4.1",
+        "pkgroll": "^2.0.1",
+        "rimraf": "^5.0.5",
+        "rollup": "^4.9.6",
+        "ts-node-dev": "^2.0.0",
+        "typescript": "^5.2.2"
     }
-  }
-  
+}

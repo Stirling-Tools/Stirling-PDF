@@ -1,6 +1,6 @@
 
 import DynamicParameterFields from "../../components/DynamicParameterFields";
-import { ImposeParamConstraints } from "@stirling-pdf/shared-operations/src/functions/impose";
+// import { ImposeParamConstraints } from "@stirling-pdf/shared-operations/src/functions/impose";
 import { useTranslation } from "react-i18next";
 
 function Impose() {
@@ -9,7 +9,7 @@ function Impose() {
         <div>
             <h2>{t("pageLayout.header")}</h2>
             <form>
-                <DynamicParameterFields constraints={ImposeParamConstraints}/>
+                {/* <DynamicParameterFields constraints={ImposeParamConstraints}/> */}
             </form>
         </div>
     );
