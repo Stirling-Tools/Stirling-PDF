@@ -43,6 +43,7 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class AutoSplitPdfController {
 
     private static final String QR_CONTENT = "https://github.com/Stirling-Tools/Stirling-PDF";
+    private static final String QR_CONTENT_OLD = "https://github.com/Frooodle/Stirling-PDF";
 
     @PostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
     @Operation(
@@ -63,12 +64,14 @@ public class AutoSplitPdfController {
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 150);
             String result = decodeQRCode(bim);
-
-            if (QR_CONTENT.equals(result) && page != 0) {
+            System.out.println("result =  " + result);
+            if ((QR_CONTENT.equals(result) || QR_CONTENT_OLD.equals(result)) && page != 0) {
+                System.out.println("page " + (page + 1) + " is QR");
                 splitDocuments.add(new PDDocument());
             }
 
-            if (!splitDocuments.isEmpty() && !QR_CONTENT.equals(result)) {
+            if (!splitDocuments.isEmpty() && !QR_CONTENT.equals(result) && !QR_CONTENT_OLD.equals(result)) {
+                System.out.println("page " + (page + 1) + " is NOT QR");
                 splitDocuments.get(splitDocuments.size() - 1).addPage(document.getPage(page));
             } else if (page == 0) {
                 PDDocument firstDocument = new PDDocument();
@@ -77,7 +80,7 @@ public class AutoSplitPdfController {
             }
 
             // If duplexMode is true and current page is a divider, then skip next page
-            if (duplexMode && QR_CONTENT.equals(result)) {
+            if (duplexMode && (QR_CONTENT.equals(result) || QR_CONTENT_OLD.equals(result))) {
                 page++;
             }
         }
