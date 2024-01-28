@@ -67,6 +67,7 @@ export default function App() {
 
 function Layout() {
     const { t } = useTranslation();
+    console.log(t("inputs.pdffile.name"));
     return (
         <div lang-direction={t("language.direction")}>
             <NavBar/>

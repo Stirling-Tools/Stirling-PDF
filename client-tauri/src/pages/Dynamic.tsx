@@ -1,18 +1,14 @@
 import { Link } from "react-router-dom";
 
-import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/getOperatorByName"
-import { Impose } from "@stirling-pdf/shared-operations/src/functions/impose"
 import { BaseSyntheticEvent } from "react";
 
 function Dynamic() {
-    console.log(listOperatorNames());
-    
-    const operators = listOperatorNames();
+    const operators = ["impose"]; // TODO: Make this dynamic
     
     function selectionChanged(s: BaseSyntheticEvent) {
         const selectedValue = s.target.value;
         if(selectedValue == "none") return;
-        const LoadedOperator = import(`../shared-operations/src/functions/${selectedValue}`);
+        const LoadedOperator = import(`@stirling-pdf/shared-operations/src/functions/${selectedValue}`);
         LoadedOperator.then(console.log);
     }
 
@@ -28,9 +24,9 @@ function Dynamic() {
             <br />
             <select id="pdfOptions" onChange={selectionChanged}>
                 <option value="none">none</option>
-                {operators.map((operator, i) => { 
+                { operators.map((operator, i) => { 
                     return (<option value={operator}>{operator}</option>) 
-                })}
+                }) }
             </select>
             <button id="loadButton">Load</button>
             <br />

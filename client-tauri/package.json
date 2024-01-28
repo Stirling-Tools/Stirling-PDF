@@ -35,6 +35,7 @@
     "@types/react-router-bootstrap": "^0.26.5",
     "@vitejs/plugin-react": "^4.0.3",
     "typescript": "^5.0.2",
-    "vite": "^4.4.4"
+    "vite": "^4.4.4",
+    "vite-plugin-dynamic-import": "^1.5.0"
   }
 }
