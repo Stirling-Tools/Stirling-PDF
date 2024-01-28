@@ -201,7 +201,15 @@ public class StampController {
             x = overrideX;
             y = overrideY;
         } else {
-            x = calculatePositionX(pageSize, position, fontSize, font, fontSize, watermarkText, marginFactor);
+            x =
+                    calculatePositionX(
+                            pageSize,
+                            position,
+                            fontSize,
+                            font,
+                            fontSize,
+                            watermarkText,
+                            marginFactor);
             y = calculatePositionY(pageSize, position, fontSize, marginFactor);
         }
 
@@ -247,7 +255,9 @@ public class StampController {
             x = overrideX;
             y = overrideY;
         } else {
-        	x = calculatePositionX(pageSize, position, desiredPhysicalWidth, null, 0, null, marginFactor);
+            x =
+                    calculatePositionX(
+                            pageSize, position, desiredPhysicalWidth, null, 0, null, marginFactor);
             y = calculatePositionY(pageSize, position, fontSize, marginFactor);
         }
 
@@ -259,8 +269,16 @@ public class StampController {
     }
 
     private float calculatePositionX(
-            PDRectangle pageSize, int position, float contentWidth, PDFont font, float fontSize, String text, float marginFactor) throws IOException {
-        float actualWidth = (text != null) ? calculateTextWidth(text, font, fontSize) : contentWidth;
+            PDRectangle pageSize,
+            int position,
+            float contentWidth,
+            PDFont font,
+            float fontSize,
+            String text,
+            float marginFactor)
+            throws IOException {
+        float actualWidth =
+                (text != null) ? calculateTextWidth(text, font, fontSize) : contentWidth;
         switch (position % 3) {
             case 1: // Left
                 return pageSize.getLowerLeftX() + marginFactor * pageSize.getWidth();
@@ -276,8 +294,6 @@ public class StampController {
     private float calculateTextWidth(String text, PDFont font, float fontSize) throws IOException {
         return font.getStringWidth(text) / 1000 * fontSize;
     }
-
-
 
     private float calculatePositionY(
             PDRectangle pageSize, int position, float height, float marginFactor) {

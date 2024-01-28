@@ -66,7 +66,7 @@ public class ApiDocService {
                     "BOOK",
                     Arrays.asList(
                             "epub", "mobi", "azw3", "fb2", "txt",
-                            "docx")); // As noted before, "Boolean" isn't a file type but a value
+                            "docx"));
             // type.
         }
 
