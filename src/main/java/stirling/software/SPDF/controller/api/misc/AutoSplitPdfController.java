@@ -64,14 +64,11 @@ public class AutoSplitPdfController {
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 150);
             String result = decodeQRCode(bim);
-            System.out.println("result =  " + result);
             if ((QR_CONTENT.equals(result) || QR_CONTENT_OLD.equals(result)) && page != 0) {
-                System.out.println("page " + (page + 1) + " is QR");
                 splitDocuments.add(new PDDocument());
             }
 
             if (!splitDocuments.isEmpty() && !QR_CONTENT.equals(result) && !QR_CONTENT_OLD.equals(result)) {
-                System.out.println("page " + (page + 1) + " is NOT QR");
                 splitDocuments.get(splitDocuments.size() - 1).addPage(document.getPage(page));
             } else if (page == 0) {
                 PDDocument firstDocument = new PDDocument();
