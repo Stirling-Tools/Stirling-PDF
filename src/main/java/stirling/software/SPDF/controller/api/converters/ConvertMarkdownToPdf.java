@@ -68,7 +68,7 @@ public class ConvertMarkdownToPdf {
 
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
-                        htmlContent.getBytes(), "converted.html", htmlFormatsInstalled);
+                        null, htmlContent.getBytes(), "converted.html", htmlFormatsInstalled);
 
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")

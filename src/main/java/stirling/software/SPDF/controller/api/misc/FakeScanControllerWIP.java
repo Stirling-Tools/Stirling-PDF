@@ -50,7 +50,7 @@ public class FakeScanControllerWIP {
 
     // TODO
     @Hidden
-    @PostMapping(consumes = "multipart/form-data", value = "/fakeScan")
+    //@PostMapping(consumes = "multipart/form-data", value = "/fakeScan")
     @Operation(
             summary = "Repair a PDF file",
             description =

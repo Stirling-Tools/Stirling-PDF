@@ -2,6 +2,7 @@ package stirling.software.SPDF.utils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -11,12 +12,16 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 
 public class FileToPdf {
 
     public static byte[] convertHtmlToPdf(
-            byte[] fileBytes, String fileName, boolean htmlFormatsInstalled)
+            HTMLToPdfRequest request,
+            byte[] fileBytes,
+            String fileName,
+            boolean htmlFormatsInstalled)
             throws IOException, InterruptedException {
 
         Path tempOutputFile = Files.createTempFile("output_", ".pdf");
@@ -40,6 +45,61 @@ public class FileToPdf {
                 command.add("ignore");
                 command.add("--load-media-error-handling");
                 command.add("ignore");
+                command.add("--zoom");
+                command.add(String.valueOf(request.getZoom()));
+
+                // if custom zoom add zoom style direct to html
+                // https://github.com/wkhtmltopdf/wkhtmltopdf/issues/4900
+                if (request.getZoom() != 1.0) {
+                    String htmlContent = new String(Files.readAllBytes(tempInputFile));
+
+                    String zoomStyle = "<style>body { zoom: " + request.getZoom() + "; }</style>";
+                    // Check for <head> tag, add style tag to associated tag
+                    if (htmlContent.contains("<head>")) {
+                        htmlContent = htmlContent.replace("<head>", "<head>" + zoomStyle);
+                    } else if (htmlContent.contains("<html>")) {
+                        // If no <head> tag, but <html> tag exists
+                        htmlContent = htmlContent.replace("<html>", "<html>" + zoomStyle);
+                    } else {
+                        // If neither <head> nor <html> tags exist
+                        htmlContent = zoomStyle + htmlContent;
+                    }
+                    // rewrite new html to file
+                    Files.write(tempInputFile, htmlContent.getBytes(StandardCharsets.UTF_8));
+                }
+
+                if (request.getPageWidth() != null) {
+                    command.add("--page-width");
+                    command.add(request.getPageWidth() + "cm");
+                }
+
+                if (request.getPageHeight() != null) {
+                    command.add("--page-height");
+                    command.add(request.getPageHeight() + "cm");
+                }
+
+                if (request.getMarginTop() != null) {
+                    command.add("--margin-top");
+                    command.add(request.getMarginTop() + "mm");
+                }
+
+                // Repeat similar pattern for marginBottom, marginLeft, marginRight
+
+                if ("Yes".equalsIgnoreCase(request.getPrintBackground())) {
+                    command.add("--background");
+                } else {
+                    command.add("--no-background");
+                }
+
+                if ("Yes".equalsIgnoreCase(request.getDefaultHeader())) {
+                    command.add("--default-header");
+                }
+
+                if ("print".equalsIgnoreCase(request.getCssMediaType())) {
+                    command.add("--print-media-type");
+                } else if ("screen".equalsIgnoreCase(request.getCssMediaType())) {
+                    command.add("--no-print-media-type");
+                }
             }
 
             command.add(tempInputFile.toString());
