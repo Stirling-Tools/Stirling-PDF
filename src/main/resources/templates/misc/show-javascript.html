@@ -18,7 +18,7 @@
 						<form id="pdfInfoForm" method="post" enctype="multipart/form-data"
 							th:action="@{show-javascript}">
 							<div
-								th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false')}"></div>
+								th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false', accept='application/pdf')}"></div>
 							<br>
 							<button type="submit" id="submitBtn" class="btn btn-primary"
 								th:text="#{showJS.submit}"></button>

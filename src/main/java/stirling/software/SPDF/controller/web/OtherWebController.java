@@ -39,6 +39,13 @@ public class OtherWebController {
         return "misc/show-javascript";
     }
 
+    @GetMapping("/stamp")
+    @Hidden
+    public String stampForm(Model model) {
+        model.addAttribute("currentPage", "stamp");
+        return "misc/stamp";
+    }
+
     @GetMapping("/add-page-numbers")
     @Hidden
     public String addPageNumbersForm(Model model) {
