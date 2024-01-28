@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 function NoMatch() {
     return (
         <div>
-            <h2>Nothing to see here!</h2>
+            <h2>The Page you are trying to access does not exist.</h2>
             <p>
-                <Link to="/">Go to the home page 3</Link>
+                <Link to="/">Go back home...</Link>
             </p>
         </div>
     );

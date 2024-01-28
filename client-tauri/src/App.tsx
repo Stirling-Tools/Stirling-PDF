@@ -4,6 +4,7 @@ import { Routes, Route, Outlet } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
+import Dynamic from "./pages/Dynamic";
 import ToPdf from "./pages/convert/ToPdf";
 import Impose from "./pages/page-operations/Impose";
 import NoMatch from "./pages/NoMatch";
@@ -15,10 +16,20 @@ import { Container } from "react-bootstrap";
 import { useTranslation, initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
-import i18n, { options } from "@stirling-pdf/shared-operations/src/i18next.config";
+import i18next from "i18next";
+import resourcesToBackend from "i18next-resources-to-backend";
 
-i18n.use(LanguageDetector)
-    .use(initReactI18next).init(options) // passes i18n down to react-i18next
+i18next.use(LanguageDetector).use(initReactI18next).use(resourcesToBackend((language: string, namespace: string) => import(`../../shared-operations/public/locales/${namespace}/${language}.json`)))
+.init({
+    debug: true,
+    ns: ["common"], // Preload this namespace, no need to add the others, they will load once their module is loaded
+    defaultNS: "common",
+    fallbackLng: "en",
+    interpolation: {
+        escapeValue: false,
+    },
+    initImmediate: true // Makes loading blocking but sync
+}); // TODO: use i18next.config.ts instead
 
 import "./general.css";
 
@@ -34,6 +45,7 @@ export default function App() {
                     <Route index element={<Home />} />
                     <Route path="about" element={<About />} />
                     <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="dynamic" element={<Dynamic />} />
 
                     {/* Using path="*"" means "match anything", so this route
                 acts like a catch-all for URLs that we don't have explicit

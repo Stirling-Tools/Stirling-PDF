@@ -27,5 +27,5 @@ export function getOperatorByName(name: string): typeof Operator | undefined {
 
 export function listOperatorNames(): string[] {
     // TODO: Implement this
-    return [];
+    return ["impose"];
 }

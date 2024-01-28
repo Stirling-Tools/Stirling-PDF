@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
-        "module": "Node16",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
         "esModuleInterop": true,
         "baseUrl": "./src",                                  /* Specify the base directory to resolve non-relative module names. */
         "paths": {

@@ -68,11 +68,13 @@ function convertToNavDropdown(sublist: NavInfoSublist, index: number) {
 function NavBar() {
     const { t } = useTranslation();
 
+    // TODO: Construct automatically by fetching local & server-side operators
+
     const navInfo = [
-        {displayText: t("multiTool.title"), icon: BsTools, dest: "/home", tooltip: t("home.multiTool.desc")},
+        {displayText: t("multiTool.title"), icon: BsTools, dest: "/nothing-here", tooltip: t("home.multiTool.desc")},
         {displayText: t("navbar.pageOps"), icon: BsFileEarmarkPdf, sublist: [
-            { displayText: t("home.merge.title"), icon: AiOutlineMergeCells, dest: "/dashboard", tooltip: t("home.merge.desc") },
-            { displayText: t("home.split.title"), icon: AiOutlineSplitCells, dest: "/about", tooltip: t("home.split.desc") },
+            { displayText: t("home.merge.title"), icon: AiOutlineMergeCells, dest: "/nothing-here", tooltip: t("home.merge.desc") },
+            { displayText: t("home.split.title"), icon: AiOutlineSplitCells, dest: "/nothing-here", tooltip: t("home.split.desc") },
             { displayText: t("home.pdfOrganiser.title"), icon: BsSortNumericDown, dest: "/nothing-here", tooltip: t("home.pdfOrganiser.desc") },
             { displayText: t("home.rotate.title"), icon: BsArrowClockwise, dest: "/nothing-here", tooltip: t("home.rotate.desc") },
             { displayText: t("home.removePages.title"), icon: BsFileEarmarkX, dest: "/nothing-here", tooltip: t("home.removePages.desc") },
