@@ -48,7 +48,7 @@ RUN apk add --no-cache \
 #    chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 # Set environment variables
-ENV ENDPOINTS_GROUPS_TO_REMOVE=Python,OpenCV,OCRmyPDF
+ENV ENDPOINTS_GROUPS_TO_REMOVE=OpenCV,OCRmyPDF
 ENV DOCKER_ENABLE_SECURITY=false
 
 # Run the application
