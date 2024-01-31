@@ -63,10 +63,7 @@ public class ApiDocService {
             outputToFileTypes.put("PPT", Arrays.asList("ppt", "pptx", "odp"));
             outputToFileTypes.put("XML", Arrays.asList("xml", "xsd", "xsl"));
             outputToFileTypes.put(
-                    "BOOK",
-                    Arrays.asList(
-                            "epub", "mobi", "azw3", "fb2", "txt",
-                            "docx"));
+                    "BOOK", Arrays.asList("epub", "mobi", "azw3", "fb2", "txt", "docx"));
             // type.
         }
 
