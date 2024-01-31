@@ -44,7 +44,10 @@ RUN apk add --no-cache \
 #    chown -R stirlingpdfuser:stirlingpdfgroup /usr/share/fonts/opentype/noto /configs /customFiles
 # Set font cache and permissions
     fc-cache -f -v && \
-    chmod +x /scripts/*.sh
+    chmod +x /scripts/*.sh && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories
 #    chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 # Set environment variables
