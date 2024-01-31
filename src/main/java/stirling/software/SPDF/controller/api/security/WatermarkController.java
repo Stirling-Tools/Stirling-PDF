@@ -155,9 +155,16 @@ public class WatermarkController {
         contentStream.setFont(font, fontSize);
         contentStream.setNonStrokingColor(Color.LIGHT_GRAY);
 
+        String[] textLines = watermarkText.split("\\\\n");
+        float maxLineWidth = 0;
+
+        for (int i = 0; i < textLines.length; ++i) {
+            maxLineWidth = Math.max(maxLineWidth, font.getStringWidth(textLines[i]));
+        }
+
         // Set size and location of text watermark
-        float watermarkWidth = widthSpacer + font.getStringWidth(watermarkText) * fontSize / 1000;
-        float watermarkHeight = heightSpacer + fontSize;
+        float watermarkWidth = widthSpacer + maxLineWidth * fontSize / 1000;
+        float watermarkHeight = heightSpacer + fontSize * textLines.length;
         float pageWidth = page.getMediaBox().getWidth();
         float pageHeight = page.getMediaBox().getHeight();
         int watermarkRows = (int) (pageHeight / watermarkHeight + 1);
@@ -172,7 +179,12 @@ public class WatermarkController {
                                 (float) Math.toRadians(rotation),
                                 j * watermarkWidth,
                                 i * watermarkHeight));
-                contentStream.showText(watermarkText);
+
+                for (int k = 0; k < textLines.length; ++k) {
+                    contentStream.showText(textLines[k]);
+                    contentStream.newLineAtOffset(0, -fontSize);
+                }
+
                 contentStream.endText();
             }
         }
