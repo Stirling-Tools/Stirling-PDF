@@ -120,7 +120,7 @@
 	          data-bs-files-selected=#{filesSelected}, 
 	          data-bs-pdf-prompt=#{pdfPrompt}">
 	    <div class="mb-3">
-	        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:classappend="${notRequired ? '' : 'required'}">
+	        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:classappend="${notRequired ? '' : 'required'}" required>
 	    </div>
 	    <div class="selected-files"></div>
 	</div>
