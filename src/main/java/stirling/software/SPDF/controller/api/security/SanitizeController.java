@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import io.github.pixee.security.Filenames;
 import java.io.IOException;
 
 import org.apache.pdfbox.Loader;
@@ -76,7 +77,7 @@ public class SanitizeController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
                             + "_sanitized.pdf");
         }
     }

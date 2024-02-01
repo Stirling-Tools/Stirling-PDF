@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import io.github.pixee.security.Filenames;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -264,7 +265,7 @@ public class CompressController {
 
         // Return the optimized PDF as a response
         String outputFilename =
-                inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_Optimized.pdf";
+                Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_Optimized.pdf";
         return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
     }
 }

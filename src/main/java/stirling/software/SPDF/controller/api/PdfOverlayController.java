@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
+import io.github.pixee.security.Filenames;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -75,7 +76,7 @@ public class PdfOverlayController {
                 overlay.overlay(overlayGuide).save(outputStream);
                 byte[] data = outputStream.toByteArray();
                 String outputFilename =
-                        baseFile.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                        Filenames.toSimpleFileName(baseFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
                                 + "_overlayed.pdf"; // Remove file extension and append .pdf
 
                 return WebResponseUtils.bytesToWebResponse(

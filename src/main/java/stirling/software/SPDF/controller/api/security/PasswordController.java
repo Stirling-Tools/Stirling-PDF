@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import io.github.pixee.security.Filenames;
 import java.io.IOException;
 
 import org.apache.pdfbox.Loader;
@@ -43,7 +44,7 @@ public class PasswordController {
         document.setAllSecurityToBeRemoved(true);
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                Filenames.toSimpleFileName(fileInput.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
                         + "_password_removed.pdf");
     }
 
@@ -88,10 +89,10 @@ public class PasswordController {
         if ("".equals(ownerPassword) && "".equals(password))
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                    Filenames.toSimpleFileName(fileInput.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
                             + "_permissions.pdf");
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_passworded.pdf");
+                Filenames.toSimpleFileName(fileInput.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_passworded.pdf");
     }
 }

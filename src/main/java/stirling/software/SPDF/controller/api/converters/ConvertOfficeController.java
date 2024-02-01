@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import io.github.pixee.security.Filenames;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,7 +32,7 @@ public class ConvertOfficeController {
 
     public byte[] convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
         // Check for valid file extension
-        String originalFilename = inputFile.getOriginalFilename();
+        String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null
                 || !isValidFileExtension(FilenameUtils.getExtension(originalFilename))) {
             throw new IllegalArgumentException("Invalid file extension");
@@ -89,7 +90,7 @@ public class ConvertOfficeController {
         byte[] pdfByteArray = convertToPdf(inputFile);
         return WebResponseUtils.bytesToWebResponse(
                 pdfByteArray,
-                inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
                         + "_convertedToPDF.pdf");
     }
 }

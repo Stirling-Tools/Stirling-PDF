@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import io.github.pixee.security.Filenames;
 import java.io.IOException;
 import java.net.URLConnection;
 
@@ -56,7 +57,7 @@ public class ConvertImgPDFController {
         // returns bytes for image
         boolean singleImage = singleOrMultiple.equals("single");
         byte[] result = null;
-        String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
+        String filename = Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "");
         try {
             result =
                     PdfUtils.convertFromPdf(

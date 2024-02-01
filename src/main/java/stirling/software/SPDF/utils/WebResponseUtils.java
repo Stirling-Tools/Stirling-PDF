@@ -1,5 +1,6 @@
 package stirling.software.SPDF.utils;
 
+import io.github.pixee.security.Filenames;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -26,7 +27,7 @@ public class WebResponseUtils {
 
     public static ResponseEntity<byte[]> multiPartFileToWebResponse(MultipartFile file)
             throws IOException {
-        String fileName = file.getOriginalFilename();
+        String fileName = Filenames.toSimpleFileName(file.getOriginalFilename());
         MediaType mediaType = MediaType.parseMediaType(file.getContentType());
 
         byte[] bytes = file.getBytes();

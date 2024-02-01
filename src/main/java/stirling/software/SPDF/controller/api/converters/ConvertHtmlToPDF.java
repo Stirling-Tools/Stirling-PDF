@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import io.github.pixee.security.Filenames;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +40,7 @@ public class ConvertHtmlToPDF {
                     "Please provide an HTML or ZIP file for conversion.");
         }
 
-        String originalFilename = fileInput.getOriginalFilename();
+        String originalFilename = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
         if (originalFilename == null
                 || (!originalFilename.endsWith(".html") && !originalFilename.endsWith(".zip"))) {
             throw new IllegalArgumentException("File must be either .html or .zip format.");

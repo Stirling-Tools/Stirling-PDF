@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import io.github.pixee.security.Filenames;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -54,7 +55,7 @@ public class ShowJavascript {
 
                         script +=
                                 "// File: "
-                                        + inputFile.getOriginalFilename()
+                                        + Filenames.toSimpleFileName(inputFile.getOriginalFilename())
                                         + ", Script: "
                                         + name
                                         + "\n"

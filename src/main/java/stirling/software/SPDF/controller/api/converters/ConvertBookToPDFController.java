@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import io.github.pixee.security.Filenames;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +44,7 @@ public class ConvertBookToPDFController {
             throw new IllegalArgumentException("Please provide a file for conversion.");
         }
 
-        String originalFilename = fileInput.getOriginalFilename();
+        String originalFilename = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
 
         if (originalFilename != null) {
             String originalFilenameLower = originalFilename.toLowerCase();

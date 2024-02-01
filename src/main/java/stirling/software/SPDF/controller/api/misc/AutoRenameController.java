@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import io.github.pixee.security.Filenames;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -133,7 +134,7 @@ public class AutoRenameController {
             return WebResponseUtils.pdfDocToWebResponse(document, header + ".pdf");
         } else {
             logger.info("File has no good title to be found");
-            return WebResponseUtils.pdfDocToWebResponse(document, file.getOriginalFilename());
+            return WebResponseUtils.pdfDocToWebResponse(document, Filenames.toSimpleFileName(file.getOriginalFilename()));
         }
     }
 }
