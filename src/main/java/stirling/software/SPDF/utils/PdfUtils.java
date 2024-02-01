@@ -2,8 +2,10 @@ package stirling.software.SPDF.utils;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -16,11 +18,15 @@ import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -30,8 +36,6 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
-
-import stirling.software.SPDF.pdf.ImageFinder;
 
 public class PdfUtils {
 
@@ -60,6 +64,23 @@ public class PdfUtils {
             default:
                 throw new IllegalArgumentException("Invalid standard page size: " + size);
         }
+    }
+
+    public static List<RenderedImage> getAllImages(PDResources resources) throws IOException {
+        List<RenderedImage> images = new ArrayList<>();
+
+        for (COSName name : resources.getXObjectNames()) {
+            PDXObject object = resources.getXObject(name);
+
+            if (object instanceof PDImageXObject) {
+                images.add(((PDImageXObject) object).getImage());
+
+            } else if (object instanceof PDFormXObject) {
+                images.addAll(getAllImages(((PDFormXObject) object).getResources()));
+            }
+        }
+
+        return images;
     }
 
     public static boolean hasImages(PDDocument document, String pagesToCheck) throws IOException {
@@ -94,9 +115,7 @@ public class PdfUtils {
     }
 
     public static boolean hasImagesOnPage(PDPage page) throws IOException {
-        ImageFinder imageFinder = new ImageFinder(page);
-        imageFinder.processPage(page);
-        return imageFinder.hasImages();
+        return getAllImages(page.getResources()).size() > 0;
     }
 
     public static boolean hasTextOnPage(PDPage page, String phrase) throws IOException {

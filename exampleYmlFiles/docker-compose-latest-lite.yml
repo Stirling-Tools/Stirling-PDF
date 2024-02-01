@@ -20,7 +20,7 @@ services:
     environment:
       DOCKER_ENABLE_SECURITY: "false"
       SECURITY_ENABLELOGIN: "false"
-      SYSTEM_DEFAULTLOCALE: en_US
+      SYSTEM_DEFAULTLOCALE: en-US
       UI_APPNAME: Stirling-PDF-Lite
       UI_HOMEDESCRIPTION: Demo site for Stirling-PDF-Lite Latest
       UI_APPNAMENAVBAR: Stirling-PDF-Lite Latest

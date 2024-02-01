@@ -121,8 +121,8 @@ public class SplitPdfBySectionsController {
                                     subDoc, subPage, AppendMode.APPEND, true, true)) {
                         // Set clipping area and position
                         float translateX = -subPageWidth * i;
-                       
-                        //float translateY = height - subPageHeight * (verticalDivisions - j);
+
+                        // float translateY = height - subPageHeight * (verticalDivisions - j);
                         float translateY = -subPageHeight * (verticalDivisions - 1 - j);
 
                         contentStream.saveGraphicsState();
