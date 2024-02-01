@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
+import io.github.pixee.security.ZipSecurity;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -356,7 +357,7 @@ public class PipelineProcessor {
         List<Resource> unzippedFiles = new ArrayList<>();
 
         try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
-                ZipInputStream zis = new ZipInputStream(bais)) {
+                ZipInputStream zis = ZipSecurity.createHardenedInputStream(bais)) {
 
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
