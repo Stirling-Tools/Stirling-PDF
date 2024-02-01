@@ -91,6 +91,8 @@ dependencies {
     implementation 'ch.qos.logback:logback-core:1.4.14'
     implementation 'org.springframework:spring-webmvc:6.1.2'
 
+    implementation("io.github.pixee:java-security-toolkit:1.1.2")
+    
     implementation 'org.yaml:snakeyaml:2.2'
     implementation 'org.springframework.boot:spring-boot-starter-web:3.2.2'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.2.2'
