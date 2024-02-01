@@ -1,5 +1,6 @@
 package stirling.software.SPDF;
 
+import io.github.pixee.security.SystemCommand;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -34,7 +35,7 @@ public class SPdfApplication {
                 Runtime rt = Runtime.getRuntime();
                 if (os.contains("win")) {
                     // For Windows
-                    rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
+                    SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
