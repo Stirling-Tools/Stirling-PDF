@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import io.github.pixee.security.Filenames;
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +49,7 @@ public class ConvertMarkdownToPdf {
             throw new IllegalArgumentException("Please provide a Markdown file for conversion.");
         }
 
-        String originalFilename = fileInput.getOriginalFilename();
+        String originalFilename = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
         if (originalFilename == null || !originalFilename.endsWith(".md")) {
             throw new IllegalArgumentException("File must be in .md format.");
         }

@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import io.github.pixee.security.Filenames;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -104,7 +105,7 @@ public class WatermarkController {
 
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_watermarked.pdf");
+                Filenames.toSimpleFileName(pdfFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_watermarked.pdf");
     }
 
     private void addTextWatermark(

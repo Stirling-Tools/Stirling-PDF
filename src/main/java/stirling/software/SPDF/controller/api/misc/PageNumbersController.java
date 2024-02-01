@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import io.github.pixee.security.Filenames;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -93,7 +94,7 @@ public class PageNumbersController {
                                     .replace("{total}", String.valueOf(document.getNumberOfPages()))
                                     .replace(
                                             "{filename}",
-                                            file.getOriginalFilename()
+                                            Filenames.toSimpleFileName(file.getOriginalFilename())
                                                     .replaceFirst("[.][^.]+$", ""))
                             : String.valueOf(pageNumber);
 
@@ -145,7 +146,7 @@ public class PageNumbersController {
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-                file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_numbersAdded.pdf",
+                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_numbersAdded.pdf",
                 MediaType.APPLICATION_PDF);
     }
 }

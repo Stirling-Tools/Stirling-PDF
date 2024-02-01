@@ -1,5 +1,6 @@
 package stirling.software.SPDF.utils;
 
+import io.github.pixee.security.Filenames;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
@@ -299,7 +300,7 @@ public class PdfUtils {
         try (PDDocument doc = new PDDocument()) {
             for (MultipartFile file : files) {
                 String contentType = file.getContentType();
-                String originalFilename = file.getOriginalFilename();
+                String originalFilename = Filenames.toSimpleFileName(file.getOriginalFilename());
                 if (originalFilename != null
                         && (originalFilename.toLowerCase().endsWith(".tiff")
                                 || originalFilename.toLowerCase().endsWith(".tif"))) {

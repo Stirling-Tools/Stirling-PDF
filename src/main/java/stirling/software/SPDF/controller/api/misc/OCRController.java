@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import io.github.pixee.security.Filenames;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -182,12 +183,12 @@ public class OCRController {
 
         // Return the OCR processed PDF as a response
         String outputFilename =
-                inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
+                Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
 
         if (sidecar != null && sidecar) {
             // Create a zip file containing both the PDF and the text file
             String outputZipFilename =
-                    inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_OCR.zip";
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_OCR.zip";
             Path tempZipFile = Files.createTempFile("output_", ".zip");
 
             try (ZipOutputStream zipOut =

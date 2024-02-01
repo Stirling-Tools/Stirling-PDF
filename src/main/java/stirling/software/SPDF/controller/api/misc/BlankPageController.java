@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import io.github.pixee.security.Filenames;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -131,7 +132,7 @@ public class BlankPageController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
                             + "_blanksRemoved.pdf");
         } catch (IOException e) {
             e.printStackTrace();
