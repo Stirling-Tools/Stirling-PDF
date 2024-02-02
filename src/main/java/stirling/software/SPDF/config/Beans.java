@@ -15,10 +15,9 @@ import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
 public class Beans implements WebMvcConfigurer {
-	
-	@Autowired
-    ApplicationProperties applicationProperties;
-	
+
+    @Autowired ApplicationProperties applicationProperties;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(localeChangeInterceptor());
@@ -35,25 +34,26 @@ public class Beans implements WebMvcConfigurer {
     @Bean
     public LocaleResolver localeResolver() {
         SessionLocaleResolver slr = new SessionLocaleResolver();
-        
-        
+
         String appLocaleEnv = applicationProperties.getSystem().getDefaultLocale();
-        Locale defaultLocale = Locale.UK; // Fallback to UK locale if environment variable is not set
+        Locale defaultLocale =
+                Locale.UK; // Fallback to UK locale if environment variable is not set
 
         if (appLocaleEnv != null && !appLocaleEnv.isEmpty()) {
             Locale tempLocale = Locale.forLanguageTag(appLocaleEnv);
             String tempLanguageTag = tempLocale.toLanguageTag();
 
-             if (appLocaleEnv.equalsIgnoreCase(tempLanguageTag)) {
+            if (appLocaleEnv.equalsIgnoreCase(tempLanguageTag)) {
                 defaultLocale = tempLocale;
             } else {
-                tempLocale = Locale.forLanguageTag(appLocaleEnv.replace("_","-"));
+                tempLocale = Locale.forLanguageTag(appLocaleEnv.replace("_", "-"));
                 tempLanguageTag = tempLocale.toLanguageTag();
 
                 if (appLocaleEnv.equalsIgnoreCase(tempLanguageTag)) {
                     defaultLocale = tempLocale;
                 } else {
-                    System.err.println("Invalid APP_LOCALE environment variable value. Falling back to default Locale.UK.");
+                    System.err.println(
+                            "Invalid APP_LOCALE environment variable value. Falling back to default Locale.UK.");
                 }
             }
         }
@@ -61,5 +61,4 @@ public class Beans implements WebMvcConfigurer {
         slr.setDefaultLocale(defaultLocale);
         return slr;
     }
-    
 }

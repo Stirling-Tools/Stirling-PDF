@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{multiTool.title})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{multiTool.title}, header=#{multiTool.header})}"></th:block>
 
 <body>
     <div id="image-highlighter"></div>
@@ -13,7 +13,14 @@
                 <div class="row justify-content-center">
                     <h2 th:text="#{multiTool.header}"></h2>
                     <div class="col-md-12" id="pages-container-wrapper">
-                        <div id="pages-container"></div>
+                        <div id="pages-container">
+                            <div class="page-container" th:each="pdf, status: ${pdfList}" th:id="'page-container-' + ${status.index}">
+                                <div class="page-number-container">
+                                    <span th:text="${status.index + 1}"></span>
+                                </div>
+                                <img th:src="${pdf.imageUrl}" alt="PDF Page">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -42,7 +49,7 @@
                                     <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z" />
                                 </svg>
                             </button>
-                            
+
                             <button class="btn btn-secondary enable-on-file" onclick="rotateAll(90)" disabled>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
                                     <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
@@ -72,13 +79,14 @@
         import scrollDivHorizontally from "./js/multitool/horizontalScroll.js";
         import ImageHighlighter from "./js/multitool/ImageHighlighter.js";
         import PdfActionsManager from './js/multitool/PdfActionsManager.js';
-        import addFileInputListener from './js/multitool/fileInput.js';
+        import FileDragManager from './js/multitool/fileInput.js';
         // enables drag and drop
         const dragDropManager = new DragDropManager('drag-container', 'pages-container');
         // enables image highlight on click
         const imageHighlighter = new ImageHighlighter('image-highlighter');
         // enables the default action buttons on each pdf
         const pdfActionsManager = new PdfActionsManager('pages-container');
+        const fileDragManager = new FileDragManager();
 
         // Scroll the wrapper horizontally
         scrollDivHorizontally('pages-container-wrapper');
@@ -91,11 +99,11 @@
                 dragDropManager,
                 imageHighlighter,
                 pdfActionsManager,
+                fileDragManager
             ]
         )
-        addFileInputListener(async (files) => {
-            pdfContainer.addPdfsFromFiles(files);
-        });
+
+        fileDragManager.setCallback(async (files) => pdfContainer.addPdfsFromFiles(files));
     </script>
 
     <style>
@@ -179,7 +187,7 @@
 
         .page-container {
             height:250px;
-            display: flex; 
+            display: flex;
             align-items: center;
             flex-direction: column-reverse;
             aspect-ratio: 1;
@@ -206,6 +214,18 @@
 
         #add-pdf-button {
             margin: 0 auto;
+        }
+
+        .page-number {
+            position: absolute;
+            top: 5px;
+            right:5px;
+            color:white;
+            background-color: #007bff; /* Primary blue color */
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index:2;
         }
     </style>
 </body>

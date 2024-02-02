@@ -1,7 +1,8 @@
 package stirling.software.SPDF.model;
+
 public enum Role {
-	
-	// Unlimited access
+
+    // Unlimited access
     ADMIN("ROLE_ADMIN", Integer.MAX_VALUE, Integer.MAX_VALUE),
 
     // Unlimited access
@@ -14,7 +15,11 @@ public enum Role {
     EXTRA_LIMITED_API_USER("ROLE_EXTRA_LIMITED_API_USER", 20, 20),
 
     // 0 API calls per day and 20 web calls
-    WEB_ONLY_USER("ROLE_WEB_ONLY_USER", 0, 20);
+    WEB_ONLY_USER("ROLE_WEB_ONLY_USER", 0, 20),
+
+    INTERNAL_API_USER("STIRLING-PDF-BACKEND-API-USER", Integer.MAX_VALUE, Integer.MAX_VALUE),
+
+    DEMO_USER("ROLE_DEMO_USER", 100, 100);
 
     private final String roleId;
     private final int apiCallsPerDay;
@@ -37,7 +42,7 @@ public enum Role {
     public int getWebCallsPerDay() {
         return webCallsPerDay;
     }
-	    
+
     public static Role fromString(String roleId) {
         for (Role role : Role.values()) {
             if (role.getRoleId().equalsIgnoreCase(roleId)) {
@@ -46,5 +51,4 @@ public enum Role {
         }
         throw new IllegalArgumentException("No Role defined for id: " + roleId);
     }
-	
 }

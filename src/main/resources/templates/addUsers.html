@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{adminUserSettings.title})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{adminUserSettings.title}, header=#{adminUserSettings.header})}"></th:block>
 
 <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
@@ -62,6 +62,7 @@
 						            <option value="ROLE_USER" th:text="#{adminUserSettings.user}">User</option>
 						            <option value="ROLE_LIMITED_API_USER" th:text="#{adminUserSettings.apiUser}">Limited API User</option>
 						            <option value="ROLE_WEB_ONLY_USER" th:text="#{adminUserSettings.webOnlyUser}">Web Only User</option>
+						            <option value="ROLE_DEMO_USER" th:text="#{adminUserSettings.demoUser}">Demo User</option>
 						        </select>
 						    </div>
 					        <div class="mb-3">

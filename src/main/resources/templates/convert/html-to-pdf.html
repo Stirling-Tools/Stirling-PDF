@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{HTMLToPDF.title})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{HTMLToPDF.title}, header=#{HTMLToPDF.header})}"></th:block>
 <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
@@ -10,10 +10,73 @@
             <br> <br>
             <div class="container">
                 <div class="row justify-content-center">
-                    <div class="col-md-6">
+                    <div class="mb-3">
                         <h2 th:text="#{HTMLToPDF.header}"></h2>
                         <form method="post" enctype="multipart/form-data" th:action="@{api/v1/convert/html/pdf}">
-                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='text/html,application/zip' )}"></div>
+                            
+				            <div class="mb-3">
+				                <label for="zoom" th:text="#{HTMLToPDF.zoom}" class="form-label"></label>
+				                <input type="number" step="0.1" class="form-control" id="zoom" name="zoom" value="1" />
+				            </div>
+				
+				            <div class="mb-3">
+				                <label for="pageWidth" th:text="#{HTMLToPDF.pageWidth}" class="form-label"></label>
+				                <input type="number" class="form-control" id="pageWidth" name="pageWidth" />
+				            </div>
+				
+				            <div class="mb-3">
+				                <label for="pageHeight" th:text="#{HTMLToPDF.pageHeight}" class="form-label"></label>
+				                <input type="number" class="form-control" id="pageHeight" name="pageHeight" />
+				            </div>
+				
+				            <div class="mb-3">
+				                <label for="marginTop" th:text="#{HTMLToPDF.marginTop}" class="form-label"></label>
+				                <input type="number" class="form-control" id="marginTop" name="marginTop" />
+				            </div>
+				
+				            <div class="mb-3">
+				                <label for="marginBottom" th:text="#{HTMLToPDF.marginBottom}" class="form-label"></label>
+				                <input type="number" class="form-control" id="marginBottom" name="marginBottom" />
+				            </div>
+				
+				            <div class="mb-3">
+				                <label for="marginLeft" th:text="#{HTMLToPDF.marginLeft}" class="form-label"></label>
+				                <input type="number" class="form-control" id="marginLeft" name="marginLeft" />
+				            </div>
+				
+				            <div class="mb-3">
+				                <label for="marginRight" th:text="#{HTMLToPDF.marginRight}" class="form-label"></label>
+				                <input type="number" class="form-control" id="marginRight" name="marginRight" />
+				            </div>
+				
+				            <div class="mb-3">
+				                <label th:text="#{HTMLToPDF.printBackground}" class="form-label"></label>
+				                <select class="form-select" name="printBackground">
+				                    <option value="Yes" th:text="#{yes}">Yes</option>
+				                    <option value="No" th:text="#{no}">No</option>
+				                </select>
+				            </div>
+				
+				            <div class="mb-3">
+							    <label th:text="#{HTMLToPDF.defaultHeader}" class="form-label"></label>
+							    <select class="form-select" name="defaultHeader">
+							    	<option value="No" th:text="#{no}">No</option>
+							        <option value="Yes" th:text="#{yes}">Yes</option>
+							    </select>
+							</div>
+				            
+				
+				            <div class="mb-3">
+				                <label th:text="#{HTMLToPDF.cssMediaType}" class="form-label"></label>
+				                <select class="form-select" name="cssMediaType">
+				                	<option value="screen" th:text="#{HTMLToPDF.screen}">Screen</option>
+				                    <option value="none" th:text="#{HTMLToPDF.none}">None</option>
+				                    <option value="print" th:text="#{HTMLToPDF.print}">Print</option>
+				                </select>
+				            </div>
+                            
+                            
                             <br>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{HTMLToPDF.submit}"></button>
 

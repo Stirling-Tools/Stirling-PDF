@@ -171,6 +171,26 @@ class PdfActionsManager {
 
         div.appendChild(insertFileButtonRightContainer);
 
+        const adaptPageNumber = (pageNumber, div) => {
+        const pageNumberElement = document.createElement('span');
+        pageNumberElement.classList.add('page-number');
+        pageNumberElement.textContent = pageNumber;
+
+        div.insertBefore(pageNumberElement, div.firstChild);
+        };
+
+        div.addEventListener('mouseenter', () => {
+               const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
+               adaptPageNumber(pageNumber, div);
+        });
+
+        div.addEventListener('mouseleave', () => {
+                const pageNumberElement = div.querySelector('.page-number');
+                if (pageNumberElement) {
+                    div.removeChild(pageNumberElement);
+                }
+        });
+
         return div;
     }
 }

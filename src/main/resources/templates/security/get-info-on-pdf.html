@@ -3,7 +3,7 @@
 	th:lang-direction="#{language.direction}"
 	xmlns:th="http://www.thymeleaf.org">
 <th:block
-	th:insert="~{fragments/common :: head(title=#{getPdfInfo.title})}"></th:block>
+	th:insert="~{fragments/common :: head(title=#{getPdfInfo.title}, header=#{getPdfInfo.header})}"></th:block>
 <body>
 	<div id="page-container">
 		<div id="content-wrap">
@@ -16,7 +16,7 @@
 						<form id="pdfInfoForm" method="post" enctype="multipart/form-data"
 							th:action="@{api/v1/security/get-info-on-pdf}">
 							<div
-								th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false')}"></div>
+								th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false', accept='application/pdf')}"></div>
 							<br>
 							<button type="submit" id="submitBtn" class="btn btn-primary"
 								th:text="#{getPdfInfo.submit}"></button>

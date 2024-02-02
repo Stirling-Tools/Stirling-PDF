@@ -1,7 +1,20 @@
 document.addEventListener('DOMContentLoaded', function() {
 	setLanguageForDropdown('.lang_dropdown-item');
-	const defaultLocale = document.documentElement.lang || 'en_GB';
-	const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
+
+	// Detect the browser's preferred language
+    let browserLang = navigator.language || navigator.userLanguage;
+    // Convert to a format consistent with your language codes (e.g., en-GB, fr-FR)
+    browserLang = browserLang.replace('-', '_');
+
+    // Check if the dropdown contains the browser's language
+    const dropdownLangExists = document.querySelector(`.lang_dropdown-item[data-language-code="${browserLang}"]`);
+    
+    // Set the default language to browser's language or 'en_GB' if not found in the dropdown
+    const defaultLocale = dropdownLangExists ? browserLang : 'en_GB';
+    const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
+    
+    
+    
 	const dropdownItems = document.querySelectorAll('.lang_dropdown-item');
 
 	for (let i = 0; i < dropdownItems.length; i++) {
@@ -61,9 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	//Sort languages by alphabet
 	const list = Array.from(document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').children).filter(child => child.matches('a'));
 	list.sort(function(a, b) {
-	    var A = a.textContent.toUpperCase();
-	    var B = b.textContent.toUpperCase();
-	    return (A < B) ? -1 : (A > B) ? 1 : 0;
+		return a.textContent.toUpperCase().localeCompare(b.textContent.toUpperCase());
 	}).forEach(node => document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').appendChild(node));
 
 });

@@ -1,31 +1,33 @@
 package stirling.software.SPDF.utils;
 
+import io.github.pixee.security.Filenames;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
+import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.imageio.ImageIO;
 import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
-import javax.imageio.ImageWriter;
 import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -36,44 +38,56 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.pdf.ImageFinder;
-
 public class PdfUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
 
+    public static PDRectangle textToPageSize(String size) {
+        switch (size.toUpperCase()) {
+            case "A0":
+                return PDRectangle.A0;
+            case "A1":
+                return PDRectangle.A1;
+            case "A2":
+                return PDRectangle.A2;
+            case "A3":
+                return PDRectangle.A3;
+            case "A4":
+                return PDRectangle.A4;
+            case "A5":
+                return PDRectangle.A5;
+            case "A6":
+                return PDRectangle.A6;
+            case "LETTER":
+                return PDRectangle.LETTER;
+            case "LEGAL":
+                return PDRectangle.LEGAL;
+            default:
+                throw new IllegalArgumentException("Invalid standard page size: " + size);
+        }
+    }
 
-	public static PDRectangle textToPageSize(String size) {
-		switch (size.toUpperCase()) {
-		case "A0":
-			return PDRectangle.A0;
-		case "A1":
-			return PDRectangle.A1;
-		case "A2":
-			return PDRectangle.A2;
-		case "A3":
-			return PDRectangle.A3;
-		case "A4":
-			return PDRectangle.A4;
-		case "A5":
-			return PDRectangle.A5;
-		case "A6":
-			return PDRectangle.A6;
-		case "LETTER":
-			return PDRectangle.LETTER;
-		case "LEGAL":
-			return PDRectangle.LEGAL;
-		default:
-			throw new IllegalArgumentException("Invalid standard page size: " + size);
-		}
-	}
+    public static List<RenderedImage> getAllImages(PDResources resources) throws IOException {
+        List<RenderedImage> images = new ArrayList<>();
 
+        for (COSName name : resources.getXObjectNames()) {
+            PDXObject object = resources.getXObject(name);
 
-    
-    
+            if (object instanceof PDImageXObject) {
+                images.add(((PDImageXObject) object).getImage());
+
+            } else if (object instanceof PDFormXObject) {
+                images.addAll(getAllImages(((PDFormXObject) object).getResources()));
+            }
+        }
+
+        return images;
+    }
+
     public static boolean hasImages(PDDocument document, String pagesToCheck) throws IOException {
         String[] pageOrderArr = pagesToCheck.split(",");
-        List<Integer> pageList = GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
+        List<Integer> pageList =
+                GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
 
         for (int pageNumber : pageList) {
             PDPage page = document.getPage(pageNumber);
@@ -85,9 +99,11 @@ public class PdfUtils {
         return false;
     }
 
-    public static boolean hasText(PDDocument document, String pageNumbersToCheck, String phrase) throws IOException {
+    public static boolean hasText(PDDocument document, String pageNumbersToCheck, String phrase)
+            throws IOException {
         String[] pageOrderArr = pageNumbersToCheck.split(",");
-        List<Integer> pageList = GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
+        List<Integer> pageList =
+                GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
 
         for (int pageNumber : pageList) {
             PDPage page = document.getPage(pageNumber);
@@ -99,15 +115,9 @@ public class PdfUtils {
         return false;
     }
 
-    
     public static boolean hasImagesOnPage(PDPage page) throws IOException {
-        ImageFinder imageFinder = new ImageFinder(page);
-        imageFinder.processPage(page);
-        return imageFinder.hasImages();
+        return getAllImages(page.getResources()).size() > 0;
     }
-    
-    
-    
 
     public static boolean hasTextOnPage(PDPage page, String phrase) throws IOException {
         PDFTextStripper textStripper = new PDFTextStripper();
@@ -118,12 +128,12 @@ public class PdfUtils {
         return pageText.contains(phrase);
     }
 
-    
-    public boolean containsTextInFile(PDDocument pdfDocument, String text, String pagesToCheck) throws IOException {
+    public boolean containsTextInFile(PDDocument pdfDocument, String text, String pagesToCheck)
+            throws IOException {
         PDFTextStripper textStripper = new PDFTextStripper();
         String pdfText = "";
 
-        if(pagesToCheck == null || pagesToCheck.equals("all")) {
+        if (pagesToCheck == null || "all".equals(pagesToCheck)) {
             pdfText = textStripper.getText(pdfDocument);
         } else {
             // remove whitespaces
@@ -157,15 +167,12 @@ public class PdfUtils {
         return pdfText.contains(text);
     }
 
-    
-    
-    
-    
-    public boolean pageCount(PDDocument pdfDocument, int pageCount, String comparator) throws IOException {
+    public boolean pageCount(PDDocument pdfDocument, int pageCount, String comparator)
+            throws IOException {
         int actualPageCount = pdfDocument.getNumberOfPages();
         pdfDocument.close();
 
-        switch(comparator.toLowerCase()) {
+        switch (comparator.toLowerCase()) {
             case "greater":
                 return actualPageCount > pageCount;
             case "equal":
@@ -173,7 +180,8 @@ public class PdfUtils {
             case "less":
                 return actualPageCount < pageCount;
             default:
-                throw new IllegalArgumentException("Invalid comparator. Only 'greater', 'equal', and 'less' are supported.");
+                throw new IllegalArgumentException(
+                        "Invalid comparator. Only 'greater', 'equal', and 'less' are supported.");
         }
     }
 
@@ -194,27 +202,25 @@ public class PdfUtils {
         // Checks if the actual page size matches the expected page size
         return actualPageWidth == expectedPageWidth && actualPageHeight == expectedPageHeight;
     }
-    
-    
-    
-    
-    
-    public static byte[] convertFromPdf(byte[] inputStream, String imageType, ImageType colorType, boolean singleImage, int DPI, String filename) throws IOException, Exception {
-        try (PDDocument document = PDDocument.load(new ByteArrayInputStream(inputStream))) {
+
+    public static byte[] convertFromPdf(
+            byte[] inputStream,
+            String imageType,
+            ImageType colorType,
+            boolean singleImage,
+            int DPI,
+            String filename)
+            throws IOException, Exception {
+        try (PDDocument document = Loader.loadPDF(inputStream)) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             int pageCount = document.getNumberOfPages();
-            List<BufferedImage> images = new ArrayList<>();
-
-            // Create images of all pages
-            for (int i = 0; i < pageCount; i++) {
-                images.add(pdfRenderer.renderImageWithDPI(i, DPI, colorType));
-            }
 
             // Create a ByteArrayOutputStream to save the image(s) to
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             if (singleImage) {
-                if (imageType.toLowerCase().equals("tiff") || imageType.toLowerCase().equals("tif")) {
+                if ("tiff".equals(imageType.toLowerCase())
+                        || "tif".equals(imageType.toLowerCase())) {
                     // Write the images to the output stream as a TIFF with multiple frames
                     ImageWriter writer = ImageIO.getImageWritersByFormatName("tiff").next();
                     ImageWriteParam param = writer.getDefaultWriteParam();
@@ -226,8 +232,8 @@ public class PdfUtils {
                         writer.setOutput(ios);
                         writer.prepareWriteSequence(null);
 
-                        for (int i = 0; i < images.size(); ++i) {
-                            BufferedImage image = images.get(i);
+                        for (int i = 0; i < pageCount; ++i) {
+                            BufferedImage image = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
                             writer.writeToSequence(new IIOImage(image, null, null), param);
                         }
 
@@ -237,11 +243,19 @@ public class PdfUtils {
                     writer.dispose();
                 } else {
                     // Combine all images into a single big image
-                    BufferedImage combined = new BufferedImage(images.get(0).getWidth(), images.get(0).getHeight() * pageCount, BufferedImage.TYPE_INT_RGB);
+                    BufferedImage image = pdfRenderer.renderImageWithDPI(0, DPI, colorType);
+                    BufferedImage combined =
+                            new BufferedImage(
+                                    image.getWidth(),
+                                    image.getHeight() * pageCount,
+                                    BufferedImage.TYPE_INT_RGB);
                     Graphics g = combined.getGraphics();
 
-                    for (int i = 0; i < images.size(); i++) {
-                        g.drawImage(images.get(i), 0, i * images.get(0).getHeight(), null);
+                    for (int i = 0; i < pageCount; ++i) {
+                        if (i != 0) {
+                            image = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                        }
+                        g.drawImage(image, 0, i * image.getHeight(), null);
                     }
 
                     // Write the image to the output stream
@@ -253,13 +267,18 @@ public class PdfUtils {
             } else {
                 // Zip the images and return as byte array
                 try (ZipOutputStream zos = new ZipOutputStream(baos)) {
-                    for (int i = 0; i < images.size(); i++) {
-                        BufferedImage image = images.get(i);
+                    for (int i = 0; i < pageCount; ++i) {
+                        BufferedImage image = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
                         try (ByteArrayOutputStream baosImage = new ByteArrayOutputStream()) {
                             ImageIO.write(image, imageType, baosImage);
 
                             // Add the image to the zip file
-                            zos.putNextEntry(new ZipEntry(String.format(filename + "_%d.%s", i + 1, imageType.toLowerCase())));
+                            zos.putNextEntry(
+                                    new ZipEntry(
+                                            String.format(
+                                                    filename + "_%d.%s",
+                                                    i + 1,
+                                                    imageType.toLowerCase())));
                             zos.write(baosImage.toByteArray());
                         }
                     }
@@ -274,28 +293,37 @@ public class PdfUtils {
             throw e;
         }
     }
-    public static byte[] imageToPdf(MultipartFile[] files, String fitOption, boolean autoRotate, String colorType) throws IOException {
+
+    public static byte[] imageToPdf(
+            MultipartFile[] files, String fitOption, boolean autoRotate, String colorType)
+            throws IOException {
         try (PDDocument doc = new PDDocument()) {
             for (MultipartFile file : files) {
-            	String contentType = file.getContentType();
-                String originalFilename = file.getOriginalFilename();
-                if (originalFilename != null && (originalFilename.toLowerCase().endsWith(".tiff") || originalFilename.toLowerCase().endsWith(".tif")) ) {
+                String contentType = file.getContentType();
+                String originalFilename = Filenames.toSimpleFileName(file.getOriginalFilename());
+                if (originalFilename != null
+                        && (originalFilename.toLowerCase().endsWith(".tiff")
+                                || originalFilename.toLowerCase().endsWith(".tif"))) {
                     ImageReader reader = ImageIO.getImageReadersByFormatName("tiff").next();
                     reader.setInput(ImageIO.createImageInputStream(file.getInputStream()));
                     int numPages = reader.getNumImages(true);
                     for (int i = 0; i < numPages; i++) {
                         BufferedImage pageImage = reader.read(i);
-                        BufferedImage convertedImage = ImageProcessingUtils.convertColorType(pageImage, colorType);
-                        PDImageXObject pdImage = LosslessFactory.createFromImage(doc, convertedImage);
+                        BufferedImage convertedImage =
+                                ImageProcessingUtils.convertColorType(pageImage, colorType);
+                        PDImageXObject pdImage =
+                                LosslessFactory.createFromImage(doc, convertedImage);
                         addImageToDocument(doc, pdImage, fitOption, autoRotate);
                     }
                 } else {
                     BufferedImage image = ImageIO.read(file.getInputStream());
-                    BufferedImage convertedImage = ImageProcessingUtils.convertColorType(image, colorType);
+                    BufferedImage convertedImage =
+                            ImageProcessingUtils.convertColorType(image, colorType);
                     // Use JPEGFactory if it's JPEG since JPEG is lossy
-                    PDImageXObject pdImage = (contentType != null && contentType.equals("image/jpeg"))
-                                           ? JPEGFactory.createFromImage(doc, convertedImage)
-                                           : LosslessFactory.createFromImage(doc, convertedImage);
+                    PDImageXObject pdImage =
+                            (contentType != null && "image/jpeg".equals(contentType))
+                                    ? JPEGFactory.createFromImage(doc, convertedImage)
+                                    : LosslessFactory.createFromImage(doc, convertedImage);
                     addImageToDocument(doc, pdImage, fitOption, autoRotate);
                 }
             }
@@ -306,11 +334,13 @@ public class PdfUtils {
         }
     }
 
-    private static void addImageToDocument(PDDocument doc, PDImageXObject image, String fitOption, boolean autoRotate) throws IOException {
+    private static void addImageToDocument(
+            PDDocument doc, PDImageXObject image, String fitOption, boolean autoRotate)
+            throws IOException {
         boolean imageIsLandscape = image.getWidth() > image.getHeight();
         PDRectangle pageSize = PDRectangle.A4;
 
-        System.out.println(fitOption); 
+        System.out.println(fitOption);
 
         if (autoRotate && imageIsLandscape) {
             pageSize = new PDRectangle(pageSize.getHeight(), pageSize.getWidth());
@@ -326,7 +356,8 @@ public class PdfUtils {
         float pageWidth = page.getMediaBox().getWidth();
         float pageHeight = page.getMediaBox().getHeight();
 
-        try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
+        try (PDPageContentStream contentStream =
+                new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
             if ("fillPage".equals(fitOption) || "fitDocumentToImage".equals(fitOption)) {
                 contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
             } else if ("maintainAspectRatio".equals(fitOption)) {
@@ -342,7 +373,12 @@ public class PdfUtils {
 
                 float xPos = (pageWidth - (image.getWidth() * scaleFactor)) / 2;
                 float yPos = (pageHeight - (image.getHeight() * scaleFactor)) / 2;
-                contentStream.drawImage(image, xPos, yPos, image.getWidth() * scaleFactor, image.getHeight() * scaleFactor);
+                contentStream.drawImage(
+                        image,
+                        xPos,
+                        yPos,
+                        image.getWidth() * scaleFactor,
+                        image.getHeight() * scaleFactor);
             }
         } catch (IOException e) {
             logger.error("Error adding image to PDF", e);
@@ -350,16 +386,19 @@ public class PdfUtils {
         }
     }
 
+    public static byte[] overlayImage(
+            byte[] pdfBytes, byte[] imageBytes, float x, float y, boolean everyPage)
+            throws IOException {
 
-    public static byte[] overlayImage(byte[] pdfBytes, byte[] imageBytes, float x, float y, boolean everyPage) throws IOException {
-
-        PDDocument document = PDDocument.load(new ByteArrayInputStream(pdfBytes));
+        PDDocument document = Loader.loadPDF(pdfBytes);
 
         // Get the first page of the PDF
         int pages = document.getNumberOfPages();
         for (int i = 0; i < pages; i++) {
             PDPage page = document.getPage(i);
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true)) {
+            try (PDPageContentStream contentStream =
+                    new PDPageContentStream(
+                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 // Create an image object from the image bytes
                 PDImageXObject image = PDImageXObject.createFromByteArray(document, imageBytes, "");
                 // Draw the image onto the page at the specified x and y coordinates
@@ -373,7 +412,6 @@ public class PdfUtils {
                 logger.error("Error overlaying image onto PDF", e);
                 throw e;
             }
-
         }
         // Create a ByteArrayOutputStream to save the PDF to
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -381,8 +419,4 @@ public class PdfUtils {
         logger.info("PDF successfully saved to byte array");
         return baos.toByteArray();
     }
-
-   
-
-    
 }

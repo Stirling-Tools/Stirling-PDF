@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import io.github.pixee.security.Filenames;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
@@ -44,14 +46,21 @@ public class OCRController {
         if (files == null) {
             return Collections.emptyList();
         }
-        return Arrays.stream(files).filter(file -> file.getName().endsWith(".traineddata")).map(file -> file.getName().replace(".traineddata", ""))
-                .filter(lang -> !lang.equalsIgnoreCase("osd")).collect(Collectors.toList());
+        return Arrays.stream(files)
+                .filter(file -> file.getName().endsWith(".traineddata"))
+                .map(file -> file.getName().replace(".traineddata", ""))
+                .filter(lang -> !lang.equalsIgnoreCase("osd"))
+                .collect(Collectors.toList());
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
-    @Operation(summary = "Process a PDF file with OCR",
-            description = "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options. Input:PDF Output:PDF Type:SI-Conditional")
-    public ResponseEntity<byte[]> processPdfWithOCR(@ModelAttribute ProcessPdfWithOcrRequest request) throws IOException, InterruptedException {
+    @Operation(
+            summary = "Process a PDF file with OCR",
+            description =
+                    "This endpoint processes a PDF file using OCR (Optical Character Recognition). Users can specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType, and removeImagesAfter options. Input:PDF Output:PDF Type:SI-Conditional")
+    public ResponseEntity<byte[]> processPdfWithOCR(
+            @ModelAttribute ProcessPdfWithOcrRequest request)
+            throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         List<String> selectedLanguages = request.getLanguages();
         Boolean sidecar = request.isSidecar();
@@ -65,16 +74,17 @@ public class OCRController {
         if (selectedLanguages == null || selectedLanguages.isEmpty()) {
             throw new IOException("Please select at least one language.");
         }
-        
-        if(!ocrRenderType.equals("hocr") && !ocrRenderType.equals("sandwich")) {
+
+        if (!"hocr".equals(ocrRenderType) && !"sandwich".equals(ocrRenderType)) {
             throw new IOException("ocrRenderType wrong");
         }
-        
+
         // Get available Tesseract languages
         List<String> availableLanguages = getAvailableTesseractLanguages();
 
         // Validate selected languages
-        selectedLanguages = selectedLanguages.stream().filter(availableLanguages::contains).toList();
+        selectedLanguages =
+                selectedLanguages.stream().filter(availableLanguages::contains).toList();
 
         if (selectedLanguages.isEmpty()) {
             throw new IOException("None of the selected languages are valid.");
@@ -92,8 +102,16 @@ public class OCRController {
         // Run OCR Command
         String languageOption = String.join("+", selectedLanguages);
 
-        
-        List<String> command = new ArrayList<>(Arrays.asList("ocrmypdf", "--verbose", "2", "--output-type", "pdf", "--pdf-renderer" , ocrRenderType));
+        List<String> command =
+                new ArrayList<>(
+                        Arrays.asList(
+                                "ocrmypdf",
+                                "--verbose",
+                                "2",
+                                "--output-type",
+                                "pdf",
+                                "--pdf-renderer",
+                                ocrRenderType));
 
         if (sidecar != null && sidecar) {
             sidecarTextPath = Files.createTempFile("sidecar", ".txt");
@@ -110,7 +128,7 @@ public class OCRController {
         if (cleanFinal != null && cleanFinal) {
             command.add("--clean-final");
         }
-        if (ocrType != null && !ocrType.equals("")) {
+        if (ocrType != null && !"".equals(ocrType)) {
             if ("skip-text".equals(ocrType)) {
                 command.add("--skip-text");
             } else if ("force-ocr".equals(ocrType)) {
@@ -120,42 +138,61 @@ public class OCRController {
             }
         }
 
-        command.addAll(Arrays.asList("--language", languageOption, tempInputFile.toString(), tempOutputFile.toString()));
+        command.addAll(
+                Arrays.asList(
+                        "--language",
+                        languageOption,
+                        tempInputFile.toString(),
+                        tempOutputFile.toString()));
 
         // Run CLI command
-        ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
-        if(result.getRc() != 0 && result.getMessages().contains("multiprocessing/synchronize.py") && result.getMessages().contains("OSError: [Errno 38] Function not implemented")) {
-        	command.add("--jobs");
-        	command.add("1");
-        	result = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
+        ProcessExecutorResult result =
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
+                        .runCommandWithOutputHandling(command);
+        if (result.getRc() != 0
+                && result.getMessages().contains("multiprocessing/synchronize.py")
+                && result.getMessages().contains("OSError: [Errno 38] Function not implemented")) {
+            command.add("--jobs");
+            command.add("1");
+            result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
+                            .runCommandWithOutputHandling(command);
         }
-        
 
-        
-        
         // Remove images from the OCR processed PDF if the flag is set to true
         if (removeImagesAfter != null && removeImagesAfter) {
             Path tempPdfWithoutImages = Files.createTempFile("output_", "_no_images.pdf");
 
-            List<String> gsCommand = Arrays.asList("gs", "-sDEVICE=pdfwrite", "-dFILTERIMAGE", "-o", tempPdfWithoutImages.toString(), tempOutputFile.toString());
+            List<String> gsCommand =
+                    Arrays.asList(
+                            "gs",
+                            "-sDEVICE=pdfwrite",
+                            "-dFILTERIMAGE",
+                            "-o",
+                            tempPdfWithoutImages.toString(),
+                            tempOutputFile.toString());
 
-            ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT).runCommandWithOutputHandling(gsCommand);
+            ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                    .runCommandWithOutputHandling(gsCommand);
             tempOutputFile = tempPdfWithoutImages;
         }
         // Read the OCR processed PDF file
         byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
         // Clean up the temporary files
         Files.delete(tempInputFile);
-        
+
         // Return the OCR processed PDF as a response
-        String outputFilename = inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
+        String outputFilename =
+                Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
 
         if (sidecar != null && sidecar) {
             // Create a zip file containing both the PDF and the text file
-            String outputZipFilename = inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_OCR.zip";
+            String outputZipFilename =
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_OCR.zip";
             Path tempZipFile = Files.createTempFile("output_", ".zip");
 
-            try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(tempZipFile.toFile()))) {
+            try (ZipOutputStream zipOut =
+                    new ZipOutputStream(new FileOutputStream(tempZipFile.toFile()))) {
                 // Add PDF file to the zip
                 ZipEntry pdfEntry = new ZipEntry(outputFilename);
                 zipOut.putNextEntry(pdfEntry);
@@ -177,13 +214,12 @@ public class OCRController {
             Files.delete(sidecarTextPath);
 
             // Return the zip file containing both the PDF and the text file
-            return WebResponseUtils.bytesToWebResponse(zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
+            return WebResponseUtils.bytesToWebResponse(
+                    zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
         } else {
             // Return the OCR processed PDF as a response
             Files.delete(tempOutputFile);
             return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
         }
-
     }
-
 }

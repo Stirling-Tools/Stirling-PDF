@@ -32,12 +32,12 @@
                             <span class="icon-text"  th:text="#{home.multiTool.title}"></span>
                         </a>
                     </li>
-                    <!--<li class="nav-item">
+                    <li th:if="${@enableAlphaFunctionality}"  class="nav-item">
                         <a class="nav-link" href="#" th:href="@{pipeline}" th:classappend="${currentPage}=='pipeline' ? 'active' : ''" th:title="#{home.pipeline.desc}">
                             <img class="icon" src="images/pipeline.svg" alt="icon">
                             <span class="icon-text"  th:text="#{home.pipeline.title}"></span>
                         </a>
-                    </li>-->
+                    </li>
 
                     <li class="nav-item nav-item-separator"></li>
                     <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='crop' OR ${currentPage}=='adjust-contrast' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' OR ${currentPage}=='multi-page-layout' OR ${currentPage}=='scale-pages' OR ${currentPage}=='auto-split-pdf' OR ${currentPage}=='extract-page' OR ${currentPage}=='pdf-to-single-page' ? 'active' : ''">
@@ -77,6 +77,7 @@
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('html-to-pdf', 'images/html.svg', 'home.HTMLToPDF.title', 'home.HTMLToPDF.desc', 'HTMLToPDF.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('url-to-pdf', 'images/url.svg', 'home.URLToPDF.title', 'home.URLToPDF.desc', 'URLToPDF.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('markdown-to-pdf', 'images/markdown.svg', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('book-to-pdf', 'images/book.svg', 'home.BookToPDF.title', 'home.BookToPDF.desc', 'BookToPDF.tags')}"></div>
                             <hr class="dropdown-divider">
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-img', 'images/image.svg', 'home.pdfToImage.title', 'home.pdfToImage.desc', 'pdfToImage.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-word', 'images/file-earmark-word.svg', 'home.PDFToWord.title', 'home.PDFToWord.desc', 'PDFToWord.tags')}"></div>
@@ -86,6 +87,7 @@
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-xml', 'images/filetype-xml.svg', 'home.PDFToXML.title', 'home.PDFToXML.desc', 'PDFToXML.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-pdfa', 'images/file-earmark-pdf.svg', 'home.pdfToPDFA.title', 'home.pdfToPDFA.desc', 'pdfToPDFA.tags')}"></div>
 							<div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-csv', 'images/pdf-csv.svg', 'home.tableExtraxt.title', 'home.tableExtraxt.desc', 'pdfToPDFA.tags')}"></div>
+                        	<div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-book', 'images/book.svg', 'home.PDFToBook.title', 'home.PDFToBook.desc', 'PDFToBook.tags')}"></div>
                         </div>
                     </li>
 
@@ -131,6 +133,7 @@
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('auto-rename', 'images/fonts.svg', 'home.auto-rename.title', 'home.auto-rename.desc', 'auto-rename.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('get-info-on-pdf', 'images/info.svg', 'home.getPdfInfo.title', 'home.getPdfInfo.desc', 'getPdfInfo.tags')}"></div>
                             <div th:replace="~{fragments/navbarEntry :: navbarEntry ('show-javascript', 'images/js.svg', 'home.showJS.title', 'home.showJS.desc', 'showJS.tags')}"></div>
+                            <div th:replace="~{fragments/navbarEntry :: navbarEntry ('stamp', 'images/stamp.svg', 'home.AddStampRequest.title', 'home.AddStampRequest.desc', 'AddStampRequest.tags')}"></div>
                         </div>
                     </li>
 
@@ -185,7 +188,7 @@
                         <!-- Search Bar -->
                         <div class="collapse position-absolute" id="navbarSearch">
                             <form class="d-flex p-2 bg-white border search-form" id="searchForm">
-                                <input class="form-control search-input" type="search" placeholder="Search" aria-label="Search" id="navbarSearchInput">
+                                <input class="form-control search-input" type="search" th:placeholder="#{home.searchBar}" aria-label="Search" id="navbarSearchInput">
                             </form>
                             <!-- Search Results -->
                             <div id="searchResults" class="border p-2 bg-white search-results"></div>
@@ -267,7 +270,7 @@
                         <a href="swagger-ui/index.html" target="_blank">
                             <button type="button" class="btn btn-sm btn-outline-primary">API</button>
                         </a>
-                        <a href="https://github.com/Frooodle/Stirling-PDF/releases" target="_blank">
+                        <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank">
                             <button type="button" class="btn btn-sm btn-outline-primary" id="update-btn" th:utext="#{settings.update}"></button>
                         </a>
                     </div>
@@ -293,7 +296,7 @@
                     </a>
                 </div>
                 <div class="modal-footer">
-                    <a th:if="${@loginEnabled}" href="/logout">
+                    <a th:if="${@loginEnabled}" href="logout">
                         <button type="button" class="btn btn-danger" th:text="#{settings.signOut}">Sign Out</button>
                     </a>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>

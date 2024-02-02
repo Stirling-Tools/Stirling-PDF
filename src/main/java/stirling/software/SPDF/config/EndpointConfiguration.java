@@ -9,10 +9,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 
 import stirling.software.SPDF.model.ApplicationProperties;
+
 @Service
+@DependsOn({"bookFormatsInstalled"})
 public class EndpointConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(EndpointConfiguration.class);
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
@@ -20,22 +24,27 @@ public class EndpointConfiguration {
 
     private final ApplicationProperties applicationProperties;
 
+    private boolean bookFormatsInstalled;
+
     @Autowired
-    public EndpointConfiguration(ApplicationProperties applicationProperties) {
+    public EndpointConfiguration(
+            ApplicationProperties applicationProperties,
+            @Qualifier("bookFormatsInstalled") boolean bookFormatsInstalled) {
         this.applicationProperties = applicationProperties;
+        this.bookFormatsInstalled = bookFormatsInstalled;
         init();
         processEnvironmentConfigs();
     }
-    
+
     public void enableEndpoint(String endpoint) {
-    	endpointStatuses.put(endpoint, true);
+        endpointStatuses.put(endpoint, true);
     }
 
     public void disableEndpoint(String endpoint) {
-    	if(!endpointStatuses.containsKey(endpoint) || endpointStatuses.get(endpoint) !=  false) {
-	        logger.info("Disabling {}", endpoint);
-	        endpointStatuses.put(endpoint, false);
-    	}
+        if (!endpointStatuses.containsKey(endpoint) || endpointStatuses.get(endpoint) != false) {
+            logger.info("Disabling {}", endpoint);
+            endpointStatuses.put(endpoint, false);
+        }
     }
 
     public boolean isEndpointEnabled(String endpoint) {
@@ -66,7 +75,7 @@ public class EndpointConfiguration {
             }
         }
     }
-    
+
     public void init() {
         // Adding endpoints to "PageOps" group
         addEndpointToGroup("PageOps", "remove-pages");
@@ -84,8 +93,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("PageOps", "split-by-size-or-count");
         addEndpointToGroup("PageOps", "overlay-pdf");
         addEndpointToGroup("PageOps", "split-pdf-by-sections");
-        
-        
+
         // Adding endpoints to "Convert" group
         addEndpointToGroup("Convert", "pdf-to-img");
         addEndpointToGroup("Convert", "img-to-pdf");
@@ -101,8 +109,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "url-to-pdf");
         addEndpointToGroup("Convert", "markdown-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-csv");
-        
-        
+
         // Adding endpoints to "Security" group
         addEndpointToGroup("Security", "add-password");
         addEndpointToGroup("Security", "remove-password");
@@ -111,8 +118,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "cert-sign");
         addEndpointToGroup("Security", "sanitize-pdf");
         addEndpointToGroup("Security", "auto-redact");
-        
-        
+
         // Adding endpoints to "Other" group
         addEndpointToGroup("Other", "ocr-pdf");
         addEndpointToGroup("Other", "add-image");
@@ -130,10 +136,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "auto-rename");
         addEndpointToGroup("Other", "get-info-on-pdf");
         addEndpointToGroup("Other", "show-javascript");
-        
-        
-        
-        //CLI
+
+        // CLI
         addEndpointToGroup("CLI", "compress-pdf");
         addEndpointToGroup("CLI", "extract-image-scans");
         addEndpointToGroup("CLI", "remove-blanks");
@@ -149,19 +153,24 @@ public class EndpointConfiguration {
         addEndpointToGroup("CLI", "ocr-pdf");
         addEndpointToGroup("CLI", "html-to-pdf");
         addEndpointToGroup("CLI", "url-to-pdf");
-        
-        
-        //python
+        addEndpointToGroup("CLI", "book-to-pdf");
+        addEndpointToGroup("CLI", "pdf-to-book");
+
+        // Calibre
+        addEndpointToGroup("Calibre", "book-to-pdf");
+        addEndpointToGroup("Calibre", "pdf-to-book");
+
+        // python
         addEndpointToGroup("Python", "extract-image-scans");
         addEndpointToGroup("Python", "remove-blanks");
         addEndpointToGroup("Python", "html-to-pdf");
         addEndpointToGroup("Python", "url-to-pdf");
-        
-        //openCV
+
+        // openCV
         addEndpointToGroup("OpenCV", "extract-image-scans");
         addEndpointToGroup("OpenCV", "remove-blanks");
 
-        //LibreOffice
+        // LibreOffice
         addEndpointToGroup("LibreOffice", "repair");
         addEndpointToGroup("LibreOffice", "file-to-pdf");
         addEndpointToGroup("LibreOffice", "xlsx-to-pdf");
@@ -170,14 +179,13 @@ public class EndpointConfiguration {
         addEndpointToGroup("LibreOffice", "pdf-to-text");
         addEndpointToGroup("LibreOffice", "pdf-to-html");
         addEndpointToGroup("LibreOffice", "pdf-to-xml");
-        
-        
-        //OCRmyPDF
+
+        // OCRmyPDF
         addEndpointToGroup("OCRmyPDF", "compress-pdf");
         addEndpointToGroup("OCRmyPDF", "pdf-to-pdfa");
         addEndpointToGroup("OCRmyPDF", "ocr-pdf");
-        
-        //Java
+
+        // Java
         addEndpointToGroup("Java", "merge-pdfs");
         addEndpointToGroup("Java", "remove-pages");
         addEndpointToGroup("Java", "split-pdfs");
@@ -210,20 +218,20 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "split-by-size-or-count");
         addEndpointToGroup("Java", "overlay-pdf");
         addEndpointToGroup("Java", "split-pdf-by-sections");
-        
-        //Javascript
+
+        // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
         addEndpointToGroup("Javascript", "sign");
         addEndpointToGroup("Javascript", "compare");
         addEndpointToGroup("Javascript", "adjust-contrast");
-        
-        
     }
-    
+
     private void processEnvironmentConfigs() {
         List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
         List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
-
+        if (!bookFormatsInstalled) {
+            groupsToRemove.add("Calibre");
+        }
         if (endpointsToRemove != null) {
             for (String endpoint : endpointsToRemove) {
                 disableEndpoint(endpoint.trim());
@@ -236,6 +244,4 @@ public class EndpointConfiguration {
             }
         }
     }
-
 }
-

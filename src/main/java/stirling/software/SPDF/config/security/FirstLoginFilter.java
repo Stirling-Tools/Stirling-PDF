@@ -15,35 +15,35 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.utils.RequestUriUtils;
 
 @Component
 public class FirstLoginFilter extends OncePerRequestFilter {
-	
-    @Autowired
-    @Lazy
-    private UserService userService;
-    
+
+    @Autowired @Lazy private UserService userService;
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-    	String method = request.getMethod();
-    	String requestURI = request.getRequestURI(); 
-    	 // Check if the request is for static resources
-        boolean isStaticResource = requestURI.startsWith("/css/") 
-                                || requestURI.startsWith("/js/")
-                                || requestURI.startsWith("/images/")
-                                || requestURI.startsWith("/public/")
-                                || requestURI.endsWith(".svg");
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        String method = request.getMethod();
+        String requestURI = request.getRequestURI();
+        // Check if the request is for static resources
+        boolean isStaticResource = RequestUriUtils.isStaticResource(requestURI);
 
         // If it's a static resource, just continue the filter chain and skip the logic below
         if (isStaticResource) {
             filterChain.doFilter(request, response);
             return;
         }
-        
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
             Optional<User> user = userService.findByUsername(authentication.getName());
-            if ("GET".equalsIgnoreCase(method) && user.isPresent() && user.get().isFirstLogin() && !"/change-creds".equals(requestURI)) {
+            if ("GET".equalsIgnoreCase(method)
+                    && user.isPresent()
+                    && user.get().isFirstLogin()
+                    && !"/change-creds".equals(requestURI)) {
                 response.sendRedirect("/change-creds");
                 return;
             }

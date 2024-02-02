@@ -1,11 +1,17 @@
 <head th:fragment="head">
 
+<!-- Title -->
+<title th:text="${@appName} + (${title} != null and ${title} != '' ? ' - ' + ${title} : '')"></title>
+
 <!-- Metadata -->
 <meta charset="UTF-8">
+<meta name="description" th:content="${@appName} + (${header} != null and ${header} != '' ? ' - ' + ${header} : '')"/>
+<meta name="msapplication-TileColor" content="#2d89ef">
+<meta name="theme-color" content="#ffffff">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title th:text="${@appName} + (${title} != null and ${title} != '' ? ' - ' + ${title} : '')"></title>
+<!-- Icons -->
 <link rel="shortcut icon" href="favicon.svg">
-
 <link rel="apple-touch-icon" sizes="57x57" href="apple-touch-icon-57x57.png">
 <link rel="apple-touch-icon" sizes="60x60" href="apple-touch-icon-60x60.png">
 <link rel="apple-touch-icon" sizes="72x72" href="apple-touch-icon-72x72.png">
@@ -19,16 +25,9 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 <link rel="manifest" href="site.webmanifest">
 <link rel="mask-icon" href="safari-pinned-tab.svg" color="#ca2b2a">
-<meta name="msapplication-TileColor" content="#2d89ef">
-<meta name="theme-color" content="#ffffff">
-
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- jQuery -->
 <script src="js/thirdParty/jquery.min.js"></script>
-
-<!-- jQuery -->
 <script src="js/thirdParty/jszip.min.js"></script>
 
 <!-- Bootstrap -->
@@ -121,7 +120,7 @@
 	          data-bs-files-selected=#{filesSelected}, 
 	          data-bs-pdf-prompt=#{pdfPrompt}">
 	    <div class="mb-3">
-	        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:classappend="${notRequired ? '' : 'required'}">
+	        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:required="${notRequired} ? null : 'required'">
 	    </div>
 	    <div class="selected-files"></div>
 	</div>

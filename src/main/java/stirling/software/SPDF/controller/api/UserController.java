@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,60 +21,72 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.model.api.user.UpdateUserDetails;
+import stirling.software.SPDF.model.api.user.UsernameAndPass;
 
 @Controller
+@Tag(name = "User", description = "User APIs")
 @RequestMapping("/api/v1/user")
 public class UserController {
-    
-    @Autowired
-    private UserService userService;
-    
+
+    @Autowired private UserService userService;
+
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
-    public String register(@RequestParam String username, @RequestParam String password, Model model) {
-        if(userService.usernameExists(username)) {
+    public String register(@ModelAttribute UsernameAndPass requestModel, Model model) {
+        if (userService.usernameExists(requestModel.getUsername())) {
             model.addAttribute("error", "Username already exists");
             return "register";
         }
 
-        userService.saveUser(username, password);
+        userService.saveUser(requestModel.getUsername(), requestModel.getPassword());
         return "redirect:/login?registered=true";
     }
-    
+
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-username-and-password")
-    public RedirectView changeUsernameAndPassword(Principal principal,
-                                                 @RequestParam String currentPassword, 
-                                                 @RequestParam String newUsername, 
-                                                 @RequestParam String newPassword, 
-                                                 HttpServletRequest request, 
-                                                 HttpServletResponse response,
-                                                 RedirectAttributes redirectAttributes) {
-    	if (principal == null) {
-    	    return new RedirectView("/change-creds?messageType=notAuthenticated");
-    	}
+    public RedirectView changeUsernameAndPassword(
+            Principal principal,
+            @ModelAttribute UpdateUserDetails requestModel,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            RedirectAttributes redirectAttributes) {
 
-    	Optional<User> userOpt = userService.findByUsername(principal.getName());
+        String currentPassword = requestModel.getPassword();
+        String newPassword = requestModel.getNewPassword();
+        String newUsername = requestModel.getNewUsername();
 
-    	if (userOpt == null || userOpt.isEmpty()) {
-    	    return new RedirectView("/change-creds?messageType=userNotFound");
-    	}
+        if (principal == null) {
+            return new RedirectView("/change-creds?messageType=notAuthenticated");
+        }
 
-    	User user = userOpt.get();
+        Optional<User> userOpt = userService.findByUsername(principal.getName());
 
-    	if (!userService.isPasswordCorrect(user, currentPassword)) {
-    	    return new RedirectView("/change-creds?messageType=incorrectPassword");
-    	}
+        if (userOpt == null || userOpt.isEmpty()) {
+            return new RedirectView("/change-creds?messageType=userNotFound");
+        }
 
-    	if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
-    	    return new RedirectView("/change-creds?messageType=usernameExists");
-    	}
+        User user = userOpt.get();
 
+        if (!userService.isPasswordCorrect(user, currentPassword)) {
+            return new RedirectView("/change-creds?messageType=incorrectPassword");
+        }
+
+        if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
+            return new RedirectView("/change-creds?messageType=usernameExists");
+        }
 
         userService.changePassword(user, newPassword);
-        if(newUsername != null && newUsername.length() > 0 && !user.getUsername().equals(newUsername)) {
+        if (newUsername != null
+                && newUsername.length() > 0
+                && !user.getUsername().equals(newUsername)) {
             userService.changeUsername(user, newUsername);
         }
         userService.changeFirstUse(user, false);
@@ -84,36 +97,36 @@ public class UserController {
         return new RedirectView("/login?messageType=credsUpdated");
     }
 
-
-    
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-username")
-    public RedirectView changeUsername(Principal principal,
-                                       @RequestParam String currentPassword, 
-                                       @RequestParam String newUsername, 
-                                       HttpServletRequest request, 
-                                       HttpServletResponse response,
-                                       RedirectAttributes redirectAttributes) {
-    	if (principal == null) {
-    	    return new RedirectView("/account?messageType=notAuthenticated");
-    	}
+    public RedirectView changeUsername(
+            Principal principal,
+            @RequestParam String currentPassword,
+            @RequestParam String newUsername,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            RedirectAttributes redirectAttributes) {
+        if (principal == null) {
+            return new RedirectView("/account?messageType=notAuthenticated");
+        }
 
-    	Optional<User> userOpt = userService.findByUsername(principal.getName());
+        Optional<User> userOpt = userService.findByUsername(principal.getName());
 
-    	if (userOpt == null || userOpt.isEmpty()) {
-    	    return new RedirectView("/account?messageType=userNotFound");
-    	}
+        if (userOpt == null || userOpt.isEmpty()) {
+            return new RedirectView("/account?messageType=userNotFound");
+        }
 
-    	User user = userOpt.get();
+        User user = userOpt.get();
 
-    	if (!userService.isPasswordCorrect(user, currentPassword)) {
-    	    return new RedirectView("/account?messageType=incorrectPassword");
-    	}
+        if (!userService.isPasswordCorrect(user, currentPassword)) {
+            return new RedirectView("/account?messageType=incorrectPassword");
+        }
 
-    	if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
-    	    return new RedirectView("/account?messageType=usernameExists");
-    	}
+        if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
+            return new RedirectView("/account?messageType=usernameExists");
+        }
 
-    	if(newUsername != null && newUsername.length() > 0) {
+        if (newUsername != null && newUsername.length() > 0) {
             userService.changeUsername(user, newUsername);
         }
 
@@ -123,28 +136,30 @@ public class UserController {
         return new RedirectView("/login?messageType=credsUpdated");
     }
 
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password")
-    public RedirectView changePassword(Principal principal, 
-                                       @RequestParam String currentPassword, 
-                                       @RequestParam String newPassword, 
-                                       HttpServletRequest request, 
-                                       HttpServletResponse response,
-                                       RedirectAttributes redirectAttributes) {
-    	if (principal == null) {
-    	    return new RedirectView("/account?messageType=notAuthenticated");
-    	}
+    public RedirectView changePassword(
+            Principal principal,
+            @RequestParam String currentPassword,
+            @RequestParam String newPassword,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            RedirectAttributes redirectAttributes) {
+        if (principal == null) {
+            return new RedirectView("/account?messageType=notAuthenticated");
+        }
 
-    	Optional<User> userOpt = userService.findByUsername(principal.getName());
+        Optional<User> userOpt = userService.findByUsername(principal.getName());
 
-    	if (userOpt == null || userOpt.isEmpty()) {
-    	    return new RedirectView("/account?messageType=userNotFound");
-    	}
+        if (userOpt == null || userOpt.isEmpty()) {
+            return new RedirectView("/account?messageType=userNotFound");
+        }
 
-    	User user = userOpt.get();
+        User user = userOpt.get();
 
-    	if (!userService.isPasswordCorrect(user, currentPassword)) {
-    	    return new RedirectView("/account?messageType=incorrectPassword");
-    	}
+        if (!userService.isPasswordCorrect(user, currentPassword)) {
+            return new RedirectView("/account?messageType=incorrectPassword");
+        }
 
         userService.changePassword(user, newPassword);
 
@@ -154,55 +169,71 @@ public class UserController {
         return new RedirectView("/login?messageType=credsUpdated");
     }
 
-    
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/updateUserSettings")
-	public String updateUserSettings(HttpServletRequest request, Principal principal) {
-	    Map<String, String[]> paramMap = request.getParameterMap();
-	    Map<String, String> updates = new HashMap<>();
+    public String updateUserSettings(HttpServletRequest request, Principal principal) {
+        Map<String, String[]> paramMap = request.getParameterMap();
+        Map<String, String> updates = new HashMap<>();
 
-	    System.out.println("Received parameter map: " + paramMap);
+        System.out.println("Received parameter map: " + paramMap);
 
-	    for (Map.Entry<String, String[]> entry : paramMap.entrySet()) {
-	        updates.put(entry.getKey(), entry.getValue()[0]);
-	    }
+        for (Map.Entry<String, String[]> entry : paramMap.entrySet()) {
+            updates.put(entry.getKey(), entry.getValue()[0]);
+        }
 
-	    System.out.println("Processed updates: " + updates);
+        System.out.println("Processed updates: " + updates);
 
-	    // Assuming you have a method in userService to update the settings for a user
-	    userService.updateUserSettings(principal.getName(), updates);
+        // Assuming you have a method in userService to update the settings for a user
+        userService.updateUserSettings(principal.getName(), updates);
 
-	    return "redirect:/account";  // Redirect to a page of your choice after updating
-	}
+        return "redirect:/account"; // Redirect to a page of your choice after updating
+    }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/saveUser")
-    public RedirectView saveUser(@RequestParam String username, @RequestParam String password, @RequestParam String role, 
-    		@RequestParam(name = "forceChange", required = false, defaultValue = "false") boolean forceChange) {
-    	
-    	if(userService.usernameExists(username)) {
-    		return new RedirectView("/addUsers?messageType=usernameExists");
-    	}
+    public RedirectView saveUser(
+            @RequestParam String username,
+            @RequestParam String password,
+            @RequestParam String role,
+            @RequestParam(name = "forceChange", required = false, defaultValue = "false")
+                    boolean forceChange) {
+
+        if (userService.usernameExists(username)) {
+            return new RedirectView("/addUsers?messageType=usernameExists");
+        }
+        try {
+            // Validate the role
+            Role roleEnum = Role.fromString(role);
+            if (roleEnum == Role.INTERNAL_API_USER) {
+                // If the role is INTERNAL_API_USER, reject the request
+                return new RedirectView("/addUsers?messageType=invalidRole");
+            }
+        } catch (IllegalArgumentException e) {
+            // If the role ID is not valid, redirect with an error message
+            return new RedirectView("/addUsers?messageType=invalidRole");
+        }
+
         userService.saveUser(username, password, role, forceChange);
-        return new RedirectView("/addUsers");  // Redirect to account page after adding the user
+        return new RedirectView("/addUsers"); // Redirect to account page after adding the user
     }
 
-    
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/deleteUser/{username}")
-    public String deleteUser(@PathVariable String username,  Authentication authentication) {
-    	
-    	// Get the currently authenticated username
+    public String deleteUser(@PathVariable String username, Authentication authentication) {
+
+        // Get the currently authenticated username
         String currentUsername = authentication.getName();
 
         // Check if the provided username matches the current session's username
         if (currentUsername.equals(username)) {
             throw new IllegalArgumentException("Cannot delete currently logined in user.");
         }
-        
-    	userService.deleteUser(username); 
+
+        userService.deleteUser(username);
         return "redirect:/addUsers";
     }
-    
+
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/get-api-key")
     public ResponseEntity<String> getApiKey(Principal principal) {
         if (principal == null) {
@@ -216,6 +247,7 @@ public class UserController {
         return ResponseEntity.ok(apiKey);
     }
 
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/update-api-key")
     public ResponseEntity<String> updateApiKey(Principal principal) {
         if (principal == null) {
@@ -229,6 +261,4 @@ public class UserController {
         }
         return ResponseEntity.ok(apiKey);
     }
-    
-    
 }

@@ -3,7 +3,9 @@ name: Release Artifacts
 on: 
   release: 
     types: [created]
-
+permissions:
+  contents: write
+  packages: write
 jobs:
   push:
     runs-on: ubuntu-latest

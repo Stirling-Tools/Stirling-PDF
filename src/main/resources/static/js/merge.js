@@ -8,12 +8,18 @@ document.getElementById("fileInput-input").addEventListener("change", function()
     displayFiles(files);
 });
 
+/**
+ * @param {FileList} files 
+ */
 function displayFiles(files) {
-    var list = document.getElementById("selectedFiles");
-    list.innerHTML = "";
+    const list = document.getElementById("selectedFiles");
 
-    for (var i = 0; i < files.length; i++) {
-        var item = document.createElement("li");
+    while (list.firstChild) {
+        list.removeChild(list.firstChild);
+    }
+
+    for (let i = 0; i < files.length; i++) {
+        const item = document.createElement("li");
         item.className = "list-group-item";
         item.innerHTML = `
             <div class="d-flex justify-content-between align-items-center w-100">
@@ -21,6 +27,7 @@ function displayFiles(files) {
                 <div class="arrows d-flex">
                     <button class="btn btn-secondary move-up"><span>&uarr;</span></button>
                     <button class="btn btn-secondary move-down"><span>&darr;</span></button>
+                    <button class="btn btn-danger remove-file"><span>&times;</span></button>
                 </div>
             </div>
         `;
@@ -55,6 +62,16 @@ function attachMoveButtons() {
                 updateFiles();
             }
         });
+    }
+
+    var removeButtons = document.querySelectorAll(".remove-file");
+    for (var i = 0; i < removeButtons.length; i++) {
+         removeButtons[i].addEventListener("click", function (event) {
+              event.preventDefault();
+              var parent = this.closest(".list-group-item");
+              parent.remove();
+              updateFiles();
+         });
     }
 }
 

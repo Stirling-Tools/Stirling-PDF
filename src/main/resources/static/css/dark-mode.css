@@ -11,6 +11,13 @@ body, select, textarea {
   color: rgb(var(--base-font-color)) !important;
 }
 
+ a {
+    color: #add8e6;
+ }
+ a:hover {
+    color: #87ceeb; /* Slightly brighter blue on hover for accessibility */
+}
+
 .dark-card {
   background-color: rgb(var(--body-background-color)) !important;
   color: rgb(var(--base-font-color)) !important;
@@ -75,6 +82,13 @@ table th, table td {
     border: none;
     color: #fff !important;
 }
+
+.btn-warning {
+    background-color: #ffc107 !important;
+    border: none;
+    color: #000 !important;
+}
+
 .btn-outline-secondary {
     color: #fff !important;
     border-color: #fff;
@@ -90,6 +104,11 @@ table th, table td {
 hr {
     border-color: rgba(255, 255, 255, 0.6); /* semi-transparent white */
     background-color: rgba(255, 255, 255, 0.6); /* for some browsers that might use background instead of border for <hr> */
+}
+
+.modal-content {
+	color: #fff !important;
+    border-color: #fff;
 }
 
 #global-buttons-container input {

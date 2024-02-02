@@ -2,7 +2,7 @@
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
 
-<th:block th:insert="~{fragments/common :: head(title=#{ocr.title})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{ocr.title}, header=#{ocr.header})}"></th:block>
 <head>
     <script>
         function handleLangSelection() {
@@ -243,7 +243,7 @@
                         </script>
                         <p th:text="#{ocr.credit}"></p>
                         <p th:text="#{ocr.help}"></p>
-                        <a href="https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md">https://github.com/Frooodle/Stirling-PDF/blob/main/HowToUseOCR.md</a>
+                        <a href="https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md">https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md</a>
                     </div>
                 </div>
             </div>

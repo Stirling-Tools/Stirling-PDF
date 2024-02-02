@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import io.github.pixee.security.Filenames;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,6 +14,7 @@ import java.util.stream.IntStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
@@ -28,10 +30,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.api.misc.RemoveBlankPagesRequest;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
-import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -39,19 +41,20 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class BlankPageController {
 
-	@PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
-	@Operation(
-	    summary = "Remove blank pages from a PDF file",
-	    description = "This endpoint removes blank pages from a given PDF file. Users can specify the threshold and white percentage to tune the detection of blank pages. Input:PDF Output:PDF Type:SISO"
-	)
-	public ResponseEntity<byte[]> removeBlankPages(@ModelAttribute RemoveBlankPagesRequest request) throws IOException, InterruptedException {
-	    MultipartFile inputFile = request.getFileInput();
-	    int threshold = request.getThreshold();
-	    float whitePercent = request.getWhitePercent();
-		
-    	PDDocument document = null;
+    @PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
+    @Operation(
+            summary = "Remove blank pages from a PDF file",
+            description =
+                    "This endpoint removes blank pages from a given PDF file. Users can specify the threshold and white percentage to tune the detection of blank pages. Input:PDF Output:PDF Type:SISO")
+    public ResponseEntity<byte[]> removeBlankPages(@ModelAttribute RemoveBlankPagesRequest request)
+            throws IOException, InterruptedException {
+        MultipartFile inputFile = request.getFileInput();
+        int threshold = request.getThreshold();
+        float whitePercent = request.getWhitePercent();
+
+        PDDocument document = null;
         try {
-            document = PDDocument.load(inputFile.getInputStream());
+            document = Loader.loadPDF(inputFile.getBytes());
             PDPageTree pages = document.getDocumentCatalog().getPages();
             PDFTextStripper textStripper = new PDFTextStripper();
 
@@ -72,34 +75,54 @@ public class BlankPageController {
                     boolean hasImages = PdfUtils.hasImagesOnPage(page);
                     if (hasImages) {
                         System.out.println("page " + pageIndex + " has image");
-    
+
                         Path tempFile = Files.createTempFile("image_", ".png");
-    
+
                         // Render image and save as temp file
                         BufferedImage image = pdfRenderer.renderImageWithDPI(pageIndex, 300);
                         ImageIO.write(image, "png", tempFile.toFile());
-    
-                        List<String> command = new ArrayList<>(Arrays.asList("python3", System.getProperty("user.dir") + "/scripts/detect-blank-pages.py", tempFile.toString() ,"--threshold", String.valueOf(threshold), "--white_percent", String.valueOf(whitePercent)));
-    
+
+                        List<String> command =
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                "python",
+                                                System.getProperty("user.dir")
+                                                        + "/scripts/detect-blank-pages.py",
+                                                tempFile.toString(),
+                                                "--threshold",
+                                                String.valueOf(threshold),
+                                                "--white_percent",
+                                                String.valueOf(whitePercent)));
+
+                        Boolean blank = false;
                         // Run CLI command
-                        ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV).runCommandWithOutputHandling(command);
-    
-                        // does contain data
-                        if (returnCode.getRc() == 0) {
-                            System.out.println("page " + pageIndex + " has image which is not blank");
-                            pagesToKeepIndex.add(pageIndex);
-                        } else {
+                        try {
+                            ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
+                                    .runCommandWithOutputHandling(command);
+                        } catch (IOException e) {
+                            // From detect-blank-pages.py
+                            // Return code 1: The image is considered blank.
+                            // Return code 0: The image is not considered blank.
+                            // Since the process returned with a failure code, it should be blank.
+                            blank = true;
+                        }
+
+                        if (blank) {
                             System.out.println("Skipping, Image was blank for page #" + pageIndex);
+                        } else {
+                            System.out.println(
+                                    "page " + pageIndex + " has image which is not blank");
+                            pagesToKeepIndex.add(pageIndex);
                         }
                     }
                 }
                 pageIndex++;
-                
             }
             System.out.print("pagesToKeep=" + pagesToKeepIndex.size());
 
             // Remove pages not present in pagesToKeepIndex
-            List<Integer> pageIndices = IntStream.range(0, pages.getCount()).boxed().collect(Collectors.toList());
+            List<Integer> pageIndices =
+                    IntStream.range(0, pages.getCount()).boxed().collect(Collectors.toList());
             Collections.reverse(pageIndices); // Reverse to prevent index shifting during removal
             for (Integer i : pageIndices) {
                 if (!pagesToKeepIndex.contains(i)) {
@@ -107,16 +130,15 @@ public class BlankPageController {
                 }
             }
 
-            return WebResponseUtils.pdfDocToWebResponse(document, inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_blanksRemoved.pdf");
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document,
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                            + "_blanksRemoved.pdf");
         } catch (IOException e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         } finally {
-            if (document != null)
-                document.close();
+            if (document != null) document.close();
         }
     }
-
-
-    
 }

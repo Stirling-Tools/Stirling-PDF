@@ -1,8 +1,8 @@
 package stirling.software.SPDF.controller.api;
 
+import io.github.pixee.security.Filenames;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -36,19 +38,24 @@ public class SplitPDFController {
     private static final Logger logger = LoggerFactory.getLogger(SplitPDFController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/split-pages")
-    @Operation(summary = "Split a PDF file into separate documents",
-            description = "This endpoint splits a given PDF file into separate documents based on the specified page numbers or ranges. Users can specify pages using individual numbers, ranges, or 'all' for every page. Input:PDF Output:PDF Type:SIMO")
-    public ResponseEntity<byte[]> splitPdf(@ModelAttribute PDFWithPageNums request) throws IOException {
-    	MultipartFile file = request.getFileInput();
+    @Operation(
+            summary = "Split a PDF file into separate documents",
+            description =
+                    "This endpoint splits a given PDF file into separate documents based on the specified page numbers or ranges. Users can specify pages using individual numbers, ranges, or 'all' for every page. Input:PDF Output:PDF Type:SIMO")
+    public ResponseEntity<byte[]> splitPdf(@ModelAttribute PDFWithPageNums request)
+            throws IOException {
+        MultipartFile file = request.getFileInput();
         String pages = request.getPageNumbers();
         // open the pdf document
-        InputStream inputStream = file.getInputStream();
-        PDDocument document = PDDocument.load(inputStream);
+
+        PDDocument document = Loader.loadPDF(file.getBytes());
 
         List<Integer> pageNumbers = request.getPageNumbersList(document);
-        if(!pageNumbers.contains(document.getNumberOfPages() - 1))
-        	pageNumbers.add(document.getNumberOfPages()- 1);
-        logger.info("Splitting PDF into pages: {}", pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
+        if (!pageNumbers.contains(document.getNumberOfPages() - 1))
+            pageNumbers.add(document.getNumberOfPages() - 1);
+        logger.info(
+                "Splitting PDF into pages: {}",
+                pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
         // split the document
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
@@ -72,13 +79,12 @@ public class SplitPDFController {
             }
         }
 
-
         // closing the original document
         document.close();
 
         Path zipFile = Files.createTempFile("split_documents", ".zip");
 
-        String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
+        String filename = Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "");
         try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
             // loop through the split documents and write them to the zip file
             for (int i = 0; i < splitDocumentsBoas.size(); i++) {
@@ -104,8 +110,7 @@ public class SplitPDFController {
         Files.delete(zipFile);
 
         // return the Resource in the response
-        return WebResponseUtils.bytesToWebResponse(data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
-        
+        return WebResponseUtils.bytesToWebResponse(
+                data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
     }
-
 }

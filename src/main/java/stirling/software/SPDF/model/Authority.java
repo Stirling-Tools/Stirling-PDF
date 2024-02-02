@@ -13,19 +13,15 @@ import jakarta.persistence.Table;
 @Table(name = "authorities")
 public class Authority {
 
-	public Authority() {
+    public Authority() {}
 
-	}
-	
-	
-	public Authority(String authority, User user) {
-	    this.authority = authority;
-	    this.user = user;
-	    user.getAuthorities().add(this);
-	}
+    public Authority(String authority, User user) {
+        this.authority = authority;
+        this.user = user;
+        user.getAuthorities().add(this);
+    }
 
-	
-	@Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -36,29 +32,27 @@ public class Authority {
     @JoinColumn(name = "user_id")
     private User user;
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public String getAuthority() {
-		return authority;
-	}
+    public String getAuthority() {
+        return authority;
+    }
 
-	public void setAuthority(String authority) {
-		this.authority = authority;
-	}
+    public void setAuthority(String authority) {
+        this.authority = authority;
+    }
 
-	public User getUser() {
-		return user;
-	}
+    public User getUser() {
+        return user;
+    }
 
-	public void setUser(User user) {
-		this.user = user;
-	}
-
-  
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

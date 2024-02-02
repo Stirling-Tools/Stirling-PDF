@@ -1,5 +1,6 @@
 package stirling.software.SPDF.utils;
 
+import io.github.pixee.security.Filenames;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,18 +24,31 @@ import org.springframework.web.multipart.MultipartFile;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 
 public class PDFToFile {
-    public ResponseEntity<byte[]> processPdfToOfficeFormat(MultipartFile inputFile, String outputFormat, String libreOfficeFilter) throws IOException, InterruptedException {
+    public ResponseEntity<byte[]> processPdfToOfficeFormat(
+            MultipartFile inputFile, String outputFormat, String libreOfficeFilter)
+            throws IOException, InterruptedException {
 
         if (!"application/pdf".equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
         // Get the original PDF file name without the extension
-        String originalPdfFileName = inputFile.getOriginalFilename();
+        String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         String pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
 
         // Validate output format
-        List<String> allowedFormats = Arrays.asList("doc", "docx", "odt", "ppt", "pptx", "odp", "rtf", "html", "xml", "txt:Text");
+        List<String> allowedFormats =
+                Arrays.asList(
+                        "doc",
+                        "docx",
+                        "odt",
+                        "ppt",
+                        "pptx",
+                        "odp",
+                        "rtf",
+                        "html",
+                        "xml",
+                        "txt:Text");
         if (!allowedFormats.contains(outputFormat)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -47,15 +61,26 @@ public class PDFToFile {
         try {
             // Save the uploaded file to a temporary location
             tempInputFile = Files.createTempFile("input_", ".pdf");
-            Files.copy(inputFile.getInputStream(), tempInputFile, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(
+                    inputFile.getInputStream(), tempInputFile, StandardCopyOption.REPLACE_EXISTING);
 
             // Prepare the output directory
             tempOutputDir = Files.createTempDirectory("output_");
 
             // Run the LibreOffice command
-            List<String> command = new ArrayList<>(
-                    Arrays.asList("soffice", "--infilter=" + libreOfficeFilter, "--convert-to", outputFormat, "--outdir", tempOutputDir.toString(), tempInputFile.toString()));
-            ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE).runCommandWithOutputHandling(command);
+            List<String> command =
+                    new ArrayList<>(
+                            Arrays.asList(
+                                    "soffice",
+                                    "--infilter=" + libreOfficeFilter,
+                                    "--convert-to",
+                                    outputFormat,
+                                    "--outdir",
+                                    tempOutputDir.toString(),
+                                    tempInputFile.toString()));
+            ProcessExecutorResult returnCode =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                            .runCommandWithOutputHandling(command);
 
             // Get output files
             List<File> outputFiles = Arrays.asList(tempOutputDir.toFile().listFiles());
@@ -63,7 +88,7 @@ public class PDFToFile {
             if (outputFiles.size() == 1) {
                 // Return single output file
                 File outputFile = outputFiles.get(0);
-                if (outputFormat.equals("txt:Text")) {
+                if ("txt:Text".equals(outputFormat)) {
                     outputFormat = "txt";
                 }
                 fileName = pdfBaseName + "." + outputFormat;
@@ -89,11 +114,10 @@ public class PDFToFile {
 
         } finally {
             // Clean up the temporary files
-            if (tempInputFile != null)
-                Files.delete(tempInputFile);
-            if (tempOutputDir != null)
-                FileUtils.deleteDirectory(tempOutputDir.toFile());
+            if (tempInputFile != null) Files.delete(tempInputFile);
+            if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
-        return WebResponseUtils.bytesToWebResponse(fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.bytesToWebResponse(
+                fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
     }
 }

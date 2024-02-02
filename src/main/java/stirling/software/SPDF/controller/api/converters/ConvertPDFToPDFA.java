@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import io.github.pixee.security.Filenames;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
@@ -24,14 +26,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToPDFA {
 
-	@PostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
-	@Operation(
-	    summary = "Convert a PDF to a PDF/A",
-	    description = "This endpoint converts a PDF file to a PDF/A file. PDF/A is a format designed for long-term archiving of digital documents. Input:PDF Output:PDF Type:SISO"
-	)
-	public ResponseEntity<byte[]> pdfToPdfA(@ModelAttribute PDFFile request) 
-	        throws Exception {
-		MultipartFile inputFile = request.getFileInput();
+    @PostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
+    @Operation(
+            summary = "Convert a PDF to a PDF/A",
+            description =
+                    "This endpoint converts a PDF file to a PDF/A file. PDF/A is a format designed for long-term archiving of digital documents. Input:PDF Output:PDF Type:SISO")
+    public ResponseEntity<byte[]> pdfToPdfA(@ModelAttribute PDFFile request) throws Exception {
+        MultipartFile inputFile = request.getFileInput();
 
         // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");
@@ -50,7 +51,9 @@ public class ConvertPDFToPDFA {
         command.add(tempInputFile.toString());
         command.add(tempOutputFile.toString());
 
-        ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF).runCommandWithOutputHandling(command);
+        ProcessExecutorResult returnCode =
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
+                        .runCommandWithOutputHandling(command);
 
         // Read the optimized PDF file
         byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
@@ -60,8 +63,8 @@ public class ConvertPDFToPDFA {
         Files.delete(tempOutputFile);
 
         // Return the optimized PDF as a response
-        String outputFilename = inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_PDFA.pdf";
+        String outputFilename =
+                Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_PDFA.pdf";
         return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
     }
-
 }
