@@ -4,6 +4,7 @@ import io.github.pixee.security.Filenames;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -136,7 +137,7 @@ public class PdfOverlayController {
             try (PDDocument overlayPdf = Loader.loadPDF(overlayFiles[overlayFileIndex])) {
                 PDDocument singlePageDocument = new PDDocument();
                 singlePageDocument.addPage(overlayPdf.getPage(pageCountInCurrentOverlay));
-                File tempFile = File.createTempFile("overlay-page-", ".pdf");
+                File tempFile = Files.createTempFile("overlay-page-", ".pdf").toFile();
                 singlePageDocument.save(tempFile);
                 singlePageDocument.close();
 
