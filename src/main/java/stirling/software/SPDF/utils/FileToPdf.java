@@ -173,7 +173,7 @@ public class FileToPdf {
 
             // Prioritize 'index.html' if it exists, otherwise use the first .html file
             for (Path htmlFile : htmlFiles) {
-                if (htmlFile.getFileName().toString().equals("index.html")) {
+                if ("index.html".equals(htmlFile.getFileName().toString())) {
                     return htmlFile;
                 }
             }

@@ -25,7 +25,7 @@ public class SPdfApplication {
     public void init() {
         // Check if the BROWSER_OPEN environment variable is set to true
         String browserOpenEnv = env.getProperty("BROWSER_OPEN");
-        boolean browserOpen = browserOpenEnv != null && browserOpenEnv.equalsIgnoreCase("true");
+        boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
 
         if (browserOpen) {
             try {
