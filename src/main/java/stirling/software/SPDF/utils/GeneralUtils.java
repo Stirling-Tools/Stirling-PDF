@@ -122,7 +122,7 @@ public class GeneralUtils {
 
         // loop through the page order array
         for (String element : pageOrderArr) {
-            if (element.equalsIgnoreCase("all")) {
+            if ("all".equalsIgnoreCase(element)) {
                 for (int i = 0; i < totalPages; i++) {
                     newPageOrder.add(i);
                 }
@@ -137,11 +137,11 @@ public class GeneralUtils {
 
                 if (element.contains("n")) {
                     String[] parts = element.split("n");
-                    if (!parts[0].equals("") && parts[0] != null) {
+                    if (!"".equals(parts[0]) && parts[0] != null) {
                         coefficient = Integer.parseInt(parts[0]);
                         coefficientExists = true;
                     }
-                    if (parts.length > 1 && !parts[1].equals("") && parts[1] != null) {
+                    if (parts.length > 1 && !"".equals(parts[1]) && parts[1] != null) {
                         constant = Integer.parseInt(parts[1]);
                         constantExists = true;
                     }

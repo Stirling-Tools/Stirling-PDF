@@ -77,7 +77,7 @@ public class WatermarkController {
             graphicsState.setNonStrokingAlphaConstant(opacity);
             contentStream.setGraphicsStateParameters(graphicsState);
 
-            if (watermarkType.equalsIgnoreCase("text")) {
+            if ("text".equalsIgnoreCase(watermarkType)) {
                 addTextWatermark(
                         contentStream,
                         watermarkText,
@@ -88,7 +88,7 @@ public class WatermarkController {
                         heightSpacer,
                         fontSize,
                         alphabet);
-            } else if (watermarkType.equalsIgnoreCase("image")) {
+            } else if ("image".equalsIgnoreCase(watermarkType)) {
                 addImageWatermark(
                         contentStream,
                         watermarkImage,
@@ -141,7 +141,7 @@ public class WatermarkController {
                 break;
         }
 
-        if (!resourceDir.equals("")) {
+        if (!"".equals(resourceDir)) {
             ClassPathResource classPathResource = new ClassPathResource(resourceDir);
             String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
             File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();

@@ -110,15 +110,15 @@ public class MetadataController {
             for (Entry<String, String> entry : allRequestParams.entrySet()) {
                 String key = entry.getKey();
                 // Check if the key is a standard metadata key
-                if (!key.equalsIgnoreCase("Author")
-                        && !key.equalsIgnoreCase("CreationDate")
-                        && !key.equalsIgnoreCase("Creator")
-                        && !key.equalsIgnoreCase("Keywords")
-                        && !key.equalsIgnoreCase("modificationDate")
-                        && !key.equalsIgnoreCase("Producer")
-                        && !key.equalsIgnoreCase("Subject")
-                        && !key.equalsIgnoreCase("Title")
-                        && !key.equalsIgnoreCase("Trapped")
+                if (!"Author".equalsIgnoreCase(key)
+                        && !"CreationDate".equalsIgnoreCase(key)
+                        && !"Creator".equalsIgnoreCase(key)
+                        && !"Keywords".equalsIgnoreCase(key)
+                        && !"modificationDate".equalsIgnoreCase(key)
+                        && !"Producer".equalsIgnoreCase(key)
+                        && !"Subject".equalsIgnoreCase(key)
+                        && !"Title".equalsIgnoreCase(key)
+                        && !"Trapped".equalsIgnoreCase(key)
                         && !key.contains("customKey")
                         && !key.contains("customValue")) {
                     info.setCustomMetadataValue(key, entry.getValue());

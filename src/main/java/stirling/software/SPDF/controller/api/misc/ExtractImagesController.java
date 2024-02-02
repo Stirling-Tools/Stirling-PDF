@@ -86,19 +86,19 @@ public class ExtractImagesController {
                     // Convert image to desired format
                     RenderedImage renderedImage = image.getImage();
                     BufferedImage bufferedImage = null;
-                    if (format.equalsIgnoreCase("png")) {
+                    if ("png".equalsIgnoreCase(format)) {
                         bufferedImage =
                                 new BufferedImage(
                                         renderedImage.getWidth(),
                                         renderedImage.getHeight(),
                                         BufferedImage.TYPE_INT_ARGB);
-                    } else if (format.equalsIgnoreCase("jpeg") || format.equalsIgnoreCase("jpg")) {
+                    } else if ("jpeg".equalsIgnoreCase(format) || "jpg".equalsIgnoreCase(format)) {
                         bufferedImage =
                                 new BufferedImage(
                                         renderedImage.getWidth(),
                                         renderedImage.getHeight(),
                                         BufferedImage.TYPE_INT_RGB);
-                    } else if (format.equalsIgnoreCase("gif")) {
+                    } else if ("gif".equalsIgnoreCase(format)) {
                         bufferedImage =
                                 new BufferedImage(
                                         renderedImage.getWidth(),

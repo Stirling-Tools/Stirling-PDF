@@ -55,7 +55,7 @@ public class ConvertImgPDFController {
             colorTypeResult = ImageType.BINARY;
         }
         // returns bytes for image
-        boolean singleImage = singleOrMultiple.equals("single");
+        boolean singleImage = "single".equals(singleOrMultiple);
         byte[] result = null;
         String filename = Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "");
         try {
@@ -114,6 +114,6 @@ public class ConvertImgPDFController {
 
     private String getMediaType(String imageFormat) {
         String mimeType = URLConnection.guessContentTypeFromName("." + imageFormat);
-        return mimeType.equals("null") ? "application/octet-stream" : mimeType;
+        return "null".equals(mimeType) ? "application/octet-stream" : mimeType;
     }
 }

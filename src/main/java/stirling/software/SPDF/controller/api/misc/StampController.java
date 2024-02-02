@@ -96,7 +96,7 @@ public class StampController {
             graphicsState.setNonStrokingAlphaConstant(opacity);
             contentStream.setGraphicsStateParameters(graphicsState);
 
-            if (watermarkType.equalsIgnoreCase("text")) {
+            if ("text".equalsIgnoreCase(watermarkType)) {
                 addTextStamp(
                         contentStream,
                         watermarkText,
@@ -110,7 +110,7 @@ public class StampController {
                         overrideY,
                         marginFactor,
                         customColor);
-            } else if (watermarkType.equalsIgnoreCase("image")) {
+            } else if ("image".equalsIgnoreCase(watermarkType)) {
                 addImageStamp(
                         contentStream,
                         watermarkImage,
@@ -167,7 +167,7 @@ public class StampController {
                 break;
         }
 
-        if (!resourceDir.equals("")) {
+        if (!"".equals(resourceDir)) {
             ClassPathResource classPathResource = new ClassPathResource(resourceDir);
             String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
             File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();

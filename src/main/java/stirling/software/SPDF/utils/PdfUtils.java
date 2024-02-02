@@ -133,7 +133,7 @@ public class PdfUtils {
         PDFTextStripper textStripper = new PDFTextStripper();
         String pdfText = "";
 
-        if (pagesToCheck == null || pagesToCheck.equals("all")) {
+        if (pagesToCheck == null || "all".equals(pagesToCheck)) {
             pdfText = textStripper.getText(pdfDocument);
         } else {
             // remove whitespaces
@@ -219,8 +219,8 @@ public class PdfUtils {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             if (singleImage) {
-                if (imageType.toLowerCase().equals("tiff")
-                        || imageType.toLowerCase().equals("tif")) {
+                if ("tiff".equals(imageType.toLowerCase())
+                        || "tif".equals(imageType.toLowerCase())) {
                     // Write the images to the output stream as a TIFF with multiple frames
                     ImageWriter writer = ImageIO.getImageWritersByFormatName("tiff").next();
                     ImageWriteParam param = writer.getDefaultWriteParam();
@@ -321,7 +321,7 @@ public class PdfUtils {
                             ImageProcessingUtils.convertColorType(image, colorType);
                     // Use JPEGFactory if it's JPEG since JPEG is lossy
                     PDImageXObject pdImage =
-                            (contentType != null && contentType.equals("image/jpeg"))
+                            (contentType != null && "image/jpeg".equals(contentType))
                                     ? JPEGFactory.createFromImage(doc, convertedImage)
                                     : LosslessFactory.createFromImage(doc, convertedImage);
                     addImageToDocument(doc, pdImage, fitOption, autoRotate);

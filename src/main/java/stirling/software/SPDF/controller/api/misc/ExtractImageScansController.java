@@ -74,7 +74,7 @@ public class ExtractImageScansController {
         List<String> images = new ArrayList<>();
 
         // Check if input file is a PDF
-        if (extension.equalsIgnoreCase("pdf")) {
+        if ("pdf".equalsIgnoreCase(extension)) {
             // Load PDF document
             try (PDDocument document = Loader.loadPDF(form.getFileInput().getBytes())) {
                 PDFRenderer pdfRenderer = new PDFRenderer(document);

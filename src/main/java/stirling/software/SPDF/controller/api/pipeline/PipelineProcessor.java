@@ -98,7 +98,7 @@ public class PipelineProcessor {
                 for (Resource file : outputFiles) {
                     boolean hasInputFileType = false;
                     for (String extension : inputFileTypes) {
-                        if (extension.equals("ALL") || file.getFilename().endsWith(extension)) {
+                        if ("ALL".equals(extension) || file.getFilename().endsWith(extension)) {
                             hasInputFileType = true;
                             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
                             body.add("fileInput", file);

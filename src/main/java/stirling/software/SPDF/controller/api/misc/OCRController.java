@@ -75,7 +75,7 @@ public class OCRController {
             throw new IOException("Please select at least one language.");
         }
 
-        if (!ocrRenderType.equals("hocr") && !ocrRenderType.equals("sandwich")) {
+        if (!"hocr".equals(ocrRenderType) && !"sandwich".equals(ocrRenderType)) {
             throw new IOException("ocrRenderType wrong");
         }
 
@@ -128,7 +128,7 @@ public class OCRController {
         if (cleanFinal != null && cleanFinal) {
             command.add("--clean-final");
         }
-        if (ocrType != null && !ocrType.equals("")) {
+        if (ocrType != null && !"".equals(ocrType)) {
             if ("skip-text".equals(ocrType)) {
                 command.add("--skip-text");
             } else if ("force-ocr".equals(ocrType)) {
