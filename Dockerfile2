@@ -22,7 +22,7 @@ RUN apk add --no-cache curl jq
 WORKDIR /downloader
 
 # Fetch the latest release jar from GitHub
-RUN curl -s https://api.github.com/repos/Frooodle/Stirling-PDF/releases/latest \
+RUN curl -s https://api.github.com/repos/Stirling-Tools/Stirling-PDF/releases/latest \
     | jq -r ".assets[] | select(.name == \"Stirling-PDF.jar\") | .browser_download_url" \
     | xargs curl -L -o Stirling-PDF.jar
     
