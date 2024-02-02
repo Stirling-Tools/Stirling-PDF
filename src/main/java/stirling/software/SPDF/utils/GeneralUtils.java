@@ -22,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class GeneralUtils {
 
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
-        File tempFile = File.createTempFile("temp", null);
+        File tempFile = Files.createTempFile("temp", null).toFile();
         try (FileOutputStream os = new FileOutputStream(tempFile)) {
             os.write(multipartFile.getBytes());
         }
