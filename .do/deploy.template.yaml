@@ -4,7 +4,7 @@ spec:
     - name: stirling-pdf
       git:
         branch: digitalOcean
-        repo_clone_url: https://github.com/Frooodle/Stirling-PDF.git
+        repo_clone_url: https://github.com/Stirling-Tools/Stirling-PDF.git
       dockerfile_path: Dockerfile2
       envs:
         - key: APP_HOME_NAME
