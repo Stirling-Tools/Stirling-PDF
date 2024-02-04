@@ -8,7 +8,6 @@ import Joi from "joi";
 import { JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
 
 import i18next from "i18next";
-i18next.loadNamespaces("impose", (err, t) => { if (err) throw err; });
 
 export class Impose extends Operator {
     static type = "impose";

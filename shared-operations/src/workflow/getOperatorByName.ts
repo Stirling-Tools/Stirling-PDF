@@ -1,7 +1,10 @@
 import { Operator } from "../functions";
+import i18next from "i18next";
 
-// TODO: Import other Operators (could make this dynamic)
+// TODO: Import other Operators (should make this dynamic imports)
+i18next.loadNamespaces("impose", (err, t) => { if (err) throw err; });
 import { Impose } from "../functions/impose";
+
 export const Operators = {
     Impose: Impose
 };

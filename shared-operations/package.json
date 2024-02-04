@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@vizzly/joi": "^17.11.0",
     "i18next-resources-to-backend": "^1.2.0",
     "image-js": "^0.35.5",
     "next-i18next": "^15.1.1",

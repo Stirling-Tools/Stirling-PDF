@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 
 import { BaseSyntheticEvent } from "react";
+import { Operator } from "@stirling-pdf/shared-operations/src/functions";
+import i18next from "i18next";
 
 function Dynamic() {
     const operators = ["impose"]; // TODO: Make this dynamic
@@ -8,8 +10,23 @@ function Dynamic() {
     function selectionChanged(s: BaseSyntheticEvent) {
         const selectedValue = s.target.value;
         if(selectedValue == "none") return;
-        const LoadedOperator = import(`@stirling-pdf/shared-operations/src/functions/${selectedValue}`);
-        LoadedOperator.then(console.log);
+
+        i18next.loadNamespaces("impose", (err, t) => { 
+            if (err) throw err;
+
+            const LoadingModule = import(`@stirling-pdf/shared-operations/src/functions/${selectedValue}`) as Promise<{ [key: string]: typeof Operator }>;
+            LoadingModule.then((Module) => {
+                const Operator = Module[capitalizeFirstLetter(selectedValue)];
+                const description = Operator.schema.describe(); // TODO: The browser build of joi does not include describe. 
+                
+                console.log(description);
+                // TODO: use description to generate fields
+            }); 
+        });
+    }
+
+    function capitalizeFirstLetter(string: String) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
     return (

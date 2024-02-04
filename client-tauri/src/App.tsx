@@ -28,7 +28,7 @@ i18next.use(LanguageDetector).use(initReactI18next).use(resourcesToBackend((lang
     interpolation: {
         escapeValue: false,
     },
-    initImmediate: true // Makes loading blocking but sync
+    initImmediate: false // Makes loading blocking but sync
 }); // TODO: use i18next.config.ts instead
 
 import "./general.css";
