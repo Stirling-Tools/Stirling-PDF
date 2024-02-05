@@ -17,9 +17,9 @@ function Dynamic() {
             const LoadingModule = import(`@stirling-pdf/shared-operations/src/functions/${selectedValue}`) as Promise<{ [key: string]: typeof Operator }>;
             LoadingModule.then((Module) => {
                 const Operator = Module[capitalizeFirstLetter(selectedValue)];
-                const description = Operator.schema.describe(); // TODO: The browser build of joi does not include describe. 
-                
-                console.log(description);
+                const description = Operator.schema.describe();
+
+                console.log("abc", description);
                 // TODO: use description to generate fields
             }); 
         });

@@ -4,7 +4,7 @@ import { Operator, Progress, oneToOne } from ".";
 
 import * as pdfcpuWrapper from "#pdfcpu"; // This is updated by tsconfig.json/paths for the context (browser, node, etc.) this module is used in.
 
-import Joi from "joi";
+import Joi from "@stirling-tools/joi";
 import { JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
 
 import i18next from "i18next";

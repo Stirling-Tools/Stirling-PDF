@@ -1,5 +1,5 @@
 import { Action } from "../../declarations/Action";
-import Joi from "joi";
+import Joi from "@stirling-tools/joi";
 
 export interface ValidationResult { 
     valid: boolean, 
