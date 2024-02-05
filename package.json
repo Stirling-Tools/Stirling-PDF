@@ -21,8 +21,5 @@
   "engines": {
     "npm": ">=7.24.2"
   },
-  "engineStrict": true,
-  "dependencies": {
-    "@stirling-tools/joi": "github:Stirling-Tools/joi"
-  }
+  "engineStrict": true
 }
