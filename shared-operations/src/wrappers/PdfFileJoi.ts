@@ -1,4 +1,4 @@
-import Joi from "joi";
+import Joi from "@stirling-tools/joi";
 import { PdfFile } from "./PdfFile";
 
 export const JoiPDFFileSchema = Joi.custom((value: Express.Multer.File[] /* <- also handles single files */ | PdfFile[] | PdfFile, helpers) => {

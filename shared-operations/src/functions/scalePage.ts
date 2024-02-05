@@ -1,5 +1,5 @@
 
-import Joi from "joi";
+import Joi from "@stirling-tools/joi";
 import { PDFPage } from "pdf-lib";
 import { PdfFile, RepresentationType, JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
 
