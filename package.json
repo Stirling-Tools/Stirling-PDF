@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev-all": "concurrently --names \"node,tauri\" -c \"red.bold,cyan.bold\" --kill-others \"npm run -w server-node dev\" \"npm run -w client-tauri dev\"",
-    "update-all-dependencies": "npm i --workspace=server-node --workspace=client-tauri --workspace=shared-operation",
+    "update-all-dependencies": "npm i --workspace=stirling-pdf --workspace=server-node --workspace=client-tauri --workspace=shared-operation",
     "update-backend-dependencies": "npm i --workspace=server-node --workspace=shared-operation",
     "update-frontend-dependencies": "npm i --workspace=client-tauri --workspace=shared-operation"
   },
