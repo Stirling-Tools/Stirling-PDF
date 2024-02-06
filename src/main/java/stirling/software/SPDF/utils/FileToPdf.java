@@ -1,6 +1,5 @@
 package stirling.software.SPDF.utils;
 
-import io.github.pixee.security.ZipSecurity;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -12,6 +11,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import io.github.pixee.security.ZipSecurity;
 
 import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
@@ -145,7 +146,8 @@ public class FileToPdf {
 
     private static Path unzipAndGetMainHtml(byte[] fileBytes) throws IOException {
         Path tempDirectory = Files.createTempDirectory("unzipped_");
-        try (ZipInputStream zipIn = ZipSecurity.createHardenedInputStream(new ByteArrayInputStream(fileBytes))) {
+        try (ZipInputStream zipIn =
+                ZipSecurity.createHardenedInputStream(new ByteArrayInputStream(fileBytes))) {
             ZipEntry entry = zipIn.getNextEntry();
             while (entry != null) {
                 Path filePath = tempDirectory.resolve(entry.getName());

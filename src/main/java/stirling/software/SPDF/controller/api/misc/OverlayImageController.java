@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import io.github.pixee.security.Filenames;
 import java.io.IOException;
 
 import org.slf4j.Logger;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -45,7 +45,9 @@ public class OverlayImageController {
 
             return WebResponseUtils.bytesToWebResponse(
                     result,
-                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_overlayed.pdf");
+                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
+                            + "_overlayed.pdf");
         } catch (IOException e) {
             logger.error("Failed to add image to PDF", e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

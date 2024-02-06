@@ -1,7 +1,5 @@
 package stirling.software.SPDF.controller.api.pipeline;
 
-import io.github.pixee.security.Filenames;
-import io.github.pixee.security.ZipSecurity;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -37,6 +35,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.github.pixee.security.ZipSecurity;
 
 import jakarta.servlet.ServletContext;
 import stirling.software.SPDF.SPdfApplication;

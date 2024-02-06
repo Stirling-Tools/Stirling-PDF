@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api;
 
-import io.github.pixee.security.Filenames;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -77,7 +77,8 @@ public class PdfOverlayController {
                 overlay.overlay(overlayGuide).save(outputStream);
                 byte[] data = outputStream.toByteArray();
                 String outputFilename =
-                        Filenames.toSimpleFileName(baseFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                        Filenames.toSimpleFileName(baseFile.getOriginalFilename())
+                                        .replaceFirst("[.][^.]+$", "")
                                 + "_overlayed.pdf"; // Remove file extension and append .pdf
 
                 return WebResponseUtils.bytesToWebResponse(

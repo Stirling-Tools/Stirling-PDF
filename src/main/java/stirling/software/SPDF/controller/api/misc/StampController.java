@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import io.github.pixee.security.Filenames;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -8,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -52,6 +53,7 @@ public class StampController {
     public ResponseEntity<byte[]> addStamp(@ModelAttribute AddStampRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
+        List<Integer> pageNumbers = request.getPageNumbersList();
         String watermarkType = request.getStampType();
         String watermarkText = request.getStampText();
         MultipartFile watermarkImage = request.getStampImage();
@@ -87,49 +89,58 @@ public class StampController {
         // Load the input PDF
         PDDocument document = Loader.loadPDF(pdfFile.getBytes());
 
-        for (PDPage page : document.getPages()) {
-            PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+        for (int pageIndex : pageNumbers) {
+            // Convert 1-based index to 0-based index required by
+            // document.getPages().get(index)
+            int zeroBasedIndex = pageIndex - 1;
+            // Check if the zeroBasedIndex is within the range of the document's pages
+            if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
+                PDPage page = document.getPage(zeroBasedIndex);
+                PDPageContentStream contentStream =
+                        new PDPageContentStream(
+                                document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
-            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-            graphicsState.setNonStrokingAlphaConstant(opacity);
-            contentStream.setGraphicsStateParameters(graphicsState);
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setNonStrokingAlphaConstant(opacity);
+                contentStream.setGraphicsStateParameters(graphicsState);
 
-            if ("text".equalsIgnoreCase(watermarkType)) {
-                addTextStamp(
-                        contentStream,
-                        watermarkText,
-                        document,
-                        page,
-                        rotation,
-                        position,
-                        fontSize,
-                        alphabet,
-                        overrideX,
-                        overrideY,
-                        marginFactor,
-                        customColor);
-            } else if ("image".equalsIgnoreCase(watermarkType)) {
-                addImageStamp(
-                        contentStream,
-                        watermarkImage,
-                        document,
-                        page,
-                        rotation,
-                        position,
-                        fontSize,
-                        overrideX,
-                        overrideY,
-                        marginFactor);
+                if ("text".equalsIgnoreCase(watermarkType)) {
+                    addTextStamp(
+                            contentStream,
+                            watermarkText,
+                            document,
+                            page,
+                            rotation,
+                            position,
+                            fontSize,
+                            alphabet,
+                            overrideX,
+                            overrideY,
+                            marginFactor,
+                            customColor);
+                } else if ("image".equalsIgnoreCase(watermarkType)) {
+                    addImageStamp(
+                            contentStream,
+                            watermarkImage,
+                            document,
+                            page,
+                            rotation,
+                            position,
+                            fontSize,
+                            overrideX,
+                            overrideY,
+                            marginFactor);
+                }
+
+                contentStream.close();
             }
-
-            contentStream.close();
         }
 
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_watermarked.pdf");
+                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
+                        + "_stamped.pdf");
     }
 
     private void addTextStamp(
