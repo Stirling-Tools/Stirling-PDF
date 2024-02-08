@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,7 +16,18 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.HostValidator;
+import io.github.pixee.security.Urls;
+
 public class GeneralUtils {
+
+    public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
+        File tempFile = Files.createTempFile("temp", null).toFile();
+        try (FileOutputStream os = new FileOutputStream(tempFile)) {
+            os.write(multipartFile.getBytes());
+        }
+        return tempFile;
+    }
 
     public static void deleteDirectory(Path path) throws IOException {
         Files.walkFileTree(
@@ -49,7 +59,8 @@ public class GeneralUtils {
 
     public static boolean isValidURL(String urlStr) {
         try {
-            new URL(urlStr);
+            Urls.create(
+                    urlStr, Urls.HTTP_PROTOCOLS, HostValidator.DENY_COMMON_INFRASTRUCTURE_TARGETS);
             return true;
         } catch (MalformedURLException e) {
             return false;
@@ -112,7 +123,7 @@ public class GeneralUtils {
 
         // loop through the page order array
         for (String element : pageOrderArr) {
-            if (element.equalsIgnoreCase("all")) {
+            if ("all".equalsIgnoreCase(element)) {
                 for (int i = 0; i < totalPages; i++) {
                     newPageOrder.add(i);
                 }
@@ -127,11 +138,11 @@ public class GeneralUtils {
 
                 if (element.contains("n")) {
                     String[] parts = element.split("n");
-                    if (!parts[0].equals("") && parts[0] != null) {
+                    if (!"".equals(parts[0]) && parts[0] != null) {
                         coefficient = Integer.parseInt(parts[0]);
                         coefficientExists = true;
                     }
-                    if (parts.length > 1 && !parts[1].equals("") && parts[1] != null) {
+                    if (parts.length > 1 && !"".equals(parts[1]) && parts[1] != null) {
                         constant = Integer.parseInt(parts[1]);
                         constantExists = true;
                     }

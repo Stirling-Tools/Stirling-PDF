@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
+
 public class WebResponseUtils {
 
     public static ResponseEntity<byte[]> boasToWebResponse(
@@ -26,7 +28,7 @@ public class WebResponseUtils {
 
     public static ResponseEntity<byte[]> multiPartFileToWebResponse(MultipartFile file)
             throws IOException {
-        String fileName = file.getOriginalFilename();
+        String fileName = Filenames.toSimpleFileName(file.getOriginalFilename());
         MediaType mediaType = MediaType.parseMediaType(file.getContentType());
 
         byte[] bytes = file.getBytes();

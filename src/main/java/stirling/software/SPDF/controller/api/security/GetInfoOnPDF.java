@@ -11,11 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.pdfbox.cos.COSDocument;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSInputStream;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSObject;
-import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -87,7 +85,7 @@ public class GetInfoOnPDF {
     @Operation(summary = "Summary here", description = "desc. Input:PDF Output:JSON Type:SISO")
     public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();
-        try (PDDocument pdfBoxDoc = PDDocument.load(inputFile.getInputStream()); ) {
+        try (PDDocument pdfBoxDoc = Loader.loadPDF(inputFile.getBytes()); ) {
             ObjectMapper objectMapper = new ObjectMapper();
             ObjectNode jsonOutput = objectMapper.createObjectNode();
 
@@ -129,17 +127,6 @@ public class GetInfoOnPDF {
             boolean hasCompression = false;
             String compressionType = "None";
 
-            COSDocument cosDoc = pdfBoxDoc.getDocument();
-            for (COSObject cosObject : cosDoc.getObjects()) {
-                if (cosObject.getObject() instanceof COSStream) {
-                    COSStream cosStream = (COSStream) cosObject.getObject();
-                    if (COSName.OBJ_STM.equals(cosStream.getItem(COSName.TYPE))) {
-                        hasCompression = true;
-                        compressionType = "Object Streams";
-                        break;
-                    }
-                }
-            }
             basicInfo.put("Compression", hasCompression);
             if (hasCompression) basicInfo.put("CompressionType", compressionType);
 
@@ -343,7 +330,6 @@ public class GetInfoOnPDF {
                     permissionsNode.put("CanModify", ap.canModify());
                     permissionsNode.put("CanModifyAnnotations", ap.canModifyAnnotations());
                     permissionsNode.put("CanPrint", ap.canPrint());
-                    permissionsNode.put("CanPrintDegraded", ap.canPrintDegraded());
 
                     encryption.set(
                             "Permissions", permissionsNode); // set the node under "Permissions"

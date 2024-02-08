@@ -9,10 +9,12 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -45,7 +48,7 @@ public class SplitPdfBySectionsController {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
 
         MultipartFile file = request.getFileInput();
-        PDDocument sourceDocument = PDDocument.load(file.getInputStream());
+        PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
 
         // Process the PDF based on split parameters
         int horiz = request.getHorizontalDivisions() + 1;
@@ -62,7 +65,9 @@ public class SplitPdfBySectionsController {
         sourceDocument.close();
 
         Path zipFile = Files.createTempFile("split_documents", ".zip");
-        String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
+        String filename =
+                Filenames.toSimpleFileName(file.getOriginalFilename())
+                        .replaceFirst("[.][^.]+$", "");
         byte[] data;
 
         try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
@@ -115,13 +120,13 @@ public class SplitPdfBySectionsController {
                                     document, document.getPages().indexOf(originalPage));
 
                     try (PDPageContentStream contentStream =
-                            new PDPageContentStream(subDoc, subPage)) {
+                            new PDPageContentStream(
+                                    subDoc, subPage, AppendMode.APPEND, true, true)) {
                         // Set clipping area and position
                         float translateX = -subPageWidth * i;
-                        float translateY = height - subPageHeight * (verticalDivisions - j);
 
-                        // Code for google Docs pdfs..
-                        // float translateY = -subPageHeight * (verticalDivisions - 1 - j);
+                        // float translateY = height - subPageHeight * (verticalDivisions - j);
+                        float translateY = -subPageHeight * (verticalDivisions - 1 - j);
 
                         contentStream.saveGraphicsState();
                         contentStream.addRect(0, 0, subPageWidth, subPageHeight);

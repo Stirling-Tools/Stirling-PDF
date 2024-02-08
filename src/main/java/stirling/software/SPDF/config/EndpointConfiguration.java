@@ -9,11 +9,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Service
+@DependsOn({"bookFormatsInstalled"})
 public class EndpointConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(EndpointConfiguration.class);
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
@@ -21,9 +24,14 @@ public class EndpointConfiguration {
 
     private final ApplicationProperties applicationProperties;
 
+    private boolean bookFormatsInstalled;
+
     @Autowired
-    public EndpointConfiguration(ApplicationProperties applicationProperties) {
+    public EndpointConfiguration(
+            ApplicationProperties applicationProperties,
+            @Qualifier("bookFormatsInstalled") boolean bookFormatsInstalled) {
         this.applicationProperties = applicationProperties;
+        this.bookFormatsInstalled = bookFormatsInstalled;
         init();
         processEnvironmentConfigs();
     }
@@ -145,6 +153,12 @@ public class EndpointConfiguration {
         addEndpointToGroup("CLI", "ocr-pdf");
         addEndpointToGroup("CLI", "html-to-pdf");
         addEndpointToGroup("CLI", "url-to-pdf");
+        addEndpointToGroup("CLI", "book-to-pdf");
+        addEndpointToGroup("CLI", "pdf-to-book");
+
+        // Calibre
+        addEndpointToGroup("Calibre", "book-to-pdf");
+        addEndpointToGroup("Calibre", "pdf-to-book");
 
         // python
         addEndpointToGroup("Python", "extract-image-scans");
@@ -215,7 +229,9 @@ public class EndpointConfiguration {
     private void processEnvironmentConfigs() {
         List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
         List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
-
+        if (!bookFormatsInstalled) {
+            groupsToRemove.add("Calibre");
+        }
         if (endpointsToRemove != null) {
             for (String endpoint : endpointsToRemove) {
                 disableEndpoint(endpoint.trim());

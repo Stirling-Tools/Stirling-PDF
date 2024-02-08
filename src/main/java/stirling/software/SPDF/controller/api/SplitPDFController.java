@@ -2,7 +2,6 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -11,6 +10,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.slf4j.Logger;
@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -46,8 +47,8 @@ public class SplitPDFController {
         MultipartFile file = request.getFileInput();
         String pages = request.getPageNumbers();
         // open the pdf document
-        InputStream inputStream = file.getInputStream();
-        PDDocument document = PDDocument.load(inputStream);
+
+        PDDocument document = Loader.loadPDF(file.getBytes());
 
         List<Integer> pageNumbers = request.getPageNumbersList(document);
         if (!pageNumbers.contains(document.getNumberOfPages() - 1))
@@ -83,7 +84,9 @@ public class SplitPDFController {
 
         Path zipFile = Files.createTempFile("split_documents", ".zip");
 
-        String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
+        String filename =
+                Filenames.toSimpleFileName(file.getOriginalFilename())
+                        .replaceFirst("[.][^.]+$", "");
         try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
             // loop through the split documents and write them to the zip file
             for (int i = 0; i < splitDocumentsBoas.size(); i++) {

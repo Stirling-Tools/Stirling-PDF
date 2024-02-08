@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.io.IOException;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -52,7 +54,7 @@ public class SanitizeController {
         boolean removeLinks = request.isRemoveLinks();
         boolean removeFonts = request.isRemoveFonts();
 
-        try (PDDocument document = PDDocument.load(inputFile.getInputStream())) {
+        try (PDDocument document = Loader.loadPDF(inputFile.getBytes())) {
             if (removeJavaScript) {
                 sanitizeJavaScript(document);
             }
@@ -75,7 +77,8 @@ public class SanitizeController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
                             + "_sanitized.pdf");
         }
     }

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -66,7 +68,7 @@ public class ScalePagesController {
 
         PDRectangle targetSize = sizeMap.get(targetPDRectangle);
 
-        PDDocument sourceDocument = PDDocument.load(file.getBytes());
+        PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
         PDDocument outputDocument = new PDDocument();
 
         int totalPages = sourceDocument.getNumberOfPages();
@@ -83,7 +85,11 @@ public class ScalePagesController {
 
             PDPageContentStream contentStream =
                     new PDPageContentStream(
-                            outputDocument, newPage, PDPageContentStream.AppendMode.APPEND, true);
+                            outputDocument,
+                            newPage,
+                            PDPageContentStream.AppendMode.APPEND,
+                            true,
+                            true);
 
             float x = (targetSize.getWidth() - sourceSize.getWidth() * scale) / 2;
             float y = (targetSize.getHeight() - sourceSize.getHeight() * scale) / 2;
@@ -107,6 +113,7 @@ public class ScalePagesController {
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-                file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_scaled.pdf");
+                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                        + "_scaled.pdf");
     }
 }

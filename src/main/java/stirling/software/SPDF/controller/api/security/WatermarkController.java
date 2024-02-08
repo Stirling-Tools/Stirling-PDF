@@ -6,16 +6,19 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
@@ -28,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -58,7 +62,7 @@ public class WatermarkController {
         int heightSpacer = request.getHeightSpacer();
 
         // Load the input PDF
-        PDDocument document = PDDocument.load(pdfFile.getInputStream());
+        PDDocument document = Loader.loadPDF(pdfFile.getBytes());
 
         // Create a page in the document
         for (PDPage page : document.getPages()) {
@@ -66,14 +70,14 @@ public class WatermarkController {
             // Get the page's content stream
             PDPageContentStream contentStream =
                     new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true);
+                            document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
             // Set transparency
             PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
             graphicsState.setNonStrokingAlphaConstant(opacity);
             contentStream.setGraphicsStateParameters(graphicsState);
 
-            if (watermarkType.equalsIgnoreCase("text")) {
+            if ("text".equalsIgnoreCase(watermarkType)) {
                 addTextWatermark(
                         contentStream,
                         watermarkText,
@@ -84,7 +88,7 @@ public class WatermarkController {
                         heightSpacer,
                         fontSize,
                         alphabet);
-            } else if (watermarkType.equalsIgnoreCase("image")) {
+            } else if ("image".equalsIgnoreCase(watermarkType)) {
                 addImageWatermark(
                         contentStream,
                         watermarkImage,
@@ -102,7 +106,9 @@ public class WatermarkController {
 
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                pdfFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_watermarked.pdf");
+                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
+                        + "_watermarked.pdf");
     }
 
     private void addTextWatermark(
@@ -117,7 +123,7 @@ public class WatermarkController {
             String alphabet)
             throws IOException {
         String resourceDir = "";
-        PDFont font = PDType1Font.HELVETICA_BOLD;
+        PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
         switch (alphabet) {
             case "arabic":
                 resourceDir = "static/fonts/NotoSansArabic-Regular.ttf";
@@ -137,10 +143,10 @@ public class WatermarkController {
                 break;
         }
 
-        if (!resourceDir.equals("")) {
+        if (!"".equals(resourceDir)) {
             ClassPathResource classPathResource = new ClassPathResource(resourceDir);
             String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
-            File tempFile = File.createTempFile("NotoSansFont", fileExtension);
+            File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();
             try (InputStream is = classPathResource.getInputStream();
                     FileOutputStream os = new FileOutputStream(tempFile)) {
                 IOUtils.copy(is, os);
@@ -153,9 +159,16 @@ public class WatermarkController {
         contentStream.setFont(font, fontSize);
         contentStream.setNonStrokingColor(Color.LIGHT_GRAY);
 
+        String[] textLines = watermarkText.split("\\\\n");
+        float maxLineWidth = 0;
+
+        for (int i = 0; i < textLines.length; ++i) {
+            maxLineWidth = Math.max(maxLineWidth, font.getStringWidth(textLines[i]));
+        }
+
         // Set size and location of text watermark
-        float watermarkWidth = widthSpacer + font.getStringWidth(watermarkText) * fontSize / 1000;
-        float watermarkHeight = heightSpacer + fontSize;
+        float watermarkWidth = widthSpacer + maxLineWidth * fontSize / 1000;
+        float watermarkHeight = heightSpacer + fontSize * textLines.length;
         float pageWidth = page.getMediaBox().getWidth();
         float pageHeight = page.getMediaBox().getHeight();
         int watermarkRows = (int) (pageHeight / watermarkHeight + 1);
@@ -170,7 +183,12 @@ public class WatermarkController {
                                 (float) Math.toRadians(rotation),
                                 j * watermarkWidth,
                                 i * watermarkHeight));
-                contentStream.showText(watermarkText);
+
+                for (int k = 0; k < textLines.length; ++k) {
+                    contentStream.showText(textLines[k]);
+                    contentStream.newLineAtOffset(0, -fontSize);
+                }
+
                 contentStream.endText();
             }
         }

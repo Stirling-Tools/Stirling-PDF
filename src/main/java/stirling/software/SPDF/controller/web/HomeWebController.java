@@ -1,7 +1,8 @@
 package stirling.software.SPDF.controller.web;
 
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +39,8 @@ public class HomeWebController {
         model.addAttribute("currentPage", "licenses");
         Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
         try {
-            String json = new String(Files.readAllBytes(resource.getFile().toPath()));
+            InputStream is = resource.getInputStream();
+            String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             ObjectMapper mapper = new ObjectMapper();
             Map<String, List<Dependency>> data =
                     mapper.readValue(json, new TypeReference<Map<String, List<Dependency>>>() {});

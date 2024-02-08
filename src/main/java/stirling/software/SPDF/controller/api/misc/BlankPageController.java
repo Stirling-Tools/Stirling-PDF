@@ -13,6 +13,7 @@ import java.util.stream.IntStream;
 
 import javax.imageio.ImageIO;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
@@ -26,13 +27,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.misc.RemoveBlankPagesRequest;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
-import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -53,7 +54,7 @@ public class BlankPageController {
 
         PDDocument document = null;
         try {
-            document = PDDocument.load(inputFile.getInputStream());
+            document = Loader.loadPDF(inputFile.getBytes());
             PDPageTree pages = document.getDocumentCatalog().getPages();
             PDFTextStripper textStripper = new PDFTextStripper();
 
@@ -84,7 +85,7 @@ public class BlankPageController {
                         List<String> command =
                                 new ArrayList<>(
                                         Arrays.asList(
-                                                "python3",
+                                                "python",
                                                 System.getProperty("user.dir")
                                                         + "/scripts/detect-blank-pages.py",
                                                 tempFile.toString(),
@@ -93,18 +94,25 @@ public class BlankPageController {
                                                 "--white_percent",
                                                 String.valueOf(whitePercent)));
 
+                        Boolean blank = false;
                         // Run CLI command
-                        ProcessExecutorResult returnCode =
-                                ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                                        .runCommandWithOutputHandling(command);
+                        try {
+                            ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
+                                    .runCommandWithOutputHandling(command);
+                        } catch (IOException e) {
+                            // From detect-blank-pages.py
+                            // Return code 1: The image is considered blank.
+                            // Return code 0: The image is not considered blank.
+                            // Since the process returned with a failure code, it should be blank.
+                            blank = true;
+                        }
 
-                        // does contain data
-                        if (returnCode.getRc() == 0) {
+                        if (blank) {
+                            System.out.println("Skipping, Image was blank for page #" + pageIndex);
+                        } else {
                             System.out.println(
                                     "page " + pageIndex + " has image which is not blank");
                             pagesToKeepIndex.add(pageIndex);
-                        } else {
-                            System.out.println("Skipping, Image was blank for page #" + pageIndex);
                         }
                     }
                 }
@@ -124,7 +132,8 @@ public class BlankPageController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
                             + "_blanksRemoved.pdf");
         } catch (IOException e) {
             e.printStackTrace();

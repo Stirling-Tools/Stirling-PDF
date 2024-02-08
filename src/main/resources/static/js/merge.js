@@ -8,11 +8,18 @@ document.getElementById("fileInput-input").addEventListener("change", function()
     displayFiles(files);
 });
 
+/**
+ * @param {FileList} files 
+ */
 function displayFiles(files) {
-    var list = document.getElementById("selectedFiles");
+    const list = document.getElementById("selectedFiles");
 
-    for (var i = 0; i < files.length; i++) {
-        var item = document.createElement("li");
+    while (list.firstChild) {
+        list.removeChild(list.firstChild);
+    }
+
+    for (let i = 0; i < files.length; i++) {
+        const item = document.createElement("li");
         item.className = "list-group-item";
         item.innerHTML = `
             <div class="d-flex justify-content-between align-items-center w-100">
