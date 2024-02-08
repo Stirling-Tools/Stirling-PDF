@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import io.github.pixee.security.Filenames;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -55,7 +55,8 @@ public class ShowJavascript {
 
                         script +=
                                 "// File: "
-                                        + Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                        + Filenames.toSimpleFileName(
+                                                inputFile.getOriginalFilename())
                                         + ", Script: "
                                         + name
                                         + "\n"
@@ -67,7 +68,7 @@ public class ShowJavascript {
 
             if (script.isEmpty()) {
                 script =
-                        "PDF '" + inputFile.getOriginalFilename() + "' does not contain Javascript";
+                        "PDF '" + Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + "' does not contain Javascript";
             }
 
             return WebResponseUtils.bytesToWebResponse(
