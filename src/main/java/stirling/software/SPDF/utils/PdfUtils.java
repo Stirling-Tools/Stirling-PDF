@@ -1,6 +1,5 @@
 package stirling.software.SPDF.utils;
 
-import io.github.pixee.security.Filenames;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
@@ -37,6 +36,8 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
 
 public class PdfUtils {
 

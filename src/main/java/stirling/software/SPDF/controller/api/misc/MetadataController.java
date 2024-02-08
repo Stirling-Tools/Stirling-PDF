@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import io.github.pixee.security.Filenames;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -165,6 +165,8 @@ public class MetadataController {
         document.setDocumentInformation(info);
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_metadata.pdf");
+                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
+                        + "_metadata.pdf");
     }
 }

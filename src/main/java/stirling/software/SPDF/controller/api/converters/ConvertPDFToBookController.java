@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import io.github.pixee.security.Filenames;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -16,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -93,7 +93,8 @@ public class ConvertPDFToBookController {
         }
 
         String outputFilename =
-                Filenames.toSimpleFileName(fileInput.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                Filenames.toSimpleFileName(fileInput.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
                         + "."
                         + outputFormat; // Remove file extension and append .pdf
 

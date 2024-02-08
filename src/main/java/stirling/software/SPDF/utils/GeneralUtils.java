@@ -1,13 +1,10 @@
 package stirling.software.SPDF.utils;
 
-import io.github.pixee.security.HostValidator;
-import io.github.pixee.security.Urls;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.HostValidator;
+import io.github.pixee.security.Urls;
 
 public class GeneralUtils {
 
@@ -59,7 +59,8 @@ public class GeneralUtils {
 
     public static boolean isValidURL(String urlStr) {
         try {
-            Urls.create(urlStr, Urls.HTTP_PROTOCOLS, HostValidator.DENY_COMMON_INFRASTRUCTURE_TARGETS);
+            Urls.create(
+                    urlStr, Urls.HTTP_PROTOCOLS, HostValidator.DENY_COMMON_INFRASTRUCTURE_TARGETS);
             return true;
         } catch (MalformedURLException e) {
             return false;
