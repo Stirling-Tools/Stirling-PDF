@@ -53,7 +53,6 @@ public class StampController {
     public ResponseEntity<byte[]> addStamp(@ModelAttribute AddStampRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
-        List<Integer> pageNumbers = request.getPageNumbersList();
         String watermarkType = request.getStampType();
         String watermarkText = request.getStampText();
         MultipartFile watermarkImage = request.getStampImage();
@@ -67,6 +66,7 @@ public class StampController {
 
         String customColor = request.getCustomColor();
         float marginFactor;
+
         switch (request.getCustomMargin().toLowerCase()) {
             case "small":
                 marginFactor = 0.02f;
@@ -80,7 +80,6 @@ public class StampController {
             case "x-large":
                 marginFactor = 0.075f;
                 break;
-
             default:
                 marginFactor = 0.035f;
                 break;
@@ -89,58 +88,61 @@ public class StampController {
         // Load the input PDF
         PDDocument document = Loader.loadPDF(pdfFile.getBytes());
 
+        List<Integer> pageNumbers = request.getPageNumbersList();
+
         for (int pageIndex : pageNumbers) {
-            // Convert 1-based index to 0-based index required by
-            // document.getPages().get(index)
             int zeroBasedIndex = pageIndex - 1;
-            // Check if the zeroBasedIndex is within the range of the document's pages
             if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
                 PDPage page = document.getPage(zeroBasedIndex);
+                PDRectangle pageSize = page.getMediaBox();
+                float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
+
+                
                 PDPageContentStream contentStream =
                         new PDPageContentStream(
                                 document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
-                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                graphicsState.setNonStrokingAlphaConstant(opacity);
-                contentStream.setGraphicsStateParameters(graphicsState);
 
-                if ("text".equalsIgnoreCase(watermarkType)) {
-                    addTextStamp(
-                            contentStream,
-                            watermarkText,
-                            document,
-                            page,
-                            rotation,
-                            position,
-                            fontSize,
-                            alphabet,
-                            overrideX,
-                            overrideY,
-                            marginFactor,
-                            customColor);
-                } else if ("image".equalsIgnoreCase(watermarkType)) {
-                    addImageStamp(
-                            contentStream,
-                            watermarkImage,
-                            document,
-                            page,
-                            rotation,
-                            position,
-                            fontSize,
-                            overrideX,
-                            overrideY,
-                            marginFactor);
-                }
-
-                contentStream.close();
-            }
+	            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+	            graphicsState.setNonStrokingAlphaConstant(opacity);
+	            contentStream.setGraphicsStateParameters(graphicsState);
+	
+	            if ("text".equalsIgnoreCase(watermarkType)) {
+	                addTextStamp(
+	                        contentStream,
+	                        watermarkText,
+	                        document,
+	                        page,
+	                        rotation,
+	                        position,
+	                        fontSize,
+	                        alphabet,
+	                        overrideX,
+	                        overrideY,
+	                        margin,
+	                        customColor);
+	            } else if ("image".equalsIgnoreCase(watermarkType)) {
+	                addImageStamp(
+	                        contentStream,
+	                        watermarkImage,
+	                        document,
+	                        page,
+	                        rotation,
+	                        position,
+	                        fontSize,
+	                        overrideX,
+	                        overrideY,
+	                        margin);
+	            }
+	
+	            contentStream.close();
+	        }
         }
-
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
                 Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
                                 .replaceFirst("[.][^.]+$", "")
-                        + "_stamped.pdf");
+                        + "_watermarked.pdf");
     }
 
     private void addTextStamp(
@@ -154,7 +156,7 @@ public class StampController {
             String alphabet,
             float overrideX, // X override
             float overrideY,
-            float marginFactor,
+            float margin,
             String colorString) // Y override
             throws IOException {
         String resourceDir = "";
@@ -216,14 +218,10 @@ public class StampController {
         } else {
             x =
                     calculatePositionX(
-                            pageSize,
-                            position,
-                            fontSize,
-                            font,
-                            fontSize,
-                            watermarkText,
-                            marginFactor);
-            y = calculatePositionY(pageSize, position, fontSize, marginFactor);
+                            pageSize, position, fontSize, font, fontSize, watermarkText, margin);
+            y =
+                    calculatePositionY(
+                            pageSize, position, calculateTextCapHeight(font, fontSize), margin);
         }
 
         contentStream.beginText();
@@ -242,7 +240,7 @@ public class StampController {
             float fontSize,
             float overrideX,
             float overrideY,
-            float marginFactor)
+            float margin)
             throws IOException {
 
         // Load the watermark image
@@ -268,10 +266,8 @@ public class StampController {
             x = overrideX;
             y = overrideY;
         } else {
-            x =
-                    calculatePositionX(
-                            pageSize, position, desiredPhysicalWidth, null, 0, null, marginFactor);
-            y = calculatePositionY(pageSize, position, fontSize, marginFactor);
+            x = calculatePositionX(pageSize, position, desiredPhysicalWidth, null, 0, null, margin);
+            y = calculatePositionY(pageSize, position, fontSize, margin);
         }
 
         contentStream.saveGraphicsState();
@@ -288,17 +284,31 @@ public class StampController {
             PDFont font,
             float fontSize,
             String text,
-            float marginFactor)
+            float margin)
             throws IOException {
         float actualWidth =
                 (text != null) ? calculateTextWidth(text, font, fontSize) : contentWidth;
         switch (position % 3) {
             case 1: // Left
-                return pageSize.getLowerLeftX() + marginFactor * pageSize.getWidth();
+                return pageSize.getLowerLeftX() + margin;
             case 2: // Center
                 return (pageSize.getWidth() - actualWidth) / 2;
             case 0: // Right
-                return pageSize.getUpperRightX() - actualWidth - marginFactor * pageSize.getWidth();
+                return pageSize.getUpperRightX() - actualWidth - margin;
+            default:
+                return 0;
+        }
+    }
+
+    private float calculatePositionY(
+            PDRectangle pageSize, int position, float height, float margin) {
+        switch ((position - 1) / 3) {
+            case 0: // Top
+                return pageSize.getUpperRightY() - height - margin;
+            case 1: // Middle
+                return (pageSize.getHeight() - height) / 2;
+            case 2: // Bottom
+                return pageSize.getLowerLeftY() + margin;
             default:
                 return 0;
         }
@@ -308,17 +318,7 @@ public class StampController {
         return font.getStringWidth(text) / 1000 * fontSize;
     }
 
-    private float calculatePositionY(
-            PDRectangle pageSize, int position, float height, float marginFactor) {
-        switch ((position - 1) / 3) {
-            case 0: // Top
-                return pageSize.getUpperRightY() - height - marginFactor * pageSize.getHeight();
-            case 1: // Middle
-                return (pageSize.getHeight() - height) / 2;
-            case 2: // Bottom
-                return pageSize.getLowerLeftY() + marginFactor * pageSize.getHeight();
-            default:
-                return 0;
-        }
+    private float calculateTextCapHeight(PDFont font, float fontSize) {
+        return font.getFontDescriptor().getCapHeight() / 1000 * fontSize;
     }
 }
