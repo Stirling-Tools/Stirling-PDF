@@ -97,46 +97,44 @@ public class StampController {
                 PDRectangle pageSize = page.getMediaBox();
                 float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
 
-                
                 PDPageContentStream contentStream =
                         new PDPageContentStream(
                                 document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setNonStrokingAlphaConstant(opacity);
+                contentStream.setGraphicsStateParameters(graphicsState);
 
-	            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-	            graphicsState.setNonStrokingAlphaConstant(opacity);
-	            contentStream.setGraphicsStateParameters(graphicsState);
-	
-	            if ("text".equalsIgnoreCase(watermarkType)) {
-	                addTextStamp(
-	                        contentStream,
-	                        watermarkText,
-	                        document,
-	                        page,
-	                        rotation,
-	                        position,
-	                        fontSize,
-	                        alphabet,
-	                        overrideX,
-	                        overrideY,
-	                        margin,
-	                        customColor);
-	            } else if ("image".equalsIgnoreCase(watermarkType)) {
-	                addImageStamp(
-	                        contentStream,
-	                        watermarkImage,
-	                        document,
-	                        page,
-	                        rotation,
-	                        position,
-	                        fontSize,
-	                        overrideX,
-	                        overrideY,
-	                        margin);
-	            }
-	
-	            contentStream.close();
-	        }
+                if ("text".equalsIgnoreCase(watermarkType)) {
+                    addTextStamp(
+                            contentStream,
+                            watermarkText,
+                            document,
+                            page,
+                            rotation,
+                            position,
+                            fontSize,
+                            alphabet,
+                            overrideX,
+                            overrideY,
+                            margin,
+                            customColor);
+                } else if ("image".equalsIgnoreCase(watermarkType)) {
+                    addImageStamp(
+                            contentStream,
+                            watermarkImage,
+                            document,
+                            page,
+                            rotation,
+                            position,
+                            fontSize,
+                            overrideX,
+                            overrideY,
+                            margin);
+                }
+
+                contentStream.close();
+            }
         }
         return WebResponseUtils.pdfDocToWebResponse(
                 document,

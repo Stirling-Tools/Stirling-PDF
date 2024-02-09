@@ -20,17 +20,19 @@ COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto
 COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto
 COPY build/libs/*.jar app.jar
 
-RUN apk add --no-cache \
+RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk add --no-cache \
         ca-certificates \
         tzdata \
         tini \
         bash \
         curl \
-        openjdk17-jre && \
+        openjdk17-jre \
 # Doc conversion
-    apk add --no-cache libreoffice --repository http://dl-cdn.alpinelinux.org/alpine/edge/community && \
+   libreoffice@testing \
 # python and pip
-    apk add --no-cache \
         python3 && \
         wget https://bootstrap.pypa.io/get-pip.py -qO - | python3 - --break-system-packages --no-cache-dir --upgrade && \
 # uno unoconv and HTML
@@ -40,14 +42,11 @@ RUN apk add --no-cache \
 #    useradd -u $PUID -g stirlingpdfgroup -s /bin/sh stirlingpdfuser && \
 #    mkdir -p $HOME && chown stirlingpdfuser:stirlingpdfgroup $HOME
 # Set up necessary directories and permissions
-    mkdir /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
+    mkdir -p /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
 #    chown -R stirlingpdfuser:stirlingpdfgroup /usr/share/fonts/opentype/noto /configs /customFiles
 # Set font cache and permissions
     fc-cache -f -v && \
-    chmod +x /scripts/*.sh && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories
+    chmod +x /scripts/*.sh
 #    chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
 # Set environment variables

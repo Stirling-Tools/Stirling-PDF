@@ -1,5 +1,32 @@
-# Use the base image
-FROM frooodle/stirling-pdf-base:version8
+# Main stage
+FROM alpine:3.19.0
+
+# JDK for app
+RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk add --no-cache \
+        ca-certificates \
+        tzdata \
+        tini \
+        bash \
+        curl \
+        openjdk17-jre \
+# Doc conversion
+        libreoffice@testing \
+# OCR MY PDF (unpaper for descew and other advanced featues)
+        ocrmypdf \
+        tesseract-ocr-data-eng \
+# CV
+        py3-opencv \
+# python3/pip
+        python3 && \
+    wget https://bootstrap.pypa.io/get-pip.py -qO - | python3 - --break-system-packages --no-cache-dir --upgrade && \
+# uno unoconv and HTML
+    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint && \
+    mv /usr/share/tessdata /usr/share/tessdata-original
+
+
 
 ARG VERSION_TAG
 
@@ -24,7 +51,7 @@ COPY build/libs/*.jar app.jar
 ##    useradd -u $PUID -g stirlingpdfgroup -s /bin/sh stirlingpdfuser && \
 ##    mkdir -p $HOME && chown stirlingpdfuser:stirlingpdfgroup $HOME && \
 # Set up necessary directories and permissions
-RUN mkdir /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
+RUN mkdir -p  /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
 ##&& \
 ##    chown -R stirlingpdfuser:stirlingpdfgroup /scripts /usr/share/fonts/opentype/noto /usr/share/tesseract-ocr /configs /customFiles && \
 ##    chown -R stirlingpdfuser:stirlingpdfgroup /usr/share/tesseract-ocr-original && \

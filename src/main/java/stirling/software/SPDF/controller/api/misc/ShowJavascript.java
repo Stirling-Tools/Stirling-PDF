@@ -68,7 +68,9 @@ public class ShowJavascript {
 
             if (script.isEmpty()) {
                 script =
-                        "PDF '" + Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + "' does not contain Javascript";
+                        "PDF '"
+                                + Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                + "' does not contain Javascript";
             }
 
             return WebResponseUtils.bytesToWebResponse(
