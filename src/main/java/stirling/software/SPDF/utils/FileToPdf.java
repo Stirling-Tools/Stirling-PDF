@@ -1,8 +1,9 @@
 package stirling.software.SPDF.utils;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -34,95 +35,40 @@ public class FileToPdf {
                 tempInputFile = Files.createTempFile("input_", ".html");
                 Files.write(tempInputFile, fileBytes);
             } else {
-                tempInputFile = unzipAndGetMainHtml(fileBytes);
+                tempInputFile = Files.createTempFile("input_", ".zip");
+                Files.write(tempInputFile, fileBytes);
             }
 
             List<String> command = new ArrayList<>();
             if (!htmlFormatsInstalled) {
                 command.add("weasyprint");
-            } else {
-                command.add("wkhtmltopdf");
-                command.add("--enable-local-file-access");
-                command.add("--load-error-handling");
-                command.add("ignore");
-                command.add("--load-media-error-handling");
-                command.add("ignore");
-                command.add("--zoom");
-                command.add(String.valueOf(request.getZoom()));
+                command.add(tempInputFile.toString());
+                command.add(tempOutputFile.toString());
 
-                // if custom zoom add zoom style direct to html
-                // https://github.com/wkhtmltopdf/wkhtmltopdf/issues/4900
+            } else {
+                command.add("ebook-convert");
+                command.add(tempInputFile.toString());
+                command.add(tempOutputFile.toString());
+                command.add("--paper-size");
+                command.add("a4");
+
                 if (request.getZoom() != 1.0) {
-                    String htmlContent = new String(Files.readAllBytes(tempInputFile));
-
-                    String zoomStyle = "<style>body { zoom: " + request.getZoom() + "; }</style>";
-                    // Check for <head> tag, add style tag to associated tag
-                    if (htmlContent.contains("<head>")) {
-                        htmlContent = htmlContent.replace("<head>", "<head>" + zoomStyle);
-                    } else if (htmlContent.contains("<html>")) {
-                        // If no <head> tag, but <html> tag exists
-                        htmlContent = htmlContent.replace("<html>", "<html>" + zoomStyle);
-                    } else {
-                        // If neither <head> nor <html> tags exist
-                        htmlContent = zoomStyle + htmlContent;
+                    // Create a temporary CSS file
+                    File tempCssFile = File.createTempFile("customStyle", ".css");
+                    try (FileWriter writer = new FileWriter(tempCssFile)) {
+                        // Write the CSS rule to the file
+                        writer.write("body { zoom: " + request.getZoom() + "; }");
                     }
-                    // rewrite new html to file
-                    Files.write(tempInputFile, htmlContent.getBytes(StandardCharsets.UTF_8));
-                }
-
-                if (request.getPageWidth() != null) {
-                    command.add("--page-width");
-                    command.add(request.getPageWidth() + "cm");
-                }
-
-                if (request.getPageHeight() != null) {
-                    command.add("--page-height");
-                    command.add(request.getPageHeight() + "cm");
-                }
-
-                if (request.getMarginTop() != null) {
-                    command.add("--margin-top");
-                    command.add(request.getMarginTop() + "mm");
-                }
-
-                // Repeat similar pattern for marginBottom, marginLeft, marginRight
-
-                if ("Yes".equalsIgnoreCase(request.getPrintBackground())) {
-                    command.add("--background");
-                } else {
-                    command.add("--no-background");
-                }
-
-                if ("Yes".equalsIgnoreCase(request.getDefaultHeader())) {
-                    command.add("--default-header");
-                }
-
-                if ("print".equalsIgnoreCase(request.getCssMediaType())) {
-                    command.add("--print-media-type");
-                } else if ("screen".equalsIgnoreCase(request.getCssMediaType())) {
-                    command.add("--no-print-media-type");
+                    command.add("--extra-css");
+                    command.add(tempCssFile.getAbsolutePath());
                 }
             }
 
-            command.add(tempInputFile.toString());
-            command.add(tempOutputFile.toString());
             ProcessExecutorResult returnCode;
-            if (fileName.endsWith(".zip")) {
 
-                if (htmlFormatsInstalled) {
-                    // command.add(1, "--allow");
-                    // command.add(2, tempInputFile.getParent().toString());
-                }
-                returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
-                                .runCommandWithOutputHandling(
-                                        command, tempInputFile.getParent().toFile());
-            } else {
-
-                returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
-                                .runCommandWithOutputHandling(command);
-            }
+            returnCode =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
+                            .runCommandWithOutputHandling(command);
 
             pdfBytes = Files.readAllBytes(tempOutputFile);
         } catch (IOException e) {
@@ -135,10 +81,6 @@ public class FileToPdf {
             // Clean up temporary files
             Files.delete(tempOutputFile);
             Files.delete(tempInputFile);
-
-            if (fileName.endsWith(".zip")) {
-                GeneralUtils.deleteDirectory(tempInputFile.getParent());
-            }
         }
 
         return pdfBytes;

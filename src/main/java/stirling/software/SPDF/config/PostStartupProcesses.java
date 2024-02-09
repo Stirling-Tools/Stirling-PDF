@@ -41,32 +41,13 @@ public class PostStartupProcesses {
         // Checking for DOCKER_INSTALL_BOOK_FORMATS environment variable
         if (bookFormatsInstalled) {
             List<String> tmpList = new ArrayList<>();
-            // Set up the timezone configuration commands
-            tmpList.addAll(
-                    Arrays.asList(
-                            "sh",
-                            "-c",
-                            "echo 'tzdata tzdata/Areas select Europe' | debconf-set-selections; "
-                                    + "echo 'tzdata tzdata/Zones/Europe select Berlin' | debconf-set-selections"));
-            commands.add(tmpList);
 
-            // Install calibre with DEBIAN_FRONTEND set to noninteractive
             tmpList = new ArrayList<>();
-            tmpList.addAll(
-                    Arrays.asList(
-                            "sh",
-                            "-c",
-                            "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends calibre"));
+            tmpList.addAll(Arrays.asList("whoami"));
             commands.add(tmpList);
-        }
 
-        // Checking for DOCKER_INSTALL_HTML_FORMATS environment variable
-        if (htmlFormatsInstalled) {
-            List<String> tmpList = new ArrayList<>();
-            // Add -y flag for automatic yes to prompts and --no-install-recommends to reduce size
-            tmpList.addAll(
-                    Arrays.asList(
-                            "apt-get", "install", "wkhtmltopdf", "-y", "--no-install-recommends"));
+            tmpList = new ArrayList<>();
+            tmpList.addAll(Arrays.asList("id"));
             commands.add(tmpList);
         }
 
@@ -74,8 +55,6 @@ public class PostStartupProcesses {
             // Run the command
             if (runningInDocker) {
                 List<String> tmpList = new ArrayList<>();
-                tmpList.addAll(Arrays.asList("apt-get", "update"));
-                commands.add(0, tmpList);
 
                 for (List<String> list : commands) {
                     ProcessExecutorResult returnCode =
