@@ -23,8 +23,8 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertHtmlToPDF {
 
     @Autowired
-    @Qualifier("htmlFormatsInstalled")
-    private boolean htmlFormatsInstalled;
+    @Qualifier("installBookAndHtmlFormats")
+    private boolean installBookAndHtmlFormats;
 
     @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
     @Operation(
@@ -47,7 +47,7 @@ public class ConvertHtmlToPDF {
         }
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
-                        request, fileInput.getBytes(), originalFilename, htmlFormatsInstalled);
+                        request, fileInput.getBytes(), originalFilename, installBookAndHtmlFormats);
 
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")
