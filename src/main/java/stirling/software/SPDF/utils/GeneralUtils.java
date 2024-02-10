@@ -116,6 +116,9 @@ public class GeneralUtils {
     }
 
     public static List<Integer> parsePageString(String pageOrder, int totalPages) {
+    	return parsePageString(pageOrder, totalPages , false );
+    }
+    public static List<Integer> parsePageString(String pageOrder, int totalPages, boolean isOneBased) {
         if (pageOrder == null || pageOrder.isEmpty()) {
             return Collections.singletonList(1);
         }
@@ -123,17 +126,23 @@ public class GeneralUtils {
             // Convert the single number string to an integer and return it in a list
             return Collections.singletonList(Integer.parseInt(pageOrder));
         }
-        return parsePageList(pageOrder.split(","), totalPages);
+        return parsePageList(pageOrder.split(","), totalPages, isOneBased);
     }
-
     public static List<Integer> parsePageList(String[] pageOrderArr, int totalPages) {
+    	return parsePageList(pageOrderArr, totalPages, false);
+    }
+    
+   
+    public static List<Integer> parsePageList(String[] pageOrderArr, int totalPages, boolean isOneBased) {
         List<Integer> newPageOrder = new ArrayList<>();
 
+        int adjustmentFactor = isOneBased ? 1 : 0;
+        
         // loop through the page order array
         for (String element : pageOrderArr) {
             if ("all".equalsIgnoreCase(element)) {
                 for (int i = 0; i < totalPages; i++) {
-                    newPageOrder.add(i);
+                    newPageOrder.add(i+ adjustmentFactor);
                 }
                 // As all pages are already added, no need to check further
                 break;
@@ -164,7 +173,7 @@ public class GeneralUtils {
                     pageNum += constantExists ? constant : 0;
 
                     if (pageNum <= totalPages && pageNum > 0) {
-                        newPageOrder.add(pageNum - 1);
+                        newPageOrder.add(pageNum - adjustmentFactor);
                     }
                 }
             } else if (element.contains("-")) {
@@ -179,11 +188,11 @@ public class GeneralUtils {
                 // loop through the range of pages
                 for (int j = start; j <= end; j++) {
                     // print the current index
-                    newPageOrder.add(j - 1);
+                    newPageOrder.add(j - adjustmentFactor);
                 }
             } else {
                 // if the element is a single page
-                newPageOrder.add(Integer.parseInt(element) - 1);
+                newPageOrder.add(Integer.parseInt(element) - adjustmentFactor);
             }
         }
 

@@ -50,7 +50,7 @@ public class SplitPDFController {
 
         PDDocument document = Loader.loadPDF(file.getBytes());
 
-        List<Integer> pageNumbers = request.getPageNumbersList(document);
+        List<Integer> pageNumbers = request.getPageNumbersList(document, true);
         if (!pageNumbers.contains(document.getNumberOfPages() - 1))
             pageNumbers.add(document.getNumberOfPages() - 1);
         logger.info(
