@@ -1,65 +1,59 @@
-# Build jbig2enc in a separate stage
-FROM bellsoft/liberica-openjdk-debian:17
+# use alpine
+FROM alpine:3.19.0
 
 ARG VERSION_TAG
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libreoffice-core \
-        libreoffice-common \
-        libreoffice-writer \
-        libreoffice-calc \
-        libreoffice-impress \
-        unoconv && \
-    rm -rf /var/lib/apt/lists/*
-
 
 # Set Environment Variables
 ENV DOCKER_ENABLE_SECURITY=false \
     HOME=/home/stirlingpdfuser \
     VERSION_TAG=$VERSION_TAG \
     JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS -XX:MaxRAMPercentage=75"
-#	PUID=1000 \
+#   PUID=1000 \
 #   PGID=1000 \
 #   UMASK=022 \
 
+# Copy necessary files
+COPY scripts/download-security-jar.sh /scripts/download-security-jar.sh
+COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
+COPY pipeline /pipeline
+COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto
+COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto
+COPY build/libs/*.jar app.jar
+
+RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk add --no-cache \
+        ca-certificates \
+        tzdata \
+        tini \
+        bash \
+        curl \
+        openjdk17-jre \
+# Doc conversion
+   libreoffice@testing \
+# python and pip
+        python3 && \
+        wget https://bootstrap.pypa.io/get-pip.py -qO - | python3 - --break-system-packages --no-cache-dir --upgrade && \
+# uno unoconv and HTML
+    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint && \
 # Create user and group
 #RUN groupadd -g $PGID stirlingpdfgroup && \
 #    useradd -u $PUID -g stirlingpdfgroup -s /bin/sh stirlingpdfuser && \
 #    mkdir -p $HOME && chown stirlingpdfuser:stirlingpdfgroup $HOME
-
 # Set up necessary directories and permissions
-RUN mkdir -p /scripts /usr/share/fonts/opentype/noto /configs /customFiles /logs /pipeline /pipeline/defaultWebUIConfigs  /pipeline/watchedFolders /pipeline/finishedFolders
-
+    mkdir -p /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
 #    chown -R stirlingpdfuser:stirlingpdfgroup /usr/share/fonts/opentype/noto /configs /customFiles
-
-# Copy necessary files
-COPY ./scripts/download-security-jar.sh /scripts/download-security-jar.sh
-COPY ./scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
-COPY ./pipeline/ /pipeline/
-COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
-COPY build/libs/*.jar app.jar
-
 # Set font cache and permissions
-RUN fc-cache -f -v && \
-chmod +x /scripts/init-without-ocr.sh && \
-chmod +x /scripts/download-security-jar.sh
-
-
+    fc-cache -f -v && \
+    chmod +x /scripts/*.sh
 #    chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
-
-
-
-# Expose the application port
-EXPOSE 8080
-
 # Set environment variables
-ENV ENDPOINTS_GROUPS_TO_REMOVE=Python,OpenCV,OCRmyPDF
+ENV ENDPOINTS_GROUPS_TO_REMOVE=OpenCV,OCRmyPDF
 ENV DOCKER_ENABLE_SECURITY=false
 
 # Run the application
 #USER stirlingpdfuser
-ENTRYPOINT ["/scripts/init-without-ocr.sh"]
+ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
 CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/app.jar"]

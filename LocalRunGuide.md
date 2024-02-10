@@ -139,7 +139,7 @@ Easiest is to use the langpacks provided by your repositories. Skip the other st
 Manual:
 
 1. Download the desired language pack(s) by selecting the `.traineddata` file(s) for the language(s) you need.
-2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tesseract-ocr/5/tessdata`
+2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tessdata`
 3. 
 Please view  [OCRmyPDF install guide](https://ocrmypdf.readthedocs.io/en/latest/installation.html) for more info.
 **IMPORTANT:** DO NOT REMOVE EXISTING `eng.traineddata`, IT'S REQUIRED.

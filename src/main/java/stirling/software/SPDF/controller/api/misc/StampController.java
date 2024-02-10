@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -125,11 +126,55 @@ public class StampController {
                         overrideX,
                         overrideY,
                         margin);
+
+        List<Integer> pageNumbers = request.getPageNumbersList();
+
+        for (int pageIndex : pageNumbers) {
+            int zeroBasedIndex = pageIndex - 1;
+            if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
+                PDPage page = document.getPage(zeroBasedIndex);
+                PDRectangle pageSize = page.getMediaBox();
+                float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
+
+                PDPageContentStream contentStream =
+                        new PDPageContentStream(
+                                document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setNonStrokingAlphaConstant(opacity);
+                contentStream.setGraphicsStateParameters(graphicsState);
+
+                if ("text".equalsIgnoreCase(stampType)) {
+                    addTextStamp(
+                            contentStream,
+                            stampText,
+                            document,
+                            page,
+                            rotation,
+                            position,
+                            fontSize,
+                            alphabet,
+                            overrideX,
+                            overrideY,
+                            margin,
+                            customColor);
+                } else if ("image".equalsIgnoreCase(stampType)) {
+                    addImageStamp(
+                            contentStream,
+                            stampImage,
+                            document,
+                            page,
+                            rotation,
+                            position,
+                            fontSize,
+                            overrideX,
+                            overrideY,
+                            margin);
+                }
+
+                contentStream.close();
             }
-
-            contentStream.close();
         }
-
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
                 Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
