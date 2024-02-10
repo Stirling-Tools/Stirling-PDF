@@ -29,8 +29,8 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertWebsiteToPDF {
 
     @Autowired
-    @Qualifier("installBookAndHtmlFormats")
-    private boolean installBookAndHtmlFormats;
+    @Qualifier("bookAndHtmlFormatsInstalled")
+    private boolean bookAndHtmlFormatsInstalled;
 
     @PostMapping(consumes = "multipart/form-data", value = "/url/pdf")
     @Operation(
@@ -53,7 +53,7 @@ public class ConvertWebsiteToPDF {
 
             // Prepare the OCRmyPDF command
             List<String> command = new ArrayList<>();
-            if (!installBookAndHtmlFormats) {
+            if (!bookAndHtmlFormatsInstalled) {
                 command.add("weasyprint");
             } else {
                 command.add("wkhtmltopdf");
