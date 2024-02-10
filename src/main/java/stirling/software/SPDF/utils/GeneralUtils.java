@@ -116,9 +116,11 @@ public class GeneralUtils {
     }
 
     public static List<Integer> parsePageString(String pageOrder, int totalPages) {
-    	return parsePageString(pageOrder, totalPages , false );
+        return parsePageString(pageOrder, totalPages, false);
     }
-    public static List<Integer> parsePageString(String pageOrder, int totalPages, boolean isOneBased) {
+
+    public static List<Integer> parsePageString(
+            String pageOrder, int totalPages, boolean isOneBased) {
         if (pageOrder == null || pageOrder.isEmpty()) {
             return Collections.singletonList(1);
         }
@@ -128,21 +130,22 @@ public class GeneralUtils {
         }
         return parsePageList(pageOrder.split(","), totalPages, isOneBased);
     }
+
     public static List<Integer> parsePageList(String[] pageOrderArr, int totalPages) {
-    	return parsePageList(pageOrderArr, totalPages, false);
+        return parsePageList(pageOrderArr, totalPages, false);
     }
-    
-   
-    public static List<Integer> parsePageList(String[] pageOrderArr, int totalPages, boolean isOneBased) {
+
+    public static List<Integer> parsePageList(
+            String[] pageOrderArr, int totalPages, boolean isOneBased) {
         List<Integer> newPageOrder = new ArrayList<>();
 
         int adjustmentFactor = isOneBased ? 1 : 0;
-        
+
         // loop through the page order array
         for (String element : pageOrderArr) {
             if ("all".equalsIgnoreCase(element)) {
                 for (int i = 0; i < totalPages; i++) {
-                    newPageOrder.add(i+ adjustmentFactor);
+                    newPageOrder.add(i + adjustmentFactor);
                 }
                 // As all pages are already added, no need to check further
                 break;
