@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{watermark.title}, header=#{watermark.header})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{watermark.title}, header=#{watermark.header})}"></th:block>
+
 
 <body onload="toggleFileOption()">
     <div id="page-container">
@@ -13,7 +14,7 @@
                     <div class="col-md-6">
                         <h2 th:text="#{watermark.header}"></h2>
 
-                        <form method="post" enctype="multipart/form-data" action="api/v1/security/add-watermark">
+                        <form method="post" enctype="multipart/form-data" action="/api/v1/security/add-watermark">
                             <div class="mb-3">
                                 <label th:text="#{watermark.selectText.1}"></label>
                                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}">
@@ -29,14 +30,14 @@
                                 </select>
                             </div>
                             <div id="alphabetGroup" class="mb-3">
-	                            <label for="fontSize" th:text="#{alphabet} + ':'"></label> 
-	                            <select class="form-control" name="alphabet" id="alphabet-select">
-	                                <option value="roman">Roman</option>
-	                                <option value="arabic">العربية</option>
-	                                <option value="japanese">日本語</option>
-	                                <option value="korean">한국어</option>
-	                                <option value="chinese">简体中文</option>
-	                            </select>
+                                <label for="fontSize" th:text="#{alphabet} + ':'"></label> 
+                                <select class="form-control" name="alphabet" id="alphabet-select">
+                                    <option value="roman">Roman</option>
+                                    <option value="arabic">العربية</option>
+                                    <option value="japanese">日本語</option>
+                                    <option value="korean">한국어</option>
+                                    <option value="chinese">简体中文</option>
+                                </select>
                             </div>
                             <div id="watermarkTextGroup" class="mb-3">
                                 <label for="watermarkText" th:text="#{watermark.selectText.2}"></label> 
@@ -53,44 +54,44 @@
                                 <input type="text" id="fontSize" name="fontSize" class="form-control" value="30" />
                             </div>
                             <div class="mb-3">
-							    <label for="opacity" th:text="#{watermark.selectText.7}"></label> 
-							    <input type="text" id="opacity" name="opacityText" class="form-control" value="50" onblur="updateOpacityValue()" />
-							    <input type="hidden" id="opacityReal" name="opacity" value="0.5">
-							</div>
+                                <label for="opacity" th:text="#{watermark.selectText.7}"></label> 
+                                <input type="text" id="opacity" name="opacityText" class="form-control" value="50" onblur="updateOpacityValue()" />
+                                <input type="hidden" id="opacityReal" name="opacity" value="0.5">
+                            </div>
 
     
-    						<script>
-							    const opacityInput = document.getElementById('opacity');
-							    const opacityRealInput = document.getElementById('opacityReal');
-							
-							    const updateOpacityValue = () => {
-							        let percentageValue = parseFloat(opacityInput.value.replace('%', ''));
-							        if (isNaN(percentageValue)) {
-							            percentageValue = 0;
-							        }
-							        percentageValue = Math.min(Math.max(percentageValue, 0), 100);
-							        opacityInput.value = `${percentageValue}`;
-							        opacityRealInput.value = (percentageValue / 100).toFixed(2);
-							    };
-							
-							    const appendPercentageSymbol = () => {
-							        if (!opacityInput.value.endsWith('%')) {
-							            opacityInput.value += '%';
-							        }
-							    };
-							
-							    opacityInput.addEventListener('focus', () => {
-							        opacityInput.value = opacityInput.value.replace('%', '');
-							    });
-							    opacityInput.addEventListener('blur', () => {
-							        updateOpacityValue();
-							        appendPercentageSymbol();
-							    });
-							
-							    // Set initial values
-							    updateOpacityValue();
-							    appendPercentageSymbol();
-							</script>
+                            <script>
+                                const opacityInput = document.getElementById('opacity');
+                                const opacityRealInput = document.getElementById('opacityReal');
+                            
+                                const updateOpacityValue = () => {
+                                    let percentageValue = parseFloat(opacityInput.value.replace('%', ''));
+                                    if (isNaN(percentageValue)) {
+                                        percentageValue = 0;
+                                    }
+                                    percentageValue = Math.min(Math.max(percentageValue, 0), 100);
+                                    opacityInput.value = `${percentageValue}`;
+                                    opacityRealInput.value = (percentageValue / 100).toFixed(2);
+                                };
+                            
+                                const appendPercentageSymbol = () => {
+                                    if (!opacityInput.value.endsWith('%')) {
+                                        opacityInput.value += '%';
+                                    }
+                                };
+                            
+                                opacityInput.addEventListener('focus', () => {
+                                    opacityInput.value = opacityInput.value.replace('%', '');
+                                });
+                                opacityInput.addEventListener('blur', () => {
+                                    updateOpacityValue();
+                                    appendPercentageSymbol();
+                                });
+                            
+                                // Set initial values
+                                updateOpacityValue();
+                                appendPercentageSymbol();
+                            </script>
                             
                             <div class="mb-3">
                                 <label for="rotation" th:text="#{watermark.selectText.4}"></label> 
@@ -132,7 +133,7 @@
                                 alphabetGroup.style.display = 'none';
                             }
                         }
-						</script>
+                        </script>
 
                     </div>
                 </div>

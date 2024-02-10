@@ -11,15 +11,15 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <h2 th:text="#{certSign.header}"></h2>
-                        <form action="api/v1/security/cert-sign" method="post" enctype="multipart/form-data">
+                        <form action="/api/v1/security/cert-sign" method="post" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <label th:text="#{certSign.selectPDF}"></label>
                                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             </div>
                             <!-- Tell users to use keytool to generate JKS for other formats -->
                             <div class="mb-3">
-								<label th:text="#{certSign.jksNote}"></label>
-							</div>
+                                <label th:text="#{certSign.jksNote}"></label>
+                            </div>
                             <div class="mb-3">
                                 <label for="certType" th:text="#{certSign.certType}"></label> <select class="form-control" id="certType" name="certType">
                                     <option value="" th:text="#{selectFillter}"></option>
@@ -78,7 +78,7 @@
     </div>
     <script type="text/javascript">
     document
-    	.getElementById('certType')
+        .getElementById('certType')
         .addEventListener(
             'change',
             function() {

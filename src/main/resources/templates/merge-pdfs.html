@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{merge.title}, header=#{merge.header})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{merge.title}, header=#{merge.header})}"></th:block>
+
 
 
 <body>
@@ -13,7 +14,7 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <h2 th:text="#{merge.header}"></h2>
-                        <form action="api/v1/general/merge-pdfs" method="post" enctype="multipart/form-data">
+                        <form action="/api/v1/general/merge-pdfs" method="post" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <label th:text="#{multiPdfDropPrompt}"></label>
                                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=true, accept='application/pdf')}"></div>
@@ -23,13 +24,13 @@
                                 <ul id="selectedFiles" class="list-group"></ul>
                             </div>
                             <div class="mb-3 text-center">
-                            	<button type="button" id="sortByNameBtn" class="btn btn-info" th:text="#{merge.sortByName}"></button>
-    							<button type="button" id="sortByDateBtn" class="btn btn-info" th:text="#{merge.sortByDate}"></button>
+                                <button type="button" id="sortByNameBtn" class="btn btn-info" th:text="#{merge.sortByName}"></button>
+                                <button type="button" id="sortByDateBtn" class="btn btn-info" th:text="#{merge.sortByDate}"></button>
                                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{merge.submit}"></button>
                             </div>
                         </form>
-                        <link rel="stylesheet" href="css/merge.css">
-                        <script src="js/merge.js"></script>
+                        <link rel="stylesheet" href="/css/merge.css">
+                        <script src="/js/merge.js"></script>
                     </div>
                 </div>
             </div>

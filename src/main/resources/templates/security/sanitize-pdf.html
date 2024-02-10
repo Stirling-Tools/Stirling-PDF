@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{sanitizePDF.title}, header=#{sanitizePDF.header})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{sanitizePDF.title}, header=#{sanitizePDF.header})}"></th:block>
+
 
 <body>
     <div id="page-container">
@@ -13,7 +14,7 @@
                     <div class="col-md-6">
                         <h2 th:text="#{sanitizePDF.header}"></h2>
 
-                        <form action="api/v1/security/sanitize-pdf" method="post" enctype="multipart/form-data">
+                        <form action="/api/v1/security/sanitize-pdf" method="post" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             </div>

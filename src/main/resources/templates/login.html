@@ -2,46 +2,46 @@
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
 <th:block th:insert="~{fragments/common :: head(title=#{login.title}, header=#{login.header})}"></th:block>
-<script src="js/darkmode.js"></script>
+<script src="/js/darkmode.js"></script>
 <style>
 html, body {
-	height: 100%;
+    height: 100%;
 }
 
 body {
-	display: flex;
-	align-items: center;
-	padding-top: 40px;
-	padding-bottom: 40px;
-	background-color: #f5f5f5;
-	
+    display: flex;
+    align-items: center;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    background-color: #f5f5f5;
+    
 }
 
 .form-signin {
-	width: 100%;
-	max-width: 330px;
-	padding: 15px;
-	margin: auto;
+    width: 100%;
+    max-width: 330px;
+    padding: 15px;
+    margin: auto;
 }
 
 .form-signin .checkbox {
-	font-weight: 400;
+    font-weight: 400;
 }
 
 .form-signin .form-floating:focus-within {
-	z-index: 2;
+    z-index: 2;
 }
 
 .form-signin input[type="text"] {
-	margin-bottom: -1px;
-	border-bottom-right-radius: 0;
-	border-bottom-left-radius: 0;
+    margin-bottom: -1px;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
 }
 
 .form-signin input[type="password"] {
-	margin-bottom: 10px;
-	border-top-left-radius: 0;
-	border-top-right-radius: 0;
+    margin-bottom: 10px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
 }
 .container-flex {
     display: flex;
@@ -113,8 +113,8 @@ li {
 }
 
 .navbar-icon {
-	width: 40px;
-	height: 40px;
+    width: 40px;
+    height: 40px;
 }
 
 </style>
@@ -171,8 +171,8 @@ document.addEventListener('modeChanged', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-	
-	const defaultLocale = document.documentElement.lang || 'en_GB';
+    
+    const defaultLocale = document.documentElement.lang || 'en_GB';
     const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
 
     const currentURL = new URL(window.location.href);
@@ -232,18 +232,18 @@ function handleDropdownItemClick(event) {
     const dropdown = document.getElementById('languageDropdown');
     
     if (languageCode) {
-    	localStorage.setItem('languageCode', languageCode);
-    	const currentLang = document.documentElement.getAttribute('lang');
-    	if (currentLang !== languageCode) {
-    		console.log("currentLang", currentLang)
-    		console.log("languageCode", languageCode)
-	        const currentUrl = window.location.href;
-	        if (currentUrl.indexOf('?lang=') === -1) {
-	            window.location.href = currentUrl + '?lang=' + languageCode;
-	        } else {
-	            window.location.href = currentUrl.replace(/\?lang=\w{2,}/, '?lang=' + languageCode);
-	        }
-    	}
+        localStorage.setItem('languageCode', languageCode);
+        const currentLang = document.documentElement.getAttribute('lang');
+        if (currentLang !== languageCode) {
+            console.log("currentLang", currentLang)
+            console.log("languageCode", languageCode)
+            const currentUrl = window.location.href;
+            if (currentUrl.indexOf('?lang=') === -1) {
+                window.location.href = currentUrl + '?lang=' + languageCode;
+            } else {
+                window.location.href = currentUrl.replace(/\?lang=\w{2,}/, '?lang=' + languageCode);
+            }
+        }
         dropdown.innerHTML = event.currentTarget.innerHTML;  // Update the dropdown button's content
     } else {
         console.error("Language code is not set for this item.");
@@ -253,56 +253,57 @@ function handleDropdownItemClick(event) {
 
 
 </script>
-		<div th:if="${logoutMessage}" class="alert alert-success"
-			th:text="${logoutMessage}"></div>
+        <div th:if="${logoutMessage}" class="alert alert-success"
+            th:text="${logoutMessage}"></div>
 
-		<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'credsUpdated'}" class="alert alert-success">
-		    <span th:text="#{changedCredsMessage}">Default message if not found</span>
-		</div>
-		<form th:action="@{login}" method="post">
-			<img class="mb-4" src="favicon.svg?v=2" alt="" width="144" height="144">
-			<h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
-			<h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
 
-			<div class="form-floating">
-				<input type="text" class="form-control bg-dark text-light" id="username" name="username"
-					placeholder="admin"> <label for="username" th:text="#{username}">Username</label>
-			</div>
-			<div class="form-floating">
-				<input type="password" class="form-control bg-dark text-light" id="password" name="password"
-					placeholder="Password"> <label for="password" th:text="#{password}">Password</label>
-			</div>
+        <div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'credsUpdated'}" class="alert alert-success">
+            <span th:text="#{changedCredsMessage}">Default message if not found</span>
+        </div>
+        <form th:action="@{login}" method="post">
+            <img class="mb-4" src="/favicon.svg" alt="" width="144" height="144">
+            <h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
+            <h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
 
-			<div class="checkbox mb-3">
-				<label > <input type="checkbox" value="remember-me">
-					<span th:text="#{login.rememberme}"></span>
-				</label>
-			</div>
-			<button class="w-100 btn btn-lg btn-primary" type="submit" th:text="#{login.signin}">Sign
-				in</button>
-		</form>
-		<div class="mt-3"> <!-- Added a margin-top for spacing -->
-	    <div class="dropdown">
-	        <button class="btn btn-secondary dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-	            English (GB) <!-- Default language placeholder -->
-	        </button>
-	        <div class="dropdown-menu" aria-labelledby="languageDropdown">
-	            <!-- Here's where the fragment will be included -->
-	            <th:block th:replace="~{fragments/languages :: langs}"></th:block>
-	        </div>
-	    </div>
-	</div>
-			
-		
-		
-		<div class="text-danger text-center">
-			<div th:if="${error == 'badcredentials'}" th:text="#{login.invalid}">Invalid username or
-				password.</div>
-			<div th:if="${error == 'locked'}" th:text="#{login.locked}">Your account has been locked.
-			</div>
-		</div>
-	
-	</main>
+            <div class="form-floating">
+                <input type="text" class="form-control bg-dark text-light" id="username" name="username"
+                    placeholder="admin"> <label for="username" th:text="#{username}">Username</label>
+            </div>
+            <div class="form-floating">
+                <input type="password" class="form-control bg-dark text-light" id="password" name="password"
+                    placeholder="Password"> <label for="password" th:text="#{password}">Password</label>
+            </div>
+
+            <div class="checkbox mb-3">
+                <label > <input type="checkbox" value="remember-me">
+                    <span th:text="#{login.rememberme}"></span>
+                </label>
+            </div>
+            <button class="w-100 btn btn-lg btn-primary" type="submit" th:text="#{login.signin}">Sign
+                in</button>
+        </form>
+        <div class="mt-3"> <!-- Added a margin-top for spacing -->
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                English (GB) <!-- Default language placeholder -->
+            </button>
+            <div class="dropdown-menu" aria-labelledby="languageDropdown">
+                <!-- Here's where the fragment will be included -->
+                <th:block th:replace="~{fragments/languages :: langs}"></th:block>
+            </div>
+        </div>
+    </div>
+            
+        
+        
+        <div class="text-danger text-center">
+            <div th:if="${error == 'badcredentials'}" th:text="#{login.invalid}">Invalid username or
+                password.</div>
+            <div th:if="${error == 'locked'}" th:text="#{login.locked}">Your account has been locked.
+            </div>
+        </div>
+    
+    </main>
     
        
         <div  th:insert="~{fragments/footer.html :: footer}"></div>

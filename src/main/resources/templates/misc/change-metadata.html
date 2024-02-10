@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{changeMetadata.title}, header=#{changeMetadata.header})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{changeMetadata.title}, header=#{changeMetadata.header})}"></th:block>
+
 
 <body>
     <div id="page-container">
@@ -129,30 +130,30 @@
   
   var lastPDFFileMeta = null;
   fileInput.addEventListener("change", async function() {
-	  
-	  
-	  
-	  while (otherMetadataEntriesDiv.firstChild) {
-		  otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
-	  }
-	  while (customMetadataFormContainer.firstChild) {
-		  customMetadataFormContainer.removeChild(customMetadataFormContainer.firstChild);
+      
+      
+      
+      while (otherMetadataEntriesDiv.firstChild) {
+          otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
       }
-	  
-	  
-	  
+      while (customMetadataFormContainer.firstChild) {
+          customMetadataFormContainer.removeChild(customMetadataFormContainer.firstChild);
+      }
+      
+      
+      
     const file = this.files[0];
     var url = URL.createObjectURL(file)
-	pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
     const pdf = await pdfjsLib.getDocument(url).promise;
     const pdfMetadata = await pdf.getMetadata();
     lastPDFFile = pdfMetadata?.info
     console.log(pdfMetadata);
     if(!pdfMetadata?.info?.Custom || pdfMetadata?.info?.Custom.size == 0) {
-    	customModeCheckbox.disabled = true;
+        customModeCheckbox.disabled = true;
         customModeCheckbox.checked = false;
     } else {
-    	customModeCheckbox.disabled = false;
+        customModeCheckbox.disabled = false;
     }
     authorInput.value = pdfMetadata?.info?.Author;
     creationDateInput.value = convertDateFormat(pdfMetadata?.info?.CreationDate);
@@ -177,42 +178,42 @@
   });
   
   addMetadataBtn.addEventListener("click", () => {
-	  
-	    const keyInput = document.createElement("input");
-	    keyInput.type = "text";
-	    keyInput.placeholder = 'Key';
-	    keyInput.className = "form-control";
-	    keyInput.name = "customKey" + count;
-	    
-	    const valueInput = document.createElement("input");
-	    valueInput.type = "text";
-	    valueInput.placeholder = 'Value';
-	    valueInput.className = "form-control";
-	    valueInput.name = "customValue" + count;
-	    count = count + 1;
-	    
-	    const formGroup = document.createElement("div");
-	    formGroup.className = "mb-3";
-	    formGroup.appendChild(keyInput);
-	    formGroup.appendChild(valueInput);
-	    
-	    
-	    customMetadataFormContainer.appendChild(formGroup);
-	  });
+      
+        const keyInput = document.createElement("input");
+        keyInput.type = "text";
+        keyInput.placeholder = 'Key';
+        keyInput.className = "form-control";
+        keyInput.name = "customKey" + count;
+        
+        const valueInput = document.createElement("input");
+        valueInput.type = "text";
+        valueInput.placeholder = 'Value';
+        valueInput.className = "form-control";
+        valueInput.name = "customValue" + count;
+        count = count + 1;
+        
+        const formGroup = document.createElement("div");
+        formGroup.className = "mb-3";
+        formGroup.appendChild(keyInput);
+        formGroup.appendChild(valueInput);
+        
+        
+        customMetadataFormContainer.appendChild(formGroup);
+      });
   function convertDateFormat(dateTimeString) {
-	  if (!dateTimeString || dateTimeString.length < 17) {
-	    return dateTimeString;
-	  }
+      if (!dateTimeString || dateTimeString.length < 17) {
+        return dateTimeString;
+      }
 
-	  const year = dateTimeString.substring(2, 6);
-	  const month = dateTimeString.substring(6, 8);
-	  const day = dateTimeString.substring(8, 10);
-	  const hour = dateTimeString.substring(10, 12);
-	  const minute = dateTimeString.substring(12, 14);
-	  const second = dateTimeString.substring(14, 16);
+      const year = dateTimeString.substring(2, 6);
+      const month = dateTimeString.substring(6, 8);
+      const day = dateTimeString.substring(8, 10);
+      const hour = dateTimeString.substring(10, 12);
+      const minute = dateTimeString.substring(12, 14);
+      const second = dateTimeString.substring(14, 16);
 
-	  return year + "/" + month + "/" + day + " " + hour + ":" + minute + ":" + second;
-	}
+      return year + "/" + month + "/" + day + " " + hour + ":" + minute + ":" + second;
+    }
   
     function addExtra() {
          const event = document.getElementById("customModeCheckbox");

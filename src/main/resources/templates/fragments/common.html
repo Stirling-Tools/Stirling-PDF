@@ -23,30 +23,30 @@
 <meta name="theme-color" content="#ffffff">
 
 <!-- jQuery -->
-<script src="js/thirdParty/jquery.min.js"></script>
-<script src="js/thirdParty/jszip.min.js"></script>
+<script src="/js/thirdParty/jquery.min.js"></script>
+<script src="/js/thirdParty/jszip.min.js"></script>
 
 <!-- Bootstrap -->
-<script src="js/thirdParty/popper.min.js"></script>
-<script src="js/thirdParty/bootstrap.min.js"></script>
-<link rel="stylesheet" href="css/bootstrap.min.css">
+<script src="/js/thirdParty/popper.min.js"></script>
+<script src="/js/thirdParty/bootstrap.min.js"></script>
+<link rel="stylesheet" href="/css/bootstrap.min.css">
 
 <!-- Bootstrap Icons -->
-<link rel="stylesheet" href="css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="/css/bootstrap-icons.min.css">
 
 <!-- PDF.js -->
-<script src="pdfjs/pdf.js"></script>
+<script src="/pdfjs/pdf.js"></script>
 
 <!-- PDF-Lib -->
-<script src="js/thirdParty/pdf-lib.min.js"></script>
+<script src="/js/thirdParty/pdf-lib.min.js"></script>
 
 <!-- Custom -->
-<link rel="stylesheet" href="css/general.css">
+<link rel="stylesheet" href="/css/general.css">
 <link rel="stylesheet" th:href="@{css/light-mode.css}" id="light-mode-styles">
 <link rel="stylesheet" th:href="@{css/dark-mode.css}" id="dark-mode-styles">
 <link rel="stylesheet" th:href="@{css/rainbow-mode.css}" id="rainbow-mode-styles" disabled="true">
-<link rel="stylesheet" href="css/tab-container.css">
-<script src="js/tab-container.js"></script>
+<link rel="stylesheet" href="/css/tab-container.css">
+<script src="/js/tab-container.js"></script>
 
 
 </head>
@@ -97,29 +97,29 @@
             <div id="score">Score: 0</div>
             <div id="high-score">High Score: 0</div>
             <div id="level">Level: 1</div>
-            <img src="favicon.svg" class="player" id="player">
+            <img src="/favicon.svg" class="player" id="player">
         </div>
-        <link rel="stylesheet" href="css/game.css">
+        <link rel="stylesheet" href="/css/game.css">
     </dialog>
 </th:block>
 
 <th:block th:fragment="fileSelector(name, multiple)"  th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, notRequired=${notRequired} ?: false">
     <script th:inline="javascript">
-		const pdfPasswordPrompt =/*[[#{error.pdfPassword}]]*/ '';
-		const multiple = [[${multiple}]] || false;
-		const remoteCall = [[${remoteCall}]] || true;
-	</script>
-    <script src="js/downloader.js"></script>
+        const pdfPasswordPrompt =/*[[#{error.pdfPassword}]]*/ '';
+        const multiple = [[${multiple}]] || false;
+        const remoteCall = [[${remoteCall}]] || true;
+    </script>
+    <script src="/js/downloader.js"></script>
 
     <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, 
-	          data-bs-element-id=${name+'-input'}, 
-	          data-bs-files-selected=#{filesSelected}, 
-	          data-bs-pdf-prompt=#{pdfPrompt}">
-	    <div class="mb-3">
-	        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:required="${notRequired} ? null : 'required'">
-	    </div>
-	    <div class="selected-files"></div>
-	</div>
+              data-bs-element-id=${name+'-input'}, 
+              data-bs-files-selected=#{filesSelected}, 
+              data-bs-pdf-prompt=#{pdfPrompt}">
+        <div class="mb-3">
+            <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:required="${notRequired} ? null : 'required'">
+        </div>
+        <div class="selected-files"></div>
+    </div>
 
     <div id="progressBarContainer" style="display: none; position: relative;">
         <div class="progress" style="height: 1rem;">
@@ -131,7 +131,7 @@
     <button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">Bored waiting?</button>
 
 
-	
-    <script src="js/fileInput.js"></script>
-    <link rel="stylesheet" href="css/fileSelect.css">
+    
+    <script src="/js/fileInput.js"></script>
+    <link rel="stylesheet" href="/css/fileSelect.css">
 </th:block>

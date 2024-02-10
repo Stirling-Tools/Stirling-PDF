@@ -17,23 +17,23 @@
                          <form id="scalePagesFrom" th:action="@{api/v1/general/scale-pages}" method="post" enctype="multipart/form-data">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                             <div class="mb-3">
-	                            <label for="pageSize" th:text="#{scalePages.pageSize}"></label>
-							    <select id="pageSize" name="pageSize" required>
-							        <option value="A0">A0</option>
-							        <option value="A1">A1</option>
-							        <option value="A2">A2</option>
-							        <option value="A3">A3</option>
-							        <option value="A4" selected>A4</option>
-							        <option value="A5">A5</option>
-							        <option value="A6">A6</option>			       
-							        <option value="LETTER">Letter</option>
-							        <option value="LEGAL">Legal</option>
-							    </select>
-						    </div>
+                                <label for="pageSize" th:text="#{scalePages.pageSize}"></label>
+                                <select id="pageSize" name="pageSize" required>
+                                    <option value="A0">A0</option>
+                                    <option value="A1">A1</option>
+                                    <option value="A2">A2</option>
+                                    <option value="A3">A3</option>
+                                    <option value="A4" selected>A4</option>
+                                    <option value="A5">A5</option>
+                                    <option value="A6">A6</option>                   
+                                    <option value="LETTER">Letter</option>
+                                    <option value="LEGAL">Legal</option>
+                                </select>
+                            </div>
                             <div class="mb-3">
-	                            <label for="scaleFactor" th:text="#{scalePages.scaleFactor}"></label>
+                                <label for="scaleFactor" th:text="#{scalePages.scaleFactor}"></label>
                                 <input type="number" id="scaleFactor" name="scaleFactor" step="any" min="0" value="1">
-						    </div>
+                            </div>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{scalePages.submit}"></button> 
                         </form>
                     </div>

@@ -13,10 +13,10 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <h2 th:text="#{pdfToSinglePage.header}"></h2>
-						<form method="post" enctype="multipart/form-data" th:action="@{api/v1/general/pdf-to-single-page}">
-						    <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-						    <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfToSinglePage.submit}"></button>
-						</form>
+                        <form method="post" enctype="multipart/form-data" th:action="@{api/v1/general/pdf-to-single-page}">
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfToSinglePage.submit}"></button>
+                        </form>
                     </div>
                 </div>
             </div>

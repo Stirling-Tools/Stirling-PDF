@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{crop.title}, header=#{crop.header})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{crop.title}, header=#{crop.header})}"></th:block>
+
 
 
 <body>
@@ -21,9 +22,9 @@
               <input id="height" type="hidden" name="height">
               <button type="submit" class="btn btn-primary" th:text="#{crop.submit}"></button>
             </form>
-            <div style="position: relative; display: inline-block;">
-			    <canvas id="crop-pdf-canvas" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
-			    <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2;"></canvas>
+                     <div style="position: relative; display: inline-block;">
+                <canvas id="crop-pdf-canvas" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
+                <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2;"></canvas>
 			</div>
 
             <script>

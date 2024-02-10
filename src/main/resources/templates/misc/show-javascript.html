@@ -1,40 +1,40 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}"
-	th:lang-direction="#{language.direction}"
-	xmlns:th="http://www.thymeleaf.org">
+    th:lang-direction="#{language.direction}"
+    xmlns:th="http://www.thymeleaf.org">
 <th:block
-	th:insert="~{fragments/common :: head(title=#{showJS.title}, header=#{showJS.header})}"></th:block>
+    th:insert="~{fragments/common :: head(title=#{showJS.title}, header=#{showJS.header})}"></th:block>
 <body>
-	<link href="css/prism.css" rel="stylesheet" />
-	<script src="js/thirdParty/prism.js"></script>
-	<div id="page-container">
-		<div id="content-wrap">
-			<div th:insert="~{fragments/navbar.html :: navbar}"></div>
-			<br> <br>
-			<div class="container">
-				<div class="row justify-content-center">
-					<div class="col-md-12">
-						<h2 th:text="#{showJS.header}"></h2>
-						<form id="pdfInfoForm" method="post" enctype="multipart/form-data"
-							th:action="@{show-javascript}">
-							<div
-								th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false', accept='application/pdf')}"></div>
-							<br>
-							<button type="submit" id="submitBtn" class="btn btn-primary"
-								th:text="#{showJS.submit}"></button>
+    <link href="/css/prism.css" rel="stylesheet" />
+    <script src="/js/thirdParty/prism.js"></script>
+    <div id="page-container">
+        <div id="content-wrap">
+            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
+            <br> <br>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-12">
+                        <h2 th:text="#{showJS.header}"></h2>
+                        <form id="pdfInfoForm" method="post" enctype="multipart/form-data"
+                            th:action="@{show-javascript}">
+                            <div
+                                th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false', accept='application/pdf')}"></div>
+                            <br>
+                            <button type="submit" id="submitBtn" class="btn btn-primary"
+                                th:text="#{showJS.submit}"></button>
 
-						</form>
-						<div class="container mt-5">
-							<!-- Iterate over each main section in the JSON -->
-							<div id="script-content">
-								<!-- JavaScript will populate this section -->
-							</div>
+                        </form>
+                        <div class="container mt-5">
+                            <!-- Iterate over each main section in the JSON -->
+                            <div id="script-content">
+                                <!-- JavaScript will populate this section -->
+                            </div>
 
-							<!-- Button to download the JSON -->
-							<a href="#" id="downloadJS" class="btn btn-primary mt-3"
-								style="display: none;" th:text="#{showJS.downloadJS}">Download
-								JSON</a>
-						</div>
+                            <!-- Button to download the JSON -->
+                            <a href="#" id="downloadJS" class="btn btn-primary mt-3"
+                                style="display: none;" th:text="#{showJS.downloadJS}">Download
+                                JSON</a>
+                        </div>
 <style>
     /* Add a max-height and make it scrollable */
     #script-content {
@@ -42,7 +42,7 @@
         overflow-y: auto;
     }
 </style>
-						<script>
+                        <script>
     document.querySelector('#pdfInfoForm').addEventListener('submit', function(event){
         event.preventDefault();
 
@@ -54,7 +54,7 @@
             body: formData
         }).then(response => response.text())
         .then(data => {
-        	 // Escape < and > characters
+             // Escape < and > characters
             let escapedData = data.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
             // Create the elements manually
@@ -89,12 +89,12 @@
         });
     });
 </script>
-					</div>
-				</div>
-			</div>
+                    </div>
+                </div>
+            </div>
 
-		</div>
-		<div th:insert="~{fragments/footer.html :: footer}"></div>
-	</div>
+        </div>
+        <div th:insert="~{fragments/footer.html :: footer}"></div>
+    </div>
 </body>
 </html>

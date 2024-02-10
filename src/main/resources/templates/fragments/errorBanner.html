@@ -52,10 +52,10 @@
 
     function copytrace() {
       var flip = false
-    	if(!traceVisible) {
-    		 toggletrace()
-    		 flip = true
-    	}
+        if(!traceVisible) {
+             toggletrace()
+             flip = true
+        }
       var traceContent = document.getElementById("traceContent");
       var range = document.createRange();
       range.selectNode(traceContent);
@@ -64,7 +64,7 @@
       document.execCommand("copy");
       window.getSelection().removeAllRanges();
       if(flip){
-    	  toggletrace()
+          toggletrace()
       }
     }
 

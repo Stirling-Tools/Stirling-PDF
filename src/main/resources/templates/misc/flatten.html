@@ -19,7 +19,7 @@
                                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
                             </div>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{flatten.submit}"></button>
-                            <script src="js/local-pdf-input-download.js"></script>
+                            <script src="/js/local-pdf-input-download.js"></script>
                            <script>
         document.getElementById('pdfForm').addEventListener('submit', async (e) => {
             e.preventDefault();

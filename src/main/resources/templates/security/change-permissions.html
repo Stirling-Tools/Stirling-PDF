@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{permissions.title}, header=#{permissions.header})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{permissions.title}, header=#{permissions.header})}"></th:block>
+
 
 
 <body>
@@ -14,7 +15,7 @@
                     <div class="col-md-6">
                         <h2 th:text="#{permissions.header}"></h2>
                         <p th:text="#{permissions.warning}"></p>
-                        <form action="api/v1/security/add-password" method="post" enctype="multipart/form-data">
+                        <form action="/api/v1/security/add-password" method="post" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <label th:text="#{permissions.selectText.1}"></label>
                                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>

@@ -16,79 +16,79 @@
                     
                     
                         <h2 th:text="#{overlay-pdfs.header}"></h2>
-						<form id="overlayForm" method="post" enctype="multipart/form-data" th:action="@{/api/v1/general/overlay-pdfs}">
-						    <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-						    <div th:replace="~{fragments/common :: fileSelector(name='overlayFiles', multiple=true, accept='application/pdf')}"></div>
-						    
-						    <label for="overlayMode" th:text="#{overlay-pdfs.mode.label}">Overlay Mode</label>
-						    <select id="overlayMode" name="overlayMode" class="form-control">
-						        <option value="SequentialOverlay" th:text="#{overlay-pdfs.mode.sequential}">Sequential Overlay</option>
-						        <option value="InterleavedOverlay" th:text="#{overlay-pdfs.mode.interleaved}">Interleaved Overlay</option>
-						        <option value="FixedRepeatOverlay" th:text="#{overlay-pdfs.mode.fixedRepeat}">Fixed Repeat Overlay</option>
-						    </select>
-						    <br>
-							<label for="overlayPosition" th:text="#{overlay-pdfs.position.label}">Overlay Position</label>
-						    <select id="overlayPosition" name="overlayPosition" class="form-control">
-						        <option value="0" th:text="#{overlay-pdfs.position.foreground}">Foreground</option>
-						        <option value="1" th:text="#{overlay-pdfs.position.background}">Background</option>
-						    </select>
-						    <br>
-						    <div id="countsContainer" style="display: none;">
-						        <label th:text="#{overlay-pdfs.counts.label}">Overlay Counts</label>
-						        <!-- Inputs for counts will be dynamically added here -->
-						    </div>
-						
-						    <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{overlay-pdfs.submit}">Submit</button>
-						</form>
-						
-						
-						<script>
-						    function updateCountsInputs() {
-						        const mode = document.getElementById('overlayMode').value;
-						        console.log("mode",mode);
-						        const countsContainer = document.getElementById('countsContainer');
-						        console.log("countsContainer",countsContainer);
-						        countsContainer.innerHTML = ''; // Clear previous inputs
-						
-						        if (mode === 'FixedRepeatOverlay') {
-						            const fileInput = document.getElementById('overlayFiles-input');
-						            console.log("fileInput",fileInput);
-						            if(fileInput){
-							            const files = fileInput.files
-							            console.log("files",files);
-							            if(files) {
-								            const fileCount = files.length;
-								
-								            for (let i = 0; i < fileCount; i++) {
-								                const input = document.createElement('input');
-								                input.type = 'text';
-								                input.name = 'counts';
-								                input.classList.add('form-control');
-								                input.placeholder = 'Count for file ' + (i + 1);
-								                countsContainer.appendChild(input);
-								            }
-								            countsContainer.style.display = 'block';
-							        	}
-						            }
-						        } else {
-						            countsContainer.style.display = 'none';
-						        }
-						    }
-						    document.addEventListener('DOMContentLoaded', (event) => {
-						    	var fileInput = document.getElementById('overlayFiles-input');
-						    	console.log("fileInput2",fileInput);
-					    	    if (fileInput) {
-					    	        fileInput.addEventListener('change', updateCountsInputs);
-					    	    }
-						    });
-						    document.addEventListener('DOMContentLoaded', (event) => {
-						    	var overlay = document.getElementById('overlayMode');
-						    	console.log("overlay2",overlay);
-					    	    if (overlay) {
-					    	    	overlay.addEventListener('change', updateCountsInputs);
-					    	    }
-						    });
-						    </script>
+                        <form id="overlayForm" method="post" enctype="multipart/form-data" th:action="@{api/v1/general/overlay-pdfs}">
+                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                            <div th:replace="~{fragments/common :: fileSelector(name='overlayFiles', multiple=true, accept='application/pdf')}"></div>
+                            
+                            <label for="overlayMode" th:text="#{overlay-pdfs.mode.label}">Overlay Mode</label>
+                            <select id="overlayMode" name="overlayMode" class="form-control">
+                                <option value="SequentialOverlay" th:text="#{overlay-pdfs.mode.sequential}">Sequential Overlay</option>
+                                <option value="InterleavedOverlay" th:text="#{overlay-pdfs.mode.interleaved}">Interleaved Overlay</option>
+                                <option value="FixedRepeatOverlay" th:text="#{overlay-pdfs.mode.fixedRepeat}">Fixed Repeat Overlay</option>
+                            </select>
+                            <br>
+                            <label for="overlayPosition" th:text="#{overlay-pdfs.position.label}">Overlay Position</label>
+                            <select id="overlayPosition" name="overlayPosition" class="form-control">
+                                <option value="0" th:text="#{overlay-pdfs.position.foreground}">Foreground</option>
+                                <option value="1" th:text="#{overlay-pdfs.position.background}">Background</option>
+                            </select>
+                            <br>
+                            <div id="countsContainer" style="display: none;">
+                                <label th:text="#{overlay-pdfs.counts.label}">Overlay Counts</label>
+                                <!-- Inputs for counts will be dynamically added here -->
+                            </div>
+                        
+                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{overlay-pdfs.submit}">Submit</button>
+                        </form>
+                        
+                        
+                        <script>
+                            function updateCountsInputs() {
+                                const mode = document.getElementById('overlayMode').value;
+                                console.log("mode",mode);
+                                const countsContainer = document.getElementById('countsContainer');
+                                console.log("countsContainer",countsContainer);
+                                countsContainer.innerHTML = ''; // Clear previous inputs
+                        
+                                if (mode === 'FixedRepeatOverlay') {
+                                    const fileInput = document.getElementById('overlayFiles-input');
+                                    console.log("fileInput",fileInput);
+                                    if(fileInput){
+                                        const files = fileInput.files
+                                        console.log("files",files);
+                                        if(files) {
+                                            const fileCount = files.length;
+                                
+                                            for (let i = 0; i < fileCount; i++) {
+                                                const input = document.createElement('input');
+                                                input.type = 'text';
+                                                input.name = 'counts';
+                                                input.classList.add('form-control');
+                                                input.placeholder = 'Count for file ' + (i + 1);
+                                                countsContainer.appendChild(input);
+                                            }
+                                            countsContainer.style.display = 'block';
+                                        }
+                                    }
+                                } else {
+                                    countsContainer.style.display = 'none';
+                                }
+                            }
+                            document.addEventListener('DOMContentLoaded', (event) => {
+                                var fileInput = document.getElementById('overlayFiles-input');
+                                console.log("fileInput2",fileInput);
+                                if (fileInput) {
+                                    fileInput.addEventListener('change', updateCountsInputs);
+                                }
+                            });
+                            document.addEventListener('DOMContentLoaded', (event) => {
+                                var overlay = document.getElementById('overlayMode');
+                                console.log("overlay2",overlay);
+                                if (overlay) {
+                                    overlay.addEventListener('change', updateCountsInputs);
+                                }
+                            });
+                            </script>
 
 
                     </div>

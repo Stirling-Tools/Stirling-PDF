@@ -3,8 +3,8 @@
 
 <head>
     <th:block th:insert="~{fragments/common :: head(title=#{sign.title}, header=#{sign.header})}"></th:block>
-    <script src="js/thirdParty/signature_pad.umd.min.js"></script>
-    <script src="js/thirdParty/interact.min.js"></script>
+    <script src="/js/thirdParty/signature_pad.umd.min.js"></script>
+    <script src="/js/thirdParty/interact.min.js"></script>
 
 </head>
 <th:block th:each="font : ${fonts}">
@@ -42,11 +42,11 @@ select#font-select, select#font-select option {
                         <!-- pdf selector -->
                         <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multiple=false, accept='application/pdf')}"></div>
                         <script>
-                        	let originalFileName = '';
+                            let originalFileName = '';
                             document.querySelector('input[name=pdf-upload]').addEventListener('change', async (event) => {
                                 const file = event.target.files[0];
                                 if (file) {
-                                	originalFileName = file.name.replace(/\.[^/.]+$/, "");
+                                    originalFileName = file.name.replace(/\.[^/.]+$/, "");
                                     const pdfData = await file.arrayBuffer();
                                     pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
                                     const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
@@ -144,11 +144,11 @@ select#font-select, select#font-select option {
                                         // some browsers report devicePixelRatio as less than 1
                                         // and only part of the canvas is cleared then.
                                         var ratio = Math.max(window.devicePixelRatio || 1, 1);
-									    var additionalFactor = 10;  
-									
-									    signaturePadCanvas.width = signaturePadCanvas.offsetWidth * ratio * additionalFactor;
-									    signaturePadCanvas.height = signaturePadCanvas.offsetHeight * ratio * additionalFactor;
-									    signaturePadCanvas.getContext("2d").scale(ratio * additionalFactor, ratio * additionalFactor);
+                                        var additionalFactor = 10;  
+                                    
+                                        signaturePadCanvas.width = signaturePadCanvas.offsetWidth * ratio * additionalFactor;
+                                        signaturePadCanvas.height = signaturePadCanvas.offsetHeight * ratio * additionalFactor;
+                                        signaturePadCanvas.getContext("2d").scale(ratio * additionalFactor, ratio * additionalFactor);
 
 
                                         // This library does not listen for canvas changes, so after the canvas is automatically
@@ -182,12 +182,12 @@ select#font-select, select#font-select option {
                                 <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
                                 <label th:text="#{font}"></label> 
                                 <select class="form-control" name="font" id="font-select">
-								    <option th:each="font : ${fonts}" 
-								            th:value="${font.name}" 
-								            th:text="${font.name}" 
-								            th:class="${font.name.toLowerCase()+'-font'}">
-								    </option>
-								</select>
+                                    <option th:each="font : ${fonts}" 
+                                            th:value="${font.name}" 
+                                            th:text="${font.name}" 
+                                            th:class="${font.name.toLowerCase()+'-font'}">
+                                    </option>
+                                </select>
                                 <div class="margin-auto-parent">
                                     <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
                                 </div>
@@ -228,7 +228,7 @@ select#font-select, select#font-select option {
 
     const updateOptionTexts = () => {
         Array.from(fontSelect.options).forEach(option => {
-        	const fontName = option.value.replace(/-regular$/i, '');
+            const fontName = option.value.replace(/-regular$/i, '');
             option.text = sigTextInput.value || fontName;
         });
     }
@@ -260,7 +260,7 @@ select#font-select, select#font-select option {
                         <!-- draggables box -->
                         <div id="box-drag-container" class="show-on-file-selected">
                             <canvas id="pdf-canvas"></canvas>
-                            <script src="js/draggable-utils.js"></script>
+                            <script src="/js/draggable-utils.js"></script>
                             <div class="draggable-buttons-box ignore-rtl">
                                 <button class="btn btn-outline-secondary" onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
