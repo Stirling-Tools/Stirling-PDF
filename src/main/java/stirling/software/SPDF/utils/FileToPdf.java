@@ -54,7 +54,7 @@ public class FileToPdf {
 
                 if (request.getZoom() != 1.0) {
                     // Create a temporary CSS file
-                    File tempCssFile = File.createTempFile("customStyle", ".css");
+                    File tempCssFile = Files.createTempFile("customStyle", ".css").toFile();
                     try (FileWriter writer = new FileWriter(tempCssFile)) {
                         // Write the CSS rule to the file
                         writer.write("body { zoom: " + request.getZoom() + "; }");
