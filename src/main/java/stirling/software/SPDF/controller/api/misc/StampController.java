@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -87,49 +88,54 @@ public class StampController {
         // Load the input PDF
         PDDocument document = Loader.loadPDF(pdfFile.getBytes());
 
-        for (PDPage page : document.getPages()) {
-            PDRectangle pageSize = page.getMediaBox();
-            float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
+        List<Integer> pageNumbers = request.getPageNumbersList();
 
-            PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+        for (int pageIndex : pageNumbers) {
+            int zeroBasedIndex = pageIndex - 1;
+            if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
+                PDPage page = document.getPage(zeroBasedIndex);
+                PDRectangle pageSize = page.getMediaBox();
+                float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
 
-            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-            graphicsState.setNonStrokingAlphaConstant(opacity);
-            contentStream.setGraphicsStateParameters(graphicsState);
+                PDPageContentStream contentStream =
+                        new PDPageContentStream(
+                                document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
-            if ("text".equalsIgnoreCase(watermarkType)) {
-                addTextStamp(
-                        contentStream,
-                        watermarkText,
-                        document,
-                        page,
-                        rotation,
-                        position,
-                        fontSize,
-                        alphabet,
-                        overrideX,
-                        overrideY,
-                        margin,
-                        customColor);
-            } else if ("image".equalsIgnoreCase(watermarkType)) {
-                addImageStamp(
-                        contentStream,
-                        watermarkImage,
-                        document,
-                        page,
-                        rotation,
-                        position,
-                        fontSize,
-                        overrideX,
-                        overrideY,
-                        margin);
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setNonStrokingAlphaConstant(opacity);
+                contentStream.setGraphicsStateParameters(graphicsState);
+
+                if ("text".equalsIgnoreCase(watermarkType)) {
+                    addTextStamp(
+                            contentStream,
+                            watermarkText,
+                            document,
+                            page,
+                            rotation,
+                            position,
+                            fontSize,
+                            alphabet,
+                            overrideX,
+                            overrideY,
+                            margin,
+                            customColor);
+                } else if ("image".equalsIgnoreCase(watermarkType)) {
+                    addImageStamp(
+                            contentStream,
+                            watermarkImage,
+                            document,
+                            page,
+                            rotation,
+                            position,
+                            fontSize,
+                            overrideX,
+                            overrideY,
+                            margin);
+                }
+
+                contentStream.close();
             }
-
-            contentStream.close();
         }
-
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
                 Filenames.toSimpleFileName(pdfFile.getOriginalFilename())

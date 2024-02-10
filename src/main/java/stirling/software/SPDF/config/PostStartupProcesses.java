@@ -26,12 +26,8 @@ public class PostStartupProcesses {
     private boolean runningInDocker;
 
     @Autowired
-    @Qualifier("bookFormatsInstalled")
-    private boolean bookFormatsInstalled;
-
-    @Autowired
-    @Qualifier("htmlFormatsInstalled")
-    private boolean htmlFormatsInstalled;
+    @Qualifier("bookAndHtmlFormatsInstalled")
+    private boolean bookAndHtmlFormatsInstalled;
 
     private static final Logger logger = LoggerFactory.getLogger(PostStartupProcesses.class);
 
@@ -39,34 +35,11 @@ public class PostStartupProcesses {
     public void runInstallCommandBasedOnEnvironment() throws IOException, InterruptedException {
         List<List<String>> commands = new ArrayList<>();
         // Checking for DOCKER_INSTALL_BOOK_FORMATS environment variable
-        if (bookFormatsInstalled) {
+        if (bookAndHtmlFormatsInstalled) {
             List<String> tmpList = new ArrayList<>();
-            // Set up the timezone configuration commands
-            tmpList.addAll(
-                    Arrays.asList(
-                            "sh",
-                            "-c",
-                            "echo 'tzdata tzdata/Areas select Europe' | debconf-set-selections; "
-                                    + "echo 'tzdata tzdata/Zones/Europe select Berlin' | debconf-set-selections"));
-            commands.add(tmpList);
 
-            // Install calibre with DEBIAN_FRONTEND set to noninteractive
             tmpList = new ArrayList<>();
-            tmpList.addAll(
-                    Arrays.asList(
-                            "sh",
-                            "-c",
-                            "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends calibre"));
-            commands.add(tmpList);
-        }
-
-        // Checking for DOCKER_INSTALL_HTML_FORMATS environment variable
-        if (htmlFormatsInstalled) {
-            List<String> tmpList = new ArrayList<>();
-            // Add -y flag for automatic yes to prompts and --no-install-recommends to reduce size
-            tmpList.addAll(
-                    Arrays.asList(
-                            "apt-get", "install", "wkhtmltopdf", "-y", "--no-install-recommends"));
+            tmpList.addAll(Arrays.asList("apk add --no-cache calibre"));
             commands.add(tmpList);
         }
 
@@ -74,8 +47,6 @@ public class PostStartupProcesses {
             // Run the command
             if (runningInDocker) {
                 List<String> tmpList = new ArrayList<>();
-                tmpList.addAll(Arrays.asList("apt-get", "update"));
-                commands.add(0, tmpList);
 
                 for (List<String> list : commands) {
                     ProcessExecutorResult returnCode =

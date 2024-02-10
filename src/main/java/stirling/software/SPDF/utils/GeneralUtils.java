@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -115,6 +116,13 @@ public class GeneralUtils {
     }
 
     public static List<Integer> parsePageString(String pageOrder, int totalPages) {
+        if (pageOrder == null || pageOrder.isEmpty()) {
+            return Collections.singletonList(1);
+        }
+        if (pageOrder.matches("\\d+")) {
+            // Convert the single number string to an integer and return it in a list
+            return Collections.singletonList(Integer.parseInt(pageOrder));
+        }
         return parsePageList(pageOrder.split(","), totalPages);
     }
 
