@@ -1,5 +1,5 @@
 # use alpine
-FROM alpine:3.19.0
+FROM alpine:3.19.1
 
 ARG VERSION_TAG
 
@@ -42,6 +42,8 @@ RUN mkdir /configs /logs /customFiles && \
 
 # Set environment variables
 ENV ENDPOINTS_GROUPS_TO_REMOVE=CLI
+
+EXPOSE 8080
 
 ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
 
