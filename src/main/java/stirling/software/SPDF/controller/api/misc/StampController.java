@@ -48,13 +48,13 @@ public class StampController {
     @Operation(
             summary = "Add stamp to a PDF file",
             description =
-                    "This endpoint adds a stamp to a given PDF file. Users can specify the stamp type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint adds a stamp to a given PDF file. Users can specify the watermark type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> addStamp(@ModelAttribute AddStampRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
-        String stampType = request.getStampType();
-        String stampText = request.getStampText();
-        MultipartFile stampImage = request.getStampImage();
+        String watermarkType = request.getStampType();
+        String watermarkText = request.getStampText();
+        MultipartFile watermarkImage = request.getStampImage();
         String alphabet = request.getAlphabet();
         float fontSize = request.getFontSize();
         float rotation = request.getRotation();
@@ -99,10 +99,10 @@ public class StampController {
             graphicsState.setNonStrokingAlphaConstant(opacity);
             contentStream.setGraphicsStateParameters(graphicsState);
 
-            if ("text".equalsIgnoreCase(stampType)) {
+            if ("text".equalsIgnoreCase(watermarkType)) {
                 addTextStamp(
                         contentStream,
-                        stampText,
+                        watermarkText,
                         document,
                         page,
                         rotation,
@@ -113,10 +113,10 @@ public class StampController {
                         overrideY,
                         margin,
                         customColor);
-            } else if ("image".equalsIgnoreCase(stampType)) {
+            } else if ("image".equalsIgnoreCase(watermarkType)) {
                 addImageStamp(
                         contentStream,
-                        stampImage,
+                        watermarkImage,
                         document,
                         page,
                         rotation,
@@ -134,12 +134,12 @@ public class StampController {
                 document,
                 Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
                                 .replaceFirst("[.][^.]+$", "")
-                        + "_stamped.pdf");
+                        + "_watermarked.pdf");
     }
 
     private void addTextStamp(
             PDPageContentStream contentStream,
-            String stampText,
+            String watermarkText,
             PDDocument document,
             PDPage page,
             float rotation,
@@ -208,7 +208,9 @@ public class StampController {
             x = overrideX;
             y = overrideY;
         } else {
-            x = calculatePositionX(pageSize, position, fontSize, font, fontSize, stampText, margin);
+            x =
+                    calculatePositionX(
+                            pageSize, position, fontSize, font, fontSize, watermarkText, margin);
             y =
                     calculatePositionY(
                             pageSize, position, calculateTextCapHeight(font, fontSize), margin);
@@ -216,13 +218,13 @@ public class StampController {
 
         contentStream.beginText();
         contentStream.setTextMatrix(Matrix.getRotateInstance(Math.toRadians(rotation), x, y));
-        contentStream.showText(stampText);
+        contentStream.showText(watermarkText);
         contentStream.endText();
     }
 
     private void addImageStamp(
             PDPageContentStream contentStream,
-            MultipartFile stampImage,
+            MultipartFile watermarkImage,
             PDDocument document,
             PDPage page,
             float rotation,
@@ -233,8 +235,8 @@ public class StampController {
             float margin)
             throws IOException {
 
-        // Load the stamp image
-        BufferedImage image = ImageIO.read(stampImage.getInputStream());
+        // Load the watermark image
+        BufferedImage image = ImageIO.read(watermarkImage.getInputStream());
 
         // Compute width based on original aspect ratio
         float aspectRatio = (float) image.getWidth() / (float) image.getHeight();
