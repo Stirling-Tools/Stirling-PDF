@@ -75,7 +75,7 @@ public class ShowJavascript {
 
             return WebResponseUtils.bytesToWebResponse(
                     script.getBytes(StandardCharsets.UTF_8),
-                    inputFile.getOriginalFilename() + ".js");
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + ".js");
         }
     }
 }
