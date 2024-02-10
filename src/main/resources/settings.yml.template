@@ -14,8 +14,7 @@ system:
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   enableAlphaFunctionality: false # Set to enable functionality which might need more testing before it fully goes live (This feature might make no changes)
   customApplications:
-    installBookFormats: false # Installs Calibre for book format conversion (For non docker it must be manually downloaded but will need to be true to show in UI)
-    installAdvancedHtmlToPDF: false # DO NOT USE EXTERNALLY, NOT SAFE! Install wkHtmlToPDF (For non docker it must be manually downloaded but will need to be true to show in UI)
+    installBookAndHtmlFormats: false # Installs Calibre for book format conversion (For non docker it must be manually downloaded but will need to be true to show in UI)
   
 #ui:
 #  appName: exampleAppName # Application's visible name

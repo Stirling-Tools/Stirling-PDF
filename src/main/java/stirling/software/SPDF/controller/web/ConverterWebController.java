@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConverterWebController {
 
-    @ConditionalOnExpression("#{bookFormatsInstalled}")
+    @ConditionalOnExpression("#{bookAndHtmlFormatsInstalled}")
     @GetMapping("/book-to-pdf")
     @Hidden
     public String convertBookToPdfForm(Model model) {
@@ -21,7 +21,7 @@ public class ConverterWebController {
         return "convert/book-to-pdf";
     }
 
-    @ConditionalOnExpression("#{bookFormatsInstalled}")
+    @ConditionalOnExpression("#{bookAndHtmlFormatsInstalled}")
     @GetMapping("/pdf-to-book")
     @Hidden
     public String convertPdfToBookForm(Model model) {

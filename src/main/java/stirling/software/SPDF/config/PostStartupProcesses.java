@@ -26,12 +26,8 @@ public class PostStartupProcesses {
     private boolean runningInDocker;
 
     @Autowired
-    @Qualifier("bookFormatsInstalled")
-    private boolean bookFormatsInstalled;
-
-    @Autowired
-    @Qualifier("htmlFormatsInstalled")
-    private boolean htmlFormatsInstalled;
+    @Qualifier("bookAndHtmlFormatsInstalled")
+    private boolean bookAndHtmlFormatsInstalled;
 
     private static final Logger logger = LoggerFactory.getLogger(PostStartupProcesses.class);
 
@@ -39,15 +35,11 @@ public class PostStartupProcesses {
     public void runInstallCommandBasedOnEnvironment() throws IOException, InterruptedException {
         List<List<String>> commands = new ArrayList<>();
         // Checking for DOCKER_INSTALL_BOOK_FORMATS environment variable
-        if (bookFormatsInstalled) {
+        if (bookAndHtmlFormatsInstalled) {
             List<String> tmpList = new ArrayList<>();
 
             tmpList = new ArrayList<>();
-            tmpList.addAll(Arrays.asList("whoami"));
-            commands.add(tmpList);
-
-            tmpList = new ArrayList<>();
-            tmpList.addAll(Arrays.asList("id"));
+            tmpList.addAll(Arrays.asList("apk add --no-cache calibre"));
             commands.add(tmpList);
         }
 
