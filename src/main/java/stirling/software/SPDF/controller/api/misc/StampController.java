@@ -88,44 +88,7 @@ public class StampController {
         // Load the input PDF
         PDDocument document = Loader.loadPDF(pdfFile.getBytes());
 
-        for (PDPage page : document.getPages()) {
-            PDRectangle pageSize = page.getMediaBox();
-            float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
-
-            PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true);
-
-            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-            graphicsState.setNonStrokingAlphaConstant(opacity);
-            contentStream.setGraphicsStateParameters(graphicsState);
-
-            if ("text".equalsIgnoreCase(stampType)) {
-                addTextStamp(
-                        contentStream,
-                        stampText,
-                        document,
-                        page,
-                        rotation,
-                        position,
-                        fontSize,
-                        alphabet,
-                        overrideX,
-                        overrideY,
-                        margin,
-                        customColor);
-            } else if ("image".equalsIgnoreCase(stampType)) {
-                addImageStamp(
-                        contentStream,
-                        stampImage,
-                        document,
-                        page,
-                        rotation,
-                        position,
-                        fontSize,
-                        overrideX,
-                        overrideY,
-                        margin);
+      
 
         List<Integer> pageNumbers = request.getPageNumbersList();
 
