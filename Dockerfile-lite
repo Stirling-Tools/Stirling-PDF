@@ -1,5 +1,5 @@
 # use alpine
-FROM alpine:3.19.0
+FROM alpine:3.19.1
 
 ARG VERSION_TAG
 
@@ -52,6 +52,8 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
 # Set environment variables
 ENV ENDPOINTS_GROUPS_TO_REMOVE=OpenCV,OCRmyPDF
 ENV DOCKER_ENABLE_SECURITY=false
+
+EXPOSE 8080
 
 # Run the application
 #USER stirlingpdfuser

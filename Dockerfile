@@ -1,5 +1,5 @@
 # Main stage
-FROM alpine:3.19.0
+FROM alpine:3.19.1
 
 # JDK for app
 RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
@@ -60,6 +60,8 @@ RUN mkdir -p  /configs /logs /customFiles /pipeline/watchedFolders /pipeline/fin
     chmod +x /scripts/*
 ##    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
 ##    chmod +x /scripts/init.sh
+
+EXPOSE 8080
 
 # Set user and run command
 ##USER stirlingpdfuser
