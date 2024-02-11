@@ -45,11 +45,11 @@
                         <form action="api/v1/user/change-username" method="post">
                             <div class="mb-3">
                                 <label for="newUsername" th:text="#{account.changeUsername}">Change Username</label>
-                                <input type="text" class="form-control" name="newUsername" id="newUsername" placeholder="New Username">
+                                <input type="text" class="form-control" name="newUsername" id="newUsername" th:placeholder="#{account.newUsername}">
                             </div>
                             <div class="mb-3">
                                 <label for="currentPassword" th:text="#{password}">Password</label>
-                                <input type="password" class="form-control" name="currentPassword" id="currentPasswordUsername" placeholder="Password">
+                                <input type="password" class="form-control" name="currentPassword" id="currentPasswordUsername" th:placeholder="#{password}">
                             </div>
                             <div class="mb-3">
                                 <button type="submit" class="btn btn-primary" th:text="#{account.changeUsername}">Change Username</button>
