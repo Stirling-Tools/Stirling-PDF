@@ -6,7 +6,7 @@
 [![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest)](https://github.com/Stirling-Tools/Stirling-PDF/)
 [![GitHub Repo stars](https://img.shields.io/github/stars/stirling-tools/stirling-pdf?style=social)](https://github.com/Stirling-Tools/stirling-pdf)
 [![Paypal Donate](https://img.shields.io/badge/Paypal%20Donate-yellow?style=flat&logo=paypal)](https://www.paypal.com/paypalme/froodleplex)
-[![Github Sponser](https://img.shields.io/badge/Github%20Sponsor-yellow?style=flat&logo=github)](https://github.com/sponsors/Frooodle)
+[![Github Sponsor](https://img.shields.io/badge/Github%20Sponsor-yellow?style=flat&logo=github)](https://github.com/sponsors/Frooodle)
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Stirling-Tools/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
 
@@ -262,7 +262,7 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 - Redact text (Via UI not just automated way)
 - Add Forms
 - Multi page layout (Stich PDF pages together) support x rows y columns and custom page sizing
-- Fill forms mannual and automatic
+- Fill forms manual and automatic
 
 ### Q2: Why is my application downloading .htm files?
 This is an issue caused commonly by your NGINX configuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. ``client_max_body_size SIZE;`` Where "SIZE" is 50M for example for 50MB files.
