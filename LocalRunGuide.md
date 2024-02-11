@@ -264,7 +264,7 @@ sudo systemctl restart stirlingpdf.service
 
 Remember to set the necessary environment variables before running the project if you want to customize the application the list can be seen in the main readme.
 
-You can do this in the terminal by using the `export` command or -D arguments to java -jar command:
+You can do this in the terminal by using the `export` command or -D argument to java -jar command:
 
 ```bash
 export APP_HOME_NAME="Stirling PDF"
