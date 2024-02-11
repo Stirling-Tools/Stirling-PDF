@@ -32,6 +32,7 @@
                             <span class="icon-text"  th:text="#{home.multiTool.title}"></span>
                         </a>
                     </li>
+                    <li th:if="${@enableAlphaFunctionality}" class="nav-item nav-item-separator"></li>
                     <li th:if="${@enableAlphaFunctionality}"  class="nav-item">
                         <a class="nav-link" href="#" th:href="@{pipeline}" th:classappend="${currentPage}=='pipeline' ? 'active' : ''" th:title="#{home.pipeline.desc}">
                             <img class="icon" src="images/pipeline.svg" alt="icon">
