@@ -52,7 +52,7 @@
                                 <hr>
                             </div>
                             <div class="mb-3">
-                                <label th:text="#{ocr.selectText.10}"></label> 
+                                <label th:text="#{ocr.selectText.10}"></label>
                                 <select class="form-control" name="ocrType">
                                     <option value="skip-text" th:text="#{ocr.selectText.6}"></option>
                                     <option value="force-ocr" th:text="#{ocr.selectText.7}"></option>
@@ -81,10 +81,10 @@
                                 <input type="checkbox" class="form-check-input" name="removeImagesAfter" id="removeImagesAfter" />
                                 <label class="form-check-label" for="removeImagesAfter" th:text="#{ocr.selectText.11}"></label>
                             </div>
-                            
-                            
+
+
                             <div class="mb-3">
-                                <label th:text="#{ocr.selectText.12}"></label> 
+                                <label th:text="#{ocr.selectText.12}"></label>
                                 <select class="form-control" name="ocrRenderType">
                                     <option value="hocr">HOCR (Latin/Roman alphabet only)</option>
                                     <option value="sandwich">Sandwich</option>
@@ -225,7 +225,7 @@
                         	    'yid': 'Yiddish',
                         	    'yor': 'Yoruba'
                         	};
-                        
+
                      	// Step 2: Function to get the full language name
                         function getFullLanguageName(shortCode) {
                             return languageMap[shortCode] || shortCode;
@@ -239,7 +239,7 @@
                                 label.textContent = getFullLanguageName(languageCode);
                             });
                         });
-                        
+
                         </script>
                         <p th:text="#{ocr.credit}"></p>
                         <p th:text="#{ocr.help}"></p>

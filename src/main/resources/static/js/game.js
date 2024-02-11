@@ -1,11 +1,11 @@
 function initializeGame() {
     const gameContainer = document.getElementById('game-container');
     const player = document.getElementById('player');
-    
+
     let playerSize = gameContainer.clientWidth * 0.0625; // 5% of container width
     player.style.width = playerSize + 'px';
     player.style.height = playerSize + 'px';
-    
+
     let playerX = gameContainer.clientWidth / 2 - playerSize / 2;
     let playerY = gameContainer.clientHeight * 0.1;
     const scoreElement = document.getElementById('score');
@@ -18,12 +18,12 @@ function initializeGame() {
     let projectileHeight = gameContainer.clientHeight * 0.01667; // 1% of container height
 
     let paused = false;
-    
+
     const fireRate = 200; // Time between shots in milliseconds
     let lastProjectileTime = 0;
     let lives = 3;
-    
-    
+
+
     let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
     updateHighScore();
 
@@ -195,7 +195,7 @@ function initializeGame() {
         score = 0;
         level = 1;
         lives = 3;
-        
+
         gameOver = false;
 
         updateScore();

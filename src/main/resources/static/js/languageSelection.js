@@ -8,13 +8,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Check if the dropdown contains the browser's language
     const dropdownLangExists = document.querySelector(`.lang_dropdown-item[data-language-code="${browserLang}"]`);
-    
+
     // Set the default language to browser's language or 'en_GB' if not found in the dropdown
     const defaultLocale = dropdownLangExists ? browserLang : 'en_GB';
     const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
-    
-    
-    
+
+
+
 	const dropdownItems = document.querySelectorAll('.lang_dropdown-item');
 
 	for (let i = 0; i < dropdownItems.length; i++) {
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	        element.remove();
 	    }
 	});
-	
+
 	//Sort languages by alphabet
 	const list = Array.from(document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').children).filter(child => child.matches('a'));
 	list.sort(function(a, b) {

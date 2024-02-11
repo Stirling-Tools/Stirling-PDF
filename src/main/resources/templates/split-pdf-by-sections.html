@@ -15,7 +15,7 @@
                         <h2 th:text="#{split-by-sections.header}"></h2>
                         <form method="post" enctype="multipart/form-data" th:action="@{/api/v1/general/split-pdf-by-sections}">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-                            
+
                             <label for="horizontalDivisions" th:text="#{split-by-sections.horizontal.label}">Horizontal Divisions</label>
                             <input type="number" id="horizontalDivisions" name="horizontalDivisions" class="form-control" min="0" max="300" value="0" required th:placeholder="#{split-by-sections.horizontal.placeholder}">
                             <br>
@@ -34,16 +34,16 @@
 							    position: absolute;
 							    background-color: red; /* Line color */
 							}
-                        	
+
                         	</style>
-                        	
+
                         	<div id="pdfVisualAid" class="pdf-visual-aid"></div>
                         	<Script>
                         	function updateVisualAid() {
                         	    const horizontalDivisions = document.getElementById('horizontalDivisions').value;
                         	    const verticalDivisions = document.getElementById('verticalDivisions').value;
                         	    const aid = document.getElementById('pdfVisualAid');
-								
+
                         	    if(horizontalDivisions > 300)
                         	    	horizontalDivisions = 300
                        	    	if(verticalDivisions > 300)

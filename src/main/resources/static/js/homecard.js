@@ -7,7 +7,7 @@ function filterCards() {
         var card = cards[i];
         var title = card.querySelector('h5.card-title').innerText;
         var text = card.querySelector('p.card-text').innerText;
-        
+
         // Get the navbar tags associated with the card
         var navbarItem = document.querySelector(`a.dropdown-item[href="${card.id}"]`);
         var navbarTags = navbarItem ? navbarItem.getAttribute('data-bs-tags') : '';

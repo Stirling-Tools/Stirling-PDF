@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{HTMLToPDF.title}, header=#{HTMLToPDF.header})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{HTMLToPDF.title}, header=#{HTMLToPDF.header})}"></th:block>
 <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
@@ -14,7 +14,7 @@
                         <h2 th:text="#{HTMLToPDF.header}"></h2>
                         <form method="post" enctype="multipart/form-data" th:action="@{api/v1/convert/html/pdf}">
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='text/html,application/zip' )}"></div>
-                            
+
 				            <div class="mb-3">
 				                <label for="zoom" th:text="#{HTMLToPDF.zoom}" class="form-label"></label>
 				                <input type="number" step="0.1" class="form-control" id="zoom" name="zoom" value="1" />

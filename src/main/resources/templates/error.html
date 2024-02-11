@@ -21,7 +21,7 @@
         .button:hover {
           background-color: #005b7f;
         }
-  
+
       .features-container {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(21rem, 3fr));
@@ -40,7 +40,7 @@
       .feature-card .card-text {
         flex: 1;
       }
-      
+
 #support-section {
 background-color: #f9f9f9;
 padding: 4rem;
@@ -94,23 +94,23 @@ margin-top: 0;
   transition: all 0.3s ease-in-out;
 }
 
-      
+
     </style>
   </head>
 
   <body>
    <div id="page-container">
         <div id="content-wrap">
-        
+
     <div th:insert="~{fragments/navbar.html :: navbar}"></div>
     <div th:insert="~{fragments/errorBanner.html :: errorBanner}"></div>
       <div class="container">
-        
+
         <div id="support-section">
         <h1 class="display-2">Oops!</h1>
         <p class="lead" th:if="${param.status == '404'}">We can't seem to find the page you're looking for.</p>
-        <p class="lead" th:unless="${param.status == '404'}">Something went wrong</p> 
-        
+        <p class="lead" th:unless="${param.status == '404'}">Something went wrong</p>
+
         <br>
           <h2>Need help / Found a issue?</h2>
           <p>If you're still having trouble, don't hesitate to reach out to us for help. You can submit a ticket on our GitHub page or contact us through Discord:</p>
@@ -124,8 +124,8 @@ margin-top: 0;
     </div>
         <div th:insert="~{fragments/footer.html :: footer}"></div>
     </div>
-    
-    
+
+
 
   </body>
 </html>

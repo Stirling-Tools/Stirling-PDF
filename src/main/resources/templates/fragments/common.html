@@ -111,9 +111,9 @@
 	</script>
     <script src="js/downloader.js"></script>
 
-    <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, 
-	          data-bs-element-id=${name+'-input'}, 
-	          data-bs-files-selected=#{filesSelected}, 
+    <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name},
+	          data-bs-element-id=${name+'-input'},
+	          data-bs-files-selected=#{filesSelected},
 	          data-bs-pdf-prompt=#{pdfPrompt}">
 	    <div class="mb-3">
 	        <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:required="${notRequired} ? null : 'required'">
@@ -131,7 +131,7 @@
     <button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">Bored waiting?</button>
 
 
-	
+
     <script src="js/fileInput.js"></script>
     <link rel="stylesheet" href="css/fileSelect.css">
 </th:block>

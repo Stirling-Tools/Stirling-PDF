@@ -120,7 +120,7 @@ const DraggableUtils = {
                     newWidth = newWidth * scaleMultiplier;
                     newHeight = newHeight * scaleMultiplier;
                 }
-                
+
                 createdCanvas.style.width = newWidth+"px";
                 createdCanvas.style.height = newHeight+"px";
 
@@ -147,7 +147,7 @@ const DraggableUtils = {
         if (!pagesMap) {
             pagesMap = {};
         }
-        
+
         const elements = [...this.boxDragContainer.querySelectorAll(".draggable-canvas")];
         const draggablesData = elements.map(el => {return{element:el, offsetWidth:el.offsetWidth, offsetHeight:el.offsetHeight}});
         elements.forEach(el => this.boxDragContainer.removeChild(el));
@@ -164,7 +164,7 @@ const DraggableUtils = {
         if (!pagesMap) {
             return;
         }
-        
+
         const draggablesData = pagesMap[this.pageIndex];
         if (draggablesData) {
             draggablesData.forEach(draggableData => this.boxDragContainer.appendChild(draggableData.element));
@@ -177,7 +177,7 @@ const DraggableUtils = {
         this.pdfDoc = pdfDocument ? pdfDocument : this.pdfDoc;
         this.pageIndex = pageIdx;
 
-        // persist 
+        // persist
         const page = await this.pdfDoc.getPage(this.pageIndex+1);
 
         // set the canvas size to the size of the page
@@ -214,7 +214,7 @@ const DraggableUtils = {
     },
 
     parseTransform(element) {
-        
+
     },
     async getOverlayedPdfDocument() {
         const pdfBytes = await this.pdfDoc.getData();
@@ -227,7 +227,7 @@ const DraggableUtils = {
                 continue;
             }
             console.log(typeof pageIdx);
-            
+
             const page = pdfDocModified.getPage(parseInt(pageIdx));
             const draggablesData = pagesMap[pageIdx];
             const offsetWidth = pagesMap[pageIdx+"-offsetWidth"];
@@ -239,7 +239,7 @@ const DraggableUtils = {
                 const response = await fetch(draggableElement.toDataURL());
                 const draggableImgBytes = await response.arrayBuffer();
                 const pdfImageObject = await pdfDocModified.embedPng(draggableImgBytes);
-    
+
                 // calculate the position in the pdf document
                 const tansform = draggableElement.style.transform.replace(/[^.,-\d]/g, '');
                 const transformComponents = tansform.split(",");
@@ -261,7 +261,7 @@ const DraggableUtils = {
                     width: draggablePositionRelative.width * page.getWidth(),
                     height: draggablePositionRelative.height * page.getHeight(),
                 }
-    
+
                 // draw the image
                 page.drawImage(pdfImageObject, {
                     x: draggablePositionPdf.x,

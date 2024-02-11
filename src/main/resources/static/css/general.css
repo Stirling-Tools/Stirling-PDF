@@ -16,11 +16,11 @@
     height: auto;  /* Adjusts height automatically based on content */
     white-space: nowrap;  /* Prevents wrapping of navbar contents */
 }
-/* TODO enable later 
+/* TODO enable later
 .navbar .container {
 
 
-    max-width: 100%;  //Allows the container to expand up to full width 
+    max-width: 100%;  //Allows the container to expand up to full width
     margin-left: auto;
     margin-right: auto;
 }*/

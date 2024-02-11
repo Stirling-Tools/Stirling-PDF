@@ -73,7 +73,7 @@ class DragDropManager {
     stopDraggingPage() {
         window.removeEventListener('mousemove', this.onDragEl);
         this.wrapper.classList.remove('drag-manager_dragging-container');
-        this.wrapper.removeChild(this.endInsertionElement); 
+        this.wrapper.removeChild(this.endInsertionElement);
         window.removeEventListener('mouseup', this.stopDraggingPage)
         this.draggedImageEl = undefined;
         this.pageDragging = false;

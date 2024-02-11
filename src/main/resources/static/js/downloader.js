@@ -5,16 +5,16 @@ function showErrorBanner(message, stackTrace) {
 	document.querySelector("#errorContainer p").textContent = message;
 	document.querySelector("#traceContent").textContent = stackTrace;
 }
-let firstErrorOccurred = false; 
+let firstErrorOccurred = false;
 
 $(document).ready(function() {
 	$('form').submit(async function(event) {
 		event.preventDefault();
-		firstErrorOccurred = false; 
+		firstErrorOccurred = false;
 		const url = this.action;
 		const files = $('#fileInput-input')[0].files;
 		const formData = new FormData(this);
-        
+
         // Remove empty file entries
         for (let [key, value] of formData.entries()) {
             if (value instanceof File && !value.name) {
@@ -113,7 +113,7 @@ async function handleResponse(blob, filename, considerViewOptions = false, isZip
 			const url = URL.createObjectURL(blob);
 			window.open(url, '_blank');
 			return;
-		} 
+		}
 	}
 	if(!isZip){
 		downloadFile(blob, filename);
@@ -152,20 +152,20 @@ async function submitMultiPdfForm(url, files) {
 	// Show the progress bar
 	$('#progressBarContainer').show();
 	// Initialize the progress bar
-	
+
 	let progressBar = $('#progressBar');
 	progressBar.css('width', '0%');
 	progressBar.attr('aria-valuenow', 0);
 	progressBar.attr('aria-valuemax', files.length);
-	
+
 	if (zipFiles) {
 		jszip = new JSZip();
 	}
-	
-	
+
+
 	// Get the form with the method attribute set to POST
 	let postForm = document.querySelector('form[method="POST"]');
-	
+
 	// Get existing form data
 	let formData;
 	if (postForm) {
@@ -191,11 +191,11 @@ async function submitMultiPdfForm(url, files) {
 		const promises = chunk.map(async file => {
 			let fileFormData = new FormData();
 			fileFormData.append('fileInput', file);
-			console.log(fileFormData); 
+			console.log(fileFormData);
 			// Add other form data
 			for (let pair of formData.entries()) {
 				fileFormData.append(pair[0], pair[1]);
-				console.log(pair[0]+ ', ' + pair[1]); 
+				console.log(pair[0]+ ', ' + pair[1]);
 			}
 
 			try {
@@ -213,7 +213,7 @@ async function submitMultiPdfForm(url, files) {
 			}
 		});
 		await Promise.all(promises);
-		
+
 	}
 
 	if (zipFiles) {

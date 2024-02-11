@@ -28,12 +28,12 @@
 						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
 						    <span th:text="#{usernameExistsMessage}">Default message if not found</span>
 						</div>
-						
-				
-						
-						
-						
-						
+
+
+
+
+
+
 						<!-- At the top of the user settings -->
 						<h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>
 
@@ -55,7 +55,7 @@
                                 <button type="submit" class="btn btn-primary" th:text="#{account.changeUsername}">Change Username</button>
                             </div>
                         </form>
-                        
+
                         <hr> <!-- Separator Line -->
 
                         <!-- Change Password Form -->
@@ -79,16 +79,16 @@
                         </form>
 
 						<hr>
-						
+
 						<div class="card">
 					        <div class="card-header" th:text="#{account.yourApiKey}">
-					            
+
 					        </div>
 					        <div class="card-body">
 					            <div class="input-group mb-3">
 					                <input type="password" class="form-control" id="apiKey" th:placeholder="#{account.yourApiKey}" readonly>
 					                <div class="input-group-append">
-					                	<button class="btn btn-outline-secondary" id="copyBtn" type="button" onclick="copyToClipboard()"> 
+					                	<button class="btn btn-outline-secondary" id="copyBtn" type="button" onclick="copyToClipboard()">
 					                    	<img class="blackwhite-icon" src="images/clipboard.svg" alt="Copy" style="height:20px;">
 					                	</button>
 					                    <button class="btn btn-outline-secondary" id="showBtn" type="button" onclick="showApiKey()">
@@ -97,13 +97,13 @@
 										<button class="btn btn-outline-secondary" id="refreshBtn" type="button" onclick="refreshApiKey()">
 										    <img class="blackwhite-icon" id="eyeIcon" src="images/arrow-clockwise.svg" alt="Refresh API-Key" style="height:20px;">
 										</button>
-										
-					                  
+
+
 					                </div>
 					            </div>
 					        </div>
 					    </div>
-					    
+
 					    <script>
 					    function copyToClipboard() {
 					        const apiKeyElement = document.getElementById("apiKey");
@@ -111,7 +111,7 @@
 					        document.execCommand("copy");
 					    }
 
-					    
+
 					    function showApiKey() {
 					        const apiKeyElement = document.getElementById("apiKey");
 					        const copyBtn = document.getElementById("copyBtn");
@@ -156,7 +156,7 @@
 					            console.error('There was an error:', error);
 					        }
 					    }
-					    
+
 					    function manageUIState(apiKey) {
 					        const apiKeyElement = document.getElementById("apiKey");
 					        const showBtn = document.getElementById("showBtn");
@@ -165,7 +165,7 @@
 					        if (apiKey && apiKey.trim().length > 0) {
 					            apiKeyElement.value = apiKey;
 					            showBtn.disabled = false;
-					            copyBtn.disabled = true;  
+					            copyBtn.disabled = true;
 					        } else {
 					            apiKeyElement.value = "";
 					            showBtn.disabled = true;
@@ -173,10 +173,10 @@
 					        }
 					    }
 
-					    
+
 					    document.addEventListener("DOMContentLoaded", function() {
 					        const form = document.querySelector('form[action="api/v1/user/change-password"]');
-					        
+
 					        form.addEventListener('submit', function(event) {
 					            const newPassword = document.getElementById('newPassword').value;
 					            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
@@ -188,10 +188,10 @@
 					        });
 					    });
 					    </script>
-    
-    
+
+
                         <hr> <!-- Separator Line -->
-                        
+
                         <h4 th:text="#{account.syncTitle}">Sync browser settings with Account</h4>
                         <div class="container mt-4">
     <h3 th:text="#{account.settingsCompare}">Settings Comparison:</h3>
@@ -226,10 +226,10 @@
         text-align: center;
     }
 </style>
-    
 
-                        
-                        
+
+
+
 
 							<script th:inline="javascript">
 							document.addEventListener("DOMContentLoaded", function() {
@@ -299,12 +299,12 @@
 
 
 							</script>
-            
-                        
-	                      
-	                    
-                        
-                        
+
+
+
+
+
+
                         <div class="mb-3 mt-4">
                             <a href="logout">
                                 <button type="button" class="btn btn-danger" th:text="#{account.signOut}">Sign Out</button>

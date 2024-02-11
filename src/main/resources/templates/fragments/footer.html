@@ -1,7 +1,7 @@
 <div th:fragment="footer">
     <footer id="footer" class="text-center py-3">
         <div class="footer-center">
-      
+
            <a href="https://github.com/Stirling-Tools/Stirling-PDF"
 				target="_blank" class="mx-1" title="Visit Github Repository"><img
 				src="images/github.svg"></img></a> <a
@@ -12,20 +12,20 @@
 			<a href="https://github.com/sponsors/Frooodle" target="_blank"
 				class="mx-1" title="Donate"><img
 				src="images/suit-heart-fill.svg"></img></a>
-            
 
-           
+
+
             <div style="color: grey;" th:if="${@appName} != 'Stirling PDF'" class="footer-powered-by" th:text="#{poweredBy} + ' Stirling PDF'"></div>
         </div>
 
-        
-            <a href="licenses" id="licenses" target="_blank" class="mx-1" title="" th:text="#{licenses.nav}">Licenses</a> 
-        
+
+            <a href="licenses" id="licenses" target="_blank" class="mx-1" title="" th:text="#{licenses.nav}">Licenses</a>
+
     </footer>
 </div>
 
 	<style>
-	
+
 	#footer {
     display: flex;
     flex-direction: column; /* Stack children vertically */
@@ -53,6 +53,6 @@
     align-self: flex-end; /* Align to the end of the flex container */
     padding-right: 20px;
 }
-	
+
 </style>
-	
+
