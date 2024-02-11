@@ -68,12 +68,14 @@ public class ShowJavascript {
 
             if (script.isEmpty()) {
                 script =
-                        "PDF '" + Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + "' does not contain Javascript";
+                        "PDF '"
+                                + Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                + "' does not contain Javascript";
             }
 
             return WebResponseUtils.bytesToWebResponse(
                     script.getBytes(StandardCharsets.UTF_8),
-                    inputFile.getOriginalFilename() + ".js");
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + ".js");
         }
     }
 }

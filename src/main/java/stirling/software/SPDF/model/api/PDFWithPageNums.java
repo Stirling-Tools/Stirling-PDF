@@ -25,7 +25,7 @@ public class PDFWithPageNums extends PDFFile {
     private String pageNumbers;
 
     @Hidden
-    public List<Integer> getPageNumbersList() {
+    public List<Integer> getPageNumbersList(boolean zeroCount) {
         int pageCount = 0;
         try {
             pageCount = Loader.loadPDF(getFileInput().getBytes()).getNumberOfPages();
@@ -33,13 +33,13 @@ public class PDFWithPageNums extends PDFFile {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        return GeneralUtils.parsePageString(pageNumbers, pageCount);
+        return GeneralUtils.parsePageString(pageNumbers, pageCount, zeroCount);
     }
 
     @Hidden
-    public List<Integer> getPageNumbersList(PDDocument doc) {
+    public List<Integer> getPageNumbersList(PDDocument doc, boolean zeroCount) {
         int pageCount = 0;
         pageCount = doc.getNumberOfPages();
-        return GeneralUtils.parsePageString(pageNumbers, pageCount);
+        return GeneralUtils.parsePageString(pageNumbers, pageCount, zeroCount);
     }
 }
