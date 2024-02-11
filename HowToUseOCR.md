@@ -7,7 +7,7 @@ Please update your tesseract docker volume path version from 4.00 to 5
 
 ## How does the OCR Work
 Stirling-PDF uses [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF) which in turn uses tesseract for its text recognition.
-All credit goes to them for this awesome work! 
+All credit goes to them for this awesome work!
 
 ## Language Packs
 
@@ -27,7 +27,7 @@ Depending on your requirements, you can choose the appropriate language pack for
 
 #### Docker
 
-If you are using Docker, you need to expose the Tesseract tessdata directory as a volume in order to use the additional language packs. 
+If you are using Docker, you need to expose the Tesseract tessdata directory as a volume in order to use the additional language packs.
 #### Docker Compose
 Modify your `docker-compose.yml` file to include the following volume configuration:
 

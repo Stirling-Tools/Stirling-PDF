@@ -67,7 +67,7 @@ run_tests() {
 # Main testing routine
 main() {
 	SECONDS=0
-	
+
     export DOCKER_ENABLE_SECURITY=false
     # Run the gradlew build command and check if it fails
     if ! ./gradlew clean build; then
@@ -106,8 +106,8 @@ main() {
 
     # Report results
     echo "All tests completed in $SECONDS seconds."
-	
-	
+
+
 	if [ ${#passed_tests[@]} -ne 0 ]; then
 		echo "Passed tests:"
 	fi
@@ -122,8 +122,8 @@ main() {
         echo -e "\e[31m$test\e[0m"  # Red color for failed tests
     done
 
-	
-	
+
+
     # Check if there are any failed tests and exit with an error code if so
     if [ ${#failed_tests[@]} -ne 0 ]; then
         echo "Some tests failed."
@@ -132,7 +132,7 @@ main() {
         echo "All tests passed successfully."
         exit 0
     fi
-	
+
 }
 
 main

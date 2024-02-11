@@ -30,7 +30,7 @@ jobs:
     - name: Run Docker Compose Tests
       run: |
         chmod +x ./gradlew
-        
+
     - name: Get version number
       id: versionNumber
       run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet | tail -1)"

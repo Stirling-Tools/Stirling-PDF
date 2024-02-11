@@ -34,13 +34,13 @@
 								JSON</a>
 						</div>
 						<script>
-                       
+
 						document.getElementById("pdfInfoForm").addEventListener("submit", function(event) {
 						    event.preventDefault();
 
 						    const formData = new FormData(event.target);
-						    
-						    fetch('api/v1/security/get-info-on-pdf', { 
+
+						    fetch('api/v1/security/get-info-on-pdf', {
 						        method: 'POST',
 						        body: formData
 						    })
@@ -55,7 +55,7 @@
 
 						function displayJsonData(jsonData) {
 						    const jsonContent = document.getElementById('json-content');
-						    
+
 						    while (jsonContent.firstChild) {
 						        jsonContent.removeChild(jsonContent.firstChild);
 						    }

@@ -1,5 +1,5 @@
 class PdfActionsManager {
-    pageDirection; 
+    pageDirection;
     pagesContainer;
 
     constructor(id) {
@@ -23,7 +23,7 @@ class PdfActionsManager {
 
     moveUpButtonCallback(e) {
         var imgContainer = this.getPageContainer(e.target);
-        
+
         const sibling = imgContainer.previousSibling;
         if (sibling) {
             this.movePageTo(imgContainer, sibling, true);
@@ -41,14 +41,14 @@ class PdfActionsManager {
     rotateCCWButtonCallback(e) {
         var imgContainer = this.getPageContainer(e.target);
         const img = imgContainer.querySelector("img");
-        
+
         this.rotateElement(img, -90)
     };
 
     rotateCWButtonCallback(e) {
         var imgContainer = this.getPageContainer(e.target);
         const img = imgContainer.querySelector("img");
-        
+
         this.rotateElement(img, 90)
     };
 
@@ -93,7 +93,7 @@ class PdfActionsManager {
         const buttonContainer = document.createElement('div');
 
         buttonContainer.classList.add("pdf-actions_button-container", "hide-on-drag");
-                    
+
         const moveUp = document.createElement('button');
         moveUp.classList.add("pdf-actions_move-left-button","btn", "btn-secondary");
         moveUp.innerHTML = `<i class="bi bi-arrow-${leftDirection}-short"></i>`;
@@ -105,7 +105,7 @@ class PdfActionsManager {
         moveDown.innerHTML = `<i class="bi bi-arrow-${rightDirection}-short"></i>`;
         moveDown.onclick = this.moveDownButtonCallback;
         buttonContainer.appendChild(moveDown);
-        
+
         const rotateCCW = document.createElement('button');
         rotateCCW.classList.add("btn", "btn-secondary");
         rotateCCW.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
@@ -136,12 +136,12 @@ class PdfActionsManager {
         div.appendChild(buttonContainer);
 
         const insertFileButtonContainer = document.createElement('div');
-                
+
         insertFileButtonContainer.classList.add(
             "pdf-actions_insert-file-button-container",
             leftDirection,
             `align-center-${leftDirection}`);
-        
+
         const insertFileButton = document.createElement('button');
         insertFileButton.classList.add("btn", "btn-primary", "pdf-actions_insert-file-button");
         insertFileButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
@@ -150,16 +150,16 @@ class PdfActionsManager {
                             </svg>`;
         insertFileButton.onclick = this.insertFileButtonCallback;
         insertFileButtonContainer.appendChild(insertFileButton);
-        
+
         div.appendChild(insertFileButtonContainer);
-        
+
         // add this button to every element, but only show it on the last one :D
         const insertFileButtonRightContainer = document.createElement('div');
         insertFileButtonRightContainer.classList.add(
             "pdf-actions_insert-file-button-container",
             rightDirection,
             `align-center-${rightDirection}`);
-        
+
         const insertFileButtonRight = document.createElement('button');
         insertFileButtonRight.classList.add("btn", "btn-primary", "pdf-actions_insert-file-button");
         insertFileButtonRight.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">

@@ -253,7 +253,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 			if (apiSchemas[refKey]) {
 			    const properties = apiSchemas[refKey].properties;
 			    const propertyKeys = Object.keys(properties);
-			
+
 			    // Check if there's more than one property or if there's exactly one property and its format is not 'binary'
 			    if (propertyKeys.length > 1 || (propertyKeys.length === 1 && properties[propertyKeys[0]].format !== 'binary')) {
 			        hasSettings = true;
@@ -436,7 +436,7 @@ document.getElementById('addOperationBtn').addEventListener('click', function() 
 
 			pipelineSettingsContent.appendChild(parameterDiv);
 		});
- 
+
  		if(hasSettings) {
 			let saveButton = document.createElement('button');
 			saveButton.textContent = saveSettings;

@@ -2,7 +2,7 @@
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
 
-<th:block th:insert="~{fragments/common :: head(title=#{compare.title}, header=#{compare.header})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{compare.title}, header=#{compare.header})}"></th:block>
 
 
 <body>
@@ -14,12 +14,12 @@
                 <div class="row justify-content-center">
                     <div class="col-md-9">
                         <h2 th:text="#{compare.header}"></h2>
-                         
+
                         <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
                         <div th:replace="~{fragments/common :: fileSelector(name='fileInput2', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
                         <button class="btn btn-primary"  onclick="comparePDFs()" th:text="#{compare.submit}"></button>
 
-            
+
                         <div class="row">
                             <div class="col-md-6">
                                 <h3 th:text="#{compare.document.1}"></h3>
@@ -52,7 +52,7 @@
                         result2.addEventListener('scroll', function() {
                             result1.scrollTop = result2.scrollTop;
                         });
-                        
+
                         async function comparePDFs() {
                             const file1 = document.getElementById("fileInput-input").files[0];
                             const file2 = document.getElementById("fileInput2-input").files[0];
@@ -145,13 +145,13 @@
                                         span1.style.color = "transparent";
                                         span1.style.userSelect = "none";
                                         span2.style.color = color;
-                                    } 
+                                    }
                                     // If it's a deletion, show it in red in the first document and transparent in the second
                                     else if (color === "red") {
                                         span1.style.color = color;
                                         span2.style.color = "transparent";
                                         span2.style.userSelect = "none";
-                                    } 
+                                    }
                                     // If it's unchanged, show it in black in both
                                     else {
                                         span1.style.color = color;
