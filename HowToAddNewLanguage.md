@@ -12,7 +12,7 @@ https://github.com/Stirling-Tools/Stirling-PDF/blob/main/src/main/resources/temp
 and add a flag svg file to
 https://github.com/Stirling-Tools/Stirling-PDF/tree/main/src/main/resources/static/images/flags
 Any SVG flags are fine, i got most of mine from [here](https://flagicons.lipis.dev/)
-If your language isnt represented by a flag just find whichever closely matches it, such as for Arabic i chose Saudi Arabia
+If your language isn't represented by a flag just find whichever closely matches it, such as for Arabic i chose Saudi Arabia
 
 
 For example to add Polish you would add
@@ -32,7 +32,7 @@ Copy and rename it to messages_{your data-language-code here}.properties, in the
 
 Then simply translate all property entries within that file and make a PR into main for others to use!
 
-If you do not have a java IDE i am happy to verify the changes worked once you raise PR (but wont be able to verify the translations themselves)
+If you do not have a java IDE i am happy to verify the changes worked once you raise PR (but won't be able to verify the translations themselves)
 
 
 
