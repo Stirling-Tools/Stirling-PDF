@@ -3,7 +3,6 @@
 
 <th:block th:insert="~{fragments/common :: head(title=#{imageToPDF.title}, header=#{imageToPDF.header})}"></th:block>
 
-
 <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
@@ -17,8 +16,6 @@
 
                         <form method="post" enctype="multipart/form-data" th:action="@{api/v1/convert/img/pdf}">
 
-
-
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*', inputText=#{imgPrompt})}"></div>
 
                             <div class="mb-3">
@@ -29,7 +26,6 @@
 							        <option value="maintainAspectRatio" th:text="#{imageToPDF.maintainAspectRatio}">Maintain Aspect Ratio</option>
 							    </select>
 							</div>
-
 
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input" name="autoRotate" id="autoRotate">
