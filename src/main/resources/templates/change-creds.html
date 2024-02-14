@@ -1,90 +1,83 @@
 <!doctype html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{changeCreds.title}, header=#{changeCreds.header})}"></th:block>
+  </head>
 
-<th:block th:insert="~{fragments/common :: head(title=#{changeCreds.title}, header=#{changeCreds.header})}"></th:block>
-
-<body>
+  <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
-        <div id="content-wrap">
-            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-            <br> <br>
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-md-9">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-9">
 
-                        <!-- User Settings Title -->
-                        <h2 class="text-center" th:text="#{changeCreds.header}">User Settings</h2>
-                        <hr>
+              <!-- User Settings Title -->
+              <h2 class="text-center" th:text="#{changeCreds.header}">User Settings</h2>
+              <hr>
+              <th:block th:if="${param.messageType != null and param.messageType.size() > 0}">
+              <div th:if="${param.messageType[0] == 'notAuthenticated'}" class="alert alert-danger">
+                <span th:text="#{notAuthenticatedMessage}">Default message if not found</span>
+              </div>
+              <div th:if="${param.messageType[0] == 'userNotFound'}" class="alert alert-danger">
+                <span th:text="#{userNotFoundMessage}">Default message if not found</span>
+              </div>
+              <div th:if="${param.messageType[0] == 'incorrectPassword'}" class="alert alert-danger">
+                <span th:text="#{incorrectPasswordMessage}">Default message if not found</span>
+              </div>
+              <div th:if="${param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
+                <span th:text="#{usernameExistsMessage}">Default message if not found</span>
+              </div>
+              </th:block>
+              <!-- At the top of the user settings -->
+              <h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>
 
-						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'notAuthenticated'}" class="alert alert-danger">
-						    <span th:text="#{notAuthenticatedMessage}">Default message if not found</span>
-						</div>
-						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'userNotFound'}" class="alert alert-danger">
-						    <span th:text="#{userNotFoundMessage}">Default message if not found</span>
-						</div>
-						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'incorrectPassword'}" class="alert alert-danger">
-						    <span th:text="#{incorrectPasswordMessage}">Default message if not found</span>
-						</div>
-						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
-						    <span th:text="#{usernameExistsMessage}">Default message if not found</span>
-						</div>
-
-						<!-- At the top of the user settings -->
-						<h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>
-
-
-                        <!-- Change Username Form -->
-                        <h4></h4>
-                        <h4 th:text="#{changeCreds.changeUserAndPassword}">Change Username and password</h4>
-                        <form action="api/v1/user/change-username-and-password" method="post">
-                            <div class="mb-3">
-                                <label for="username" th:text="#{changeCreds.newUsername}">New Username</label>
-                                <input type="text" class="form-control" name="username" id="username" th:placeholder="${username}">
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" th:text="#{changeCreds.oldPassword}">Old Password</label>
-                                <input type="password" class="form-control" name="password" id="password"  th:placeholder="#{changeCreds.oldPassword}">
-                            </div>
-                            <div class="mb-3">
-                                <label for="newPassword" th:text="#{changeCreds.newPassword}">New Password</label>
-                                <input type="password" class="form-control" name="newPassword" id="newPassword" th:placeholder="#{changeCreds.newPassword}">
-                            </div>
-                            <div class="mb-3">
-                                <label for="confirmNewPassword" th:text="#{account.confirmNewPassword}">Confirm New Password</label>
-                                <input type="password" class="form-control" name="confirmNewPassword" id="confirmNewPassword" th:placeholder="#{account.confirmNewPassword}">
-                            </div>
-                            <div class="mb-3">
-                                <button type="submit" class="btn btn-primary" th:text="#{changeCreds.submit}">Change credentials!</button>
-                            </div>
-                        </form>
-
-			<script>
-			document.addEventListener("DOMContentLoaded", function() {
-		        const form = document.querySelector('form[action="api/v1/user/change-username-and-password"]');
-
-		        form.addEventListener('submit', function(event) {
-		            const newPassword = document.getElementById('newPassword').value;
-		            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-
-		            if (newPassword !== confirmNewPassword) {
-		                alert('New Password and Confirm New Password must match.');
-		                event.preventDefault(); // Prevent form submission
-		            }
-		        });
-		    });
-			</script>
-</div>
-
-
-
-
-
+              <!-- Change Username Form -->
+              <h4></h4>
+              <h4 th:text="#{changeCreds.changeUserAndPassword}">Change Username and password</h4>
+              <form action="api/v1/user/change-username-and-password" method="post">
+                <div class="mb-3">
+                  <label for="username" th:text="#{changeCreds.newUsername}">New Username</label>
+                  <input type="text" class="form-control" name="username" id="username" th:placeholder="${username}">
                 </div>
-            </div>
+                <div class="mb-3">
+                  <label for="password" th:text="#{changeCreds.oldPassword}">Old Password</label>
+                  <input type="password" class="form-control" name="password" id="password" th:placeholder="#{changeCreds.oldPassword}">
+                </div>
+                <div class="mb-3">
+                  <label for="newPassword" th:text="#{changeCreds.newPassword}">New Password</label>
+                  <input type="password" class="form-control" name="newPassword" id="newPassword" th:placeholder="#{changeCreds.newPassword}">
+                </div>
+                <div class="mb-3">
+                  <label for="confirmNewPassword" th:text="#{account.confirmNewPassword}">Confirm New Password</label>
+                  <input type="password" class="form-control" name="confirmNewPassword" id="confirmNewPassword" th:placeholder="#{account.confirmNewPassword}">
+                </div>
+                <div class="mb-3">
+                  <button type="submit" class="btn btn-primary" th:text="#{changeCreds.submit}">Change credentials!</button>
+                </div>
+              </form>
+              <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                  const form = document.querySelector('form[action="api/v1/user/change-username-and-password"]');
 
+                  form.addEventListener('submit', function(event) {
+                    const newPassword = document.getElementById('newPassword').value;
+                    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+                    if (newPassword !== confirmNewPassword) {
+                      alert('New Password and Confirm New Password must match.');
+                      event.preventDefault(); // Prevent form submission
+                    }
+                  });
+                });
+              </script>
+            </div>
+          </div>
         </div>
-        <div th:insert="~{fragments/footer.html :: footer}"></div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-</body>
+  </body>
 </html>
