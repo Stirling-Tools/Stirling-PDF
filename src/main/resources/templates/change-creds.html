@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{changeCreds.title}, header=#{changeCreds.header})}"></th:block>
@@ -9,14 +9,14 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br><br>
+        <br /><br />
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-9">
 
               <!-- User Settings Title -->
               <h2 class="text-center" th:text="#{changeCreds.header}">User Settings</h2>
-              <hr>
+              <hr />
               <th:block th:if="${param.messageType != null and param.messageType.size() > 0}">
               <div th:if="${param.messageType[0] == 'notAuthenticated'}" class="alert alert-danger">
                 <span th:text="#{notAuthenticatedMessage}">Default message if not found</span>
