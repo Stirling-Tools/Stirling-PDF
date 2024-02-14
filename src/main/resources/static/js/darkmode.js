@@ -22,7 +22,7 @@ function getElements() {
   elements.formControls = document.querySelectorAll(".form-control")
   elements.navbar = document.querySelectorAll("nav.navbar")
   elements.navIcons = document.querySelectorAll("nav .icon, .navbar-icon")
-  elements.navDropdownMenus = document.querySelectorAll("nav .dropdown-menu")
+  elements.navDropdownMenus = document.querySelectorAll(".dropdown-menu")
 }
 function setMode(mode) {
   var event = new CustomEvent("modeChanged", { detail: mode });
