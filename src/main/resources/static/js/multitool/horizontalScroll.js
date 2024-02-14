@@ -17,7 +17,7 @@ const scrollDivHorizontally = (id) => {
         }
     }
 
-    
+
     divToScrollHorizontally.addEventListener("wheel", function(e) {
         e.preventDefault(); // prevent default mousewheel behavior
 

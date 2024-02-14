@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{pageRemover.title}, header=#{pageRemover.header})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{pageRemover.title}, header=#{pageRemover.header})}"></th:block>
+
 
 
 <body>
@@ -17,7 +18,7 @@
             <form th:action="@{api/v1/general/remove-pages}" method="post" enctype="multipart/form-data">
               <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
               <div class="mb-3">
-                <label for="pageNumbers" th:text="#{pageRemover.pagesToDelete}"></label> 
+                <label for="pageNumbers" th:text="#{pageRemover.pagesToDelete}"></label>
                 <input type="text" class="form-control" id="fileInput" name="pageNumbers" placeholder="(e.g. 1,2,6 or 1-10,15-30)" required>
               </div>
               <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pageRemover.submit}"></button>
@@ -28,5 +29,10 @@
     </div>
     <div th:insert="~{fragments/footer.html :: footer}"></div>
   </div>
+  <script>
+    document.getElementById('fileInput').addEventListener('input', function(){
+       this.value =this.value.replace(/\s+/g, '');;
+    });
+  </script>
 </body>
 </html>

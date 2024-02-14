@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -75,7 +77,8 @@ public class PdfOverlayController {
                 overlay.overlay(overlayGuide).save(outputStream);
                 byte[] data = outputStream.toByteArray();
                 String outputFilename =
-                        baseFile.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                        Filenames.toSimpleFileName(baseFile.getOriginalFilename())
+                                        .replaceFirst("[.][^.]+$", "")
                                 + "_overlayed.pdf"; // Remove file extension and append .pdf
 
                 return WebResponseUtils.bytesToWebResponse(
@@ -135,7 +138,7 @@ public class PdfOverlayController {
             try (PDDocument overlayPdf = Loader.loadPDF(overlayFiles[overlayFileIndex])) {
                 PDDocument singlePageDocument = new PDDocument();
                 singlePageDocument.addPage(overlayPdf.getPage(pageCountInCurrentOverlay));
-                File tempFile = File.createTempFile("overlay-page-", ".pdf");
+                File tempFile = Files.createTempFile("overlay-page-", ".pdf").toFile();
                 singlePageDocument.save(tempFile);
                 singlePageDocument.close();
 

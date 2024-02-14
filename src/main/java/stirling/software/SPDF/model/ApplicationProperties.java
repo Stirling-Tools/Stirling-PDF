@@ -290,31 +290,20 @@ public class ApplicationProperties {
         }
 
         public static class CustomApplications {
-            private boolean installBookFormats;
-            private boolean installAdvancedHtmlToPDF;
+            private boolean installBookAndHtmlFormats;
 
-            public boolean isInstallBookFormats() {
-                return installBookFormats;
+            public boolean isInstallBookAndHtmlFormats() {
+                return installBookAndHtmlFormats;
             }
 
-            public void setInstallBookFormats(boolean installBookFormats) {
-                this.installBookFormats = installBookFormats;
-            }
-
-            public boolean isInstallAdvancedHtmlToPDF() {
-                return installAdvancedHtmlToPDF;
-            }
-
-            public void setInstallAdvancedHtmlToPDF(boolean installAdvancedHtmlToPDF) {
-                this.installAdvancedHtmlToPDF = installAdvancedHtmlToPDF;
+            public void setInstallBookAndHtmlFormats(boolean installBookAndHtmlFormats) {
+                this.installBookAndHtmlFormats = installBookAndHtmlFormats;
             }
 
             @Override
             public String toString() {
-                return "CustomApplications [installBookFormats="
-                        + installBookFormats
-                        + ", installAdvancedHtmlToPDF="
-                        + installAdvancedHtmlToPDF
+                return "CustomApplications [installBookAndHtmlFormats="
+                        + installBookAndHtmlFormats
                         + "]";
             }
         }

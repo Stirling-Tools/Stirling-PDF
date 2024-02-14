@@ -17,7 +17,7 @@
             <form id="multiPdfForm" th:action="@{api/v1/misc/extract-images}" method="post" enctype="multipart/form-data">
               <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
               <div class="mb-3">
-                <label th:text="#{extractImages.selectText}"></label> 
+                <label th:text="#{extractImages.selectText}"></label>
                 <select class="form-control" name="format">
                     <option value="png">PNG</option>
                     <option value="jpg">JPG</option>

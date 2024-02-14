@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -29,22 +30,22 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertPDFToBookController {
 
     @Autowired
-    @Qualifier("bookFormatsInstalled")
-    private boolean bookFormatsInstalled;
+    @Qualifier("bookAndHtmlFormatsInstalled")
+    private boolean bookAndHtmlFormatsInstalled;
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/book")
     @Operation(
             summary =
                     "Convert a PDF to a Book/comic (*.epub | *.mobi | *.azw3 | *.fb2 | *.txt | *.docx .. (others to include by chatgpt) to PDF",
             description =
-                    "(Requires bookFormatsInstalled flag and Calibre installed) This endpoint Convert a PDF to a Book/comic (*.epub | *.mobi | *.azw3 | *.fb2 | *.txt | *.docx .. (others to include by chatgpt) to PDF")
+                    "(Requires bookAndHtmlFormatsInstalled flag and Calibre installed) This endpoint Convert a PDF to a Book/comic (*.epub | *.mobi | *.azw3 | *.fb2 | *.txt | *.docx .. (others to include by chatgpt) to PDF")
     public ResponseEntity<byte[]> HtmlToPdf(@ModelAttribute PdfToBookRequest request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();
 
-        if (!bookFormatsInstalled) {
+        if (!bookAndHtmlFormatsInstalled) {
             throw new IllegalArgumentException(
-                    "bookFormatsInstalled flag is False, this functionality is not avaiable");
+                    "bookAndHtmlFormatsInstalled flag is False, this functionality is not avaiable");
         }
 
         if (fileInput == null) {
@@ -92,7 +93,8 @@ public class ConvertPDFToBookController {
         }
 
         String outputFilename =
-                fileInput.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                Filenames.toSimpleFileName(fileInput.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
                         + "."
                         + outputFormat; // Remove file extension and append .pdf
 

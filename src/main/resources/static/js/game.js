@@ -1,11 +1,11 @@
 function initializeGame() {
     const gameContainer = document.getElementById('game-container');
     const player = document.getElementById('player');
-    
+
     let playerSize = gameContainer.clientWidth * 0.0625; // 5% of container width
     player.style.width = playerSize + 'px';
     player.style.height = playerSize + 'px';
-    
+
     let playerX = gameContainer.clientWidth / 2 - playerSize / 2;
     let playerY = gameContainer.clientHeight * 0.1;
     const scoreElement = document.getElementById('score');
@@ -14,13 +14,16 @@ function initializeGame() {
     const highScoreElement = document.getElementById('high-score');
 
     let pdfSize = gameContainer.clientWidth * 0.0625; // 5% of container width
-    let projectileWidth = gameContainer.clientWidth * 0.00625; // 0.5% of container width
+    let projectileWidth = gameContainer.clientWidth *  0.00625;// 0.00625; // 0.5% of container width
     let projectileHeight = gameContainer.clientHeight * 0.01667; // 1% of container height
 
     let paused = false;
+
     const fireRate = 200; // Time between shots in milliseconds
     let lastProjectileTime = 0;
     let lives = 3;
+
+
     let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
     updateHighScore();
 
@@ -31,7 +34,7 @@ function initializeGame() {
     const projectiles = [];
     let score = 0;
     let level = 1;
-    let pdfSpeed = 1;
+    let pdfSpeed = 0.5;
     let gameOver = false;
 
     function handleKeys() {
@@ -119,7 +122,7 @@ function initializeGame() {
 
         for (let pdfIndex = 0; pdfIndex < pdfs.length; pdfIndex++) {
             const pdf = pdfs[pdfIndex];
-            const pdfY = parseInt(pdf.style.top) + pdfSpeed;
+            const pdfY = parseFloat(pdf.style.top) + pdfSpeed;
             if (pdfY + 50 > gameContainer.clientHeight) {
                 gameContainer.removeChild(pdf);
                 pdfs.splice(pdfIndex, 1);
@@ -192,7 +195,7 @@ function initializeGame() {
         score = 0;
         level = 1;
         lives = 3;
-        
+
         gameOver = false;
 
         updateScore();
@@ -218,7 +221,7 @@ function initializeGame() {
         if (newLevel > level) {
             level = newLevel;
             levelElement.textContent = 'Level: ' + level;
-            pdfSpeed += 1;
+            pdfSpeed += 0.2;
         }
     }
 
@@ -249,6 +252,10 @@ function initializeGame() {
 
     let spawnPdfTimeout;
 
+	const BASE_SPAWN_INTERVAL_MS = 1250; // milliseconds before a new enemy spawns
+	const LEVEL_INCREASE_FACTOR_MS = 0; // milliseconds to decrease the spawn interval per level
+	const MAX_SPAWN_RATE_REDUCTION_MS = 800; // Max milliseconds from the base spawn interval
+
     function spawnPdfInterval() {
          console.log("spawnPdfInterval");
         if (gameOver || paused) {
@@ -258,7 +265,9 @@ function initializeGame() {
         }
         console.log("spawnPdfInterval 3");
         spawnPdf();
-        spawnPdfTimeout = setTimeout(spawnPdfInterval, 1000 - level * 50);
+        let spawnRateReduction = Math.min(level * LEVEL_INCREASE_FACTOR_MS, MAX_SPAWN_RATE_REDUCTION_MS);
+	    let spawnRate = BASE_SPAWN_INTERVAL_MS - spawnRateReduction;
+	    spawnPdfTimeout = setTimeout(spawnPdfInterval, spawnRate);
     }
 
     updatePlayerPosition();

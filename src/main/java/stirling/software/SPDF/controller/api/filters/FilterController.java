@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -43,7 +44,7 @@ public class FilterController {
         PDDocument pdfDocument = Loader.loadPDF(inputFile.getBytes());
         if (PdfUtils.hasText(pdfDocument, pageNumber, text))
             return WebResponseUtils.pdfDocToWebResponse(
-                    pdfDocument, inputFile.getOriginalFilename());
+                    pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
         return null;
     }
 
@@ -60,7 +61,7 @@ public class FilterController {
         PDDocument pdfDocument = Loader.loadPDF(inputFile.getBytes());
         if (PdfUtils.hasImages(pdfDocument, pageNumber))
             return WebResponseUtils.pdfDocToWebResponse(
-                    pdfDocument, inputFile.getOriginalFilename());
+                    pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
         return null;
     }
 

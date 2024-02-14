@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,14 +12,18 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.HostValidator;
+import io.github.pixee.security.Urls;
+
 public class GeneralUtils {
 
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
-        File tempFile = File.createTempFile("temp", null);
+        File tempFile = Files.createTempFile("temp", null).toFile();
         try (FileOutputStream os = new FileOutputStream(tempFile)) {
             os.write(multipartFile.getBytes());
         }
@@ -57,7 +60,8 @@ public class GeneralUtils {
 
     public static boolean isValidURL(String urlStr) {
         try {
-            new URL(urlStr);
+            Urls.create(
+                    urlStr, Urls.HTTP_PROTOCOLS, HostValidator.DENY_COMMON_INFRASTRUCTURE_TARGETS);
             return true;
         } catch (MalformedURLException e) {
             return false;
@@ -112,17 +116,36 @@ public class GeneralUtils {
     }
 
     public static List<Integer> parsePageString(String pageOrder, int totalPages) {
-        return parsePageList(pageOrder.split(","), totalPages);
+        return parsePageString(pageOrder, totalPages, false);
+    }
+
+    public static List<Integer> parsePageString(
+            String pageOrder, int totalPages, boolean isOneBased) {
+        if (pageOrder == null || pageOrder.isEmpty()) {
+            return Collections.singletonList(1);
+        }
+        if (pageOrder.matches("\\d+")) {
+            // Convert the single number string to an integer and return it in a list
+            return Collections.singletonList(Integer.parseInt(pageOrder));
+        }
+        return parsePageList(pageOrder.split(","), totalPages, isOneBased);
     }
 
     public static List<Integer> parsePageList(String[] pageOrderArr, int totalPages) {
+        return parsePageList(pageOrderArr, totalPages, false);
+    }
+
+    public static List<Integer> parsePageList(
+            String[] pageOrderArr, int totalPages, boolean isOneBased) {
         List<Integer> newPageOrder = new ArrayList<>();
+
+        int adjustmentFactor = isOneBased ? 1 : 0;
 
         // loop through the page order array
         for (String element : pageOrderArr) {
-            if (element.equalsIgnoreCase("all")) {
+            if ("all".equalsIgnoreCase(element)) {
                 for (int i = 0; i < totalPages; i++) {
-                    newPageOrder.add(i);
+                    newPageOrder.add(i + adjustmentFactor);
                 }
                 // As all pages are already added, no need to check further
                 break;
@@ -135,11 +158,11 @@ public class GeneralUtils {
 
                 if (element.contains("n")) {
                     String[] parts = element.split("n");
-                    if (!parts[0].equals("") && parts[0] != null) {
+                    if (!"".equals(parts[0]) && parts[0] != null) {
                         coefficient = Integer.parseInt(parts[0]);
                         coefficientExists = true;
                     }
-                    if (parts.length > 1 && !parts[1].equals("") && parts[1] != null) {
+                    if (parts.length > 1 && !"".equals(parts[1]) && parts[1] != null) {
                         constant = Integer.parseInt(parts[1]);
                         constantExists = true;
                     }
@@ -153,7 +176,7 @@ public class GeneralUtils {
                     pageNum += constantExists ? constant : 0;
 
                     if (pageNum <= totalPages && pageNum > 0) {
-                        newPageOrder.add(pageNum - 1);
+                        newPageOrder.add(pageNum - adjustmentFactor);
                     }
                 }
             } else if (element.contains("-")) {
@@ -168,11 +191,11 @@ public class GeneralUtils {
                 // loop through the range of pages
                 for (int j = start; j <= end; j++) {
                     // print the current index
-                    newPageOrder.add(j - 1);
+                    newPageOrder.add(j - adjustmentFactor);
                 }
             } else {
                 // if the element is a single page
-                newPageOrder.add(Integer.parseInt(element) - 1);
+                newPageOrder.add(Integer.parseInt(element) - adjustmentFactor);
             }
         }
 

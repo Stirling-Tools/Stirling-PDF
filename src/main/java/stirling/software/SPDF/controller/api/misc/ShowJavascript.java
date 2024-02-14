@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -54,7 +55,8 @@ public class ShowJavascript {
 
                         script +=
                                 "// File: "
-                                        + inputFile.getOriginalFilename()
+                                        + Filenames.toSimpleFileName(
+                                                inputFile.getOriginalFilename())
                                         + ", Script: "
                                         + name
                                         + "\n"
@@ -66,12 +68,14 @@ public class ShowJavascript {
 
             if (script.isEmpty()) {
                 script =
-                        "PDF '" + inputFile.getOriginalFilename() + "' does not contain Javascript";
+                        "PDF '"
+                                + Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                + "' does not contain Javascript";
             }
 
             return WebResponseUtils.bytesToWebResponse(
                     script.getBytes(StandardCharsets.UTF_8),
-                    inputFile.getOriginalFilename() + ".js");
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + ".js");
         }
     }
 }

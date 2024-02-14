@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -66,7 +67,9 @@ public class ExtractImagesController {
         zos.setLevel(Deflater.BEST_COMPRESSION);
 
         int imageIndex = 1;
-        String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
+        String filename =
+                Filenames.toSimpleFileName(file.getOriginalFilename())
+                        .replaceFirst("[.][^.]+$", "");
         int pageNum = 0;
         Set<Integer> processedImages = new HashSet<>();
         // Iterate over each page
@@ -85,19 +88,19 @@ public class ExtractImagesController {
                     // Convert image to desired format
                     RenderedImage renderedImage = image.getImage();
                     BufferedImage bufferedImage = null;
-                    if (format.equalsIgnoreCase("png")) {
+                    if ("png".equalsIgnoreCase(format)) {
                         bufferedImage =
                                 new BufferedImage(
                                         renderedImage.getWidth(),
                                         renderedImage.getHeight(),
                                         BufferedImage.TYPE_INT_ARGB);
-                    } else if (format.equalsIgnoreCase("jpeg") || format.equalsIgnoreCase("jpg")) {
+                    } else if ("jpeg".equalsIgnoreCase(format) || "jpg".equalsIgnoreCase(format)) {
                         bufferedImage =
                                 new BufferedImage(
                                         renderedImage.getWidth(),
                                         renderedImage.getHeight(),
                                         BufferedImage.TYPE_INT_RGB);
-                    } else if (format.equalsIgnoreCase("gif")) {
+                    } else if ("gif".equalsIgnoreCase(format)) {
                         bufferedImage =
                                 new BufferedImage(
                                         renderedImage.getWidth(),

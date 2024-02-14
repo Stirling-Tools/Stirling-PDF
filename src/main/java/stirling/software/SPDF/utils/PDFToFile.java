@@ -20,6 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
+
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 
 public class PDFToFile {
@@ -32,7 +34,7 @@ public class PDFToFile {
         }
 
         // Get the original PDF file name without the extension
-        String originalPdfFileName = inputFile.getOriginalFilename();
+        String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         String pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
 
         // Validate output format
@@ -87,7 +89,7 @@ public class PDFToFile {
             if (outputFiles.size() == 1) {
                 // Return single output file
                 File outputFile = outputFiles.get(0);
-                if (outputFormat.equals("txt:Text")) {
+                if ("txt:Text".equals(outputFormat)) {
                     outputFormat = "txt";
                 }
                 fileName = pdfBaseName + "." + outputFormat;

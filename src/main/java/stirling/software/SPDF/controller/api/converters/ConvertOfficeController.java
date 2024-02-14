@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -31,7 +32,7 @@ public class ConvertOfficeController {
 
     public byte[] convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
         // Check for valid file extension
-        String originalFilename = inputFile.getOriginalFilename();
+        String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null
                 || !isValidFileExtension(FilenameUtils.getExtension(originalFilename))) {
             throw new IllegalArgumentException("Invalid file extension");
@@ -89,7 +90,8 @@ public class ConvertOfficeController {
         byte[] pdfByteArray = convertToPdf(inputFile);
         return WebResponseUtils.bytesToWebResponse(
                 pdfByteArray,
-                inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
                         + "_convertedToPDF.pdf");
     }
 }

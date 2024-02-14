@@ -1,6 +1,6 @@
 function updateFavoritesDropdown() {
     var dropdown = document.querySelector('#favoritesDropdown');
-    
+
     // Check if dropdown exists
     if (!dropdown) {
         console.error('Dropdown element with ID "favoritesDropdown" not found!');

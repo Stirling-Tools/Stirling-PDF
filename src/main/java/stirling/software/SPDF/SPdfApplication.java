@@ -10,6 +10,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import io.github.pixee.security.SystemCommand;
+
 import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.config.ConfigInitializer;
 import stirling.software.SPDF.utils.GeneralUtils;
@@ -24,7 +26,7 @@ public class SPdfApplication {
     public void init() {
         // Check if the BROWSER_OPEN environment variable is set to true
         String browserOpenEnv = env.getProperty("BROWSER_OPEN");
-        boolean browserOpen = browserOpenEnv != null && browserOpenEnv.equalsIgnoreCase("true");
+        boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
 
         if (browserOpen) {
             try {
@@ -34,7 +36,7 @@ public class SPdfApplication {
                 Runtime rt = Runtime.getRuntime();
                 if (os.contains("win")) {
                     // For Windows
-                    rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
+                    SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

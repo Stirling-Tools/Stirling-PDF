@@ -44,7 +44,7 @@ document.querySelector('#navbarSearchInput').addEventListener('input', function(
         var iconElement = item.querySelector('.icon');
         var itemHref = item.getAttribute('href');
         var tags = item.getAttribute('data-bs-tags') || ""; // If no tags, default to empty string
-        
+
         if (titleElement && iconElement && itemHref !== '#') {
             var title = titleElement.innerText;
             if ((title.toLowerCase().indexOf(searchText) !== -1 || tags.toLowerCase().indexOf(searchText) !== -1) && !resultsBox.querySelector(`a[href="${item.getAttribute('href')}"]`)) {

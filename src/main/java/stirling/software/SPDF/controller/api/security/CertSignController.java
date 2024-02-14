@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -74,7 +75,7 @@ public class CertSignController {
     @Operation(
             summary = "Sign PDF with a Digital Certificate",
             description =
-                    "This endpoint accepts a PDF file, a digital certificate and related information to sign the PDF. It then returns the digitally signed PDF file. Input:PDF Output:PDF Type:MF-SISO")
+                    "This endpoint accepts a PDF file, a digital certificate and related information to sign the PDF. It then returns the digitally signed PDF file. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();
@@ -123,7 +124,9 @@ public class CertSignController {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         sign(pdf.getBytes(), baos, createSignature, name, location, reason);
         return WebResponseUtils.boasToWebResponse(
-                baos, pdf.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_signed.pdf");
+                baos,
+                Filenames.toSimpleFileName(pdf.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                        + "_signed.pdf");
     }
 
     private static void sign(

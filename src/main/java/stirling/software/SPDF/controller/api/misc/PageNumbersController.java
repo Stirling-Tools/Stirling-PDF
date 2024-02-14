@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -93,7 +94,7 @@ public class PageNumbersController {
                                     .replace("{total}", String.valueOf(document.getNumberOfPages()))
                                     .replace(
                                             "{filename}",
-                                            file.getOriginalFilename()
+                                            Filenames.toSimpleFileName(file.getOriginalFilename())
                                                     .replaceFirst("[.][^.]+$", ""))
                             : String.valueOf(pageNumber);
 
@@ -145,7 +146,8 @@ public class PageNumbersController {
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-                file.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_numbersAdded.pdf",
+                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                        + "_numbersAdded.pdf",
                 MediaType.APPLICATION_PDF);
     }
 }

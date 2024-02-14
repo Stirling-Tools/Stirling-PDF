@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -22,28 +23,28 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertBookToPDFController {
 
     @Autowired
-    @Qualifier("bookFormatsInstalled")
-    private boolean bookFormatsInstalled;
+    @Qualifier("bookAndHtmlFormatsInstalled")
+    private boolean bookAndHtmlFormatsInstalled;
 
     @PostMapping(consumes = "multipart/form-data", value = "/book/pdf")
     @Operation(
             summary =
                     "Convert a BOOK/comic (*.epub | *.mobi | *.azw3 | *.fb2 | *.txt | *.docx) to PDF",
             description =
-                    "(Requires bookFormatsInstalled flag and Calibre installed) This endpoint takes an BOOK/comic (*.epub | *.mobi | *.azw3 | *.fb2 | *.txt | *.docx)  input and converts it to PDF format.")
+                    "(Requires bookAndHtmlFormatsInstalled flag and Calibre installed) This endpoint takes an BOOK/comic (*.epub | *.mobi | *.azw3 | *.fb2 | *.txt | *.docx)  input and converts it to PDF format.")
     public ResponseEntity<byte[]> HtmlToPdf(@ModelAttribute GeneralFile request) throws Exception {
         MultipartFile fileInput = request.getFileInput();
 
-        if (!bookFormatsInstalled) {
+        if (!bookAndHtmlFormatsInstalled) {
             throw new IllegalArgumentException(
-                    "bookFormatsInstalled flag is False, this functionality is not avaiable");
+                    "bookAndHtmlFormatsInstalled flag is False, this functionality is not avaiable");
         }
 
         if (fileInput == null) {
             throw new IllegalArgumentException("Please provide a file for conversion.");
         }
 
-        String originalFilename = fileInput.getOriginalFilename();
+        String originalFilename = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
 
         if (originalFilename != null) {
             String originalFilenameLower = originalFilename.toLowerCase();

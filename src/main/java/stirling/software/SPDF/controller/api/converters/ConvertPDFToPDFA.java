@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -63,7 +64,9 @@ public class ConvertPDFToPDFA {
 
         // Return the optimized PDF as a response
         String outputFilename =
-                inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_PDFA.pdf";
+                Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
+                        + "_PDFA.pdf";
         return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
     }
 }

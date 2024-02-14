@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -32,14 +33,14 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertMarkdownToPdf {
 
     @Autowired
-    @Qualifier("htmlFormatsInstalled")
-    private boolean htmlFormatsInstalled;
+    @Qualifier("bookAndHtmlFormatsInstalled")
+    private boolean bookAndHtmlFormatsInstalled;
 
     @PostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
     @Operation(
             summary = "Convert a Markdown file to PDF",
             description =
-                    "This endpoint takes a Markdown file input, converts it to HTML, and then to PDF format.")
+                    "This endpoint takes a Markdown file input, converts it to HTML, and then to PDF format. Input:MARKDOWN Output:PDF Type:SISO")
     public ResponseEntity<byte[]> markdownToPdf(@ModelAttribute GeneralFile request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();
@@ -48,7 +49,7 @@ public class ConvertMarkdownToPdf {
             throw new IllegalArgumentException("Please provide a Markdown file for conversion.");
         }
 
-        String originalFilename = fileInput.getOriginalFilename();
+        String originalFilename = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
         if (originalFilename == null || !originalFilename.endsWith(".md")) {
             throw new IllegalArgumentException("File must be in .md format.");
         }
@@ -68,7 +69,10 @@ public class ConvertMarkdownToPdf {
 
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
-                        htmlContent.getBytes(), "converted.html", htmlFormatsInstalled);
+                        null,
+                        htmlContent.getBytes(),
+                        "converted.html",
+                        bookAndHtmlFormatsInstalled);
 
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")

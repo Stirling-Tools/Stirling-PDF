@@ -6,7 +6,7 @@ TabContainer = {
         unloadedGroups.forEach(group => {
             const containers = group.querySelectorAll(".tab-container");
             const tabTitles = [...containers].map(c => c.getAttribute("title"));
-            
+
             const tabList = document.createElement("div");
             tabList.classList.add("tab-buttons");
             tabTitles.forEach(title => {

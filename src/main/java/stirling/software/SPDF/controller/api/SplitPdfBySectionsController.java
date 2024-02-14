@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -64,7 +65,9 @@ public class SplitPdfBySectionsController {
         sourceDocument.close();
 
         Path zipFile = Files.createTempFile("split_documents", ".zip");
-        String filename = file.getOriginalFilename().replaceFirst("[.][^.]+$", "");
+        String filename =
+                Filenames.toSimpleFileName(file.getOriginalFilename())
+                        .replaceFirst("[.][^.]+$", "");
         byte[] data;
 
         try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
@@ -121,8 +124,8 @@ public class SplitPdfBySectionsController {
                                     subDoc, subPage, AppendMode.APPEND, true, true)) {
                         // Set clipping area and position
                         float translateX = -subPageWidth * i;
-                       
-                        //float translateY = height - subPageHeight * (verticalDivisions - j);
+
+                        // float translateY = height - subPageHeight * (verticalDivisions - j);
                         float translateY = -subPageHeight * (verticalDivisions - 1 - j);
 
                         contentStream.saveGraphicsState();

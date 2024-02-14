@@ -81,7 +81,7 @@ function setupFileInput(chooser) {
     document.body.addEventListener('drop', dropListener);
 
     $("#" + elementId).on("change", function(e) {
-	    allFiles = Array.from(e.target.files); 
+	    allFiles = Array.from(e.target.files);
 	    handleFileInputChange(this);
 	});
 

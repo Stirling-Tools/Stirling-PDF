@@ -1,6 +1,8 @@
 package stirling.software.SPDF.utils;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,12 +13,18 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import io.github.pixee.security.ZipSecurity;
+
+import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 
 public class FileToPdf {
 
     public static byte[] convertHtmlToPdf(
-            byte[] fileBytes, String fileName, boolean htmlFormatsInstalled)
+            HTMLToPdfRequest request,
+            byte[] fileBytes,
+            String fileName,
+            boolean htmlFormatsInstalled)
             throws IOException, InterruptedException {
 
         Path tempOutputFile = Files.createTempFile("output_", ".pdf");
@@ -27,46 +35,52 @@ public class FileToPdf {
                 tempInputFile = Files.createTempFile("input_", ".html");
                 Files.write(tempInputFile, fileBytes);
             } else {
-                tempInputFile = unzipAndGetMainHtml(fileBytes);
+                tempInputFile = Files.createTempFile("input_", ".zip");
+                Files.write(tempInputFile, fileBytes);
             }
 
             List<String> command = new ArrayList<>();
             if (!htmlFormatsInstalled) {
                 command.add("weasyprint");
+                command.add(tempInputFile.toString());
+                command.add(tempOutputFile.toString());
+
             } else {
-                command.add("wkhtmltopdf");
-                command.add("--enable-local-file-access");
-            }
+                command.add("ebook-convert");
+                command.add(tempInputFile.toString());
+                command.add(tempOutputFile.toString());
+                command.add("--paper-size");
+                command.add("a4");
 
-            command.add(tempInputFile.toString());
-            command.add(tempOutputFile.toString());
-            ProcessExecutorResult returnCode;
-            if (fileName.endsWith(".zip")) {
-
-                if (htmlFormatsInstalled) {
-                    // command.add(1, "--allow");
-                    // command.add(2, tempInputFile.getParent().toString());
+                if (request.getZoom() != 1.0) {
+                    // Create a temporary CSS file
+                    File tempCssFile = Files.createTempFile("customStyle", ".css").toFile();
+                    try (FileWriter writer = new FileWriter(tempCssFile)) {
+                        // Write the CSS rule to the file
+                        writer.write("body { zoom: " + request.getZoom() + "; }");
+                    }
+                    command.add("--extra-css");
+                    command.add(tempCssFile.getAbsolutePath());
                 }
-                returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
-                                .runCommandWithOutputHandling(
-                                        command, tempInputFile.getParent().toFile());
-            } else {
-
-                returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
-                                .runCommandWithOutputHandling(command);
             }
+
+            ProcessExecutorResult returnCode;
+
+            returnCode =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
+                            .runCommandWithOutputHandling(command);
 
             pdfBytes = Files.readAllBytes(tempOutputFile);
+        } catch (IOException e) {
+            pdfBytes = Files.readAllBytes(tempOutputFile);
+            if (pdfBytes.length < 1) {
+                throw e;
+            }
         } finally {
+
             // Clean up temporary files
             Files.delete(tempOutputFile);
             Files.delete(tempInputFile);
-
-            if (fileName.endsWith(".zip")) {
-                GeneralUtils.deleteDirectory(tempInputFile.getParent());
-            }
         }
 
         return pdfBytes;
@@ -74,7 +88,8 @@ public class FileToPdf {
 
     private static Path unzipAndGetMainHtml(byte[] fileBytes) throws IOException {
         Path tempDirectory = Files.createTempDirectory("unzipped_");
-        try (ZipInputStream zipIn = new ZipInputStream(new ByteArrayInputStream(fileBytes))) {
+        try (ZipInputStream zipIn =
+                ZipSecurity.createHardenedInputStream(new ByteArrayInputStream(fileBytes))) {
             ZipEntry entry = zipIn.getNextEntry();
             while (entry != null) {
                 Path filePath = tempDirectory.resolve(entry.getName());
@@ -102,7 +117,7 @@ public class FileToPdf {
 
             // Prioritize 'index.html' if it exists, otherwise use the first .html file
             for (Path htmlFile : htmlFiles) {
-                if (htmlFile.getFileName().toString().equals("index.html")) {
+                if ("index.html".equals(htmlFile.getFileName().toString())) {
                     return htmlFile;
                 }
             }
@@ -130,7 +145,6 @@ public class FileToPdf {
             command.add("ebook-convert");
             command.add(tempInputFile.toString());
             command.add(tempOutputFile.toString());
-
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
                             .runCommandWithOutputHandling(command);

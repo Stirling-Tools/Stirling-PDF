@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -133,7 +134,8 @@ public class AutoRenameController {
             return WebResponseUtils.pdfDocToWebResponse(document, header + ".pdf");
         } else {
             logger.info("File has no good title to be found");
-            return WebResponseUtils.pdfDocToWebResponse(document, file.getOriginalFilename());
+            return WebResponseUtils.pdfDocToWebResponse(
+                    document, Filenames.toSimpleFileName(file.getOriginalFilename()));
         }
     }
 }

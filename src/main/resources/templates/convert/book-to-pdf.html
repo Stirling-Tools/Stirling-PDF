@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
 
-<th:block th:insert="~{fragments/common :: head(title=#{BookToPDF.title}, header=#{BookToPDF.header})}"></th:block>
+<th:block th:insert="~{fragments/common :: head(title=#{BookToPDF.title}, header=#{BookToPDF.header})}"></th:block>
 <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
@@ -16,7 +16,6 @@
                             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
                             <br>
                             <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{BookToPDF.submit}"></button>
-
                         </form>
                         <p class="mt-3" th:text="#{BookToPDF.help}"></p>
                         <p class="mt-3" th:text="#{BookToPDF.credit}"></p>
