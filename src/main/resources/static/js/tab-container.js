@@ -26,14 +26,10 @@ TabContainer = {
   setActiveTab(tabButton) {
     const group = tabButton.closest(".tab-group");
 
-    group
-      .querySelectorAll(".active")
-      .forEach((el) => el.classList.remove("active"));
+    group.querySelectorAll(".active").forEach((el) => el.classList.remove("active"));
 
     tabButton.classList.add("active");
-    group
-      .querySelector(`[title="${tabButton.innerHTML}"]`)
-      .classList.add("active");
+    group.querySelector(`[title="${tabButton.innerHTML}"]`).classList.add("active");
   },
 };
 

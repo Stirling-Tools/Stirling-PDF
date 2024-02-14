@@ -7,9 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
   browserLang = browserLang.replace("-", "_");
 
   // Check if the dropdown contains the browser's language
-  const dropdownLangExists = document.querySelector(
-    `.lang_dropdown-item[data-language-code="${browserLang}"]`,
-  );
+  const dropdownLangExists = document.querySelector(`.lang_dropdown-item[data-language-code="${browserLang}"]`);
 
   // Set the default language to browser's language or 'en_GB' if not found in the dropdown
   const defaultLocale = dropdownLangExists ? browserLang : "en_GB";
@@ -52,10 +50,7 @@ function handleDropdownItemClick(event) {
     if (currentUrl.indexOf("?lang=") === -1) {
       window.location.href = currentUrl + "?lang=" + languageCode;
     } else {
-      window.location.href = currentUrl.replace(
-        /\?lang=\w{2,}/,
-        "?lang=" + languageCode,
-      );
+      window.location.href = currentUrl.replace(/\?lang=\w{2,}/, "?lang=" + languageCode);
     }
   } else {
     console.error("Language code is not set for this item."); // for debugging
@@ -68,8 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (
       dropdownMenu.id !== "favoritesDropdown" &&
       dropdownMenu.children.length <= 2 &&
-      dropdownMenu.querySelectorAll("hr.dropdown-divider").length ===
-        dropdownMenu.children.length
+      dropdownMenu.querySelectorAll("hr.dropdown-divider").length === dropdownMenu.children.length
     ) {
       if (
         element.previousElementSibling &&
@@ -83,19 +77,12 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   //Sort languages by alphabet
-  const list = Array.from(
-    document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]')
-      .children,
-  ).filter((child) => child.matches("a"));
+  const list = Array.from(document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').children).filter(
+    (child) => child.matches("a"),
+  );
   list
     .sort(function (a, b) {
-      return a.textContent
-        .toUpperCase()
-        .localeCompare(b.textContent.toUpperCase());
+      return a.textContent.toUpperCase().localeCompare(b.textContent.toUpperCase());
     })
-    .forEach((node) =>
-      document
-        .querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]')
-        .appendChild(node),
-    );
+    .forEach((node) => document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').appendChild(node));
 });

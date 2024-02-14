@@ -58,21 +58,16 @@ html[lang-direction="rtl"] .pdf-actions_insert-file-button-container.left {
   translate: 0 -50%;
 }
 
-.pdf-actions_insert-file-button-container.right
-  .pdf-actions_insert-file-button {
+.pdf-actions_insert-file-button-container.right .pdf-actions_insert-file-button {
   right: 0;
   translate: 0 -50%;
 }
 
-html[lang-direction="ltr"]
-  .pdf-actions_container:last-child
-  > .pdf-actions_insert-file-button-container.right {
+html[lang-direction="ltr"] .pdf-actions_container:last-child > .pdf-actions_insert-file-button-container.right {
   display: block;
 }
 
-html[lang-direction="rtl"]
-  .pdf-actions_container:last-child
-  > .pdf-actions_insert-file-button-container.left {
+html[lang-direction="rtl"] .pdf-actions_container:last-child > .pdf-actions_insert-file-button-container.left {
   display: block;
 }
 

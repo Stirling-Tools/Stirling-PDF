@@ -40,11 +40,7 @@ function adjustContainerHeight() {
   var errorContainer = document.getElementById("errorContainer");
   var traceDiv = document.getElementById("trace");
   if (traceVisible) {
-    errorContainer.style.height =
-      errorContainer.scrollHeight -
-      traceDiv.scrollHeight +
-      traceDiv.offsetHeight +
-      "px";
+    errorContainer.style.height = errorContainer.scrollHeight - traceDiv.scrollHeight + traceDiv.offsetHeight + "px";
   } else {
     errorContainer.style.height = "auto";
   }

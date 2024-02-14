@@ -11,8 +11,7 @@ class DragDropManager {
 
   constructor(id, wrapperId) {
     this.dragContainer = document.getElementById(id);
-    this.pageDirection =
-      document.documentElement.getAttribute("lang-direction");
+    this.pageDirection = document.documentElement.getAttribute("lang-direction");
     this.wrapper = document.getElementById(wrapperId);
     this.pageDragging = false;
     this.hoveredEl = undefined;
@@ -52,9 +51,7 @@ class DragDropManager {
     imgEl.src = imageSrc;
     this.draggedImageEl = imgEl;
     imgEl.style.visibility = "hidden";
-    imgEl.style.transform = `rotate(${
-      img.style.rotate === "" ? "0deg" : img.style.rotate
-    }) translate(-50%, -50%)`;
+    imgEl.style.transform = `rotate(${img.style.rotate === "" ? "0deg" : img.style.rotate}) translate(-50%, -50%)`;
     this.dragContainer.appendChild(imgEl);
 
     window.addEventListener("mouseup", this.stopDraggingPage);

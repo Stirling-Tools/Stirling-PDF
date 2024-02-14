@@ -138,9 +138,7 @@
 
   .annotationLayer .textWidgetAnnotation :is(input, textarea):required,
   .annotationLayer .choiceWidgetAnnotation select:required,
-  .annotationLayer
-    .buttonWidgetAnnotation:is(.checkBox, .radioButton)
-    input:required {
+  .annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input:required {
     outline: 1.5px solid selectedItem;
   }
 
@@ -227,9 +225,7 @@
   height: 100%;
 }
 
-.annotationLayer
-  :is(.linkAnnotation, .buttonWidgetAnnotation.pushButton):not(.hasBorder)
-  > a:hover {
+.annotationLayer :is(.linkAnnotation, .buttonWidgetAnnotation.pushButton):not(.hasBorder) > a:hover {
   opacity: 0.2;
   background-color: rgba(255, 255, 0, 1);
   box-shadow: 0 2px 10px rgba(255, 255, 0, 1);
@@ -267,9 +263,7 @@
 
 .annotationLayer .textWidgetAnnotation :is(input, textarea):required,
 .annotationLayer .choiceWidgetAnnotation select:required,
-.annotationLayer
-  .buttonWidgetAnnotation:is(.checkBox, .radioButton)
-  input:required {
+.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input:required {
   outline: 1.5px solid red;
 }
 
@@ -287,9 +281,7 @@
 
 .annotationLayer .textWidgetAnnotation :is(input, textarea)[disabled],
 .annotationLayer .choiceWidgetAnnotation select[disabled],
-.annotationLayer
-  .buttonWidgetAnnotation:is(.checkBox, .radioButton)
-  input[disabled] {
+.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input[disabled] {
   background: none;
   border: 2px solid var(--input-disabled-border-color);
   cursor: not-allowed;
@@ -297,9 +289,7 @@
 
 .annotationLayer .textWidgetAnnotation :is(input, textarea):hover,
 .annotationLayer .choiceWidgetAnnotation select:hover,
-.annotationLayer
-  .buttonWidgetAnnotation:is(.checkBox, .radioButton)
-  input:hover {
+.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input:hover {
   border: 2px solid var(--input-hover-border-color);
 }
 
@@ -404,8 +394,7 @@
 
 .annotationLayer .popup {
   background-color: rgba(255, 255, 153, 1);
-  box-shadow: 0 calc(2px * var(--scale-factor)) calc(5px * var(--scale-factor))
-    rgba(136, 136, 136, 1);
+  box-shadow: 0 calc(2px * var(--scale-factor)) calc(5px * var(--scale-factor)) rgba(136, 136, 136, 1);
   border-radius: calc(2px * var(--scale-factor));
   outline: 1.5px solid rgb(255, 255, 74);
   padding: calc(6px * var(--scale-factor));
@@ -818,20 +807,15 @@
   --hover-outline-around-color: var(--outline-around-color);
   --focus-outline: solid var(--outline-width) var(--outline-color);
   --unfocus-outline: solid var(--outline-width) transparent;
-  --focus-outline-around: solid var(--outline-around-width)
-    var(--outline-around-color);
+  --focus-outline-around: solid var(--outline-around-width) var(--outline-around-color);
   --hover-outline-color: #8f8f9d;
   --hover-outline: solid var(--outline-width) var(--hover-outline-color);
-  --hover-outline-around: solid var(--outline-around-width)
-    var(--hover-outline-around-color);
+  --hover-outline-around: solid var(--outline-around-width) var(--hover-outline-around-color);
   --freetext-line-height: 1.35;
   --freetext-padding: 2px;
   --resizer-bg-color: var(--outline-color);
   --resizer-size: 6px;
-  --resizer-shift: calc(
-    0px - (var(--outline-width) + var(--resizer-size)) / 2 -
-      var(--outline-around-width)
-  );
+  --resizer-shift: calc(0px - (var(--outline-width) + var(--resizer-size)) / 2 - var(--outline-around-width));
   --editorFreeText-editing-cursor: text;
   --editorInk-editing-cursor: url(../images/cursor-editorInk.svg) 0 16, pointer;
 
@@ -854,9 +838,7 @@
 
 @media (-webkit-min-device-pixel-ratio: 1.1), (min-resolution: 1.1dppx) {
   :root {
-    --editorFreeText-editing-cursor: url(../images/cursor-editorFreeText.svg) 0
-        16,
-      text;
+    --editorFreeText-editing-cursor: url(../images/cursor-editorFreeText.svg) 0 16, text;
   }
 }
 
@@ -934,19 +916,16 @@
   border: var(--unfocus-outline);
 }
 
-.annotationEditorLayer
-  .draggable.selectedEditor:is(.freeTextEditor, .inkEditor, .stampEditor) {
+.annotationEditorLayer .draggable.selectedEditor:is(.freeTextEditor, .inkEditor, .stampEditor) {
   cursor: move;
 }
 
-.annotationEditorLayer
-  .selectedEditor:is(.freeTextEditor, .inkEditor, .stampEditor) {
+.annotationEditorLayer .selectedEditor:is(.freeTextEditor, .inkEditor, .stampEditor) {
   border: var(--focus-outline);
   outline: var(--focus-outline-around);
 }
 
-.annotationEditorLayer
-  .selectedEditor:is(.freeTextEditor, .inkEditor, .stampEditor)::before {
+.annotationEditorLayer .selectedEditor:is(.freeTextEditor, .inkEditor, .stampEditor)::before {
   /*
     This is a workaround for the lack of support for stripes(...) (see
     https://drafts.csswg.org/css-images-4/#stripes).
@@ -971,16 +950,12 @@
   pointer-events: none;
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor):hover:not(.selectedEditor) {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor):hover:not(.selectedEditor) {
   border: var(--hover-outline);
   outline: var(--hover-outline-around);
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor):hover:not(
-    .selectedEditor
-  )::before {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor):hover:not(.selectedEditor)::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -1059,23 +1034,16 @@
   height: 100%;
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor)
-  > .resizers {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers {
   position: absolute;
   inset: 0;
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor)
-  > .resizers.hidden {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers.hidden {
   display: none;
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor)
-  > .resizers
-  > .resizer {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer {
   width: var(--resizer-size);
   height: var(--resizer-size);
   background: content-box var(--resizer-bg-color);
@@ -1084,66 +1052,42 @@
   position: absolute;
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor)
-  > .resizers
-  > .resizer.topLeft {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.topLeft {
   top: var(--resizer-shift);
   left: var(--resizer-shift);
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor)
-  > .resizers
-  > .resizer.topMiddle {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.topMiddle {
   top: var(--resizer-shift);
   left: calc(50% + var(--resizer-shift));
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor)
-  > .resizers
-  > .resizer.topRight {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.topRight {
   top: var(--resizer-shift);
   right: var(--resizer-shift);
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor)
-  > .resizers
-  > .resizer.middleRight {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.middleRight {
   top: calc(50% + var(--resizer-shift));
   right: var(--resizer-shift);
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor)
-  > .resizers
-  > .resizer.bottomRight {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.bottomRight {
   bottom: var(--resizer-shift);
   right: var(--resizer-shift);
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor)
-  > .resizers
-  > .resizer.bottomMiddle {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.bottomMiddle {
   bottom: var(--resizer-shift);
   left: calc(50% + var(--resizer-shift));
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor)
-  > .resizers
-  > .resizer.bottomLeft {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.bottomLeft {
   bottom: var(--resizer-shift);
   left: var(--resizer-shift);
 }
 
-.annotationEditorLayer
-  :is(.freeTextEditor, .inkEditor, .stampEditor)
-  > .resizers
-  > .resizer.middleLeft {
+.annotationEditorLayer :is(.freeTextEditor, .inkEditor, .stampEditor) > .resizers > .resizer.middleLeft {
   top: calc(50% + var(--resizer-shift));
   left: var(--resizer-shift);
 }
@@ -1940,20 +1884,12 @@
   color: var(--textarea-fg-color);
 }
 
-#altTextDialog
-  #altTextContainer
-  #addDescription
-  .descriptionArea
-  textarea:focus {
+#altTextDialog #altTextContainer #addDescription .descriptionArea textarea:focus {
   outline-offset: 0;
   border-color: transparent;
 }
 
-#altTextDialog
-  #altTextContainer
-  #addDescription
-  .descriptionArea
-  textarea:disabled {
+#altTextDialog #altTextContainer #addDescription .descriptionArea textarea:disabled {
   pointer-events: none;
   opacity: 0.4;
 }
@@ -2213,9 +2149,8 @@
   --toolbar-border-color: rgba(184, 184, 184, 1);
   --toolbar-box-shadow: 0 1px 0 var(--toolbar-border-color);
   --toolbar-border-bottom: none;
-  --toolbarSidebar-box-shadow: inset calc(-1px * var(--dir-factor)) 0 0
-      rgba(0, 0, 0, 0.25),
-    0 1px 0 rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
+  --toolbarSidebar-box-shadow: inset calc(-1px * var(--dir-factor)) 0 0 rgba(0, 0, 0, 0.25), 0 1px 0 rgba(0, 0, 0, 0.15),
+    0 0 1px rgba(0, 0, 0, 0.1);
   --toolbarSidebar-border-bottom: none;
   --button-hover-color: rgba(221, 222, 223, 1);
   --toggled-btn-color: rgba(0, 0, 0, 1);
@@ -2511,8 +2446,7 @@ body {
   font: message-box;
 }
 
-:is(.toolbar, .editorParamsToolbar, .findbar, #sidebarContainer)
-  :is(input, button, select),
+:is(.toolbar, .editorParamsToolbar, .findbar, #sidebarContainer) :is(input, button, select),
 .secondaryToolbar :is(input, button, a, select) {
   outline: none;
   font: message-box;
@@ -2620,8 +2554,7 @@ body {
   animation: progressIndeterminate 1s linear infinite;
 }
 
-#outerContainer.sidebarResizing
-  :is(#sidebarContainer, #viewerContainer, #loadingBar) {
+#outerContainer.sidebarResizing :is(#sidebarContainer, #viewerContainer, #loadingBar) {
   /* Improve responsiveness and avoid visual glitches when the sidebar is resized. */
   transition-duration: 0s;
 }
@@ -2751,8 +2684,7 @@ body {
   background-color: black;
 }
 
-.editorParamsToolbarContainer
-  .editorParamsSlider::-webkit-slider-runnable-track,
+.editorParamsToolbarContainer .editorParamsSlider::-webkit-slider-runnable-track,
 .editorParamsToolbarContainer .editorParamsSlider::-moz-range-track {
   background-color: black;
 }
@@ -3649,8 +3581,7 @@ dialog :link {
   cursor: grab !important;
 }
 
-.grab-to-pan-grab
-  *:not(input):not(textarea):not(button):not(select):not(:link) {
+.grab-to-pan-grab *:not(input):not(textarea):not(button):not(select):not(:link) {
   cursor: inherit !important;
 }
 

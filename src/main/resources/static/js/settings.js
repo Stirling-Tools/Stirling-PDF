@@ -5,12 +5,10 @@ var downloadOption = localStorage.getItem("downloadOption") || "sameWindow";
 document.getElementById("downloadOption").value = downloadOption;
 
 // Save the selected option to local storage when the dropdown value changes
-document
-  .getElementById("downloadOption")
-  .addEventListener("change", function () {
-    downloadOption = this.value;
-    localStorage.setItem("downloadOption", downloadOption);
-  });
+document.getElementById("downloadOption").addEventListener("change", function () {
+  downloadOption = this.value;
+  localStorage.setItem("downloadOption", downloadOption);
+});
 
 // Get the zipThreshold value from local storage, or set it to 0 if it doesn't exist
 var zipThreshold = parseInt(localStorage.getItem("zipThreshold"), 10) || 4;

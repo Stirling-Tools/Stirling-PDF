@@ -17,8 +17,7 @@ function compareVersions(version1, version2) {
 }
 
 async function getLatestReleaseVersion() {
-  const url =
-    "https://api.github.com/repos/Stirling-Tools/Stirling-PDF/releases/latest";
+  const url = "https://api.github.com/repos/Stirling-Tools/Stirling-PDF/releases/latest";
   try {
     const response = await fetch(url);
     const data = await response.json();
@@ -39,10 +38,7 @@ async function checkForUpdate() {
   const latestVersion = await getLatestReleaseVersion();
   console.log("latestVersion=" + latestVersion);
   console.log("currentVersion=" + currentVersion);
-  console.log(
-    "compareVersions(latestVersion, currentVersion) > 0)=" +
-      compareVersions(latestVersion, currentVersion),
-  );
+  console.log("compareVersions(latestVersion, currentVersion) > 0)=" + compareVersions(latestVersion, currentVersion));
   if (latestVersion && compareVersions(latestVersion, currentVersion) > 0) {
     document.getElementById("update-btn").style.display = "block";
     console.log("visible");
