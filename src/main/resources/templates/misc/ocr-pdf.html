@@ -31,7 +31,7 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br><br>
+        <br /><br />
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-6">
@@ -40,14 +40,14 @@
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label for="languages" class="form-label" th:text="#{ocr.selectText.1}"></label>
-                  <hr>
+                  <hr />
                   <div id="languages">
                     <div th:each="language, iterStat : ${languages}">
                       <input type="checkbox" th:name="languages" th:value="${language}" required th:id="${'language-' + language}" onchange="handleLangSelection()" />
                       <label class="form-check-label" th:for="${'language-' + language}" th:text="${language}"></label>
                     </div>
                   </div>
-                  <hr>
+                  <hr />
                 </div>
                 <div class="mb-3">
                   <label th:text="#{ocr.selectText.10}"></label>

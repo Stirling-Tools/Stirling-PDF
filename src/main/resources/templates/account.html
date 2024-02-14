@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{account.title})}"></th:block>
@@ -9,14 +9,14 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br><br>
+        <br /><br />
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-9">
 
               <!-- User Settings Title -->
               <h2 class="text-center" th:text="#{account.accountSettings}">User Settings</h2>
-              <hr>
+              <hr />
               <th:block th:if="${param.messageType != null and param.messageType.size() > 0}">
               <div th:if="${param.messageType[0] == 'notAuthenticated'}" class="alert alert-danger">
                 <span th:text="#{notAuthenticatedMessage}">Default message if not found</span>
@@ -54,7 +54,7 @@
                 </div>
               </form>
 
-              <hr> <!-- Separator Line -->
+              <hr /> <!-- Separator Line -->
 
               <!-- Change Password Form -->
               <h4 th:text="#{account.changePassword}">Change Password?</h4>
@@ -76,7 +76,7 @@
                 </div>
               </form>
 
-              <hr>
+              <hr />
 
               <div class="card">
                 <div class="card-header" th:text="#{account.yourApiKey}"></div>
@@ -182,7 +182,7 @@
                 });
               </script>
 
-              <hr> <!-- Separator Line -->
+              <hr /> <!-- Separator Line -->
 
               <h4 th:text="#{account.syncTitle}">Sync browser settings with Account</h4>
               <div class="container mt-4">
