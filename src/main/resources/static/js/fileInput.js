@@ -94,20 +94,14 @@ function setupFileInput(chooser) {
       selectedFilesContainer.append("<div>" + fileName + "</div>");
     });
     if (fileNames.length === 1) {
-      $(inputElement)
-        .siblings(".custom-file-label")
-        .addClass("selected")
-        .html(fileNames[0]);
+      $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
     } else if (fileNames.length > 1) {
       $(inputElement)
         .siblings(".custom-file-label")
         .addClass("selected")
         .html(fileNames.length + " " + filesSelected);
     } else {
-      $(inputElement)
-        .siblings(".custom-file-label")
-        .addClass("selected")
-        .html(pdfPrompt);
+      $(inputElement).siblings(".custom-file-label").addClass("selected").html(pdfPrompt);
     }
   }
 }

@@ -106,12 +106,7 @@ table td {
 }
 hr {
   border-color: rgba(255, 255, 255, 0.6); /* semi-transparent white */
-  background-color: rgba(
-    255,
-    255,
-    255,
-    0.6
-  ); /* for some browsers that might use background instead of border for <hr> */
+  background-color: rgba(255, 255, 255, 0.6); /* for some browsers that might use background instead of border for <hr> */
 }
 
 .modal-content {

@@ -34,10 +34,7 @@ pre[class*="language-"] > code {
     -1px 0 0 0 #358ccb,
     0 0 0 1px #dfdfdf;
   background-color: #fdfdfd;
-  background-image: linear-gradient(
-    transparent 50%,
-    rgba(69, 142, 209, 0.04) 50%
-  );
+  background-image: linear-gradient(transparent 50%, rgba(69, 142, 209, 0.04) 50%);
   background-size: 3em 3em;
   background-origin: content-box;
   background-attachment: local;

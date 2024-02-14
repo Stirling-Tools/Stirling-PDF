@@ -12,10 +12,8 @@ const DraggableUtils = {
         listeners: {
           move: (event) => {
             const target = event.target;
-            const x =
-              (parseFloat(target.getAttribute("data-bs-x")) || 0) + event.dx;
-            const y =
-              (parseFloat(target.getAttribute("data-bs-y")) || 0) + event.dy;
+            const x = (parseFloat(target.getAttribute("data-bs-x")) || 0) + event.dx;
+            const y = (parseFloat(target.getAttribute("data-bs-y")) || 0) + event.dy;
 
             target.style.transform = `translate(${x}px, ${y}px)`;
             target.setAttribute("data-bs-x", x);
@@ -40,10 +38,7 @@ const DraggableUtils = {
               let width = event.rect.width;
               let height = event.rect.height;
 
-              if (
-                Math.abs(event.deltaRect.width) >=
-                Math.abs(event.deltaRect.height)
-              ) {
+              if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
                 height = width / aspectRatio;
               } else {
                 width = height * aspectRatio;
@@ -64,10 +59,7 @@ const DraggableUtils = {
 
             target.setAttribute("data-bs-x", x);
             target.setAttribute("data-bs-y", y);
-            target.textContent =
-              Math.round(event.rect.width) +
-              "\u00D7" +
-              Math.round(event.rect.height);
+            target.textContent = Math.round(event.rect.width) + "\u00D7" + Math.round(event.rect.height);
 
             this.onInteraction(target);
           },
@@ -112,9 +104,7 @@ const DraggableUtils = {
         createdCanvas.height = myImage.height;
 
         const imgAspect = myImage.width / myImage.height;
-        const pdfAspect =
-          this.boxDragContainer.offsetWidth /
-          this.boxDragContainer.offsetHeight;
+        const pdfAspect = this.boxDragContainer.offsetWidth / this.boxDragContainer.offsetHeight;
 
         var scaleMultiplier;
         if (imgAspect > pdfAspect) {
@@ -140,9 +130,7 @@ const DraggableUtils = {
     });
   },
   deleteAllDraggableCanvases() {
-    this.boxDragContainer
-      .querySelectorAll(".draggable-canvas")
-      .forEach((el) => el.remove());
+    this.boxDragContainer.querySelectorAll(".draggable-canvas").forEach((el) => el.remove());
   },
   deleteDraggableCanvas(element) {
     if (element) {
@@ -150,9 +138,7 @@ const DraggableUtils = {
     }
   },
   getLastInteracted() {
-    return this.boxDragContainer.querySelector(
-      ".draggable-canvas:last-of-type",
-    );
+    return this.boxDragContainer.querySelector(".draggable-canvas:last-of-type");
   },
 
   storePageContents() {
@@ -161,9 +147,7 @@ const DraggableUtils = {
       pagesMap = {};
     }
 
-    const elements = [
-      ...this.boxDragContainer.querySelectorAll(".draggable-canvas"),
-    ];
+    const elements = [...this.boxDragContainer.querySelectorAll(".draggable-canvas")];
     const draggablesData = elements.map((el) => {
       return {
         element: el,
@@ -188,9 +172,7 @@ const DraggableUtils = {
 
     const draggablesData = pagesMap[this.pageIndex];
     if (draggablesData) {
-      draggablesData.forEach((draggableData) =>
-        this.boxDragContainer.appendChild(draggableData.element),
-      );
+      draggablesData.forEach((draggableData) => this.boxDragContainer.appendChild(draggableData.element));
     }
 
     this.documentsMap.set(this.pdfDoc, pagesMap);
@@ -264,10 +246,7 @@ const DraggableUtils = {
         const pdfImageObject = await pdfDocModified.embedPng(draggableImgBytes);
 
         // calculate the position in the pdf document
-        const tansform = draggableElement.style.transform.replace(
-          /[^.,-\d]/g,
-          "",
-        );
+        const tansform = draggableElement.style.transform.replace(/[^.,-\d]/g, "");
         const transformComponents = tansform.split(",");
         const draggablePositionPixels = {
           x: parseFloat(transformComponents[0]),
@@ -291,10 +270,7 @@ const DraggableUtils = {
         // draw the image
         page.drawImage(pdfImageObject, {
           x: draggablePositionPdf.x,
-          y:
-            page.getHeight() -
-            draggablePositionPdf.y -
-            draggablePositionPdf.height,
+          y: page.getHeight() - draggablePositionPdf.y - draggablePositionPdf.height,
           width: draggablePositionPdf.width,
           height: draggablePositionPdf.height,
         });

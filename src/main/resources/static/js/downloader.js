@@ -1,8 +1,7 @@
 function showErrorBanner(message, stackTrace) {
   const errorContainer = document.getElementById("errorContainer");
   errorContainer.style.display = "block"; // Display the banner
-  document.querySelector("#errorContainer .alert-heading").textContent =
-    "Error";
+  document.querySelector("#errorContainer .alert-heading").textContent = "Error";
   document.querySelector("#errorContainer p").textContent = message;
   document.querySelector("#traceContent").textContent = stackTrace;
 }
@@ -28,10 +27,7 @@ $(document).ready(function () {
     console.log(override);
     try {
       if (remoteCall === true) {
-        if (
-          override === "multi" ||
-          (!multiple && files.length > 1 && override !== "single")
-        ) {
+        if (override === "multi" || (!multiple && files.length > 1 && override !== "single")) {
           await submitMultiPdfForm(url, files);
         } else {
           await handleSingleDownload(url, formData);
@@ -46,12 +42,7 @@ $(document).ready(function () {
   });
 });
 
-async function handleSingleDownload(
-  url,
-  formData,
-  isMulti = false,
-  isZip = false,
-) {
+async function handleSingleDownload(url, formData, isMulti = false, isZip = false) {
   try {
     const response = await fetch(url, { method: "POST", body: formData });
     const contentType = response.headers.get("content-type");
@@ -68,10 +59,7 @@ async function handleSingleDownload(
     let filename = getFilenameFromContentDisposition(contentDisposition);
 
     const blob = await response.blob();
-    if (
-      contentType.includes("application/pdf") ||
-      contentType.includes("image/")
-    ) {
+    if (contentType.includes("application/pdf") || contentType.includes("image/")) {
       return handleResponse(blob, filename, !isMulti, isZip);
     } else {
       return handleResponse(blob, filename, false, isZip);
@@ -86,9 +74,7 @@ function getFilenameFromContentDisposition(contentDisposition) {
   let filename;
 
   if (contentDisposition && contentDisposition.indexOf("attachment") !== -1) {
-    filename = decodeURIComponent(
-      contentDisposition.split("filename=")[1].replace(/"/g, ""),
-    ).trim();
+    filename = decodeURIComponent(contentDisposition.split("filename=")[1].replace(/"/g, "")).trim();
   } else {
     // If the Content-Disposition header is not present or does not contain the filename, use a default filename
     filename = "download";
@@ -114,12 +100,7 @@ async function handleJsonResponse(response) {
   }
 }
 
-async function handleResponse(
-  blob,
-  filename,
-  considerViewOptions = false,
-  isZip = false,
-) {
+async function handleResponse(blob, filename, considerViewOptions = false, isZip = false) {
   if (!blob) return;
   const downloadOption = localStorage.getItem("downloadOption");
   if (considerViewOptions) {
@@ -214,12 +195,7 @@ async function submitMultiPdfForm(url, files) {
       }
 
       try {
-        const downloadDetails = await handleSingleDownload(
-          url,
-          fileFormData,
-          true,
-          zipFiles,
-        );
+        const downloadDetails = await handleSingleDownload(url, fileFormData, true, zipFiles);
         console.log(downloadDetails);
         if (zipFiles) {
           jszip.file(downloadDetails.filename, downloadDetails.blob);
@@ -248,14 +224,9 @@ async function submitMultiPdfForm(url, files) {
 }
 
 function updateProgressBar(progressBar, files) {
-  let progress =
-    (progressBar.attr("aria-valuenow") / files.length) * 100 +
-    100 / files.length;
+  let progress = (progressBar.attr("aria-valuenow") / files.length) * 100 + 100 / files.length;
   progressBar.css("width", progress + "%");
-  progressBar.attr(
-    "aria-valuenow",
-    parseInt(progressBar.attr("aria-valuenow")) + 1,
-  );
+  progressBar.attr("aria-valuenow", parseInt(progressBar.attr("aria-valuenow")) + 1);
 }
 window.addEventListener("unload", () => {
   for (const url of urls) {

@@ -3,12 +3,10 @@ let currentSort = {
   descending: false,
 };
 
-document
-  .getElementById("fileInput-input")
-  .addEventListener("change", function () {
-    var files = this.files;
-    displayFiles(files);
-  });
+document.getElementById("fileInput-input").addEventListener("change", function () {
+  var files = this.files;
+  displayFiles(files);
+});
 
 /**
  * @param {FileList} files
@@ -101,9 +99,7 @@ document.getElementById("sortByDateBtn").addEventListener("click", function () {
 
 function sortFiles(comparator) {
   // Convert FileList to array and sort
-  const sortedFilesArray = Array.from(
-    document.getElementById("fileInput-input").files,
-  ).sort(comparator);
+  const sortedFilesArray = Array.from(document.getElementById("fileInput-input").files).sort(comparator);
 
   // Refresh displayed list
   displayFiles(sortedFilesArray);

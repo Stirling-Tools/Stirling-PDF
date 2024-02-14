@@ -23,9 +23,7 @@ function initializeGame() {
   let lastProjectileTime = 0;
   let lives = 3;
 
-  let highScore = localStorage.getItem("highScore")
-    ? parseInt(localStorage.getItem("highScore"))
-    : 0;
+  let highScore = localStorage.getItem("highScore") ? parseInt(localStorage.getItem("highScore")) : 0;
   updateHighScore();
 
   const keysPressed = {};
@@ -84,10 +82,8 @@ function initializeGame() {
     projectile.style.backgroundColor = "black";
     projectile.style.width = projectileWidth + "px";
     projectile.style.height = projectileHeight + "px";
-    projectile.style.left =
-      playerX + playerSize / 2 - projectileWidth / 2 + "px";
-    projectile.style.top =
-      gameContainer.clientHeight - playerY - playerSize + "px";
+    projectile.style.left = playerX + playerSize / 2 - projectileWidth / 2 + "px";
+    projectile.style.top = gameContainer.clientHeight - playerY - playerSize + "px";
     gameContainer.appendChild(projectile);
     projectiles.push(projectile);
   }
@@ -98,8 +94,7 @@ function initializeGame() {
     pdf.classList.add("pdf");
     pdf.style.width = pdfSize + "px";
     pdf.style.height = pdfSize + "px";
-    pdf.style.left =
-      Math.floor(Math.random() * (gameContainer.clientWidth - pdfSize)) + "px";
+    pdf.style.left = Math.floor(Math.random() * (gameContainer.clientWidth - pdfSize)) + "px";
     pdf.style.top = "0px";
     gameContainer.appendChild(pdf);
     pdfs.push(pdf);
@@ -216,12 +211,7 @@ function initializeGame() {
   function collisionDetected(a, b) {
     const rectA = a.getBoundingClientRect();
     const rectB = b.getBoundingClientRect();
-    return (
-      rectA.left < rectB.right &&
-      rectA.right > rectB.left &&
-      rectA.top < rectB.bottom &&
-      rectA.bottom > rectB.top
-    );
+    return rectA.left < rectB.right && rectA.right > rectB.left && rectA.top < rectB.bottom && rectA.bottom > rectB.top;
   }
 
   function endGame() {
@@ -250,10 +240,7 @@ function initializeGame() {
     }
     console.log("spawnPdfInterval 3");
     spawnPdf();
-    let spawnRateReduction = Math.min(
-      level * LEVEL_INCREASE_FACTOR_MS,
-      MAX_SPAWN_RATE_REDUCTION_MS,
-    );
+    let spawnRateReduction = Math.min(level * LEVEL_INCREASE_FACTOR_MS, MAX_SPAWN_RATE_REDUCTION_MS);
     let spawnRate = BASE_SPAWN_INTERVAL_MS - spawnRateReduction;
     spawnPdfTimeout = setTimeout(spawnPdfInterval, spawnRate);
   }

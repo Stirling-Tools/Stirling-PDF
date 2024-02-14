@@ -57,8 +57,7 @@ class PdfContainer {
 
     if (scrollTo) {
       const { width } = startElement.getBoundingClientRect();
-      const vector =
-        endIndex !== -1 && startIndex > endIndex ? 0 - width : width;
+      const vector = endIndex !== -1 && startIndex > endIndex ? 0 - width : width;
 
       this.pagesContainerWrapper.scroll({
         left: this.pagesContainerWrapper.scrollLeft + vector,
@@ -171,9 +170,7 @@ class PdfContainer {
   }
 
   async toPdfLib(objectUrl) {
-    const existingPdfBytes = await fetch(objectUrl).then((res) =>
-      res.arrayBuffer(),
-    );
+    const existingPdfBytes = await fetch(objectUrl).then((res) => res.arrayBuffer());
     const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes, {
       ignoreEncryption: true,
     });
@@ -190,8 +187,7 @@ class PdfContainer {
 
   async exportPdf() {
     const pdfDoc = await PDFLib.PDFDocument.create();
-    const pageContainers =
-      this.pagesContainer.querySelectorAll(".page-container"); // Select all .page-container elements
+    const pageContainers = this.pagesContainer.querySelectorAll(".page-container"); // Select all .page-container elements
     for (var i = 0; i < pageContainers.length; i++) {
       const img = pageContainers[i].querySelector("img"); // Find the img element within each .page-container
       if (!img) continue;
@@ -201,9 +197,7 @@ class PdfContainer {
       const rotation = img.style.rotate;
       if (rotation) {
         const rotationAngle = parseInt(rotation.replace(/[^\d-]/g, ""));
-        page.setRotation(
-          PDFLib.degrees(page.getRotation().angle + rotationAngle),
-        );
+        page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle));
       }
 
       pdfDoc.addPage(page);
@@ -246,10 +240,7 @@ class PdfContainer {
       this.downloadLink.href = url;
       // downloadLink.download = this.fileName ? this.fileName : 'managed.pdf';
       // downloadLink.download = this.fileName;
-      this.downloadLink.setAttribute(
-        "download",
-        this.fileName ? this.fileName : "managed.pdf",
-      );
+      this.downloadLink.setAttribute("download", this.fileName ? this.fileName : "managed.pdf");
       this.downloadLink.setAttribute("target", "_blank");
       this.downloadLink.onclick = this.setDownloadAttribute;
       this.downloadLink.click();
@@ -257,10 +248,7 @@ class PdfContainer {
   }
 
   setDownloadAttribute() {
-    this.downloadLink.setAttribute(
-      "download",
-      this.fileName ? this.fileName : "managed.pdf",
-    );
+    this.downloadLink.setAttribute("download", this.fileName ? this.fileName : "managed.pdf");
   }
 
   updateFilename(fileName = "") {

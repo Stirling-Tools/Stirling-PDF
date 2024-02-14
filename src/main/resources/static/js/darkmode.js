@@ -48,9 +48,7 @@ function setMode(mode) {
       elements.searchBar.classList.add("dark-mode-search");
     }
     if (elements && elements.formControls) {
-      elements.formControls.forEach((input) =>
-        input.classList.add("bg-dark", "text-white"),
-      );
+      elements.formControls.forEach((input) => input.classList.add("bg-dark", "text-white"));
     }
     if (elements && elements.navbar) {
       elements.navbar.forEach((navElement) => {
@@ -59,9 +57,7 @@ function setMode(mode) {
       });
     }
     if (elements && elements.navDropdownMenus) {
-      elements.navDropdownMenus.forEach((menu) =>
-        menu.classList.add("dropdown-menu-dark"),
-      );
+      elements.navDropdownMenus.forEach((menu) => menu.classList.add("dropdown-menu-dark"));
     }
     if (elements && elements.navIcons) {
       elements.navIcons.forEach((icon) => (icon.style.filter = "invert(1)"));
@@ -82,9 +78,7 @@ function setMode(mode) {
       elements.searchBar.classList.remove("dark-mode-search");
     }
     if (elements && elements.formControls) {
-      elements.formControls.forEach((input) =>
-        input.classList.remove("bg-dark", "text-white"),
-      );
+      elements.formControls.forEach((input) => input.classList.remove("bg-dark", "text-white"));
     }
     if (elements && elements.navbar) {
       elements.navbar.forEach((navElement) => {
@@ -93,9 +87,7 @@ function setMode(mode) {
       });
     }
     if (elements && elements.navDropdownMenus) {
-      elements.navDropdownMenus.forEach((menu) =>
-        menu.classList.remove("dropdown-menu-dark"),
-      );
+      elements.navDropdownMenus.forEach((menu) => menu.classList.remove("dropdown-menu-dark"));
     }
     if (elements && elements.navIcons) {
       elements.navIcons.forEach((icon) => (icon.style.filter = "none"));
@@ -140,16 +132,9 @@ document.addEventListener("DOMContentLoaded", function () {
   getElements();
 
   var currentMode = localStorage.getItem("dark-mode");
-  if (
-    currentMode === "on" ||
-    currentMode === "off" ||
-    currentMode === "rainbow"
-  ) {
+  if (currentMode === "on" || currentMode === "off" || currentMode === "rainbow") {
     setMode(currentMode);
-  } else if (
-    window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches
-  ) {
+  } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
     setMode("on");
   } else {
     setMode("off");
