@@ -1,13 +1,13 @@
 #navbarSearch {
     top: 100%;
     right: 0;
-	transition: all 0.3s;
-	max-height: 0;
-	overflow: hidden;
+    transition: all 0.3s;
+    max-height: 0;
+    overflow: hidden;
 }
 
 #navbarSearch.show {
-	max-height: 300px; /* Adjust this to your desired max height */
+    max-height: 300px; /* Adjust this to your desired max height */
 }
 
 #searchForm {
@@ -19,8 +19,8 @@
     max-height: 200px;  /* Adjust this value as needed */
     overflow-y: auto;
     width: 100%;
-	max-width: 300px; /* Adjust to your preferred width */
-	transition: height 0.3s ease; /* Smooth height transition */
+    max-width: 300px; /* Adjust to your preferred width */
+    transition: height 0.3s ease; /* Smooth height transition */
 }
 
 #searchResults .dropdown-item {
@@ -42,74 +42,73 @@
 }
 
 #search-icon i {
-	font-size: 24px; /* Adjust this to your desired size */
-	transition: color 0.3s;
+    font-size: 24px; /* Adjust this to your desired size */
+    transition: color 0.3s;
 }
 
 #search-icon:hover i {
-	color: #666; /* Adjust this to your hover color */
+    color: #666; /* Adjust this to your hover color */
 }
 
 .search-input {
-	transition: border 0.3s, box-shadow 0.3s;
-
+    transition: border 0.3s, box-shadow 0.3s;
 }
 
 .search-input:focus {
-	border-color: #666; /* Adjust this to your focus color */
-	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Adjust this to your desired shadow */
+    border-color: #666; /* Adjust this to your focus color */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Adjust this to your desired shadow */
 }
 
 /* Set a fixed height and styling for each search result item */
 .search-results a {
-	display: flex;
-	align-items: center;
-	gap: 10px; /* space between icon and text */
-	height: 40px; /* Adjust based on your design */
-	overflow: hidden; /* Prevent content from overflowing */
-	white-space: nowrap; /* Prevent text from wrapping to next line */
-	text-overflow: ellipsis; /* Truncate text if it's too long */
+    display: flex;
+    align-items: center;
+    gap: 10px; /* space between icon and text */
+    height: 40px; /* Adjust based on your design */
+    overflow: hidden; /* Prevent content from overflowing */
+    white-space: nowrap; /* Prevent text from wrapping to next line */
+    text-overflow: ellipsis; /* Truncate text if it's too long */
 }
 
 .main-icon {
-	width: 36px;
-	height: 36px;
-	vertical-align: middle;
-	transform: translateY(-2px);
+    width: 36px;
+    height: 36px;
+    vertical-align: middle;
+    transform: translateY(-2px);
 }
 
 .icon {
-	width: 16px;
-	height: 16px;
-	vertical-align: middle;
-	transform: translateY(-2px);
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    transform: translateY(-2px);
 }
 
 .icon+.icon {
-	margin-left: -4px;
+    margin-left: -4px;
 }
 
 .icon-text {
-	margin-left: 4px;
+    margin-left: 4px;
 }
 
 .nav-item-separator {
-	position: relative;
-	margin: 0 4px; /* Adjust the margin as needed */
+    position: relative;
+    margin: 0 4px; /* Adjust the margin as needed */
 }
 
 .nav-item-separator::before {
-	content: '';
-	position: absolute;
-	left: 0;
-	top: 10%; /* Adjust the top and bottom margins as needed */
-	bottom: 10%;
-	width: 1px;
-	background-color: #ccc; /* Adjust the color as needed */
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10%; /* Adjust the top and bottom margins as needed */
+    bottom: 10%;
+    width: 1px;
+    background-color: #ccc; /* Adjust the color as needed */
 }
 
 .navbar-icon {
-	width: 20px;
-	height: 20px;
-	transform: translateY(-2px);
+    width: 20px;
+    height: 20px;
+    transform: translateY(-2px);
 }
