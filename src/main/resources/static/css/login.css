@@ -1,0 +1,111 @@
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  padding-top: 40px;
+  padding-bottom: 40px;
+  background-color: #f5f5f5;
+}
+
+.form-signin {
+  width: 100%;
+  max-width: 330px;
+  padding: 15px;
+  margin: auto;
+}
+
+.form-signin .checkbox {
+  font-weight: 400;
+}
+
+.form-signin .form-floating:focus-within {
+  z-index: 2;
+}
+
+.form-signin input[type="text"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.container-flex {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%; /* Set width to 100% */
+  align-items: center; /* Center its children horizontally */
+}
+.footer-bottom {
+  margin-top: auto;
+}
+body.light-mode input:-webkit-autofill,
+body.light-mode input:-webkit-autofill:hover,
+body.light-mode input:-webkit-autofill:focus,
+body.light-mode input:-webkit-autofill:active {
+  -webkit-text-fill-color: #212529; /* Dark font color */
+  -webkit-box-shadow: 0 0 0 1000px #f8f9fa inset; /* Light background color */
+}
+
+/* Dark Mode */
+body.dark-mode input:-webkit-autofill,
+body.dark-mode input:-webkit-autofill:hover,
+body.dark-mode input:-webkit-autofill:focus,
+body.dark-mode input:-webkit-autofill:active {
+  -webkit-text-fill-color: #f8f9fa; /* Light font color */
+  -webkit-box-shadow: 0 0 0 1000px #212529 inset; /* Dark background color */
+}
+/* Light Mode */
+body.light-mode .form-floating > input:focus + label {
+  color: #212529 !important; /* Dark text for light background */
+}
+
+/* Dark Mode */
+body.dark-mode .form-floating > input:focus + label {
+  color: #fff !important; /* Light text for dark background */
+}
+
+body.light-mode .form-floating > label {
+  color: #212529 !important; /* Dark text for light background */
+}
+
+body.dark-mode .form-floating > label {
+  color: #fff !important; /* Light text for dark background */
+}
+
+/* Removing default styles for ul and li */
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  list-style: none;
+}
+
+/* Positioning the container of these elements to the top right */
+.your-container-class {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+}
+
+/* Styling for the dropdown */
+.dropdown-menu {
+  min-width: 200px; /* or whatever width you prefer */
+}
+
+.navbar-icon {
+  width: 40px;
+  height: 40px;
+}

@@ -1,57 +1,56 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{pdfOrganiser.title}, header=#{pdfOrganiser.header})}"></th:block>
+  </head>
 
-<th:block th:insert="~{fragments/common :: head(title=#{pdfOrganiser.title}, header=#{pdfOrganiser.header})}"></th:block>
-
-
-<body>
+  <body>
     <div id="page-container">
-        <div id="content-wrap">
-            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-            <br> <br>
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-md-6">
-                        <h2 th:text="#{pdfOrganiser.header}"></h2>
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br /><br />
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6">
+              <h2 th:text="#{pdfOrganiser.header}"></h2>
 
-                        <form th:action="@{api/v1/general/rearrange-pages}" method="post" enctype="multipart/form-data">
-                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-                            <div class="mb-3">
-						        <label for="customMode">Mode</label>
-						        <select class="form-control" id="customMode" name="customMode">
-						            <option value="">Custom Page Order</option>
-						            <option value="REVERSE_ORDER">Reverse Order</option>
-						            <option value="DUPLEX_SORT">Duplex Sort</option>
-						            <option value="BOOKLET_SORT">Booklet Sort</option>
-						            <option value="SIDE_STITCH_BOOKLET_SORT">Side Stitch Booklet Sort</option>
-						            <option value="ODD_EVEN_SPLIT">Odd-Even Split</option>
-						            <option value="REMOVE_FIRST">Remove First</option>
-						            <option value="REMOVE_LAST">Remove Last</option>
-						            <option value="REMOVE_FIRST_AND_LAST">Remove First and Last</option>
-						        </select>
-						    </div>
-                            <div class="mb-3">
-                                <label for="pageOrder" th:text="#{pageOrderPrompt}"></label>
-                                <input type="text" class="form-control" id="pageOrder" name="pageNumbers" placeholder="(e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)" required>
-                            </div>
-
-                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfOrganiser.submit}"></button>
-                        </form>
-						<script>
-						document.getElementById('customMode').addEventListener('change', function () {
-						    var pageOrderInput = document.getElementById('pageOrder');
-						    if (this.value === "") {
-						        pageOrderInput.disabled = false;
-						    } else {
-						        pageOrderInput.disabled = true;
-						    }
-						});
-						</script>
-                    </div>
+              <form th:action="@{api/v1/general/rearrange-pages}" method="post" enctype="multipart/form-data">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div class="mb-3">
+                  <label for="customMode">Mode</label>
+                  <select class="form-control" id="customMode" name="customMode">
+                      <option value="">Custom Page Order</option>
+                      <option value="REVERSE_ORDER">Reverse Order</option>
+                      <option value="DUPLEX_SORT">Duplex Sort</option>
+                      <option value="BOOKLET_SORT">Booklet Sort</option>
+                      <option value="SIDE_STITCH_BOOKLET_SORT">Side Stitch Booklet Sort</option>
+                      <option value="ODD_EVEN_SPLIT">Odd-Even Split</option>
+                      <option value="REMOVE_FIRST">Remove First</option>
+                      <option value="REMOVE_LAST">Remove Last</option>
+                      <option value="REMOVE_FIRST_AND_LAST">Remove First and Last</option>
+                  </select>
                 </div>
+                <div class="mb-3">
+                  <label for="pageOrder" th:text="#{pageOrderPrompt}"></label>
+                  <input type="text" class="form-control" id="pageOrder" name="pageNumbers" placeholder="(e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)" required>
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfOrganiser.submit}"></button>
+              </form>
+              <script>
+                document.getElementById('customMode').addEventListener('change', function () {
+                  var pageOrderInput = document.getElementById('pageOrder');
+                  if (this.value === "") {
+                    pageOrderInput.disabled = false;
+                  } else {
+                    pageOrderInput.disabled = true;
+                  }
+                });
+              </script>
             </div>
+          </div>
         </div>
-        <div th:insert="~{fragments/footer.html :: footer}"></div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-</body>
+  </body>
 </html>

@@ -1,313 +1,175 @@
-<!doctype html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{login.title}, header=#{login.header})}"></th:block>
+    <link rel="stylesheet" href="css/login.css">
+  </head>
 
-<th:block th:insert="~{fragments/common :: head(title=#{login.title}, header=#{login.header})}"></th:block>
-<script src="js/darkmode.js"></script>
-<style>
-html, body {
-	height: 100%;
-}
+  <body>
+    <div class="your-container-class"></div>
+    <div class="container-flex">
+      <main class="form-signin text-center">
+        <script>
+          function setInputMode(elementId, mode) {
+            var inputElement = document.getElementById(elementId);
 
-body {
-	display: flex;
-	align-items: center;
-	padding-top: 40px;
-	padding-bottom: 40px;
-	background-color: #f5f5f5;
+            if (!inputElement) return;  // If the element doesn't exist, exit the function
 
-}
-
-.form-signin {
-	width: 100%;
-	max-width: 330px;
-	padding: 15px;
-	margin: auto;
-}
-
-.form-signin .checkbox {
-	font-weight: 400;
-}
-
-.form-signin .form-floating:focus-within {
-	z-index: 2;
-}
-
-.form-signin input[type="text"] {
-	margin-bottom: -1px;
-	border-bottom-right-radius: 0;
-	border-bottom-left-radius: 0;
-}
-
-.form-signin input[type="password"] {
-	margin-bottom: 10px;
-	border-top-left-radius: 0;
-	border-top-right-radius: 0;
-}
-.container-flex {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    width: 100%;      /* Set width to 100% */
-    align-items: center;  /* Center its children horizontally */
-}
-.footer-bottom {
-    margin-top: auto;
-}
-body.light-mode input:-webkit-autofill,
-body.light-mode input:-webkit-autofill:hover,
-body.light-mode input:-webkit-autofill:focus,
-body.light-mode input:-webkit-autofill:active {
-    -webkit-text-fill-color: #212529;  /* Dark font color */
-    -webkit-box-shadow: 0 0 0 1000px #f8f9fa inset;  /* Light background color */
-}
-
-/* Dark Mode */
-body.dark-mode input:-webkit-autofill,
-body.dark-mode input:-webkit-autofill:hover,
-body.dark-mode input:-webkit-autofill:focus,
-body.dark-mode input:-webkit-autofill:active {
-    -webkit-text-fill-color: #f8f9fa;  /* Light font color */
-    -webkit-box-shadow: 0 0 0 1000px #212529 inset;  /* Dark background color */
-}
-/* Light Mode */
-body.light-mode .form-floating > input:focus + label {
-    color: #212529 !important;  /* Dark text for light background */
-}
-
-/* Dark Mode */
-body.dark-mode .form-floating > input:focus + label {
-    color: #fff !important;  /* Light text for dark background */
-}
-
-body.light-mode .form-floating > label {
-    color: #212529 !important;  /* Dark text for light background */
-}
-
-body.dark-mode .form-floating > label {
-    color: #fff !important;  /* Light text for dark background */
-}
-
-
-/* Removing default styles for ul and li */
-ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-li {
-    list-style: none;
-}
-
-/* Positioning the container of these elements to the top right */
-.your-container-class {
-    position: absolute;
-    top: 0;
-    right: 0;
-    display: flex;
-}
-
-/* Styling for the dropdown */
-.dropdown-menu {
-    min-width: 200px;  /* or whatever width you prefer */
-}
-
-.navbar-icon {
-	width: 40px;
-	height: 40px;
-}
-
-</style>
-<body>
-<div class="your-container-class">
-</div>
-<div class="container-flex">
-<main class="form-signin text-center">
-
-
-<script>
-function setInputMode(elementId, mode) {
-    var inputElement = document.getElementById(elementId);
-
-    if (!inputElement) return;  // If the element doesn't exist, exit the function
-
-    switch (mode) {
-        case "on":
-            inputElement.classList.add("bg-dark", "text-light");
-            inputElement.classList.remove("bg-light", "text-dark");
-            break;
-        case "off":
-            inputElement.classList.add("bg-light", "text-dark");
-            inputElement.classList.remove("bg-dark", "text-light");
-            break;
-        case "rainbow":
-            // Assuming you have defined some classes for rainbow mode
-
-            break;
-    }
-}
-
-
-
-document.addEventListener('modeChanged', function(e) {
-    var mode = e.detail;
-
-    setInputMode("username", mode);
-    setInputMode("password", mode);
-    document.body.classList.remove("light-mode", "dark-mode", "rainbow-mode"); // remove all mode classes first
-
-    switch (mode) {
-        case "on":
-            document.body.classList.add("dark-mode");
-            break;
-        case "off":
-            document.body.classList.add("light-mode");
-            break;
-        case "rainbow":
-            document.body.classList.add("rainbow-mode");
-            break;
-    }
-
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-
-	const defaultLocale = document.documentElement.lang || 'en_GB';
-    const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
-
-    const currentURL = new URL(window.location.href);
-    const urlParams = currentURL.searchParams;
-    const currentLangParam = urlParams.get('lang') || defaultLocale;
-
-
-    if (defaultLocale !== storedLocale && currentLangParam !== storedLocale) {
-        urlParams.set('lang', storedLocale);
-        currentURL.search = urlParams.toString();
-        window.location.href = currentURL.toString();
-        return;
-    }
-
-    const dropdown = document.getElementById('languageDropdown');
-    const dropdownItems = document.querySelectorAll('.lang_dropdown-item');
-
-    let activeItem;
-    for (let i = 0; i < dropdownItems.length; i++) {
-        const item = dropdownItems[i];
-        item.classList.remove('active');
-        if (item.dataset.bsLanguageCode === storedLocale) {
-            item.classList.add('active');
-            activeItem = item;
-        }
-        item.addEventListener('click', handleDropdownItemClick);
-    }
-
-    if (activeItem) {
-        dropdown.innerHTML = activeItem.innerHTML;  // This will set the dropdown button's content to the active language's flag and name
-    }
-
-    // Additional functionality that was in your provided code:
-
-    document.querySelectorAll('.nav-item.dropdown').forEach((element) => {
-        const dropdownMenu = element.querySelector(".dropdown-menu");
-        if (dropdownMenu.id !== 'favoritesDropdown' &&  dropdownMenu.children.length <= 2 && dropdownMenu.querySelectorAll("hr.dropdown-divider").length === dropdownMenu.children.length) {
-            if (element.previousElementSibling && element.previousElementSibling.classList.contains('nav-item') && element.previousElementSibling.classList.contains('nav-item-separator')) {
-                element.previousElementSibling.remove();
+            switch (mode) {
+              case "on":
+                inputElement.classList.add("bg-dark", "text-light");
+                inputElement.classList.remove("bg-light", "text-dark");
+                break;
+              case "off":
+                inputElement.classList.add("bg-light", "text-dark");
+                inputElement.classList.remove("bg-dark", "text-light");
+                break;
+              case "rainbow":
+                // Assuming you have defined some classes for rainbow mode
+                break;
             }
-            element.remove();
-        }
-    });
+          }
 
-    // Sort languages by alphabet
-    const list = Array.from(document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').children).filter(child => child.matches('a'));
-    list.sort(function(a, b) {
-        var A = a.textContent.toUpperCase();
-        var B = b.textContent.toUpperCase();
-        return (A < B) ? -1 : (A > B) ? 1 : 0;
-    }).forEach(node => document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').appendChild(node));
-});
+          document.addEventListener('modeChanged', function(e) {
+            var mode = e.detail;
 
-function handleDropdownItemClick(event) {
-    event.preventDefault();
-    const languageCode = event.currentTarget.dataset.bsLanguageCode;
-    const dropdown = document.getElementById('languageDropdown');
+            setInputMode("username", mode);
+            setInputMode("password", mode);
+            document.body.classList.remove("light-mode", "dark-mode", "rainbow-mode"); // remove all mode classes first
 
-    if (languageCode) {
-    	localStorage.setItem('languageCode', languageCode);
-    	const currentLang = document.documentElement.getAttribute('lang');
-    	if (currentLang !== languageCode) {
-    		console.log("currentLang", currentLang)
-    		console.log("languageCode", languageCode)
-	        const currentUrl = window.location.href;
-	        if (currentUrl.indexOf('?lang=') === -1) {
-	            window.location.href = currentUrl + '?lang=' + languageCode;
-	        } else {
-	            window.location.href = currentUrl.replace(/\?lang=\w{2,}/, '?lang=' + languageCode);
-	        }
-    	}
-        dropdown.innerHTML = event.currentTarget.innerHTML;  // Update the dropdown button's content
-    } else {
-        console.error("Language code is not set for this item.");
-    }
-}
+            switch (mode) {
+              case "on":
+                document.body.classList.add("dark-mode");
+                break;
+              case "off":
+                document.body.classList.add("light-mode");
+                break;
+              case "rainbow":
+                document.body.classList.add("rainbow-mode");
+                break;
+            }
+          });
+
+          document.addEventListener('DOMContentLoaded', function() {
+
+            const defaultLocale = document.documentElement.lang || 'en_GB';
+            const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
+
+            const currentURL = new URL(window.location.href);
+            const urlParams = currentURL.searchParams;
+            const currentLangParam = urlParams.get('lang') || defaultLocale;
 
 
+            if (defaultLocale !== storedLocale && currentLangParam !== storedLocale) {
+                urlParams.set('lang', storedLocale);
+                currentURL.search = urlParams.toString();
+                window.location.href = currentURL.toString();
+                return;
+            }
 
-</script>
-		<div th:if="${logoutMessage}" class="alert alert-success"
-			th:text="${logoutMessage}"></div>
+            const dropdown = document.getElementById('languageDropdown');
+            const dropdownItems = document.querySelectorAll('.lang_dropdown-item');
 
-		<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'credsUpdated'}" class="alert alert-success">
-		    <span th:text="#{changedCredsMessage}">Default message if not found</span>
-		</div>
-		<form th:action="@{login}" method="post">
-			<img class="mb-4" src="favicon.svg?v=2" alt="" width="144" height="144">
-			<h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
-			<h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
+            let activeItem;
+            for (let i = 0; i < dropdownItems.length; i++) {
+                const item = dropdownItems[i];
+                item.classList.remove('active');
+                if (item.dataset.bsLanguageCode === storedLocale) {
+                    item.classList.add('active');
+                    activeItem = item;
+                }
+                item.addEventListener('click', handleDropdownItemClick);
+            }
 
-			<div class="form-floating">
-				<input type="text" class="form-control bg-dark text-light" id="username" name="username"
-					placeholder="admin"> <label for="username" th:text="#{username}">Username</label>
-			</div>
-			<div class="form-floating">
-				<input type="password" class="form-control bg-dark text-light" id="password" name="password"
-					placeholder="Password"> <label for="password" th:text="#{password}">Password</label>
-			</div>
+            if (activeItem) {
+                dropdown.innerHTML = activeItem.innerHTML;  // This will set the dropdown button's content to the active language's flag and name
+            }
 
-			<div class="checkbox mb-3">
-				<label > <input type="checkbox" value="remember-me">
-					<span th:text="#{login.rememberme}"></span>
-				</label>
-			</div>
-			<button class="w-100 btn btn-lg btn-primary" type="submit" th:text="#{login.signin}">Sign
-				in</button>
-		</form>
-		<div class="mt-3"> <!-- Added a margin-top for spacing -->
-	    <div class="dropdown">
-	        <button class="btn btn-secondary dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-	            English (GB) <!-- Default language placeholder -->
-	        </button>
-	        <div class="dropdown-menu" aria-labelledby="languageDropdown">
-	            <!-- Here's where the fragment will be included -->
-	            <th:block th:replace="~{fragments/languages :: langs}"></th:block>
-	        </div>
-	    </div>
-	</div>
+            // Additional functionality that was in your provided code:
 
+            document.querySelectorAll('.nav-item.dropdown').forEach((element) => {
+              const dropdownMenu = element.querySelector(".dropdown-menu");
+              if (dropdownMenu.id !== 'favoritesDropdown' &&  dropdownMenu.children.length <= 2 && dropdownMenu.querySelectorAll("hr.dropdown-divider").length === dropdownMenu.children.length) {
+                if (element.previousElementSibling && element.previousElementSibling.classList.contains('nav-item') && element.previousElementSibling.classList.contains('nav-item-separator')) {
+                    element.previousElementSibling.remove();
+                }
+                element.remove();
+              }
+            });
 
+            // Sort languages by alphabet
+            const list = Array.from(document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').children).filter(child => child.matches('a'));
+            list.sort(function(a, b) {
+              var A = a.textContent.toUpperCase();
+              var B = b.textContent.toUpperCase();
+              return (A < B) ? -1 : (A > B) ? 1 : 0;
+            }).forEach(node => document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').appendChild(node));
+          });
 
-		<div class="text-danger text-center">
-			<div th:if="${error == 'badcredentials'}" th:text="#{login.invalid}">Invalid username or
-				password.</div>
-			<div th:if="${error == 'locked'}" th:text="#{login.locked}">Your account has been locked.
-			</div>
-		</div>
+          function handleDropdownItemClick(event) {
+            event.preventDefault();
+            const languageCode = event.currentTarget.dataset.bsLanguageCode;
+            const dropdown = document.getElementById('languageDropdown');
 
-	</main>
+            if (languageCode) {
+              localStorage.setItem('languageCode', languageCode);
+              const currentLang = document.documentElement.getAttribute('lang');
+              if (currentLang !== languageCode) {
+                console.log("currentLang", currentLang)
+                console.log("languageCode", languageCode)
+                const currentUrl = window.location.href;
+                if (currentUrl.indexOf('?lang=') === -1) {
+                  window.location.href = currentUrl + '?lang=' + languageCode;
+                } else {
+                  window.location.href = currentUrl.replace(/\?lang=\w{2,}/, '?lang=' + languageCode);
+                }
+              }
+              dropdown.innerHTML = event.currentTarget.innerHTML;  // Update the dropdown button's content
+            } else {
+              console.error("Language code is not set for this item.");
+            }
+          }
+        </script>
+        <div th:if="${logoutMessage}" class="alert alert-success" th:text="${logoutMessage}"></div>
+        <div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'credsUpdated'}" class="alert alert-success">
+          <span th:text="#{changedCredsMessage}">Default message if not found</span>
+        </div>
+        <form th:action="@{login}" method="post">
+          <img class="mb-4" src="favicon.svg?v=2" alt="" width="144" height="144">
+          <h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
+          <h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
 
+          <div class="form-floating">
+            <input type="text" class="form-control bg-dark text-light" id="username" name="username" placeholder="admin"> <label for="username" th:text="#{username}">Username</label>
+          </div>
+          <div class="form-floating">
+            <input type="password" class="form-control bg-dark text-light" id="password" name="password" placeholder="Password"> <label for="password" th:text="#{password}">Password</label>
+          </div>
 
-        <div  th:insert="~{fragments/footer.html :: footer}"></div>
- </div>
-
-
-</body>
+          <div class="checkbox mb-3">
+            <label > <input type="checkbox" value="remember-me">
+              <span th:text="#{login.rememberme}"></span>
+            </label>
+          </div>
+          <button class="w-100 btn btn-lg btn-primary" type="submit" th:text="#{login.signin}">Sign in</button>
+        </form>
+        <div class="mt-3"> <!-- Added a margin-top for spacing -->
+          <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              English (GB) <!-- Default language placeholder -->
+            </button>
+            <div class="dropdown-menu" aria-labelledby="languageDropdown">
+              <!-- Here's where the fragment will be included -->
+              <th:block th:replace="~{fragments/languages :: langs}"></th:block>
+            </div>
+          </div>
+        </div>
+        <div class="text-danger text-center">
+          <div th:if="${error == 'badcredentials'}" th:text="#{login.invalid}">Invalid username or password.</div>
+          <div th:if="${error == 'locked'}" th:text="#{login.locked}">Your account has been locked. </div>
+        </div>
+      </main>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
 </html>

@@ -1,233 +1,104 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{multiTool.title}, header=#{multiTool.header})}"></th:block>
+  </head>
 
-<th:block th:insert="~{fragments/common :: head(title=#{multiTool.title}, header=#{multiTool.header})}"></th:block>
-
-<body>
+  <body>
     <div id="image-highlighter"></div>
     <div id="page-container">
-        <div id="content-wrap">
-            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-            <br> <br>
-            <div class="multi-tool-container">
-                <div class="row justify-content-center">
-                    <h2 th:text="#{multiTool.header}"></h2>
-                    <div class="col-md-12" id="pages-container-wrapper">
-                        <div id="pages-container">
-                            <div class="page-container" th:each="pdf, status: ${pdfList}" th:id="'page-container-' + ${status.index}">
-                                <div class="page-number-container">
-                                    <span th:text="${status.index + 1}"></span>
-                                </div>
-                                <img th:src="${pdf.imageUrl}" alt="PDF Page">
-                            </div>
-                        </div>
-                    </div>
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br /><br />
+        <div class="multi-tool-container">
+          <div class="row justify-content-center">
+            <h2 th:text="#{multiTool.header}"></h2>
+            <div class="col-md-12" id="pages-container-wrapper">
+              <div id="pages-container">
+                <div class="page-container" th:each="pdf, status: ${pdfList}" th:id="'page-container-' + ${status.index}">
+                  <div class="page-number-container">
+                    <span th:text="${status.index + 1}"></span>
+                  </div>
+                  <img th:src="${pdf.imageUrl}" alt="PDF Page">
                 </div>
+              </div>
             </div>
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-md-6" style="text-align: center">
-                        <div id="global-buttons-container" class="d-flex align-content-center justify-content-center">
-                            <div class="form-group">
-                                <label for="filename-input">Filename</label>
-                                <input type="text" class="form-control" id="filename-input" placeholder="filename">
-                            </div>
-                        </div>
-                        <div id="global-buttons-container">
-
-                            <button class="btn btn-primary" onclick="addPdfs()">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
-                                    <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
-                                    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-                                </svg>
-                            </button>
-
-
-                            <button class="btn btn-secondary enable-on-file" onclick="rotateAll(-90)" disabled>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
-                                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z" />
-                                    <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z" />
-                                </svg>
-                            </button>
-
-                            <button class="btn btn-secondary enable-on-file" onclick="rotateAll(90)" disabled>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-                                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
-                                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
-                                </svg>
-                            </button>
-
-                            <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
-                                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-                                </svg>
-                            </button>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
-        <div th:insert="~{fragments/footer.html :: footer}"></div>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6" style="text-align: center">
+              <div id="global-buttons-container" class="d-flex align-content-center justify-content-center">
+                <div class="form-group">
+                  <label for="filename-input">Filename</label>
+                  <input type="text" class="form-control" id="filename-input" placeholder="filename">
+                </div>
+              </div>
+              <div id="global-buttons-container">
+                <button class="btn btn-primary" onclick="addPdfs()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
+                    <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                  </svg>
+                </button>
+                <button class="btn btn-secondary enable-on-file" onclick="rotateAll(-90)" disabled>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z" />
+                    <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z" />
+                  </svg>
+                </button>
+                <button class="btn btn-secondary enable-on-file" onclick="rotateAll(90)" disabled>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
+                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
+                  </svg>
+                </button>
+                <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
     <div id="drag-container"></div>
 
     <script type="module">
-        import PdfContainer from './js/multitool/PdfContainer.js';
-        import DragDropManager from "./js/multitool/DragDropManager.js";
-        import scrollDivHorizontally from "./js/multitool/horizontalScroll.js";
-        import ImageHighlighter from "./js/multitool/ImageHighlighter.js";
-        import PdfActionsManager from './js/multitool/PdfActionsManager.js';
-        import FileDragManager from './js/multitool/fileInput.js';
-        // enables drag and drop
-        const dragDropManager = new DragDropManager('drag-container', 'pages-container');
-        // enables image highlight on click
-        const imageHighlighter = new ImageHighlighter('image-highlighter');
-        // enables the default action buttons on each pdf
-        const pdfActionsManager = new PdfActionsManager('pages-container');
-        const fileDragManager = new FileDragManager();
+      import PdfContainer from './js/multitool/PdfContainer.js';
+      import DragDropManager from "./js/multitool/DragDropManager.js";
+      import scrollDivHorizontally from "./js/multitool/horizontalScroll.js";
+      import ImageHighlighter from "./js/multitool/ImageHighlighter.js";
+      import PdfActionsManager from './js/multitool/PdfActionsManager.js';
+      import FileDragManager from './js/multitool/fileInput.js';
+      // enables drag and drop
+      const dragDropManager = new DragDropManager('drag-container', 'pages-container');
+      // enables image highlight on click
+      const imageHighlighter = new ImageHighlighter('image-highlighter');
+      // enables the default action buttons on each pdf
+      const pdfActionsManager = new PdfActionsManager('pages-container');
+      const fileDragManager = new FileDragManager();
 
-        // Scroll the wrapper horizontally
-        scrollDivHorizontally('pages-container-wrapper');
+      // Scroll the wrapper horizontally
+      scrollDivHorizontally('pages-container-wrapper');
 
-        // Automatically exposes rotateAll, addPdfs and exportPdf to the window for the global buttons.
-        const pdfContainer = new PdfContainer(
-            'pages-container',
-            'pages-container-wrapper',
-            [
-                dragDropManager,
-                imageHighlighter,
-                pdfActionsManager,
-                fileDragManager
-            ]
-        )
+      // Automatically exposes rotateAll, addPdfs and exportPdf to the window for the global buttons.
+      const pdfContainer = new PdfContainer(
+        'pages-container',
+        'pages-container-wrapper',
+        [
+          dragDropManager,
+          imageHighlighter,
+          pdfActionsManager,
+          fileDragManager
+        ]
+      )
 
-        fileDragManager.setCallback(async (files) => pdfContainer.addPdfsFromFiles(files));
+      fileDragManager.setCallback(async (files) => pdfContainer.addPdfsFromFiles(files));
     </script>
-
-    <style>
-        .multi-tool-container {
-            max-width: 95vw;
-            margin: 0 auto;
-        }
-
-        #global-buttons-container {
-            display: flex;
-            gap: 10px;
-            align-items: start;
-
-            background-color: rgba(13, 110, 253, 0.1);
-            border: 1px solid rgba(0, 0, 0, .25);
-            backdrop-filter: blur(2px);
-
-            top: 10px;
-            z-index: 10;
-            padding: 10px;
-            border-radius: 8px;
-        }
-        #global-buttons-container > * {
-            padding: 0.6rem 0.75rem;
-        }
-
-        #global-buttons-container svg {
-            width: 20px;
-            height: 20px;
-        }
-        #export-button {
-            margin-left: auto;
-        }
-
-        #pages-container-wrapper {
-            --background-color: rgba(0, 0, 0, 0.025);
-            --scroll-bar-color: #f1f1f1;
-            --scroll-bar-thumb: #888;
-            --scroll-bar-thumb-hover: #555;
-            background-color: var(--background-color);
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            padding: 10px 25px;
-            border-radius: 10px;
-            overflow-y: hidden;
-            overflow-x: auto;
-            min-height: 275px;
-            margin: 0 0 30px 0;
-        }
-
-        #pages-container {
-            margin: auto;
-            gap: 0px;
-            display:flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* width */
-        #pages-container-wrapper::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-
-        /* Track */
-        #pages-container-wrapper::-webkit-scrollbar-track {
-        background: var(--scroll-bar-color);
-        }
-
-        /* Handle */
-        #pages-container-wrapper::-webkit-scrollbar-thumb {
-            border-radius: 10px;
-            background: var(--scroll-bar-thumb);
-        }
-
-        /* Handle on hover */
-        #pages-container-wrapper::-webkit-scrollbar-thumb:hover {
-            background: var(--scroll-bar-thumb-hover);
-        }
-
-        .page-container {
-            height:250px;
-            display: flex;
-            align-items: center;
-            flex-direction: column-reverse;
-            aspect-ratio: 1;
-            text-align: center;
-            position: relative;
-            user-select: none;
-            transition: width 1s linear;
-
-        }
-
-        .page-container img {
-            /* max-width: calc(100% - 15px); */
-            max-height: calc(100% - 15px);
-            max-width: 237px;
-            display: block;
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            translate: -50% -50%;
-            box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
-            border-radius: 4px;
-            transition: rotate 0.3s;
-        }
-
-        #add-pdf-button {
-            margin: 0 auto;
-        }
-
-        .page-number {
-            position: absolute;
-            top: 5px;
-            right:5px;
-            color:white;
-            background-color: #007bff; /* Primary blue color */
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index:2;
-        }
-    </style>
-</body>
-
+  </body>
 </html>

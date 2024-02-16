@@ -1,20 +1,20 @@
 #page-container {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 #content-wrap {
-    flex: 1;
+  flex: 1;
 }
 
 #footer {
-    bottom: 0;
-    width: 100%;
+  bottom: 0;
+  width: 100%;
 }
 .navbar {
-    height: auto;  /* Adjusts height automatically based on content */
-    white-space: nowrap;  /* Prevents wrapping of navbar contents */
+  height: auto; /* Adjusts height automatically based on content */
+  white-space: nowrap; /* Prevents wrapping of navbar contents */
 }
 /* TODO enable later
 .navbar .container {
@@ -25,70 +25,70 @@
     margin-right: auto;
 }*/
 
-html[lang-direction=ltr] * {
-    direction: ltr;
+html[lang-direction="ltr"] * {
+  direction: ltr;
 }
-html[lang-direction=rtl] * {
-    direction: rtl;
-    text-align: right;
+html[lang-direction="rtl"] * {
+  direction: rtl;
+  text-align: right;
 }
 .ignore-rtl {
-    direction: ltr !important;
-    text-align: left !important;
+  direction: ltr !important;
+  text-align: left !important;
 }
 
 .align-top {
-    position: absolute;
-    top: 0;
+  position: absolute;
+  top: 0;
 }
 .align-center-right {
-    position: absolute;
-    right: 0;
-    top: 50%;
+  position: absolute;
+  right: 0;
+  top: 50%;
 }
 
 .align-center-left {
-    position: absolute;
-    left: 0;
-    top: 50%;
+  position: absolute;
+  left: 0;
+  top: 50%;
 }
 
 .align-bottom {
-    position: absolute;
-    bottom: 0;
+  position: absolute;
+  bottom: 0;
 }
 
 .btn-group > label:first-of-type {
-    border-top-left-radius: 0.25rem !important;
-    border-bottom-left-radius: 0.25rem !important;
+  border-top-left-radius: 0.25rem !important;
+  border-bottom-left-radius: 0.25rem !important;
 }
 
 html[lang-direction="rtl"] input.form-check-input {
-    position: relative;
-    margin-left: 0px;
+  position: relative;
+  margin-left: 0px;
 }
 html[lang-direction="rtl"] label.form-check-label {
-    display: inline;
+  display: inline;
 }
 
 .margin-auto-parent {
-    width: 100%;
-    display: flex;
+  width: 100%;
+  display: flex;
 }
 .margin-center {
-    margin: 0 auto;
+  margin: 0 auto;
 }
 #pdf-canvas {
-    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
-    width: 100%;
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+  width: 100%;
 }
 .fixed-shadow-canvas {
-    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
-    width: 100%;
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+  width: 100%;
 }
 .shadow-canvas {
-    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
 }
 .hidden {
-    display: none;
+  display: none;
 }
