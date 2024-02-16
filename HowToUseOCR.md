@@ -2,7 +2,7 @@
 
 This document provides instructions on how to add additional language packs for the OCR tab in Stirling-PDF, both inside and outside of Docker.
 
-## My OCR used to work and now doesnt!
+## My OCR used to work and now doesn't!
 Please update your tesseract docker volume path version from 4.00 to 5
 
 ## How does the OCR Work
