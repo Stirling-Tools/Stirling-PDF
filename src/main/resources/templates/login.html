@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{login.title}, header=#{login.header})}"></th:block>
     <link rel="stylesheet" href="css/login.css">
@@ -52,7 +52,7 @@
 
           document.addEventListener('DOMContentLoaded', function() {
 
-            const defaultLocale = document.documentElement.lang || 'en_GB';
+            const defaultLocale = document.documentElement.language || 'en_GB';
             const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
 
             const currentURL = new URL(window.location.href);
@@ -113,7 +113,7 @@
 
             if (languageCode) {
               localStorage.setItem('languageCode', languageCode);
-              const currentLang = document.documentElement.getAttribute('lang');
+              const currentLang = document.documentElement.getAttribute('language');
               if (currentLang !== languageCode) {
                 console.log("currentLang", currentLang)
                 console.log("languageCode", languageCode)
