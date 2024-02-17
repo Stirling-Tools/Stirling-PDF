@@ -140,7 +140,6 @@ public class EndpointConfiguration {
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");
         addEndpointToGroup("CLI", "extract-image-scans");
-        addEndpointToGroup("CLI", "remove-blanks");
         addEndpointToGroup("CLI", "repair");
         addEndpointToGroup("CLI", "pdf-to-pdfa");
         addEndpointToGroup("CLI", "file-to-pdf");
@@ -218,7 +217,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "split-by-size-or-count");
         addEndpointToGroup("Java", "overlay-pdf");
         addEndpointToGroup("Java", "split-pdf-by-sections");
-
+        addEndpointToGroup("Java", "remove-blanks");
+        
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
         addEndpointToGroup("Javascript", "sign");

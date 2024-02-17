@@ -42,7 +42,7 @@
 }
 #lives {
   top: 10px;
-  left: calc(7vw); /* Adjusted position */
+  left: calc(9vw); /* Adjusted position */
 }
 #high-score {
   top: 10px;
