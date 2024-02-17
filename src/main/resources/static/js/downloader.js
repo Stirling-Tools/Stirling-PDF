@@ -26,13 +26,14 @@ $(document).ready(function () {
     $("#submitBtn").text("Processing...");
     console.log(override);
     
-    // Set a timeout to show the game button if operation takes more than 3 seconds
+    // Set a timeout to show the game button if operation takes more than 5 seconds
     const timeoutId = setTimeout(() => {
+	  var boredWaiting = localStorage.getItem("boredWaiting") || "disabled";
       const showGameBtn = document.getElementById('show-game-btn');
-      if(showGameBtn){
+      if(boredWaiting === "enabled" && showGameBtn){
       	showGameBtn.style.display = 'block';
       }
-    }, 1); // 3000 milliseconds = 3 seconds
+    }, 5000); 
 
 
     try {
