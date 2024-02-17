@@ -25,6 +25,16 @@ $(document).ready(function () {
     const originalButtonText = $("#submitBtn").text();
     $("#submitBtn").text("Processing...");
     console.log(override);
+    
+    // Set a timeout to show the game button if operation takes more than 3 seconds
+    const timeoutId = setTimeout(() => {
+      const showGameBtn = document.getElementById('show-game-btn');
+      if(showGameBtn){
+      	showGameBtn.style.display = 'block';
+      }
+    }, 1); // 3000 milliseconds = 3 seconds
+
+
     try {
       if (remoteCall === true) {
         if (override === "multi" || (!multiple && files.length > 1 && override !== "single")) {
@@ -33,8 +43,11 @@ $(document).ready(function () {
           await handleSingleDownload(url, formData);
         }
       }
+      clearTimeout(timeoutId);
       $("#submitBtn").text(originalButtonText);
+      
     } catch (error) {
+	  clearTimeout(timeoutId);
       handleDownloadError(error);
       $("#submitBtn").text(originalButtonText);
       console.error(error);

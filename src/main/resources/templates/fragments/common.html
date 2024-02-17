@@ -70,6 +70,24 @@
       <script>
         console.log("loaded game");
         $(document).ready(function() {
+        	
+        	
+       	 // Find the file input within the form
+            var fileInput = $('input[type="file"]');
+            
+            // Find the closest enclosing form of the file input
+            var form = fileInput.closest('form');
+            
+            // Find the submit button within the form
+            var submitButton = form.find('button[type="submit"], input[type="submit"]');
+            
+            // Create the 'show-game-btn' button
+            var gameButton = $('<button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">Bored waiting?</button><br /><br />');
+            
+            // Insert the 'show-game-btn' just above the submit button
+            submitButton.before(gameButton);
+            
+            
           function loadGameScript(callback) {
             console.log('loadGameScript called');
             const script = document.createElement('script');
@@ -104,6 +122,8 @@
               gameDialog.close();
             }
           })
+    	
+          
         })
       </script>
       <div id="game-container">
@@ -115,6 +135,7 @@
       </div>
       <link rel="stylesheet" href="css/game.css">
     </dialog>
+
 </th:block>
 
 <th:block th:fragment="fileSelector(name, multiple)" th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, notRequired=${notRequired} ?: false">
@@ -139,6 +160,9 @@
                   </div>
                 </div>
               </div>
-              <button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">Bored waiting?</button>
+             
+ 
+          
+    
               <script src="js/fileInput.js"></script>
 </th:block>

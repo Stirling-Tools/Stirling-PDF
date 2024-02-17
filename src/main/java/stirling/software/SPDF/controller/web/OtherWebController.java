@@ -82,7 +82,7 @@ public class OtherWebController {
     }
 
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = "/usr/share/tesseract-ocr/5/tessdata";
+        String tessdataDir = "/usr/share/tesseract";
         File[] files = new File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();
