@@ -79,6 +79,16 @@ public class ConfigInitializer
                     return parts.length > 0 ? parts[0].trim().replace("#", "").trim() : "";
                 };
 
+        Function<String, Integer> getIndentationLevel =
+                line -> {
+                    int count = 0;
+                    for (char ch : line.toCharArray()) {
+                        if (ch == ' ') count++;
+                        else break;
+                    }
+                    return count;
+                };
+
         Set<String> userKeys = userLines.stream().map(extractKey).collect(Collectors.toSet());
 
         for (String line : templateLines) {
@@ -134,10 +144,77 @@ public class ConfigInitializer
                             .map(extractKey)
                             .anyMatch(templateKey -> templateKey.equalsIgnoreCase(userKey));
             if (!isPresentInTemplate && !isCommented.apply(userLine)) {
-                mergedLines.add(userLine);
+                if (!childOfTemplateEntry(
+                        isCommented,
+                        extractKey,
+                        getIndentationLevel,
+                        userLines,
+                        userLine,
+                        templateLines)) {
+                    // check if userLine is a child of a entry within templateLines or not, if child
+                    // of parent in templateLines then dont add to mergedLines, if anything else
+                    // then add
+                    mergedLines.add(userLine);
+                }
             }
         }
 
         Files.write(outputPath, mergedLines, StandardCharsets.UTF_8);
+    }
+
+    // New method to check if a userLine is a child of an entry in templateLines
+    boolean childOfTemplateEntry(
+            Function<String, Boolean> isCommented,
+            Function<String, String> extractKey,
+            Function<String, Integer> getIndentationLevel,
+            List<String> userLines,
+            String userLine,
+            List<String> templateLines) {
+        String userKey = extractKey.apply(userLine).trim();
+        int userIndentation = getIndentationLevel.apply(userLine);
+
+        // Start by assuming the line is not a child of an entry in templateLines
+        boolean isChild = false;
+
+        // Iterate backwards through userLines from the current line to find any parent
+        for (int i = userLines.indexOf(userLine) - 1; i >= 0; i--) {
+            String potentialParentLine = userLines.get(i);
+            int parentIndentation = getIndentationLevel.apply(potentialParentLine);
+
+            // Check if we've reached a potential parent based on indentation
+            if (parentIndentation < userIndentation) {
+                String parentKey = extractKey.apply(potentialParentLine).trim();
+
+                // Now, check if this potential parent or any of its parents exist in templateLines
+                boolean parentExistsInTemplate =
+                        templateLines.stream()
+                                .filter(line -> !isCommented.apply(line)) // Skip commented lines
+                                .anyMatch(
+                                        templateLine -> {
+                                            String templateKey =
+                                                    extractKey.apply(templateLine).trim();
+                                            return parentKey.equalsIgnoreCase(templateKey);
+                                        });
+
+                if (!parentExistsInTemplate) {
+                    // If the parent does not exist in template, check the next level parent
+                    userIndentation =
+                            parentIndentation; // Update userIndentation to the parent's indentation
+                    // for next iteration
+                    if (parentIndentation == 0) {
+                        // If we've reached the top-level parent and it's not in template, the
+                        // original line is considered not a child
+                        isChild = false;
+                        break;
+                    }
+                } else {
+                    // If any parent exists in template, the original line is considered a child
+                    isChild = true;
+                    break;
+                }
+            }
+        }
+
+        return isChild; // Return true if the line is not a child of any entry in templateLines
     }
 }
