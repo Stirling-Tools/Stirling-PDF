@@ -1,22 +1,3 @@
-<footer th:fragment="footer" id="footer" class="text-center pt-5">
-  <div class="footer-center pb-4">
-    <!-- Links section -->
-    <div class="d-flex justify-content-center">
-      <ul class="list-unstyled d-flex">
-        <li><a class="footer-link px-2" id="licenses" target="_blank" th:href="@{'/licenses'}" th:text="#{licenses.nav}">Licenses</a></li>
-        <li><a class="footer-link px-2" id="survey" target="_blank" href="https://stirlingpdf.info/s/cm28y3niq000o56dv7liv8wsu" th:text="#{survey.nav}">Survey</a></li>
-        <li th:if="${@privacyPolicy != ''}"><a class="footer-link px-2" target="_blank" th:href="${@privacyPolicy}" th:text="#{legal.privacy}">privacyPolicy</a></li>
-        <li th:if="${@termsAndConditions != ''}"><a class="footer-link px-2" target="_blank" th:href="${@termsAndConditions}" th:text="#{legal.terms}">termsAndConditions</a></li>
-        <li th:if="${@accessibilityStatement != ''}"><a class="footer-link px-2" target="_blank" th:href="${@accessibilityStatement}" th:text="#{legal.accessibility}">accessibilityStatement</a></li>
-        <li th:if="${@cookiePolicy != ''}"><a class="footer-link px-2" target="_blank" th:href="${@cookiePolicy}" th:text="#{legal.cookie}">cookiePolicy</a></li>
-        <li th:if="${@impressum != ''}"><a class="footer-link px-2" target="_blank" th:href="${@impressum}" th:text="#{legal.impressum}">impressum</a></li>
-      </ul>
-    </div>
-
-    <!-- powered by section -->
-    <div class="footer-powered-by">
-	  <span th:text="#{poweredBy}"></span>
-	  <a href="https://stirlingpdf.com" class="stirling-link">Stirling PDF</a>
-	</div>
-  </div>
-</footer>
+<footer th:fragment="footer" id="footer" class="text-center py-3">
+        <a href="licenses" id="licenses" target="_blank" class="mx-1" title="" th:text="#{licenses.nav}">Licenses</a>
+      </footer>
