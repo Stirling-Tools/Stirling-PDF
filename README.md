@@ -172,7 +172,7 @@ Stirling PDF currently supports 26!
 - Hindi (हिंदी) (hi_IN)
 - Hungarian (Magyar) (hu_HU)
 - Bulgarian (Български) (bg_BG)
-- Sebian Latin alphabet (Srpski) (sr_Latn_RS)
+- Sebian Latin alphabet (Srpski) (sr_LATN_RS)
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
