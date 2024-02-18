@@ -32,8 +32,7 @@ function initializeGame() {
   const BASE_SPAWN_INTERVAL_MS = 1250; // milliseconds before a new enemy spawns
   const LEVEL_INCREASE_FACTOR_MS = 25; // milliseconds to decrease the spawn interval per level
   const MAX_SPAWN_RATE_REDUCTION_MS = 800; // Max milliseconds from the base spawn interval
-  
-  
+
   let keysPressed = {};
   const pdfs = [];
   const projectiles = [];
@@ -42,11 +41,10 @@ function initializeGame() {
   let pdfSpeed = BASE_PDF_SPEED;
   let gameOver = false;
 
-  
   function handleKeys() {
     if (keysPressed["ArrowLeft"]) {
       playerX -= PLAYER_MOVE_SPEED;
-      playerX = Math.max(0, playerX)
+      playerX = Math.max(0, playerX);
     }
     if (keysPressed["ArrowRight"]) {
       playerX += PLAYER_MOVE_SPEED;
@@ -70,9 +68,9 @@ function initializeGame() {
     handleKeys();
   }
   function onKeyUp(event) {
-	  keysPressed[event.key] = false;
+    keysPressed[event.key] = false;
   }
-  
+
   document.removeEventListener("keydown", onKeydown);
   document.removeEventListener("keyup", onKeyUp);
   document.addEventListener("keydown", onKeydown);
@@ -109,7 +107,7 @@ function initializeGame() {
     pdf.classList.add("pdf");
     pdf.style.width = pdfSize + "px";
     pdf.style.height = pdfSize + "px";
-    pdf.style.left = Math.floor(Math.random() * (gameContainer.clientWidth - (2*pdfSize))) + pdfSize + "px";
+    pdf.style.left = Math.floor(Math.random() * (gameContainer.clientWidth - 2 * pdfSize)) + pdfSize + "px";
     pdf.style.top = "0px";
     gameContainer.appendChild(pdf);
     pdfs.push(pdf);
@@ -123,7 +121,7 @@ function initializeGame() {
   function updateGame() {
     if (gameOver || paused) return;
 
-	handleKeys();
+    handleKeys();
     for (let pdfIndex = 0; pdfIndex < pdfs.length; pdfIndex++) {
       const pdf = pdfs[pdfIndex];
       const pdfY = parseFloat(pdf.style.top) + pdfSpeed;
@@ -242,8 +240,6 @@ function initializeGame() {
   }
 
   let spawnPdfTimeout;
-
-  
 
   function spawnPdfInterval() {
     if (gameOver || paused) {
