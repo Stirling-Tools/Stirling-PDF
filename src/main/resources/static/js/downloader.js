@@ -45,27 +45,24 @@ $(document).ready(function () {
       }
       clearTimeout(timeoutId);
       $("#submitBtn").text(originalButtonText);
-
+      
       // After process finishes, check for boredWaiting and gameDialog open status
       const boredWaiting = localStorage.getItem("boredWaiting") || "disabled";
-      const gameDialog = document.getElementById("game-container-wrapper");
+      const gameDialog = document.getElementById('game-container-wrapper');
       if (boredWaiting === "enabled" && gameDialog && gameDialog.open) {
         // Display a green banner at the bottom of the screen saying "Download complete"
         let downloadCompleteText = "Download Complete";
-        if (window.downloadCompleteText) {
-          downloadCompleteText = window.downloadCompleteText;
-        }
-        $("body").append(
-          '<div id="download-complete-banner" style="position:fixed;bottom:0;left:0;width:100%;background-color:green;color:white;text-align:center;padding:10px;font-size:16px;z-index:1000;">' +
-            downloadCompleteText +
-            "</div>",
-        );
-        setTimeout(function () {
-          $("#download-complete-banner").fadeOut("slow", function () {
+        if(window.downloadCompleteText){
+			downloadCompleteText = window.downloadCompleteText;
+		}
+        $("body").append('<div id="download-complete-banner" style="position:fixed;bottom:0;left:0;width:100%;background-color:green;color:white;text-align:center;padding:10px;font-size:16px;z-index:1000;">'+ downloadCompleteText + '</div>');
+        setTimeout(function() {
+          $("#download-complete-banner").fadeOut("slow", function() {
             $(this).remove(); // Remove the banner after fading out
           });
         }, 5000); // Banner will fade out after 5 seconds
       }
+      
     } catch (error) {
       clearTimeout(timeoutId);
       handleDownloadError(error);
