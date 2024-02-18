@@ -218,7 +218,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "overlay-pdf");
         addEndpointToGroup("Java", "split-pdf-by-sections");
         addEndpointToGroup("Java", "remove-blanks");
-        
+
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
         addEndpointToGroup("Javascript", "sign");
