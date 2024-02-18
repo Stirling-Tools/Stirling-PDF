@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-    - "build.gradle"
+      - "build.gradle"
 
 permissions:
   contents: write
