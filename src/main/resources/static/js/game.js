@@ -26,14 +26,22 @@ function initializeGame() {
   let highScore = localStorage.getItem("highScore") ? parseInt(localStorage.getItem("highScore")) : 0;
   updateHighScore();
 
+  const BASE_PDF_SPEED = 1;
+  const LEVEL_INCREASE_PDF_SPEED = 0.2;
+  const BASE_SPAWN_INTERVAL_MS = 1250; // milliseconds before a new enemy spawns
+  const LEVEL_INCREASE_FACTOR_MS = 25; // milliseconds to decrease the spawn interval per level
+  const MAX_SPAWN_RATE_REDUCTION_MS = 800; // Max milliseconds from the base spawn interval
+  
+  
   const keysPressed = {};
   const pdfs = [];
   const projectiles = [];
   let score = 0;
   let level = 1;
-  let pdfSpeed = 0.5;
+  let pdfSpeed = BASE_PDF_SPEED;
   let gameOver = false;
 
+  
   function handleKeys() {
     if (keysPressed["ArrowLeft"]) {
       playerX -= 10;
@@ -188,7 +196,7 @@ function initializeGame() {
     updateScore();
     updateLives();
     levelElement.textContent = "Level: " + level;
-    pdfSpeed = 1;
+    pdfSpeed = BASE_PDF_SPEED;
     clearTimeout(spawnPdfTimeout); // Clear the existing spawnPdfTimeout
     setTimeout(updateGame, 1000 / 60);
     spawnPdfInterval();
@@ -204,7 +212,7 @@ function initializeGame() {
     if (newLevel > level) {
       level = newLevel;
       levelElement.textContent = "Level: " + level;
-      pdfSpeed += 0.2;
+      pdfSpeed += LEVEL_INCREASE_PDF_SPEED;
     }
   }
 
@@ -227,9 +235,7 @@ function initializeGame() {
 
   let spawnPdfTimeout;
 
-  const BASE_SPAWN_INTERVAL_MS = 1250; // milliseconds before a new enemy spawns
-  const LEVEL_INCREASE_FACTOR_MS = 0; // milliseconds to decrease the spawn interval per level
-  const MAX_SPAWN_RATE_REDUCTION_MS = 800; // Max milliseconds from the base spawn interval
+  
 
   function spawnPdfInterval() {
     console.log("spawnPdfInterval");
