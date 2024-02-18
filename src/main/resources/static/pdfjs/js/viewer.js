@@ -3323,13 +3323,13 @@
                     kind: OptionKind.WORKER
                 },
                 workerSrc: {
-                    value: "/pdfjs/pdf.worker.js",
+                    value: "./pdfjs/pdf.worker.js",
                     kind: OptionKind.WORKER
                 }
             };
             {
                 defaultOptions.defaultUrl = {
-                    value: "/pdfjs/example/Welcome.pdf",
+                    value: "./pdfjs/example/Welcome.pdf",
                     kind: OptionKind.VIEWER
                 };
                 defaultOptions.disablePreferences = {

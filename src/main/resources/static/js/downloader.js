@@ -25,16 +25,15 @@ $(document).ready(function () {
     const originalButtonText = $("#submitBtn").text();
     $("#submitBtn").text("Processing...");
     console.log(override);
-    
+
     // Set a timeout to show the game button if operation takes more than 5 seconds
     const timeoutId = setTimeout(() => {
-	  var boredWaiting = localStorage.getItem("boredWaiting") || "disabled";
-      const showGameBtn = document.getElementById('show-game-btn');
-      if(boredWaiting === "enabled" && showGameBtn){
-      	showGameBtn.style.display = 'block';
+      var boredWaiting = localStorage.getItem("boredWaiting") || "disabled";
+      const showGameBtn = document.getElementById("show-game-btn");
+      if (boredWaiting === "enabled" && showGameBtn) {
+        showGameBtn.style.display = "block";
       }
-    }, 5000); 
-
+    }, 5000);
 
     try {
       if (remoteCall === true) {
@@ -46,9 +45,8 @@ $(document).ready(function () {
       }
       clearTimeout(timeoutId);
       $("#submitBtn").text(originalButtonText);
-      
     } catch (error) {
-	  clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
       handleDownloadError(error);
       $("#submitBtn").text(originalButtonText);
       console.error(error);
