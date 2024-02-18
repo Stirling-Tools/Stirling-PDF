@@ -246,13 +246,10 @@ function initializeGame() {
   
 
   function spawnPdfInterval() {
-    console.log("spawnPdfInterval");
     if (gameOver || paused) {
-      console.log("spawnPdfInterval 2");
       clearTimeout(spawnPdfTimeout);
       return;
     }
-    console.log("spawnPdfInterval 3");
     spawnPdf();
     let spawnRateReduction = Math.min(level * LEVEL_INCREASE_FACTOR_MS, MAX_SPAWN_RATE_REDUCTION_MS);
     let spawnRate = BASE_SPAWN_INTERVAL_MS - spawnRateReduction;
