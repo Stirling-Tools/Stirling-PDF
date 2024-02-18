@@ -41,4 +41,5 @@ repos:
         # args: ["--replace_with=  "]
         entry: python .github/scripts/check_tabulator.py
         language: python
-        files: ^.*\.html$
+        exclude: ^src/main/resources/static/pdfjs/
+        files: ^.*(\.html|\.css|\.js)$
