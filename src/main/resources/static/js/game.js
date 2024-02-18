@@ -26,6 +26,7 @@ function initializeGame() {
   let highScore = localStorage.getItem("highScore") ? parseInt(localStorage.getItem("highScore")) : 0;
   updateHighScore();
 
+  const PLAYER_MOVE_SPEED = 5;
   const BASE_PDF_SPEED = 1;
   const LEVEL_INCREASE_PDF_SPEED = 0.2;
   const BASE_SPAWN_INTERVAL_MS = 1250; // milliseconds before a new enemy spawns
@@ -33,7 +34,7 @@ function initializeGame() {
   const MAX_SPAWN_RATE_REDUCTION_MS = 800; // Max milliseconds from the base spawn interval
   
   
-  const keysPressed = {};
+  let keysPressed = {};
   const pdfs = [];
   const projectiles = [];
   let score = 0;
@@ -44,10 +45,12 @@ function initializeGame() {
   
   function handleKeys() {
     if (keysPressed["ArrowLeft"]) {
-      playerX -= 10;
+      playerX -= PLAYER_MOVE_SPEED;
+      playerX = Math.max(0, playerX)
     }
     if (keysPressed["ArrowRight"]) {
-      playerX += 10;
+      playerX += PLAYER_MOVE_SPEED;
+      playerX = Math.min(gameContainer.clientWidth - playerSize, playerX);
     }
     if (keysPressed[" "] && !gameOver) {
       const currentTime = new Date().getTime();
@@ -59,17 +62,21 @@ function initializeGame() {
     updatePlayerPosition();
   }
 
-  document.addEventListener("keydown", (event) => {
+  function onKeydown(event) {
     if (event.key === " ") {
       event.preventDefault();
     }
     keysPressed[event.key] = true;
     handleKeys();
-  });
-
-  document.addEventListener("keyup", (event) => {
-    keysPressed[event.key] = false;
-  });
+  }
+  function onKeyUp(event) {
+	  keysPressed[event.key] = false;
+  }
+  
+  document.removeEventListener("keydown", onKeydown);
+  document.removeEventListener("keyup", onKeyUp);
+  document.addEventListener("keydown", onKeydown);
+  document.addEventListener("keyup", onKeyUp);
 
   function updatePlayerPosition() {
     player.style.left = playerX + "px";
@@ -102,7 +109,7 @@ function initializeGame() {
     pdf.classList.add("pdf");
     pdf.style.width = pdfSize + "px";
     pdf.style.height = pdfSize + "px";
-    pdf.style.left = Math.floor(Math.random() * (gameContainer.clientWidth - pdfSize)) + "px";
+    pdf.style.left = Math.floor(Math.random() * (gameContainer.clientWidth - (2*pdfSize))) + pdfSize + "px";
     pdf.style.top = "0px";
     gameContainer.appendChild(pdf);
     pdfs.push(pdf);
@@ -116,6 +123,7 @@ function initializeGame() {
   function updateGame() {
     if (gameOver || paused) return;
 
+	handleKeys();
     for (let pdfIndex = 0; pdfIndex < pdfs.length; pdfIndex++) {
       const pdf = pdfs[pdfIndex];
       const pdfY = parseFloat(pdf.style.top) + pdfSpeed;
