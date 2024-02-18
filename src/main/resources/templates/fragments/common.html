@@ -67,7 +67,7 @@
 
 <th:block th:fragment="game">
     <dialog id="game-container-wrapper" class="game-container-wrapper" data-bs-modal>
-      <script>
+      <script th:inline="javascript">
         console.log("loaded game");
         $(document).ready(function() {
 
@@ -80,8 +80,11 @@
           // Find the submit button within the form
           var submitButton = form.find('button[type="submit"], input[type="submit"]');
           
+          const boredWaitingText = /*[[#{bored}]]*/ 'Bored Waiting?';
+          const downloadCompleteText = /*[[#{downloadComplete}]]*/ 'Download Complete';
+          window.downloadCompleteText = downloadCompleteText;
           // Create the 'show-game-btn' button
-          var gameButton = $('<button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">Bored waiting?</button><br /><br />');
+          var gameButton = $('<button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">' + boredWaitingText + '</button><br /><br />');
           
           // Insert the 'show-game-btn' just above the submit button
           submitButton.before(gameButton);
