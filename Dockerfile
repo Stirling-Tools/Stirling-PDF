@@ -23,9 +23,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         python3 && \
     wget https://bootstrap.pypa.io/get-pip.py -qO - | python3 - --break-system-packages --no-cache-dir --upgrade && \
 # uno unoconv and HTML
-    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint && \
-    mv /usr/share/tessdata /usr/share/tessdata-original
-
+    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint
 
 
 ARG VERSION_TAG
@@ -62,6 +60,9 @@ RUN mkdir -p  /configs /logs /customFiles /pipeline/watchedFolders /pipeline/fin
 ##    chmod +x /scripts/init.sh
 
 EXPOSE 8080
+
+# location for the additional tesseract OCR language files
+VOLUME /languages
 
 # Set user and run command
 ##USER stirlingpdfuser

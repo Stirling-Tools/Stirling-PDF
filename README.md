@@ -107,10 +107,10 @@ For people that don't mind about space optimization just use the latest tag.
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
 
 Docker Run
-```bash
+```sh
 docker run -d \
   -p 8080:8080 \
-  -v /location/of/trainingData:/usr/share/tessdata \
+  -v /location/of/trainingData:/languages:ro \
   -v /location/of/extraConfigs:/configs \
   -v /location/of/logs:/logs \
   -e DOCKER_ENABLE_SECURITY=false \
@@ -122,16 +122,19 @@ docker run -d \
 
   -v /location/of/customFiles:/customFiles \
 ```
+
 Docker Compose
+
 ```yaml
 version: '3.3'
+
 services:
   stirling-pdf:
     image: frooodle/s-pdf:latest
     ports:
       - '8080:8080'
     volumes:
-      - /location/of/trainingData:/usr/share/tessdata #Required for extra OCR languages
+      - /location/of/trainingData:/languages:ro # Required only for extra OCR languages
       - /location/of/extraConfigs:/configs
 #      - /location/of/customFiles:/customFiles/
 #      - /location/of/logs:/logs/
@@ -142,6 +145,7 @@ services:
 Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
 
 ## Enable OCR/Compression feature
+
 Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Supported Languages

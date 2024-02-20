@@ -3,9 +3,11 @@
 This document provides instructions on how to add additional language packs for the OCR tab in Stirling-PDF, both inside and outside of Docker.
 
 ## My OCR used to work and now doesn't!
-The paths have changed for the tessadata locations on new docker images, please use ``/usr/share/tessdata`` (Others should still work for backwards compatability but might not)
+
+The paths have changed for the tessadata locations on new docker images, please use ``/languages`` (Others should still work for backwards compatability but might not)
 
 ## How does the OCR Work
+
 Stirling-PDF uses [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF) which in turn uses tesseract for its text recognition.
 All credit goes to them for this awesome work!
 
@@ -21,14 +23,13 @@ Depending on your requirements, you can choose the appropriate language pack for
 ### Installing Language Packs
 
 1. Download the desired language pack(s) by selecting the `.traineddata` file(s) for the language(s) you need.
-2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tessdata`
-
-# DO NOT REMOVE EXISTING ENG.TRAINEDDATA, IT'S REQUIRED.
+2. Place the `*.traineddata` files in the Tesseract tessdata directory: `/languages`
 
 #### Docker
 
 If you are using Docker, you need to expose the Tesseract tessdata directory as a volume in order to use the additional language packs.
 #### Docker Compose
+
 Modify your `docker-compose.yml` file to include the following volume configuration:
 
 
@@ -37,17 +38,18 @@ services:
   your_service_name:
     image: your_docker_image_name
     volumes:
-      - /location/of/trainingData:/usr/share/tessdata
+      - /location/of/trainingData:/languages:ro
 ```
 
-
 #### Docker run
+
 Add the following to your existing docker run command
 ```bash
--v /location/of/trainingData:/usr/share/tessdata
+-v /location/of/trainingData:/languages:ro
 ```
 
 #### Non-Docker
+
 If you are not using Docker, you need to install the OCR components, including the ocrmypdf app.
 You can see [OCRmyPDF install guide](https://ocrmypdf.readthedocs.io/en/latest/installation.html)
 
