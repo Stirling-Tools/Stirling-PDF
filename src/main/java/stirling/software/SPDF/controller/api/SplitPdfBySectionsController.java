@@ -1,16 +1,19 @@
 package stirling.software.SPDF.controller.api;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -53,8 +56,19 @@ public class SplitPdfBySectionsController {
         // Process the PDF based on split parameters
         int horiz = request.getHorizontalDivisions() + 1;
         int verti = request.getVerticalDivisions() + 1;
-
+        boolean merge = request.isMerge();
         List<PDDocument> splitDocuments = splitPdfPages(sourceDocument, verti, horiz);
+
+        String filename =
+                Filenames.toSimpleFileName(file.getOriginalFilename())
+                        .replaceFirst("[.][^.]+$", "");
+        if (merge) {
+            ByteArrayOutputStream mergedPdf = mergeSplitPdfs(splitDocuments);
+            return WebResponseUtils.bytesToWebResponse(
+                    mergedPdf.toByteArray(),
+                    filename + "_split.pdf",
+                    MediaType.APPLICATION_OCTET_STREAM);
+        }
         for (PDDocument doc : splitDocuments) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             doc.save(baos);
@@ -65,9 +79,6 @@ public class SplitPdfBySectionsController {
         sourceDocument.close();
 
         Path zipFile = Files.createTempFile("split_documents", ".zip");
-        String filename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
         byte[] data;
 
         try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
@@ -144,5 +155,24 @@ public class SplitPdfBySectionsController {
         }
 
         return splitDocuments;
+    }
+
+    public ByteArrayOutputStream mergeSplitPdfs(List<PDDocument> splitDocuments)
+            throws IOException {
+        PDFMergerUtility pdfMerger = new PDFMergerUtility();
+        ByteArrayOutputStream mergedPdfOutputStream = new ByteArrayOutputStream();
+
+        for (PDDocument doc : splitDocuments) {
+            String tempFileName = UUID.randomUUID().toString();
+            File tempFile = File.createTempFile(tempFileName, ".pdf");
+            doc.save(tempFile);
+            pdfMerger.addSource(tempFile);
+            tempFile.deleteOnExit();
+        }
+
+        pdfMerger.setDestinationStream(mergedPdfOutputStream);
+        pdfMerger.mergeDocuments(null);
+
+        return mergedPdfOutputStream;
     }
 }
