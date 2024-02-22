@@ -37,7 +37,7 @@ RUN fc-cache -f -v && chmod +x /scripts/*
 ##    chmod +x /scripts/init.sh
 
 # Expose necessary ports
-EXPOSE 8080
+EXPOSE 8085
 
 # Set user and run command
 ##USER stirlingpdfuser
