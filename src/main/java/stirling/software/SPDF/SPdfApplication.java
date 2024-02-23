@@ -1,6 +1,8 @@
 package stirling.software.SPDF;
 
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 
@@ -9,7 +11,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import io.github.pixee.security.SystemCommand;
 
 import jakarta.annotation.PostConstruct;
@@ -19,6 +22,8 @@ import stirling.software.SPDF.utils.GeneralUtils;
 @SpringBootApplication
 @EnableScheduling
 public class SPdfApplication {
+
+    private static final Logger logger = LoggerFactory.getLogger(SPdfApplication.class);
 
     @Autowired private Environment env;
 
@@ -39,12 +44,12 @@ public class SPdfApplication {
                     SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Error opening browser: {}", e.getMessage());
             }
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, InterruptedException {
         SpringApplication app = new SpringApplication(SPdfApplication.class);
         app.addInitializers(new ConfigInitializer());
         if (Files.exists(Paths.get("configs/settings.yml"))) {
@@ -52,25 +57,30 @@ public class SPdfApplication {
                     Collections.singletonMap(
                             "spring.config.additional-location", "file:configs/settings.yml"));
         } else {
-            System.out.println(
-                    "External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
+            logger.warn("External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
         }
         app.run(args);
 
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new InterruptedException("Error");
         }
 
-        GeneralUtils.createDir("customFiles/static/");
-        GeneralUtils.createDir("customFiles/templates/");
+        try {
+            Files.createDirectories(Path.of("customFiles/static/"));
+            Files.createDirectories(Path.of("customFiles/templates/"));
+        } catch (Exception e) {
+            logger.error("Error creating directories: {}", e.getMessage());
+        }
+        printStartupLogs();
+    }
 
-        System.out.println("Stirling-PDF Started.");
+    private static void printStartupLogs() {
+        logger.info("Stirling-PDF Started.");
 
         String url = "http://localhost:" + getPort();
-        System.out.println("Navigate to " + url);
+        logger.info("Navigate to {}", url);
     }
 
     public static String getPort() {
