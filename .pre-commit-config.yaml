@@ -28,14 +28,6 @@ repos:
         files: ^(src)/.+\.properties$
   - repo: local
     hooks:
-      - id: mixed-line-endling
-        name: Mixed line ending
-        entry: python .github/scripts/mixed_line_ending.py
-        language: python
-        files: ^(\.properties|\.html|\.css|\.js|.gitignore|\.py|\.txt)$
-        exclude: ^(thirdParty|.*bootstrap.*\.css)$
-  - repo: local
-    hooks:
       - id: check-html-tabs
         name: Check HTML for tabs
         # args: ["--replace_with=  "]
