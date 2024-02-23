@@ -36,6 +36,7 @@
     "@vitejs/plugin-react": "^4.0.3",
     "typescript": "^5.0.2",
     "vite": "^4.4.4",
+    "vite-plugin-compile-time": "^0.2.1",
     "vite-plugin-dynamic-import": "^1.5.0"
   }
 }

@@ -1,15 +1,23 @@
 import { Link } from "react-router-dom";
 
-import { BaseSyntheticEvent } from "react";
+import { BaseSyntheticEvent, createContext, useState } from "react";
 import { Operator } from "@stirling-pdf/shared-operations/src/functions";
 import i18next from "i18next";
+import Joi from "@stirling-tools/joi";
+import { BuildFields } from "../components/fields/BuildFields";
 
 function Dynamic() {
+    const [schemaDescription, setSchemaDescription] = useState<Joi.Description>();
+
+
     const operators = ["impose"]; // TODO: Make this dynamic
 
     function selectionChanged(s: BaseSyntheticEvent) {
         const selectedValue = s.target.value;
-        if(selectedValue == "none") return;
+        if(selectedValue == "none") {
+            setSchemaDescription(undefined);
+            return;
+        }
 
         i18next.loadNamespaces("impose", (err, t) => {
             if (err) throw err;
@@ -19,8 +27,8 @@ function Dynamic() {
                 const Operator = Module[capitalizeFirstLetter(selectedValue)];
                 const description = Operator.schema.describe();
 
+                setSchemaDescription(description); // This will update children
                 console.log(description);
-                // TODO: use description to generate fields
             });
         });
     }
@@ -35,21 +43,19 @@ function Dynamic() {
 
             <input type="file" id="pdfFile" accept=".pdf" multiple />
             <br />
-
-            <br />
-            <textarea name="workflow" id="workflow"></textarea>
-            <br />
             <select id="pdfOptions" onChange={selectionChanged}>
                 <option value="none">none</option>
                 { operators.map((operator, i) => {
                     return (<option value={operator}>{operator}</option>)
                 }) }
             </select>
-            <button id="loadButton">Load</button>
-            <br />
+
+            <div id="values">
+                <BuildFields schemaDescription={schemaDescription}></BuildFields>
+            </div>
 
             <br />
-            <button id="doneButton">Done</button>
+            <button id="processButton">Process process file with current settings</button>
 
             <p>
                 <Link to="/">Go back home...</Link>

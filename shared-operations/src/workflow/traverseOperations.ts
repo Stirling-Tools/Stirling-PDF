@@ -3,10 +3,10 @@ import { Action, WaitAction } from "../../declarations/Action";
 import { PdfFile } from "../wrappers/PdfFile";
 import { Progress } from "../functions";
 import { validateOperations } from "./validateOperations";
-import { getOperatorByName } from "./getOperatorByName";
+import { getOperatorByName } from "./operatorAccessor";
 
 export async function traverseOperations(operations: Action[], input: PdfFile[], progressCallback: (state: Progress) => void): Promise<PdfFile[]> {
-    const validationResult = validateOperations(operations);
+    const validationResult = await validateOperations(operations);
     if(!validationResult.valid) {
         return Promise.reject({validationError: validationResult.reason});
     }
@@ -47,7 +47,7 @@ export async function traverseOperations(operations: Action[], input: PdfFile[],
             }
             break;
         default:
-            const operator = getOperatorByName(action.type);
+            const operator = await getOperatorByName(action.type);
             if(operator) {
                 const operation = new operator(action);
                 input = await operation.run(input, progressCallback);

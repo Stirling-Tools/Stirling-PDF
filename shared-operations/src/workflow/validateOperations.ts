@@ -1,9 +1,9 @@
 import { Operator } from "../functions";
 import { Action } from "../../declarations/Action";
-import { getOperatorByName } from "./getOperatorByName";
+import { getOperatorByName } from "./operatorAccessor";
 
 /** This function validates the "workflow-json" from the API */
-export function validateOperations(actions: Action[]): { valid: boolean, reason?: string} {
+export async function validateOperations(actions: Action[]): Promise<{ valid: boolean, reason?: string}> {
     const done: Action[] = [];
 
     for (const action of actions) {
@@ -15,7 +15,7 @@ export function validateOperations(actions: Action[]): { valid: boolean, reason?
             continue;
         }
         
-        const operator = getOperatorByName(action.type);
+        const operator = await getOperatorByName(action.type);
         if(!operator) {
             return { valid: false, reason: `action.type ${action.type} does not exist` };
         }
@@ -35,7 +35,7 @@ export function validateOperations(actions: Action[]): { valid: boolean, reason?
                     }
 
                     for (const afterDoneChild of done[childAction.values.id]?.actions || []) {
-                        const receivingOperator = getOperatorByName(afterDoneChild.type);
+                        const receivingOperator = await getOperatorByName(afterDoneChild.type);
                         if (receivingOperator === undefined) {
                             return { valid: false, reason: `action.type ${afterDoneChild.type} does not exist.` };
                         } else if (!ioCompatible(operator, receivingOperator)) {
@@ -47,7 +47,7 @@ export function validateOperations(actions: Action[]): { valid: boolean, reason?
                     return { valid: false, reason: "There shouldn't be a done action here." };
                 }
                 else {
-                    const receivingOperator = getOperatorByName(childAction.type);
+                    const receivingOperator = await getOperatorByName(childAction.type);
                     if (receivingOperator === undefined) {
                         return { valid: false, reason: `action.type ${childAction.type} does not exist.` };
                     } else if (!ioCompatible(operator, receivingOperator)) {
@@ -56,7 +56,7 @@ export function validateOperations(actions: Action[]): { valid: boolean, reason?
                 }
             }
 
-            const validationResult = validateOperations(action.actions);
+            const validationResult = await validateOperations(action.actions);
 
             if(!validationResult.valid) {
                 return validationResult;

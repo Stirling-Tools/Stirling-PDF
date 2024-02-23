@@ -36,10 +36,13 @@
         "pdf-lib": "^1.17.1",
         "rollup-plugin-copy": "^3.5.0",
         "tsconfig-paths": "^4.2.0",
+        "vite-plugin-compile-time": "^0.2.1",
+        "vite-plugin-dynamic-import": "^1.5.0",
         "vite-plugin-node-polyfills": "^0.19.0",
         "vite-plugin-top-level-await": "^1.4.1"
     },
     "devDependencies": {
+        "@rollup/plugin-dynamic-import-vars": "^2.1.2",
         "@rollup/plugin-run": "^3.0.2",
         "@rollup/plugin-typescript": "^11.1.6",
         "copyfiles": "^2.4.1",

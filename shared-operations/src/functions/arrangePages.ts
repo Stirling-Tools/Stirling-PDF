@@ -1,8 +1,7 @@
-
-import { PdfFile } from "../wrappers/PdfFile.js";
-import { Sorts } from "./common/pageIndexesSorting.js";
-import { getPages } from "./common/getPagesByIndex.js";
-import { parsePageIndexSpecification } from "./common/pageIndexesUtils.js";
+import { PdfFile } from "../wrappers/PdfFile";
+import { Sorts } from "./common/pageIndexesSorting";
+import { getPages } from "./common/getPagesByIndex";
+import { parsePageIndexSpecification } from "./common/pageIndexesUtils";
 
 export interface ArrangePagesParamsType {
     file: PdfFile;
