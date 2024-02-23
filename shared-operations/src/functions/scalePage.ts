@@ -1,7 +1,9 @@
 
 import Joi from "@stirling-tools/joi";
 import { PDFPage } from "pdf-lib";
-import { PdfFile, RepresentationType, JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
+import { PdfFile, RepresentationType } from "../wrappers/PdfFile";
+import { JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
+
 
 const whSchema = Joi.string().custom((value, helpers) => {
     console.log("value.pageSize", typeof value);

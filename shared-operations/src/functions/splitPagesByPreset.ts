@@ -1,8 +1,8 @@
 
-import { PdfFile } from "../wrappers/PdfFile.js";
-import { splitPagesByIndex } from "./common/splitPagesByIndex.js";
-import { detectEmptyPages } from "./common/detectEmptyPages.js";
-import { detectQRCodePages } from "./common/detectQRCodePages.js";
+import { PdfFile } from "../wrappers/PdfFile";
+import { splitPagesByIndex } from "./common/splitPagesByIndex";
+import { detectEmptyPages } from "./common/detectEmptyPages";
+import { detectQRCodePages } from "./common/detectQRCodePages";
 
 export interface SplitPageByPresetParamsType {
     file: PdfFile;

@@ -1,8 +1,8 @@
 
 import jsQR from "jsqr";
 
-import { PdfFile } from "../../wrappers/PdfFile.js";
-import { getImagesOnPage, PDFJSImage } from "./getImagesOnPage.js";
+import { PdfFile } from "../../wrappers/PdfFile";
+import { getImagesOnPage, PDFJSImage } from "./getImagesOnPage";
 
 export async function detectQRCodePages(file: PdfFile) {
     console.log("FileInQRPrev: ", file);

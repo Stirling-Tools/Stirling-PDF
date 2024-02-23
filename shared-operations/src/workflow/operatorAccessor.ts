@@ -2,7 +2,7 @@ import { Operator } from "../functions";
 import i18next from "i18next";
 
 function getCompileTimeOperatorList(): string[] {
-    return import.meta.compileTime("./listOperatorsInDir.ts");
+    return import.meta.compileTime("./listOperatorsInDir.ts"); // The will compile to ["impose", "extractPages", etc...]
 }
 
 export async function getOperatorByName(name: string): Promise<typeof Operator | undefined> {

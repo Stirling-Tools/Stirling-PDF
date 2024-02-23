@@ -1,7 +1,6 @@
 import * as PDFJS from "pdfjs-dist";
 import type { PDFDocumentProxy as PDFJSDocument } from "pdfjs-dist/types/src/display/api";
 import { PDFDocument as PDFLibDocument } from "pdf-lib";
-import Joi from "@stirling-tools/joi";
 
 export enum RepresentationType {
     Uint8Array,

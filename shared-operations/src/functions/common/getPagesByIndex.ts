@@ -1,5 +1,5 @@
 
-import { PdfFile, RepresentationType } from "../../wrappers/PdfFile.js";
+import { PdfFile, RepresentationType } from "../../wrappers/PdfFile";
 import { PDFDocument } from "pdf-lib";
 
 export async function getPages(file: PdfFile, pageIndexes: number[]): Promise<PdfFile> {

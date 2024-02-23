@@ -1,7 +1,7 @@
 
-import { PdfFile } from "../wrappers/PdfFile.js";
+import { PdfFile } from "../wrappers/PdfFile";
 import { parsePageIndexSpecification } from "./common/pageIndexesUtils";
-import { splitPagesByIndex } from "./common/splitPagesByIndex.js";
+import { splitPagesByIndex } from "./common/splitPagesByIndex";
 
 export interface SplitPdfByIndexParamsType {
     file: PdfFile;

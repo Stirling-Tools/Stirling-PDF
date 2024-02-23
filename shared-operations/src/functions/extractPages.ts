@@ -1,6 +1,6 @@
 
-import { PdfFile } from "../wrappers/PdfFile.js";
-import { getPages } from "./common/getPagesByIndex.js";
+import { PdfFile } from "../wrappers/PdfFile";
+import { getPages } from "./common/getPagesByIndex";
 import { parsePageIndexSpecification } from "./common/pageIndexesUtils";
 
 export interface ExtractPagesParamsType {

@@ -1,5 +1,5 @@
 
-import { PdfFile } from "../../wrappers/PdfFile.js";
+import { PdfFile } from "../../wrappers/PdfFile";
 import { getPages } from "./getPagesByIndex";
 
 export async function splitPagesByIndex(file: PdfFile, splitAfterPageIndexes: number[]): Promise<PdfFile[]> {

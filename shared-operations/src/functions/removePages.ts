@@ -1,7 +1,7 @@
 
-import { PdfFile } from "../wrappers/PdfFile.js";
-import { getPages } from "./common/getPagesByIndex.js";
-import { invertSelection, parsePageIndexSpecification } from "./common/pageIndexesUtils.js";
+import { PdfFile } from "../wrappers/PdfFile";
+import { getPages } from "./common/getPagesByIndex";
+import { invertSelection, parsePageIndexSpecification } from "./common/pageIndexesUtils";
 
 export interface RemovePagesParamsType {
     file: PdfFile;
