@@ -1,36 +1,72 @@
-package stirling.software.SPDF;
-
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import io.github.pixee.security.SystemCommand;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import io.github.pixee.security.SystemCommand;
-
-import jakarta.annotation.PostConstruct;
-import stirling.software.SPDF.config.ConfigInitializer;
-import stirling.software.SPDF.utils.GeneralUtils;
+import static java.nio.file.Files.createDirectories;
 
 @SpringBootApplication
 @EnableScheduling
 public class SPdfApplication {
 
-    @Autowired private Environment env;
+    private static Environment env;
 
-    @PostConstruct
-    public void init() {
-        // Check if the BROWSER_OPEN environment variable is set to true
-        String browserOpenEnv = env.getProperty("BROWSER_OPEN");
+    public SPdfApplication(Environment env) {
+        SPdfApplication.env = env;
+    }
+
+    public static void main(String[] args) {
+        SpringApplication app = new SpringApplication(SPdfApplication.class);
+        app.addInitializers((ApplicationContextInitializer<ConfigurableApplicationContext>) applicationContext -> {
+            if (Files.exists(Paths.get("configs/settings.yml"))) {
+                app.setDefaultProperties(
+                        Collections.singletonMap(
+                                "spring.config.additional-location", "file:configs/settings.yml"));
+            } else {
+                System.out.println(
+                        "External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
+            }
+        ConfigurableApplicationContext context = app.run(args);
+
+        createDirectories();
+        printStartupMessage(context);
+    }
+    }
+
+    private static void createDirectories() {
+        try {
+            createDirectories(Paths.get("customFiles/static/"));
+            createDirectories(Paths.get("customFiles/templates/"));
+        } catch (Exception e) {
+            System.err.println("Error creating directories: " + e.getMessage());
+        }
+    }
+
+    private static void printStartupMessage(ConfigurableApplicationContext context) {
+        String port = context.getEnvironment().getProperty("local.server.port", "8080");
+        String url = "http://localhost:" + port;
+        System.out.println("Stirling-PDF Started.");
+        System.out.println("Navigate to " + url);
+
+        // Open browser if BROWSER_OPEN environment variable is set to true
+        openBrowserIfRequired(context);
+    }
+
+    private static void openBrowserIfRequired(ConfigurableApplicationContext context) {
+        Environment environment = context.getEnvironment();
+        String browserOpenEnv = environment.getProperty("BROWSER_OPEN");
         boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
 
         if (browserOpen) {
             try {
-                String url = "http://localhost:" + getPort();
+                String url = "http://localhost:" + context.getEnvironment().getProperty("local.server.port", "8080");
 
                 String os = System.getProperty("os.name").toLowerCase();
                 Runtime rt = Runtime.getRuntime();
@@ -39,45 +75,8 @@ public class SPdfApplication {
                     SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("Error opening browser: " + e.getMessage());
             }
         }
-    }
-
-    public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(SPdfApplication.class);
-        app.addInitializers(new ConfigInitializer());
-        if (Files.exists(Paths.get("configs/settings.yml"))) {
-            app.setDefaultProperties(
-                    Collections.singletonMap(
-                            "spring.config.additional-location", "file:configs/settings.yml"));
-        } else {
-            System.out.println(
-                    "External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
-        }
-        app.run(args);
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        GeneralUtils.createDir("customFiles/static/");
-        GeneralUtils.createDir("customFiles/templates/");
-
-        System.out.println("Stirling-PDF Started.");
-
-        String url = "http://localhost:" + getPort();
-        System.out.println("Navigate to " + url);
-    }
-
-    public static String getPort() {
-        String port = System.getProperty("local.server.port");
-        if (port == null || port.isEmpty()) {
-            port = "8080";
-        }
-        return port;
     }
 }
