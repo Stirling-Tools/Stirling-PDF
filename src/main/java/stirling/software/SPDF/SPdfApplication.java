@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
@@ -17,7 +18,7 @@ import io.github.pixee.security.SystemCommand;
 
 import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.config.ConfigInitializer;
-import stirling.software.SPDF.utils.GeneralUtils;
+import stirling.software.SPDF.model.ApplicationProperties;
 
 @SpringBootApplication
 @EnableScheduling
@@ -26,6 +27,14 @@ public class SPdfApplication {
     private static final Logger logger = LoggerFactory.getLogger(SPdfApplication.class);
 
     @Autowired private Environment env;
+    @Autowired ApplicationProperties applicationProperties;
+
+    private static String serverPortStatic;
+
+    @Value("${server.port:8080}")
+    public void setServerPortStatic(String port) {
+        SPdfApplication.serverPortStatic = port;
+    }
 
     @PostConstruct
     public void init() {
@@ -35,7 +44,7 @@ public class SPdfApplication {
 
         if (browserOpen) {
             try {
-                String url = "http://localhost:" + getPort();
+                String url = "http://localhost:" + getNonStaticPort();
 
                 String os = System.getProperty("os.name").toLowerCase();
                 Runtime rt = Runtime.getRuntime();
@@ -64,7 +73,8 @@ public class SPdfApplication {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            throw new InterruptedException("Error");
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted while sleeping", e);
         }
 
         try {
@@ -79,15 +89,15 @@ public class SPdfApplication {
     private static void printStartupLogs() {
         logger.info("Stirling-PDF Started.");
 
-        String url = "http://localhost:" + getPort();
+        String url = "http://localhost:" + getStaticPort();
         logger.info("Navigate to {}", url);
     }
 
-    public static String getPort() {
-        String port = System.getProperty("local.server.port");
-        if (port == null || port.isEmpty()) {
-            port = "8080";
-        }
-        return port;
+    public static String getStaticPort() {
+        return serverPortStatic;
+    }
+
+    public String getNonStaticPort() {
+        return serverPortStatic;
     }
 }
