@@ -60,13 +60,7 @@ public class SPdfApplication {
             logger.warn("External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
         }
         app.run(args);
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.error("Thread interrupted while sleeping: {}", e.getMessage());
-        }
+        Thread.sleep(1000);
 
         try {
             Files.createDirectories(Path.of("customFiles/static/"));
