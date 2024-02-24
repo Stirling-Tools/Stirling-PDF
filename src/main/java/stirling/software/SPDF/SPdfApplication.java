@@ -65,7 +65,8 @@ public class SPdfApplication {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            throw new InterruptedException("Error");
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted while sleeping", e);
         }
 
         try {
