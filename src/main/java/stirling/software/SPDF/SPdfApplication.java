@@ -6,18 +6,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import io.github.pixee.security.SystemCommand;
 
 import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.config.ConfigInitializer;
-import stirling.software.SPDF.utils.GeneralUtils;
 
 @SpringBootApplication
 @EnableScheduling
@@ -57,7 +57,8 @@ public class SPdfApplication {
                     Collections.singletonMap(
                             "spring.config.additional-location", "file:configs/settings.yml"));
         } else {
-            logger.warn("External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
+            logger.warn(
+                    "External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
         }
         app.run(args);
 

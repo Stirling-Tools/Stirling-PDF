@@ -289,24 +289,7 @@ public class ApplicationProperties {
                     + "]";
         }
 
-        public static class CustomApplications {
-            private boolean installBookAndHtmlFormats;
-
-            public boolean isInstallBookAndHtmlFormats() {
-                return installBookAndHtmlFormats;
-            }
-
-            public void setInstallBookAndHtmlFormats(boolean installBookAndHtmlFormats) {
-                this.installBookAndHtmlFormats = installBookAndHtmlFormats;
-            }
-
-            @Override
-            public String toString() {
-                return "CustomApplications [installBookAndHtmlFormats="
-                        + installBookAndHtmlFormats
-                        + "]";
-            }
-        }
+        public static class CustomApplications {}
     }
 
     public static class Ui {
