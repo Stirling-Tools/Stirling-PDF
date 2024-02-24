@@ -6,7 +6,8 @@
       "parameters": {
         "horizontalDivisions": 2,
         "verticalDivisions": 2,
-        "fileInput": "automated"
+        "fileInput": "automated",
+        "merge": false
       }
     },
     {

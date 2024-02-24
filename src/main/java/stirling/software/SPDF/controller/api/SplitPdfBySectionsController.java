@@ -53,8 +53,21 @@ public class SplitPdfBySectionsController {
         // Process the PDF based on split parameters
         int horiz = request.getHorizontalDivisions() + 1;
         int verti = request.getVerticalDivisions() + 1;
-
+        boolean merge = request.isMerge();
         List<PDDocument> splitDocuments = splitPdfPages(sourceDocument, verti, horiz);
+
+        String filename =
+                Filenames.toSimpleFileName(file.getOriginalFilename())
+                        .replaceFirst("[.][^.]+$", "");
+        if (merge) {
+            MergeController mergeController = new MergeController();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            mergeController.mergeDocuments(splitDocuments).save(baos);
+            return WebResponseUtils.bytesToWebResponse(
+                    baos.toByteArray(),
+                    filename + "_split.pdf",
+                    MediaType.APPLICATION_OCTET_STREAM);
+        }
         for (PDDocument doc : splitDocuments) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             doc.save(baos);
@@ -65,9 +78,6 @@ public class SplitPdfBySectionsController {
         sourceDocument.close();
 
         Path zipFile = Files.createTempFile("split_documents", ".zip");
-        String filename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
         byte[] data;
 
         try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
@@ -145,4 +155,5 @@ public class SplitPdfBySectionsController {
 
         return splitDocuments;
     }
+
 }
