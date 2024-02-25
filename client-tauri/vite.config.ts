@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import topLevelAwait from "vite-plugin-top-level-await";
 import dynamicImport from 'vite-plugin-dynamic-import'
 import compileTime from "vite-plugin-compile-time"
+import { fileURLToPath, URL } from 'node:url'
 
 
 // https://vitejs.dev/config/
@@ -18,7 +19,11 @@ export default defineConfig(async () => ({
         compileTime(),
         dynamicImport(),
     ],
-
+    resolve: {
+        alias: {
+          '#pdfcpu': fileURLToPath(new URL("../shared-operations/src/wasm/pdfcpu/pdfcpu-wrapper.client", import.meta.url))
+        }
+    },
     // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
     //
     // 1. prevent vite from obscuring rust errors

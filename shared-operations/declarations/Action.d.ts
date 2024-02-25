@@ -1,6 +1,6 @@
 export interface Action {
     values: any;
-    type: string;
+    type: "wait" | "done" | "impose" | string;
     actions?: Action[];
 }
 

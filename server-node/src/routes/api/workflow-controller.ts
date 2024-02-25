@@ -43,7 +43,7 @@ router.post("/:workflowUuid?", [
             }
         }
 
-        const validationResults = JoiPDFFileSchema.validate(req.files);
+        const validationResults = await JoiPDFFileSchema.validateAsync(req.files);
         if(validationResults.error) {
             res.status(400).json({error: "PDF validation failed", details: validationResults.error.message});
             return;

@@ -1,3 +1,4 @@
+import { PdfFile } from "wrappers/PdfFile";
 import { Action } from "../../declarations/Action";
 import Joi from "@stirling-tools/joi";
 
@@ -33,7 +34,7 @@ export class Operator {
         this.actionValues = action.values;
     }
 
-    async run(input: any[], progressCallback: (progress: Progress) => void): Promise<any[]> {
+    async run(input: PdfFile[] | any[], progressCallback: (progress: Progress) => void): Promise<PdfFile[] | any[]> {
         return [];
     }
 }

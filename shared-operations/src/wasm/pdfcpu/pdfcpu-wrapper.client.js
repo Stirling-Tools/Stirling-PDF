@@ -1,4 +1,5 @@
 // imports browserfs via index.html script-tag
+import wasmUrl from '../../../public/wasm/pdfcpu/pdfcpu.wasm?url'
 
 let wasmLocation = "/wasm/pdfcpu/";
 
@@ -29,15 +30,12 @@ function configureFs() {
 }
 
 function loadWasm() {
-    const script = document.createElement("script");
-    script.src = wasmLocation + "/wasm_exec.js";
-    script.async = true;
-    document.body.appendChild(script);
+    import("./wasm_exec.js");
 }
 
 const runWasm = async (param) => {
     if (window.cachedWasmResponse === undefined) {
-        const response = await fetch(wasmLocation + "/pdfcpu.wasm");
+        const response = await fetch(wasmUrl);
         const buffer = await response.arrayBuffer();
         window.cachedWasmResponse = buffer;
         window.go = new Go();
