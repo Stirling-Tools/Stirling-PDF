@@ -64,7 +64,7 @@ public class PipelineProcessor {
 
     private String getBaseUrl() {
         String contextPath = servletContext.getContextPath();
-        String port = SPdfApplication.getPort();
+        String port = SPdfApplication.getStaticPort();
 
         return "http://localhost:" + port + contextPath + "/";
     }

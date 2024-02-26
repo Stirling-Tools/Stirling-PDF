@@ -36,7 +36,7 @@ public class ApiDocService {
 
     private String getApiDocsUrl() {
         String contextPath = servletContext.getContextPath();
-        String port = SPdfApplication.getPort();
+        String port = SPdfApplication.getStaticPort();
 
         return "http://localhost:" + port + contextPath + "/v1/api-docs";
     }
