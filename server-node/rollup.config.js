@@ -12,15 +12,16 @@ export default {
   output: {
     dir: "dist/",
     format: "es",
+    strict: false,
   },
   watch: {
     include: [ './src/**', '../shared-operations/src/**' ]
   },
   plugins: [
+    compileTime(),
     json(),
     typescript(),
-    dynamicImportVars(),
-    compileTime(),
+    dynamicImportVars({errorWhenNoFilesFound: true, warnOnError: true}),
     copy({
         targets: [
             { src: '../shared-operations/public', dest: 'dist' },

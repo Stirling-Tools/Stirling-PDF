@@ -48,7 +48,7 @@ router.post("/:workflowUuid?", [
             res.status(400).json({error: "PDF validation failed", details: validationResults.error.message});
             return;
         }
-        const inputs: PdfFile[] = validationResults.value;
+        const inputs: PdfFile[] = validationResults;
 
         // Allow option to do it synchronously and just make a long request
         if(req.body.async === "false") {

@@ -2,7 +2,7 @@ import i18next from "i18next";
 import resourcesToBackend from "i18next-resources-to-backend";
 
 i18next
-    .use(resourcesToBackend((language, namespace) => import(`./public/locales/${namespace}/${language}.json`, {
+    .use(resourcesToBackend((language: string, namespace: string) => import(`../public/locales/${namespace}/${language}.json`, {
         assert: { type: "json" },
     })))
     .init({

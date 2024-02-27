@@ -1,4 +1,4 @@
-import { PdfFile } from "wrappers/PdfFile";
+import { PdfFile } from "../wrappers/PdfFile";
 import { Action } from "../../declarations/Action";
 import Joi from "@stirling-tools/joi";
 

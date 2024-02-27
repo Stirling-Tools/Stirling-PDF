@@ -1,20 +1,19 @@
 import { Operator } from "../functions";
 import i18next from "i18next";
 
-function getCompileTimeOperatorList(): string[] {
-    return import.meta.compileTime("./listOperatorsInDir.ts"); // The will compile to ["impose", "extractPages", etc...]
-}
+const compileTimeOperatorList: string[] = ["impose"]; import.meta.compileTime("./listOperatorsInDir.ts"); // The will compile to ["impose", "extractPages", etc...]
 
 export async function getOperatorByName(name: string): Promise<typeof Operator | undefined> {
     // Check if exists
-    if(!getCompileTimeOperatorList().includes(name)) return;
+    if(!compileTimeOperatorList.includes(name)) return;
 
     i18next.loadNamespaces(name, (err, t) => { if (err) throw err; });
-    return (await import("../functions/" + name + ".ts"))[capitalizeFirstLetter(name)];
+    const loadedModule = await import("../functions/" + name + ".ts");
+    return loadedModule[capitalizeFirstLetter(name)];
 }
 
 export function listOperatorNames(): string[] {
-    const availableOperators = getCompileTimeOperatorList();
+    const availableOperators = compileTimeOperatorList;
     // TODO: Implement this
     return availableOperators;
 }

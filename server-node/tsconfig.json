@@ -112,8 +112,8 @@
   },
   "include": [
     "src",
-    "declarations/*.d.ts", 
-    "../shared-operations/src/wasm/pdfcpu/PdfcpuWrapper.d.ts"  
+    "./declarations/",
+    "../shared-operations/declarations/"
   ],
   "ts-node": {
     "experimentalSpecifierResolution": "node",

@@ -9,11 +9,11 @@ const wasmfs = new WasmFs();
 
 // TODO: This can later be defered to load asynchronously
 (async () => {
+    configureFs();
     await loadWasm();
-    await configureFs();
 })();
 
-async function configureFs() {
+function configureFs() {
     // Can't use BrowserFS: https://github.com/jvilk/BrowserFS/issues/271
     fs = wasmfs.fs; 
     global.fs = fs;
@@ -43,6 +43,9 @@ const runWasm = async (param) => {
 
 async function loadFileAsync(data) {
     console.log(`Writing file to Disk`);
+    if(fs === undefined) {
+        throw new Error("FS hasn't loaded, this should never happen.")
+    }
     fs.writeFileSync(`input.pdf`, data);
     console.log(`Write done. Validating...`);
     let exitcode = await runWasm([

@@ -20,12 +20,11 @@ export async function traverseOperations(operations: Action[], input: PdfFile[],
     async function nextOperation(actions: Action[] | undefined, input: PdfFile[], progressCallback: (state: Progress) => void): Promise<void> {
         if(!actions || (Array.isArray(actions) && actions.length == 0)) { // isEmpty
             if(input && Array.isArray(input)) {
-                console.log("operation done: " + input[0].filename + (input.length > 1 ? "+" : ""));
+                console.log("operation done: " + input.map(file => file.filename) + (input.length > 1 ? "+" : ""));
                 results = results.concat(input);
             }
             return;
         }
-
         for (let i = 0; i < actions.length; i++) {
             await computeOperation(actions[i], Object.assign([], input), progressCallback); // structuredClone-like for ts TODO: test if this really works
         }

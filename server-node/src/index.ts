@@ -4,9 +4,12 @@ import express from "express";
 const app = express();
 const PORT = 8000;
 
+
+import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
+console.log("Available Modules: ", listOperatorNames())
+
 // server-node: backend api
 import api from "./routes/api/api-controller";
-import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
 app.use("/api", api);
 
 // serve
@@ -17,5 +20,3 @@ app.listen(PORT, () => {
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
-
-console.log("Available Modules: ", listOperatorNames())

@@ -44,7 +44,6 @@ async function handleEndpoint(req: Request, res: Response) {
         else {
             action.values = validationResults.value.values;
             const operation = new operator(action);
-
             operation.run(validationResults.value.input, (progress) => {}).then(pdfFiles => {
                 respondWithPdfFiles(res, pdfFiles, req.params.func + "_result");
             });

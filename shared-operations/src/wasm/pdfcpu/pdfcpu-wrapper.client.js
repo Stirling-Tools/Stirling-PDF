@@ -61,15 +61,12 @@ async function loadFileAsync(data) {
         `/input.pdf`,
     ]);
 
+    console.log("Exit Code: " + exitcode);
     if (exitcode !== 0)
         throw new Error("There was an error validating your PDFs");
 
     console.log(`File is Valid`);
 }
-
-export async function impose(snapshot, nup, format) {
-    
-};
 
 export async function oneToOne(wasmArray, snapshot) {
     await loadFileAsync(Buffer.from(snapshot));

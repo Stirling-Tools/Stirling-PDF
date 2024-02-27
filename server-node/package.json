@@ -35,6 +35,7 @@
         "multer": "^1.4.5-lts.1",
         "pdf-lib": "^1.17.1",
         "rollup-plugin-copy": "^3.5.0",
+        "rollup-plugin-dynamic-import-variables": "^1.1.0",
         "tsconfig-paths": "^4.2.0",
         "vite-plugin-compile-time": "^0.2.1",
         "vite-plugin-dynamic-import": "^1.5.0",
