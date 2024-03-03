@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
@@ -52,8 +53,10 @@ public class RearrangePagesPDFController {
         List<Integer> pagesToRemove =
                 GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
 
+        Collections.sort(pagesToRemove);
+
         for (int i = pagesToRemove.size() - 1; i >= 0; i--) {
-            int pageIndex = pagesToRemove.get(i);
+            int pageIndex = pagesToRemove.get(i) - 1;
             document.removePage(pageIndex);
         }
         return WebResponseUtils.pdfDocToWebResponse(
@@ -199,7 +202,7 @@ public class RearrangePagesPDFController {
             // Create a new list to hold the pages in the new order
             List<PDPage> newPages = new ArrayList<>();
             for (int i = 0; i < newPageOrder.size(); i++) {
-                newPages.add(document.getPage(newPageOrder.get(i)));
+                newPages.add(document.getPage(newPageOrder.get(i) - 1));
             }
 
             // Remove all the pages from the original document
