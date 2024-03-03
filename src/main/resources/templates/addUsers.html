@@ -27,7 +27,7 @@
                 <tbody>
                   <tr th:each="user : ${users}">
                     <td th:text="${user.username}"></td>
-                    <td th:text="${user.getRolesAsString()}"></td>
+                    <td th:text="#{${user.roleName}}"></td>
                     <td>
                       <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post">
                         <button type="submit" th:text="#{delete}">Delete</button>
@@ -53,11 +53,7 @@
                 <div class="mb-3">
                   <label for="role" th:text="#{adminUserSettings.role}">Role</label>
                   <select name="role" class="form-control" required>
-                    <option value="ROLE_ADMIN" th:text="#{adminUserSettings.admin}">Admin</option>
-                    <option value="ROLE_USER" th:text="#{adminUserSettings.user}">User</option>
-                    <option value="ROLE_LIMITED_API_USER" th:text="#{adminUserSettings.apiUser}">Limited API User</option>
-                    <option value="ROLE_WEB_ONLY_USER" th:text="#{adminUserSettings.webOnlyUser}">Web Only User</option>
-                    <option value="ROLE_DEMO_USER" th:text="#{adminUserSettings.demoUser}">Demo User</option>
+                    <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
                   </select>
                 </div>
                 <div class="mb-3">
