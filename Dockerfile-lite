@@ -8,9 +8,6 @@ ENV DOCKER_ENABLE_SECURITY=false \
     HOME=/home/stirlingpdfuser \
     VERSION_TAG=$VERSION_TAG \
     JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS -XX:MaxRAMPercentage=75"
-#   PUID=1000 \
-#   PGID=1000 \
-#   UMASK=022 \
 
 # Copy necessary files
 COPY scripts/download-security-jar.sh /scripts/download-security-jar.sh
@@ -30,6 +27,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         bash \
         curl \
         openjdk17-jre \
+        su-exec \
 # Doc conversion
    libreoffice@testing \
 # python and pip
@@ -37,17 +35,16 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         wget https://bootstrap.pypa.io/get-pip.py -qO - | python3 - --break-system-packages --no-cache-dir --upgrade && \
 # uno unoconv and HTML
     pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint && \
-# Create user and group
-#RUN groupadd -g $PGID stirlingpdfgroup && \
-#    useradd -u $PUID -g stirlingpdfgroup -s /bin/sh stirlingpdfuser && \
-#    mkdir -p $HOME && chown stirlingpdfuser:stirlingpdfgroup $HOME
 # Set up necessary directories and permissions
     mkdir -p /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
-#    chown -R stirlingpdfuser:stirlingpdfgroup /usr/share/fonts/opentype/noto /configs /customFiles
 # Set font cache and permissions
     fc-cache -f -v && \
-    chmod +x /scripts/*.sh
-#    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+    chmod +x /scripts/*.sh && \
+# User permissions
+    addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto  /configs /customFiles /pipeline && \
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar    
+
 
 # Set environment variables
 ENV ENDPOINTS_GROUPS_TO_REMOVE=OpenCV,OCRmyPDF
@@ -56,6 +53,6 @@ ENV DOCKER_ENABLE_SECURITY=false
 EXPOSE 8080
 
 # Run the application
-#USER stirlingpdfuser
+
 ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
 CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/app.jar"]
