@@ -114,6 +114,7 @@ docker run -d \
   -v /location/of/extraConfigs:/configs \
   -v /location/of/logs:/logs \
   -e DOCKER_ENABLE_SECURITY=false \
+  -e INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
   --name stirling-pdf \
   frooodle/s-pdf:latest
 
@@ -137,6 +138,7 @@ services:
 #      - /location/of/logs:/logs/
     environment:
       - DOCKER_ENABLE_SECURITY=false
+      - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
 ```
 
 Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
@@ -228,6 +230,7 @@ metrics:
 - ``SYSTEM_ROOTURIPATH`` ie set to ``/pdf-app`` to Set the application's root URI to ``localhost:8080/pdf-app``
 - ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
 - ``DOCKER_ENABLE_SECURITY`` to tell docker to download security jar (required as true for auth login)
+- ``INSTALL_BOOK_AND_ADVANCED_HTML_OPS`` to download calibre onto stirling-pdf enabling pdf to/from book and advanced html conversion
 
 ## API
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation

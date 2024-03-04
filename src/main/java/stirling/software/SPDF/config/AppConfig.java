@@ -79,9 +79,10 @@ public class AppConfig {
 
     @Bean(name = "bookAndHtmlFormatsInstalled")
     public boolean bookAndHtmlFormatsInstalled() {
-        return applicationProperties
-                .getSystem()
-                .getCustomApplications()
-                .isInstallBookAndHtmlFormats();
+        String installOps = System.getProperty("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
+        if (installOps == null) {
+            installOps = System.getenv("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
+        }
+        return "true".equalsIgnoreCase(installOps);
     }
 }

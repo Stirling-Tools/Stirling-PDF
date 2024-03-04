@@ -9,13 +9,10 @@ security:
   loginResetTimeMinutes : 120 # lock account for 2 hours after x attempts
 
 system:
-
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   enableAlphaFunctionality: false # Set to enable functionality which might need more testing before it fully goes live (This feature might make no changes)
-  customApplications:
-    bookAndHtmlFormatsInstalled: false # Installs Calibre for book format conversion (For non docker it must be manually downloaded but will need to be true to show in UI)
-
+  
 #ui:
 #  appName: exampleAppName # Application's visible name
 #  homeDescription: I am a description # Short description or tagline shown on homepage.
