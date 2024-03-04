@@ -222,18 +222,22 @@ public class UserController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/deleteUser/{username}")
-    public String deleteUser(@PathVariable String username, Authentication authentication) {
+    public RedirectView deleteUser(@PathVariable String username, Authentication authentication) {
+
+        if (!userService.usernameExists(username)) {
+            return new RedirectView("/addUsers?messageType=deleteUsernameExists");
+        }
 
         // Get the currently authenticated username
         String currentUsername = authentication.getName();
 
         // Check if the provided username matches the current session's username
         if (currentUsername.equals(username)) {
-            throw new IllegalArgumentException("Cannot delete currently logined in user.");
+            return new RedirectView("/addUsers?messageType=deleteCurrentUser");
         }
         invalidateUserSessions(username);
         userService.deleteUser(username);
-        return "redirect:/addUsers";
+        return new RedirectView("/addUsers");
     }
 
     @Autowired private SessionRegistry sessionRegistry;

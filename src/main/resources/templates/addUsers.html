@@ -16,6 +16,10 @@
 
               <!-- User Settings Title -->
               <h2 class="text-center" th:text="#{adminUserSettings.header}">Admin User Control Settings</h2>
+              <div th:if="${param.messageType != null and param.messageType.size() > 0 and (param.messageType[0] == 'deleteCurrentUser' or param.messageType[0] == 'deleteUsernameExists')}" class="alert alert-danger">
+                <span th:if="${param.messageType[0] == 'deleteCurrentUser'}" th:text="#{deleteCurrentUserMessage}">Cannot delete currently logged in user.</span>
+                <span th:if="${param.messageType[0] == 'deleteUsernameExists'}" th:text="#{deleteUsernameExistsMessage}">The username does not exist and cannot be deleted.</span>
+              </div>
               <table class="table">
                 <thead>
                   <tr>
