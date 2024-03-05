@@ -49,7 +49,7 @@
 					    <form action="/api/v1/user/admin/saveUser" method="post">
 					        <div class="mb-3">
 					            <label for="username" th:text="#{username}">Username</label>
-					            <input type="text" class="form-control" name="username" required>
+					            <input type="text" class="form-control" name="username" pattern="[a-zA-Z0-9]+" title="Username must only contain letters and numbers and no spaces or special characters" required>
 					        </div>
 					        <div class="mb-3">
 					            <label for="password" th:text="#{password}">Password</label>
