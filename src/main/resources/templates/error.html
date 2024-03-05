@@ -1,131 +1,39 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
-
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
-    <title>Error! :(</title>
-    <th:block th:insert="~{fragments/common :: head(title='')}"></th:block>
-    <style>
-
-      h1 {
-        text-align: center;
-        margin-top: 10%;
-      }
-
-      p {
-
-        text-align: center;
-        margin-top: 2em;
-      }
-
-
-        .button:hover {
-          background-color: #005b7f;
-        }
-  
-      .features-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(21rem, 3fr));
-        gap: 25px 30px;
-      }
-
-      .feature-card {
-        border: 1px solid rgba(0, 0, 0, .125);
-        border-radius: 0.25rem;
-        padding: 1.25rem;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .feature-card .card-text {
-        flex: 1;
-      }
-      
-#support-section {
-background-color: #f9f9f9;
-padding: 4rem;
-  margin-top: 1rem;
-text-align: center;
-}
-
-#support-section h1 {
-margin-top: 0;
-}
-
-#support-section p {
-margin-top: 0;
-}
-
-#button-group {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-#github-button, #discord-button {
-  display: inline-block;
-  padding: 1rem 2rem;
-  margin: 1rem;
-  background-color: #008CBA;
-  color: #fff;
-  font-size: 1.2rem;
-  text-align: center;
-  text-decoration: none;
-  border-radius: 3rem;
-  transition: all 0.3s ease-in-out;
-}
-
-#github-button:hover, #discord-button:hover, #home-button:hover {
-  background-color: #005b7f;
-}
-
-#home-button {
-  display: block;
-        width: 200px;
-        height: 50px;
-        margin: 2em auto;
-        background-color: #008CBA;
-        color: white;
-        text-align: center;
-        line-height: 50px;
-        text-decoration: none;
-        font-weight: bold;
-        border-radius: 25px;
-  transition: all 0.3s ease-in-out;
-}
-
-      
-    </style>
+  <th:block th:insert="~{fragments/common :: head(title='404 - Page Not Found | Oops, we tripped in the code!')}"></th:block>
   </head>
 
   <body>
-   <div id="page-container">
-        <div id="content-wrap">
-        
-    <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-    <div th:insert="~{fragments/errorBanner.html :: errorBanner}"></div>
-      <div class="container">
-        
-        <div id="support-section">
-        <h1 class="display-2">Oops!</h1>
-        <p class="lead" th:if="${param.status == '404'}">We can't seem to find the page you're looking for.</p>
-        <p class="lead" th:unless="${param.status == '404'}">Something went wrong</p> 
-        
-        <br>
-          <h2>Need help / Found a issue?</h2>
-          <p>If you're still having trouble, don't hesitate to reach out to us for help. You can submit a ticket on our GitHub page or contact us through Discord:</p>
-          <div id="button-group">
-            <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" target="_blank">Submit a ticket on GitHub</a>
-            <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" target="_blank">Join our Discord server</a>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <div th:insert="~{fragments/errorBanner.html :: errorBanner}"></div>
+        <div class="container">
+          <div id="support-section">
+            <h1 class="display-2">Oops!</h1>
+            <p class="lead" th:if="${param.status == '404'}">
+              We can't seem to find the page you're looking for.
+            </p>
+            <p class="lead" th:unless="${param.status == '404'}">
+              Something went wrong
+            </p>
+            <br>
+            <h2>Need help / Found a issue?</h2>
+            <p>
+              If you're still having trouble, don't hesitate to reach out to us
+              for help. You can submit a ticket on our GitHub page or contact us
+              through Discord:
+            </p>
+            <div id="button-group">
+              <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" target="_blank">Submit a ticket on GitHub</a>
+              <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" target="_blank">Join our Discord server</a>
+            </div>
+            <a href="/" id="home-button">Go back to homepage</a>
           </div>
-          <a href="/" id="home-button">Go back to homepage</a>
         </div>
       </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-        <div th:insert="~{fragments/footer.html :: footer}"></div>
-    </div>
-    
-    
-
   </body>
 </html>

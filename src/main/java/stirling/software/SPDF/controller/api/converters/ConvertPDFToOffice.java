@@ -2,6 +2,10 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -17,6 +22,7 @@ import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
 import stirling.software.SPDF.utils.PDFToFile;
+import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/convert")
@@ -59,9 +65,21 @@ public class ConvertPDFToOffice {
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
-
-        PDFToFile pdfToFile = new PDFToFile();
-        return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
+        if ("txt".equals(request.getOutputFormat())) {
+            try (PDDocument document = Loader.loadPDF(inputFile.getBytes())) {
+                PDFTextStripper stripper = new PDFTextStripper();
+                String text = stripper.getText(document);
+                return WebResponseUtils.bytesToWebResponse(
+                        text.getBytes(),
+                        Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                        .replaceFirst("[.][^.]+$", "")
+                                + ".txt",
+                        MediaType.TEXT_PLAIN);
+            }
+        } else {
+            PDFToFile pdfToFile = new PDFToFile();
+            return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
+        }
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/word")

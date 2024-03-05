@@ -6,7 +6,7 @@
 [![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest)](https://github.com/Stirling-Tools/Stirling-PDF/)
 [![GitHub Repo stars](https://img.shields.io/github/stars/stirling-tools/stirling-pdf?style=social)](https://github.com/Stirling-Tools/stirling-pdf)
 [![Paypal Donate](https://img.shields.io/badge/Paypal%20Donate-yellow?style=flat&logo=paypal)](https://www.paypal.com/paypalme/froodleplex)
-[![Github Sponser](https://img.shields.io/badge/Github%20Sponsor-yellow?style=flat&logo=github)](https://github.com/sponsors/Frooodle)
+[![Github Sponsor](https://img.shields.io/badge/Github%20Sponsor-yellow?style=flat&logo=github)](https://github.com/sponsors/Frooodle)
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Stirling-Tools/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
 
@@ -110,10 +110,11 @@ Docker Run
 ```bash
 docker run -d \
   -p 8080:8080 \
-  -v /location/of/trainingData:/usr/share/tesseract-ocr/5/tessdata \
+  -v /location/of/trainingData:/usr/share/tessdata \
   -v /location/of/extraConfigs:/configs \
   -v /location/of/logs:/logs \
   -e DOCKER_ENABLE_SECURITY=false \
+  -e INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
   --name stirling-pdf \
   frooodle/s-pdf:latest
 
@@ -131,12 +132,13 @@ services:
     ports:
       - '8080:8080'
     volumes:
-      - /location/of/trainingData:/usr/share/tesseract-ocr/5/tessdata #Required for extra OCR languages
+      - /location/of/trainingData:/usr/share/tessdata #Required for extra OCR languages
       - /location/of/extraConfigs:/configs
 #      - /location/of/customFiles:/customFiles/
 #      - /location/of/logs:/logs/
     environment:
       - DOCKER_ENABLE_SECURITY=false
+      - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
 ```
 
 Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
@@ -172,7 +174,7 @@ Stirling PDF currently supports 26!
 - Hindi (हिंदी) (hi_IN)
 - Hungarian (Magyar) (hu_HU)
 - Bulgarian (Български) (bg_BG)
-- Sebian Latin alphabet (Srpski) (sr-Latn-RS)
+- Sebian Latin alphabet (Srpski) (sr_LATN_RS)
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
@@ -228,6 +230,7 @@ metrics:
 - ``SYSTEM_ROOTURIPATH`` ie set to ``/pdf-app`` to Set the application's root URI to ``localhost:8080/pdf-app``
 - ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
 - ``DOCKER_ENABLE_SECURITY`` to tell docker to download security jar (required as true for auth login)
+- ``INSTALL_BOOK_AND_ADVANCED_HTML_OPS`` to download calibre onto stirling-pdf enabling pdf to/from book and advanced html conversion
 
 ## API
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
@@ -262,7 +265,7 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 - Redact text (Via UI not just automated way)
 - Add Forms
 - Multi page layout (Stich PDF pages together) support x rows y columns and custom page sizing
-- Fill forms mannual and automatic
+- Fill forms manually or automatically
 
 ### Q2: Why is my application downloading .htm files?
 This is an issue caused commonly by your NGINX configuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. ``client_max_body_size SIZE;`` Where "SIZE" is 50M for example for 50MB files.

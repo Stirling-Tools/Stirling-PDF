@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Service
-@DependsOn({"bookFormatsInstalled"})
+@DependsOn({"bookAndHtmlFormatsInstalled"})
 public class EndpointConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(EndpointConfiguration.class);
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
@@ -24,14 +24,14 @@ public class EndpointConfiguration {
 
     private final ApplicationProperties applicationProperties;
 
-    private boolean bookFormatsInstalled;
+    private boolean bookAndHtmlFormatsInstalled;
 
     @Autowired
     public EndpointConfiguration(
             ApplicationProperties applicationProperties,
-            @Qualifier("bookFormatsInstalled") boolean bookFormatsInstalled) {
+            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled) {
         this.applicationProperties = applicationProperties;
-        this.bookFormatsInstalled = bookFormatsInstalled;
+        this.bookAndHtmlFormatsInstalled = bookAndHtmlFormatsInstalled;
         init();
         processEnvironmentConfigs();
     }
@@ -140,7 +140,6 @@ public class EndpointConfiguration {
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");
         addEndpointToGroup("CLI", "extract-image-scans");
-        addEndpointToGroup("CLI", "remove-blanks");
         addEndpointToGroup("CLI", "repair");
         addEndpointToGroup("CLI", "pdf-to-pdfa");
         addEndpointToGroup("CLI", "file-to-pdf");
@@ -218,6 +217,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "split-by-size-or-count");
         addEndpointToGroup("Java", "overlay-pdf");
         addEndpointToGroup("Java", "split-pdf-by-sections");
+        addEndpointToGroup("Java", "remove-blanks");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
@@ -229,7 +229,7 @@ public class EndpointConfiguration {
     private void processEnvironmentConfigs() {
         List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
         List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
-        if (!bookFormatsInstalled) {
+        if (!bookAndHtmlFormatsInstalled) {
             groupsToRemove.add("Calibre");
         }
         if (endpointsToRemove != null) {

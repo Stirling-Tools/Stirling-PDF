@@ -116,7 +116,6 @@
   top: 0;
 }
 
-
 :root {
   --annotation-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
   --input-focus-border-color: Highlight;
@@ -139,9 +138,7 @@
 
   .annotationLayer .textWidgetAnnotation :is(input, textarea):required,
   .annotationLayer .choiceWidgetAnnotation select:required,
-  .annotationLayer
-  .buttonWidgetAnnotation:is(.checkBox, .radioButton)
-  input:required {
+  .annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input:required {
     outline: 1.5px solid selectedItem;
   }
 
@@ -228,9 +225,7 @@
   height: 100%;
 }
 
-.annotationLayer
-:is(.linkAnnotation, .buttonWidgetAnnotation.pushButton):not(.hasBorder)
-> a:hover {
+.annotationLayer :is(.linkAnnotation, .buttonWidgetAnnotation.pushButton):not(.hasBorder) > a:hover {
   opacity: 0.2;
   background-color: rgba(255, 255, 0, 1);
   box-shadow: 0 2px 10px rgba(255, 255, 0, 1);
@@ -268,9 +263,7 @@
 
 .annotationLayer .textWidgetAnnotation :is(input, textarea):required,
 .annotationLayer .choiceWidgetAnnotation select:required,
-.annotationLayer
-.buttonWidgetAnnotation:is(.checkBox, .radioButton)
-input:required {
+.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input:required {
   outline: 1.5px solid red;
 }
 
@@ -288,9 +281,7 @@ input:required {
 
 .annotationLayer .textWidgetAnnotation :is(input, textarea)[disabled],
 .annotationLayer .choiceWidgetAnnotation select[disabled],
-.annotationLayer
-.buttonWidgetAnnotation:is(.checkBox, .radioButton)
-input[disabled] {
+.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input[disabled] {
   background: none;
   border: 2px solid var(--input-disabled-border-color);
   cursor: not-allowed;
@@ -298,9 +289,7 @@ input[disabled] {
 
 .annotationLayer .textWidgetAnnotation :is(input, textarea):hover,
 .annotationLayer .choiceWidgetAnnotation select:hover,
-.annotationLayer
-.buttonWidgetAnnotation:is(.checkBox, .radioButton)
-input:hover {
+.annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input:hover {
   border: 2px solid var(--input-hover-border-color);
 }
 
@@ -488,7 +477,6 @@ input:hover {
   left: 0;
   z-index: -1;
 }
-
 
 :root {
   --xfa-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
@@ -827,10 +815,7 @@ input:hover {
   --freetext-padding: 2px;
   --resizer-bg-color: var(--outline-color);
   --resizer-size: 6px;
-  --resizer-shift: calc(
-          0px - (var(--outline-width) + var(--resizer-size)) / 2 -
-          var(--outline-around-width)
-  );
+  --resizer-shift: calc(0px - (var(--outline-width) + var(--resizer-size)) / 2 - var(--outline-around-width));
   --editorFreeText-editing-cursor: text;
   --editorInk-editing-cursor: url(../images/cursor-editorInk.svg) 0 16, pointer;
 
@@ -853,8 +838,7 @@ input:hover {
 
 @media (-webkit-min-device-pixel-ratio: 1.1), (min-resolution: 1.1dppx) {
   :root {
-    --editorFreeText-editing-cursor: url(../images/cursor-editorFreeText.svg) 0 16,
-    text;
+    --editorFreeText-editing-cursor: url(../images/cursor-editorFreeText.svg) 0 16, text;
   }
 }
 
@@ -1109,216 +1093,354 @@ input:hover {
 }
 
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.topLeft,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.topLeft,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.topLeft,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.topLeft,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.topLeft,
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.topLeft,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.topLeft,
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.topLeft,
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.bottomRight,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.bottomRight,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.bottomRight,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.bottomRight,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.bottomRight,
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.bottomRight,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.bottomRight {
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.bottomRight {
   cursor: nwse-resize;
 }
 
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.topMiddle,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.topMiddle,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.topMiddle,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.topMiddle,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.topMiddle,
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.topMiddle,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.topMiddle,
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.topMiddle,
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.bottomMiddle,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.bottomMiddle,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.bottomMiddle,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.bottomMiddle,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.bottomMiddle,
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.bottomMiddle,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.bottomMiddle {
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.bottomMiddle {
   cursor: ns-resize;
 }
 
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.topRight,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.topRight,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.topRight,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.topRight,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.topRight,
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.topRight,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.topRight,
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.topRight,
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.bottomLeft,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.bottomLeft,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.bottomLeft,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.bottomLeft,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.bottomLeft,
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.bottomLeft,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.bottomLeft {
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.bottomLeft {
   cursor: nesw-resize;
 }
 
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.middleRight,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.middleRight,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.middleRight,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.middleRight,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.middleRight,
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.middleRight,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.middleRight,
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.middleRight,
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.middleLeft,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.middleLeft,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.middleLeft,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.middleLeft,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.middleLeft,
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.middleLeft,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.middleLeft {
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.middleLeft {
   cursor: ew-resize;
 }
 
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.topLeft,
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.topLeft,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.topLeft,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.topLeft,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.topLeft,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.topLeft,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.topLeft,
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.topLeft,
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.bottomRight,
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.bottomRight,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.bottomRight,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.bottomRight,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.bottomRight,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.bottomRight,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.bottomRight {
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.bottomRight {
   cursor: nesw-resize;
 }
 
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.topMiddle,
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.topMiddle,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.topMiddle,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.topMiddle,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.topMiddle,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.topMiddle,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.topMiddle,
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.topMiddle,
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.bottomMiddle,
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.bottomMiddle,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.bottomMiddle,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.bottomMiddle,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.bottomMiddle,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.bottomMiddle,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.bottomMiddle {
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.bottomMiddle {
   cursor: ew-resize;
 }
 
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.topRight,
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.topRight,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.topRight,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.topRight,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.topRight,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.topRight,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.topRight,
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.topRight,
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.bottomLeft,
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.bottomLeft,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.bottomLeft,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.bottomLeft,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.bottomLeft,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.bottomLeft,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.bottomLeft {
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.bottomLeft {
   cursor: nwse-resize;
 }
 
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.middleRight,
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.middleRight,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.middleRight,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.middleRight,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.middleRight,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.middleRight,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.middleRight,
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.middleRight,
 .annotationEditorLayer[data-main-rotation="0"]
-:is([data-editor-rotation="90"], [data-editor-rotation="270"]) > .resizers > .resizer.middleLeft,
+  :is([data-editor-rotation="90"], [data-editor-rotation="270"])
+  > .resizers
+  > .resizer.middleLeft,
 .annotationEditorLayer[data-main-rotation="90"]
-:is([data-editor-rotation="0"], [data-editor-rotation="180"]) > .resizers > .resizer.middleLeft,
+  :is([data-editor-rotation="0"], [data-editor-rotation="180"])
+  > .resizers
+  > .resizer.middleLeft,
 .annotationEditorLayer[data-main-rotation="180"]
-:is([data-editor-rotation="270"], [data-editor-rotation="90"]) > .resizers > .resizer.middleLeft,
+  :is([data-editor-rotation="270"], [data-editor-rotation="90"])
+  > .resizers
+  > .resizer.middleLeft,
 .annotationEditorLayer[data-main-rotation="270"]
-:is([data-editor-rotation="180"], [data-editor-rotation="0"]) > .resizers > .resizer.middleLeft {
+  :is([data-editor-rotation="180"], [data-editor-rotation="0"])
+  > .resizers
+  > .resizer.middleLeft {
   cursor: ns-resize;
 }
 
 .annotationEditorLayer
-:is(
-      [data-main-rotation="0"] [data-editor-rotation="90"],
-      [data-main-rotation="90"] [data-editor-rotation="0"],
-      [data-main-rotation="180"] [data-editor-rotation="270"],
-      [data-main-rotation="270"] [data-editor-rotation="180"]
-    ) .altText {
+  :is(
+    [data-main-rotation="0"] [data-editor-rotation="90"],
+    [data-main-rotation="90"] [data-editor-rotation="0"],
+    [data-main-rotation="180"] [data-editor-rotation="270"],
+    [data-main-rotation="270"] [data-editor-rotation="180"]
+  )
+  .altText {
   rotate: 270deg;
 }
 
-[dir="ltr"] .annotationEditorLayer
-:is(
-      [data-main-rotation="0"] [data-editor-rotation="90"],
-      [data-main-rotation="90"] [data-editor-rotation="0"],
-      [data-main-rotation="180"] [data-editor-rotation="270"],
-      [data-main-rotation="270"] [data-editor-rotation="180"]
-    ) .altText {
+[dir="ltr"]
+  .annotationEditorLayer
+  :is(
+    [data-main-rotation="0"] [data-editor-rotation="90"],
+    [data-main-rotation="90"] [data-editor-rotation="0"],
+    [data-main-rotation="180"] [data-editor-rotation="270"],
+    [data-main-rotation="270"] [data-editor-rotation="180"]
+  )
+  .altText {
   inset-inline-start: calc(100% - 8px);
 }
 
-[dir="ltr"] .annotationEditorLayer
-:is(
-      [data-main-rotation="0"] [data-editor-rotation="90"],
-      [data-main-rotation="90"] [data-editor-rotation="0"],
-      [data-main-rotation="180"] [data-editor-rotation="270"],
-      [data-main-rotation="270"] [data-editor-rotation="180"]
-    ) .altText.small {
+[dir="ltr"]
+  .annotationEditorLayer
+  :is(
+    [data-main-rotation="0"] [data-editor-rotation="90"],
+    [data-main-rotation="90"] [data-editor-rotation="0"],
+    [data-main-rotation="180"] [data-editor-rotation="270"],
+    [data-main-rotation="270"] [data-editor-rotation="180"]
+  )
+  .altText.small {
   inset-inline-start: calc(100% + 8px);
   inset-block-start: 100%;
 }
 
-[dir="rtl"] .annotationEditorLayer
-:is(
-      [data-main-rotation="0"] [data-editor-rotation="90"],
-      [data-main-rotation="90"] [data-editor-rotation="0"],
-      [data-main-rotation="180"] [data-editor-rotation="270"],
-      [data-main-rotation="270"] [data-editor-rotation="180"]
-    ) .altText {
+[dir="rtl"]
+  .annotationEditorLayer
+  :is(
+    [data-main-rotation="0"] [data-editor-rotation="90"],
+    [data-main-rotation="90"] [data-editor-rotation="0"],
+    [data-main-rotation="180"] [data-editor-rotation="270"],
+    [data-main-rotation="270"] [data-editor-rotation="180"]
+  )
+  .altText {
   inset-block-end: calc(100% - 8px);
 }
 
-[dir="rtl"] .annotationEditorLayer
-:is(
-      [data-main-rotation="0"] [data-editor-rotation="90"],
-      [data-main-rotation="90"] [data-editor-rotation="0"],
-      [data-main-rotation="180"] [data-editor-rotation="270"],
-      [data-main-rotation="270"] [data-editor-rotation="180"]
-    ) .altText.small {
+[dir="rtl"]
+  .annotationEditorLayer
+  :is(
+    [data-main-rotation="0"] [data-editor-rotation="90"],
+    [data-main-rotation="90"] [data-editor-rotation="0"],
+    [data-main-rotation="180"] [data-editor-rotation="270"],
+    [data-main-rotation="270"] [data-editor-rotation="180"]
+  )
+  .altText.small {
   inset-inline-start: -8px;
   inset-block-start: 0;
 }
 
 .annotationEditorLayer
-:is(
-      [data-main-rotation="0"] [data-editor-rotation="180"],
-      [data-main-rotation="90"] [data-editor-rotation="90"],
-      [data-main-rotation="180"] [data-editor-rotation="0"],
-      [data-main-rotation="270"] [data-editor-rotation="270"]
-    ) .altText {
+  :is(
+    [data-main-rotation="0"] [data-editor-rotation="180"],
+    [data-main-rotation="90"] [data-editor-rotation="90"],
+    [data-main-rotation="180"] [data-editor-rotation="0"],
+    [data-main-rotation="270"] [data-editor-rotation="270"]
+  )
+  .altText {
   rotate: 180deg;
 
   inset-block-end: calc(100% - 8px);
@@ -1326,64 +1448,74 @@ input:hover {
 }
 
 .annotationEditorLayer
-:is(
-      [data-main-rotation="0"] [data-editor-rotation="180"],
-      [data-main-rotation="90"] [data-editor-rotation="90"],
-      [data-main-rotation="180"] [data-editor-rotation="0"],
-      [data-main-rotation="270"] [data-editor-rotation="270"]
-    ) .altText.small {
+  :is(
+    [data-main-rotation="0"] [data-editor-rotation="180"],
+    [data-main-rotation="90"] [data-editor-rotation="90"],
+    [data-main-rotation="180"] [data-editor-rotation="0"],
+    [data-main-rotation="270"] [data-editor-rotation="270"]
+  )
+  .altText.small {
   inset-inline-start: 100%;
   inset-block-start: -8px;
 }
 
 .annotationEditorLayer
-:is(
-      [data-main-rotation="0"] [data-editor-rotation="270"],
-      [data-main-rotation="90"] [data-editor-rotation="180"],
-      [data-main-rotation="180"] [data-editor-rotation="90"],
-      [data-main-rotation="270"] [data-editor-rotation="0"]
-    ) .altText {
+  :is(
+    [data-main-rotation="0"] [data-editor-rotation="270"],
+    [data-main-rotation="90"] [data-editor-rotation="180"],
+    [data-main-rotation="180"] [data-editor-rotation="90"],
+    [data-main-rotation="270"] [data-editor-rotation="0"]
+  )
+  .altText {
   rotate: 90deg;
 }
 
-[dir="ltr"] .annotationEditorLayer
-:is(
-      [data-main-rotation="0"] [data-editor-rotation="270"],
-      [data-main-rotation="90"] [data-editor-rotation="180"],
-      [data-main-rotation="180"] [data-editor-rotation="90"],
-      [data-main-rotation="270"] [data-editor-rotation="0"]
-    ) .altText {
+[dir="ltr"]
+  .annotationEditorLayer
+  :is(
+    [data-main-rotation="0"] [data-editor-rotation="270"],
+    [data-main-rotation="90"] [data-editor-rotation="180"],
+    [data-main-rotation="180"] [data-editor-rotation="90"],
+    [data-main-rotation="270"] [data-editor-rotation="0"]
+  )
+  .altText {
   inset-block-end: calc(100% - 8px);
 }
 
-[dir="ltr"] .annotationEditorLayer
-:is(
-      [data-main-rotation="0"] [data-editor-rotation="270"],
-      [data-main-rotation="90"] [data-editor-rotation="180"],
-      [data-main-rotation="180"] [data-editor-rotation="90"],
-      [data-main-rotation="270"] [data-editor-rotation="0"]
-    ) .altText.small {
+[dir="ltr"]
+  .annotationEditorLayer
+  :is(
+    [data-main-rotation="0"] [data-editor-rotation="270"],
+    [data-main-rotation="90"] [data-editor-rotation="180"],
+    [data-main-rotation="180"] [data-editor-rotation="90"],
+    [data-main-rotation="270"] [data-editor-rotation="0"]
+  )
+  .altText.small {
   inset-inline-start: -8px;
   inset-block-start: 0;
 }
 
-[dir="rtl"] .annotationEditorLayer
-:is(
-      [data-main-rotation="0"] [data-editor-rotation="270"],
-      [data-main-rotation="90"] [data-editor-rotation="180"],
-      [data-main-rotation="180"] [data-editor-rotation="90"],
-      [data-main-rotation="270"] [data-editor-rotation="0"]
-    ) .altText {
+[dir="rtl"]
+  .annotationEditorLayer
+  :is(
+    [data-main-rotation="0"] [data-editor-rotation="270"],
+    [data-main-rotation="90"] [data-editor-rotation="180"],
+    [data-main-rotation="180"] [data-editor-rotation="90"],
+    [data-main-rotation="270"] [data-editor-rotation="0"]
+  )
+  .altText {
   inset-inline-start: calc(100% - 8px);
 }
 
-[dir="rtl"] .annotationEditorLayer
-:is(
-      [data-main-rotation="0"] [data-editor-rotation="270"],
-      [data-main-rotation="90"] [data-editor-rotation="180"],
-      [data-main-rotation="180"] [data-editor-rotation="90"],
-      [data-main-rotation="270"] [data-editor-rotation="0"]
-    ) .altText.small {
+[dir="rtl"]
+  .annotationEditorLayer
+  :is(
+    [data-main-rotation="0"] [data-editor-rotation="270"],
+    [data-main-rotation="90"] [data-editor-rotation="180"],
+    [data-main-rotation="180"] [data-editor-rotation="90"],
+    [data-main-rotation="270"] [data-editor-rotation="0"]
+  )
+  .altText.small {
   inset-inline-start: calc(100% + 8px);
   inset-block-start: 100%;
 }
@@ -1421,7 +1553,6 @@ input:hover {
 }
 
 .altText.small {
-
   inset-block-end: unset;
   inset-inline-start: 0;
   inset-block-start: calc(100% + 8px);
@@ -1515,7 +1646,6 @@ input:hover {
 }
 
 @media (prefers-color-scheme: dark) {
-
   .altText .tooltip.show {
     --alt-text-tooltip-bg: #1c1b22;
     --alt-text-tooltip-fg: #fbfbfe;
@@ -1524,7 +1654,6 @@ input:hover {
 }
 
 @media screen and (forced-colors: active) {
-
   .altText .tooltip.show {
     --alt-text-tooltip-bg: Canvas;
     --alt-text-tooltip-fg: CanvasText;
@@ -1581,7 +1710,6 @@ input:hover {
 }
 
 @media (prefers-color-scheme: dark) {
-
   #altTextDialog {
     --dialog-bg-color: #1c1b22;
     --dialog-border-color: #1c1b22;
@@ -1604,7 +1732,6 @@ input:hover {
 }
 
 @media screen and (forced-colors: active) {
-
   #altTextDialog {
     --dialog-bg-color: Canvas;
     --dialog-border-color: CanvasText;
@@ -2022,8 +2149,8 @@ input:hover {
   --toolbar-border-color: rgba(184, 184, 184, 1);
   --toolbar-box-shadow: 0 1px 0 var(--toolbar-border-color);
   --toolbar-border-bottom: none;
-  --toolbarSidebar-box-shadow: inset calc(-1px * var(--dir-factor)) 0 0 rgba(0, 0, 0, 0.25),
-  0 1px 0 rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
+  --toolbarSidebar-box-shadow: inset calc(-1px * var(--dir-factor)) 0 0 rgba(0, 0, 0, 0.25), 0 1px 0 rgba(0, 0, 0, 0.15),
+    0 0 1px rgba(0, 0, 0, 0.1);
   --toolbarSidebar-border-bottom: none;
   --button-hover-color: rgba(221, 222, 223, 1);
   --toggled-btn-color: rgba(0, 0, 0, 1);
@@ -2319,8 +2446,7 @@ body {
   font: message-box;
 }
 
-:is(.toolbar, .editorParamsToolbar, .findbar, #sidebarContainer)
-:is(input, button, select),
+:is(.toolbar, .editorParamsToolbar, .findbar, #sidebarContainer) :is(input, button, select),
 .secondaryToolbar :is(input, button, a, select) {
   outline: none;
   font: message-box;
@@ -2417,19 +2543,18 @@ body {
   height: 100%;
   width: calc(100% + 150px);
   background: repeating-linear-gradient(
-          135deg,
-          var(--progressBar-blend-color) 0,
-          var(--progressBar-bg-color) 5px,
-          var(--progressBar-bg-color) 45px,
-          var(--progressBar-color) 55px,
-          var(--progressBar-color) 95px,
-          var(--progressBar-blend-color) 100px
+    135deg,
+    var(--progressBar-blend-color) 0,
+    var(--progressBar-bg-color) 5px,
+    var(--progressBar-bg-color) 45px,
+    var(--progressBar-color) 55px,
+    var(--progressBar-color) 95px,
+    var(--progressBar-blend-color) 100px
   );
   animation: progressIndeterminate 1s linear infinite;
 }
 
-#outerContainer.sidebarResizing
-:is(#sidebarContainer, #viewerContainer, #loadingBar) {
+#outerContainer.sidebarResizing :is(#sidebarContainer, #viewerContainer, #loadingBar) {
   /* Improve responsiveness and avoid visual glitches when the sidebar is resized. */
   transition-duration: 0s;
 }
@@ -2600,8 +2725,9 @@ body {
 .doorHanger,
 .doorHangerRight {
   border-radius: 2px;
-  box-shadow: 0 1px 5px var(--doorhanger-border-color),
-  0 0 0 1px var(--doorhanger-border-color);
+  box-shadow:
+    0 1px 5px var(--doorhanger-border-color),
+    0 0 0 1px var(--doorhanger-border-color);
   border: var(--doorhanger-border-color-whcm);
 }
 
@@ -3455,8 +3581,7 @@ dialog :link {
   cursor: grab !important;
 }
 
-.grab-to-pan-grab
-*:not(input):not(textarea):not(button):not(select):not(:link) {
+.grab-to-pan-grab *:not(input):not(textarea):not(button):not(select):not(:link) {
   cursor: inherit !important;
 }
 

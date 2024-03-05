@@ -12,7 +12,7 @@ plugins {
 import com.github.jk1.license.render.*
 
 group = 'stirling.software'
-version = '0.20.2'
+version = '0.22.0'
 sourceCompatibility = '17'
 
 repositories {
@@ -89,10 +89,10 @@ dependencies {
     //security updates
     implementation 'ch.qos.logback:logback-classic:1.4.14'
     implementation 'ch.qos.logback:logback-core:1.4.14'
-    implementation 'org.springframework:spring-webmvc:6.1.2'
+    implementation 'org.springframework:spring-webmvc:6.1.3'
 
     implementation("io.github.pixee:java-security-toolkit:1.1.2")
-    
+
     implementation 'org.yaml:snakeyaml:2.2'
     implementation 'org.springframework.boot:spring-boot-starter-web:3.2.2'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.2.2'
@@ -101,7 +101,7 @@ dependencies {
         implementation 'org.springframework.boot:spring-boot-starter-security:3.2.2'
         implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:3.2.2"
-        
+
         //2.2.x requires rebuild of DB file.. need migration path
         implementation "com.h2database:h2:2.1.214"
     }
@@ -138,19 +138,19 @@ dependencies {
     implementation ('com.opencsv:opencsv:5.9') {
         exclude group: 'commons-logging', module: 'commons-logging'
     }
-    
+
     implementation ('org.apache.pdfbox:pdfbox:3.0.1'){
         exclude group: 'commons-logging', module: 'commons-logging'
     }
-    
+
     implementation ('org.apache.pdfbox:xmpbox:3.0.1'){
         exclude group: 'commons-logging', module: 'commons-logging'
     }
-    
+
     implementation 'org.bouncycastle:bcprov-jdk18on:1.77'
     implementation 'org.bouncycastle:bcpkix-jdk18on:1.77'
     implementation 'org.springframework.boot:spring-boot-starter-actuator:3.2.2'
-    implementation 'io.micrometer:micrometer-core:1.12.2'
+    implementation 'io.micrometer:micrometer-core:1.12.3'
     implementation group: 'com.google.zxing', name: 'core', version: '3.5.2'
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation 'org.commonmark:commonmark:0.21.0'

@@ -1,64 +1,62 @@
 #searchBar {
-	background-image: url('../images/search.svg');
-	background-position: 16px 16px;
-	background-repeat: no-repeat;
-	width: 100%;
-	font-size: 16px;
-	margin-bottom: 12px;
-	padding: 12px 20px 12px 40px;
-	border: 1px solid #ddd;
-
-
+  background-image: url("../images/search.svg");
+  background-position: 16px 16px;
+  background-repeat: no-repeat;
+  width: 100%;
+  font-size: 16px;
+  margin-bottom: 12px;
+  padding: 12px 20px 12px 40px;
+  border: 1px solid #ddd;
 }
 .dark-mode-search {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' hei… 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") !important;
-    color: #f8f9fa !important;
-    background-color: #212529 !important;
-    border-color: #343a40 !important;
-  }
-
-
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' hei… 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") !important;
+  color: #f8f9fa !important;
+  background-color: #212529 !important;
+  border-color: #343a40 !important;
+}
 
 .features-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(15rem, 3fr));
-    gap: 25px 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 3fr));
+  gap: 25px 30px;
 }
 
 .feature-card {
-    border: 2px solid rgba(0, 0, 0, .25);
-    border-radius: 0.25rem;
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    background: rgba(13, 110, 253, 0.05);
-    transition: transform 0.3s, border 0.3s;
-    transform-origin: center center;
-    outline: 2px solid transparent;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  border-radius: 0.25rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: rgba(13, 110, 253, 0.05);
+  transition:
+    transform 0.3s,
+    border 0.3s;
+  transform-origin: center center;
+  outline: 2px solid transparent;
 }
 
 .feature-card a {
-    text-decoration: none;
-    color: inherit;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
 }
 
 .feature-card .card-text {
-    flex: 1;
+  flex: 1;
 }
 
 .feature-card:hover {
-    outline: 1px solid rgba(0, 0, 0, .5);
-    cursor: pointer;
-    transform: scale(1.1);
+  outline: 1px solid rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transform: scale(1.1);
 }
 
 .feature-card:hover .card-title {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 .card-title.text-primary {
   color: #000; /* Replace with your desired shade of blue */
@@ -67,27 +65,27 @@
 .home-card-icon {
   width: 30px;
   height: 30px;
-   transform: translateY(-5px);
+  transform: translateY(-5px);
 }
 .home-card-icon-colour {
-filter: invert(0.2) sepia(2) saturate(50) hue-rotate(190deg);
+  filter: invert(0.2) sepia(2) saturate(50) hue-rotate(190deg);
 }
 
 .favorite-icon {
-    display: none;
-    position: absolute;
-    top: 10px;
-    right: 10px;
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
 
 /* Only show the favorite icons when the parent card is being hovered over */
 .feature-card:hover .favorite-icon {
-    display: block;
+  display: block;
 }
 .favorite-icon img {
-    filter: brightness(0);
+  filter: brightness(0);
 }
 
 .jumbotron {
-    padding: 3rem 3rem;  /* Reduce vertical padding */
+  padding: 3rem 3rem; /* Reduce vertical padding */
 }

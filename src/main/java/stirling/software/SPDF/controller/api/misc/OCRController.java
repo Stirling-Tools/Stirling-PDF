@@ -41,7 +41,7 @@ public class OCRController {
     private static final Logger logger = LoggerFactory.getLogger(OCRController.class);
 
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = "/usr/share/tesseract-ocr/5/tessdata";
+        String tessdataDir = "/usr/share/tessdata";
         File[] files = new File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();
