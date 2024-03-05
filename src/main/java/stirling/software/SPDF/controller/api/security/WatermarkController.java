@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.security;
 
-import io.github.pixee.security.Filenames;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -32,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -106,7 +106,9 @@ public class WatermarkController {
 
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_watermarked.pdf");
+                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
+                        + "_watermarked.pdf");
     }
 
     private void addTextWatermark(

@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api;
 
-import io.github.pixee.security.Filenames;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -113,6 +113,7 @@ public class ScalePagesController {
 
         return WebResponseUtils.bytesToWebResponse(
                 baos.toByteArray(),
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_scaled.pdf");
+                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                        + "_scaled.pdf");
     }
 }

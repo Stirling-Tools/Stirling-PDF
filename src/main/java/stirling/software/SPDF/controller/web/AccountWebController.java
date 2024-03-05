@@ -33,6 +33,8 @@ public class AccountWebController {
             return "redirect:/";
         }
 
+        model.addAttribute("currentPage", "login");
+
         if (request.getParameter("error") != null) {
 
             model.addAttribute("error", request.getParameter("error"));
@@ -112,6 +114,7 @@ public class AccountWebController {
                 model.addAttribute("role", user.get().getRolesAsString());
                 model.addAttribute("settings", settingsJson);
                 model.addAttribute("changeCredsFlag", user.get().isFirstLogin());
+                model.addAttribute("currentPage", "account");
             }
         } else {
             return "redirect:/";

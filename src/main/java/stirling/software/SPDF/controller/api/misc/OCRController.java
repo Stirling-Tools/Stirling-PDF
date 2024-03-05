@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import io.github.pixee.security.Filenames;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -41,7 +41,7 @@ public class OCRController {
     private static final Logger logger = LoggerFactory.getLogger(OCRController.class);
 
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = "/usr/share/tesseract-ocr/5/tessdata";
+        String tessdataDir = "/usr/share/tessdata";
         File[] files = new File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();
@@ -183,12 +183,16 @@ public class OCRController {
 
         // Return the OCR processed PDF as a response
         String outputFilename =
-                Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
+                Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
+                        + "_OCR.pdf";
 
         if (sidecar != null && sidecar) {
             // Create a zip file containing both the PDF and the text file
             String outputZipFilename =
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_OCR.zip";
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
+                            + "_OCR.zip";
             Path tempZipFile = Files.createTempFile("output_", ".zip");
 
             try (ZipOutputStream zipOut =

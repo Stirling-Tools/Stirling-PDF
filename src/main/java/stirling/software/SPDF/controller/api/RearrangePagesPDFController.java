@@ -1,8 +1,8 @@
 package stirling.software.SPDF.controller.api;
 
-import io.github.pixee.security.Filenames;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -50,7 +51,9 @@ public class RearrangePagesPDFController {
         String[] pageOrderArr = pagesToDelete.split(",");
 
         List<Integer> pagesToRemove =
-                GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
+                GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages(), true);
+
+        Collections.sort(pagesToRemove);
 
         for (int i = pagesToRemove.size() - 1; i >= 0; i--) {
             int pageIndex = pagesToRemove.get(i);
@@ -58,7 +61,9 @@ public class RearrangePagesPDFController {
         }
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(pdfFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_removed_pages.pdf");
+                Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
+                        + "_removed_pages.pdf");
     }
 
     private List<Integer> removeFirst(int totalPages) {
@@ -190,7 +195,7 @@ public class RearrangePagesPDFController {
             if (sortType != null && sortType.length() > 0) {
                 newPageOrder = processSortTypes(sortType, totalPages);
             } else {
-                newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages);
+                newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, true);
             }
             logger.info("newPageOrder = " + newPageOrder);
             logger.info("totalPages = " + totalPages);
@@ -212,7 +217,8 @@ public class RearrangePagesPDFController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
                             + "_rearranged.pdf");
         } catch (IOException e) {
             logger.error("Failed rearranging documents", e);

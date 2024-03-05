@@ -1,6 +1,5 @@
 package stirling.software.SPDF.utils;
 
-import io.github.pixee.security.BoundedLineReader;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.github.pixee.security.BoundedLineReader;
 
 public class ProcessExecutor {
 
@@ -110,7 +111,10 @@ public class ProcessExecutor {
                                                         process.getErrorStream(),
                                                         StandardCharsets.UTF_8))) {
                                     String line;
-                                    while ((line = BoundedLineReader.readLine(errorReader, 5_000_000)) != null) {
+                                    while ((line =
+                                                    BoundedLineReader.readLine(
+                                                            errorReader, 5_000_000))
+                                            != null) {
                                         errorLines.add(line);
                                         if (liveUpdates) logger.info(line);
                                     }
@@ -131,7 +135,10 @@ public class ProcessExecutor {
                                                         process.getInputStream(),
                                                         StandardCharsets.UTF_8))) {
                                     String line;
-                                    while ((line = BoundedLineReader.readLine(outputReader, 5_000_000)) != null) {
+                                    while ((line =
+                                                    BoundedLineReader.readLine(
+                                                            outputReader, 5_000_000))
+                                            != null) {
                                         outputLines.add(line);
                                         if (liveUpdates) logger.info(line);
                                     }

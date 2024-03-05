@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import io.github.pixee.security.Filenames;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -23,8 +23,8 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertHtmlToPDF {
 
     @Autowired
-    @Qualifier("htmlFormatsInstalled")
-    private boolean htmlFormatsInstalled;
+    @Qualifier("bookAndHtmlFormatsInstalled")
+    private boolean bookAndHtmlFormatsInstalled;
 
     @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
     @Operation(
@@ -47,7 +47,10 @@ public class ConvertHtmlToPDF {
         }
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
-                        request, fileInput.getBytes(), originalFilename, htmlFormatsInstalled);
+                        request,
+                        fileInput.getBytes(),
+                        originalFilename,
+                        bookAndHtmlFormatsInstalled);
 
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")

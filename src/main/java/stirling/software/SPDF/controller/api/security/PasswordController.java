@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.security;
 
-import io.github.pixee.security.Filenames;
 import java.io.IOException;
 
 import org.apache.pdfbox.Loader;
@@ -16,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -44,7 +44,8 @@ public class PasswordController {
         document.setAllSecurityToBeRemoved(true);
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(fileInput.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                Filenames.toSimpleFileName(fileInput.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
                         + "_password_removed.pdf");
     }
 
@@ -89,10 +90,13 @@ public class PasswordController {
         if ("".equals(ownerPassword) && "".equals(password))
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    Filenames.toSimpleFileName(fileInput.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                    Filenames.toSimpleFileName(fileInput.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
                             + "_permissions.pdf");
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
-                Filenames.toSimpleFileName(fileInput.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_passworded.pdf");
+                Filenames.toSimpleFileName(fileInput.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
+                        + "_passworded.pdf");
     }
 }

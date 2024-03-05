@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.security;
 
-import io.github.pixee.security.Filenames;
 import java.io.IOException;
 
 import org.apache.pdfbox.Loader;
@@ -29,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -77,7 +77,8 @@ public class SanitizeController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
                             + "_sanitized.pdf");
         }
     }
