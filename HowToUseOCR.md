@@ -4,7 +4,7 @@ This document provides instructions on how to add additional language packs for 
 
 ## My OCR used to work and now doesn't!
 
-The paths have changed for the tessadata locations on new docker images, please use ``/languages`` (Others should still work for backwards compatability but might not)
+The paths have changed for the tessadata locations on new docker images, please use ``/languages``.
 
 ## How does the OCR Work
 
