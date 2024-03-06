@@ -43,6 +43,6 @@ spec:
     name: http
 {{- end }}
     protocol: TCP
-    
+
   selector:
     {{- include "stirlingpdf.selectorLabels" . | nindent 4 }}

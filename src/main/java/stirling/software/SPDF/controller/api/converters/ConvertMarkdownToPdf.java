@@ -33,8 +33,8 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertMarkdownToPdf {
 
     @Autowired
-    @Qualifier("htmlFormatsInstalled")
-    private boolean htmlFormatsInstalled;
+    @Qualifier("bookAndHtmlFormatsInstalled")
+    private boolean bookAndHtmlFormatsInstalled;
 
     @PostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
     @Operation(
@@ -69,7 +69,10 @@ public class ConvertMarkdownToPdf {
 
         byte[] pdfBytes =
                 FileToPdf.convertHtmlToPdf(
-                        null, htmlContent.getBytes(), "converted.html", htmlFormatsInstalled);
+                        null,
+                        htmlContent.getBytes(),
+                        "converted.html",
+                        bookAndHtmlFormatsInstalled);
 
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")

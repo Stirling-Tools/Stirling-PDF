@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -48,13 +49,13 @@ public class StampController {
     @Operation(
             summary = "Add stamp to a PDF file",
             description =
-                    "This endpoint adds a stamp to a given PDF file. Users can specify the watermark type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint adds a stamp to a given PDF file. Users can specify the stamp type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> addStamp(@ModelAttribute AddStampRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
-        String watermarkType = request.getStampType();
-        String watermarkText = request.getStampText();
-        MultipartFile watermarkImage = request.getStampImage();
+        String stampType = request.getStampType();
+        String stampText = request.getStampText();
+        MultipartFile stampImage = request.getStampImage();
         String alphabet = request.getAlphabet();
         float fontSize = request.getFontSize();
         float rotation = request.getRotation();
@@ -87,59 +88,64 @@ public class StampController {
         // Load the input PDF
         PDDocument document = Loader.loadPDF(pdfFile.getBytes());
 
-        for (PDPage page : document.getPages()) {
-            PDRectangle pageSize = page.getMediaBox();
-            float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
+        List<Integer> pageNumbers = request.getPageNumbersList(document, false);
 
-            PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+        for (int pageIndex : pageNumbers) {
+            int zeroBasedIndex = pageIndex - 1;
+            if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
+                PDPage page = document.getPage(zeroBasedIndex);
+                PDRectangle pageSize = page.getMediaBox();
+                float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
 
-            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-            graphicsState.setNonStrokingAlphaConstant(opacity);
-            contentStream.setGraphicsStateParameters(graphicsState);
+                PDPageContentStream contentStream =
+                        new PDPageContentStream(
+                                document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
-            if ("text".equalsIgnoreCase(watermarkType)) {
-                addTextStamp(
-                        contentStream,
-                        watermarkText,
-                        document,
-                        page,
-                        rotation,
-                        position,
-                        fontSize,
-                        alphabet,
-                        overrideX,
-                        overrideY,
-                        margin,
-                        customColor);
-            } else if ("image".equalsIgnoreCase(watermarkType)) {
-                addImageStamp(
-                        contentStream,
-                        watermarkImage,
-                        document,
-                        page,
-                        rotation,
-                        position,
-                        fontSize,
-                        overrideX,
-                        overrideY,
-                        margin);
+                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                graphicsState.setNonStrokingAlphaConstant(opacity);
+                contentStream.setGraphicsStateParameters(graphicsState);
+
+                if ("text".equalsIgnoreCase(stampType)) {
+                    addTextStamp(
+                            contentStream,
+                            stampText,
+                            document,
+                            page,
+                            rotation,
+                            position,
+                            fontSize,
+                            alphabet,
+                            overrideX,
+                            overrideY,
+                            margin,
+                            customColor);
+                } else if ("image".equalsIgnoreCase(stampType)) {
+                    addImageStamp(
+                            contentStream,
+                            stampImage,
+                            document,
+                            page,
+                            rotation,
+                            position,
+                            fontSize,
+                            overrideX,
+                            overrideY,
+                            margin);
+                }
+
+                contentStream.close();
             }
-
-            contentStream.close();
         }
-
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
                 Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
                                 .replaceFirst("[.][^.]+$", "")
-                        + "_watermarked.pdf");
+                        + "_stamped.pdf");
     }
 
     private void addTextStamp(
             PDPageContentStream contentStream,
-            String watermarkText,
+            String stampText,
             PDDocument document,
             PDPage page,
             float rotation,
@@ -208,9 +214,7 @@ public class StampController {
             x = overrideX;
             y = overrideY;
         } else {
-            x =
-                    calculatePositionX(
-                            pageSize, position, fontSize, font, fontSize, watermarkText, margin);
+            x = calculatePositionX(pageSize, position, fontSize, font, fontSize, stampText, margin);
             y =
                     calculatePositionY(
                             pageSize, position, calculateTextCapHeight(font, fontSize), margin);
@@ -218,13 +222,13 @@ public class StampController {
 
         contentStream.beginText();
         contentStream.setTextMatrix(Matrix.getRotateInstance(Math.toRadians(rotation), x, y));
-        contentStream.showText(watermarkText);
+        contentStream.showText(stampText);
         contentStream.endText();
     }
 
     private void addImageStamp(
             PDPageContentStream contentStream,
-            MultipartFile watermarkImage,
+            MultipartFile stampImage,
             PDDocument document,
             PDPage page,
             float rotation,
@@ -235,8 +239,8 @@ public class StampController {
             float margin)
             throws IOException {
 
-        // Load the watermark image
-        BufferedImage image = ImageIO.read(watermarkImage.getInputStream());
+        // Load the stamp image
+        BufferedImage image = ImageIO.read(stampImage.getInputStream());
 
         // Compute width based on original aspect ratio
         float aspectRatio = (float) image.getWidth() / (float) image.getHeight();

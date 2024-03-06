@@ -45,7 +45,7 @@ sudo apt-get update
 sudo apt-get install -y git  automake  autoconf  libtool  libleptonica-dev  pkg-config zlib1g-dev make g++ java-17-openjdk python3 python3-pip
 ```
 
-For Fedora-based systems use this command: 
+For Fedora-based systems use this command:
 
 ```bash
 sudo dnf install -y git automake autoconf libtool leptonica-devel pkg-config zlib-devel make gcc-c++ java-17-openjdk python3 python3-pip
@@ -65,7 +65,7 @@ sudo make install
 ```
 
 ### Step 3: Install Additional Software
-Next we need to install LibreOffice for conversions, ocrmypdf for OCR, and opencv for patern recognition functionality.
+Next we need to install LibreOffice for conversions, ocrmypdf for OCR, and opencv for pattern recognition functionality.
 
 Install the following software:
 
@@ -95,14 +95,14 @@ For Debian-based systems, you can use the following command:
 
 ```bash
 sudo apt-get install -y libreoffice-writer libreoffice-calc libreoffice-impress unpaper ocrmypdf
-pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint 
+pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint
 ```
 
 For Fedora:
 
 ```bash
 sudo dnf install -y libreoffice-writer libreoffice-calc libreoffice-impress unpaper ocrmypdf
-pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint 
+pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint
 ```
 
 ### Step 4: Clone and Build Stirling-PDF
@@ -139,8 +139,8 @@ Easiest is to use the langpacks provided by your repositories. Skip the other st
 Manual:
 
 1. Download the desired language pack(s) by selecting the `.traineddata` file(s) for the language(s) you need.
-2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tesseract-ocr/5/tessdata`
-3. 
+2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tessdata`
+3.
 Please view  [OCRmyPDF install guide](https://ocrmypdf.readthedocs.io/en/latest/installation.html) for more info.
 **IMPORTANT:** DO NOT REMOVE EXISTING `eng.traineddata`, IT'S REQUIRED.
 
@@ -264,10 +264,10 @@ sudo systemctl restart stirlingpdf.service
 
 Remember to set the necessary environment variables before running the project if you want to customize the application the list can be seen in the main readme.
 
-You can do this in the terminal by using the `export` command or -D arguements to java -jar command:
+You can do this in the terminal by using the `export` command or -D argument to java -jar command:
 
 ```bash
 export APP_HOME_NAME="Stirling PDF"
 or
--DAPP_HOME_NAME="Stirling PDF" 
+-DAPP_HOME_NAME="Stirling PDF"
 ```

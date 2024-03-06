@@ -1,0 +1,119 @@
+.multi-tool-container {
+  max-width: 95vw;
+  margin: 0 auto;
+}
+
+#global-buttons-container {
+  display: flex;
+  gap: 10px;
+  align-items: start;
+
+  background-color: rgba(13, 110, 253, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(2px);
+
+  top: 10px;
+  z-index: 10;
+  padding: 10px;
+  border-radius: 8px;
+}
+#global-buttons-container > * {
+  padding: 0.6rem 0.75rem;
+}
+
+#global-buttons-container svg {
+  width: 20px;
+  height: 20px;
+}
+#export-button {
+  margin-left: auto;
+}
+
+#pages-container-wrapper {
+  --background-color: rgba(0, 0, 0, 0.025);
+  --scroll-bar-color: #f1f1f1;
+  --scroll-bar-thumb: #888;
+  --scroll-bar-thumb-hover: #555;
+  background-color: var(--background-color);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 25px;
+  border-radius: 10px;
+  overflow-y: hidden;
+  overflow-x: auto;
+  min-height: 275px;
+  margin: 0 0 30px 0;
+}
+
+#pages-container {
+  margin: auto;
+  gap: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* width */
+#pages-container-wrapper::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+/* Track */
+#pages-container-wrapper::-webkit-scrollbar-track {
+  background: var(--scroll-bar-color);
+}
+
+/* Handle */
+#pages-container-wrapper::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: var(--scroll-bar-thumb);
+}
+
+/* Handle on hover */
+#pages-container-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-bar-thumb-hover);
+}
+
+.page-container {
+  height: 250px;
+  display: flex;
+  align-items: center;
+  flex-direction: column-reverse;
+  aspect-ratio: 1;
+  text-align: center;
+  position: relative;
+  user-select: none;
+  transition: width 1s linear;
+}
+
+.page-container img {
+  /* max-width: calc(100% - 15px); */
+  max-height: calc(100% - 15px);
+  max-width: 237px;
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+  border-radius: 4px;
+  transition: rotate 0.3s;
+}
+
+#add-pdf-button {
+  margin: 0 auto;
+}
+
+.page-number {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  color: white;
+  background-color: #007bff; /* Primary blue color */
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 2;
+}

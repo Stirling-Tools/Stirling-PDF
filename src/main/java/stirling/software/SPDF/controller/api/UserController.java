@@ -10,6 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -232,9 +235,25 @@ public class UserController {
         if (currentUsername.equals(username)) {
             throw new IllegalArgumentException("Cannot delete currently logined in user.");
         }
-
+        invalidateUserSessions(username);
         userService.deleteUser(username);
         return "redirect:/addUsers";
+    }
+
+    @Autowired private SessionRegistry sessionRegistry;
+
+    private void invalidateUserSessions(String username) {
+        for (Object principal : sessionRegistry.getAllPrincipals()) {
+            if (principal instanceof UserDetails) {
+                UserDetails userDetails = (UserDetails) principal;
+                if (userDetails.getUsername().equals(username)) {
+                    for (SessionInformation session :
+                            sessionRegistry.getAllSessions(principal, false)) {
+                        session.expireNow();
+                    }
+                }
+            }
+        }
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
