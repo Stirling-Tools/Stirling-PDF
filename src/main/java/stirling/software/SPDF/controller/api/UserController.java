@@ -198,6 +198,10 @@ public class UserController {
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
                     boolean forceChange) {
 
+        if (!username.matches("[a-zA-Z0-9]+")) {
+            return new RedirectView("/addUsers?messageType=invalidUsername");
+        }
+
         if (userService.usernameExists(username)) {
             return new RedirectView("/addUsers?messageType=usernameExists");
         }

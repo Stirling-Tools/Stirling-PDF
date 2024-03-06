@@ -43,10 +43,15 @@
 						
 
 						<h2 th:text="#{adminUserSettings.addUser}">Add New User</h2>
-						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
-						    <span th:text="#{usernameExistsMessage}">Default message if not found</span>
+						<div th:switch="${param.messageType != null and param.messageType.size() > 0 ? param.messageType[0] : ''}">
+							<div th:case="'usernameExists'" class="alert alert-danger">
+								<span th:text="#{usernameExistsMessage}">Default message if not found</span>
+							</div>
+							<div th:case="'invalidUsername'" class="alert alert-danger">
+								<span th:text="#{invalidUsernameMessage}">Default message if not found</span>
+							</div>
 						</div>
-					    <form action="/api/v1/user/admin/saveUser" method="post">
+						<form action="/api/v1/user/admin/saveUser" method="post">
 					        <div class="mb-3">
 					            <label for="username" th:text="#{username}">Username</label>
 					            <input type="text" class="form-control" name="username" pattern="[a-zA-Z0-9]+" title="Username must only contain letters and numbers and no spaces or special characters" required>
