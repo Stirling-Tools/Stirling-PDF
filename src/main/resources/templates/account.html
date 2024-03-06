@@ -28,6 +28,9 @@
 						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
 						    <span th:text="#{usernameExistsMessage}">Default message if not found</span>
 						</div>
+                        <div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'invalidUsername'}" class="alert alert-danger">
+                            <span th:text="#{invalidUsernameMessage}">Default message if not found</span>
+                        </div>
 						
 				
 						
@@ -45,7 +48,7 @@
                         <form action="api/v1/user/change-username" method="post">
                             <div class="mb-3">
                                 <label for="newUsername" th:text="#{account.changeUsername}">Change Username</label>
-                                <input type="text" class="form-control" name="newUsername" id="newUsername" placeholder="New Username">
+                                <input type="text" class="form-control" name="newUsername" id="newUsername" placeholder="New Username" pattern="[a-zA-Z0-9]+" title="Username must only contain letters and numbers and no spaces or special characters">
                             </div>
                             <div class="mb-3">
                                 <label for="currentPassword" th:text="#{password}">Password</label>

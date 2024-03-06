@@ -29,6 +29,9 @@
 						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
 						    <span th:text="#{usernameExistsMessage}">Default message if not found</span>
 						</div>
+                        <div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'invalidUsername'}" class="alert alert-danger">
+                            <span th:text="#{invalidUsernameMessage}">Default message if not found</span>
+                        </div>
 
 						<!-- At the top of the user settings -->
 						<h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>
@@ -40,7 +43,7 @@
                         <form action="api/v1/user/change-username-and-password" method="post">
                             <div class="mb-3">
                                 <label for="username" th:text="#{changeCreds.newUsername}">New Username</label>
-                                <input type="text" class="form-control" name="username" id="username" th:placeholder="${username}">
+                                <input type="text" class="form-control" name="newUsername" id="username" th:placeholder="${username}" pattern="[a-zA-Z0-9]+" title="Username must only contain letters and numbers and no spaces or special characters">
                             </div>
                             <div class="mb-3">
                                 <label for="password" th:text="#{changeCreds.oldPassword}">Old Password</label>

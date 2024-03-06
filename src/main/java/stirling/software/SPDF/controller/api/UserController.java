@@ -13,11 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -41,6 +37,14 @@ public class UserController {
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
     public String register(@ModelAttribute UsernameAndPass requestModel, Model model) {
+
+        if (!userService.isUsernameValid(requestModel.getUsername())) {
+            model.addAttribute(
+                    "invalidUsername",
+                    "Invalid username, Username must only contain alphabet characters and numbers.");
+            return "register";
+        }
+
         if (userService.usernameExists(requestModel.getUsername())) {
             model.addAttribute("error", "Username already exists");
             return "register";
@@ -62,6 +66,10 @@ public class UserController {
         String currentPassword = requestModel.getPassword();
         String newPassword = requestModel.getNewPassword();
         String newUsername = requestModel.getNewUsername();
+
+        if (!userService.isUsernameValid(newUsername)) {
+            return new RedirectView("/change-creds?messageType=invalidUsername");
+        }
 
         if (principal == null) {
             return new RedirectView("/change-creds?messageType=notAuthenticated");
@@ -106,6 +114,11 @@ public class UserController {
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
+
+        if (!userService.isUsernameValid(newUsername)) {
+            return new RedirectView("/account?messageType=invalidUsername");
+        }
+
         if (principal == null) {
             return new RedirectView("/account?messageType=notAuthenticated");
         }
@@ -198,7 +211,7 @@ public class UserController {
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
                     boolean forceChange) {
 
-        if (!username.matches("[a-zA-Z0-9]+")) {
+        if (!userService.isUsernameValid(username)) {
             return new RedirectView("/addUsers?messageType=invalidUsername");
         }
 

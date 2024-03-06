@@ -194,4 +194,11 @@ public class UserService implements UserServiceInterface {
     public boolean isPasswordCorrect(User user, String currentPassword) {
         return passwordEncoder.matches(currentPassword, user.getPassword());
     }
+
+    public boolean isUsernameValid(String username) {
+        if (!username.matches("[a-zA-Z0-9]+")) {
+            return false;
+        }
+        return true;
+    }
 }
