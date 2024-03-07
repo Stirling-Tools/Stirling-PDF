@@ -36,15 +36,11 @@
 
               <!-- Change Username Form -->
               <h4></h4>
-              <h4 th:text="#{changeCreds.changeUserAndPassword}">Change Username and password</h4>
-              <form action="api/v1/user/change-username-and-password" method="post">
+              <h4 th:text="#{changeCreds.changePassword}">Change password</h4>
+              <form action="api/v1/user/change-password-on-login" method="post">
                 <div class="mb-3">
-                  <label for="username" th:text="#{changeCreds.newUsername}">New Username</label>
-                  <input type="text" class="form-control" name="username" id="username" th:placeholder="${username}">
-                </div>
-                <div class="mb-3">
-                  <label for="password" th:text="#{changeCreds.oldPassword}">Old Password</label>
-                  <input type="password" class="form-control" name="password" id="password" th:placeholder="#{changeCreds.oldPassword}">
+                  <label for="currentPassword" th:text="#{changeCreds.oldPassword}">Old Password</label>
+                  <input type="password" class="form-control" name="currentPassword" id="currentPassword" th:placeholder="#{changeCreds.oldPassword}">
                 </div>
                 <div class="mb-3">
                   <label for="newPassword" th:text="#{changeCreds.newPassword}">New Password</label>
@@ -60,7 +56,7 @@
               </form>
               <script>
                 document.addEventListener("DOMContentLoaded", function() {
-                  const form = document.querySelector('form[action="api/v1/user/change-username-and-password"]');
+                  const form = document.querySelector('form[action="api/v1/user/change-password-on-login"]');
 
                   form.addEventListener('submit', function(event) {
                     const newPassword = document.getElementById('newPassword').value;

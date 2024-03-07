@@ -31,7 +31,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
-import stirling.software.SPDF.model.api.user.UpdateUserDetails;
 import stirling.software.SPDF.model.api.user.UsernameAndPass;
 
 @Controller
@@ -51,53 +50,6 @@ public class UserController {
 
         userService.saveUser(requestModel.getUsername(), requestModel.getPassword());
         return "redirect:/login?registered=true";
-    }
-
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
-    @PostMapping("/change-username-and-password")
-    public RedirectView changeUsernameAndPassword(
-            Principal principal,
-            @ModelAttribute UpdateUserDetails requestModel,
-            HttpServletRequest request,
-            HttpServletResponse response,
-            RedirectAttributes redirectAttributes) {
-
-        String currentPassword = requestModel.getPassword();
-        String newPassword = requestModel.getNewPassword();
-        String newUsername = requestModel.getNewUsername();
-
-        if (principal == null) {
-            return new RedirectView("/change-creds?messageType=notAuthenticated");
-        }
-
-        Optional<User> userOpt = userService.findByUsername(principal.getName());
-
-        if (userOpt == null || userOpt.isEmpty()) {
-            return new RedirectView("/change-creds?messageType=userNotFound");
-        }
-
-        User user = userOpt.get();
-
-        if (!userService.isPasswordCorrect(user, currentPassword)) {
-            return new RedirectView("/change-creds?messageType=incorrectPassword");
-        }
-
-        if (!user.getUsername().equals(newUsername) && userService.usernameExists(newUsername)) {
-            return new RedirectView("/change-creds?messageType=usernameExists");
-        }
-
-        userService.changePassword(user, newPassword);
-        if (newUsername != null
-                && newUsername.length() > 0
-                && !user.getUsername().equals(newUsername)) {
-            userService.changeUsername(user, newUsername);
-        }
-        userService.changeFirstUse(user, false);
-
-        // Logout using Spring's utility
-        new SecurityContextLogoutHandler().logout(request, response, null);
-
-        return new RedirectView("/login?messageType=credsUpdated");
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
@@ -133,6 +85,39 @@ public class UserController {
             userService.changeUsername(user, newUsername);
         }
 
+        // Logout using Spring's utility
+        new SecurityContextLogoutHandler().logout(request, response, null);
+
+        return new RedirectView("/login?messageType=credsUpdated");
+    }
+
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PostMapping("/change-password-on-login")
+    public RedirectView changePasswordOnLogin(
+            Principal principal,
+            @RequestParam String currentPassword,
+            @RequestParam String newPassword,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            RedirectAttributes redirectAttributes) {
+        if (principal == null) {
+            return new RedirectView("/change-creds?messageType=notAuthenticated");
+        }
+
+        Optional<User> userOpt = userService.findByUsername(principal.getName());
+
+        if (userOpt == null || userOpt.isEmpty()) {
+            return new RedirectView("/change-creds?messageType=userNotFound");
+        }
+
+        User user = userOpt.get();
+
+        if (!userService.isPasswordCorrect(user, currentPassword)) {
+            return new RedirectView("/change-creds?messageType=incorrectPassword");
+        }
+
+        userService.changePassword(user, newPassword);
+        userService.changeFirstUse(user, false);
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
 
