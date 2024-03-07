@@ -277,7 +277,6 @@ public class ApplicationProperties {
                     + enableAlphaFunctionality
                     + "]";
         }
-
     }
 
     public static class Ui {
