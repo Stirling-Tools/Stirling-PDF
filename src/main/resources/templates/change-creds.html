@@ -17,7 +17,6 @@
                         <!-- User Settings Title -->
                         <h2 class="text-center" th:text="#{changeCreds.header}">User Settings</h2>
                         <hr>
-
 						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'notAuthenticated'}" class="alert alert-danger">
 						    <span th:text="#{notAuthenticatedMessage}">Default message if not found</span>
 						</div>
@@ -34,38 +33,34 @@
                             <span th:text="#{invalidUsernameMessage}">Default message if not found</span>
                         </div>
 
+
 						<!-- At the top of the user settings -->
 						<h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>
 
 						
-                        <!-- Change Username Form -->
-                        <h4></h4>
-                        <h4 th:text="#{changeCreds.changeUserAndPassword}">Change Username and password</h4>
-                        <form action="api/v1/user/change-username-and-password" method="post">
-                            <div class="mb-3">
-                                <label for="username" th:text="#{changeCreds.newUsername}">New Username</label>
-                                <input type="text" class="form-control" name="newUsername" id="username" th:placeholder="${username}" pattern="[a-zA-Z0-9]+" title="Username must only contain letters and numbers and no spaces or special characters">
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" th:text="#{changeCreds.oldPassword}">Old Password</label>
-                                <input type="password" class="form-control" name="password" id="password"  th:placeholder="#{changeCreds.oldPassword}">
-                            </div>
-                            <div class="mb-3">
-                                <label for="newPassword" th:text="#{changeCreds.newPassword}">New Password</label>
-                                <input type="password" class="form-control" name="newPassword" id="newPassword" th:placeholder="#{changeCreds.newPassword}">
-                            </div>
-                            <div class="mb-3">
-                                <label for="confirmNewPassword" th:text="#{account.confirmNewPassword}">Confirm New Password</label>
-                                <input type="password" class="form-control" name="confirmNewPassword" id="confirmNewPassword" th:placeholder="#{account.confirmNewPassword}">
-                            </div>
-                            <div class="mb-3">
-                                <button type="submit" class="btn btn-primary" th:text="#{changeCreds.submit}">Change credentials!</button>
-                            </div>
-                        </form>
-						
-			<script>
-			document.addEventListener("DOMContentLoaded", function() {
-		        const form = document.querySelector('form[action="api/v1/user/change-username-and-password"]');
+                         <!-- Change Username Form -->
+              <h4></h4>
+              <h4 th:text="#{changeCreds.changePassword}">Change password</h4>
+              <form action="api/v1/user/change-password-on-login" method="post">
+                <div class="mb-3">
+                  <label for="currentPassword" th:text="#{changeCreds.oldPassword}">Old Password</label>
+                  <input type="password" class="form-control" name="currentPassword" id="currentPassword" th:placeholder="#{changeCreds.oldPassword}">
+                </div>
+                <div class="mb-3">
+                  <label for="newPassword" th:text="#{changeCreds.newPassword}">New Password</label>
+                  <input type="password" class="form-control" name="newPassword" id="newPassword" th:placeholder="#{changeCreds.newPassword}">
+                </div>
+                <div class="mb-3">
+                  <label for="confirmNewPassword" th:text="#{account.confirmNewPassword}">Confirm New Password</label>
+                  <input type="password" class="form-control" name="confirmNewPassword" id="confirmNewPassword" th:placeholder="#{account.confirmNewPassword}">
+                </div>
+                <div class="mb-3">
+                  <button type="submit" class="btn btn-primary" th:text="#{changeCreds.submit}">Change credentials!</button>
+                </div>
+              </form>
+              <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                  const form = document.querySelector('form[action="api/v1/user/change-password-on-login"]');
 		        
 		        form.addEventListener('submit', function(event) {
 		            const newPassword = document.getElementById('newPassword').value;
