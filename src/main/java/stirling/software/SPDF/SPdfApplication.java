@@ -19,6 +19,7 @@ import io.github.pixee.security.SystemCommand;
 
 import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.config.ConfigInitializer;
+import stirling.software.SPDF.model.ApplicationProperties;
 
 @SpringBootApplication
 @EnableScheduling
@@ -27,6 +28,8 @@ public class SPdfApplication {
     private static final Logger logger = LoggerFactory.getLogger(SPdfApplication.class);
 
     @Autowired private Environment env;
+
+    @Autowired ApplicationProperties applicationProperties;
 
     private static String serverPortStatic;
 
@@ -55,6 +58,7 @@ public class SPdfApplication {
                 logger.error("Error opening browser: {}", e.getMessage());
             }
         }
+        logger.info("Running configs {}", applicationProperties.toString());
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -88,7 +92,6 @@ public class SPdfApplication {
 
     private static void printStartupLogs() {
         logger.info("Stirling-PDF Started.");
-
         String url = "http://localhost:" + getStaticPort();
         logger.info("Navigate to {}", url);
     }
