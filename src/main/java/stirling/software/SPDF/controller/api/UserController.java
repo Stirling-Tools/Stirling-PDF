@@ -38,13 +38,6 @@ public class UserController {
     @PostMapping("/register")
     public String register(@ModelAttribute UsernameAndPass requestModel, Model model) {
 
-        if (!userService.isUsernameValid(requestModel.getUsername())) {
-            model.addAttribute(
-                    "invalidUsername",
-                    "Invalid username, Username must only contain alphabet characters and numbers.");
-            return "register";
-        }
-
         if (userService.usernameExists(requestModel.getUsername())) {
             model.addAttribute("error", "Username already exists");
             return "register";
