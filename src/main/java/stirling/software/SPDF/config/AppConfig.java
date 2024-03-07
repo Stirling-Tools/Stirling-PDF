@@ -77,16 +77,12 @@ public class AppConfig {
         return Files.exists(Paths.get("/.dockerenv"));
     }
 
-    @Bean(name = "bookFormatsInstalled")
-    public boolean bookFormatsInstalled() {
-        return applicationProperties.getSystem().getCustomApplications().isInstallBookFormats();
-    }
-
-    @Bean(name = "htmlFormatsInstalled")
-    public boolean htmlFormatsInstalled() {
-        return applicationProperties
-                .getSystem()
-                .getCustomApplications()
-                .isInstallAdvancedHtmlToPDF();
+    @Bean(name = "bookAndHtmlFormatsInstalled")
+    public boolean bookAndHtmlFormatsInstalled() {
+        String installOps = System.getProperty("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
+        if (installOps == null) {
+            installOps = System.getenv("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
+        }
+        return "true".equalsIgnoreCase(installOps);
     }
 }

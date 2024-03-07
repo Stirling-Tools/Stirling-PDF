@@ -30,22 +30,22 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertPDFToBookController {
 
     @Autowired
-    @Qualifier("bookFormatsInstalled")
-    private boolean bookFormatsInstalled;
+    @Qualifier("bookAndHtmlFormatsInstalled")
+    private boolean bookAndHtmlFormatsInstalled;
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/book")
     @Operation(
             summary =
                     "Convert a PDF to a Book/comic (*.epub | *.mobi | *.azw3 | *.fb2 | *.txt | *.docx .. (others to include by chatgpt) to PDF",
             description =
-                    "(Requires bookFormatsInstalled flag and Calibre installed) This endpoint Convert a PDF to a Book/comic (*.epub | *.mobi | *.azw3 | *.fb2 | *.txt | *.docx .. (others to include by chatgpt) to PDF")
+                    "(Requires bookAndHtmlFormatsInstalled flag and Calibre installed) This endpoint Convert a PDF to a Book/comic (*.epub | *.mobi | *.azw3 | *.fb2 | *.txt | *.docx .. (others to include by chatgpt) to PDF")
     public ResponseEntity<byte[]> HtmlToPdf(@ModelAttribute PdfToBookRequest request)
             throws Exception {
         MultipartFile fileInput = request.getFileInput();
 
-        if (!bookFormatsInstalled) {
+        if (!bookAndHtmlFormatsInstalled) {
             throw new IllegalArgumentException(
-                    "bookFormatsInstalled flag is False, this functionality is not avaiable");
+                    "bookAndHtmlFormatsInstalled flag is False, this functionality is not avaiable");
         }
 
         if (fileInput == null) {

@@ -1,14 +1,15 @@
-<!doctype html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{account.title})}"></th:block>
+  </head>
 
-<th:block th:insert="~{fragments/common :: head(title=#{account.title}, header=#{account.header})}"></th:block>
-
-<body>
+  <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
         <div id="content-wrap">
-            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-            <br> <br>
+            <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+            <br/> <br/>
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-md-9">
@@ -231,9 +232,6 @@
 </style>
     
 
-                        
-                        
-
 							<script th:inline="javascript">
 							document.addEventListener("DOMContentLoaded", function() {
 							    const settingsTableBody = document.querySelector("#settingsTable tbody");
@@ -297,16 +295,7 @@
 
 							});
 
-
-
-
-
-							</script>
-            
-                        
-	                      
-	                    
-                        
+							</script> 
                         
                         <div class="mb-3 mt-4">
                             <a href="logout">
@@ -315,15 +304,12 @@
                             <a th:if="${role == 'ROLE_ADMIN'}" href="addUsers" target="_blank">
 						        <button type="button" class="btn btn-info"  th:text="#{account.adminSettings}">Admin Settings</button>
 						    </a>
-
-                        </div>
-
-                    </div>
-                </div>
+              </div>
             </div>
-
+          </div>
         </div>
-        <div th:insert="~{fragments/footer.html :: footer}"></div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-</body>
+  </body>
 </html>

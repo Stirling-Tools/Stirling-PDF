@@ -3,7 +3,7 @@ name: Push Docker Image with VersionNumber
 on:
   workflow_dispatch:
   push:
-    branches: 
+    branches:
       - master
       - main
 permissions:
@@ -15,13 +15,13 @@ jobs:
     steps:
 
     - uses: actions/checkout@v3.5.2
-    
+
     - name: Set up JDK 17
       uses: actions/setup-java@v3.11.0
       with:
         java-version: '17'
         distribution: 'temurin'
-    
+
 
     - uses: gradle/gradle-build-action@v2.4.2
       env:
@@ -32,11 +32,11 @@ jobs:
 
     - name: Make Gradle wrapper executable
       run: chmod +x gradlew
-      
+
     - name: Get version number
       id: versionNumber
       run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet | tail -1)"
-    
+
     - name: Login to Docker Hub
       uses: docker/login-action@v2.1.0
       with:
@@ -53,7 +53,7 @@ jobs:
     - name: Convert repository owner to lowercase
       id: repoowner
       run: echo "::set-output name=lowercase::$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')"
-      
+
     - name: Generate tags
       id: meta
       uses: docker/metadata-action@v4.4.0
@@ -82,7 +82,7 @@ jobs:
         cache-to: type=gha,mode=max
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        build-args: 
+        build-args:
           VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
         platforms: linux/amd64,linux/arm64/v8
 
@@ -99,7 +99,7 @@ jobs:
         tags: |
           type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
           type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
-          
+
 
     - name: Build and push Dockerfile-ultra-lite
       uses: docker/build-push-action@v4.0.0
@@ -112,7 +112,7 @@ jobs:
         cache-to: type=gha,mode=max
         tags: ${{ steps.meta2.outputs.tags }}
         labels: ${{ steps.meta2.outputs.labels }}
-        build-args: 
+        build-args:
           VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
         platforms: linux/amd64,linux/arm64/v8
 
@@ -129,7 +129,7 @@ jobs:
         tags: |
           type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-lite,enable=${{ github.ref == 'refs/heads/master' }}
           type=raw,value=latest-lite,enable=${{ github.ref == 'refs/heads/master' }}
-          
+
 
     - name: Build and push Dockerfile-lite
       uses: docker/build-push-action@v4.0.0
@@ -142,7 +142,7 @@ jobs:
         cache-to: type=gha,mode=max
         tags: ${{ steps.meta3.outputs.tags }}
         labels: ${{ steps.meta3.outputs.labels }}
-        build-args: 
+        build-args:
           VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
         platforms: linux/amd64,linux/arm64/v8
     - name: Build and Push Helm Chart

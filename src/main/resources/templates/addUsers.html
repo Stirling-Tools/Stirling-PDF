@@ -1,46 +1,45 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{adminUserSettings.title}, header=#{adminUserSettings.header})}"></th:block>
+  </head>
 
-<th:block th:insert="~{fragments/common :: head(title=#{adminUserSettings.title}, header=#{adminUserSettings.header})}"></th:block>
-
-<body>
+  <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
-        <div id="content-wrap">
-            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-            <br> <br>
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-md-8">
-			
-                        <!-- User Settings Title -->
-                        <h2 class="text-center" th:text="#{adminUserSettings.header}">Admin User Control Settings</h2>
-                      
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br /><br />
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-8">
 
-						
-						
-						<table class="table">
-					    <thead>
-					        <tr>
-					            <th th:text="#{username}">Username</th>
-					            <th th:text="#{adminUserSettings.roles}">Roles</th>
-					            <th th:text="#{adminUserSettings.actions}">Actions</th>
-					        </tr>
-					    </thead>
-					    <tbody>
-					        <tr th:each="user : ${users}">
-					            <td th:text="${user.username}"></td>
-					            <td th:text="${user.getRolesAsString()}"></td>
-					            <td>
-					                <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post">
-					                    <button type="submit" th:text="#{delete}">Delete</button>
-					                </form>
-					            </td>
-					        </tr>
-					    </tbody>
-					</table>
-
-						
+              <!-- User Settings Title -->
+              <h2 class="text-center" th:text="#{adminUserSettings.header}">Admin User Control Settings</h2>
+              <div th:if="${param.messageType != null and param.messageType.size() > 0 and (param.messageType[0] == 'deleteCurrentUser' or param.messageType[0] == 'deleteUsernameExists')}" class="alert alert-danger">
+                <span th:if="${param.messageType[0] == 'deleteCurrentUser'}" th:text="#{deleteCurrentUserMessage}">Cannot delete currently logged in user.</span>
+                <span th:if="${param.messageType[0] == 'deleteUsernameExists'}" th:text="#{deleteUsernameExistsMessage}">The username does not exist and cannot be deleted.</span>
+              </div>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th th:text="#{username}">Username</th>
+                    <th th:text="#{adminUserSettings.roles}">Roles</th>
+                     <th th:text="#{adminUserSettings.actions}">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="user : ${users}">
+                    <td th:text="${user.username}"></td>
+                    <td th:text="#{${user.roleName}}"></td>
+                    <td>
+                      <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post">
+                        <button type="submit" th:text="#{delete}">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
 						<h2 th:text="#{adminUserSettings.addUser}">Add New User</h2>
 						<div th:switch="${param.messageType != null and param.messageType.size() > 0 ? param.messageType[0] : ''}">
@@ -78,12 +77,11 @@
 					        <!-- Add other fields as required -->
 					        <button type="submit" class="btn btn-primary"  th:text="#{adminUserSettings.submit}">Save User</button>
 					    </form>
-                    </div>
-                </div>
             </div>
-
+          </div>
         </div>
-        <div th:insert="~{fragments/footer.html :: footer}"></div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-</body>
+  </body>
 </html>

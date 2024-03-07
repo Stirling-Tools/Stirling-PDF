@@ -1,9 +1,10 @@
-<!doctype html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{changeCreds.title}, header=#{changeCreds.header})}"></th:block>
+  </head>
 
-<th:block th:insert="~{fragments/common :: head(title=#{changeCreds.title}, header=#{changeCreds.header})}"></th:block>
-
-<body>
+  <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
         <div id="content-wrap">
@@ -77,17 +78,11 @@
 		        });
 		    });
 			</script>
-</div>
-
-
-
-
-
-                </div>
-            </div>
-
+           </div>
+          </div>
         </div>
-        <div th:insert="~{fragments/footer.html :: footer}"></div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-</body>
+  </body>
 </html>

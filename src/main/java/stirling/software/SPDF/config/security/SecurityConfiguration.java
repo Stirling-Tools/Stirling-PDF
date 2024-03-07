@@ -9,6 +9,9 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,6 +48,11 @@ public class SecurityConfiguration {
     @Autowired private FirstLoginFilter firstLoginFilter;
 
     @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.addFilterBefore(userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -53,6 +61,14 @@ public class SecurityConfiguration {
             http.csrf(csrf -> csrf.disable());
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
+            http.sessionManagement(
+                    sessionManagement ->
+                            sessionManagement
+                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                                    .maximumSessions(3)
+                                    .maxSessionsPreventsLogin(true)
+                                    .sessionRegistry(sessionRegistry())
+                                    .expiredUrl("/login?logout=true"));
             http.formLogin(
                             formLogin ->
                                     formLogin
