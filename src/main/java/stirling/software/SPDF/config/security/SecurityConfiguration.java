@@ -21,6 +21,7 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import jakarta.servlet.http.HttpSession;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 
 @Configuration
@@ -78,7 +79,7 @@ public class SecurityConfiguration {
                                             .defaultSuccessUrl("/")
                                             .failureHandler(
                                                     new CustomAuthenticationFailureHandler(
-                                                            loginAttemptService))
+                                                            loginAttemptService, userService))
                                             .permitAll())
                     .requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()))
                     .logout(
@@ -87,7 +88,19 @@ public class SecurityConfiguration {
                                                     new AntPathRequestMatcher("/logout"))
                                             .logoutSuccessUrl("/login?logout=true")
                                             .invalidateHttpSession(true) // Invalidate session
-                                            .deleteCookies("JSESSIONID", "remember-me"))
+                                            .deleteCookies("JSESSIONID", "remember-me")
+                                            .addLogoutHandler(
+                                                    (request, response, authentication) -> {
+                                                        HttpSession session =
+                                                                request.getSession(
+                                                                        false); 
+                                                        if (session != null) {
+                                                            String sessionId = session.getId();
+                                                            sessionRegistry()
+                                                                    .removeSessionInformation(
+                                                                            sessionId);
+                                                        }
+                                                    }))
                     .rememberMe(
                             rememberMeConfigurer ->
                                     rememberMeConfigurer // Use the configurator directly
