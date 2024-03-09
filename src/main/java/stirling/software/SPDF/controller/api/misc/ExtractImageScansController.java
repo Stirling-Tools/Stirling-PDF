@@ -78,7 +78,6 @@ public class ExtractImageScansController {
         Path tempZipFile = null;
         List<Path> tempDirs = new ArrayList<>();
 
-
         try {
             // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
@@ -173,6 +172,8 @@ public class ExtractImageScansController {
                         zipOut.write(processedImageBytes.get(i));
                         zipOut.closeEntry();
                     }
+                }
+
                 byte[] zipBytes = Files.readAllBytes(tempZipFile);
 
                 // Clean up the temporary zip file
