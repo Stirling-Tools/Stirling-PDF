@@ -60,6 +60,5 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         return user.isPresent()
                 && user.get().getAuthorities().stream()
                         .anyMatch(authority -> "ROLE_DEMO_USER".equals(authority.getAuthority()));
-
     }
 }
