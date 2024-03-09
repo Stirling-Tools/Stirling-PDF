@@ -72,112 +72,146 @@ public class ExtractImageScansController {
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
 
         List<String> images = new ArrayList<>();
+        
+        List<Path> tempImageFiles = new ArrayList<>();
+        Path tempInputFile = null;
+        Path tempZipFile = null;
+        List<Path> tempDirs = new ArrayList<>();
+        
+        try {
+	        // Check if input file is a PDF
+	        if ("pdf".equalsIgnoreCase(extension)) {
+	            // Load PDF document
+	            try (PDDocument document = Loader.loadPDF(form.getFileInput().getBytes())) {
+	                PDFRenderer pdfRenderer = new PDFRenderer(document);
+	                int pageCount = document.getNumberOfPages();
+	                images = new ArrayList<>();
+	
+	                // Create images of all pages
+	                for (int i = 0; i < pageCount; i++) {
+	                    // Create temp file to save the image
+	                    Path tempFile = Files.createTempFile("image_", ".png");
+	
+	                    // Render image and save as temp file
+	                    BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300);
+	                    ImageIO.write(image, "png", tempFile.toFile());
+	
+	                    // Add temp file path to images list
+	                    images.add(tempFile.toString());
+	                    tempImageFiles.add(tempFile);
+	                }
+	            }
+	        } else {
+	            tempInputFile = Files.createTempFile("input_", "." + extension);
+	            Files.copy(
+	                    form.getFileInput().getInputStream(),
+	                    tempInputFile,
+	                    StandardCopyOption.REPLACE_EXISTING);
+	            // Add input file path to images list
+	            images.add(tempInputFile.toString());
+	        }
+	
+	        List<byte[]> processedImageBytes = new ArrayList<>();
+	
+	        // Process each image
+	        for (int i = 0; i < images.size(); i++) {
+	
+	            Path tempDir = Files.createTempDirectory("openCV_output");
+	            tempDirs.add(tempDir);
+	            List<String> command =
+	                    new ArrayList<>(
+	                            Arrays.asList(
+	                                    "python3",
+	                                    "./scripts/split_photos.py",
+	                                    images.get(i),
+	                                    tempDir.toString(),
+	                                    "--angle_threshold",
+	                                    String.valueOf(form.getAngleThreshold()),
+	                                    "--tolerance",
+	                                    String.valueOf(form.getTolerance()),
+	                                    "--min_area",
+	                                    String.valueOf(form.getMinArea()),
+	                                    "--min_contour_area",
+	                                    String.valueOf(form.getMinContourArea()),
+	                                    "--border_size",
+	                                    String.valueOf(form.getBorderSize())));
+	
+	            // Run CLI command
+	            ProcessExecutorResult returnCode =
+	                    ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
+	                            .runCommandWithOutputHandling(command);
+	
+	            // Read the output photos in temp directory
+	            List<Path> tempOutputFiles = Files.list(tempDir).sorted().collect(Collectors.toList());
+	            for (Path tempOutputFile : tempOutputFiles) {
+	                byte[] imageBytes = Files.readAllBytes(tempOutputFile);
+	                processedImageBytes.add(imageBytes);
+	            }
+	            // Clean up the temporary directory
+	            FileUtils.deleteDirectory(tempDir.toFile());
+	        }
+	
+	        // Create zip file if multiple images
+	        if (processedImageBytes.size() > 1) {
+	            String outputZipFilename = fileName.replaceFirst("[.][^.]+$", "") + "_processed.zip";
+	            tempZipFile = Files.createTempFile("output_", ".zip");
+	
+	            try (ZipOutputStream zipOut =
+	                    new ZipOutputStream(new FileOutputStream(tempZipFile.toFile()))) {
+	                // Add processed images to the zip
+	                for (int i = 0; i < processedImageBytes.size(); i++) {
+	                    ZipEntry entry =
+	                            new ZipEntry(
+	                                    fileName.replaceFirst("[.][^.]+$", "")
+	                                            + "_"
+	                                            + (i + 1)
+	                                            + ".png");
+	                    zipOut.putNextEntry(entry);
+	                    zipOut.write(processedImageBytes.get(i));
+	                    zipOut.closeEntry();
+	                }
+	            }
+	
+	            byte[] zipBytes = Files.readAllBytes(tempZipFile);
+	
+	            // Clean up the temporary zip file
+	            Files.delete(tempZipFile);
+	
+	            return WebResponseUtils.bytesToWebResponse(
+	                    zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
+	        } else {
+	            // Return the processed image as a response
+	            byte[] imageBytes = processedImageBytes.get(0);
+	            return WebResponseUtils.bytesToWebResponse(
+	                    imageBytes,
+	                    fileName.replaceFirst("[.][^.]+$", "") + ".png",
+	                    MediaType.IMAGE_PNG);
+	        }
+        } finally {
+        	// Cleanup logic for all temporary files and directories
+            tempImageFiles.forEach(path -> {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException e) {
+                    logger.error("Failed to delete temporary image file: " + path, e);
+                }
+            });
 
-        // Check if input file is a PDF
-        if ("pdf".equalsIgnoreCase(extension)) {
-            // Load PDF document
-            try (PDDocument document = Loader.loadPDF(form.getFileInput().getBytes())) {
-                PDFRenderer pdfRenderer = new PDFRenderer(document);
-                int pageCount = document.getNumberOfPages();
-                images = new ArrayList<>();
-
-                // Create images of all pages
-                for (int i = 0; i < pageCount; i++) {
-                    // Create temp file to save the image
-                    Path tempFile = Files.createTempFile("image_", ".png");
-
-                    // Render image and save as temp file
-                    BufferedImage image = pdfRenderer.renderImageWithDPI(i, 300);
-                    ImageIO.write(image, "png", tempFile.toFile());
-
-                    // Add temp file path to images list
-                    images.add(tempFile.toString());
+            if (tempZipFile != null && Files.exists(tempZipFile)) {
+                try {
+                    Files.delete(tempZipFile);
+                } catch (IOException e) {
+                    logger.error("Failed to delete temporary zip file: " + tempZipFile, e);
                 }
             }
-        } else {
-            Path tempInputFile = Files.createTempFile("input_", "." + extension);
-            Files.copy(
-                    form.getFileInput().getInputStream(),
-                    tempInputFile,
-                    StandardCopyOption.REPLACE_EXISTING);
-            // Add input file path to images list
-            images.add(tempInputFile.toString());
-        }
 
-        List<byte[]> processedImageBytes = new ArrayList<>();
-
-        // Process each image
-        for (int i = 0; i < images.size(); i++) {
-
-            Path tempDir = Files.createTempDirectory("openCV_output");
-            List<String> command =
-                    new ArrayList<>(
-                            Arrays.asList(
-                                    "python3",
-                                    "./scripts/split_photos.py",
-                                    images.get(i),
-                                    tempDir.toString(),
-                                    "--angle_threshold",
-                                    String.valueOf(form.getAngleThreshold()),
-                                    "--tolerance",
-                                    String.valueOf(form.getTolerance()),
-                                    "--min_area",
-                                    String.valueOf(form.getMinArea()),
-                                    "--min_contour_area",
-                                    String.valueOf(form.getMinContourArea()),
-                                    "--border_size",
-                                    String.valueOf(form.getBorderSize())));
-
-            // Run CLI command
-            ProcessExecutorResult returnCode =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                            .runCommandWithOutputHandling(command);
-
-            // Read the output photos in temp directory
-            List<Path> tempOutputFiles = Files.list(tempDir).sorted().collect(Collectors.toList());
-            for (Path tempOutputFile : tempOutputFiles) {
-                byte[] imageBytes = Files.readAllBytes(tempOutputFile);
-                processedImageBytes.add(imageBytes);
-            }
-            // Clean up the temporary directory
-            FileUtils.deleteDirectory(tempDir.toFile());
-        }
-
-        // Create zip file if multiple images
-        if (processedImageBytes.size() > 1) {
-            String outputZipFilename = fileName.replaceFirst("[.][^.]+$", "") + "_processed.zip";
-            Path tempZipFile = Files.createTempFile("output_", ".zip");
-
-            try (ZipOutputStream zipOut =
-                    new ZipOutputStream(new FileOutputStream(tempZipFile.toFile()))) {
-                // Add processed images to the zip
-                for (int i = 0; i < processedImageBytes.size(); i++) {
-                    ZipEntry entry =
-                            new ZipEntry(
-                                    fileName.replaceFirst("[.][^.]+$", "")
-                                            + "_"
-                                            + (i + 1)
-                                            + ".png");
-                    zipOut.putNextEntry(entry);
-                    zipOut.write(processedImageBytes.get(i));
-                    zipOut.closeEntry();
+            tempDirs.forEach(dir -> {
+                try {
+                    FileUtils.deleteDirectory(dir.toFile());
+                } catch (IOException e) {
+                    logger.error("Failed to delete temporary directory: " + dir, e);
                 }
-            }
-
-            byte[] zipBytes = Files.readAllBytes(tempZipFile);
-
-            // Clean up the temporary zip file
-            Files.delete(tempZipFile);
-
-            return WebResponseUtils.bytesToWebResponse(
-                    zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
-        } else {
-            // Return the processed image as a response
-            byte[] imageBytes = processedImageBytes.get(0);
-            return WebResponseUtils.bytesToWebResponse(
-                    imageBytes,
-                    fileName.replaceFirst("[.][^.]+$", "") + ".png",
-                    MediaType.IMAGE_PNG);
+            });
         }
     }
 }

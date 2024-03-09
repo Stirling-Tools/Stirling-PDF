@@ -15,7 +15,10 @@ ARG VERSION_TAG
 ENV DOCKER_ENABLE_SECURITY=false \
     VERSION_TAG=$VERSION_TAG \
     JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS -XX:MaxRAMPercentage=75" \
-	HOME=/home/stirlingpdfuser
+	HOME=/home/stirlingpdfuser \
+	PUID=1000 \
+    PGID=1000 \
+    UMASK=022
 
 
 # JDK for app

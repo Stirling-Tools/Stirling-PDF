@@ -179,7 +179,9 @@ class PdfContainer {
 
   rotateAll(deg) {
     for (var i = 0; i < this.pagesContainer.childNodes.length; i++) {
-      const img = this.pagesContainer.childNodes[i].querySelector("img");
+      const child = this.pagesContainer.children[i];
+      if (!child) continue;
+      const img = child.querySelector("img");
       if (!img) continue;
       this.rotateElement(img, deg);
     }
