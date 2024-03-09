@@ -18,6 +18,7 @@ if [ ! -z "$PUID" ] && [ "$PUID" != "$(id -u stirlingpdfuser)" ]; then
     usermod -o -u "$PUID" stirlingpdfuser
 fi
 
+
 if [ ! -z "$PGID" ] && [ "$PGID" != "$(getent group stirlingpdfgroup | cut -d: -f3)" ]; then
     groupmod -o -g "$PGID" stirlingpdfgroup
 fi
