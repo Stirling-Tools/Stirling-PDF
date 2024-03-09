@@ -29,8 +29,10 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         tini \
         bash \
         curl \
+        gcc \
         openjdk17-jre \
         su-exec \
+        shadow \
 # Doc conversion
    libreoffice@testing \
 # python and pip

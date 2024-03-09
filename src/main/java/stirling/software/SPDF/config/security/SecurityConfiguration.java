@@ -66,10 +66,11 @@ public class SecurityConfiguration {
                     sessionManagement ->
                             sessionManagement
                                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                    .maximumSessions(3)
-                                    .maxSessionsPreventsLogin(true)
+                                    .maximumSessions(10)
+                                    .maxSessionsPreventsLogin(false)
                                     .sessionRegistry(sessionRegistry())
                                     .expiredUrl("/login?logout=true"));
+
             http.formLogin(
                             formLogin ->
                                     formLogin
@@ -92,8 +93,7 @@ public class SecurityConfiguration {
                                             .addLogoutHandler(
                                                     (request, response, authentication) -> {
                                                         HttpSession session =
-                                                                request.getSession(
-                                                                        false); 
+                                                                request.getSession(false);
                                                         if (session != null) {
                                                             String sessionId = session.getId();
                                                             sessionRegistry()

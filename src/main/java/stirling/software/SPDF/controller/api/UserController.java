@@ -56,8 +56,8 @@ public class UserController {
     @PostMapping("/change-username")
     public RedirectView changeUsername(
             Principal principal,
-            @RequestParam String currentPassword,
-            @RequestParam String newUsername,
+            @RequestParam(name = "currentPassword") String currentPassword,
+            @RequestParam(name = "newUsername") String newUsername,
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
@@ -95,8 +95,8 @@ public class UserController {
     @PostMapping("/change-password-on-login")
     public RedirectView changePasswordOnLogin(
             Principal principal,
-            @RequestParam String currentPassword,
-            @RequestParam String newPassword,
+            @RequestParam(name = "currentPassword") String currentPassword,
+            @RequestParam(name = "newPassword") String newPassword,
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
@@ -128,8 +128,8 @@ public class UserController {
     @PostMapping("/change-password")
     public RedirectView changePassword(
             Principal principal,
-            @RequestParam String currentPassword,
-            @RequestParam String newPassword,
+            @RequestParam(name = "currentPassword") String currentPassword,
+            @RequestParam(name = "newPassword") String newPassword,
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
@@ -180,9 +180,9 @@ public class UserController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/saveUser")
     public RedirectView saveUser(
-            @RequestParam String username,
-            @RequestParam String password,
-            @RequestParam String role,
+            @RequestParam(name = "username") String username,
+            @RequestParam(name = "password") String password,
+            @RequestParam(name = "role") String role,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
                     boolean forceChange) {
 
@@ -207,7 +207,8 @@ public class UserController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/deleteUser/{username}")
-    public RedirectView deleteUser(@PathVariable String username, Authentication authentication) {
+    public RedirectView deleteUser(
+            @PathVariable(name = "username") String username, Authentication authentication) {
 
         if (!userService.usernameExists(username)) {
             return new RedirectView("/addUsers?messageType=deleteUsernameExists");

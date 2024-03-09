@@ -33,6 +33,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         curl \
         openjdk17-jre \
         su-exec \
+        shadow \
 # Doc conversion
         libreoffice@testing \
 # OCR MY PDF (unpaper for descew and other advanced featues)
@@ -52,8 +53,8 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
     chmod +x /scripts/init.sh && \
 # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto  /configs /customFiles /pipeline && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar    
 
 EXPOSE 8080
 
