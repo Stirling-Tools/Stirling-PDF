@@ -51,8 +51,8 @@ public class SplitPDFController {
         PDDocument document = Loader.loadPDF(file.getBytes());
         int totalPages = document.getNumberOfPages();
         List<Integer> pageNumbers = request.getPageNumbersList(document, false);
-        System.out.println(pageNumbers.stream().map(String::valueOf)
-        	    .collect(Collectors.joining(",")));
+        System.out.println(
+                pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
         if (!pageNumbers.contains(totalPages - 1)) {
             // Create a mutable ArrayList so we can add to it
             pageNumbers = new ArrayList<>(pageNumbers);
@@ -63,7 +63,6 @@ public class SplitPDFController {
                 "Splitting PDF into pages: {}",
                 pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
-        
         // split the document
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
         int previousPageNumber = 0;

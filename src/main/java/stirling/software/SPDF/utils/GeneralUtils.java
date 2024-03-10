@@ -14,7 +14,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fathzer.soft.javaluator.DoubleEvaluator;
@@ -171,10 +170,9 @@ public class GeneralUtils {
 
             // Check if the result is null or not within bounds
             if (result == null || result <= 0 || result.intValue() > maxValue) {
-                if(n != 0)
-                	break;
+                if (n != 0) break;
             } else {
-            	results.add(result.intValue());
+                results.add(result.intValue());
             }
             n++;
         }
@@ -192,15 +190,14 @@ public class GeneralUtils {
     private static List<Integer> handlePart(String part, int totalPages, int offset) {
         List<Integer> partResult = new ArrayList<>();
 
-
         // First check for n-syntax because it should not be processed as a range
         if (part.contains("n")) {
             partResult = evaluateNFunc(part, totalPages);
-			// Adjust the results according to the offset
-			for (int i = 0; i < partResult.size(); i++) {
-			    int adjustedValue = partResult.get(i) -1 + offset;
-			    partResult.set(i, adjustedValue);
-			}
+            // Adjust the results according to the offset
+            for (int i = 0; i < partResult.size(); i++) {
+                int adjustedValue = partResult.get(i) - 1 + offset;
+                partResult.set(i, adjustedValue);
+            }
         } else if (part.contains("-")) {
             // Process ranges only if it's not n-syntax
             String[] rangeParts = part.split("-");
