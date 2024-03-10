@@ -12,7 +12,8 @@ plugins {
 import com.github.jk1.license.render.*
 
 group = 'stirling.software'
-version = '0.22.1'
+
+version = '0.22.2'
 sourceCompatibility = '17'
 
 repositories {
@@ -157,6 +158,8 @@ dependencies {
     implementation 'org.commonmark:commonmark-ext-gfm-tables:0.21.0'
     // https://mvnrepository.com/artifact/com.github.vladimir-bukhtoyarov/bucket4j-core
     implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
+
+	implementation 'com.fathzer:javaluator:3.0.3'
 
     developmentOnly("org.springframework.boot:spring-boot-devtools:3.2.2")
     compileOnly 'org.projectlombok:lombok:1.18.30'

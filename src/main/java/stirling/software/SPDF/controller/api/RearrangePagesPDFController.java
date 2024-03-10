@@ -51,7 +51,7 @@ public class RearrangePagesPDFController {
         String[] pageOrderArr = pagesToDelete.split(",");
 
         List<Integer> pagesToRemove =
-                GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages(), true);
+                GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages(), false);
 
         Collections.sort(pagesToRemove);
 
@@ -195,7 +195,7 @@ public class RearrangePagesPDFController {
             if (sortType != null && sortType.length() > 0) {
                 newPageOrder = processSortTypes(sortType, totalPages);
             } else {
-                newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, true);
+                newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
             }
             logger.info("newPageOrder = " + newPageOrder);
             logger.info("totalPages = " + totalPages);

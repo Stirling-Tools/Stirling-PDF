@@ -14,8 +14,8 @@ if [ "$DOCKER_ENABLE_SECURITY" = "true" ] && [ "$VERSION_TAG" != "alpha" ]; then
         if [ $? -eq 0 ]; then  # checks if curl was successful
             rm -f app.jar
             ln -s app-security.jar app.jar
-            chown stirlingpdfuser:stirlingpdfgroup app.jar
-            chmod 755 app.jar
+            chown stirlingpdfuser:stirlingpdfgroup app.jar || true
+            chmod 755 app.jar || true
         fi
     fi
 fi
