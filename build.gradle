@@ -158,6 +158,8 @@ dependencies {
     // https://mvnrepository.com/artifact/com.github.vladimir-bukhtoyarov/bucket4j-core
     implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
 
+	implementation 'com.fathzer:javaluator:3.0.3'
+
     developmentOnly("org.springframework.boot:spring-boot-devtools:3.2.2")
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.28'
