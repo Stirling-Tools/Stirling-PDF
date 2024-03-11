@@ -50,9 +50,6 @@ public class PipelineController {
     @PostMapping("/handleData")
     public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request)
             throws JsonMappingException, JsonProcessingException {
-        if (!Boolean.TRUE.equals(applicationProperties.getSystem().getEnableAlphaFunctionality())) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
 
         MultipartFile[] files = request.getFileInput();
         String jsonString = request.getJson();

@@ -58,7 +58,7 @@ public class AutoSplitPdfController {
 
         PDDocument document = Loader.loadPDF(file.getBytes());
         PDFRenderer pdfRenderer = new PDFRenderer(document);
-
+        pdfRenderer.setSubsamplingAllowed(true);
         List<PDDocument> splitDocuments = new ArrayList<>();
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
 

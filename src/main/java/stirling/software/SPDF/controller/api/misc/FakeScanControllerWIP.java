@@ -60,6 +60,7 @@ public class FakeScanControllerWIP {
 
         PDDocument document = Loader.loadPDF(inputFile.getBytes());
         PDFRenderer pdfRenderer = new PDFRenderer(document);
+        pdfRenderer.setSubsamplingAllowed(true);
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             BufferedImage image = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
             ImageIO.write(image, "png", new File("scanned-" + (page + 1) + ".png"));
