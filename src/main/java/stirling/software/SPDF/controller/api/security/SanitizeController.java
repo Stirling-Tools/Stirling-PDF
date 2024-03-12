@@ -54,33 +54,33 @@ public class SanitizeController {
         boolean removeLinks = request.isRemoveLinks();
         boolean removeFonts = request.isRemoveFonts();
 
-        try (PDDocument document = Loader.loadPDF(inputFile.getBytes())) {
-            if (removeJavaScript) {
-                sanitizeJavaScript(document);
-            }
-
-            if (removeEmbeddedFiles) {
-                sanitizeEmbeddedFiles(document);
-            }
-
-            if (removeMetadata) {
-                sanitizeMetadata(document);
-            }
-
-            if (removeLinks) {
-                sanitizeLinks(document);
-            }
-
-            if (removeFonts) {
-                sanitizeFonts(document);
-            }
-
-            return WebResponseUtils.pdfDocToWebResponse(
-                    document,
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_sanitized.pdf");
+        PDDocument document = Loader.loadPDF(inputFile.getBytes());
+        if (removeJavaScript) {
+            sanitizeJavaScript(document);
         }
+
+        if (removeEmbeddedFiles) {
+            sanitizeEmbeddedFiles(document);
+        }
+
+        if (removeMetadata) {
+            sanitizeMetadata(document);
+        }
+
+        if (removeLinks) {
+            sanitizeLinks(document);
+        }
+
+        if (removeFonts) {
+            sanitizeFonts(document);
+        }
+
+        return WebResponseUtils.pdfDocToWebResponse(
+                document,
+                Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
+                        + "_sanitized.pdf");
+        
     }
 
     private void sanitizeJavaScript(PDDocument document) throws IOException {
