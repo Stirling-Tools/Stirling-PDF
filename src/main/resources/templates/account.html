@@ -30,6 +30,9 @@
               <div th:if="${param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
                 <span th:text="#{usernameExistsMessage}">Default message if not found</span>
               </div>
+              <div th:if="${param.messageType[0] == 'invalidUsername'}" class="alert alert-danger">
+                <span th:text="#{invalidUsernameMessage}">Default message if not found</span>
+              </div>
               </th:block>
               <!-- At the top of the user settings -->
               <h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>

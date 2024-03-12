@@ -61,17 +61,26 @@ public class UserController {
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
+
+        if (!userService.isUsernameValid(newUsername)) {
+            return new RedirectView("/account?messageType=invalidUsername");
+        }
+
         if (principal == null) {
             return new RedirectView("/account?messageType=notAuthenticated");
         }
 
-        Optional<User> userOpt = userService.findByUsername(principal.getName());
+        Optional<User> userOpt = userService.findByUsername(principal.getName(), true);
 
         if (userOpt == null || userOpt.isEmpty()) {
             return new RedirectView("/account?messageType=userNotFound");
         }
 
         User user = userOpt.get();
+
+        if (user.getUsername().equals(newUsername)) {
+            return new RedirectView("/account?messageType=usernameExists");
+        }
 
         if (!userService.isPasswordCorrect(user, currentPassword)) {
             return new RedirectView("/account?messageType=incorrectPassword");
@@ -186,6 +195,18 @@ public class UserController {
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
                     boolean forceChange) {
 
+        if (!userService.isUsernameValid(username)) {
+            return new RedirectView("/addUsers?messageType=invalidUsername");
+        }
+
+        Optional<User> userOpt = userService.findByUsername(username, true);
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (user != null && user.getUsername().equalsIgnoreCase(username)) {
+                return new RedirectView("/addUsers?messageType=usernameExists");
+            }
+        }
         if (userService.usernameExists(username)) {
             return new RedirectView("/addUsers?messageType=usernameExists");
         }
