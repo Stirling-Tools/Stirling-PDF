@@ -80,7 +80,6 @@ public class SanitizeController {
                 Filenames.toSimpleFileName(inputFile.getOriginalFilename())
                                 .replaceFirst("[.][^.]+$", "")
                         + "_sanitized.pdf");
-        
     }
 
     private void sanitizeJavaScript(PDDocument document) throws IOException {

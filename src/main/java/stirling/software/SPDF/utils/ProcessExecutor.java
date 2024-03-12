@@ -189,7 +189,11 @@ public class ProcessExecutor {
                     }
                 }
             } else if (exitCode != 0) {
-                throw new IOException("Command process failed with exit code " + exitCode + "\nLogs: " + messages);
+                throw new IOException(
+                        "Command process failed with exit code "
+                                + exitCode
+                                + "\nLogs: "
+                                + messages);
             }
         } finally {
             semaphore.release();
