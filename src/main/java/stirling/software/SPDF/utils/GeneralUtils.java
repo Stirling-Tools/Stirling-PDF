@@ -135,7 +135,8 @@ public class GeneralUtils {
         List<Integer> result = new ArrayList<>();
         int offset = oneBased ? 1 : 0;
         for (String page : pages) {
-            if (page.equalsIgnoreCase("all")) {
+            if ("all".equalsIgnoreCase(page)) {
+
                 for (int i = 0; i < totalPages; i++) {
                     result.add(i + offset);
                 }
