@@ -3,7 +3,7 @@
 This document provides instructions on how to add additional language packs for the OCR tab in Stirling-PDF, both inside and outside of Docker.
 
 ## My OCR used to work and now doesn't!
-The paths have changed for the tessadata locations on new docker images, please use ``/usr/share/tessdata`` (Others should still work for backwards compatability but might not)
+The paths have changed for the tessadata locations on new docker images, please use ``/usr/share/tessdata`` (Others should still work for backwards compatibility but might not)
 
 ## How does the OCR Work
 Stirling-PDF uses [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF) which in turn uses tesseract for its text recognition.
