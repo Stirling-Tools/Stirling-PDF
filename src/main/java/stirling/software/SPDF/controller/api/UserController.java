@@ -70,7 +70,7 @@ public class UserController {
             return new RedirectView("/account?messageType=notAuthenticated");
         }
 
-        Optional<User> userOpt = userService.findByUsername(principal.getName(), true);
+        Optional<User> userOpt = userService.findByUsernameIgnoreCase(principal.getName());
 
         if (userOpt == null || userOpt.isEmpty()) {
             return new RedirectView("/account?messageType=userNotFound");
@@ -199,7 +199,7 @@ public class UserController {
             return new RedirectView("/addUsers?messageType=invalidUsername");
         }
 
-        Optional<User> userOpt = userService.findByUsername(username, true);
+        Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
 
         if (userOpt.isPresent()) {
             User user = userOpt.get();

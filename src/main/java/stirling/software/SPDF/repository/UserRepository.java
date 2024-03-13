@@ -9,12 +9,7 @@ import org.springframework.data.repository.query.Param;
 import stirling.software.SPDF.model.User;
 
 public interface UserRepository extends JpaRepository<User, String> {
-    @Query(
-            "SELECT u FROM User u WHERE "
-                    + "(:ignoreCase = false AND u.username = :username) OR "
-                    + "(:ignoreCase = true AND LOWER(u.username) = LOWER(:username))")
-    Optional<User> findByUsername(
-            @Param("username") String username, @Param("ignoreCase") boolean ignoreCase);
+    Optional<User> findByUsernameIgnoreCase(String username);
 
     Optional<User> findByUsername(String username);
 

@@ -176,8 +176,8 @@ public class UserService implements UserServiceInterface {
         return userRepository.findByUsername(username);
     }
 
-    public Optional<User> findByUsername(String username, boolean ignoreCase) {
-        return userRepository.findByUsername(username, ignoreCase);
+    public Optional<User> findByUsernameIgnoreCase(String username) {
+        return userRepository.findByUsernameIgnoreCase(username);
     }
 
     public void changeUsername(User user, String newUsername) {
