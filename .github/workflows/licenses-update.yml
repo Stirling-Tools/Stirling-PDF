@@ -40,7 +40,7 @@ jobs:
       - name: Run git add
         run: |
           git add src/main/resources/static/3rdPartyLicenses.json
-          git diff --staged --quiet || echo "changes detected"
+          git diff --staged --quiet || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
 
       - name: Create Pull Request
         if: env.CHANGES_DETECTED == 'true'
