@@ -210,7 +210,6 @@ public class ApplicationProperties {
         private String rootURIPath;
         private String customStaticFilePath;
         private Integer maxFileSize;
-        private CustomApplications customApplications;
 
         private Boolean enableAlphaFunctionality;
 
@@ -262,14 +261,6 @@ public class ApplicationProperties {
             this.maxFileSize = maxFileSize;
         }
 
-        public CustomApplications getCustomApplications() {
-            return customApplications != null ? customApplications : new CustomApplications();
-        }
-
-        public void setCustomApplications(CustomApplications customApplications) {
-            this.customApplications = customApplications;
-        }
-
         @Override
         public String toString() {
             return "System [defaultLocale="
@@ -282,30 +273,9 @@ public class ApplicationProperties {
                     + customStaticFilePath
                     + ", maxFileSize="
                     + maxFileSize
-                    + ", customApplications="
-                    + customApplications
                     + ", enableAlphaFunctionality="
                     + enableAlphaFunctionality
                     + "]";
-        }
-
-        public static class CustomApplications {
-            private boolean installBookAndHtmlFormats;
-
-            public boolean isInstallBookAndHtmlFormats() {
-                return installBookAndHtmlFormats;
-            }
-
-            public void setInstallBookAndHtmlFormats(boolean installBookAndHtmlFormats) {
-                this.installBookAndHtmlFormats = installBookAndHtmlFormats;
-            }
-
-            @Override
-            public String toString() {
-                return "CustomApplications [installBookAndHtmlFormats="
-                        + installBookAndHtmlFormats
-                        + "]";
-            }
         }
     }
 

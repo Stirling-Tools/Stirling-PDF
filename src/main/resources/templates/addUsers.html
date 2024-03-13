@@ -16,6 +16,10 @@
 
               <!-- User Settings Title -->
               <h2 class="text-center" th:text="#{adminUserSettings.header}">Admin User Control Settings</h2>
+              <div th:if="${param.messageType != null and param.messageType.size() > 0 and (param.messageType[0] == 'deleteCurrentUser' or param.messageType[0] == 'deleteUsernameExists')}" class="alert alert-danger">
+                <span th:if="${param.messageType[0] == 'deleteCurrentUser'}" th:text="#{deleteCurrentUserMessage}">Cannot delete currently logged in user.</span>
+                <span th:if="${param.messageType[0] == 'deleteUsernameExists'}" th:text="#{deleteUsernameExistsMessage}">The username does not exist and cannot be deleted.</span>
+              </div>
               <table class="table">
                 <thead>
                   <tr>
@@ -27,7 +31,7 @@
                 <tbody>
                   <tr th:each="user : ${users}">
                     <td th:text="${user.username}"></td>
-                    <td th:text="${user.getRolesAsString()}"></td>
+                    <td th:text="#{${user.roleName}}"></td>
                     <td>
                       <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post">
                         <button type="submit" th:text="#{delete}">Delete</button>
@@ -38,13 +42,14 @@
               </table>
 
               <h2 th:text="#{adminUserSettings.addUser}">Add New User</h2>
-              <div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
-                <span th:text="#{usernameExistsMessage}">Default message if not found</span>
+              <div th:if="${param.messageType != null and param.messageType.size() > 0 and (param.messageType[0] == 'usernameExists' or param.messageType[0] == 'invalidUsername')}" class="alert alert-danger">
+                <span th:if="${param.messageType[0] == 'usernameExists'}" th:text="#{usernameExistsMessage}">Default message if not found</span>
+                <span th:if="${param.messageType[0] == 'invalidUsername'}" th:text="#{invalidUsernameMessage}">Default message if not found</span>
               </div>
               <form action="/api/v1/user/admin/saveUser" method="post">
                 <div class="mb-3">
                   <label for="username" th:text="#{username}">Username</label>
-                  <input type="text" class="form-control" name="username" required>
+                  <input type="text" class="form-control" name="username" pattern="[a-zA-Z0-9]+" th:title="#{adminUserSettings.usernameInfo}" required>
                 </div>
                 <div class="mb-3">
                   <label for="password" th:text="#{password}">Password</label>
@@ -53,11 +58,7 @@
                 <div class="mb-3">
                   <label for="role" th:text="#{adminUserSettings.role}">Role</label>
                   <select name="role" class="form-control" required>
-                    <option value="ROLE_ADMIN" th:text="#{adminUserSettings.admin}">Admin</option>
-                    <option value="ROLE_USER" th:text="#{adminUserSettings.user}">User</option>
-                    <option value="ROLE_LIMITED_API_USER" th:text="#{adminUserSettings.apiUser}">Limited API User</option>
-                    <option value="ROLE_WEB_ONLY_USER" th:text="#{adminUserSettings.webOnlyUser}">Web Only User</option>
-                    <option value="ROLE_DEMO_USER" th:text="#{adminUserSettings.demoUser}">Demo User</option>
+                    <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
                   </select>
                 </div>
                 <div class="mb-3">

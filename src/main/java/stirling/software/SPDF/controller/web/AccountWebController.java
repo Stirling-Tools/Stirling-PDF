@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.web;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,7 @@ public class AccountWebController {
     public String showAddUserForm(Model model, Authentication authentication) {
         List<User> allUsers = userRepository.findAll();
         Iterator<User> iterator = allUsers.iterator();
+        Map<String, String> roleDetails = Role.getAllRoleDetails();
 
         while (iterator.hasNext()) {
             User user = iterator.next();
@@ -62,6 +64,7 @@ public class AccountWebController {
                 for (Authority authority : user.getAuthorities()) {
                     if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
                         iterator.remove();
+                        roleDetails.remove(Role.INTERNAL_API_USER.getRoleId());
                         break; // Break out of the inner loop once the user is removed
                     }
                 }
@@ -70,6 +73,7 @@ public class AccountWebController {
 
         model.addAttribute("users", allUsers);
         model.addAttribute("currentUsername", authentication.getName());
+        model.addAttribute("roleDetails", roleDetails);
         return "addUsers";
     }
 
