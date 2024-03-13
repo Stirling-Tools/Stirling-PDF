@@ -88,7 +88,7 @@ spotless {
 dependencies {
     //security updates
     implementation 'ch.qos.logback:logback-classic:1.4.14'
-    implementation 'ch.qos.logback:logback-core:1.4.14'
+    implementation 'ch.qos.logback:logback-core:1.5.3'
     implementation 'org.springframework:spring-webmvc:6.1.3'
 
     implementation("io.github.pixee:java-security-toolkit:1.1.2")
