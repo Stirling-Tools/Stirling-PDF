@@ -18,7 +18,8 @@ check_health() {
 		fi
 	done
 	echo -e "\n$service_name is healthy!"
-
+	echo "Printing logs for $service_name:"
+    docker logs "$service_name"
     return 0
 }
 
