@@ -6,6 +6,10 @@ on:
     branches:
       - master
       - main
+    paths-ignore:
+      - ".github/**"
+      - "**/*.md"
+
 permissions:
   contents: read
   packages: write
