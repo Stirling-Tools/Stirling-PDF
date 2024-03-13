@@ -176,6 +176,10 @@ public class UserService implements UserServiceInterface {
         return userRepository.findByUsername(username);
     }
 
+    public Optional<User> findByUsernameIgnoreCase(String username) {
+        return userRepository.findByUsernameIgnoreCase(username);
+    }
+
     public void changeUsername(User user, String newUsername) {
         user.setUsername(newUsername);
         userRepository.save(user);
@@ -193,5 +197,9 @@ public class UserService implements UserServiceInterface {
 
     public boolean isPasswordCorrect(User user, String currentPassword) {
         return passwordEncoder.matches(currentPassword, user.getPassword());
+    }
+
+    public boolean isUsernameValid(String username) {
+        return username.matches("[a-zA-Z0-9]+");
     }
 }
