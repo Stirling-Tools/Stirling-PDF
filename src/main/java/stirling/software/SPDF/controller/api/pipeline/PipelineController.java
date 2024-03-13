@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -50,9 +49,6 @@ public class PipelineController {
     @PostMapping("/handleData")
     public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request)
             throws JsonMappingException, JsonProcessingException {
-        if (!Boolean.TRUE.equals(applicationProperties.getSystem().getEnableAlphaFunctionality())) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
 
         MultipartFile[] files = request.getFileInput();
         String jsonString = request.getJson();

@@ -214,6 +214,7 @@ public class PdfUtils {
             throws IOException, Exception {
         try (PDDocument document = Loader.loadPDF(inputStream)) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
+            pdfRenderer.setSubsamplingAllowed(true);
             int pageCount = document.getNumberOfPages();
 
             // Create a ByteArrayOutputStream to save the image(s) to

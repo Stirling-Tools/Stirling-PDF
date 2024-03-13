@@ -12,8 +12,7 @@ plugins {
 import com.github.jk1.license.render.*
 
 group = 'stirling.software'
-
-version = '0.22.2'
+version = '0.22.3'
 sourceCompatibility = '17'
 
 repositories {

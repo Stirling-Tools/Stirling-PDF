@@ -84,6 +84,7 @@ public class ExtractImageScansController {
                 // Load PDF document
                 try (PDDocument document = Loader.loadPDF(form.getFileInput().getBytes())) {
                     PDFRenderer pdfRenderer = new PDFRenderer(document);
+                    pdfRenderer.setSubsamplingAllowed(true);
                     int pageCount = document.getNumberOfPages();
                     images = new ArrayList<>();
 
