@@ -20,7 +20,6 @@ repositories {
 }
 
 
-
 licenseReport {
     renderers = [new JsonReportRenderer()]
 }
