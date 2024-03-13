@@ -47,7 +47,6 @@ openApi {
     outputFileName = "SwaggerDoc.json"
 }
 
-
 launch4j {
   icon = "${projectDir}/src/main/resources/static/favicon.ico"
 
