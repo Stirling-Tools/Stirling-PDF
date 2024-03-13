@@ -136,6 +136,7 @@ public class GeneralUtils {
         int offset = oneBased ? 1 : 0;
         for (String page : pages) {
             if ("all".equalsIgnoreCase(page)) {
+
                 for (int i = 0; i < totalPages; i++) {
                     result.add(i + offset);
                 }
