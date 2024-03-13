@@ -24,6 +24,6 @@ if chown -R stirlingpdfuser:stirlingpdfgroup $HOME /logs /scripts /usr/share/fon
     exec su-exec stirlingpdfuser "$@"
 else
     # If chown fails, execute the command without changing the user context
-    echo "[WARN] Chown failed, running as root user"
+    echo "[WARN] Chown failed, running as host user"
     exec "$@"
 fi
