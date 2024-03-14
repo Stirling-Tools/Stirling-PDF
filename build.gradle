@@ -20,7 +20,6 @@ repositories {
 }
 
 
-
 licenseReport {
     renderers = [new JsonReportRenderer()]
 }
@@ -47,7 +46,6 @@ openApi {
     outputDir = file("$projectDir")
     outputFileName = "SwaggerDoc.json"
 }
-
 
 launch4j {
   icon = "${projectDir}/src/main/resources/static/favicon.ico"
