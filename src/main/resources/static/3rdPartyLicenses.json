@@ -91,7 +91,7 @@
         {
             "moduleName": "com.google.zxing:core",
             "moduleUrl": "https://github.com/zxing/zxing/core",
-            "moduleVersion": "3.5.2",
+            "moduleVersion": "3.5.3",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
