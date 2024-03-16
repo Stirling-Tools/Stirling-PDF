@@ -22,7 +22,7 @@ services:
       DOCKER_ENABLE_SECURITY: "true"
       SECURITY_ENABLELOGIN: "true"
       PUID: 1002
-      GGID: 1002
+      PGID: 1002
       UMASK: "022"
       SYSTEM_DEFAULTLOCALE: en-US
       UI_APPNAME: Stirling-PDF
