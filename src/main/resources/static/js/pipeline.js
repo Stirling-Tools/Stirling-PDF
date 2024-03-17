@@ -479,6 +479,31 @@ document.getElementById("addOperationBtn").addEventListener("click", function ()
   hideOrShowPipelineHeader();
 });
 
+function loadBrowserPipelinesIntoDropdown() {
+  let pipelineSelect = document.getElementById("pipelineSelect");
+
+  // Retrieve the current set of option values for comparison
+  let existingOptions = new Set();
+  for (let option of pipelineSelect.options) {
+    existingOptions.add(option.value);
+  }
+
+   // Iterate over all items in localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    let key = localStorage.key(i);
+    if (key.startsWith("#Pipeline-")) {
+      let pipelineData = localStorage.getItem(key);
+      // Check if the data is already in the dropdown
+      if (!existingOptions.has(pipelineData)) {
+        let pipelineName = key.replace("#Pipeline-", ""); // Extract pipeline name from the key
+        let option = new Option(pipelineName, pipelineData); // Use pipeline data as the option value
+        pipelineSelect.appendChild(option);
+      }
+    }
+  }
+}
+loadBrowserPipelinesIntoDropdown();
+
 function updateConfigInDropdown() {
   let pipelineSelect = document.getElementById("pipelineSelect");
   let selectedOption = pipelineSelect.options[pipelineSelect.selectedIndex];
@@ -496,13 +521,13 @@ function updateConfigInDropdown() {
 }
 
 var saveBtn = document.getElementById("savePipelineBtn");
-
+var saveBrowserBtn = document.getElementById("saveBrowserPipelineBtn");
 // Remove any existing event listeners
 saveBtn.removeEventListener("click", savePipeline);
-
+saveBrowserBtn.removeEventListener("click", savePipelineToBrowser);
 // Add the event listener
 saveBtn.addEventListener("click", savePipeline);
-console.log("saveBtn", saveBtn);
+saveBrowserBtn.addEventListener("click", savePipelineToBrowser);
 
 function configToJson() {
   if (!validatePipeline()) {
@@ -537,6 +562,21 @@ function configToJson() {
   return JSON.stringify(pipelineConfig, null, 2);
 }
 
+function savePipelineToBrowser() {
+  let pipelineConfigJson = configToJson();
+  if (!pipelineConfigJson) {
+    console.error("Failed to save pipeline: Invalid configuration");
+    return;
+  }
+
+  let pipelineName = document.getElementById("pipelineName").value;
+  if (!pipelineName) {
+    console.error("Failed to save pipeline: Pipeline name is required");
+    return;
+  }
+  localStorage.setItem("#Pipeline-" +pipelineName, pipelineConfigJson);
+  console.log("Pipeline configuration saved to localStorage");
+}
 function savePipeline() {
   let pipelineConfigJson = configToJson();
   if (!pipelineConfigJson) {
