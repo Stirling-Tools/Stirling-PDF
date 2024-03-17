@@ -1,13 +1,6 @@
 # Pipeline Configuration and Usage Tutorial
-
-## Whilst Pipelines are in alpha...
-You must enable this alpha functionality by setting
-```yaml
-system:
-  enableAlphaFunctionality: true
-```
-To true like in the above for your `/config/settings.yml` file, after restarting Stirling-PDF you should see both UI and folder scanning enabled.
-
+- Configure the pipeline config file and input files to run files against it
+- For reuse, download the config file and re-upload it when needed, or place it in /pipeline/defaultWebUIConfigs/ to auto-load in the web UI for all users
 
 ## Steps to Configure and Use Your Pipeline
 
@@ -40,3 +33,12 @@ To true like in the above for your `/config/settings.yml` file, after restarting
 
 10. **Note on Web UI Limitations**
     - The current web UI version does not support operations that require multiple different types of inputs, such as adding a separate image to a PDF.
+
+    
+### Current Limitations
+- Cannot have more than one of the same operation
+- Cannot input additional files via UI
+- All files and operations run in serial mode
+
+
+    
