@@ -47,8 +47,10 @@ function handleDropdownItemClick(event) {
     localStorage.setItem("languageCode", languageCode);
 
     const currentUrl = window.location.href;
-    if (currentUrl.indexOf("?lang=") === -1) {
+    if (currentUrl.indexOf("?lang=") === -1 && currentUrl.indexOf("&lang=") === -1) {
       window.location.href = currentUrl + "?lang=" + languageCode;
+    } else if (currentUrl.indexOf("&lang=") !== -1 && currentUrl.indexOf("?lang=") === -1) {
+      window.location.href = currentUrl.replace(/&lang=\w{2,}/, "&lang=" + languageCode);
     } else {
       window.location.href = currentUrl.replace(/\?lang=\w{2,}/, "?lang=" + languageCode);
     }
