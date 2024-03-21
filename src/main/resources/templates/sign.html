@@ -162,10 +162,7 @@
                     <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
                     <label th:text="#{font}"></label>
                     <select class="form-control" name="font" id="font-select">
-                      <option th:each="font : ${fonts}"
-                              th:value="${font.name}"
-                              th:text="${font.name}"
-                              th:class="${font.name.toLowerCase()+'-font'}">
+                      <option th:each="font : ${fonts}" th:value="${font.name}" th:text="${font.name}" th:class="${font.name.toLowerCase()+'-font'}">
                       </option>
                     </select>
                     <div class="margin-auto-parent">
