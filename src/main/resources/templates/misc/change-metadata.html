@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{changeMetadata.title}, header=#{changeMetadata.header})}"></th:block>
   </head>
@@ -8,7 +8,7 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-6">
@@ -25,8 +25,8 @@
                   <label class="ms-3" for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
                 </div>
                 <div class="mb-3">
-                    <label class="form-check-label" for="author" th:text="#{changeMetadata.author}"></label>
-                    <input type="text" class="form-control" id="author" name="author">
+                  <label class="form-check-label" for="author" th:text="#{changeMetadata.author}"></label>
+                  <input type="text" class="form-control" id="author" name="author">
                 </div>
 
                 <div class="mb-3">
@@ -89,12 +89,12 @@
 
                   deleteAllCheckbox.addEventListener("change", function(event) {
                     inputs.forEach(input => {
-                        // If it's the deleteAllCheckbox or any file input, skip
-                        if (input === deleteAllCheckbox || input.type === "file") {
-                            return;
-                        }
-                        // Disable or enable based on the checkbox state
-                        input.disabled = deleteAllCheckbox.checked;
+                      // If it's the deleteAllCheckbox or any file input, skip
+                      if (input === deleteAllCheckbox || input.type === "file") {
+                        return;
+                      }
+                      // Disable or enable based on the checkbox state
+                      input.disabled = deleteAllCheckbox.checked;
                     });
                   });
 

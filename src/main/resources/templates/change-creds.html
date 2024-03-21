@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{changeCreds.title}, header=#{changeCreds.header})}"></th:block>
   </head>
@@ -9,14 +9,14 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-9">
 
               <!-- User Settings Title -->
               <h2 class="text-center" th:text="#{changeCreds.header}">User Settings</h2>
-              <hr />
+              <hr>
               <th:block th:if="${param.messageType != null and param.messageType.size() > 0}">
               <div th:if="${param.messageType[0] == 'notAuthenticated'}" class="alert alert-danger">
                 <span th:text="#{notAuthenticatedMessage}">Default message if not found</span>
@@ -35,7 +35,6 @@
               <h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>
 
               <!-- Change Username Form -->
-              <h4></h4>
               <h4 th:text="#{changeCreds.changePassword}">Change password</h4>
               <form action="api/v1/user/change-password-on-login" method="post">
                 <div class="mb-3">

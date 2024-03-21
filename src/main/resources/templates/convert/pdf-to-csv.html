@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{PDFToCSV.title}, header=#{PDFToCSV.header})}"></th:block>
   </head>
@@ -8,13 +8,13 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-6">
               <h2 th:text="#{PDFToCSV.header}"></h2>
               <form id="PDFToCSVForm" th:action="@{api/v1/convert/pdf/csv}" method="post" enctype="multipart/form-data">
-                <input  id="pageId" type="hidden" name="pageId" />
+                <input  id="pageId" type="hidden" name="pageId">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <button type="submit" class="btn btn-primary" th:text="#{PDFToCSV.submit}"></button>
               </form>
@@ -23,8 +23,8 @@
               <div style="position: relative; display: inline-block;">
                 <div>
                   <div style="display:none ;margin: 3px;position: absolute;top: 0;width: 120px;justify-content:space-between;z-index: 10" id="pagination-button-container">
-                      <button id='previous-page-btn' style='opacity: 80% ; width: 50px; height: 30px; display: flex;align-items: center;justify-content: center; background: grey; color: #ffffff;  ;border: none;outline: none; border-radius: 4px;'> < </button>
-                      <button id='next-page-btn' style='opacity: 80% ; width: 50px; height: 30px; display: flex;align-items: center;justify-content: center; background: grey; color: #ffffff;  ;border: none;outline: none; border-radius: 4px;'> > </button>
+                    <button id='previous-page-btn' style='opacity: 80% ; width: 50px; height: 30px; display: flex;align-items: center;justify-content: center; background: grey; color: #ffffff;  ;border: none;outline: none; border-radius: 4px;'> &lt; </button>
+                    <button id='next-page-btn' style='opacity: 80% ; width: 50px; height: 30px; display: flex;align-items: center;justify-content: center; background: grey; color: #ffffff;  ;border: none;outline: none; border-radius: 4px;'> &gt; </button>
                   </div>
                   <canvas id="crop-pdf-canvas" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
                 </div>
@@ -106,9 +106,9 @@
                       let typedArray = new Uint8Array(reader.result);
                       pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js';
                       pdfjsLib.getDocument(typedArray).promise.then(function(pdf) {
-                          pdfDoc = pdf;
-                          totalPages = pdf.numPages;
-                          renderPage(currentPage);
+                        pdfDoc = pdf;
+                        totalPages = pdf.numPages;
+                        renderPage(currentPage);
                       });
                       pageId.value = currentPage;
                     };

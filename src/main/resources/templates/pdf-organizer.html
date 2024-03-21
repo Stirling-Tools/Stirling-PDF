@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{pdfOrganiser.title}, header=#{pdfOrganiser.header})}"></th:block>
   </head>
@@ -8,7 +8,7 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-6">
@@ -19,15 +19,15 @@
                 <div class="mb-3">
                   <label for="customMode">Mode</label>
                   <select class="form-control" id="customMode" name="customMode">
-                      <option value="">Custom Page Order</option>
-                      <option value="REVERSE_ORDER">Reverse Order</option>
-                      <option value="DUPLEX_SORT">Duplex Sort</option>
-                      <option value="BOOKLET_SORT">Booklet Sort</option>
-                      <option value="SIDE_STITCH_BOOKLET_SORT">Side Stitch Booklet Sort</option>
-                      <option value="ODD_EVEN_SPLIT">Odd-Even Split</option>
-                      <option value="REMOVE_FIRST">Remove First</option>
-                      <option value="REMOVE_LAST">Remove Last</option>
-                      <option value="REMOVE_FIRST_AND_LAST">Remove First and Last</option>
+                    <option value="">Custom Page Order</option>
+                    <option value="REVERSE_ORDER">Reverse Order</option>
+                    <option value="DUPLEX_SORT">Duplex Sort</option>
+                    <option value="BOOKLET_SORT">Booklet Sort</option>
+                    <option value="SIDE_STITCH_BOOKLET_SORT">Side Stitch Booklet Sort</option>
+                    <option value="ODD_EVEN_SPLIT">Odd-Even Split</option>
+                    <option value="REMOVE_FIRST">Remove First</option>
+                    <option value="REMOVE_LAST">Remove Last</option>
+                    <option value="REMOVE_FIRST_AND_LAST">Remove First and Last</option>
                   </select>
                 </div>
                 <div class="mb-3">
