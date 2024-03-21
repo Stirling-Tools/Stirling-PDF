@@ -141,7 +141,7 @@ dependencies {
         exclude group: 'commons-logging', module: 'commons-logging'
     }
 
-    implementation ('org.apache.pdfbox:xmpbox:3.0.1'){
+    implementation ('org.apache.pdfbox:xmpbox:3.0.2'){
         exclude group: 'commons-logging', module: 'commons-logging'
     }
 
