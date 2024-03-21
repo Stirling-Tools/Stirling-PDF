@@ -378,21 +378,21 @@
         {
             "moduleName": "org.apache.pdfbox:fontbox",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.1",
+            "moduleVersion": "3.0.2",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.pdfbox:pdfbox",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.1",
+            "moduleVersion": "3.0.2",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.pdfbox:pdfbox-io",
             "moduleUrl": "https://pdfbox.apache.org",
-            "moduleVersion": "3.0.1",
+            "moduleVersion": "3.0.2",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -541,64 +541,11 @@
             "moduleLicenseUrl": "http://repository.jboss.org/licenses/cc0-1.0.txt"
         },
         {
-            "moduleName": "org.junit.jupiter:junit-jupiter",
-            "moduleUrl": "https://junit.org/junit5/",
-            "moduleVersion": "5.10.2",
-            "moduleLicense": "Eclipse Public License v2.0",
-            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-v20.html"
-        },
-        {
-            "moduleName": "org.junit.jupiter:junit-jupiter-api",
-            "moduleUrl": "https://junit.org/junit5/",
-            "moduleVersion": "5.10.2",
-            "moduleLicense": "Eclipse Public License v2.0",
-            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-v20.html"
-        },
-        {
-            "moduleName": "org.junit.jupiter:junit-jupiter-engine",
-            "moduleUrl": "https://junit.org/junit5/",
-            "moduleVersion": "5.10.2",
-            "moduleLicense": "Eclipse Public License v2.0",
-            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-v20.html"
-        },
-        {
-            "moduleName": "org.junit.jupiter:junit-jupiter-params",
-            "moduleUrl": "https://junit.org/junit5/",
-            "moduleVersion": "5.10.2",
-            "moduleLicense": "Eclipse Public License v2.0",
-            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-v20.html"
-        },
-        {
-            "moduleName": "org.junit.platform:junit-platform-commons",
-            "moduleUrl": "https://junit.org/junit5/",
-            "moduleVersion": "1.10.2",
-            "moduleLicense": "Eclipse Public License v2.0",
-            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-v20.html"
-        },
-        {
-            "moduleName": "org.junit.platform:junit-platform-engine",
-            "moduleUrl": "https://junit.org/junit5/",
-            "moduleVersion": "1.10.2",
-            "moduleLicense": "Eclipse Public License v2.0",
-            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-v20.html"
-        },
-        {
-            "moduleName": "org.junit:junit-bom",
-            "moduleVersion": "5.10.2"
-        },
-        {
             "moduleName": "org.latencyutils:LatencyUtils",
             "moduleUrl": "http://latencyutils.github.io/LatencyUtils/",
             "moduleVersion": "2.0.3",
             "moduleLicense": "Public Domain, per Creative Commons CC0",
             "moduleLicenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/"
-        },
-        {
-            "moduleName": "org.opentest4j:opentest4j",
-            "moduleUrl": "https://github.com/ota4j-team/opentest4j",
-            "moduleVersion": "1.3.0",
-            "moduleLicense": "The Apache License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.slf4j:jul-to-slf4j",
