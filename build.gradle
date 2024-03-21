@@ -92,7 +92,7 @@ dependencies {
     implementation("io.github.pixee:java-security-toolkit:1.1.2")
 
     implementation 'org.yaml:snakeyaml:2.2'
-    implementation 'org.springframework.boot:spring-boot-starter-web:3.2.3'
+    implementation 'org.springframework.boot:spring-boot-starter-web:3.2.4'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.2.3'
 
     if (System.getenv('DOCKER_ENABLE_SECURITY') != 'false') {
