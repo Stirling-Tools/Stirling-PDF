@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{imageToPDF.title}, header=#{imageToPDF.header})}"></th:block>
   </head>
@@ -9,7 +9,7 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-6">
@@ -46,7 +46,7 @@
                     <option value="convert" th:text=#{imageToPDF.selectText.5} selected></option>
                   </select>
                 </div>
-                <br /><br />
+                <br><br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
                 <script>
                   $('#fileInput-input').on('change', function() {
@@ -61,14 +61,14 @@
                   });
 
                   $('#conversionType').change(function() {
-                      var selectedValue = $(this).val();
-                      var override = document.getElementById("override");
-                      console.log("selectedValue=" + selectedValue)
-                      if (selectedValue === 'merge') {
-                        override.value = "single";
-                      } else if (selectedValue === 'convert') {
-                        override.value = "multi";
-                      }
+                    var selectedValue = $(this).val();
+                    var override = document.getElementById("override");
+                    console.log("selectedValue=" + selectedValue)
+                    if (selectedValue === 'merge') {
+                      override.value = "single";
+                    } else if (selectedValue === 'convert') {
+                      override.value = "multi";
+                    }
                   });
                 </script>
               </form>

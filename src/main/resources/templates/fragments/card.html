@@ -1,7 +1,7 @@
 <div th:fragment="card" class="feature-card" th:id="${id}" th:if="${@endpointConfiguration.isEndpointEnabled(cardLink)}" th:data-bs-tags="${tags}">
               <a th:href="${cardLink}">
                 <div class="d-flex align-items-center"> <!-- Add a flex container to align the SVG and title -->
-                  <img th:if="${svgPath}" id="card-icon" class="home-card-icon home-card-icon-colour" th:src="${svgPath}" alt="Icon" width="30" height="30">
+                  <img th:if="${svgPath}" class="card-icon home-card-icon home-card-icon-colour" th:src="${svgPath}" alt="Icon" width="30" height="30">
                   <h5 class="card-title  ms-2" th:text="${cardTitle}"></h5> <!-- Add some margin-left (ms-2) for spacing between SVG and title -->
                 </div>
                 <p class="card-text" th:text="${cardText}"></p>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{compress.title}, header=#{compress.header})}"></th:block>
   </head>
@@ -9,7 +9,7 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-6">
@@ -32,7 +32,7 @@
                   <div class="card-body">
                     <h4 th:text="#{compress.selectText.4}"></h4>
                     <label for="expectedOutputSize" th:text="#{compress.selectText.5}"></label>
-                    <input type="text" name="expectedOutputSize" id="expectedOutputSize" min="1" class="form-control">
+                    <input type="text" name="expectedOutputSize" id="expectedOutputSize" class="form-control">
                   </div>
                 </div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{compress.submit}"></button>

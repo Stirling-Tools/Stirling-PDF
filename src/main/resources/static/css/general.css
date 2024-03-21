@@ -25,10 +25,10 @@
     margin-right: auto;
 }*/
 
-html[lang-direction="ltr"] * {
+html[dir="ltr"] * {
   direction: ltr;
 }
-html[lang-direction="rtl"] * {
+html[dir="rtl"] * {
   direction: rtl;
   text-align: right;
 }
@@ -63,11 +63,11 @@ html[lang-direction="rtl"] * {
   border-bottom-left-radius: 0.25rem !important;
 }
 
-html[lang-direction="rtl"] input.form-check-input {
+html[dir="rtl"] input.form-check-input {
   position: relative;
   margin-left: 0px;
 }
-html[lang-direction="rtl"] label.form-check-label {
+html[dir="rtl"] label.form-check-label {
   display: inline;
 }
 

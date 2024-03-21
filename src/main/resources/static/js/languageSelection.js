@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function setLanguageForDropdown(dropdownClass) {
-  const defaultLocale = document.documentElement.language || "en_GB";
+  const defaultLocale = document.documentElement.getAttribute("data-language") || "en_GB";
   const storedLocale = localStorage.getItem("languageCode") || defaultLocale;
   const dropdownItems = document.querySelectorAll(dropdownClass);
 

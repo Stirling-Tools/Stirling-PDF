@@ -3,7 +3,7 @@
   margin: 0 auto;
 }
 
-#global-buttons-container {
+.global-buttons-container {
   display: flex;
   gap: 10px;
   align-items: start;
@@ -17,11 +17,11 @@
   padding: 10px;
   border-radius: 8px;
 }
-#global-buttons-container > * {
+.global-buttons-container > * {
   padding: 0.6rem 0.75rem;
 }
 
-#global-buttons-container svg {
+.global-buttons-container svg {
   width: 20px;
   height: 20px;
 }
