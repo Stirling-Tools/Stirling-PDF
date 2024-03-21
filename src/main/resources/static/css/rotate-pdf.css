@@ -11,7 +11,7 @@
   translate: -50% -50%;
 }
 
-.previewContainer {
+#previewContainer {
   aspect-ratio: 1;
   width: 100%;
   border: 1px solid rgba(0, 0, 0, 0.125);

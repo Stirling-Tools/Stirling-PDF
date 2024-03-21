@@ -114,28 +114,28 @@ hr {
   border-color: #fff;
 }
 
-#global-buttons-container input {
+.global-buttons-container input {
   background-color: #323948;
   caret-color: #ffffff;
   color: #ffffff;
 }
-#global-buttons-container input::placeholder {
+.global-buttons-container input::placeholder {
   color: #ffffff;
 }
 
-#global-buttons-container input:disabled::-webkit-input-placeholder {
+.global-buttons-container input:disabled::-webkit-input-placeholder {
   /* WebKit browsers */
   color: #6e6865;
 }
-#global-buttons-container input:disabled:-moz-placeholder {
+.global-buttons-container input:disabled:-moz-placeholder {
   /* Mozilla Firefox 4 to 18 */
   color: #6e6865;
 }
-#global-buttons-container input:disabled::-moz-placeholder {
+.global-buttons-container input:disabled::-moz-placeholder {
   /* Mozilla Firefox 19+ */
   color: #6e6865;
 }
-#global-buttons-container input:disabled:-ms-input-placeholder {
+.global-buttons-container input:disabled:-ms-input-placeholder {
   /* Internet Explorer 10+ */
   color: #6e6865;
 }

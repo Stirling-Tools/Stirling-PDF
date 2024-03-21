@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{scalePages.title}, header=#{scalePages.header})}"></th:block>
   </head>
@@ -8,7 +8,7 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-6">
@@ -17,16 +17,16 @@
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label for="pageSize" th:text="#{scalePages.pageSize}"></label>
-                  <select id="pageSize" name="pageSize" required>
-                      <option value="A0">A0</option>
-                      <option value="A1">A1</option>
-                      <option value="A2">A2</option>
-                      <option value="A3">A3</option>
-                      <option value="A4" selected>A4</option>
-                      <option value="A5">A5</option>
-                      <option value="A6">A6</option>
-                      <option value="LETTER">Letter</option>
-                      <option value="LEGAL">Legal</option>
+                  <select id="pageSize" name="pageSize">
+                    <option value="A0">A0</option>
+                    <option value="A1">A1</option>
+                    <option value="A2">A2</option>
+                    <option value="A3">A3</option>
+                    <option value="A4" selected>A4</option>
+                    <option value="A5">A5</option>
+                    <option value="A6">A6</option>
+                    <option value="LETTER">Letter</option>
+                    <option value="LEGAL">Legal</option>
                   </select>
                 </div>
                 <div class="mb-3">

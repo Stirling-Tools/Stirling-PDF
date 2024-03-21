@@ -70,7 +70,7 @@ function initializeGame() {
     handleKeys();
   }
   function onKeyUp(event) {
-	  keysPressed[event.key] = false;
+    keysPressed[event.key] = false;
   }
   
   document.removeEventListener("keydown", onKeydown);
@@ -123,7 +123,7 @@ function initializeGame() {
   function updateGame() {
     if (gameOver || paused) return;
 
-	handleKeys();
+  handleKeys();
     for (let pdfIndex = 0; pdfIndex < pdfs.length; pdfIndex++) {
       const pdf = pdfs[pdfIndex];
       const pdfY = parseFloat(pdf.style.top) + pdfSpeed;

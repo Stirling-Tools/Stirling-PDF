@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title='')}"></th:block>
   </head>
@@ -21,7 +21,7 @@
 
         <div class=" container">
           <br>
-          <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}">
+          <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
           <div class="features-container">
             <div th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', svgPath='images/pipeline.svg', tags=#{pipeline.tags})}"></div>
 
@@ -74,7 +74,6 @@
             <div th:replace="~{fragments/card :: card(id='cert-sign', cardTitle=#{home.certSign.title}, cardText=#{home.certSign.desc}, cardLink='cert-sign', svgPath='images/award.svg', tags=#{certSign.tags})}"></div>
             <div th:replace="~{fragments/card :: card(id='multi-page-layout', cardTitle=#{home.pageLayout.title}, cardText=#{home.pageLayout.desc}, cardLink='multi-page-layout', svgPath='images/page-layout.svg', tags=#{pageLayout.tags})}"></div>
             <div th:replace="~{fragments/card :: card(id='scale-pages', cardTitle=#{home.scalePages.title}, cardText=#{home.scalePages.desc}, cardLink='scale-pages', svgPath='images/scale-pages.svg', tags=#{scalePages.tags})}"></div>
-
 
             <div th:replace="~{fragments/card :: card(id='auto-rename', cardTitle=#{home.auto-rename.title}, cardText=#{home.auto-rename.desc}, cardLink='auto-rename', svgPath='images/fonts.svg', tags=#{auto-rename.tags})}"></div>
             <div th:replace="~{fragments/card :: card(id='auto-split-pdf', cardTitle=#{home.autoSplitPDF.title}, cardText=#{home.autoSplitPDF.desc}, cardLink='auto-split-pdf', svgPath='images/layout-split.svg', tags=#{autoSplitPDF.tags})}"></div>

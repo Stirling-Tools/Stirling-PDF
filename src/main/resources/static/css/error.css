@@ -68,11 +68,11 @@ p {
 
 #github-button:hover,
 #discord-button:hover,
-#home-button:hover {
+.home-button:hover {
   background-color: #005b7f;
 }
 
-#home-button {
+.home-button {
   display: block;
   width: 200px;
   height: 50px;

@@ -248,20 +248,20 @@ document.getElementById("addOperationBtn").addEventListener("click", function ()
   }
 
   listItem.innerHTML = `
-	    <div class="d-flex justify-content-between align-items-center w-100">
-	        <div class="operationName">${selectedOperation}</div>
-	        <div class="arrows d-flex">
-	            <button class="btn btn-secondary move-up ms-1"><span>&uarr;</span></button>
-	            <button class="btn btn-secondary move-down ms-1"><span>&darr;</span></button>
-	            <button class="btn ${hasSettings ? "btn-warning" : "btn-secondary"} pipelineSettings ms-1" ${
+      <div class="d-flex justify-content-between align-items-center w-100">
+          <div class="operationName">${selectedOperation}</div>
+          <div class="arrows d-flex">
+              <button class="btn btn-secondary move-up ms-1"><span>&uarr;</span></button>
+              <button class="btn btn-secondary move-down ms-1"><span>&darr;</span></button>
+              <button class="btn ${hasSettings ? "btn-warning" : "btn-secondary"} pipelineSettings ms-1" ${
                 hasSettings ? "" : "disabled"
               }>
-			        <span style="color: ${hasSettings ? "white" : "grey"};">⚙️</span>
-			    </button>
-	            <button class="btn btn-danger remove ms-1"><span>X</span></button>
-	        </div>
-	    </div>
-	`;
+              <span style="color: ${hasSettings ? "white" : "grey"};">⚙️</span>
+          </button>
+              <button class="btn btn-danger remove ms-1"><span>X</span></button>
+          </div>
+      </div>
+  `;
 
   pipelineList.appendChild(listItem);
 
@@ -465,13 +465,13 @@ document.getElementById("addOperationBtn").addEventListener("click", function ()
     //pipelineSettingsModal.style.display = "block";
 
     //pipelineSettingsModal.getElementsByClassName("close")[0].onclick = function() {
-    //	pipelineSettingsModal.style.display = "none";
+    //  pipelineSettingsModal.style.display = "none";
     //}
 
     //window.onclick = function(event) {
-    //	if (event.target == pipelineSettingsModal) {
-    //		pipelineSettingsModal.style.display = "none";
-    //	}
+    //  if (event.target == pipelineSettingsModal) {
+    //    pipelineSettingsModal.style.display = "none";
+    //  }
     //}
   }
   showpipelineSettingsModal(selectedOperation);
