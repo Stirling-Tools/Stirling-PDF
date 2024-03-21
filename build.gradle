@@ -159,8 +159,8 @@ dependencies {
 	implementation 'com.fathzer:javaluator:3.0.3'
 
     developmentOnly("org.springframework.boot:spring-boot-devtools:3.2.4")
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
 }
 
 tasks.withType(JavaCompile) {
