@@ -36,11 +36,11 @@
   visibility: hidden !important;
 }
 
-html[lang-direction="ltr"] .drag-manager_draghover img {
+html[dir="ltr"] .drag-manager_draghover img {
   left: calc(50% + 62.5px) !important;
 }
 
-html[lang-direction="rtl"] .drag-manager_draghover img {
+html[dir="rtl"] .drag-manager_draghover img {
   left: 125px;
 }
 

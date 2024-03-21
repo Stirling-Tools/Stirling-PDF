@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{pipeline.title}, header=#{pipeline.header})}"></th:block>
     <link rel="stylesheet" href="css/pipeline.css" th:if="${currentPage == 'pipeline'}">
@@ -12,16 +12,15 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            
-			<div style="text-align: center;">
-			<h1 th:text="#{pipeline.header}"></h1>
-    <img src="images/pipeline.svg" alt="icon" style="filter: invert(33%) sepia(100%) saturate(5000%) hue-rotate(183deg) brightness(90%) contrast(100%); width: 100px; height: 100px;">
-  </div>
-           
-			
+
+            <div style="text-align: center;">
+              <h1 th:text="#{pipeline.header}"></h1>
+              <img src="images/pipeline.svg" alt="icon" style="filter: invert(33%) sepia(100%) saturate(5000%) hue-rotate(183deg) brightness(90%) contrast(100%); width: 100px; height: 100px;">
+            </div>
+          
             <div class="bordered-box">
               <div class="text-end text-top">
                 <button id="uploadPipelineBtn" class="btn btn-primary" th:text="#{pipeline.uploadButton}"></button>
@@ -44,8 +43,8 @@
                   <button class="btn btn-primary" id="submitConfigBtn" th:text="#{pipeline.submitButton}"></button>
                 </div>
                 <a href="https://github.com/Stirling-Tools/Stirling-PDF/blob/main/PipelineFeature.md" target="_blank">Pipeline Help</a>
-              </br>
-			  <a href="https://github.com/Stirling-Tools/Stirling-PDF/blob/main/FolderScanning.md" target="_blank">Folder Scanning Help</a>
+                <br>
+                <a href="https://github.com/Stirling-Tools/Stirling-PDF/blob/main/FolderScanning.md" target="_blank">Folder Scanning Help</a>
               </div>
             </div>
 
@@ -87,7 +86,7 @@
 
                   <!-- Modal footer -->
                   <div class="modal-footer">
-                  	<button id="saveBrowserPipelineBtn" class="btn btn-success" th:text="#{saveToBrowser}"></button>
+                    <button id="saveBrowserPipelineBtn" class="btn btn-success" th:text="#{saveToBrowser}"></button>
                     <button id="savePipelineBtn" class="btn btn-success" th:text="#{pipelineOptions.saveButton}"></button>
                     <button id="validateButton" class="btn btn-success" th:text="#{pipelineOptions.validateButton}"></button>
 

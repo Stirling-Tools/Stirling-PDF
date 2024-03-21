@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{split-by-size-or-count.title}, header=#{split-by-size-or-count.header})}"></th:block>
   </head>
@@ -9,7 +9,7 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-6">
@@ -20,9 +20,9 @@
 
                 <label for="overlayMode" th:text="#{overlay-pdfs.mode.label}">Overlay Mode</label>
                 <select id="overlayMode" name="overlayMode" class="form-control">
-                    <option value="SequentialOverlay" th:text="#{overlay-pdfs.mode.sequential}">Sequential Overlay</option>
-                    <option value="InterleavedOverlay" th:text="#{overlay-pdfs.mode.interleaved}">Interleaved Overlay</option>
-                    <option value="FixedRepeatOverlay" th:text="#{overlay-pdfs.mode.fixedRepeat}">Fixed Repeat Overlay</option>
+                  <option value="SequentialOverlay" th:text="#{overlay-pdfs.mode.sequential}">Sequential Overlay</option>
+                  <option value="InterleavedOverlay" th:text="#{overlay-pdfs.mode.interleaved}">Interleaved Overlay</option>
+                  <option value="FixedRepeatOverlay" th:text="#{overlay-pdfs.mode.fixedRepeat}">Fixed Repeat Overlay</option>
                 </select>
                 <br>
                 <label for="overlayPosition" th:text="#{overlay-pdfs.position.label}">Overlay Position</label>
@@ -75,7 +75,7 @@
                   var fileInput = document.getElementById('overlayFiles-input');
                   console.log("fileInput2",fileInput);
                     if (fileInput) {
-                        fileInput.addEventListener('change', updateCountsInputs);
+                      fileInput.addEventListener('change', updateCountsInputs);
                     }
                 });
                 document.addEventListener('DOMContentLoaded', (event) => {

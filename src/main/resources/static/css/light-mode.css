@@ -4,20 +4,20 @@ body {
   --base-font-color: 33, 37, 41;
 }
 
-#global-buttons-container input {
+.global-buttons-container input {
   background-color: #ffffff;
   /*caret-color: #ffffff;*/
   /*color: #ffffff;*/
 }
-/*#global-buttons-container input:disabled::-webkit-input-placeholder { !* WebKit browsers *!*/
+/*.global-buttons-container input:disabled::-webkit-input-placeholder { !* WebKit browsers *!*/
 /*    color:    #98A0AB;*/
 /*}*/
-/*#global-buttons-container input:disabled:-moz-placeholder { !* Mozilla Firefox 4 to 18 *!*/
+/*.global-buttons-container input:disabled:-moz-placeholder { !* Mozilla Firefox 4 to 18 *!*/
 /*    color:    #98A0AB;*/
 /*}*/
-/*#global-buttons-container input:disabled::-moz-placeholder { !* Mozilla Firefox 19+ *!*/
+/*.global-buttons-container input:disabled::-moz-placeholder { !* Mozilla Firefox 19+ *!*/
 /*    color:    #98A0AB;*/
 /*}*/
-/*#global-buttons-container input:disabled:-ms-input-placeholder { !* Internet Explorer 10+ *!*/
+/*.global-buttons-container input:disabled:-ms-input-placeholder { !* Internet Explorer 10+ *!*/
 /*    color:    #98A0AB;*/
 /*}*/

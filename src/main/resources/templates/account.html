@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{account.title})}"></th:block>
   </head>
@@ -9,14 +9,14 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-9">
 
               <!-- User Settings Title -->
               <h2 class="text-center" th:text="#{account.accountSettings}">User Settings</h2>
-              <hr />
+              <hr>
               <th:block th:if="${param.messageType != null and param.messageType.size() > 0}">
               <div th:if="${param.messageType[0] == 'notAuthenticated'}" class="alert alert-danger">
                 <span th:text="#{notAuthenticatedMessage}">Default message if not found</span>
@@ -42,7 +42,6 @@
               </div>
               </th:block>
               <!-- Change Username Form -->
-              <h4></h4>
               <form action="api/v1/user/change-username" method="post">
                 <div class="mb-3">
                   <label for="newUsername" th:text="#{account.changeUsername}">Change Username</label>
@@ -50,14 +49,14 @@
                 </div>
                 <div class="mb-3">
                   <label for="currentPassword" th:text="#{password}">Password</label>
-                  <input type="password" class="form-control" name="currentPassword" id="currentPasswordUsername" th:placeholder="#{password}">
+                  <input type="password" class="form-control" name="currentPassword" id="currentPassword" th:placeholder="#{password}">
                 </div>
                 <div class="mb-3">
                   <button type="submit" class="btn btn-primary" th:text="#{account.changeUsername}">Change Username</button>
                 </div>
               </form>
 
-              <hr /> <!-- Separator Line -->
+              <hr> <!-- Separator Line -->
 
               <!-- Change Password Form -->
               <h4 th:text="#{account.changePassword}">Change Password?</h4>
@@ -79,7 +78,7 @@
                 </div>
               </form>
 
-              <hr />
+              <hr>
 
               <div class="card">
                 <div class="card-header" th:text="#{account.yourApiKey}"></div>
@@ -94,7 +93,7 @@
                         <img class="blackwhite-icon" id="eyeIcon" src="images/eye.svg" alt="Toggle API Key Visibility" style="height:20px;">
                       </button>
                       <button class="btn btn-outline-secondary" id="refreshBtn" type="button" onclick="refreshApiKey()">
-                        <img class="blackwhite-icon" id="eyeIcon" src="images/arrow-clockwise.svg" alt="Refresh API-Key" style="height:20px;">
+                        <img class="blackwhite-icon" id="arrowIcon" src="images/arrow-clockwise.svg" alt="Refresh API-Key" style="height:20px;">
                       </button>
                     </div>
                   </div>
@@ -169,7 +168,6 @@
                   }
                 }
 
-
                 document.addEventListener("DOMContentLoaded", function() {
                   const form = document.querySelector('form[action="api/v1/user/change-password"]');
 
@@ -185,7 +183,7 @@
                 });
               </script>
 
-              <hr /> <!-- Separator Line -->
+              <hr> <!-- Separator Line -->
 
               <h4 th:text="#{account.syncTitle}">Sync browser settings with Account</h4>
               <div class="container mt-4">
@@ -199,7 +197,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                      <!-- This will be dynamically populated by JavaScript -->
+                    <!-- This will be dynamically populated by JavaScript -->
                   </tbody>
                 </table>
 
@@ -271,13 +269,9 @@
 
                 });
               </script>
-              <div class="mb-3 mt-4">
-                <a href="logout">
-                    <button type="button" class="btn btn-danger" th:text="#{account.signOut}">Sign Out</button>
-                </a>
-                <a th:if="${role == 'ROLE_ADMIN'}" href="addUsers" target="_blank">
-                  <button type="button" class="btn btn-info" th:text="#{account.adminSettings}">Admin Settings</button>
-                </a>
+              <div class="mb-3 mt-4 text-center">
+                <a href="logout" role="button" class="btn btn-danger" th:text="#{account.signOut}">Sign Out</a>
+                <a th:if="${role == 'ROLE_ADMIN'}" class="btn btn-info" href="addUsers" role="button" th:text="#{account.adminSettings}" target="_blank">Admin Settings</a>
               </div>
             </div>
           </div>

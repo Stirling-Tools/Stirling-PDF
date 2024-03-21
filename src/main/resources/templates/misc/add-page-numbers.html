@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{addPageNumbers.title}, header=#{addPageNumbers.header})}"></th:block>
     <style>
       .a4container {
         position: relative;
         width: 50%;
-        aspect-ratio: 0.707;
+        aspect-ratio: 0.707/1;
         border: 1px solid #ddd;
         box-sizing: border-box;
         background-color: white;
@@ -52,7 +52,7 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-6">
@@ -62,7 +62,7 @@
                 <br>
                 <div class="mb-3">
                   <label for="customMargin" th:text="#{addPageNumbers.selectText.2}"></label>
-                  <select class="form-control" id="customMargin" name="customMargin" required>
+                  <select class="form-control" id="customMargin" name="customMargin">
                     <option value="small" th:text="#{sizes.small}"></option>
                     <option value="medium" selected th:text="#{sizes.medium}"></option>
                     <option value="large" th:text="#{sizes.large}"></option>
@@ -70,7 +70,7 @@
                   </select>
                 </div>
                 <div class="mb-3">
-                  <label for="position" th:text="#{addPageNumbers.selectText.3}"></label>
+                  <label th:text="#{addPageNumbers.selectText.3}"></label>
                   <div class="a4container">
                     <div class="pageNumber" id="1" style="top: 10%; left: 10%;">1</div>
                     <div class="pageNumber" id="2" style="top: 10%; left: 50%;">2</div>
@@ -83,18 +83,18 @@
                     <div class="pageNumber" id="9" style="top: 90%; left: 90%;">9</div>
                   </div>
                 </div>
-                <input type="hidden" id="numberInput" name="position" min="1" max="9" value="8" required />
+                <input type="hidden" id="numberInput" name="position" value="8">
                 <div class="mb-3">
                   <label for="startingNumber" th:text="#{addPageNumbers.selectText.4}"></label>
-                  <input type="number" class="form-control" id="startingNumber" name="startingNumber" min="1" required value="1" />
+                  <input type="number" class="form-control" id="startingNumber" name="startingNumber" min="1" required value="1">
                 </div>
                 <div class="mb-3">
                   <label for="pagesToNumber" th:text="#{addPageNumbers.selectText.5}"></label>
-                  <input type="text" class="form-control" id="pagesToNumber" name="pagesToNumber" th:placeholder="#{addPageNumbers.numberPagesDesc}" />
+                  <input type="text" class="form-control" id="pagesToNumber" name="pagesToNumber" th:placeholder="#{addPageNumbers.numberPagesDesc}">
                 </div>
                 <div class="mb-3">
                   <label for="customText" th:text="#{addPageNumbers.selectText.6}"></label>
-                  <input type="text" class="form-control" id="customText" name="customText" th:placeholder="#{addPageNumbers.customNumberDesc}" />
+                  <input type="text" class="form-control" id="customText" name="customText" th:placeholder="#{addPageNumbers.customNumberDesc}">
                 </div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{addPageNumbers.submit}"></button>
               </form>

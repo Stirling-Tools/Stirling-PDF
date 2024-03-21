@@ -53,8 +53,8 @@ $(document).ready(function () {
         // Display a green banner at the bottom of the screen saying "Download complete"
         let downloadCompleteText = "Download Complete";
         if(window.downloadCompleteText){
-			downloadCompleteText = window.downloadCompleteText;
-		}
+          downloadCompleteText = window.downloadCompleteText;
+        }
         $("body").append('<div id="download-complete-banner" style="position:fixed;bottom:0;left:0;width:100%;background-color:green;color:white;text-align:center;padding:10px;font-size:16px;z-index:1000;">'+ downloadCompleteText + '</div>');
         setTimeout(function() {
           $("#download-complete-banner").fadeOut("slow", function() {
@@ -79,8 +79,8 @@ async function handleSingleDownload(url, formData, isMulti = false, isZip = fals
 
     if (!response.ok) {
       if (contentType && contentType.includes("application/json")) {
-        return handleJsonResponse(response);
         console.error("Throwing error banner, response was not okay");
+        return handleJsonResponse(response);
       }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -177,10 +177,10 @@ async function submitMultiPdfForm(url, files) {
   const zipFiles = files.length > zipThreshold;
   let jszip = null;
   // Show the progress bar
-  $("#progressBarContainer").show();
+  $(".progressBarContainer").show();
   // Initialize the progress bar
 
-  let progressBar = $("#progressBar");
+  let progressBar = $(".progressBar");
   progressBar.css("width", "0%");
   progressBar.attr("aria-valuenow", 0);
   progressBar.attr("aria-valuemax", files.length);

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{login.title}, header=#{login.header})}"></th:block>
     <link rel="stylesheet" href="css/login.css">
@@ -52,7 +52,7 @@
 
           document.addEventListener('DOMContentLoaded', function() {
 
-            const defaultLocale = document.documentElement.language || 'en_GB';
+            const defaultLocale = document.documentElement.getAttribute('language') || 'en_GB';
             const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
 
             const currentURL = new URL(window.location.href);
@@ -61,10 +61,10 @@
 
 
             if (defaultLocale !== storedLocale && currentLangParam !== storedLocale) {
-                urlParams.set('lang', storedLocale);
-                currentURL.search = urlParams.toString();
-                window.location.href = currentURL.toString();
-                return;
+              urlParams.set('lang', storedLocale);
+              currentURL.search = urlParams.toString();
+              window.location.href = currentURL.toString();
+              return;
             }
 
             const dropdown = document.getElementById('languageDropdown');
@@ -72,17 +72,17 @@
 
             let activeItem;
             for (let i = 0; i < dropdownItems.length; i++) {
-                const item = dropdownItems[i];
-                item.classList.remove('active');
-                if (item.dataset.bsLanguageCode === storedLocale) {
-                    item.classList.add('active');
-                    activeItem = item;
-                }
-                item.addEventListener('click', handleDropdownItemClick);
+              const item = dropdownItems[i];
+              item.classList.remove('active');
+              if (item.dataset.bsLanguageCode === storedLocale) {
+                item.classList.add('active');
+                activeItem = item;
+              }
+              item.addEventListener('click', handleDropdownItemClick);
             }
 
             if (activeItem) {
-                dropdown.innerHTML = activeItem.innerHTML;  // This will set the dropdown button's content to the active language's flag and name
+              dropdown.innerHTML = activeItem.innerHTML;  // This will set the dropdown button's content to the active language's flag and name
             }
 
             // Additional functionality that was in your provided code:
@@ -91,7 +91,7 @@
               const dropdownMenu = element.querySelector(".dropdown-menu");
               if (dropdownMenu.id !== 'favoritesDropdown' &&  dropdownMenu.children.length <= 2 && dropdownMenu.querySelectorAll("hr.dropdown-divider").length === dropdownMenu.children.length) {
                 if (element.previousElementSibling && element.previousElementSibling.classList.contains('nav-item') && element.previousElementSibling.classList.contains('nav-item-separator')) {
-                    element.previousElementSibling.remove();
+                  element.previousElementSibling.remove();
                 }
                 element.remove();
               }
@@ -142,23 +142,25 @@
           <h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
 
           <div class="form-floating">
-            <input type="text" class="form-control bg-dark text-light" id="username" name="username" placeholder="admin"> <label for="username" th:text="#{username}">Username</label>
+            <input type="text" class="form-control bg-dark text-light" id="username" name="username" placeholder="admin">
+            <label for="username" th:text="#{username}">Username</label>
           </div>
           <div class="form-floating">
-            <input type="password" class="form-control bg-dark text-light" id="password" name="password" placeholder="Password"> <label for="password" th:text="#{password}">Password</label>
+            <input type="password" class="form-control bg-dark text-light" id="password" name="password" placeholder="Password">
+            <label for="password" th:text="#{password}">Password</label>
           </div>
 
           <div class="checkbox mb-3">
-            <label > <input type="checkbox" value="remember-me">
-              <span th:text="#{login.rememberme}"></span>
-            </label>
+            <input type="checkbox" id="remember" value="remember-me">
+            <label for="remember" th:text="#{login.rememberme}"></label> 
           </div>
           <button class="w-100 btn btn-lg btn-primary" type="submit" th:text="#{login.signin}">Sign in</button>
         </form>
         <div class="mt-3"> <!-- Added a margin-top for spacing -->
           <div class="dropdown">
             <button class="btn btn-secondary dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-              English (GB) <!-- Default language placeholder -->
+              <img src="images/flags/gb.svg" alt="icon" width="20" height="15"> English (GB)
+              <!-- Default language placeholder -->
             </button>
             <div class="dropdown-menu" aria-labelledby="languageDropdown">
               <!-- Here's where the fragment will be included -->

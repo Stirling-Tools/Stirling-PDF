@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{autoSplitPDF.title}, header=#{autoSplitPDF.header})}"></th:block>
   </head>
@@ -9,7 +9,7 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-6">
@@ -29,8 +29,8 @@
                   <input type="checkbox" class="form-check-input" name="duplexMode" id="duplexMode">
                   <label class="ms-3" for="duplexMode" th:text=#{autoSplitPDF.duplexMode}></label>
                 </div>
-                <p><a th:href="@{files/Auto Splitter Divider (minimal).pdf}" download th:text="#{autoSplitPDF.dividerDownload1}"></a></p>
-                <p><a th:href="@{files/Auto Splitter Divider (with instructions).pdf}" download th:text="#{autoSplitPDF.dividerDownload2}"></a></p>
+                <p><a th:href="@{files/Auto%20Splitter%20Divider%20(minimal).pdf}" download th:text="#{autoSplitPDF.dividerDownload1}"></a></p>
+                <p><a th:href="@{files/Auto%20Splitter%20Divider%20(with%20instructions).pdf}" download th:text="#{autoSplitPDF.dividerDownload2}"></a></p>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{autoSplitPDF.submit}"></button>
               </form>
             </div>

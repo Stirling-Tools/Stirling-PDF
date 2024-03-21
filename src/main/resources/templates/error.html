@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title='404 - Page Not Found | Oops, we tripped in the code!')}"></th:block>
   </head>
@@ -29,7 +29,7 @@
               <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" target="_blank">Submit a ticket on GitHub</a>
               <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" target="_blank">Join our Discord server</a>
             </div>
-            <a href="/" id="home-button">Go back to homepage</a>
+            <a href="/" class="home-button">Go back to homepage</a>
           </div>
         </div>
       </div>

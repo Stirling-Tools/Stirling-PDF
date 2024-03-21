@@ -4,7 +4,7 @@ class PdfActionsManager {
 
   constructor(id) {
     this.pagesContainer = document.getElementById(id);
-    this.pageDirection = document.documentElement.getAttribute("lang-direction");
+    this.pageDirection = document.documentElement.getAttribute("dir");
 
     var styleElement = document.createElement("link");
     styleElement.rel = "stylesheet";

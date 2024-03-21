@@ -45,11 +45,11 @@
   right: -20px;
 }
 
-html[lang-direction="ltr"] .pdf-actions_insert-file-button-container.right {
+html[dir="ltr"] .pdf-actions_insert-file-button-container.right {
   display: none;
 }
 
-html[lang-direction="rtl"] .pdf-actions_insert-file-button-container.left {
+html[dir="rtl"] .pdf-actions_insert-file-button-container.left {
   display: none;
 }
 
@@ -63,11 +63,11 @@ html[lang-direction="rtl"] .pdf-actions_insert-file-button-container.left {
   translate: 0 -50%;
 }
 
-html[lang-direction="ltr"] .pdf-actions_container:last-child > .pdf-actions_insert-file-button-container.right {
+html[dir="ltr"] .pdf-actions_container:last-child > .pdf-actions_insert-file-button-container.right {
   display: block;
 }
 
-html[lang-direction="rtl"] .pdf-actions_container:last-child > .pdf-actions_insert-file-button-container.left {
+html[dir="rtl"] .pdf-actions_container:last-child > .pdf-actions_insert-file-button-container.left {
   display: block;
 }
 

@@ -3,8 +3,8 @@
     <title th:text="${@appName} + (${title} != null and ${title} != '' ? ' - ' + ${title} : '')"></title>
 
     <!-- Metadata -->
-    <meta charset="UTF-8">
-    <meta name="description" th:content="${@appName} + (${header} != null and ${header} != '' ? ' - ' + ${header} : '')"/>
+    <meta charset="utf-8">
+    <meta name="description" th:content="${@appName} + (${header} != null and ${header} != '' ? ' - ' + ${header} : '')">
     <meta name="msapplication-TileColor" content="#2d89ef">
     <meta name="theme-color" content="#ffffff">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,7 +43,7 @@
     <link rel="stylesheet" href="css/general.css">
     <link rel="stylesheet" th:href="@{css/light-mode.css}" id="light-mode-styles">
     <link rel="stylesheet" th:href="@{css/dark-mode.css}" id="dark-mode-styles">
-    <link rel="stylesheet" th:href="@{css/rainbow-mode.css}" id="rainbow-mode-styles" disabled="true">
+    <link rel="stylesheet" th:href="@{css/rainbow-mode.css}" id="rainbow-mode-styles" disabled>
     <link rel="stylesheet" href="css/tab-container.css">
     <link rel="stylesheet" href="css/navbar.css">
 
@@ -84,7 +84,7 @@
           const downloadCompleteText = /*[[#{downloadComplete}]]*/ 'Download Complete';
           window.downloadCompleteText = downloadCompleteText;
           // Create the 'show-game-btn' button
-          var gameButton = $('<button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">' + boredWaitingText + '</button><br /><br />');
+          var gameButton = $('<button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">' + boredWaitingText + '</button><br><br>');
           
           // Insert the 'show-game-btn' just above the submit button
           submitButton.before(gameButton);
@@ -130,38 +130,33 @@
         <div id="score">Score: 0</div>
         <div id="high-score">High Score: 0</div>
         <div id="level">Level: 1</div>
-        <img src="favicon.svg" class="player" id="player">
+        <img src="favicon.svg" class="player" id="player" alt="favicon">
       </div>
       <link rel="stylesheet" href="css/game.css">
     </dialog>
-
 </th:block>
 
 <th:block th:fragment="fileSelector(name, multiple)" th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, notRequired=${notRequired} ?: false">
-              <script th:inline="javascript">
-                const pdfPasswordPrompt = /*[[#{error.pdfPassword}]]*/ '';
-                const multiple = [[${multiple}]] || false;
-                const remoteCall = [[${remoteCall}]] || true;
-              </script>
-              <script src="js/downloader.js"></script>
+                <script th:inline="javascript">
+                  const pdfPasswordPrompt = /*[[#{error.pdfPassword}]]*/ '';
+                  const multiple = [[${multiple}]] || false;
+                  const remoteCall = [[${remoteCall}]] || true;
+                </script>
+                <script src="js/downloader.js"></script>
 
-              <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
-                <div class="mb-3">
-                  <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:required="${notRequired} ? null : 'required'">
+                <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
+                  <div class="mb-3">
+                    <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:required="${notRequired} ? null : 'required'">
+                  </div>
+                  <div class="selected-files"></div>
                 </div>
-                <div class="selected-files"></div>
-              </div>
 
-              <div id="progressBarContainer" style="display: none; position: relative;">
-                <div class="progress" style="height: 1rem;">
-                  <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                    <span class="visually-hidden">Loading...</span>
+                <div class="progressBarContainer" style="display: none; position: relative;">
+                  <div class="progress" style="height: 1rem;">
+                    <div class="progressBar progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                      <span class="visually-hidden">Loading...</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-             
- 
-          
-    
-              <script src="js/fileInput.js"></script>
+                <script src="js/fileInput.js"></script>
 </th:block>

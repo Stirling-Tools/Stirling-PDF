@@ -1,49 +1,49 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{adjustContrast.title}, header=#{adjustContrast.header})}"></th:block>
+    <style>
+      #flex-container {
+        display: flex;
+        align-items: center;
+      }
+      #sliders-container {
+        padding: 0 20px;  /* Add some padding to separate sliders from canvas */
+      }
+    </style>
   </head>
 
   <body>
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-12">
               <div class="row justify-content-center">
                 <div class="col-md-3">
-                    <div id="sliders-container" style="display:none;">
-                      <h4><span th:text="#{adjustContrast.contrast}"></span> <span id="contrast-val">100</span>%</h4>
-                      <input type="range" min="0" max="200" value="100" id="contrast-slider" />
+                  <div id="sliders-container" style="display:none;">
+                    <h4><span th:text="#{adjustContrast.contrast}"></span> <span id="contrast-val">100</span>%</h4>
+                    <input type="range" min="0" max="200" value="100" id="contrast-slider">
 
-                      <h4><span th:text="#{adjustContrast.brightness}"></span> <span id="brightness-val">100</span>%</h4>
-                      <input type="range" min="0" max="200" value="100" id="brightness-slider" />
+                    <h4><span th:text="#{adjustContrast.brightness}"></span> <span id="brightness-val">100</span>%</h4>
+                    <input type="range" min="0" max="200" value="100" id="brightness-slider">
 
-                      <h4><span th:text="#{adjustContrast.saturation}"></span> <span id="saturation-val">100</span>%</h4>
-                      <input type="range" min="0" max="200" value="100" id="saturation-slider" />
-                    </div>
+                    <h4><span th:text="#{adjustContrast.saturation}"></span> <span id="saturation-val">100</span>%</h4>
+                    <input type="range" min="0" max="200" value="100" id="saturation-slider">
+                  </div>
                 </div>
                 <div class="col-md-7">
                   <h2 th:text="#{adjustContrast.header}"></h2>
                   <div class="col-md-8">
                     <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
                   </div>
-                  <br />
+                  <br>
                   <canvas id="contrast-pdf-canvas"></canvas>
                   <button id="download-button" class="btn btn-primary" th:text="#{adjustContrast.download}"></button>
                 </div>
               </div>
-              <style>
-                #flex-container {
-                  display: flex;
-                  align-items: center;
-                }
-                #sliders-container {
-                  padding: 0 20px;  /* Add some padding to separate sliders from canvas */
-                }
-              </style>
 
               <script>
                 var canvas = document.getElementById('contrast-pdf-canvas');
@@ -69,7 +69,6 @@
                     // Render the first page in the viewer
                     await renderPageAndAdjustImageProperties(1);
                     document.getElementById("sliders-container").style.display = "block";
-
                   };
                   fileReader.readAsArrayBuffer(file);
                 }
@@ -130,7 +129,6 @@
                       newImageData.data[i+1] = rgb[1];
                       newImageData.data[i+2] = rgb[2];
                     }
-
                     context.putImageData(newImageData, 0, 0);
                   }
                 }
@@ -256,7 +254,6 @@
                   if (pdf !== null) {
                     renderPageAndAdjustImageProperties(1);
                   }
-
                 }
 
                 // Event listeners

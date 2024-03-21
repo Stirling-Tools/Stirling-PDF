@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:lang-direction="#{language.direction}" th:language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{multiTool.title}, header=#{multiTool.header})}"></th:block>
   </head>
@@ -9,7 +9,7 @@
     <div id="page-container">
       <div id="content-wrap">
         <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br /><br />
+        <br><br>
         <div class="multi-tool-container">
           <div class="row justify-content-center">
             <h2 th:text="#{multiTool.header}"></h2>
@@ -28,13 +28,13 @@
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-6" style="text-align: center">
-              <div id="global-buttons-container" class="d-flex align-content-center justify-content-center">
+              <div class="global-buttons-container d-flex align-content-center justify-content-center">
                 <div class="form-group">
-                  <label for="filename-input">Filename</label>
-                  <input type="text" class="form-control" id="filename-input" placeholder="filename">
+                  <label for="filename-input" th:text="#{multiTool.filename}">Filename</label>
+                  <input type="text" class="form-control" id="filename-input" th:placeholder="#{multiTool.filename}">
                 </div>
               </div>
-              <div id="global-buttons-container">
+              <div class="global-buttons-container">
                 <button class="btn btn-primary" onclick="addPdfs()">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
                     <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
@@ -64,9 +64,9 @@
           </div>
         </div>
       </div>
+      <div id="drag-container"></div>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-    <div id="drag-container"></div>
 
     <script type="module">
       import PdfContainer from './js/multitool/PdfContainer.js';

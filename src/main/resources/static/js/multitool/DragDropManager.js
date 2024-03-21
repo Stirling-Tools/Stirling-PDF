@@ -11,7 +11,7 @@ class DragDropManager {
 
   constructor(id, wrapperId) {
     this.dragContainer = document.getElementById(id);
-    this.pageDirection = document.documentElement.getAttribute("lang-direction");
+    this.pageDirection = document.documentElement.getAttribute("dir");
     this.wrapper = document.getElementById(wrapperId);
     this.pageDragging = false;
     this.hoveredEl = undefined;
