@@ -255,7 +255,6 @@ To add new users go to the bottom of Account settings and hit 'Admin Settings', 
 
 For API usage you must provide a header with 'X-API-Key' and the associated API key for that user.
 
-
 ## FAQ
 
 ### Q1: What are your planned features?
