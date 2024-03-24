@@ -1,0 +1,21 @@
+.btn-margin {
+  margin-right: 2px;
+}
+
+.bordered-box {
+  border: 1px solid #ddd;
+  padding: 20px;
+  margin: 20px;
+  width: 70%;
+}
+
+.center-element {
+  width: 80%;
+  text-align: center;
+  margin: auto;
+}
+
+.element-margin {
+  margin: 10px 0;
+  /* Adjust this value to increase/decrease the margin as needed */
+}

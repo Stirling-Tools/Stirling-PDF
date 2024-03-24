@@ -1,0 +1,28 @@
+#box-drag-container {
+  position: relative;
+  margin: 20px 0;
+}
+#pdf-canvas {
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+  width: 100%;
+}
+.draggable-buttons-box {
+  position: absolute;
+  top: 0;
+  padding: 10px;
+  width: 100%;
+  display: flex;
+  gap: 5px;
+}
+.draggable-buttons-box > button {
+  z-index: 10;
+  background-color: rgba(13, 110, 253, 0.1);
+}
+.draggable-canvas {
+  border: 1px solid red;
+  position: absolute;
+  touch-action: none;
+  user-select: none;
+  top: 0px;
+  left: 0;
+}

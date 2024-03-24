@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +27,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Convert", description = "Convert APIs")
 @RequestMapping("/api/v1/convert")
 public class ConvertWebsiteToPDF {
+
+    @Autowired
+    @Qualifier("bookAndHtmlFormatsInstalled")
+    private boolean bookAndHtmlFormatsInstalled;
 
     @PostMapping(consumes = "multipart/form-data", value = "/url/pdf")
     @Operation(
@@ -47,7 +53,11 @@ public class ConvertWebsiteToPDF {
 
             // Prepare the OCRmyPDF command
             List<String> command = new ArrayList<>();
-            command.add("weasyprint");
+            if (!bookAndHtmlFormatsInstalled) {
+                command.add("weasyprint");
+            } else {
+                command.add("wkhtmltopdf");
+            }
             command.add(URL);
             command.add(tempOutputFile.toString());
 

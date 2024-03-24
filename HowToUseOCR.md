@@ -2,12 +2,12 @@
 
 This document provides instructions on how to add additional language packs for the OCR tab in Stirling-PDF, both inside and outside of Docker.
 
-## My OCR used to work and now doesnt!
-Please update your tesseract docker volume path version from 4.00 to 5
+## My OCR used to work and now doesn't!
+The paths have changed for the tessadata locations on new docker images, please use ``/usr/share/tessdata`` (Others should still work for backwards compatibility but might not)
 
 ## How does the OCR Work
 Stirling-PDF uses [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF) which in turn uses tesseract for its text recognition.
-All credit goes to them for this awesome work! 
+All credit goes to them for this awesome work!
 
 ## Language Packs
 
@@ -21,13 +21,13 @@ Depending on your requirements, you can choose the appropriate language pack for
 ### Installing Language Packs
 
 1. Download the desired language pack(s) by selecting the `.traineddata` file(s) for the language(s) you need.
-2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tesseract-ocr/5/tessdata` (Debian) or `/usr/share/tesseract/tessdata` (Fedora)
+2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tessdata`
 
 # DO NOT REMOVE EXISTING ENG.TRAINEDDATA, IT'S REQUIRED.
 
 #### Docker
 
-If you are using Docker, you need to expose the Tesseract tessdata directory as a volume in order to use the additional language packs. 
+If you are using Docker, you need to expose the Tesseract tessdata directory as a volume in order to use the additional language packs.
 #### Docker Compose
 Modify your `docker-compose.yml` file to include the following volume configuration:
 
@@ -37,14 +37,14 @@ services:
   your_service_name:
     image: your_docker_image_name
     volumes:
-      - /location/of/trainingData:/usr/share/tesseract-ocr/5/tessdata
+      - /location/of/trainingData:/usr/share/tessdata
 ```
 
 
 #### Docker run
 Add the following to your existing docker run command
 ```bash
--v /location/of/trainingData:/usr/share/tesseract-ocr/5/tessdata
+-v /location/of/trainingData:/usr/share/tessdata
 ```
 
 #### Non-Docker

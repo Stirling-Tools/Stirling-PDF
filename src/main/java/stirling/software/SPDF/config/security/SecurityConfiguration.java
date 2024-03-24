@@ -9,6 +9,9 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +21,7 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import jakarta.servlet.http.HttpSession;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 
 @Configuration
@@ -45,6 +49,11 @@ public class SecurityConfiguration {
     @Autowired private FirstLoginFilter firstLoginFilter;
 
     @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.addFilterBefore(userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -53,6 +62,15 @@ public class SecurityConfiguration {
             http.csrf(csrf -> csrf.disable());
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
+            http.sessionManagement(
+                    sessionManagement ->
+                            sessionManagement
+                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                                    .maximumSessions(10)
+                                    .maxSessionsPreventsLogin(false)
+                                    .sessionRegistry(sessionRegistry())
+                                    .expiredUrl("/login?logout=true"));
+
             http.formLogin(
                             formLogin ->
                                     formLogin
@@ -62,7 +80,7 @@ public class SecurityConfiguration {
                                             .defaultSuccessUrl("/")
                                             .failureHandler(
                                                     new CustomAuthenticationFailureHandler(
-                                                            loginAttemptService))
+                                                            loginAttemptService, userService))
                                             .permitAll())
                     .requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()))
                     .logout(
@@ -71,7 +89,18 @@ public class SecurityConfiguration {
                                                     new AntPathRequestMatcher("/logout"))
                                             .logoutSuccessUrl("/login?logout=true")
                                             .invalidateHttpSession(true) // Invalidate session
-                                            .deleteCookies("JSESSIONID", "remember-me"))
+                                            .deleteCookies("JSESSIONID", "remember-me")
+                                            .addLogoutHandler(
+                                                    (request, response, authentication) -> {
+                                                        HttpSession session =
+                                                                request.getSession(false);
+                                                        if (session != null) {
+                                                            String sessionId = session.getId();
+                                                            sessionRegistry()
+                                                                    .removeSessionInformation(
+                                                                            sessionId);
+                                                        }
+                                                    }))
                     .rememberMe(
                             rememberMeConfigurer ->
                                     rememberMeConfigurer // Use the configurator directly
@@ -102,7 +131,9 @@ public class SecurityConfiguration {
                                                                 || trimmedUri.startsWith("/images/")
                                                                 || trimmedUri.startsWith("/public/")
                                                                 || trimmedUri.startsWith("/css/")
-                                                                || trimmedUri.startsWith("/js/");
+                                                                || trimmedUri.startsWith("/js/")
+                                                                || trimmedUri.startsWith(
+                                                                        "/api/v1/info/status");
                                                     })
                                             .permitAll()
                                             .anyRequest()
@@ -113,6 +144,7 @@ public class SecurityConfiguration {
             http.csrf(csrf -> csrf.disable())
                     .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
+
         return http.build();
     }
 

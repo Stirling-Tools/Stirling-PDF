@@ -84,7 +84,7 @@ public class MetricsController {
             for (Meter meter : meterRegistry.getMeters()) {
                 if (meter.getId().getName().equals("http.requests")) {
                     String method = meter.getId().getTag("method");
-                    if (method != null && method.equals("GET")) {
+                    if (method != null && "GET".equals(method)) {
 
                         if (endpoint.isPresent() && !endpoint.get().isBlank()) {
                             if (!endpoint.get().startsWith("/")) {
@@ -129,7 +129,7 @@ public class MetricsController {
             for (Meter meter : meterRegistry.getMeters()) {
                 if (meter.getId().getName().equals("http.requests")) {
                     String method = meter.getId().getTag("method");
-                    if (method != null && method.equals("GET")) {
+                    if (method != null && "GET".equals(method)) {
                         String uri = meter.getId().getTag("uri");
                         if (uri != null) {
                             double currentCount = counts.getOrDefault(uri, 0.0);
@@ -197,7 +197,7 @@ public class MetricsController {
             for (Meter meter : meterRegistry.getMeters()) {
                 if (meter.getId().getName().equals("http.requests")) {
                     String method = meter.getId().getTag("method");
-                    if (method != null && method.equals("POST")) {
+                    if (method != null && "POST".equals(method)) {
                         if (endpoint.isPresent() && !endpoint.get().isBlank()) {
                             if (!endpoint.get().startsWith("/")) {
                                 endpoint = Optional.of("/" + endpoint.get());
@@ -235,7 +235,7 @@ public class MetricsController {
             for (Meter meter : meterRegistry.getMeters()) {
                 if (meter.getId().getName().equals("http.requests")) {
                     String method = meter.getId().getTag("method");
-                    if (method != null && method.equals("POST")) {
+                    if (method != null && "POST".equals(method)) {
                         String uri = meter.getId().getTag("uri");
                         if (uri != null) {
                             double currentCount = counts.getOrDefault(uri, 0.0);

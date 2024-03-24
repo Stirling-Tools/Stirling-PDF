@@ -2,9 +2,7 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -13,6 +11,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -28,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -73,197 +73,213 @@ public class CompressController {
         long inputFileSize = Files.size(tempInputFile);
 
         // Prepare the output file path
-        Path tempOutputFile = Files.createTempFile("output_", ".pdf");
 
-        // Determine initial optimization level based on expected size reduction, only if in
-        // autoMode
-        if (autoMode) {
-            double sizeReductionRatio = expectedOutputSize / (double) inputFileSize;
-            if (sizeReductionRatio > 0.7) {
-                optimizeLevel = 1;
-            } else if (sizeReductionRatio > 0.5) {
-                optimizeLevel = 2;
-            } else if (sizeReductionRatio > 0.35) {
-                optimizeLevel = 3;
-            } else {
-                optimizeLevel = 3;
-            }
-        }
-
-        boolean sizeMet = false;
-        while (!sizeMet && optimizeLevel <= 4) {
-            // Prepare the Ghostscript command
-            List<String> command = new ArrayList<>();
-            command.add("gs");
-            command.add("-sDEVICE=pdfwrite");
-            command.add("-dCompatibilityLevel=1.4");
-
-            switch (optimizeLevel) {
-                case 1:
-                    command.add("-dPDFSETTINGS=/prepress");
-                    break;
-                case 2:
-                    command.add("-dPDFSETTINGS=/printer");
-                    break;
-                case 3:
-                    command.add("-dPDFSETTINGS=/ebook");
-                    break;
-                case 4:
-                    command.add("-dPDFSETTINGS=/screen");
-                    break;
-                default:
-                    command.add("-dPDFSETTINGS=/default");
-            }
-
-            command.add("-dNOPAUSE");
-            command.add("-dQUIET");
-            command.add("-dBATCH");
-            command.add("-sOutputFile=" + tempOutputFile.toString());
-            command.add(tempInputFile.toString());
-
-            ProcessExecutorResult returnCode =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                            .runCommandWithOutputHandling(command);
-
-            // Check if file size is within expected size or not auto mode so instantly finish
-            long outputFileSize = Files.size(tempOutputFile);
-            if (outputFileSize <= expectedOutputSize || !autoMode) {
-                sizeMet = true;
-            } else {
-                // Increase optimization level for next iteration
-                optimizeLevel++;
-                if (autoMode && optimizeLevel > 3) {
-                    System.out.println("Skipping level 4 due to bad results in auto mode");
-                    sizeMet = true;
-                } else if (optimizeLevel == 5) {
-
+        Path tempOutputFile = null;
+        byte[] pdfBytes;
+        try {
+            tempOutputFile = Files.createTempFile("output_", ".pdf");
+            // Determine initial optimization level based on expected size reduction, only if in
+            // autoMode
+            if (autoMode) {
+                double sizeReductionRatio = expectedOutputSize / (double) inputFileSize;
+                if (sizeReductionRatio > 0.7) {
+                    optimizeLevel = 1;
+                } else if (sizeReductionRatio > 0.5) {
+                    optimizeLevel = 2;
+                } else if (sizeReductionRatio > 0.35) {
+                    optimizeLevel = 3;
                 } else {
-                    System.out.println(
-                            "Increasing ghostscript optimisation level to " + optimizeLevel);
+                    optimizeLevel = 3;
                 }
             }
-        }
 
-        if (expectedOutputSize != null && autoMode) {
-            long outputFileSize = Files.size(tempOutputFile);
-            if (outputFileSize > expectedOutputSize) {
-                try (PDDocument doc = PDDocument.load(new File(tempOutputFile.toString()))) {
-                    long previousFileSize = 0;
-                    double scaleFactor = 1.0;
-                    while (true) {
-                        for (PDPage page : doc.getPages()) {
-                            PDResources res = page.getResources();
+            boolean sizeMet = false;
+            while (!sizeMet && optimizeLevel <= 4) {
+                // Prepare the Ghostscript command
+                List<String> command = new ArrayList<>();
+                command.add("gs");
+                command.add("-sDEVICE=pdfwrite");
+                command.add("-dCompatibilityLevel=1.4");
 
-                            for (COSName name : res.getXObjectNames()) {
-                                PDXObject xobj = res.getXObject(name);
-                                if (xobj instanceof PDImageXObject) {
-                                    PDImageXObject image = (PDImageXObject) xobj;
+                switch (optimizeLevel) {
+                    case 1:
+                        command.add("-dPDFSETTINGS=/prepress");
+                        break;
+                    case 2:
+                        command.add("-dPDFSETTINGS=/printer");
+                        break;
+                    case 3:
+                        command.add("-dPDFSETTINGS=/ebook");
+                        break;
+                    case 4:
+                        command.add("-dPDFSETTINGS=/screen");
+                        break;
+                    default:
+                        command.add("-dPDFSETTINGS=/default");
+                }
 
-                                    // Get the image in BufferedImage format
-                                    BufferedImage bufferedImage = image.getImage();
+                command.add("-dNOPAUSE");
+                command.add("-dQUIET");
+                command.add("-dBATCH");
+                command.add("-sOutputFile=" + tempOutputFile.toString());
+                command.add(tempInputFile.toString());
 
-                                    // Calculate the new dimensions
-                                    int newWidth = (int) (bufferedImage.getWidth() * scaleFactor);
-                                    int newHeight = (int) (bufferedImage.getHeight() * scaleFactor);
+                ProcessExecutorResult returnCode =
+                        ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                                .runCommandWithOutputHandling(command);
 
-                                    // If the new dimensions are zero, skip this iteration
-                                    if (newWidth == 0 || newHeight == 0) {
-                                        continue;
+                // Check if file size is within expected size or not auto mode so instantly finish
+                long outputFileSize = Files.size(tempOutputFile);
+                if (outputFileSize <= expectedOutputSize || !autoMode) {
+                    sizeMet = true;
+                } else {
+                    // Increase optimization level for next iteration
+                    optimizeLevel++;
+                    if (autoMode && optimizeLevel > 4) {
+                        System.out.println("Skipping level 5 due to bad results in auto mode");
+                        sizeMet = true;
+                    } else {
+                        System.out.println(
+                                "Increasing ghostscript optimisation level to " + optimizeLevel);
+                    }
+                }
+            }
+
+            if (expectedOutputSize != null && autoMode) {
+                long outputFileSize = Files.size(tempOutputFile);
+                byte[] fileBytes = Files.readAllBytes(tempOutputFile);
+                if (outputFileSize > expectedOutputSize) {
+                    try (PDDocument doc = Loader.loadPDF(fileBytes)) {
+                        long previousFileSize = 0;
+                        double scaleFactorConst = 0.9f;
+                        double scaleFactor = 0.9f;
+                        while (true) {
+                            for (PDPage page : doc.getPages()) {
+                                PDResources res = page.getResources();
+                                if (res != null && res.getXObjectNames() != null) {
+                                    for (COSName name : res.getXObjectNames()) {
+                                        PDXObject xobj = res.getXObject(name);
+                                        if (xobj != null && xobj instanceof PDImageXObject) {
+                                            PDImageXObject image = (PDImageXObject) xobj;
+
+                                            // Get the image in BufferedImage format
+                                            BufferedImage bufferedImage = image.getImage();
+
+                                            // Calculate the new dimensions
+                                            int newWidth =
+                                                    (int)
+                                                            (bufferedImage.getWidth()
+                                                                    * scaleFactorConst);
+                                            int newHeight =
+                                                    (int)
+                                                            (bufferedImage.getHeight()
+                                                                    * scaleFactorConst);
+
+                                            // If the new dimensions are zero, skip this iteration
+                                            if (newWidth == 0 || newHeight == 0) {
+                                                continue;
+                                            }
+
+                                            // Otherwise, proceed with the scaling
+                                            Image scaledImage =
+                                                    bufferedImage.getScaledInstance(
+                                                            newWidth,
+                                                            newHeight,
+                                                            Image.SCALE_SMOOTH);
+
+                                            // Convert the scaled image back to a BufferedImage
+                                            BufferedImage scaledBufferedImage =
+                                                    new BufferedImage(
+                                                            newWidth,
+                                                            newHeight,
+                                                            BufferedImage.TYPE_INT_RGB);
+                                            scaledBufferedImage
+                                                    .getGraphics()
+                                                    .drawImage(scaledImage, 0, 0, null);
+
+                                            // Compress the scaled image
+                                            ByteArrayOutputStream compressedImageStream =
+                                                    new ByteArrayOutputStream();
+                                            ImageIO.write(
+                                                    scaledBufferedImage,
+                                                    "jpeg",
+                                                    compressedImageStream);
+                                            byte[] imageBytes = compressedImageStream.toByteArray();
+                                            compressedImageStream.close();
+
+                                            PDImageXObject compressedImage =
+                                                    PDImageXObject.createFromByteArray(
+                                                            doc,
+                                                            imageBytes,
+                                                            image.getCOSObject().toString());
+
+                                            // Replace the image in the resources with the
+                                            // compressed
+                                            // version
+                                            res.put(name, compressedImage);
+                                        }
                                     }
-
-                                    // Otherwise, proceed with the scaling
-                                    Image scaledImage =
-                                            bufferedImage.getScaledInstance(
-                                                    newWidth, newHeight, Image.SCALE_SMOOTH);
-
-                                    // Convert the scaled image back to a BufferedImage
-                                    BufferedImage scaledBufferedImage =
-                                            new BufferedImage(
-                                                    newWidth,
-                                                    newHeight,
-                                                    BufferedImage.TYPE_INT_RGB);
-                                    scaledBufferedImage
-                                            .getGraphics()
-                                            .drawImage(scaledImage, 0, 0, null);
-
-                                    // Compress the scaled image
-                                    ByteArrayOutputStream compressedImageStream =
-                                            new ByteArrayOutputStream();
-                                    ImageIO.write(
-                                            scaledBufferedImage, "jpeg", compressedImageStream);
-                                    byte[] imageBytes = compressedImageStream.toByteArray();
-                                    compressedImageStream.close();
-
-                                    // Convert compressed image back to PDImageXObject
-                                    ByteArrayInputStream bais =
-                                            new ByteArrayInputStream(imageBytes);
-                                    PDImageXObject compressedImage =
-                                            PDImageXObject.createFromByteArray(
-                                                    doc,
-                                                    imageBytes,
-                                                    image.getCOSObject().toString());
-
-                                    // Replace the image in the resources with the compressed
-                                    // version
-                                    res.put(name, compressedImage);
                                 }
                             }
-                        }
 
-                        // save the document to tempOutputFile again
-                        doc.save(tempOutputFile.toString());
+                            // save the document to tempOutputFile again
+                            doc.save(tempOutputFile.toString());
 
-                        long currentSize = Files.size(tempOutputFile);
-                        // Check if the overall PDF size is still larger than expectedOutputSize
-                        if (currentSize > expectedOutputSize) {
-                            // Log the current file size and scaleFactor
+                            long currentSize = Files.size(tempOutputFile);
+                            // Check if the overall PDF size is still larger than expectedOutputSize
+                            if (currentSize > expectedOutputSize) {
+                                // Log the current file size and scaleFactor
 
-                            System.out.println(
-                                    "Current file size: "
-                                            + FileUtils.byteCountToDisplaySize(currentSize));
-                            System.out.println("Current scale factor: " + scaleFactor);
+                                System.out.println(
+                                        "Current file size: "
+                                                + FileUtils.byteCountToDisplaySize(currentSize));
+                                System.out.println("Current scale factor: " + scaleFactor);
 
-                            // The file is still too large, reduce scaleFactor and try again
-                            scaleFactor *= 0.9; // reduce scaleFactor by 10%
-                            // Avoid scaleFactor being too small, causing the image to shrink to 0
-                            if (scaleFactor < 0.2 || previousFileSize == currentSize) {
-                                throw new RuntimeException(
-                                        "Could not reach the desired size without excessively degrading image quality, lowest size recommended is "
-                                                + FileUtils.byteCountToDisplaySize(currentSize)
-                                                + ", "
-                                                + currentSize
-                                                + " bytes");
+                                // The file is still too large, reduce scaleFactor and try again
+                                scaleFactor *= 0.9f; // reduce scaleFactor by 10%
+                                // Avoid scaleFactor being too small, causing the image to shrink to
+                                // 0
+                                if (scaleFactor < 0.2f || previousFileSize == currentSize) {
+                                    throw new RuntimeException(
+                                            "Could not reach the desired size without excessively degrading image quality, lowest size recommended is "
+                                                    + FileUtils.byteCountToDisplaySize(currentSize)
+                                                    + ", "
+                                                    + currentSize
+                                                    + " bytes");
+                                }
+                                previousFileSize = currentSize;
+                            } else {
+                                // The file is small enough, break the loop
+                                break;
                             }
-                            previousFileSize = currentSize;
-                        } else {
-                            // The file is small enough, break the loop
-                            break;
                         }
                     }
                 }
             }
+
+            // Read the optimized PDF file
+            pdfBytes = Files.readAllBytes(tempOutputFile);
+
+            // Check if optimized file is larger than the original
+            if (pdfBytes.length > inputFileSize) {
+                // Log the occurrence
+                logger.warn(
+                        "Optimized file is larger than the original. Returning the original file instead.");
+
+                // Read the original file again
+                pdfBytes = Files.readAllBytes(tempInputFile);
+            }
+        } finally {
+            // Clean up the temporary files
+            Files.delete(tempInputFile);
+            Files.delete(tempOutputFile);
         }
-
-        // Read the optimized PDF file
-        byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
-
-        // Check if optimized file is larger than the original
-        if (pdfBytes.length > inputFileSize) {
-            // Log the occurrence
-            logger.warn(
-                    "Optimized file is larger than the original. Returning the original file instead.");
-
-            // Read the original file again
-            pdfBytes = Files.readAllBytes(tempInputFile);
-        }
-
-        // Clean up the temporary files
-        Files.delete(tempInputFile);
-        Files.delete(tempOutputFile);
 
         // Return the optimized PDF as a response
         String outputFilename =
-                inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_Optimized.pdf";
+                Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
+                        + "_Optimized.pdf";
         return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
     }
 }

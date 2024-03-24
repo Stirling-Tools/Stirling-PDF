@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -40,7 +41,7 @@ public class OCRController {
     private static final Logger logger = LoggerFactory.getLogger(OCRController.class);
 
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = "/usr/share/tesseract-ocr/5/tessdata";
+        String tessdataDir = "/usr/share/tessdata";
         File[] files = new File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();
@@ -74,7 +75,7 @@ public class OCRController {
             throw new IOException("Please select at least one language.");
         }
 
-        if (!ocrRenderType.equals("hocr") && !ocrRenderType.equals("sandwich")) {
+        if (!"hocr".equals(ocrRenderType) && !"sandwich".equals(ocrRenderType)) {
             throw new IOException("ocrRenderType wrong");
         }
 
@@ -127,7 +128,7 @@ public class OCRController {
         if (cleanFinal != null && cleanFinal) {
             command.add("--clean-final");
         }
-        if (ocrType != null && !ocrType.equals("")) {
+        if (ocrType != null && !"".equals(ocrType)) {
             if ("skip-text".equals(ocrType)) {
                 command.add("--skip-text");
             } else if ("force-ocr".equals(ocrType)) {
@@ -182,12 +183,16 @@ public class OCRController {
 
         // Return the OCR processed PDF as a response
         String outputFilename =
-                inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
+                Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                .replaceFirst("[.][^.]+$", "")
+                        + "_OCR.pdf";
 
         if (sidecar != null && sidecar) {
             // Create a zip file containing both the PDF and the text file
             String outputZipFilename =
-                    inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_OCR.zip";
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
+                            + "_OCR.zip";
             Path tempZipFile = Files.createTempFile("output_", ".zip");
 
             try (ZipOutputStream zipOut =

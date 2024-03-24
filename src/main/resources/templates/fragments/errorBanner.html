@@ -1,23 +1,5 @@
 <th:block th:fragment="errorBanner">
 
-  <style>
-    #github-button,
-    #discord-button {
-      display: inline-block;
-      padding: 1rem 2rem;
-      background-color: #008CBA;
-      color: #fff;
-      text-align: center;
-      text-decoration: none;
-      border-radius: 3rem;
-      transition: all 0.3s ease-in-out;
-    }
-
-    #github-button:hover,
-    #discord-button:hover {
-      background-color: #005b7f;
-    }
-  </style>
   <br  th:if="${message}">
   <div id="errorContainer" th:if="${message}" class="alert alert-danger alert-dismissible fade show" role="alert">
     <h4 class="alert-heading" th:text="'Error:  ' + ${status} + '  ' + ${error}"></h4>
@@ -31,7 +13,7 @@
         <pre id="traceContent" th:text="${trace}"></pre>
       </div>
       <!-- Buttons to submit a ticket on GitHub and join Discord server -->
-      <a href="https://github.com/Frooodle/Stirling-PDF/issues" id="github-button" target="_blank">Submit a ticket on GitHub</a>
+      <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" target="_blank">Submit a ticket on GitHub</a>
       <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" target="_blank">Join our Discord server</a>
     </div>
   </div>
@@ -52,10 +34,10 @@
 
     function copytrace() {
       var flip = false
-    	if(!traceVisible) {
-    		 toggletrace()
-    		 flip = true
-    	}
+      if(!traceVisible) {
+        toggletrace()
+        flip = true
+      }
       var traceContent = document.getElementById("traceContent");
       var range = document.createRange();
       range.selectNode(traceContent);
@@ -64,7 +46,7 @@
       document.execCommand("copy");
       window.getSelection().removeAllRanges();
       if(flip){
-    	  toggletrace()
+        toggletrace()
       }
     }
 

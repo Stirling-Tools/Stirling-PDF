@@ -2,7 +2,9 @@ package stirling.software.SPDF.controller.api.pipeline;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -10,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -48,9 +49,6 @@ public class PipelineController {
     @PostMapping("/handleData")
     public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request)
             throws JsonMappingException, JsonProcessingException {
-        if (!Boolean.TRUE.equals(applicationProperties.getSystem().getEnableAlphaFunctionality())) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
 
         MultipartFile[] files = request.getFileInput();
         String jsonString = request.getJson();
@@ -84,9 +82,26 @@ public class PipelineController {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ZipOutputStream zipOut = new ZipOutputStream(baos);
 
+            // A map to keep track of filenames and their counts
+            Map<String, Integer> filenameCount = new HashMap<>();
+
             // Loop through each file and add it to the zip
             for (Resource file : outputFiles) {
-                ZipEntry zipEntry = new ZipEntry(file.getFilename());
+                String originalFilename = file.getFilename();
+                String filename = originalFilename;
+
+                // Check if the filename already exists, and modify it if necessary
+                if (filenameCount.containsKey(originalFilename)) {
+                    int count = filenameCount.get(originalFilename);
+                    String baseName = originalFilename.replaceAll("\\.[^.]*$", "");
+                    String extension = originalFilename.replaceAll("^.*\\.", "");
+                    filename = baseName + "(" + count + ")." + extension;
+                    filenameCount.put(originalFilename, count + 1);
+                } else {
+                    filenameCount.put(originalFilename, 1);
+                }
+
+                ZipEntry zipEntry = new ZipEntry(filename);
                 zipOut.putNextEntry(zipEntry);
 
                 // Read the file into a byte array

@@ -30,14 +30,13 @@ See https://github.com/adobe-type-tools/cmap-resources
     <!-- Bootstrap -->
 <script src="js/thirdParty/popper.min.js"></script>
 <script src="js/thirdParty/bootstrap.min.js"></script>
-<link rel="stylesheet" href="css/bootstrap.min.css">
 
     <!-- This snippet is used in production (included from view-pdf.html) -->
-    <link rel="resource" type="application/l10n" href="pdfjs/locale/locale.properties">
-    <script src="pdfjs/pdf.js"></script>
+    <link rel="resource" type="application/l10n" th:href="@{pdfjs/locale/locale.properties}">
+    <script th:src="@{pdfjs/pdf.js}" type="module"></script>
 
-    <link rel="stylesheet" href="pdfjs/css/viewer.css">
-    <script src="pdfjs/js/viewer.js"></script>
+    <link rel="stylesheet" th:href="@{pdfjs/css/viewer.css}">
+    <script th:src="@{pdfjs/js/viewer.js}" type="module"></script>
 </head>
 
 <body tabindex="1">

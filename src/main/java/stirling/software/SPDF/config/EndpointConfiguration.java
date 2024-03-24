@@ -9,11 +9,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Service
+@DependsOn({"bookAndHtmlFormatsInstalled"})
 public class EndpointConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(EndpointConfiguration.class);
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
@@ -21,9 +24,14 @@ public class EndpointConfiguration {
 
     private final ApplicationProperties applicationProperties;
 
+    private boolean bookAndHtmlFormatsInstalled;
+
     @Autowired
-    public EndpointConfiguration(ApplicationProperties applicationProperties) {
+    public EndpointConfiguration(
+            ApplicationProperties applicationProperties,
+            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled) {
         this.applicationProperties = applicationProperties;
+        this.bookAndHtmlFormatsInstalled = bookAndHtmlFormatsInstalled;
         init();
         processEnvironmentConfigs();
     }
@@ -132,7 +140,6 @@ public class EndpointConfiguration {
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");
         addEndpointToGroup("CLI", "extract-image-scans");
-        addEndpointToGroup("CLI", "remove-blanks");
         addEndpointToGroup("CLI", "repair");
         addEndpointToGroup("CLI", "pdf-to-pdfa");
         addEndpointToGroup("CLI", "file-to-pdf");
@@ -145,6 +152,12 @@ public class EndpointConfiguration {
         addEndpointToGroup("CLI", "ocr-pdf");
         addEndpointToGroup("CLI", "html-to-pdf");
         addEndpointToGroup("CLI", "url-to-pdf");
+        addEndpointToGroup("CLI", "book-to-pdf");
+        addEndpointToGroup("CLI", "pdf-to-book");
+
+        // Calibre
+        addEndpointToGroup("Calibre", "book-to-pdf");
+        addEndpointToGroup("Calibre", "pdf-to-book");
 
         // python
         addEndpointToGroup("Python", "extract-image-scans");
@@ -204,6 +217,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "split-by-size-or-count");
         addEndpointToGroup("Java", "overlay-pdf");
         addEndpointToGroup("Java", "split-pdf-by-sections");
+        addEndpointToGroup("Java", "remove-blanks");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
@@ -215,7 +229,9 @@ public class EndpointConfiguration {
     private void processEnvironmentConfigs() {
         List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
         List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
-
+        if (!bookAndHtmlFormatsInstalled) {
+            groupsToRemove.add("Calibre");
+        }
         if (endpointsToRemove != null) {
             for (String endpoint : endpointsToRemove) {
                 disableEndpoint(endpoint.trim());

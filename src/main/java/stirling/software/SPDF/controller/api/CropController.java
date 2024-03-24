@@ -1,13 +1,14 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.slf4j.Logger;
@@ -37,9 +38,7 @@ public class CropController {
             description =
                     "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm form) throws IOException {
-
-        PDDocument sourceDocument =
-                PDDocument.load(new ByteArrayInputStream(form.getFileInput().getBytes()));
+        PDDocument sourceDocument = Loader.loadPDF(form.getFileInput().getBytes());
 
         PDDocument newDocument = new PDDocument();
 
@@ -53,7 +52,8 @@ public class CropController {
             // Create a new page with the size of the source page
             PDPage newPage = new PDPage(sourcePage.getMediaBox());
             newDocument.addPage(newPage);
-            PDPageContentStream contentStream = new PDPageContentStream(newDocument, newPage);
+            PDPageContentStream contentStream =
+                    new PDPageContentStream(newDocument, newPage, AppendMode.OVERWRITE, true, true);
 
             // Import the source page as a form XObject
             PDFormXObject formXObject = layerUtility.importPageAsForm(sourceDocument, i);

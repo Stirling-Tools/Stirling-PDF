@@ -16,7 +16,7 @@ public class PropSync {
         Map<String, String> enProps = linesToProps(enLines);
 
         for (File file : files) {
-            if (!file.getName().equals("messages_en_GB.properties")) {
+            if (!"messages_en_GB.properties".equals(file.getName())) {
                 System.out.println("Processing file: " + file.getName());
                 List<String> lines;
                 try {

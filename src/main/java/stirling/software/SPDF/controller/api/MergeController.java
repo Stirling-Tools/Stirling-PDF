@@ -1,16 +1,17 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.pdfbox.io.MemoryUsageSetting;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -27,6 +28,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
+import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -36,7 +38,7 @@ public class MergeController {
 
     private static final Logger logger = LoggerFactory.getLogger(MergeController.class);
 
-    private PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
+    public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument mergedDoc = new PDDocument();
         for (PDDocument doc : documents) {
             for (PDPage page : doc.getPages()) {
@@ -84,8 +86,8 @@ public class MergeController {
                 };
             case "byPDFTitle":
                 return (file1, file2) -> {
-                    try (PDDocument doc1 = PDDocument.load(file1.getInputStream());
-                            PDDocument doc2 = PDDocument.load(file2.getInputStream())) {
+                    try (PDDocument doc1 = Loader.loadPDF(file1.getBytes());
+                            PDDocument doc2 = Loader.loadPDF(file2.getBytes())) {
                         String title1 = doc1.getDocumentInformation().getTitle();
                         String title2 = doc2.getDocumentInformation().getTitle();
                         return title1.compareTo(title2);
@@ -106,6 +108,7 @@ public class MergeController {
                     "This endpoint merges multiple PDF files into a single PDF file. The merged file will contain all pages from the input files in the order they were provided. Input:PDF Output:PDF Type:MISO")
     public ResponseEntity<byte[]> mergePdfs(@ModelAttribute MergePdfsRequest form)
             throws IOException {
+        List<File> filesToDelete = new ArrayList<File>();
         try {
             MultipartFile[] files = form.getFileInput();
             Arrays.sort(files, getSortComparator(form.getSortType()));
@@ -113,20 +116,27 @@ public class MergeController {
             PDFMergerUtility mergedDoc = new PDFMergerUtility();
             ByteArrayOutputStream docOutputstream = new ByteArrayOutputStream();
 
-            for (MultipartFile file : files) {
-                mergedDoc.addSource(new ByteArrayInputStream(file.getBytes()));
+            for (MultipartFile multipartFile : files) {
+                File tempFile = GeneralUtils.convertMultipartFileToFile(multipartFile);
+                filesToDelete.add(tempFile);
+                mergedDoc.addSource(tempFile);
             }
 
             mergedDoc.setDestinationFileName(
                     files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_merged.pdf");
             mergedDoc.setDestinationStream(docOutputstream);
-            mergedDoc.mergeDocuments(MemoryUsageSetting.setupMainMemoryOnly());
+
+            mergedDoc.mergeDocuments(null);
 
             return WebResponseUtils.bytesToWebResponse(
                     docOutputstream.toByteArray(), mergedDoc.getDestinationFileName());
         } catch (Exception ex) {
             logger.error("Error in merge pdf process", ex);
             throw ex;
+        } finally {
+            for (File file : filesToDelete) {
+                file.delete();
+            }
         }
     }
 }

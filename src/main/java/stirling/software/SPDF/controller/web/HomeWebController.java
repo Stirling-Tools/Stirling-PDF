@@ -1,15 +1,27 @@
 package stirling.software.SPDF.controller.web;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.swagger.v3.oas.annotations.Hidden;
 
 import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.Dependency;
 
 @Controller
 public class HomeWebController {
@@ -19,6 +31,24 @@ public class HomeWebController {
     public String gameForm(Model model) {
         model.addAttribute("currentPage", "about");
         return "about";
+    }
+
+    @GetMapping("/licenses")
+    @Hidden
+    public String licensesForm(Model model) {
+        model.addAttribute("currentPage", "licenses");
+        Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
+        try {
+            InputStream is = resource.getInputStream();
+            String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, List<Dependency>> data =
+                    mapper.readValue(json, new TypeReference<Map<String, List<Dependency>>>() {});
+            model.addAttribute("dependencies", data.get("dependencies"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "licenses";
     }
 
     @GetMapping("/")

@@ -5,10 +5,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,6 +35,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.github.pixee.security.ZipSecurity;
 
 import jakarta.servlet.ServletContext;
 import stirling.software.SPDF.SPdfApplication;
@@ -58,7 +64,7 @@ public class PipelineProcessor {
 
     private String getBaseUrl() {
         String contextPath = servletContext.getContextPath();
-        String port = SPdfApplication.getPort();
+        String port = SPdfApplication.getStaticPort();
 
         return "http://localhost:" + port + contextPath + "/";
     }
@@ -80,15 +86,11 @@ public class PipelineProcessor {
                     operation,
                     isMultiInputOperation);
             Map<String, Object> parameters = pipelineOperation.getParameters();
-            String inputFileExtension = "";
-
-            // TODO
-            // if (operationNode.has("inputFileType")) {
-            //	inputFileExtension = operationNode.get("inputFileType").asText();
-            // } else {
-            inputFileExtension = ".pdf";
-            // }
-            final String finalInputFileExtension = inputFileExtension;
+            List<String> inputFileTypes = apiDocService.getExtensionTypes(false, operation);
+            if (inputFileTypes == null) {
+                inputFileTypes = new ArrayList<String>(Arrays.asList("ALL"));
+            }
+            // List outputFileTypes = apiDocService.getExtensionTypes(true, operation);
 
             String url = getBaseUrl() + operation;
 
@@ -96,55 +98,63 @@ public class PipelineProcessor {
             if (!isMultiInputOperation) {
                 for (Resource file : outputFiles) {
                     boolean hasInputFileType = false;
-                    if (file.getFilename().endsWith(inputFileExtension)) {
-                        hasInputFileType = true;
-                        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-                        body.add("fileInput", file);
+                    for (String extension : inputFileTypes) {
+                        if ("ALL".equals(extension) || file.getFilename().endsWith(extension)) {
+                            hasInputFileType = true;
+                            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+                            body.add("fileInput", file);
 
-                        for (Entry<String, Object> entry : parameters.entrySet()) {
-                            body.add(entry.getKey(), entry.getValue());
+                            for (Entry<String, Object> entry : parameters.entrySet()) {
+                                body.add(entry.getKey(), entry.getValue());
+                            }
+
+                            ResponseEntity<byte[]> response = sendWebRequest(url, body);
+
+                            // If the operation is filter and the response body is null or empty,
+                            // skip
+                            // this
+                            // file
+                            if (operation.startsWith("filter-")
+                                    && (response.getBody() == null
+                                            || response.getBody().length == 0)) {
+                                logger.info("Skipping file due to failing {}", operation);
+                                continue;
+                            }
+
+                            if (!response.getStatusCode().equals(HttpStatus.OK)) {
+                                logPrintStream.println("Error: " + response.getBody());
+                                hasErrors = true;
+                                continue;
+                            }
+                            processOutputFiles(operation, response, newOutputFiles);
                         }
-
-                        ResponseEntity<byte[]> response = sendWebRequest(url, body);
-
-                        // If the operation is filter and the response body is null or empty, skip
-                        // this
-                        // file
-                        if (operation.startsWith("filter-")
-                                && (response.getBody() == null || response.getBody().length == 0)) {
-                            logger.info("Skipping file due to failing {}", operation);
-                            continue;
-                        }
-
-                        if (!response.getStatusCode().equals(HttpStatus.OK)) {
-                            logPrintStream.println("Error: " + response.getBody());
-                            hasErrors = true;
-                            continue;
-                        }
-                        processOutputFiles(operation, file.getFilename(), response, newOutputFiles);
                     }
 
                     if (!hasInputFileType) {
                         logPrintStream.println(
                                 "No files with extension "
-                                        + inputFileExtension
+                                        + String.join(", ", inputFileTypes)
                                         + " found for operation "
                                         + operation);
                         hasErrors = true;
                     }
-
-                    outputFiles = newOutputFiles;
                 }
 
             } else {
                 // Filter and collect all files that match the inputFileExtension
-                List<Resource> matchingFiles =
-                        outputFiles.stream()
-                                .filter(
-                                        file ->
-                                                file.getFilename()
-                                                        .endsWith(finalInputFileExtension))
-                                .collect(Collectors.toList());
+                List<Resource> matchingFiles;
+                if (inputFileTypes.contains("ALL")) {
+                    matchingFiles = new ArrayList<>(outputFiles);
+                } else {
+                    final List<String> finalinputFileTypes = inputFileTypes;
+                    matchingFiles =
+                            outputFiles.stream()
+                                    .filter(
+                                            file ->
+                                                    finalinputFileTypes.stream()
+                                                            .anyMatch(file.getFilename()::endsWith))
+                                    .collect(Collectors.toList());
+                }
 
                 // Check if there are matching files
                 if (!matchingFiles.isEmpty()) {
@@ -164,11 +174,7 @@ public class PipelineProcessor {
 
                     // Handle the response
                     if (response.getStatusCode().equals(HttpStatus.OK)) {
-                        processOutputFiles(
-                                operation,
-                                matchingFiles.get(0).getFilename(),
-                                response,
-                                newOutputFiles);
+                        processOutputFiles(operation, response, newOutputFiles);
                     } else {
                         // Log error if the response status is not OK
                         logPrintStream.println(
@@ -178,17 +184,19 @@ public class PipelineProcessor {
                 } else {
                     logPrintStream.println(
                             "No files with extension "
-                                    + inputFileExtension
+                                    + String.join(", ", inputFileTypes)
                                     + " found for multi-input operation "
                                     + operation);
                     hasErrors = true;
                 }
             }
             logPrintStream.close();
+            outputFiles = newOutputFiles;
         }
         if (hasErrors) {
             logger.error("Errors occurred during processing. Log: {}", logStream.toString());
         }
+
         return outputFiles;
     }
 
@@ -196,6 +204,7 @@ public class PipelineProcessor {
         RestTemplate restTemplate = new RestTemplate();
 
         // Set up headers, including API key
+
         HttpHeaders headers = new HttpHeaders();
         String apiKey = getApiKeyForUser();
         headers.add("X-API-Key", apiKey);
@@ -208,22 +217,41 @@ public class PipelineProcessor {
         return restTemplate.exchange(url, HttpMethod.POST, entity, byte[].class);
     }
 
+    public static String removeTrailingNaming(String filename) {
+        // Splitting filename into name and extension
+        int dotIndex = filename.lastIndexOf(".");
+        if (dotIndex == -1) {
+            // No extension found
+            return filename;
+        }
+        String name = filename.substring(0, dotIndex);
+        String extension = filename.substring(dotIndex);
+
+        // Finding the last underscore
+        int underscoreIndex = name.lastIndexOf("_");
+        if (underscoreIndex == -1) {
+            // No underscore found
+            return filename;
+        }
+
+        // Removing the last part and reattaching the extension
+        return name.substring(0, underscoreIndex) + extension;
+    }
+
     private List<Resource> processOutputFiles(
-            String operation,
-            String fileName,
-            ResponseEntity<byte[]> response,
-            List<Resource> newOutputFiles)
+            String operation, ResponseEntity<byte[]> response, List<Resource> newOutputFiles)
             throws IOException {
         // Define filename
         String newFilename;
-        if ("auto-rename".equals(operation)) {
+        if (operation.contains("auto-rename")) {
             // If the operation is "auto-rename", generate a new filename.
             // This is a simple example of generating a filename using current timestamp.
             // Modify as per your needs.
-            newFilename = "file_" + System.currentTimeMillis();
+
+            newFilename = extractFilename(response);
         } else {
             // Otherwise, keep the original filename.
-            newFilename = fileName;
+            newFilename = removeTrailingNaming(extractFilename(response));
         }
 
         // Check if the response body is a zip file
@@ -242,6 +270,28 @@ public class PipelineProcessor {
         }
 
         return newOutputFiles;
+    }
+
+    public String extractFilename(ResponseEntity<byte[]> response) {
+        String filename = "default-filename.ext"; // Default filename if not found
+
+        HttpHeaders headers = response.getHeaders();
+        String contentDisposition = headers.getFirst(HttpHeaders.CONTENT_DISPOSITION);
+
+        if (contentDisposition != null && !contentDisposition.isEmpty()) {
+            String[] parts = contentDisposition.split(";");
+            for (String part : parts) {
+                if (part.trim().startsWith("filename")) {
+                    // Extracts filename and removes quotes if present
+                    filename = part.split("=")[1].trim().replace("\"", "");
+                    filename = URLDecoder.decode(filename, StandardCharsets.UTF_8);
+
+                    break;
+                }
+            }
+        }
+
+        return filename;
     }
 
     List<Resource> generateInputFiles(File[] files) throws Exception {
@@ -286,7 +336,7 @@ public class PipelineProcessor {
                     new ByteArrayResource(file.getBytes()) {
                         @Override
                         public String getFilename() {
-                            return file.getOriginalFilename();
+                            return Filenames.toSimpleFileName(file.getOriginalFilename());
                         }
                     };
             outputFiles.add(fileResource);
@@ -309,7 +359,7 @@ public class PipelineProcessor {
         List<Resource> unzippedFiles = new ArrayList<>();
 
         try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
-                ZipInputStream zis = new ZipInputStream(bais)) {
+                ZipInputStream zis = ZipSecurity.createHardenedInputStream(bais)) {
 
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {

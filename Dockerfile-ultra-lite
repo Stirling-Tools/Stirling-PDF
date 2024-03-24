@@ -1,5 +1,5 @@
-# Build jbig2enc in a separate stage
-FROM bellsoft/liberica-openjdk-alpine:17
+# use alpine
+FROM alpine:3.19.1
 
 ARG VERSION_TAG
 
@@ -7,40 +7,45 @@ ARG VERSION_TAG
 ENV DOCKER_ENABLE_SECURITY=false \
     HOME=/home/stirlingpdfuser \
     VERSION_TAG=$VERSION_TAG \
-    JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS -XX:MaxRAMPercentage=75"
-#	PUID=1000 \
-#   PGID=1000 \
-#   UMASK=022 \
+    JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS -XX:MaxRAMPercentage=75" \
+	PUID=1000 \
+    PGID=1000 \
+    UMASK=022
 
-# Create user and group using Alpine's addgroup and adduser
-#RUN addgroup -g $PGID stirlingpdfgroup && \
-#    adduser -u $PUID -G stirlingpdfgroup -s /bin/sh -D stirlingpdfuser && \
-#    mkdir -p $HOME && chown stirlingpdfuser:stirlingpdfgroup $HOME
-
-# Set up necessary directories and permissions
-#RUN mkdir -p /scripts /configs /customFiles && \
-#    chown -R stirlingpdfuser:stirlingpdfgroup /scripts /configs /customFiles /logs /pipeline /pipeline/defaultWebUIConfigs  /pipeline/watchedFolders /pipeline/finishedFolders
- 
-RUN mkdir -p /scripts /usr/share/fonts/opentype/noto /configs /customFiles
-COPY ./scripts/download-security-jar.sh /scripts/download-security-jar.sh
-COPY ./scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
-COPY ./pipeline/ /pipeline/
+# Copy necessary files
+COPY scripts/download-security-jar.sh /scripts/download-security-jar.sh
+COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
+COPY pipeline /pipeline
 COPY build/libs/*.jar app.jar
 
-# Set font cache and permissions
-#RUN chown stirlingpdfuser:stirlingpdfgroup /app.jar
 
-RUN chmod +x /scripts/init-without-ocr.sh && \
-chmod +x /scripts/download-security-jar.sh && \
-apk add --no-cache curl
+# Set up necessary directories and permissions
 
-# Expose the application port
-EXPOSE 8080
+RUN mkdir /configs /logs /customFiles && \
+    chmod +x /scripts/*.sh && \
+    apk add --no-cache \
+        ca-certificates \
+        tzdata \
+        tini \
+        bash \
+        curl \
+        su-exec \
+        shadow \
+        openjdk17-jre && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    # User permissions
+    addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts  /configs /customFiles /pipeline && \
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar    
 
 # Set environment variables
 ENV ENDPOINTS_GROUPS_TO_REMOVE=CLI
 
-ENTRYPOINT ["/scripts/init-without-ocr.sh"]
+EXPOSE 8080
+
+ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
 
 # Run the application
 CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/app.jar"]
