@@ -129,7 +129,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "sign");
         addEndpointToGroup("Other", "flatten");
         addEndpointToGroup("Other", "repair");
-        addEndpointToGroup("Other", "remove-blanks");
+        addEndpointToGroup("Other", REMOVE_BLANKS);
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "compare");
         addEndpointToGroup("Other", "add-page-numbers");
@@ -161,13 +161,13 @@ public class EndpointConfiguration {
 
         // python
         addEndpointToGroup("Python", "extract-image-scans");
-        addEndpointToGroup("Python", "remove-blanks");
+        addEndpointToGroup("Python", REMOVE_BLANKS);
         addEndpointToGroup("Python", "html-to-pdf");
         addEndpointToGroup("Python", "url-to-pdf");
 
         // openCV
         addEndpointToGroup("OpenCV", "extract-image-scans");
-        addEndpointToGroup("OpenCV", "remove-blanks");
+        addEndpointToGroup("OpenCV", REMOVE_BLANKS);
 
         // LibreOffice
         addEndpointToGroup("LibreOffice", "repair");
@@ -217,7 +217,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "split-by-size-or-count");
         addEndpointToGroup("Java", "overlay-pdf");
         addEndpointToGroup("Java", "split-pdf-by-sections");
-        addEndpointToGroup("Java", "remove-blanks");
+        addEndpointToGroup("Java", REMOVE_BLANKS);
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
@@ -244,4 +244,6 @@ public class EndpointConfiguration {
             }
         }
     }
+    
+    private static final String REMOVE_BLANKS = "remove-blanks";
 }

@@ -97,7 +97,7 @@ public class UserController {
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
 
-        return new RedirectView("/login?messageType=credsUpdated");
+        return new RedirectView(LOGIN_MESSAGETYPE_CREDSUPDATED);
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
@@ -130,7 +130,7 @@ public class UserController {
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
 
-        return new RedirectView("/login?messageType=credsUpdated");
+        return new RedirectView(LOGIN_MESSAGETYPE_CREDSUPDATED);
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
@@ -163,7 +163,7 @@ public class UserController {
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
 
-        return new RedirectView("/login?messageType=credsUpdated");
+        return new RedirectView(LOGIN_MESSAGETYPE_CREDSUPDATED);
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
@@ -291,4 +291,6 @@ public class UserController {
         }
         return ResponseEntity.ok(apiKey);
     }
+    
+    private static final String LOGIN_MESSAGETYPE_CREDSUPDATED = "/login?messageType=credsUpdated";
 }
