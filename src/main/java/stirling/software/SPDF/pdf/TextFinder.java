@@ -19,6 +19,16 @@ public class TextFinder extends PDFTextStripper {
     private final boolean wholeWordSearch;
     private final List<PDFText> textOccurrences = new ArrayList<>();
 
+    private class MatchInfo {
+        int startIndex;
+        int matchLength;
+
+        MatchInfo(int startIndex, int matchLength) {
+            this.startIndex = startIndex;
+            this.matchLength = matchLength;
+        }
+    }
+
     public TextFinder(String searchText, boolean useRegex, boolean wholeWordSearch)
             throws IOException {
         this.searchText = searchText.toLowerCase();
@@ -27,36 +37,37 @@ public class TextFinder extends PDFTextStripper {
         setSortByPosition(true);
     }
 
-    private List<Integer> findOccurrencesInText(String searchText, String content) {
-        List<Integer> indexes = new ArrayList<>();
+    private List<MatchInfo> findOccurrencesInText(String searchText, String content) {
+        List<MatchInfo> matches = new ArrayList<>();
+
         Pattern pattern;
 
         if (useRegex) {
             // Use regex-based search
             pattern =
                     wholeWordSearch
-                            ? Pattern.compile("(\\b|_|\\.)" + searchText + "(\\b|_|\\.)")
+                            ? Pattern.compile("\\b" + searchText + "\\b")
                             : Pattern.compile(searchText);
         } else {
             // Use normal text search
             pattern =
                     wholeWordSearch
-                            ? Pattern.compile(
-                                    "(\\b|_|\\.)" + Pattern.quote(searchText) + "(\\b|_|\\.)")
+                            ? Pattern.compile("\\b" + Pattern.quote(searchText) + "\\b")
                             : Pattern.compile(Pattern.quote(searchText));
         }
 
         Matcher matcher = pattern.matcher(content);
         while (matcher.find()) {
-            indexes.add(matcher.start());
+            matches.add(new MatchInfo(matcher.start(), matcher.end() - matcher.start()));
         }
-        return indexes;
+        return matches;
     }
 
     @Override
     protected void writeString(String text, List<TextPosition> textPositions) {
-        for (Integer index : findOccurrencesInText(searchText, text.toLowerCase())) {
-            if (index + searchText.length() <= textPositions.size()) {
+        for (MatchInfo match : findOccurrencesInText(searchText, text.toLowerCase())) {
+            int index = match.startIndex;
+            if (index + match.matchLength <= textPositions.size()) {
                 // Initial values based on the first character
                 TextPosition first = textPositions.get(index);
                 float minX = first.getX();
@@ -65,7 +76,7 @@ public class TextFinder extends PDFTextStripper {
                 float maxY = first.getY() + first.getHeight();
 
                 // Loop over the rest of the characters and adjust bounding box values
-                for (int i = index; i < index + searchText.length(); i++) {
+                for (int i = index; i < index + match.matchLength; i++) {
                     TextPosition position = textPositions.get(i);
                     minX = Math.min(minX, position.getX());
                     minY = Math.min(minY, position.getY());
