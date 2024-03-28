@@ -156,7 +156,7 @@ public class ExtractImageScansController {
             // Create zip file if multiple images
             if (processedImageBytes.size() > 1) {
                 String outputZipFilename =
-                        fileName.replaceFirst("[.][^.]+$", "") + "_processed.zip";
+                        fileName.replaceFirst(REPLACEFIRST, "") + "_processed.zip";
                 tempZipFile = Files.createTempFile("output_", ".zip");
 
                 try (ZipOutputStream zipOut =
@@ -165,7 +165,7 @@ public class ExtractImageScansController {
                     for (int i = 0; i < processedImageBytes.size(); i++) {
                         ZipEntry entry =
                                 new ZipEntry(
-                                        fileName.replaceFirst("[.][^.]+$", "")
+                                        fileName.replaceFirst(REPLACEFIRST, "")
                                                 + "_"
                                                 + (i + 1)
                                                 + ".png");
@@ -187,7 +187,7 @@ public class ExtractImageScansController {
                 byte[] imageBytes = processedImageBytes.get(0);
                 return WebResponseUtils.bytesToWebResponse(
                         imageBytes,
-                        fileName.replaceFirst("[.][^.]+$", "") + ".png",
+                        fileName.replaceFirst(REPLACEFIRST, "") + ".png",
                         MediaType.IMAGE_PNG);
             }
         } finally {
@@ -219,4 +219,6 @@ public class ExtractImageScansController {
                     });
         }
     }
+    
+    private static final String REPLACEFIRST = "[.][^.]+$";
 }
