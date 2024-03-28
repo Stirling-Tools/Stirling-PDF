@@ -42,7 +42,7 @@ For Debian-based systems, you can use the following command:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y git  automake  autoconf  libtool  libleptonica-dev  pkg-config zlib1g-dev make g++ java-17-openjdk python3 python3-pip
+sudo apt-get install -y git  automake  autoconf  libtool  libleptonica-dev  pkg-config zlib1g-dev make g++ openjdk-17-jdk python3 python3-pip
 ```
 
 For Fedora-based systems use this command:
