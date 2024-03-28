@@ -62,8 +62,8 @@
                 <div class="mb-3">
                   <label for="stampType" class="form-label" th:text="#{AddStampRequest.stampType}">Stamp Type</label>
                   <select class="form-select" id="stampType" name="stampType" onchange="toggleFileOption()">
-                    <option value="text">Text</option>
-                    <option value="image">Image</option>
+                    <option value="text" th:text="#{watermark.type.1}">Text</option>
+                    <option value="image" th:text="#{watermark.type.2}">Image</option>
                   </select>
                 </div>
 
