@@ -88,7 +88,7 @@
 
               <!-- download button -->
               <div class="margin-auto-parent">
-                <button id="download-pdf" class="btn btn-primary mb-2 show-on-file-selected margin-center">Download PDF</button>
+                <button id="download-pdf" class="btn btn-primary mb-2 show-on-file-selected margin-center" th:text="#{downloadPdf}"></button>
               </div>
               <script>
                 document.getElementById("download-pdf").addEventListener('click', async() => {
