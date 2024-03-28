@@ -169,26 +169,30 @@ public class ProcessExecutor {
             errorReaderThread.join();
             outputReaderThread.join();
 
-            if (!liveUpdates) {
-                if (outputLines.size() > 0) {
-                    String outputMessage = String.join("\n", outputLines);
-                    messages += outputMessage;
+            if (outputLines.size() > 0) {
+                String outputMessage = String.join("\n", outputLines);
+                messages += outputMessage;
+                if (!liveUpdates) {
                     logger.info("Command output:\n" + outputMessage);
                 }
+            }
 
-                if (errorLines.size() > 0) {
-                    String errorMessage = String.join("\n", errorLines);
-                    messages += errorMessage;
+            if (errorLines.size() > 0) {
+                String errorMessage = String.join("\n", errorLines);
+                messages += errorMessage;
+                if (!liveUpdates) {
                     logger.warn("Command error output:\n" + errorMessage);
-                    if (exitCode != 0) {
-                        throw new IOException(
-                                "Command process failed with exit code "
-                                        + exitCode
-                                        + ". Error message: "
-                                        + errorMessage);
-                    }
                 }
-            } else if (exitCode != 0) {
+                if (exitCode != 0) {
+                    throw new IOException(
+                            "Command process failed with exit code "
+                                    + exitCode
+                                    + ". Error message: "
+                                    + errorMessage);
+                }
+            }
+
+            if (exitCode != 0) {
                 throw new IOException(
                         "Command process failed with exit code "
                                 + exitCode
