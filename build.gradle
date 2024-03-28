@@ -12,7 +12,7 @@ plugins {
 import com.github.jk1.license.render.*
 
 group = 'stirling.software'
-version = '0.22.4'
+version = '0.22.5'
 sourceCompatibility = '17'
 
 repositories {
@@ -128,7 +128,7 @@ dependencies {
     // implementation 'com.twelvemonkeys.imageio:imageio-xwd:3.10.1'
 
     implementation 'commons-io:commons-io:2.15.1'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
     //general PDF
 
