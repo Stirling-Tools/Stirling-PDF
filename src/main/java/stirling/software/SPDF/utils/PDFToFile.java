@@ -25,6 +25,71 @@ import io.github.pixee.security.Filenames;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 
 public class PDFToFile {
+
+    public ResponseEntity<byte[]> processPdfToHtml(MultipartFile inputFile)
+            throws IOException, InterruptedException {
+        if (!"application/pdf".equals(inputFile.getContentType())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        // Get the original PDF file name without the extension
+        String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
+        String pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
+
+        Path tempInputFile = null;
+        Path tempOutputDir = null;
+        byte[] fileBytes;
+        String fileName = "temp.file";
+
+        try {
+            // Save the uploaded file to a temporary location
+            tempInputFile = Files.createTempFile("input_", ".pdf");
+            Files.copy(
+                    inputFile.getInputStream(), tempInputFile, StandardCopyOption.REPLACE_EXISTING);
+
+            // Prepare the output directory
+            tempOutputDir = Files.createTempDirectory("output_");
+
+            // Run the pdftohtml command with complex output
+            List<String> command =
+                    new ArrayList<>(
+                            Arrays.asList(
+                                    "pdftohtml", "-c", tempInputFile.toString(), pdfBaseName));
+
+            ProcessExecutorResult returnCode =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
+                            .runCommandWithOutputHandling(command, tempOutputDir.toFile());
+
+            // Get output files
+            List<File> outputFiles = Arrays.asList(tempOutputDir.toFile().listFiles());
+
+            // Return output files in a ZIP archive
+            fileName = pdfBaseName + "ToHtml.zip";
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream);
+
+            for (File outputFile : outputFiles) {
+                ZipEntry entry = new ZipEntry(outputFile.getName());
+                zipOutputStream.putNextEntry(entry);
+                FileInputStream fis = new FileInputStream(outputFile);
+                IOUtils.copy(fis, zipOutputStream);
+                fis.close();
+                zipOutputStream.closeEntry();
+            }
+
+            zipOutputStream.close();
+            fileBytes = byteArrayOutputStream.toByteArray();
+
+        } finally {
+            // Clean up the temporary files
+            if (tempInputFile != null) Files.delete(tempInputFile);
+            if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
+        }
+
+        return WebResponseUtils.bytesToWebResponse(
+                fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
+    }
+
     public ResponseEntity<byte[]> processPdfToOfficeFormat(
             MultipartFile inputFile, String outputFormat, String libreOfficeFilter)
             throws IOException, InterruptedException {
@@ -39,17 +104,7 @@ public class PDFToFile {
 
         // Validate output format
         List<String> allowedFormats =
-                Arrays.asList(
-                        "doc",
-                        "docx",
-                        "odt",
-                        "ppt",
-                        "pptx",
-                        "odp",
-                        "rtf",
-                        "html",
-                        "xml",
-                        "txt:Text");
+                Arrays.asList("doc", "docx", "odt", "ppt", "pptx", "odp", "rtf", "xml", "txt:Text");
         if (!allowedFormats.contains(outputFormat)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }

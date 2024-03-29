@@ -291,6 +291,6 @@ public class UserController {
         }
         return ResponseEntity.ok(apiKey);
     }
-    
+
     private static final String LOGIN_MESSAGETYPE_CREDSUPDATED = "/login?messageType=credsUpdated";
 }
