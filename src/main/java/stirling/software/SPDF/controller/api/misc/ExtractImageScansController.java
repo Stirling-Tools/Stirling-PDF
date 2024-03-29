@@ -219,6 +219,6 @@ public class ExtractImageScansController {
                     });
         }
     }
-    
+
     private static final String REPLACEFIRST = "[.][^.]+$";
 }

@@ -244,6 +244,6 @@ public class EndpointConfiguration {
             }
         }
     }
-    
+
     private static final String REMOVE_BLANKS = "remove-blanks";
 }

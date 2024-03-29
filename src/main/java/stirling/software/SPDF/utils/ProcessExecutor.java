@@ -24,6 +24,7 @@ public class ProcessExecutor {
 
     public enum Processes {
         LIBRE_OFFICE,
+        PDFTOHTML,
         OCR_MY_PDF,
         PYTHON_OPENCV,
         GHOSTSCRIPT,
@@ -45,6 +46,7 @@ public class ProcessExecutor {
                     int semaphoreLimit =
                             switch (key) {
                                 case LIBRE_OFFICE -> 1;
+                                case PDFTOHTML -> 1;
                                 case OCR_MY_PDF -> 2;
                                 case PYTHON_OPENCV -> 8;
                                 case GHOSTSCRIPT -> 16;
@@ -56,6 +58,7 @@ public class ProcessExecutor {
                     long timeoutMinutes =
                             switch (key) {
                                 case LIBRE_OFFICE -> 30;
+                                case PDFTOHTML -> 5;
                                 case OCR_MY_PDF -> 30;
                                 case PYTHON_OPENCV -> 30;
                                 case GHOSTSCRIPT -> 5;

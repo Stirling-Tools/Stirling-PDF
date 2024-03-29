@@ -29,18 +29,6 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToOffice {
 
-    @PostMapping(consumes = "multipart/form-data", value = "/pdf/html")
-    @Operation(
-            summary = "Convert PDF to HTML",
-            description =
-                    "This endpoint converts a PDF file to HTML format. Input:PDF Output:HTML Type:SISO")
-    public ResponseEntity<byte[]> processPdfToHTML(@ModelAttribute PDFFile request)
-            throws Exception {
-        MultipartFile inputFile = request.getFileInput();
-        PDFToFile pdfToFile = new PDFToFile();
-        return pdfToFile.processPdfToOfficeFormat(inputFile, "html", "writer_pdf_import");
-    }
-
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/presentation")
     @Operation(
             summary = "Convert PDF to Presentation format",
