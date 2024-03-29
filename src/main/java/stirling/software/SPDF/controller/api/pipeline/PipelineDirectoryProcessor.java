@@ -36,7 +36,6 @@ public class PipelineDirectoryProcessor {
     private static final Logger logger = LoggerFactory.getLogger(PipelineDirectoryProcessor.class);
     @Autowired private ObjectMapper objectMapper;
     @Autowired private ApiDocService apiDocService;
-    @Autowired private ApplicationProperties applicationProperties;
 
     final String watchedFoldersDir = "./pipeline/watchedFolders/";
     final String finishedFoldersDir = "./pipeline/finishedFolders/";
@@ -45,9 +44,6 @@ public class PipelineDirectoryProcessor {
 
     @Scheduled(fixedRate = 60000)
     public void scanFolders() {
-        if (!Boolean.TRUE.equals(applicationProperties.getSystem().getEnableAlphaFunctionality())) {
-            return;
-        }
         Path watchedFolderPath = Paths.get(watchedFoldersDir);
         if (!Files.exists(watchedFolderPath)) {
             try {
