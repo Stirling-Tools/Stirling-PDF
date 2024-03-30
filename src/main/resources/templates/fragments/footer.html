@@ -1,19 +1,55 @@
-<footer th:fragment="footer" id="footer" class="text-center py-3">
-        <div class="footer-center">
-          <a href="https://github.com/Stirling-Tools/Stirling-PDF" target="_blank" class="mx-1" title="Visit Github Repository">
-            <img src="images/github.svg" alt="github">
-          </a>
-          <a href="https://hub.docker.com/r/frooodle/s-pdf" target="_blank" class="mx-1" title="See Docker Hub">
-            <img src="images/docker.svg" alt="docker">
-          </a>
-          <a href="https://discord.gg/Cn8pWhQRxZ" target="_blank" class="mx-1" title="Join Discord Channel">
-            <img src="images/discord.svg" alt="discord">
-          </a>
-          <a href="https://github.com/sponsors/Frooodle" target="_blank" class="mx-1" title="Donate">
-            <img src="images/suit-heart-fill.svg" alt="suit-heart-fill">
-          </a>
-        </div>
-        <div style="color: grey;" th:if="${@appName} != 'Stirling PDF'" class="footer-powered-by" th:text="#{poweredBy} + ' Stirling PDF'"></div>
-        <a href="licenses" id="licenses" target="_blank" class="mx-1" title="" th:text="#{licenses.nav}">Licenses</a>
-      </footer>
-
+<footer th:fragment="footer" id="footer" class="align-items-center pt-4 mt-4">
+          <ul th:if="${currentPage != 'login' and currentPage != 'home'}" id="navbar-2" class="nav justify-content-center pb-2 mb-3 list-unstyled align-items-center border-top border-bottom">
+            <li class="nav-item">
+              <a class="px-2 nav-link text-body-secondary" id="dark-mode-toggle" href="#">
+                <img class="navbar-icon" id="dark-mode-icon" src="moon.svg" alt="icon">
+                <span class="icon-text" th:text="#{navbar.darkmode}">Dark Mode</span>
+              </a>
+            </li>
+            <li class="nav-item dropup">
+              <a class="nav-link text-body-secondary dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <img class="navbar-icon" id="language-icon" src="images/web.svg" alt="icon">
+                <span class="icon-text" th:text="#{navbar.languages}">Languages</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                <th:block th:insert="~{fragments/languages :: langs}"></th:block>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <!-- Settings Button -->
+              <a href="#" class="nav-link text-body-secondary px-2" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                <img class="navbar-icon" src="images/gear.svg" alt="icon" width="24" height="24">
+                <span class="icon-text" th:text="#{navbar.settings}">Settings</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="licenses" id="licenses" target="_blank" class="nav-link text-body-secondary px-2" th:title="#{navbar.licenses}">
+                <img class="navbar-icon" src="images/license.svg" alt="icon" width="24" height="24">
+                <span class="icon-text" th:text="#{navbar.licenses}">Licenses</span>
+              </a>
+            </li>
+          </ul>
+          <ul class="nav justify-content-center pb-2 mb-3 list-unstyled align-items-center">
+            <li class="ms-3 nav-item">
+              <a href="https://github.com/Stirling-Tools/Stirling-PDF" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none" target="_blank" title="Visit Github Repository">
+                <img src="images/github.svg" alt="github" width="24" height="24">
+              </a>
+            </li>
+            <li class="ms-3 nav-item">
+              <a href="https://hub.docker.com/r/frooodle/s-pdf" target="_blank" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none" title="See Docker Hub">
+                <img src="images/docker.svg" alt="docker" width="24" height="24">
+              </a>
+            </li>
+            <li class="ms-3 nav-item">
+              <a href="https://discord.gg/Cn8pWhQRxZ" target="_blank" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none" title="Join Discord Channel">
+                <img src="images/discord.svg" alt="discord" width="24" height="24">
+              </a>
+            </li>
+            <li class="ms-3 nav-item">
+              <a href="https://github.com/sponsors/Frooodle" target="_blank" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none" title="Donate">
+                <img src="images/suit-heart-fill.svg" alt="suit-heart-fill" width="24" height="24">
+              </a>
+            </li>
+          </ul>
+          <p class="footer-powered-by text-center" style="color: grey;" th:if="${@appName} != 'Stirling PDF'" th:text="#{poweredBy} + ' Stirling PDF'"></p>
+        </footer>

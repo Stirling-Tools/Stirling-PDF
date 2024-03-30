@@ -5,9 +5,9 @@
             const noFavourites = /*[[#{noFavourites}]]*/ '';
           </script>
           <script th:src="@{js/githubVersion.js}"></script>
-          <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container ">
-              <a class="navbar-brand" href="#" th:href="@{/}" style="display: flex;">
+          <nav class="navbar navbar-expand-xxl navbar-light bg-light" id="navbar-1">
+            <div class="container">
+              <a class="navbar-brand" id="navbar-brand-1" href="#" th:href="@{/}" style="display: flex;">
                 <img class="main-icon" src="favicon.svg?v=2" alt="icon">
                 <span class="icon-text" th:text="${@navBarText}"></span>
               </a>
@@ -18,24 +18,24 @@
                 <ul class="navbar-nav me-auto flex-nowrap">
                   <li class="nav-item">
                     <a class="nav-link" href="#" th:href="@{multi-tool}" th:classappend="${currentPage}=='multi-tool' ? 'active' : ''" th:title="#{home.multiTool.desc}">
-                      <img class="icon" src="images/tools.svg" alt="icon">
+                      <img class="navbar-icon" src="images/tools.svg" alt="icon">
                       <span class="icon-text" th:text="#{home.multiTool.title}"></span>
                     </a>
                   </li>
                   <li class="nav-item nav-item-separator"></li>
                   <li class="nav-item">
                     <a class="nav-link" href="#" th:href="@{pipeline}" th:classappend="${currentPage}=='pipeline' ? 'active' : ''" th:title="#{home.pipeline.desc}">
-                      <img class="icon" src="images/pipeline.svg" alt="icon">
+                      <img class="navbar-icon" src="images/pipeline.svg" alt="icon">
                       <span class="icon-text" th:text="#{home.pipeline.title}"></span>
                     </a>
                   </li>
                   <li class="nav-item nav-item-separator"></li>
                   <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='crop' OR ${currentPage}=='adjust-contrast' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' OR ${currentPage}=='multi-page-layout' OR ${currentPage}=='scale-pages' OR ${currentPage}=='auto-split-pdf' OR ${currentPage}=='extract-page' OR ${currentPage}=='pdf-to-single-page' ? 'active' : ''">
                     <a class="nav-link dropdown-toggle" id="navbarDropdown-1" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <img class="icon" src="images/file-earmark-pdf.svg" alt="icon">
+                      <img class="navbar-icon" src="images/file-earmark-pdf.svg" alt="icon">
                       <span class="icon-text" th:text="#{navbar.pageOps}"></span>
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown-1">
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown-1">
                       <!-- Existing menu items -->
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('merge-pdfs', 'images/union.svg', 'home.merge.title', 'home.merge.desc', 'merge.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdfs', 'images/layout-split.svg', 'home.split.title', 'home.split.desc', 'split.tags')}"></div>
@@ -52,17 +52,17 @@
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('split-by-size-or-count', 'images/layout-split.svg', 'home.autoSizeSplitPDF.title', 'home.autoSizeSplitPDF.desc', 'autoSizeSplitPDF.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('overlay-pdf', 'images/overlay.svg', 'home.overlay-pdfs.title', 'home.overlay-pdfs.desc', 'overlay-pdfs.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdf-by-sections', 'images/layout-split.svg', 'home.split-by-sections.title', 'home.split-by-sections.desc', 'split-by-sections.tags')}"></div>
-                    </div>
+                    </ul>
                   </li>
 
                   <li class="nav-item nav-item-separator"></li>
 
                   <li class="nav-item dropdown" th:classappend="${currentPage}=='pdf-to-img' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='pdf-to-pdfa' OR ${currentPage}=='file-to-pdf' OR ${currentPage}=='xlsx-to-pdf' OR ${currentPage}=='pdf-to-word' OR ${currentPage}=='pdf-to-presentation' OR ${currentPage}=='pdf-to-text' OR ${currentPage}=='pdf-to-html' OR ${currentPage}=='pdf-to-xml' ? 'active' : ''">
                     <a class="nav-link dropdown-toggle" id="navbarDropdown-2" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <img class="icon" src="images/arrow-left-right.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;">
+                      <img class="navbar-icon" src="images/arrow-left-right.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;">
                       <span class="icon-text" th:text="#{navbar.convert}"></span>
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown-2">
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown-2">
                       <!-- Existing menu items -->
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('img-to-pdf', 'images/image.svg', 'home.imageToPdf.title', 'home.imageToPdf.desc', 'imageToPdf.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('file-to-pdf', 'images/file.svg', 'home.fileToPDF.title', 'home.fileToPDF.desc', 'fileToPDF.tags')}"></div>
@@ -70,7 +70,7 @@
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('url-to-pdf', 'images/url.svg', 'home.URLToPDF.title', 'home.URLToPDF.desc', 'URLToPDF.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('markdown-to-pdf', 'images/markdown.svg', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('book-to-pdf', 'images/book.svg', 'home.BookToPDF.title', 'home.BookToPDF.desc', 'BookToPDF.tags')}"></div>
-                      <hr class="dropdown-divider">
+                      <li><hr class="dropdown-divider"></li>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-img', 'images/image.svg', 'home.pdfToImage.title', 'home.pdfToImage.desc', 'pdfToImage.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-word', 'images/file-earmark-word.svg', 'home.PDFToWord.title', 'home.PDFToWord.desc', 'PDFToWord.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-presentation', 'images/file-earmark-ppt.svg', 'home.PDFToPresentation.title', 'home.PDFToPresentation.desc', 'PDFToPresentation.tags')}"></div>
@@ -80,16 +80,17 @@
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-pdfa', 'images/file-earmark-pdf.svg', 'home.pdfToPDFA.title', 'home.pdfToPDFA.desc', 'pdfToPDFA.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-csv', 'images/pdf-csv.svg', 'home.tableExtraxt.title', 'home.tableExtraxt.desc', 'pdfToPDFA.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-book', 'images/book.svg', 'home.PDFToBook.title', 'home.PDFToBook.desc', 'PDFToBook.tags')}"></div>
-                    </div>
+                    </ul>
                   </li>
 
                   <li class="nav-item nav-item-separator"></li>
 
                   <li class="nav-item dropdown" th:classappend="${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='add-watermark' OR ${currentPage}=='cert-sign' OR ${currentPage}=='sanitize-pdf' ? 'active' : ''">
                     <a class="nav-link dropdown-toggle" id="navbarDropdown-3" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <img class="icon" src="images/shield-check.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;"> <span class="icon-text" th:text="#{navbar.security}"></span>
+                      <img class="navbar-icon" src="images/shield-check.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;">
+                      <span class="icon-text" th:text="#{navbar.security}"></span>
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown-3">
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown-3">
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('add-password', 'images/lock.svg', 'home.addPassword.title', 'home.addPassword.desc', 'addPassword.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-password', 'images/unlock.svg', 'home.removePassword.title', 'home.removePassword.desc', 'removePassword.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('change-permissions', 'images/shield-lock.svg', 'home.permissions.title', 'home.permissions.desc', 'permissions.tags')}"></div>
@@ -97,17 +98,17 @@
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('cert-sign', 'images/award.svg', 'home.certSign.title', 'home.certSign.desc', 'certSign.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('sanitize-pdf', 'images/sanitize.svg', 'home.sanitizePdf.title', 'home.sanitizePdf.desc', 'sanitizePdf.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('auto-redact', 'images/eraser-fill.svg', 'home.autoRedact.title', 'home.autoRedact.desc', 'autoRedact.tags')}"></div>
-                    </div>
+                    </ul>
                   </li>
 
                   <li class="nav-item nav-item-separator"></li>
 
                   <li class="nav-item dropdown" th:classappend="${currentPage}=='sign' OR ${currentPage}=='repair' OR ${currentPage}=='compare' OR ${currentPage}=='show-javascript' OR ${currentPage}=='flatten' OR ${currentPage}=='remove-blanks' OR ${currentPage}=='remove-annotations' OR ${currentPage}=='extract-image-scans' OR ${currentPage}=='change-metadata' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' OR ${currentPage}=='add-page-numbers' OR ${currentPage}=='auto-rename' OR ${currentPage}=='get-info-on-pdf' ? 'active' : ''">
                     <a class="nav-link dropdown-toggle" id="navbarDropdown-4" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <img class="icon" src="images/card-list.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;">
+                      <img class="navbar-icon" src="images/card-list.svg" alt="icon" style="width: 16px; height: 16px; vertical-align: middle;">
                       <span class="icon-text" th:text="#{navbar.other}"></span>
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown-4">
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown-4">
                       <!--<div th:replace="~{fragments/navbarEntry :: navbarEntry ('pipeline', 'images/pipeline.svg', 'home.pipeline.title', 'home.pipeline.desc', 'pipeline.tags')}"></div> -->
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('view-pdf', 'images/book-opened.svg', 'home.viewPdf.title', 'home.viewPdf.desc', 'viewPdf.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('ocr-pdf', 'images/search.svg', 'home.ocr.title', 'home.ocr.desc', 'ocr.tags')}"></div>
@@ -127,39 +128,9 @@
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('get-info-on-pdf', 'images/info.svg', 'home.getPdfInfo.title', 'home.getPdfInfo.desc', 'getPdfInfo.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('show-javascript', 'images/js.svg', 'home.showJS.title', 'home.showJS.desc', 'showJS.tags')}"></div>
                       <div th:replace="~{fragments/navbarEntry :: navbarEntry ('stamp', 'images/stamp.svg', 'home.AddStampRequest.title', 'home.AddStampRequest.desc', 'AddStampRequest.tags')}"></div>
-                    </div>
+                    </ul>
                   </li>
-                </ul>
-                <ul class="navbar-nav  flex-nowrap">
-                  <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown-5" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <img class="navbar-icon" src="images/star.svg" alt="icon" width="24" height="24">
-                    </a>
-                    <div class="dropdown-menu" id="favoritesDropdown" aria-labelledby="navbarDropdown-5">
-                      <!-- Dropdown items will be added here by JavaScript -->
-                    </div>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" id="dark-mode-toggle" href="#">
-                      <img class="navbar-icon" id="dark-mode-icon" src="moon.svg" alt="icon" >
-                    </a>
-                  </li>
-                  <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-globe2 globe-icon" viewBox="0 0 20 20">
-                        <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855-.143.268-.276.56-.395.872.705.157 1.472.257 2.282.287V1.077zM4.249 3.539c.142-.384.304-.744.481-1.078a6.7 6.7 0 0 1 .597-.933A7.01 7.01 0 0 0 3.051 3.05c.362.184.763.349 1.198.49zM3.509 7.5c.036-1.07.188-2.087.436-3.008a9.124 9.124 0 0 1-1.565-.667A6.964 6.964 0 0 0 1.018 7.5h2.49zm1.4-2.741a12.344 12.344 0 0 0-.4 2.741H7.5V5.091c-.91-.03-1.783-.145-2.591-.332zM8.5 5.09V7.5h2.99a12.342 12.342 0 0 0-.399-2.741c-.808.187-1.681.301-2.591.332zM4.51 8.5c.035.987.176 1.914.399 2.741A13.612 13.612 0 0 1 7.5 10.91V8.5H4.51zm3.99 0v2.409c.91.03 1.783.145 2.591.332.223-.827.364-1.754.4-2.741H8.5zm-3.282 3.696c.12.312.252.604.395.872.552 1.035 1.218 1.65 1.887 1.855V11.91c-.81.03-1.577.13-2.282.287zm.11 2.276a6.696 6.696 0 0 1-.598-.933 8.853 8.853 0 0 1-.481-1.079 8.38 8.38 0 0 0-1.198.49 7.01 7.01 0 0 0 2.276 1.522zm-1.383-2.964A13.36 13.36 0 0 1 3.508 8.5h-2.49a6.963 6.963 0 0 0 1.362 3.675c.47-.258.995-.482 1.565-.667zm6.728 2.964a7.009 7.009 0 0 0 2.275-1.521 8.376 8.376 0 0 0-1.197-.49 8.853 8.853 0 0 1-.481 1.078 6.688 6.688 0 0 1-.597.933zM8.5 11.909v3.014c.67-.204 1.335-.82 1.887-1.855.143-.268.276-.56.395-.872A12.63 12.63 0 0 0 8.5 11.91zm3.555-.401c.57.185 1.095.409 1.565.667A6.963 6.963 0 0 0 14.982 8.5h-2.49a13.36 13.36 0 0 1-.437 3.008zM14.982 7.5a6.963 6.963 0 0 0-1.362-3.675c-.47.258-.995.482-1.565.667.248.92.4 1.938.437 3.008h2.49zM11.27 2.461c.177.334.339.694.482 1.078a8.368 8.368 0 0 0 1.196-.49 7.01 7.01 0 0 0-2.275-1.52c.218.283.418.597.597.932zm-.488 1.343a7.765 7.765 0 0 0-.395-.872C9.835 1.897 9.17 1.282 8.5 1.077V4.09c.81-.03 1.577-.13 2.282-.287z"/>
-                      </svg>
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="languageDropdown">
-                      <th:block th:insert="~{fragments/languages :: langs}"></th:block>
-                    </div>
-                  </li>
-                  <li class="nav-item">
-                    <!-- Settings Button -->
-                    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#settingsModal">
-                      <img class="navbar-icon" src="images/gear.svg" alt="icon" width="24" height="24">
-                    </a>
-                  </li>
+                  <li class="nav-item nav-item-separator"></li>
                   <!-- Search Button and Search Bar -->
                   <li class="nav-item position-relative">
                     <a href="#" class="nav-link" id="search-icon">
@@ -174,6 +145,24 @@
                       <div id="searchResults" class="border p-2 bg-white search-results"></div>
                     </div>
                   </li>
+                  <li class="nav-item nav-item-separator"></li>
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbarDropdown-5" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <img class="navbar-icon" src="images/star.svg" alt="icon" width="24" height="24">
+                      <span class="icon-text visually-hidden" th:text="#{navbar.favorites}">Favourites</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" id="favoritesDropdown" aria-labelledby="navbarDropdown-5">
+                      <!-- Dropdown items will be added here by JavaScript -->
+                    </ul>
+                  </li>
+                  <li class="nav-item nav-item-separator"></li>
+                  
+                  <li class="nav-item position-relative">
+                    <a class="nav-link" href="/logout" th:title="#{navbar.signOut}">
+                      <img class="navbar-icon" src="images/logout.svg" alt="icon" width="24" height="24">
+                      <span class="icon-text visually-hidden" th:text="#{navbar.signOut}">Logout</span>
+                    </a>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -181,6 +170,92 @@
             <script src="js/search.js"></script>
           </nav>
 
+          <nav th:if="${currentPage == 'home'}" class="navbar navbar-expand-lg navbar-light bg-light" id="navbar-2">
+            <div class="container justify-content-center">
+              <a class="navbar-brand" id="navbar-brand-2" href="#" th:href="@{/}" style="display: flex;">
+                <img class="main-icon" src="favicon.svg?v=2" alt="icon">
+                <span class="icon-text" th:text="${@navBarText}"></span>
+              </a>
+              <ul class="nav">
+                <li class="nav-item">
+                  <a class="px-2 nav-link text-body-secondary" id="dark-mode-toggle" href="#">
+                    <img class="navbar-icon" id="dark-mode-icon" src="moon.svg" alt="icon">
+                    <span class="icon-text" th:text="#{navbar.darkmode}">Dark Mode</span>
+                  </a>
+                </li>
+                <li class="nav-item nav-item-separator"></li>
+                <li class="nav-item dropdown">
+                  <a class="nav-link text-body-secondary dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <img class="navbar-icon" id="language-icon" src="images/web.svg" alt="icon">
+                    <span class="icon-text" th:text="#{navbar.languages}">Languages</span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                    <th:block th:insert="~{fragments/languages :: langs}"></th:block>
+                  </ul>
+                </li>
+                <li class="nav-item nav-item-separator"></li>
+                <li class="nav-item">
+                  <!-- Settings Button -->
+                  <a href="#" class="nav-link text-body-secondary px-2" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                    <img class="navbar-icon" src="images/gear.svg" alt="icon" width="24" height="24">
+                    <span class="icon-text" th:text="#{navbar.settings}">Settings</span>
+                  </a>
+                </li>
+                <li class="nav-item nav-item-separator"></li>
+                <li class="nav-item">
+                  <a href="licenses" id="licenses" target="_blank" class="nav-link text-body-secondary px-2" th:title="#{navbar.licenses}">
+                    <img class="navbar-icon" src="images/license.svg" alt="icon" width="24" height="24">
+                    <span class="icon-text" th:text="#{navbar.licenses}">Licenses</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </nav>
+          <script>
+            window.addEventListener('DOMContentLoaded', function() {
+              var spanElements = document.querySelectorAll('#navbar-2 .nav-link span.icon-text');
+              var navbar = document.getElementById('navbar-2');
+        
+              function toggleSpanVisibility() {
+                if (window.innerWidth <= 768) {
+                  spanElements.forEach(function(span) {
+                    span.style.display = 'none';
+                  });
+                } else {
+                  spanElements.forEach(function(span) {
+                    span.style.display = '';
+                  });
+                }
+              }
+        
+              // Check window size on page load
+              toggleSpanVisibility();
+
+              // Check window size on resize
+              window.addEventListener('resize', toggleSpanVisibility);
+
+            });
+            
+            function handleNavbarWidth() {
+              var navbarContainer = document.querySelector('#navbar-1 .container');
+              var navbarbarBrand1 = document.getElementById('navbar-brand-1');
+              var navbarbarBrand2 = document.getElementById("navbar-brand-2");
+
+              if (navbarContainer.offsetWidth < navbarContainer.scrollWidth) {
+                // Hide icon if container is too narrow to display it
+                navbarbarBrand1.style.display = 'none';
+                navbarbarBrand2.style.display = 'flex';
+              } else {
+                // Show icon if container is wide enough to display it
+                navbarbarBrand1.style.display = 'flex';
+                navbarbarBrand2.style.display = 'none';
+              }
+            }
+
+            // Call handleNavbarWidth function on page load and window resize
+            window.addEventListener('DOMContentLoaded', handleNavbarWidth);
+            window.addEventListener('resize', handleNavbarWidth);
+          </script>
           <th:block th:insert="~{fragments/errorBannerPerPage.html :: errorBannerPerPage}"></th:block>
           <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="settingsModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">

@@ -17,11 +17,13 @@ function updateFavoritesDropdown() {
       var navbarEntry = document.querySelector(`a[href='${key}']`);
       if (navbarEntry) {
         // Create a new dropdown entry
+        var dropdownItemLi = document.createElement("li");
         var dropdownItem = document.createElement("a");
         dropdownItem.className = "dropdown-item";
         dropdownItem.href = navbarEntry.href;
         dropdownItem.innerHTML = navbarEntry.innerHTML;
-        dropdown.appendChild(dropdownItem);
+        dropdownItemLi.appendChild(dropdownItem);
+        dropdown.appendChild(dropdownItemLi);
         hasFavorites = true;
       } else {
         console.warn(`Navbar entry not found for key: ${key}`);
@@ -31,10 +33,12 @@ function updateFavoritesDropdown() {
 
   // Show or hide the default item based on whether there are any favorites
   if (!hasFavorites) {
+    var dropdownItemLi = document.createElement("li");
     var defaultItem = document.createElement("a");
     defaultItem.className = "dropdown-item";
     defaultItem.textContent = noFavourites;
-    dropdown.appendChild(defaultItem);
+    dropdownItemLi.appendChild(defaultItem);
+    dropdown.appendChild(dropdownItemLi);
   }
 }
 
