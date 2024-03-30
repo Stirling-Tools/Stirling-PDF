@@ -95,7 +95,7 @@ For Debian-based systems, you can use the following command:
 
 ```bash
 sudo apt-get install -y libreoffice-writer libreoffice-calc libreoffice-impress unpaper ocrmypdf
-pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint
+pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint --break-system-packages
 ```
 
 For Fedora:
