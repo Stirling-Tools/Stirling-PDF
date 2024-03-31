@@ -48,14 +48,18 @@ async function checkForUpdate() {
   console.log("compareVersions(latestVersion, currentVersion) > 0)=" + compareVersions(latestVersion, currentVersion));
   if (latestVersion && compareVersions(latestVersion, currentVersion) > 0) {
     document.getElementById("update-btn").style.display = "block";
-    document.getElementById("app-update").innerText = currentVersion + " => " + latestVersion;
-    console.log("visible");
-    if (updateLink.classList.contains("visually-hidden")) {
-      updateLink.classList.remove("visually-hidden");
+    if (updateLink !== null) {
+      document.getElementById("app-update").innerText = currentVersion + " => " + latestVersion;
+      if (updateLink.classList.contains("visually-hidden")) {
+        updateLink.classList.remove("visually-hidden");
+      }
     }
+    console.log("visible");
   } else {
-    if (!updateLink.classList.contains("visually-hidden")) {
-      updateLink.classList.add("visually-hidden");
+    if (updateLink !== null) {
+      if (!updateLink.classList.contains("visually-hidden")) {
+        updateLink.classList.add("visually-hidden");
+      }
     }
     console.log("hidden");
   }

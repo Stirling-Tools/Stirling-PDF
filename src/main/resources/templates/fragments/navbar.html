@@ -238,17 +238,21 @@
             
             function handleNavbarWidth() {
               var navbarContainer = document.querySelector('#navbar-1 .container');
-              var navbarbarBrand1 = document.getElementById('navbar-brand-1');
-              var navbarbarBrand2 = document.getElementById("navbar-brand-2");
+              var navbarBrand1 = document.getElementById('navbar-brand-1');
+              var navbarBrand2 = document.getElementById("navbar-brand-2");
 
               if (navbarContainer.offsetWidth < navbarContainer.scrollWidth) {
                 // Hide icon if container is too narrow to display it
-                navbarbarBrand1.style.display = 'none';
-                navbarbarBrand2.style.display = 'flex';
+                navbarBrand1.style.display = 'none';
+                if (navbarBrand2 != null) {
+                  navbarBrand2.style.display = 'flex';
+                }
               } else {
                 // Show icon if container is wide enough to display it
-                navbarbarBrand1.style.display = 'flex';
-                navbarbarBrand2.style.display = 'none';
+                navbarBrand1.style.display = 'flex';
+                if (navbarBrand2 != null) {
+                  navbarBrand2.style.display = 'none';
+                }
               }
             }
 
