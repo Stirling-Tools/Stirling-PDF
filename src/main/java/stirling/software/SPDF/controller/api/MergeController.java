@@ -53,52 +53,46 @@ public class MergeController {
             case "byFileName":
                 return Comparator.comparing(MultipartFile::getOriginalFilename);
             case "byDateModified":
-                return (file1, file2) -> {
-                    try {
-                        BasicFileAttributes attr1 =
-                                Files.readAttributes(
-                                        Paths.get(file1.getOriginalFilename()),
-                                        BasicFileAttributes.class);
-                        BasicFileAttributes attr2 =
-                                Files.readAttributes(
-                                        Paths.get(file2.getOriginalFilename()),
-                                        BasicFileAttributes.class);
-                        return attr1.lastModifiedTime().compareTo(attr2.lastModifiedTime());
-                    } catch (IOException e) {
-                        return 0; // If there's an error, treat them as equal
-                    }
-                };
+                return Comparator.comparing(this::getLastModifiedDate);
             case "byDateCreated":
-                return (file1, file2) -> {
-                    try {
-                        BasicFileAttributes attr1 =
-                                Files.readAttributes(
-                                        Paths.get(file1.getOriginalFilename()),
-                                        BasicFileAttributes.class);
-                        BasicFileAttributes attr2 =
-                                Files.readAttributes(
-                                        Paths.get(file2.getOriginalFilename()),
-                                        BasicFileAttributes.class);
-                        return attr1.creationTime().compareTo(attr2.creationTime());
-                    } catch (IOException e) {
-                        return 0; // If there's an error, treat them as equal
-                    }
-                };
+                return Comparator.comparing(this::getCreationDate);
             case "byPDFTitle":
-                return (file1, file2) -> {
-                    try (PDDocument doc1 = Loader.loadPDF(file1.getBytes());
-                            PDDocument doc2 = Loader.loadPDF(file2.getBytes())) {
-                        String title1 = doc1.getDocumentInformation().getTitle();
-                        String title2 = doc2.getDocumentInformation().getTitle();
-                        return title1.compareTo(title2);
-                    } catch (IOException e) {
-                        return 0;
-                    }
-                };
+                return Comparator.comparing(this::getPdfTitle);
             case "orderProvided":
             default:
                 return (file1, file2) -> 0; // Default is the order provided
         }
+    }
+
+    private long getLastModifiedDate(MultipartFile file) {
+        try {
+            BasicFileAttributes attributes = getFileAttributes(file);
+            return attributes.lastModifiedTime().toMillis();
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
+    private long getCreationDate(MultipartFile file) {
+        try {
+            BasicFileAttributes attributes = getFileAttributes(file);
+            return attributes.creationTime().toMillis();
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
+    private String getPdfTitle(MultipartFile file) {
+        try (PDDocument doc = Loader.loadPDF(file.getBytes())) {
+            return doc.getDocumentInformation().getTitle();
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
+    private BasicFileAttributes getFileAttributes(MultipartFile file) throws IOException {
+        return Files.readAttributes(
+                Paths.get(file.getOriginalFilename()), BasicFileAttributes.class);
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/merge-pdfs")
@@ -108,35 +102,48 @@ public class MergeController {
                     "This endpoint merges multiple PDF files into a single PDF file. The merged file will contain all pages from the input files in the order they were provided. Input:PDF Output:PDF Type:MISO")
     public ResponseEntity<byte[]> mergePdfs(@ModelAttribute MergePdfsRequest form)
             throws IOException {
-        List<File> filesToDelete = new ArrayList<File>();
+        List<File> tempFiles = new ArrayList<>();
         try {
             MultipartFile[] files = form.getFileInput();
             Arrays.sort(files, getSortComparator(form.getSortType()));
 
-            PDFMergerUtility mergedDoc = new PDFMergerUtility();
-            ByteArrayOutputStream docOutputstream = new ByteArrayOutputStream();
+            PDFMergerUtility pdfMerger = new PDFMergerUtility();
+            ByteArrayOutputStream mergedPdfStream = new ByteArrayOutputStream();
 
             for (MultipartFile multipartFile : files) {
-                File tempFile = GeneralUtils.convertMultipartFileToFile(multipartFile);
-                filesToDelete.add(tempFile);
-                mergedDoc.addSource(tempFile);
+                File tempFile = createTempFile(multipartFile);
+                tempFiles.add(tempFile);
+                pdfMerger.addSource(tempFile);
             }
 
-            mergedDoc.setDestinationFileName(
-                    files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_merged.pdf");
-            mergedDoc.setDestinationStream(docOutputstream);
-
-            mergedDoc.mergeDocuments(null);
+            String mergedFileName = getMergedFileName(files);
+            pdfMerger.setDestinationFileName(mergedFileName);
+            pdfMerger.setDestinationStream(mergedPdfStream);
+            pdfMerger.mergeDocuments(null);
 
             return WebResponseUtils.bytesToWebResponse(
-                    docOutputstream.toByteArray(), mergedDoc.getDestinationFileName());
+                    mergedPdfStream.toByteArray(), mergedFileName);
         } catch (Exception ex) {
-            logger.error("Error in merge pdf process", ex);
+            logger.error("Error occurred during PDF merge", ex);
             throw ex;
         } finally {
-            for (File file : filesToDelete) {
-                file.delete();
-            }
+            cleanupTempFiles(tempFiles);
+        }
+    }
+
+    private File createTempFile(MultipartFile multipartFile) throws IOException {
+        File tempFile = GeneralUtils.convertMultipartFileToFile(multipartFile);
+        tempFile.deleteOnExit();
+        return tempFile;
+    }
+
+    private String getMergedFileName(MultipartFile[] files) {
+        return files[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_merged.pdf";
+    }
+
+    private void cleanupTempFiles(List<File> tempFiles) {
+        for (File file : tempFiles) {
+            file.delete();
         }
     }
 }

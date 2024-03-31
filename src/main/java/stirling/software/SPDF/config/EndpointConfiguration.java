@@ -32,7 +32,7 @@ public class EndpointConfiguration {
             @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled) {
         this.applicationProperties = applicationProperties;
         this.bookAndHtmlFormatsInstalled = bookAndHtmlFormatsInstalled;
-        init();
+        initialize();
         processEnvironmentConfigs();
     }
 
@@ -41,17 +41,19 @@ public class EndpointConfiguration {
     }
 
     public void disableEndpoint(String endpoint) {
-        if (!endpointStatuses.containsKey(endpoint) || endpointStatuses.get(endpoint) != false) {
+        if (!isAlreadyDisabled(endpoint)) {
             logger.info("Disabling {}", endpoint);
             endpointStatuses.put(endpoint, false);
         }
     }
 
+    private boolean isAlreadyDisabled(String endpoint) {
+        return !endpointStatuses.containsKey(endpoint) || !endpointStatuses.get(endpoint);
+    }
+
     public boolean isEndpointEnabled(String endpoint) {
-        if (endpoint.startsWith("/")) {
-            endpoint = endpoint.substring(1);
-        }
-        return endpointStatuses.getOrDefault(endpoint, true);
+        return endpointStatuses.getOrDefault(
+                endpoint.startsWith("/") ? endpoint.substring(1) : endpoint, true);
     }
 
     public void addEndpointToGroup(String group, String endpoint) {
@@ -76,154 +78,153 @@ public class EndpointConfiguration {
         }
     }
 
-    public void init() {
-        // Adding endpoints to "PageOps" group
-        addEndpointToGroup("PageOps", "remove-pages");
-        addEndpointToGroup("PageOps", "merge-pdfs");
-        addEndpointToGroup("PageOps", "split-pdfs");
-        addEndpointToGroup("PageOps", "pdf-organizer");
-        addEndpointToGroup("PageOps", "rotate-pdf");
-        addEndpointToGroup("PageOps", "multi-page-layout");
-        addEndpointToGroup("PageOps", "scale-pages");
-        addEndpointToGroup("PageOps", "adjust-contrast");
-        addEndpointToGroup("PageOps", "crop");
-        addEndpointToGroup("PageOps", "auto-split-pdf");
-        addEndpointToGroup("PageOps", "extract-page");
-        addEndpointToGroup("PageOps", "pdf-to-single-page");
-        addEndpointToGroup("PageOps", "split-by-size-or-count");
-        addEndpointToGroup("PageOps", "overlay-pdf");
-        addEndpointToGroup("PageOps", "split-pdf-by-sections");
+    private void initialize() {
+        addEndpointsToGroup(
+                "PageOps",
+                "remove-pages",
+                "merge-pdfs",
+                "split-pdfs",
+                "pdf-organizer",
+                "rotate-pdf",
+                "multi-page-layout",
+                "scale-pages",
+                "adjust-contrast",
+                "crop",
+                "auto-split-pdf",
+                "extract-page",
+                "pdf-to-single-page",
+                "split-by-size-or-count",
+                "overlay-pdf",
+                "split-pdf-by-sections");
 
-        // Adding endpoints to "Convert" group
-        addEndpointToGroup("Convert", "pdf-to-img");
-        addEndpointToGroup("Convert", "img-to-pdf");
-        addEndpointToGroup("Convert", "pdf-to-pdfa");
-        addEndpointToGroup("Convert", "file-to-pdf");
-        addEndpointToGroup("Convert", "xlsx-to-pdf");
-        addEndpointToGroup("Convert", "pdf-to-word");
-        addEndpointToGroup("Convert", "pdf-to-presentation");
-        addEndpointToGroup("Convert", "pdf-to-text");
-        addEndpointToGroup("Convert", "pdf-to-html");
-        addEndpointToGroup("Convert", "pdf-to-xml");
-        addEndpointToGroup("Convert", "html-to-pdf");
-        addEndpointToGroup("Convert", "url-to-pdf");
-        addEndpointToGroup("Convert", "markdown-to-pdf");
-        addEndpointToGroup("Convert", "pdf-to-csv");
+        addEndpointsToGroup(
+                "Convert",
+                "pdf-to-img",
+                "img-to-pdf",
+                "pdf-to-pdfa",
+                "file-to-pdf",
+                "xlsx-to-pdf",
+                "pdf-to-word",
+                "pdf-to-presentation",
+                "pdf-to-text",
+                "pdf-to-html",
+                "pdf-to-xml",
+                "html-to-pdf",
+                "url-to-pdf",
+                "markdown-to-pdf",
+                "pdf-to-csv");
 
-        // Adding endpoints to "Security" group
-        addEndpointToGroup("Security", "add-password");
-        addEndpointToGroup("Security", "remove-password");
-        addEndpointToGroup("Security", "change-permissions");
-        addEndpointToGroup("Security", "add-watermark");
-        addEndpointToGroup("Security", "cert-sign");
-        addEndpointToGroup("Security", "sanitize-pdf");
-        addEndpointToGroup("Security", "auto-redact");
+        addEndpointsToGroup(
+                "Security",
+                "add-password",
+                "remove-password",
+                "change-permissions",
+                "add-watermark",
+                "cert-sign",
+                "sanitize-pdf",
+                "auto-redact");
 
-        // Adding endpoints to "Other" group
-        addEndpointToGroup("Other", "ocr-pdf");
-        addEndpointToGroup("Other", "add-image");
-        addEndpointToGroup("Other", "compress-pdf");
-        addEndpointToGroup("Other", "extract-images");
-        addEndpointToGroup("Other", "change-metadata");
-        addEndpointToGroup("Other", "extract-image-scans");
-        addEndpointToGroup("Other", "sign");
-        addEndpointToGroup("Other", "flatten");
-        addEndpointToGroup("Other", "repair");
-        addEndpointToGroup("Other", REMOVE_BLANKS);
-        addEndpointToGroup("Other", "remove-annotations");
-        addEndpointToGroup("Other", "compare");
-        addEndpointToGroup("Other", "add-page-numbers");
-        addEndpointToGroup("Other", "auto-rename");
-        addEndpointToGroup("Other", "get-info-on-pdf");
-        addEndpointToGroup("Other", "show-javascript");
+        addEndpointsToGroup(
+                "Other",
+                "ocr-pdf",
+                "add-image",
+                "compress-pdf",
+                "extract-images",
+                "change-metadata",
+                "extract-image-scans",
+                "sign",
+                "flatten",
+                "repair",
+                "remove-blanks",
+                "remove-annotations",
+                "compare",
+                "add-page-numbers",
+                "auto-rename",
+                "get-info-on-pdf",
+                "show-javascript");
 
-        // CLI
-        addEndpointToGroup("CLI", "compress-pdf");
-        addEndpointToGroup("CLI", "extract-image-scans");
-        addEndpointToGroup("CLI", "repair");
-        addEndpointToGroup("CLI", "pdf-to-pdfa");
-        addEndpointToGroup("CLI", "file-to-pdf");
-        addEndpointToGroup("CLI", "xlsx-to-pdf");
-        addEndpointToGroup("CLI", "pdf-to-word");
-        addEndpointToGroup("CLI", "pdf-to-presentation");
-        addEndpointToGroup("CLI", "pdf-to-text");
-        addEndpointToGroup("CLI", "pdf-to-html");
-        addEndpointToGroup("CLI", "pdf-to-xml");
-        addEndpointToGroup("CLI", "ocr-pdf");
-        addEndpointToGroup("CLI", "html-to-pdf");
-        addEndpointToGroup("CLI", "url-to-pdf");
-        addEndpointToGroup("CLI", "book-to-pdf");
-        addEndpointToGroup("CLI", "pdf-to-book");
+        addEndpointsToGroup(
+                "CLI",
+                "compress-pdf",
+                "extract-image-scans",
+                "repair",
+                "pdf-to-pdfa",
+                "file-to-pdf",
+                "xlsx-to-pdf",
+                "pdf-to-word",
+                "pdf-to-presentation",
+                "pdf-to-text",
+                "pdf-to-html",
+                "pdf-to-xml",
+                "ocr-pdf",
+                "html-to-pdf",
+                "url-to-pdf",
+                "book-to-pdf",
+                "pdf-to-book");
 
-        // Calibre
-        addEndpointToGroup("Calibre", "book-to-pdf");
-        addEndpointToGroup("Calibre", "pdf-to-book");
+        addEndpointsToGroup("Calibre", "book-to-pdf", "pdf-to-book");
 
-        // python
-        addEndpointToGroup("Python", "extract-image-scans");
-        addEndpointToGroup("Python", REMOVE_BLANKS);
-        addEndpointToGroup("Python", "html-to-pdf");
-        addEndpointToGroup("Python", "url-to-pdf");
+        addEndpointsToGroup(
+                "Python", "extract-image-scans", "remove-blanks", "html-to-pdf", "url-to-pdf");
 
-        // openCV
-        addEndpointToGroup("OpenCV", "extract-image-scans");
-        addEndpointToGroup("OpenCV", REMOVE_BLANKS);
+        addEndpointsToGroup("OpenCV", "extract-image-scans", "remove-blanks");
 
-        // LibreOffice
-        addEndpointToGroup("LibreOffice", "repair");
-        addEndpointToGroup("LibreOffice", "file-to-pdf");
-        addEndpointToGroup("LibreOffice", "xlsx-to-pdf");
-        addEndpointToGroup("LibreOffice", "pdf-to-word");
-        addEndpointToGroup("LibreOffice", "pdf-to-presentation");
-        addEndpointToGroup("LibreOffice", "pdf-to-text");
-        addEndpointToGroup("LibreOffice", "pdf-to-html");
-        addEndpointToGroup("LibreOffice", "pdf-to-xml");
+        addEndpointsToGroup(
+                "LibreOffice",
+                "repair",
+                "file-to-pdf",
+                "xlsx-to-pdf",
+                "pdf-to-word",
+                "pdf-to-presentation",
+                "pdf-to-text",
+                "pdf-to-html",
+                "pdf-to-xml");
 
-        // OCRmyPDF
-        addEndpointToGroup("OCRmyPDF", "compress-pdf");
-        addEndpointToGroup("OCRmyPDF", "pdf-to-pdfa");
-        addEndpointToGroup("OCRmyPDF", "ocr-pdf");
+        addEndpointsToGroup("OCRmyPDF", "compress-pdf", "pdf-to-pdfa", "ocr-pdf");
 
-        // Java
-        addEndpointToGroup("Java", "merge-pdfs");
-        addEndpointToGroup("Java", "remove-pages");
-        addEndpointToGroup("Java", "split-pdfs");
-        addEndpointToGroup("Java", "pdf-organizer");
-        addEndpointToGroup("Java", "rotate-pdf");
-        addEndpointToGroup("Java", "pdf-to-img");
-        addEndpointToGroup("Java", "img-to-pdf");
-        addEndpointToGroup("Java", "add-password");
-        addEndpointToGroup("Java", "remove-password");
-        addEndpointToGroup("Java", "change-permissions");
-        addEndpointToGroup("Java", "add-watermark");
-        addEndpointToGroup("Java", "add-image");
-        addEndpointToGroup("Java", "extract-images");
-        addEndpointToGroup("Java", "change-metadata");
-        addEndpointToGroup("Java", "cert-sign");
-        addEndpointToGroup("Java", "multi-page-layout");
-        addEndpointToGroup("Java", "scale-pages");
-        addEndpointToGroup("Java", "add-page-numbers");
-        addEndpointToGroup("Java", "auto-rename");
-        addEndpointToGroup("Java", "auto-split-pdf");
-        addEndpointToGroup("Java", "sanitize-pdf");
-        addEndpointToGroup("Java", "crop");
-        addEndpointToGroup("Java", "get-info-on-pdf");
-        addEndpointToGroup("Java", "extract-page");
-        addEndpointToGroup("Java", "pdf-to-single-page");
-        addEndpointToGroup("Java", "markdown-to-pdf");
-        addEndpointToGroup("Java", "show-javascript");
-        addEndpointToGroup("Java", "auto-redact");
-        addEndpointToGroup("Java", "pdf-to-csv");
-        addEndpointToGroup("Java", "split-by-size-or-count");
-        addEndpointToGroup("Java", "overlay-pdf");
-        addEndpointToGroup("Java", "split-pdf-by-sections");
-        addEndpointToGroup("Java", REMOVE_BLANKS);
+        addEndpointsToGroup(
+                "Java",
+                "merge-pdfs",
+                "remove-pages",
+                "split-pdfs",
+                "pdf-organizer",
+                "rotate-pdf",
+                "pdf-to-img",
+                "img-to-pdf",
+                "add-password",
+                "remove-password",
+                "change-permissions",
+                "add-watermark",
+                "add-image",
+                "extract-images",
+                "change-metadata",
+                "cert-sign",
+                "multi-page-layout",
+                "scale-pages",
+                "add-page-numbers",
+                "auto-rename",
+                "auto-split-pdf",
+                "sanitize-pdf",
+                "crop",
+                "get-info-on-pdf",
+                "extract-page",
+                "pdf-to-single-page",
+                "markdown-to-pdf",
+                "show-javascript",
+                "auto-redact",
+                "pdf-to-csv",
+                "split-by-size-or-count",
+                "overlay-pdf",
+                "split-pdf-by-sections",
+                "remove-blanks");
 
-        // Javascript
-        addEndpointToGroup("Javascript", "pdf-organizer");
-        addEndpointToGroup("Javascript", "sign");
-        addEndpointToGroup("Javascript", "compare");
-        addEndpointToGroup("Javascript", "adjust-contrast");
+        addEndpointsToGroup("Javascript", "pdf-organizer", "sign", "compare", "adjust-contrast");
+    }
+
+    private void addEndpointsToGroup(String group, String... endpoints) {
+        for (String endpoint : endpoints) {
+            addEndpointToGroup(group, endpoint);
+        }
     }
 
     private void processEnvironmentConfigs() {
@@ -232,18 +233,23 @@ public class EndpointConfiguration {
         if (!bookAndHtmlFormatsInstalled) {
             groupsToRemove.add("Calibre");
         }
+        disableEndpoints(endpointsToRemove);
+        disableGroups(groupsToRemove);
+    }
+
+    private void disableEndpoints(List<String> endpointsToRemove) {
         if (endpointsToRemove != null) {
             for (String endpoint : endpointsToRemove) {
                 disableEndpoint(endpoint.trim());
             }
         }
+    }
 
+    private void disableGroups(List<String> groupsToRemove) {
         if (groupsToRemove != null) {
             for (String group : groupsToRemove) {
                 disableGroup(group.trim());
             }
         }
     }
-
-    private static final String REMOVE_BLANKS = "remove-blanks";
 }

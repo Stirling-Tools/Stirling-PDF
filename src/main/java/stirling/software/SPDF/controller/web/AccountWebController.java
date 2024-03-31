@@ -28,32 +28,92 @@ import stirling.software.SPDF.repository.UserRepository;
 @Tag(name = "Account Security", description = "Account Security APIs")
 public class AccountWebController {
 
+    private final UserRepository userRepository;
+
+    @Autowired
+    public AccountWebController(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
+        if (isAuthenticated(authentication)) {
             return "redirect:/";
         }
 
-        model.addAttribute("currentPage", "login");
-
-        if (request.getParameter("error") != null) {
-
-            model.addAttribute("error", request.getParameter("error"));
-        }
-        if (request.getParameter("logout") != null) {
-
-            model.addAttribute("logoutMessage", "You have been logged out.");
-        }
+        addLoginAttributes(request, model);
 
         return "login";
     }
 
-    @Autowired
-    private UserRepository userRepository; // Assuming you have a repository for user operations
-
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/addUsers")
     public String showAddUserForm(Model model, Authentication authentication) {
+        List<User> users = getUsersWithoutInternalAPIUsers();
+        Map<String, String> roleDetails = Role.getAllRoleDetails();
+
+        model.addAttribute("users", users);
+        model.addAttribute("currentUsername", authentication.getName());
+        model.addAttribute("roleDetails", roleDetails);
+        return "addUsers";
+    }
+
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @GetMapping("/account")
+    public String account(HttpServletRequest request, Model model, Authentication authentication) {
+        if (!isAuthenticated(authentication)) {
+            return "redirect:/";
+        }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String username = userDetails.getUsername();
+        Optional<User> user = userRepository.findByUsername(username);
+
+        if (!user.isPresent()) {
+            return "redirect:/error";
+        }
+
+        String settingsJson = convertSettingsToJson(user.get());
+
+        model.addAttribute("username", username);
+        model.addAttribute("role", user.get().getRolesAsString());
+        model.addAttribute("settings", settingsJson);
+        model.addAttribute("changeCredsFlag", user.get().isFirstLogin());
+        model.addAttribute("currentPage", "account");
+
+        return "account";
+    }
+
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @GetMapping("/change-creds")
+    public String changeCredentials(
+            HttpServletRequest request, Model model, Authentication authentication) {
+        if (!isAuthenticated(authentication)) {
+            return "redirect:/";
+        }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String username = userDetails.getUsername();
+
+        model.addAttribute("username", username);
+        return "change-creds";
+    }
+
+    private boolean isAuthenticated(Authentication authentication) {
+        return authentication != null && authentication.isAuthenticated();
+    }
+
+    private void addLoginAttributes(HttpServletRequest request, Model model) {
+        if (request.getParameter("error") != null) {
+            model.addAttribute("error", request.getParameter("error"));
+        }
+        if (request.getParameter("logout") != null) {
+            model.addAttribute("logoutMessage", "You have been logged out.");
+        }
+        model.addAttribute("currentPage", "login");
+    }
+
+    private List<User> getUsersWithoutInternalAPIUsers() {
         List<User> allUsers = userRepository.findAll();
         Iterator<User> iterator = allUsers.iterator();
         Map<String, String> roleDetails = Role.getAllRoleDetails();
@@ -65,98 +125,21 @@ public class AccountWebController {
                     if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
                         iterator.remove();
                         roleDetails.remove(Role.INTERNAL_API_USER.getRoleId());
-                        break; // Break out of the inner loop once the user is removed
+                        break;
                     }
                 }
             }
         }
-
-        model.addAttribute("users", allUsers);
-        model.addAttribute("currentUsername", authentication.getName());
-        model.addAttribute("roleDetails", roleDetails);
-        return "addUsers";
+        return allUsers;
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
-    @GetMapping("/account")
-    public String account(HttpServletRequest request, Model model, Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return "redirect:/";
+    private String convertSettingsToJson(User user) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.writeValueAsString(user.getSettings());
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return "redirect:/error";
         }
-        if (authentication != null && authentication.isAuthenticated()) {
-            Object principal = authentication.getPrincipal();
-
-            if (principal instanceof UserDetails) {
-                // Cast the principal object to UserDetails
-                UserDetails userDetails = (UserDetails) principal;
-
-                // Retrieve username and other attributes
-                String username = userDetails.getUsername();
-
-                // Fetch user details from the database
-                Optional<User> user =
-                        userRepository.findByUsername(
-                                username); // Assuming findByUsername method exists
-                if (!user.isPresent()) {
-                    // Handle error appropriately
-                    return "redirect:/error"; // Example redirection in case of error
-                }
-
-                // Convert settings map to JSON string
-                ObjectMapper objectMapper = new ObjectMapper();
-                String settingsJson;
-                try {
-                    settingsJson = objectMapper.writeValueAsString(user.get().getSettings());
-                } catch (JsonProcessingException e) {
-                    // Handle JSON conversion error
-                    e.printStackTrace();
-                    return "redirect:/error"; // Example redirection in case of error
-                }
-
-                // Add attributes to the model
-                model.addAttribute("username", username);
-                model.addAttribute("role", user.get().getRolesAsString());
-                model.addAttribute("settings", settingsJson);
-                model.addAttribute("changeCredsFlag", user.get().isFirstLogin());
-                model.addAttribute("currentPage", "account");
-            }
-        } else {
-            return "redirect:/";
-        }
-        return "account";
-    }
-
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
-    @GetMapping("/change-creds")
-    public String changeCreds(
-            HttpServletRequest request, Model model, Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return "redirect:/";
-        }
-        if (authentication != null && authentication.isAuthenticated()) {
-            Object principal = authentication.getPrincipal();
-
-            if (principal instanceof UserDetails) {
-                // Cast the principal object to UserDetails
-                UserDetails userDetails = (UserDetails) principal;
-
-                // Retrieve username and other attributes
-                String username = userDetails.getUsername();
-
-                // Fetch user details from the database
-                Optional<User> user =
-                        userRepository.findByUsername(
-                                username); // Assuming findByUsername method exists
-                if (!user.isPresent()) {
-                    // Handle error appropriately
-                    return "redirect:/error"; // Example redirection in case of error
-                }
-                // Add attributes to the model
-                model.addAttribute("username", username);
-            }
-        } else {
-            return "redirect:/";
-        }
-        return "change-creds";
     }
 }

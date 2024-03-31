@@ -3,8 +3,6 @@ package stirling.software.SPDF;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import io.github.pixee.security.SystemCommand;
 
@@ -15,84 +13,90 @@ public class LibreOfficeListener {
     private static final LibreOfficeListener INSTANCE = new LibreOfficeListener();
     private static final int LISTENER_PORT = 2002;
 
+    private long lastActivityTime;
+    private ListenerProcess listenerProcess;
+
     public static LibreOfficeListener getInstance() {
         return INSTANCE;
     }
 
-    private ExecutorService executorService;
-    private long lastActivityTime;
+    public void start() throws IOException {
+        if (listenerProcess != null && listenerProcess.isRunning()) {
+            return;
+        }
 
-    private Process process;
+        listenerProcess = new StartListenerProcess();
+        listenerProcess.start();
+        lastActivityTime = System.currentTimeMillis();
 
-    private LibreOfficeListener() {}
+        ActivityMonitor monitor = new ActivityMonitor();
+        monitor.start();
+    }
+
+    public synchronized void stop() {
+        if (listenerProcess != null && listenerProcess.isRunning()) {
+            listenerProcess.stop();
+        }
+    }
+
+    private class ActivityMonitor extends Thread {
+        @Override
+        public void run() {
+            while (true) {
+                long idleTime = System.currentTimeMillis() - lastActivityTime;
+                if (idleTime >= ACTIVITY_TIMEOUT) {
+                    listenerProcess.stop();
+                    break;
+                }
+                try {
+                    Thread.sleep(5000); // Check for inactivity every 5 seconds
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
+    }
+
+    interface ListenerProcess {
+        void start() throws IOException;
+
+        void stop();
+
+        boolean isRunning();
+    }
+
+    private class StartListenerProcess implements ListenerProcess {
+        private Process process;
+
+        @Override
+        public void start() throws IOException {
+            process = SystemCommand.runCommand(Runtime.getRuntime(), "unoconv --listener");
+        }
+
+        @Override
+        public void stop() {
+            if (process != null && process.isAlive()) {
+                process.destroy();
+            }
+        }
+
+        @Override
+        public boolean isRunning() {
+            return isListenerRunning();
+        }
+    }
 
     private boolean isListenerRunning() {
         try {
             System.out.println("waiting for listener to start");
             Socket socket = new Socket();
             socket.connect(
-                    new InetSocketAddress("localhost", 2002), 1000); // Timeout after 1 second
+                    new InetSocketAddress("localhost", LISTENER_PORT),
+                    1000); // Timeout after 1 second
             socket.close();
             return true;
         } catch (IOException e) {
             return false;
-        }
-    }
-
-    public void start() throws IOException {
-        // Check if the listener is already running
-        if (process != null && process.isAlive()) {
-            return;
-        }
-
-        // Start the listener process
-        process = SystemCommand.runCommand(Runtime.getRuntime(), "unoconv --listener");
-        lastActivityTime = System.currentTimeMillis();
-
-        // Start a background thread to monitor the activity timeout
-        executorService = Executors.newSingleThreadExecutor();
-        executorService.submit(
-                () -> {
-                    while (true) {
-                        long idleTime = System.currentTimeMillis() - lastActivityTime;
-                        if (idleTime >= ACTIVITY_TIMEOUT) {
-                            // If there has been no activity for too long, tear down the listener
-                            process.destroy();
-                            break;
-                        }
-                        try {
-                            Thread.sleep(5000); // Check for inactivity every 5 seconds
-                        } catch (InterruptedException e) {
-                            break;
-                        }
-                    }
-                });
-
-        // Wait for the listener to start up
-        long startTime = System.currentTimeMillis();
-        long timeout = 30000; // Timeout after 30 seconds
-        while (System.currentTimeMillis() - startTime < timeout) {
-            if (isListenerRunning()) {
-
-                lastActivityTime = System.currentTimeMillis();
-                return;
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } // Check every 1 second
-        }
-    }
-
-    public synchronized void stop() {
-        // Stop the activity timeout monitor thread
-        executorService.shutdownNow();
-
-        // Stop the listener process
-        if (process != null && process.isAlive()) {
-            process.destroy();
         }
     }
 }
