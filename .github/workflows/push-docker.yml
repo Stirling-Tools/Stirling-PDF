@@ -116,37 +116,3 @@ jobs:
         build-args:
           VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
         platforms: linux/amd64,linux/arm64/v8
-
-
-
-    - name: Generate tags lite
-      id: meta3
-      uses: docker/metadata-action@v4.4.0
-      if: github.ref != 'refs/heads/main'
-      with:
-        images: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
-          ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
-        tags: |
-          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-lite,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=latest-lite,enable=${{ github.ref == 'refs/heads/master' }}
-
-
-    - name: Build and push Dockerfile-lite
-      uses: docker/build-push-action@v4.0.0
-      if: github.ref != 'refs/heads/main'
-      with:
-        context: .
-        file: ./Dockerfile-lite
-        push: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        tags: ${{ steps.meta3.outputs.tags }}
-        labels: ${{ steps.meta3.outputs.labels }}
-        build-args:
-          VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-        platforms: linux/amd64,linux/arm64/v8
-    - name: Build and Push Helm Chart
-      run: |
-        helm package chart/stirling-pdf
-        helm push stirling-pdf-chart-1.0.0.tgz oci://registry-1.docker.io/frooodle
