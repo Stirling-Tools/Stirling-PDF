@@ -64,9 +64,6 @@ build_and_test() {
         full)
             dockerfile_name="./Dockerfile"
             ;;
-        lite)
-            dockerfile_name="./Dockerfile-lite"
-            ;;
         ultra-lite)
             dockerfile_name="./Dockerfile-ultra-lite"
             ;;
