@@ -36,51 +36,9 @@ public class EndpointConfiguration {
         processEnvironmentConfigs();
     }
 
-    public void enableEndpoint(String endpoint) {
-        endpointStatuses.put(endpoint, true);
-    }
-
-    public void disableEndpoint(String endpoint) {
-        if (!isAlreadyDisabled(endpoint)) {
-            logger.info("Disabling {}", endpoint);
-            endpointStatuses.put(endpoint, false);
-        }
-    }
-
-    private boolean isAlreadyDisabled(String endpoint) {
-        return !endpointStatuses.containsKey(endpoint) || !endpointStatuses.get(endpoint);
-    }
-
-    public boolean isEndpointEnabled(String endpoint) {
-        return endpointStatuses.getOrDefault(
-                endpoint.startsWith("/") ? endpoint.substring(1) : endpoint, true);
-    }
-
-    public void addEndpointToGroup(String group, String endpoint) {
-        endpointGroups.computeIfAbsent(group, k -> new HashSet<>()).add(endpoint);
-    }
-
-    public void enableGroup(String group) {
-        Set<String> endpoints = endpointGroups.get(group);
-        if (endpoints != null) {
-            for (String endpoint : endpoints) {
-                enableEndpoint(endpoint);
-            }
-        }
-    }
-
-    public void disableGroup(String group) {
-        Set<String> endpoints = endpointGroups.get(group);
-        if (endpoints != null) {
-            for (String endpoint : endpoints) {
-                disableEndpoint(endpoint);
-            }
-        }
-    }
-
     private void initialize() {
-        addEndpointsToGroup(
-                "PageOps",
+        // Define endpoints for each group explicitly as String arrays
+        String[] pageOpsEndpoints = {
                 "remove-pages",
                 "merge-pdfs",
                 "split-pdfs",
@@ -95,10 +53,10 @@ public class EndpointConfiguration {
                 "pdf-to-single-page",
                 "split-by-size-or-count",
                 "overlay-pdf",
-                "split-pdf-by-sections");
+                "split-pdf-by-sections"
+        };
 
-        addEndpointsToGroup(
-                "Convert",
+        String[] convertEndpoints = {
                 "pdf-to-img",
                 "img-to-pdf",
                 "pdf-to-pdfa",
@@ -112,20 +70,20 @@ public class EndpointConfiguration {
                 "html-to-pdf",
                 "url-to-pdf",
                 "markdown-to-pdf",
-                "pdf-to-csv");
+                "pdf-to-csv"
+        };
 
-        addEndpointsToGroup(
-                "Security",
+        String[] securityEndpoints = {
                 "add-password",
                 "remove-password",
                 "change-permissions",
                 "add-watermark",
                 "cert-sign",
                 "sanitize-pdf",
-                "auto-redact");
+                "auto-redact"
+        };
 
-        addEndpointsToGroup(
-                "Other",
+        String[] otherEndpoints = {
                 "ocr-pdf",
                 "add-image",
                 "compress-pdf",
@@ -141,10 +99,10 @@ public class EndpointConfiguration {
                 "add-page-numbers",
                 "auto-rename",
                 "get-info-on-pdf",
-                "show-javascript");
+                "show-javascript"
+        };
 
-        addEndpointsToGroup(
-                "CLI",
+        String[] cliEndpoints = {
                 "compress-pdf",
                 "extract-image-scans",
                 "repair",
@@ -160,17 +118,27 @@ public class EndpointConfiguration {
                 "html-to-pdf",
                 "url-to-pdf",
                 "book-to-pdf",
-                "pdf-to-book");
+                "pdf-to-book"
+        };
 
-        addEndpointsToGroup("Calibre", "book-to-pdf", "pdf-to-book");
+        String[] calibreEndpoints = {
+                "book-to-pdf",
+                "pdf-to-book"
+        };
 
-        addEndpointsToGroup(
-                "Python", "extract-image-scans", "remove-blanks", "html-to-pdf", "url-to-pdf");
+        String[] pythonEndpoints = {
+                "extract-image-scans",
+                "remove-blanks",
+                "html-to-pdf",
+                "url-to-pdf"
+        };
 
-        addEndpointsToGroup("OpenCV", "extract-image-scans", "remove-blanks");
+        String[] openCVEndpoints = {
+                "extract-image-scans",
+                "remove-blanks"
+        };
 
-        addEndpointsToGroup(
-                "LibreOffice",
+        String[] libreOfficeEndpoints = {
                 "repair",
                 "file-to-pdf",
                 "xlsx-to-pdf",
@@ -178,12 +146,16 @@ public class EndpointConfiguration {
                 "pdf-to-presentation",
                 "pdf-to-text",
                 "pdf-to-html",
-                "pdf-to-xml");
+                "pdf-to-xml"
+        };
 
-        addEndpointsToGroup("OCRmyPDF", "compress-pdf", "pdf-to-pdfa", "ocr-pdf");
+        String[] ocrmyPDFEndpoints = {
+                "compress-pdf",
+                "pdf-to-pdfa",
+                "ocr-pdf"
+        };
 
-        addEndpointsToGroup(
-                "Java",
+        String[] javaEndpoints = {
                 "merge-pdfs",
                 "remove-pages",
                 "split-pdfs",
@@ -216,15 +188,39 @@ public class EndpointConfiguration {
                 "split-by-size-or-count",
                 "overlay-pdf",
                 "split-pdf-by-sections",
-                "remove-blanks");
+                "remove-blanks"
+        };
 
-        addEndpointsToGroup("Javascript", "pdf-organizer", "sign", "compare", "adjust-contrast");
+        String[] javascriptEndpoints = {
+                "pdf-organizer",
+                "sign",
+                "compare",
+                "adjust-contrast"
+        };
+
+        // Add each group with its respective endpoints
+        addEndpointsToGroup("PageOps", pageOpsEndpoints);
+        addEndpointsToGroup("Convert", convertEndpoints);
+        addEndpointsToGroup("Security", securityEndpoints);
+        addEndpointsToGroup("Other", otherEndpoints);
+        addEndpointsToGroup("CLI", cliEndpoints);
+        addEndpointsToGroup("Calibre", calibreEndpoints);
+        addEndpointsToGroup("Python", pythonEndpoints);
+        addEndpointsToGroup("OpenCV", openCVEndpoints);
+        addEndpointsToGroup("LibreOffice", libreOfficeEndpoints);
+        addEndpointsToGroup("OCRmyPDF", ocrmyPDFEndpoints);
+        addEndpointsToGroup("Java", javaEndpoints);
+        addEndpointsToGroup("Javascript", javascriptEndpoints);
     }
 
-    private void addEndpointsToGroup(String group, String... endpoints) {
+    private void addEndpointsToGroup(String group, String[] endpoints) {
         for (String endpoint : endpoints) {
             addEndpointToGroup(group, endpoint);
         }
+    }
+
+    private void addEndpointToGroup(String group, String endpoint) {
+        endpointGroups.computeIfAbsent(group, k -> new HashSet<>()).add(endpoint);
     }
 
     private void processEnvironmentConfigs() {
@@ -249,6 +245,44 @@ public class EndpointConfiguration {
         if (groupsToRemove != null) {
             for (String group : groupsToRemove) {
                 disableGroup(group.trim());
+            }
+        }
+    }
+
+    public void enableEndpoint(String endpoint) {
+        endpointStatuses.put(endpoint, true);
+    }
+
+    public void disableEndpoint(String endpoint) {
+        if (!isAlreadyDisabled(endpoint)) {
+            logger.info("Disabling {}", endpoint);
+            endpointStatuses.put(endpoint, false);
+        }
+    }
+
+    private boolean isAlreadyDisabled(String endpoint) {
+        return !endpointStatuses.containsKey(endpoint) || !endpointStatuses.get(endpoint);
+    }
+
+    public boolean isEndpointEnabled(String endpoint) {
+        return endpointStatuses.getOrDefault(
+                endpoint.startsWith("/") ? endpoint.substring(1) : endpoint, true);
+    }
+
+    public void enableGroup(String group) {
+        Set<String> endpoints = endpointGroups.get(group);
+        if (endpoints != null) {
+            for (String endpoint : endpoints) {
+                enableEndpoint(endpoint);
+            }
+        }
+    }
+
+    public void disableGroup(String group) {
+        Set<String> endpoints = endpointGroups.get(group);
+        if (endpoints != null) {
+            for (String endpoint : endpoints) {
+                disableEndpoint(endpoint);
             }
         }
     }
