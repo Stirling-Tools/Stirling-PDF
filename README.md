@@ -19,6 +19,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 ![stirling-home](images/stirling-home.png)
 
 ## Features
+
 - Dark mode support.
 - Custom download options (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/images/settings.png) for example)
 - Parallel file processing and downloads
@@ -29,6 +30,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 ## **PDF Features**
 
 ### **Page Operations**
+
 - View and modify PDFs - View multi page PDFs with custom viewing sorting and searching. Plus on page edit features like annotate, draw and adding text and images. (Using PDF.js with Joxit and Liberation.Liberation fonts)
 - Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages.
 - Merge multiple PDFs together into a single resultant file.
@@ -45,6 +47,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Convert PDF to a single page.
 
 ### **Conversion Operations**
+
 - Convert PDFs to and from images.
 - Convert any common file to PDF (using LibreOffice).
 - Convert PDF to Word/Powerpoint/Others (using LibreOffice).
@@ -53,6 +56,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Markdown to PDF.
 
 ### **Security & Permissions**
+
 - Add and remove passwords.
 - Change/set PDF Permissions.
 - Add watermark(s).
@@ -61,6 +65,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Auto-redact text.
 
 ### **Other Operations**
+
 - Add/Generate/Write signatures.
 - Repair PDFs.
 - Detect and remove blank pages.
@@ -77,11 +82,11 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Flatten PDFs.
 - Get all information on a PDF to view or export as JSON.
 
-
 For a overview of the tasks and the technology each uses please view [Endpoint-groups.md](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
 Demo of the app is available [here](https://stirlingpdf.io). username: demo, password: demo
 
 ## Technologies used
+
 - Spring Boot + Thymeleaf
 - [PDFBox](https://github.com/apache/pdfbox/tree/trunk)
 - [LibreOffice](https://www.libreoffice.org/discover/libreoffice/) for advanced conversions
@@ -94,9 +99,11 @@ Demo of the app is available [here](https://stirlingpdf.io). username: demo, pas
 ## How to use
 
 ### Locally
+
 Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LocalRunGuide.md
 
 ### Docker / Podman
+
 https://hub.docker.com/r/frooodle/s-pdf
 
 Stirling PDF has 3 different versions, a Full version, Lite, and ultra-Lite. Depending on the types of features you use you may want a smaller image to save on space.
@@ -107,6 +114,7 @@ For people that don't mind about space optimization just use the latest tag.
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
 
 Docker Run
+
 ```bash
 docker run -d \
   -p 8080:8080 \
@@ -123,7 +131,9 @@ docker run -d \
 
   -v /location/of/customFiles:/customFiles \
 ```
+
 Docker Compose
+
 ```yaml
 version: '3.3'
 services:
@@ -144,6 +154,7 @@ services:
 Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
 
 ## Enable OCR/Compression feature
+
 Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Supported Languages
@@ -181,17 +192,19 @@ Stirling PDF currently supports 26!
 Please see our [Contributing Guide](CONTRIBUTING.md)!
 
 ## Customisation
+
 Stirling PDF allows easy customization of the app.
 Includes things like
+
 - Custom application name
 - Custom slogans, icons, images, and even custom HTML (via file overrides)
-
 
 There are two options for this, either using the generated settings file ``settings.yml``
 This file is located in the ``/configs`` directory and follows standard YAML formatting
 
 Environment variables are also supported and would override the settings file
 For example in the settings.yml you have
+
 ```yaml
 system:
   defaultLocale: 'en-US'
@@ -200,6 +213,7 @@ system:
 To have this via an environment variable you would have ``SYSTEM_DEFAULTLOCALE``
 
 The Current list of settings is
+
 ```yaml
 security:
   enableLogin: false # set to 'true' to enable login
@@ -209,6 +223,8 @@ system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
+  showUpdate: true # see when a new update is available
+  showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
 
 #ui:
 #  appName: exampleAppName # Application's visible name
@@ -222,24 +238,31 @@ endpoints:
 metrics:
   enabled: true # 'true' to enable Info APIs endpoints (view http://localhost:8080/swagger-ui/index.html#/API to learn more), 'false' to disable
 ```
+
 ### Extra notes
+
 - Endpoints. Currently, the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma separate lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image-to-pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
 - customStaticFilePath. Customise static files such as the app logo by placing files in the /customFiles/static/ directory. An example of customising app logo is placing a /customFiles/static/favicon.svg to override current SVG. This can be used to change any images/icons/css/fonts/js etc in Stirling-PDF
 
 ### Environment only parameters
+
 - ``SYSTEM_ROOTURIPATH`` ie set to ``/pdf-app`` to Set the application's root URI to ``localhost:8080/pdf-app``
 - ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
 - ``DOCKER_ENABLE_SECURITY`` to tell docker to download security jar (required as true for auth login)
 - ``INSTALL_BOOK_AND_ADVANCED_HTML_OPS`` to download calibre onto stirling-pdf enabling pdf to/from book and advanced html conversion
 
 ## API
+
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
 [here](https://app.swaggerhub.com/apis-docs/Stirling-Tools/Stirling-PDF/) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation (Or by following the API button in your settings of Stirling-PDF)
 
 
 ## Login authentication
+
 ![stirling-login](images/login-light.png)
-### Prerequisites:
+
+### Prerequisites
+
 - User must have the folder ./configs volumed within docker so that it is retained during updates.
 - Docker uses must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables.
 - Then either enable login via the settings.yml file or via setting ``SECURITY_ENABLE_LOGIN`` to ``true``
@@ -258,6 +281,7 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 ## FAQ
 
 ### Q1: What are your planned features?
+
 - Progress bar/Tracking
 - Full custom logic pipelines to combine multiple operations together.
 - Folder support with auto scanning to perform operations on
@@ -267,7 +291,9 @@ For API usage you must provide a header with 'X-API-Key' and the associated API 
 - Fill forms manually or automatically
 
 ### Q2: Why is my application downloading .htm files?
+
 This is an issue caused commonly by your NGINX configuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. ``client_max_body_size SIZE;`` Where "SIZE" is 50M for example for 50MB files.
 
 ### Q3: Why is my download timing out
+
 NGINX has timeout values by default so if you are running Stirling-PDF behind NGINX you may need to set a timeout value such as adding the config ``proxy_read_timeout 3600;``

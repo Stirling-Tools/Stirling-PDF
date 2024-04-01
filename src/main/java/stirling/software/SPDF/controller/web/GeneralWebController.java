@@ -29,14 +29,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.config.security.AppUpdateShowService;
+
 @Controller
 @Tag(name = "General", description = "General APIs")
 public class GeneralWebController {
+
+    @Autowired private AppUpdateShowService appUpdateShowService;
 
     @GetMapping("/pipeline")
     @Hidden
     public String pipelineForm(Model model) {
         model.addAttribute("currentPage", "pipeline");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
 
         List<String> pipelineConfigs = new ArrayList<>();
         List<Map<String, String>> pipelineConfigsWithNames = new ArrayList<>();
@@ -94,6 +99,7 @@ public class GeneralWebController {
     @Hidden
     public String mergePdfForm(Model model) {
         model.addAttribute("currentPage", "merge-pdfs");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "merge-pdfs";
     }
 
@@ -101,6 +107,7 @@ public class GeneralWebController {
     @Hidden
     public String splitPdfBySections(Model model) {
         model.addAttribute("currentPage", "split-pdf-by-sections");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "split-pdf-by-sections";
     }
 
@@ -108,6 +115,7 @@ public class GeneralWebController {
     @Hidden
     public String ViewPdfForm2(Model model) {
         model.addAttribute("currentPage", "view-pdf");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "view-pdf";
     }
 
@@ -115,6 +123,7 @@ public class GeneralWebController {
     @Hidden
     public String multiToolForm(Model model) {
         model.addAttribute("currentPage", "multi-tool");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "multi-tool";
     }
 
@@ -122,6 +131,7 @@ public class GeneralWebController {
     @Hidden
     public String pageDeleter(Model model) {
         model.addAttribute("currentPage", "remove-pages");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "remove-pages";
     }
 
@@ -129,6 +139,7 @@ public class GeneralWebController {
     @Hidden
     public String pageOrganizer(Model model) {
         model.addAttribute("currentPage", "pdf-organizer");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "pdf-organizer";
     }
 
@@ -136,6 +147,7 @@ public class GeneralWebController {
     @Hidden
     public String extractPages(Model model) {
         model.addAttribute("currentPage", "extract-page");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "extract-page";
     }
 
@@ -143,6 +155,7 @@ public class GeneralWebController {
     @Hidden
     public String pdfToSinglePage(Model model) {
         model.addAttribute("currentPage", "pdf-to-single-page");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "pdf-to-single-page";
     }
 
@@ -150,6 +163,7 @@ public class GeneralWebController {
     @Hidden
     public String rotatePdfForm(Model model) {
         model.addAttribute("currentPage", "rotate-pdf");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "rotate-pdf";
     }
 
@@ -157,6 +171,7 @@ public class GeneralWebController {
     @Hidden
     public String splitPdfForm(Model model) {
         model.addAttribute("currentPage", "split-pdfs");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "split-pdfs";
     }
 
@@ -164,6 +179,7 @@ public class GeneralWebController {
     @Hidden
     public String signForm(Model model) {
         model.addAttribute("currentPage", "sign");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         model.addAttribute("fonts", getFontNames());
         return "sign";
     }
@@ -172,6 +188,7 @@ public class GeneralWebController {
     @Hidden
     public String multiPageLayoutForm(Model model) {
         model.addAttribute("currentPage", "multi-page-layout");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "multi-page-layout";
     }
 
@@ -179,6 +196,7 @@ public class GeneralWebController {
     @Hidden
     public String scalePagesFrom(Model model) {
         model.addAttribute("currentPage", "scale-pages");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "scale-pages";
     }
 
@@ -186,6 +204,7 @@ public class GeneralWebController {
     @Hidden
     public String splitBySizeOrCount(Model model) {
         model.addAttribute("currentPage", "split-by-size-or-count");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "split-by-size-or-count";
     }
 
@@ -193,6 +212,7 @@ public class GeneralWebController {
     @Hidden
     public String overlayPdf(Model model) {
         model.addAttribute("currentPage", "overlay-pdf");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "overlay-pdf";
     }
 
@@ -297,6 +317,7 @@ public class GeneralWebController {
     @Hidden
     public String cropForm(Model model) {
         model.addAttribute("currentPage", "crop");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "crop";
     }
 
@@ -304,6 +325,7 @@ public class GeneralWebController {
     @Hidden
     public String autoSPlitPDFForm(Model model) {
         model.addAttribute("currentPage", "auto-split-pdf");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "auto-split-pdf";
     }
 }

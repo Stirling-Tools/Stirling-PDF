@@ -30,13 +30,13 @@ async function getLatestReleaseVersion() {
 
 async function checkForUpdate() {
   // Initialize the update button as hidden
-  var updateBtn = document.getElementById("update-btn");
-  var updateLink = document.getElementById("update-link");
+  var updateBtn = document.getElementById("update-btn") || null;
+  var updateLink = document.getElementById("update-link") || null;
   if (updateBtn !== null) {
     updateBtn.style.display = "none";
   }
   if (updateLink !== null) {
-    console.log("Ausblenden!");
+    console.log("hidden!");
     if (!updateLink.classList.contains("visually-hidden")) {
       updateLink.classList.add("visually-hidden");
     }
@@ -47,7 +47,9 @@ async function checkForUpdate() {
   console.log("currentVersion=" + currentVersion);
   console.log("compareVersions(latestVersion, currentVersion) > 0)=" + compareVersions(latestVersion, currentVersion));
   if (latestVersion && compareVersions(latestVersion, currentVersion) > 0) {
-    document.getElementById("update-btn").style.display = "block";
+    if (updateBtn != null) {
+      document.getElementById("update-btn").style.display = "block";
+    }
     if (updateLink !== null) {
       document.getElementById("app-update").innerText = currentVersion + " => " + latestVersion;
       if (updateLink.classList.contains("visually-hidden")) {
