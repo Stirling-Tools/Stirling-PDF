@@ -4,6 +4,7 @@
   transition: all 0.3s;
   max-height: 0;
   overflow: hidden;
+  z-index: 10;
 }
 
 #navbarSearch.show {
