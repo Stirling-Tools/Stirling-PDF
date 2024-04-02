@@ -16,7 +16,7 @@ Stirling PDF makes no outbound calls for any record keeping or tracking.
 
 All files and PDFs exist either exclusively on the client side, reside in server memory only during task execution, or temporarily reside in a file solely for the execution of the task. Any file downloaded by the user will have been deleted from the server by that point.
 
-![stirling-home](images/stirling-home.png)
+![stirling-home](images/stirling-home.jpg)
 
 ## Features
 - Dark mode support.
