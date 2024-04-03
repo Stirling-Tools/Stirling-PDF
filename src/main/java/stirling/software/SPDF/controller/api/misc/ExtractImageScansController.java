@@ -144,7 +144,7 @@ public class ExtractImageScansController {
 
                 // Read the output photos in temp directory
                 List<Path> tempOutputFiles =
-                        Files.list(tempDir).sorted().collect(Collectors.toList());
+                        Files.list(tempDir).sorted().toList();
                 for (Path tempOutputFile : tempOutputFiles) {
                     byte[] imageBytes = Files.readAllBytes(tempOutputFile);
                     processedImageBytes.add(imageBytes);
