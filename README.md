@@ -106,11 +106,10 @@ Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LocalRunGui
 
 https://hub.docker.com/r/frooodle/s-pdf
 
-Stirling PDF has 3 different versions, a Full version, Lite, and ultra-Lite. Depending on the types of features you use you may want a smaller image to save on space.
+Stirling PDF has 2 different versions, a Full version and ultra-Lite version. Depending on the types of features you use you may want a smaller image to save on space.
 To see what the different versions offer please look at our [version mapping](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Version-groups.md)
 For people that don't mind about space optimization just use the latest tag.
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest?label=Stirling-PDF%20Full)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-lite?label=Stirling-PDF%20Lite)
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
 
 Docker Run
