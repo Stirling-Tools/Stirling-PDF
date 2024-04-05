@@ -9,7 +9,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -143,8 +142,7 @@ public class ExtractImageScansController {
                                 .runCommandWithOutputHandling(command);
 
                 // Read the output photos in temp directory
-                List<Path> tempOutputFiles =
-                        Files.list(tempDir).sorted().toList();
+                List<Path> tempOutputFiles = Files.list(tempDir).sorted().toList();
                 for (Path tempOutputFile : tempOutputFiles) {
                     byte[] imageBytes = Files.readAllBytes(tempOutputFile);
                     processedImageBytes.add(imageBytes);
