@@ -1,7 +1,5 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,10 +17,6 @@ import stirling.software.SPDF.utils.PDFToFile;
 @Tag(name = "Convert", description = "Convert APIs")
 @RequestMapping("/api/v1/convert")
 public class ConvertPDFToHtml {
-
-    @Autowired
-    @Qualifier("bookAndHtmlFormatsInstalled")
-    private boolean bookAndHtmlFormatsInstalled;
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/html")
     @Operation(
