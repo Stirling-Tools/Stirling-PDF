@@ -6,6 +6,7 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -434,7 +435,7 @@ public class PdfUtils {
                 .build();
     }
 
-    public static PDDocument setMetadataToPdf(PDDocument pdf, PdfMetadata pdfMetadata) {
+    public static void setMetadataToPdf(PDDocument pdf, PdfMetadata pdfMetadata) {
         pdf.getDocumentInformation().setAuthor(pdfMetadata.getAuthor());
         pdf.getDocumentInformation().setProducer(pdfMetadata.getProducer());
         pdf.getDocumentInformation().setTitle(pdfMetadata.getTitle());
@@ -442,8 +443,6 @@ public class PdfUtils {
         pdf.getDocumentInformation().setSubject(pdfMetadata.getSubject());
         pdf.getDocumentInformation().setKeywords(pdfMetadata.getKeywords());
         pdf.getDocumentInformation().setCreationDate(pdfMetadata.getCreationDate());
-        pdf.getDocumentInformation().setModificationDate(pdfMetadata.getModificationDate());
-
-        return pdf;
+        pdf.getDocumentInformation().setModificationDate(Calendar.getInstance());
     }
 }
