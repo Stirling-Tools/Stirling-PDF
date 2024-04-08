@@ -157,7 +157,7 @@ Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR
 
 ## Supported Languages
 
-Stirling PDF currently supports 26!
+Stirling PDF currently supports 27!
 
 | Language                                    | Progress                               |
 | ------------------------------------------- | -------------------------------------- |
@@ -165,12 +165,12 @@ Stirling PDF currently supports 26!
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
 | Arabic (العربية) (ar_AR)                    | ![58%](https://geps.dev/progress/58)   |
 | German (Deutsch) (de_DE)                    | ![95%](https://geps.dev/progress/95)   |
-| French (Français) (fr_FR)                   | ![99%](https://geps.dev/progress/99)   |
+| French (Français) (fr_FR)                   | ![94%](https://geps.dev/progress/94)   |
 | Spanish (Español) (es_ES)                   | ![95%](https://geps.dev/progress/95)   |
 | Simplified Chinese (简体中文) (zh_CN)       | ![99%](https://geps.dev/progress/99)   |
 | Traditional Chinese (繁體中文) (zh_TW)      | ![97%](https://geps.dev/progress/97)   |
 | Catalan (Català) (ca_CA)                    | ![65%](https://geps.dev/progress/65)   |
-| Italian (Italiano) (it_IT)                  | ![99%](https://geps.dev/progress/99)   |
+| Italian (Italiano) (it_IT)                  | ![98%](https://geps.dev/progress/98)   |
 | Swedish (Svenska) (sv_SE)                   | ![58%](https://geps.dev/progress/58)   |
 | Polish (Polski) (pl_PL)                     | ![60%](https://geps.dev/progress/60)   |
 | Romanian (Română) (ro_RO)                   | ![58%](https://geps.dev/progress/58)   |
@@ -187,6 +187,7 @@ Stirling PDF currently supports 26!
 | Hungarian (Magyar) (hu_HU)                  | ![87%](https://geps.dev/progress/87)   |
 | Bulgarian (Български) (bg_BG)               | ![82%](https://geps.dev/progress/82)   |
 | Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![89%](https://geps.dev/progress/89)   |
+| Ukrainian (Українська) (uk_UA)              | ![98%](https://geps.dev/progress/98)   |
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
