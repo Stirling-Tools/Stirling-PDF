@@ -88,6 +88,7 @@ public class GeneralUtils {
         }
 
         sizeStr = sizeStr.trim().toUpperCase();
+        sizeStr = sizeStr.replace(",", ".").replace(" ", "");
         try {
             if (sizeStr.endsWith("KB")) {
                 return (long)
