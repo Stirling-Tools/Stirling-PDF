@@ -31,3 +31,12 @@ document.getElementById("boredWaiting").addEventListener("change", function () {
   boredWaiting = this.checked ? "enabled" : "disabled";
   localStorage.setItem("boredWaiting", boredWaiting);
 });
+
+var cacheInputs = localStorage.getItem("cacheInputs") || "disabled";
+document.getElementById("cacheInputs").checked = cacheInputs === "enabled";
+
+document.getElementById("cacheInputs").addEventListener("change", function () {
+  cacheInputs = this.checked ? "enabled" : "disabled";
+  localStorage.setItem("cacheInputs", cacheInputs);
+});
+
