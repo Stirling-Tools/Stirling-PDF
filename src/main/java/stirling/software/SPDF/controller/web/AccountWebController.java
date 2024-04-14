@@ -95,7 +95,7 @@ public class AccountWebController {
 
                 // Fetch user details from the database
                 Optional<User> user =
-                        userRepository.findByUsername(
+                        userRepository.findByUsernameIgnoreCase(
                                 username); // Assuming findByUsername method exists
                 if (!user.isPresent()) {
                     // Handle error appropriately
@@ -145,7 +145,7 @@ public class AccountWebController {
 
                 // Fetch user details from the database
                 Optional<User> user =
-                        userRepository.findByUsername(
+                        userRepository.findByUsernameIgnoreCase(
                                 username); // Assuming findByUsername method exists
                 if (!user.isPresent()) {
                     // Handle error appropriately
