@@ -38,7 +38,7 @@ public class InitialSecuritySetup {
                         initialUsername, initialPassword, Role.ADMIN.getRoleId(), true);
             }
         }
-        if (!userService.usernameExists(Role.INTERNAL_API_USER.getRoleId())) {
+        if (!userService.usernameExistsIgnoreCase(Role.INTERNAL_API_USER.getRoleId())) {
             userService.saveUser(
                     Role.INTERNAL_API_USER.getRoleId(),
                     UUID.randomUUID().toString(),
