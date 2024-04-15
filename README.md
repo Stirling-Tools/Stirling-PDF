@@ -225,6 +225,8 @@ system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
+  showUpdate: true # see when a new update is available
+  showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
 
 #ui:
 #  appName: exampleAppName # Application's visible name

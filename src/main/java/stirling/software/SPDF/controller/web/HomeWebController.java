@@ -20,16 +20,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
+import stirling.software.SPDF.config.security.AppUpdateShowService;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Dependency;
 
 @Controller
 public class HomeWebController {
 
+    @Autowired private AppUpdateShowService appUpdateShowService;
+
     @GetMapping("/about")
     @Hidden
     public String gameForm(Model model) {
         model.addAttribute("currentPage", "about");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "about";
     }
 
@@ -37,6 +41,7 @@ public class HomeWebController {
     @Hidden
     public String licensesForm(Model model) {
         model.addAttribute("currentPage", "licenses");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
         try {
             InputStream is = resource.getInputStream();
@@ -54,6 +59,7 @@ public class HomeWebController {
     @GetMapping("/")
     public String home(Model model) {
         model.addAttribute("currentPage", "home");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "home";
     }
 

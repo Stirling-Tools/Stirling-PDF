@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,13 +15,19 @@ import org.springframework.web.servlet.ModelAndView;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.config.security.AppUpdateShowService;
+
 @Controller
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class OtherWebController {
+
+    @Autowired private AppUpdateShowService appUpdateShowService;
+
     @GetMapping("/compress-pdf")
     @Hidden
     public String compressPdfForm(Model model) {
         model.addAttribute("currentPage", "compress-pdf");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/compress-pdf";
     }
 
@@ -29,6 +36,7 @@ public class OtherWebController {
     public ModelAndView extractImageScansForm() {
         ModelAndView modelAndView = new ModelAndView("misc/extract-image-scans");
         modelAndView.addObject("currentPage", "extract-image-scans");
+        modelAndView.addObject("showUpdate", appUpdateShowService.showUpdate());
         return modelAndView;
     }
 
@@ -36,6 +44,7 @@ public class OtherWebController {
     @Hidden
     public String extractJavascriptForm(Model model) {
         model.addAttribute("currentPage", "show-javascript");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/show-javascript";
     }
 
@@ -43,6 +52,7 @@ public class OtherWebController {
     @Hidden
     public String stampForm(Model model) {
         model.addAttribute("currentPage", "stamp");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/stamp";
     }
 
@@ -50,6 +60,7 @@ public class OtherWebController {
     @Hidden
     public String addPageNumbersForm(Model model) {
         model.addAttribute("currentPage", "add-page-numbers");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/add-page-numbers";
     }
 
@@ -57,6 +68,7 @@ public class OtherWebController {
     @Hidden
     public String extractImagesForm(Model model) {
         model.addAttribute("currentPage", "extract-images");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/extract-images";
     }
 
@@ -64,6 +76,7 @@ public class OtherWebController {
     @Hidden
     public String flattenForm(Model model) {
         model.addAttribute("currentPage", "flatten");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/flatten";
     }
 
@@ -71,6 +84,7 @@ public class OtherWebController {
     @Hidden
     public String addWatermarkForm(Model model) {
         model.addAttribute("currentPage", "change-metadata");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/change-metadata";
     }
 
@@ -78,6 +92,7 @@ public class OtherWebController {
     @Hidden
     public String compareForm(Model model) {
         model.addAttribute("currentPage", "compare");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/compare";
     }
 
@@ -102,6 +117,7 @@ public class OtherWebController {
         Collections.sort(languages);
         modelAndView.addObject("languages", languages);
         modelAndView.addObject("currentPage", "ocr-pdf");
+        modelAndView.addObject("showUpdate", appUpdateShowService.showUpdate());
         return modelAndView;
     }
 
@@ -109,6 +125,7 @@ public class OtherWebController {
     @Hidden
     public String overlayImage(Model model) {
         model.addAttribute("currentPage", "add-image");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/add-image";
     }
 
@@ -116,6 +133,7 @@ public class OtherWebController {
     @Hidden
     public String contrast(Model model) {
         model.addAttribute("currentPage", "adjust-contrast");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/adjust-contrast";
     }
 
@@ -123,6 +141,7 @@ public class OtherWebController {
     @Hidden
     public String repairForm(Model model) {
         model.addAttribute("currentPage", "repair");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/repair";
     }
 
@@ -130,6 +149,7 @@ public class OtherWebController {
     @Hidden
     public String removeBlanksForm(Model model) {
         model.addAttribute("currentPage", "remove-blanks");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/remove-blanks";
     }
 
@@ -137,6 +157,7 @@ public class OtherWebController {
     @Hidden
     public String removeAnnotationsForm(Model model) {
         model.addAttribute("currentPage", "remove-annotations");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/remove-annotations";
     }
 
@@ -144,6 +165,7 @@ public class OtherWebController {
     @Hidden
     public String autoCropForm(Model model) {
         model.addAttribute("currentPage", "auto-crop");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/auto-crop";
     }
 
@@ -151,6 +173,7 @@ public class OtherWebController {
     @Hidden
     public String autoRenameForm(Model model) {
         model.addAttribute("currentPage", "auto-rename");
+        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "misc/auto-rename";
     }
 }
