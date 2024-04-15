@@ -43,7 +43,7 @@ public class UserController {
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
     public String register(@ModelAttribute UsernameAndPass requestModel, Model model) {
-        if (userService.usernameExists(requestModel.getUsername())) {
+        if (userService.usernameExistsIgnoreCase(requestModel.getUsername())) {
             model.addAttribute("error", "Username already exists");
             return "register";
         }
@@ -70,7 +70,8 @@ public class UserController {
             return new RedirectView("/account?messageType=notAuthenticated");
         }
 
-        Optional<User> userOpt = userService.findByUsernameIgnoreCase(principal.getName());
+        // The username MUST be unique when renaming
+        Optional<User> userOpt = userService.findByUsername(principal.getName());
 
         if (userOpt == null || userOpt.isEmpty()) {
             return new RedirectView("/account?messageType=userNotFound");
@@ -113,7 +114,7 @@ public class UserController {
             return new RedirectView("/change-creds?messageType=notAuthenticated");
         }
 
-        Optional<User> userOpt = userService.findByUsername(principal.getName());
+        Optional<User> userOpt = userService.findByUsernameIgnoreCase(principal.getName());
 
         if (userOpt == null || userOpt.isEmpty()) {
             return new RedirectView("/change-creds?messageType=userNotFound");
@@ -146,7 +147,7 @@ public class UserController {
             return new RedirectView("/account?messageType=notAuthenticated");
         }
 
-        Optional<User> userOpt = userService.findByUsername(principal.getName());
+        Optional<User> userOpt = userService.findByUsernameIgnoreCase(principal.getName());
 
         if (userOpt == null || userOpt.isEmpty()) {
             return new RedirectView("/account?messageType=userNotFound");
@@ -207,7 +208,7 @@ public class UserController {
                 return new RedirectView("/addUsers?messageType=usernameExists");
             }
         }
-        if (userService.usernameExists(username)) {
+        if (userService.usernameExistsIgnoreCase(username)) {
             return new RedirectView("/addUsers?messageType=usernameExists");
         }
         try {
@@ -231,7 +232,7 @@ public class UserController {
     public RedirectView deleteUser(
             @PathVariable(name = "username") String username, Authentication authentication) {
 
-        if (!userService.usernameExists(username)) {
+        if (!userService.usernameExistsIgnoreCase(username)) {
             return new RedirectView("/addUsers?messageType=deleteUsernameExists");
         }
 
@@ -239,7 +240,7 @@ public class UserController {
         String currentUsername = authentication.getName();
 
         // Check if the provided username matches the current session's username
-        if (currentUsername.equals(username)) {
+        if (currentUsername.equalsIgnoreCase(username)) {
             return new RedirectView("/addUsers?messageType=deleteCurrentUser");
         }
         invalidateUserSessions(username);
