@@ -88,6 +88,7 @@ public class GeneralUtils {
         }
 
         sizeStr = sizeStr.trim().toUpperCase();
+        sizeStr = sizeStr.replace(",", ".").replace(" ", "");
         try {
             if (sizeStr.endsWith("KB")) {
                 return (long)
@@ -185,7 +186,7 @@ public class GeneralUtils {
         // Insert multiplication between a number and 'n' (e.g., "4n" becomes "4*n")
         String withMultiplication = expression.replaceAll("(\\d)n", "$1*n");
         // Now replace 'n' with its current value
-        return withMultiplication.replaceAll("n", String.valueOf(nValue));
+        return withMultiplication.replace("n", String.valueOf(nValue));
     }
 
     private static List<Integer> handlePart(String part, int totalPages, int offset) {
