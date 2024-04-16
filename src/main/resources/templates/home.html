@@ -23,7 +23,7 @@
           <br>
           <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
           <div class="features-container">
-            <div th:if="${showUpdate}" class="feature-card favorite" id="update-link" style="display: none;">
+            <div th:if="${@showUpdate.isShow()}" class="feature-card favorite" id="update-link" style="display: none;">
               <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" class="nav-link text-body-secondary px-2" rel="noopener">
                 <div class="d-flex align-items-center">
                   <img class="card-icon home-card-icon home-card-icon-colour" src="images/update.svg" alt="Icon" width="30" height="30">

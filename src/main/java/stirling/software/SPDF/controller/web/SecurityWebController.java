@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.web;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,19 +7,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import stirling.software.SPDF.config.security.AppUpdateShowService;
-
 @Controller
 @Tag(name = "Security", description = "Security APIs")
 public class SecurityWebController {
-
-    @Autowired private AppUpdateShowService appUpdateShowService;
 
     @GetMapping("/auto-redact")
     @Hidden
     public String autoRedactForm(Model model) {
         model.addAttribute("currentPage", "auto-redact");
-        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "security/auto-redact";
     }
 
@@ -28,7 +22,6 @@ public class SecurityWebController {
     @Hidden
     public String addPasswordForm(Model model) {
         model.addAttribute("currentPage", "add-password");
-        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "security/add-password";
     }
 
@@ -36,7 +29,6 @@ public class SecurityWebController {
     @Hidden
     public String permissionsForm(Model model) {
         model.addAttribute("currentPage", "change-permissions");
-        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "security/change-permissions";
     }
 
@@ -44,7 +36,6 @@ public class SecurityWebController {
     @Hidden
     public String removePasswordForm(Model model) {
         model.addAttribute("currentPage", "remove-password");
-        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "security/remove-password";
     }
 
@@ -52,7 +43,6 @@ public class SecurityWebController {
     @Hidden
     public String addWatermarkForm(Model model) {
         model.addAttribute("currentPage", "add-watermark");
-        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "security/add-watermark";
     }
 
@@ -60,7 +50,6 @@ public class SecurityWebController {
     @Hidden
     public String certSignForm(Model model) {
         model.addAttribute("currentPage", "cert-sign");
-        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "security/cert-sign";
     }
 
@@ -68,7 +57,6 @@ public class SecurityWebController {
     @Hidden
     public String sanitizeForm(Model model) {
         model.addAttribute("currentPage", "sanitize-pdf");
-        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "security/sanitize-pdf";
     }
 
@@ -76,7 +64,6 @@ public class SecurityWebController {
     @Hidden
     public String getInfo(Model model) {
         model.addAttribute("currentPage", "get-info-on-pdf");
-        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "security/get-info-on-pdf";
     }
 }

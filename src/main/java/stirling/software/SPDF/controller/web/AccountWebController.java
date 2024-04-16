@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
-import stirling.software.SPDF.config.security.AppUpdateShowService;
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
@@ -28,8 +27,6 @@ import stirling.software.SPDF.repository.UserRepository;
 @Controller
 @Tag(name = "Account Security", description = "Account Security APIs")
 public class AccountWebController {
-
-    @Autowired private AppUpdateShowService appUpdateShowService;
 
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
@@ -74,7 +71,6 @@ public class AccountWebController {
             }
         }
 
-        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         model.addAttribute("users", allUsers);
         model.addAttribute("currentUsername", authentication.getName());
         model.addAttribute("roleDetails", roleDetails);
@@ -118,7 +114,6 @@ public class AccountWebController {
                 }
 
                 // Add attributes to the model
-                model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
                 model.addAttribute("username", username);
                 model.addAttribute("role", user.get().getRolesAsString());
                 model.addAttribute("settings", settingsJson);
@@ -162,7 +157,6 @@ public class AccountWebController {
         } else {
             return "redirect:/";
         }
-        model.addAttribute("showUpdate", appUpdateShowService.showUpdate());
         return "change-creds";
     }
 }
