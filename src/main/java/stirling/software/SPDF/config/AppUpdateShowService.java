@@ -2,9 +2,6 @@ package stirling.software.SPDF.config;
 
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
@@ -17,11 +14,9 @@ import stirling.software.SPDF.repository.UserRepository;
 @Configuration
 public class AppUpdateShowService {
 
-    @Autowired private UserRepository userRepository;
-    @Autowired private ApplicationProperties applicationProperties;
-
     @Bean
-    public AppUpdateService showUpdate() {
+    public AppUpdateService showUpdate(
+            UserRepository userRepository, ApplicationProperties applicationProperties) {
         return new AppUpdateService(userRepository, applicationProperties);
     }
 }
@@ -30,8 +25,6 @@ class AppUpdateService {
 
     private UserRepository userRepository;
     private ApplicationProperties applicationProperties;
-
-    private static final Logger logger = LoggerFactory.getLogger(AppUpdateShowService.class);
 
     public AppUpdateService(
             UserRepository userRepository, ApplicationProperties applicationProperties) {
