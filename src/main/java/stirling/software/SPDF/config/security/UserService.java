@@ -62,7 +62,7 @@ public class UserService implements UserServiceInterface {
     public User addApiKeyToUser(String username) {
         User user =
                 userRepository
-                        .findByUsername(username)
+                        .findByUsernameIgnoreCase(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         user.setApiKey(generateApiKey());
@@ -76,7 +76,7 @@ public class UserService implements UserServiceInterface {
     public String getApiKeyForUser(String username) {
         User user =
                 userRepository
-                        .findByUsername(username)
+                        .findByUsernameIgnoreCase(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return user.getApiKey();
     }
@@ -103,7 +103,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public boolean validateApiKeyForUser(String username, String apiKey) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
+        Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
         return userOpt.isPresent() && userOpt.get().getApiKey().equals(apiKey);
     }
 
@@ -136,7 +136,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public void deleteUser(String username) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
+        Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
         if (userOpt.isPresent()) {
             for (Authority authority : userOpt.get().getAuthorities()) {
                 if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
@@ -151,12 +151,16 @@ public class UserService implements UserServiceInterface {
         return userRepository.findByUsername(username).isPresent();
     }
 
+    public boolean usernameExistsIgnoreCase(String username) {
+        return userRepository.findByUsernameIgnoreCase(username).isPresent();
+    }
+
     public boolean hasUsers() {
         return userRepository.count() > 0;
     }
 
     public void updateUserSettings(String username, Map<String, String> updates) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
+        Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             Map<String, String> settingsMap = user.getSettings();
