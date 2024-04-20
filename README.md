@@ -164,30 +164,30 @@ Stirling PDF currently supports 27!
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
 | Arabic (العربية) (ar_AR)                    | ![58%](https://geps.dev/progress/58)   |
-| German (Deutsch) (de_DE)                    | ![98%](https://geps.dev/progress/98)   |
-| French (Français) (fr_FR)                   | ![94%](https://geps.dev/progress/94)   |
+| German (Deutsch) (de_DE)                    | ![97%](https://geps.dev/progress/97)   |
+| French (Français) (fr_FR)                   | ![93%](https://geps.dev/progress/93)   |
 | Spanish (Español) (es_ES)                   | ![95%](https://geps.dev/progress/95)   |
-| Simplified Chinese (简体中文) (zh_CN)       | ![99%](https://geps.dev/progress/99)   |
-| Traditional Chinese (繁體中文) (zh_TW)      | ![99%](https://geps.dev/progress/99)   |
-| Catalan (Català) (ca_CA)                    | ![65%](https://geps.dev/progress/65)   |
+| Simplified Chinese (简体中文) (zh_CN)       | ![98%](https://geps.dev/progress/98)   |
+| Traditional Chinese (繁體中文) (zh_TW)      | ![98%](https://geps.dev/progress/98)   |
+| Catalan (Català) (ca_CA)                    | ![64%](https://geps.dev/progress/64)   |
 | Italian (Italiano) (it_IT)                  | ![98%](https://geps.dev/progress/98)   |
 | Swedish (Svenska) (sv_SE)                   | ![58%](https://geps.dev/progress/58)   |
-| Polish (Polski) (pl_PL)                     | ![60%](https://geps.dev/progress/60)   |
-| Romanian (Română) (ro_RO)                   | ![58%](https://geps.dev/progress/58)   |
-| Korean (한국어) (ko_KR)                     | ![94%](https://geps.dev/progress/94)   |
-| Portuguese Brazilian (Português) (pt_BR)    | ![74%](https://geps.dev/progress/74)   |
-| Russian (Русский) (ru_RU)                   | ![94%](https://geps.dev/progress/94)   |
-| Basque (Euskara) (eu_ES)                    | ![76%](https://geps.dev/progress/76)   |
-| Japanese (日本語) (ja_JP)                   | ![94%](https://geps.dev/progress/94)   |
-| Dutch (Nederlands) (nl_NL)                  | ![92%](https://geps.dev/progress/92)   |
+| Polish (Polski) (pl_PL)                     | ![59%](https://geps.dev/progress/59)   |
+| Romanian (Română) (ro_RO)                   | ![57%](https://geps.dev/progress/57)   |
+| Korean (한국어) (ko_KR)                     | ![93%](https://geps.dev/progress/93)   |
+| Portuguese Brazilian (Português) (pt_BR)    | ![73%](https://geps.dev/progress/73)   |
+| Russian (Русский) (ru_RU)                   | ![93%](https://geps.dev/progress/93)   |
+| Basque (Euskara) (eu_ES)                    | ![75%](https://geps.dev/progress/75)   |
+| Japanese (日本語) (ja_JP)                   | ![93%](https://geps.dev/progress/93)   |
+| Dutch (Nederlands) (nl_NL)                  | ![91%](https://geps.dev/progress/91)   |
 | Greek (Ελληνικά) (el_GR)                    | ![92%](https://geps.dev/progress/92)   |
-| Turkish (Türkçe) (tr_TR)                    | ![99%](https://geps.dev/progress/99)   |
+| Turkish (Türkçe) (tr_TR)                    | ![98%](https://geps.dev/progress/98)   |
 | Indonesia (Bahasa Indonesia) (id_ID)        | ![87%](https://geps.dev/progress/87)   |
-| Hindi (हिंदी) (hi_IN)                          | ![88%](https://geps.dev/progress/88)   |
-| Hungarian (Magyar) (hu_HU)                  | ![87%](https://geps.dev/progress/87)   |
+| Hindi (हिंदी) (hi_IN)                          | ![87%](https://geps.dev/progress/87)   |
+| Hungarian (Magyar) (hu_HU)                  | ![86%](https://geps.dev/progress/86)   |
 | Bulgarian (Български) (bg_BG)               | ![82%](https://geps.dev/progress/82)   |
-| Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![89%](https://geps.dev/progress/89)   |
-| Ukrainian (Українська) (uk_UA)              | ![98%](https://geps.dev/progress/98)   |
+| Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![88%](https://geps.dev/progress/88)   |
+| Ukrainian (Українська) (uk_UA)              | ![93%](https://geps.dev/progress/93)   |
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
