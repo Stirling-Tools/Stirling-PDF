@@ -39,7 +39,7 @@ public class FirstLoginFilter extends OncePerRequestFilter {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
-            Optional<User> user = userService.findByUsername(authentication.getName());
+            Optional<User> user = userService.findByUsernameIgnoreCase(authentication.getName());
             if ("GET".equalsIgnoreCase(method)
                     && user.isPresent()
                     && user.get().isFirstLogin()
