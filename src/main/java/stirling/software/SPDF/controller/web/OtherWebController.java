@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class OtherWebController {
+
     @GetMapping("/compress-pdf")
     @Hidden
     public String compressPdfForm(Model model) {

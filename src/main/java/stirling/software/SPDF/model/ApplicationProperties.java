@@ -210,6 +210,24 @@ public class ApplicationProperties {
         private String rootURIPath;
         private String customStaticFilePath;
         private Integer maxFileSize;
+        private boolean showUpdate;
+        private Boolean showUpdateOnlyAdmin;
+
+        public boolean getShowUpdateOnlyAdmin() {
+            return showUpdateOnlyAdmin;
+        }
+
+        public void setShowUpdateOnlyAdmin(boolean showUpdateOnlyAdmin) {
+            this.showUpdateOnlyAdmin = showUpdateOnlyAdmin;
+        }
+
+        public boolean getShowUpdate() {
+            return showUpdate;
+        }
+
+        public void setShowUpdate(boolean showUpdate) {
+            this.showUpdate = showUpdate;
+        }
 
         private Boolean enableAlphaFunctionality;
 
@@ -275,6 +293,10 @@ public class ApplicationProperties {
                     + maxFileSize
                     + ", enableAlphaFunctionality="
                     + enableAlphaFunctionality
+                    + ", showUpdate="
+                    + showUpdate
+                    + ", showUpdateOnlyAdmin="
+                    + showUpdateOnlyAdmin
                     + "]";
         }
     }
