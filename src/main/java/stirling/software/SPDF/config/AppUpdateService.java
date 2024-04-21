@@ -5,8 +5,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import stirling.software.SPDF.model.ApplicationProperties;
+
 @Service
 class AppUpdateService {
+
+    @Autowired private ApplicationProperties applicationProperties;
 
     @Autowired(required = false)
     ShowAdminInterface showAdmin;
@@ -14,6 +18,8 @@ class AppUpdateService {
     @Bean(name = "shouldShow")
     @Scope("request")
     public boolean shouldShow() {
-        return (showAdmin != null) ? showAdmin.getShowUpdateOnlyAdmins() : true;
+        boolean showUpdate = applicationProperties.getSystem().getShowUpdate();
+        boolean showAdminResult = (showAdmin != null) ? showAdmin.getShowUpdateOnlyAdmins() : true;
+        return showUpdate && showAdminResult;
     }
 }
