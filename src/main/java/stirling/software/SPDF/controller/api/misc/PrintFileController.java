@@ -35,11 +35,12 @@ import stirling.software.SPDF.model.api.misc.PrintFileRequest;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class PrintFileController {
 
-    @PostMapping(value = "/print-file", consumes = "multipart/form-data")
-    @Operation(
-            summary = "Prints PDF/Image file to a set printer",
-            description =
-                    "Input of PDF or Image along with a printer name/URL/IP to match against to send it to (Fire and forget) Input:Any Output:N/A Type:SISO")
+	//TODO
+    //@PostMapping(value = "/print-file", consumes = "multipart/form-data")
+    //@Operation(
+    //        summary = "Prints PDF/Image file to a set printer",
+    //        description =
+    //                "Input of PDF or Image along with a printer name/URL/IP to match against to send it to (Fire and forget) Input:Any Output:N/A Type:SISO")
     public ResponseEntity<String> printFile(@ModelAttribute PrintFileRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();

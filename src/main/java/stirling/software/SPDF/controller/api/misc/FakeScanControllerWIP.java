@@ -47,11 +47,12 @@ public class FakeScanControllerWIP {
 
     private static final Logger logger = LoggerFactory.getLogger(FakeScanControllerWIP.class);
 
-    @PostMapping(consumes = "multipart/form-data", value = "/fake-scan")
-    @Operation(
-            summary = "Repair a PDF file",
-            description =
-                    "This endpoint repairs a given PDF file by running Ghostscript command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response.")
+    //TODO
+    //@PostMapping(consumes = "multipart/form-data", value = "/fake-scan")
+    //@Operation(
+    //        summary = "Repair a PDF file",
+    //        description =
+    //                "This endpoint repairs a given PDF file by running Ghostscript command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response.")
     public ResponseEntity<byte[]> fakeScan(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();
 
