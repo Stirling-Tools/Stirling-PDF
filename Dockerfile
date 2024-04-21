@@ -61,7 +61,8 @@ openssl-dev \
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
-    tesseract --list-langs
+    tesseract --list-langs && \
+    rm -rf /var/cache/apk/*
 
 EXPOSE 8080
 
