@@ -4,8 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -41,117 +39,137 @@ public class SplitPdfBySizeController {
                             + " if 10MB and each page is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts 1.9MB but not 2.1MB) Input:PDF Output:ZIP-PDF Type:SISO")
     public ResponseEntity<byte[]> autoSplitPdf(@ModelAttribute SplitPdfBySizeOrCountRequest request)
             throws Exception {
-        List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<ByteArrayOutputStream>();
 
         MultipartFile file = request.getFileInput();
-        PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
-
-        // 0 = size, 1 = page count, 2 = doc count
-        int type = request.getSplitType();
-        String value = request.getSplitValue();
-
-        if (type == 0) { // Split by size
-            long maxBytes = GeneralUtils.convertSizeToBytes(value);
-            long currentSize = 0;
-            PDDocument currentDoc = new PDDocument();
-
-            for (PDPage page : sourceDocument.getPages()) {
-                ByteArrayOutputStream pageOutputStream = new ByteArrayOutputStream();
-                PDDocument tempDoc = new PDDocument();
-                tempDoc.addPage(page);
-                tempDoc.save(pageOutputStream);
-                tempDoc.close();
-
-                long pageSize = pageOutputStream.size();
-                if (currentSize + pageSize > maxBytes) {
-                    // Save and reset current document
-                    splitDocumentsBoas.add(currentDocToByteArray(currentDoc));
-                    currentDoc = new PDDocument();
-                    currentSize = 0;
-                }
-
-                currentDoc.addPage(page);
-                currentSize += pageSize;
-            }
-            // Add the last document if it contains any pages
-            if (currentDoc.getPages().getCount() != 0) {
-                splitDocumentsBoas.add(currentDocToByteArray(currentDoc));
-            }
-        } else if (type == 1) { // Split by page count
-            int pageCount = Integer.parseInt(value);
-            int currentPageCount = 0;
-            PDDocument currentDoc = new PDDocument();
-
-            for (PDPage page : sourceDocument.getPages()) {
-                currentDoc.addPage(page);
-                currentPageCount++;
-
-                if (currentPageCount == pageCount) {
-                    // Save and reset current document
-                    splitDocumentsBoas.add(currentDocToByteArray(currentDoc));
-                    currentDoc = new PDDocument();
-                    currentPageCount = 0;
-                }
-            }
-            // Add the last document if it contains any pages
-            if (currentDoc.getPages().getCount() != 0) {
-                splitDocumentsBoas.add(currentDocToByteArray(currentDoc));
-            }
-        } else if (type == 2) { // Split by doc count
-            int documentCount = Integer.parseInt(value);
-            int totalPageCount = sourceDocument.getNumberOfPages();
-            int pagesPerDocument = totalPageCount / documentCount;
-            int extraPages = totalPageCount % documentCount;
-            int currentPageIndex = 0;
-
-            for (int i = 0; i < documentCount; i++) {
-                PDDocument currentDoc = new PDDocument();
-                int pagesToAdd = pagesPerDocument + (i < extraPages ? 1 : 0);
-
-                for (int j = 0; j < pagesToAdd; j++) {
-                    currentDoc.addPage(sourceDocument.getPage(currentPageIndex++));
-                }
-
-                splitDocumentsBoas.add(currentDocToByteArray(currentDoc));
-            }
-        } else {
-            throw new IllegalArgumentException("Invalid argument for split type");
-        }
-
-        sourceDocument.close();
-
         Path zipFile = Files.createTempFile("split_documents", ".zip");
         String filename =
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
-        byte[] data;
+        byte[] data = null;
+        try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile));
+                PDDocument sourceDocument = Loader.loadPDF(file.getBytes())) {
 
-        try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
-            for (int i = 0; i < splitDocumentsBoas.size(); i++) {
-                String fileName = filename + "_" + (i + 1) + ".pdf";
-                ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
-                byte[] pdf = baos.toByteArray();
+            int type = request.getSplitType();
+            String value = request.getSplitValue();
 
-                ZipEntry pdfEntry = new ZipEntry(fileName);
-                zipOut.putNextEntry(pdfEntry);
-                zipOut.write(pdf);
-                zipOut.closeEntry();
+            if (type == 0) {
+                long maxBytes = GeneralUtils.convertSizeToBytes(value);
+                handleSplitBySize(sourceDocument, maxBytes, zipOut, filename);
+            } else if (type == 1) {
+                int pageCount = Integer.parseInt(value);
+                handleSplitByPageCount(sourceDocument, pageCount, zipOut, filename);
+            } else if (type == 2) {
+                int documentCount = Integer.parseInt(value);
+                handleSplitByDocCount(sourceDocument, documentCount, zipOut, filename);
+            } else {
+                throw new IllegalArgumentException("Invalid argument for split type");
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             data = Files.readAllBytes(zipFile);
-            Files.delete(zipFile);
+            Files.deleteIfExists(zipFile);
         }
 
         return WebResponseUtils.bytesToWebResponse(
                 data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 
-    private ByteArrayOutputStream currentDocToByteArray(PDDocument document) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        document.save(baos);
-        document.close();
-        return baos;
+    private void handleSplitBySize(
+            PDDocument sourceDocument, long maxBytes, ZipOutputStream zipOut, String baseFilename)
+            throws IOException {
+        long currentSize = 0;
+        PDDocument currentDoc = new PDDocument();
+        int fileIndex = 1;
+
+        for (int pageIndex = 0; pageIndex < sourceDocument.getNumberOfPages(); pageIndex++) {
+            PDPage page = sourceDocument.getPage(pageIndex);
+            ByteArrayOutputStream pageOutputStream = new ByteArrayOutputStream();
+
+            try (PDDocument tempDoc = new PDDocument()) {
+                PDPage importedPage = tempDoc.importPage(page); // This creates a new PDPage object
+                tempDoc.save(pageOutputStream);
+            }
+
+            long pageSize = pageOutputStream.size();
+            if (currentSize + pageSize > maxBytes) {
+                if (currentDoc.getNumberOfPages() > 0) {
+                    saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
+                    currentDoc.close(); // Make sure to close the document
+                    currentDoc = new PDDocument();
+                    currentSize = 0;
+                }
+            }
+
+            PDPage newPage = new PDPage(page.getCOSObject()); // Re-create the page
+            currentDoc.addPage(newPage);
+            currentSize += pageSize;
+        }
+
+        if (currentDoc.getNumberOfPages() != 0) {
+            saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
+            currentDoc.close();
+        }
+    }
+
+    private void handleSplitByPageCount(
+            PDDocument sourceDocument, int pageCount, ZipOutputStream zipOut, String baseFilename)
+            throws IOException {
+        int currentPageCount = 0;
+        PDDocument currentDoc = new PDDocument();
+        int fileIndex = 1;
+        for (PDPage page : sourceDocument.getPages()) {
+            currentDoc.addPage(page);
+            currentPageCount++;
+
+            if (currentPageCount == pageCount) {
+                // Save and reset current document
+                saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
+                currentDoc = new PDDocument();
+                currentPageCount = 0;
+            }
+        }
+        // Add the last document if it contains any pages
+        if (currentDoc.getPages().getCount() != 0) {
+            saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
+        }
+    }
+
+    private void handleSplitByDocCount(
+            PDDocument sourceDocument,
+            int documentCount,
+            ZipOutputStream zipOut,
+            String baseFilename)
+            throws IOException {
+        int totalPageCount = sourceDocument.getNumberOfPages();
+        int pagesPerDocument = totalPageCount / documentCount;
+        int extraPages = totalPageCount % documentCount;
+        int currentPageIndex = 0;
+        int fileIndex = 1;
+        for (int i = 0; i < documentCount; i++) {
+            PDDocument currentDoc = new PDDocument();
+            int pagesToAdd = pagesPerDocument + (i < extraPages ? 1 : 0);
+
+            for (int j = 0; j < pagesToAdd; j++) {
+                currentDoc.addPage(sourceDocument.getPage(currentPageIndex++));
+            }
+
+            saveDocumentToZip(currentDoc, zipOut, baseFilename, fileIndex++);
+        }
+    }
+
+    private void saveDocumentToZip(
+            PDDocument document, ZipOutputStream zipOut, String baseFilename, int index)
+            throws IOException {
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        document.save(outStream);
+        document.close(); // Close the document to free resources
+
+        // Create a new zip entry
+        ZipEntry zipEntry = new ZipEntry(baseFilename + "_" + index + ".pdf");
+        zipOut.putNextEntry(zipEntry);
+        zipOut.write(outStream.toByteArray());
+        zipOut.closeEntry();
     }
 }
