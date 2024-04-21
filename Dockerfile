@@ -36,7 +36,6 @@ openssl-dev \
         curl \
         openjdk17-jre \
         su-exec \
-        font-noto-cjk \
         shadow \
 # Doc conversion
         libreoffice@testing \
