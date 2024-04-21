@@ -166,4 +166,9 @@ public class SecurityConfiguration {
     public PersistentTokenRepository persistentTokenRepository() {
         return new JPATokenRepositoryImpl();
     }
+
+    @Bean
+    public boolean activSecurity() {
+        return true;
+    }
 }
