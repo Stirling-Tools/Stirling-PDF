@@ -8,31 +8,32 @@ on:
 
 jobs:
   push:
-
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
 
-    - uses: actions/checkout@v3.5.2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3.11.0
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v3
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      - name: Generate Swagger documentation
+        run: ./gradlew generateOpenApiDocs
 
-    - name: Generate Swagger documentation
-      run: ./gradlew generateOpenApiDocs
+      - name: Upload Swagger Documentation to SwaggerHub
+        run: ./gradlew swaggerhubUpload
+        env:
+          SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
 
-    - name: Upload Swagger Documentation to SwaggerHub
-      run: ./gradlew swaggerhubUpload
-      env:
-        SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+      - name: Get version number
+        id: versionNumber
+        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
 
-    - name: Set API version as published and default on SwaggerHub
-      run: |
-        curl -X PUT -H "Authorization: ${SWAGGERHUB_API_KEY}" "https://api.swaggerhub.com/apis/Frooodle/Stirling-PDF/${{ steps.versionNumber.outputs.versionNumber }}/settings/lifecycle" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"published\":true,\"default\":true}"
-      env:
-        SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+      - name: Set API version as published and default on SwaggerHub
+        run: |
+          curl -X PUT -H "Authorization: ${SWAGGERHUB_API_KEY}" "https://api.swaggerhub.com/apis/Frooodle/Stirling-PDF/${{ steps.versionNumber.outputs.versionNumber }}/settings/lifecycle" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"published\":true,\"default\":true}"
+        env:
+          SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
