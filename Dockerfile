@@ -25,15 +25,17 @@ ENV DOCKER_ENABLE_SECURITY=false \
 RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk update && \
     apk add --no-cache \
         ca-certificates \
         tzdata \
         tini \
+        openssl \
+openssl-dev \
         bash \
         curl \
         openjdk17-jre \
         su-exec \
-        font-noto-cjk \
         shadow \
 # Doc conversion
         libreoffice@testing \
@@ -58,7 +60,8 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
-    tesseract --list-langs
+    tesseract --list-langs && \
+    rm -rf /var/cache/apk/*
 
 EXPOSE 8080
 

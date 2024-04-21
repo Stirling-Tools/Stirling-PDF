@@ -31,7 +31,8 @@ public class ConvertPDFToPDFA {
             summary = "Convert a PDF to a PDF/A",
             description =
                     "This endpoint converts a PDF file to a PDF/A file. PDF/A is a format designed for long-term archiving of digital documents. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> pdfToPdfA(@ModelAttribute PdfToPdfARequest request) throws Exception {
+    public ResponseEntity<byte[]> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
+            throws Exception {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
 
