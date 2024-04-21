@@ -19,14 +19,13 @@
                 <div class="mb-3">
                   <label th:text="#{PDFToText.selectText.1}"></label>
                   <select class="form-control" name="outputFormat">
-                    <option value="rtf">RTF</option>
+                    <option th:if="${@endpointConfiguration.isEndpointEnabled('pdf-to-rtf')}" value="rtf">RTF</option>
                     <option value="txt">TXT</option>
                   </select>
                 </div>
-                <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{PDFToText.submit}"></button>
               </form>
-              <p class="mt-3" th:text="#{PDFToText.credit}"></p>
+              <p th:if="${@endpointConfiguration.isEndpointEnabled('pdf-to-rtf')}" class="mt-3" th:text="#{PDFToText.credit}"></p>
             </div>
           </div>
         </div>

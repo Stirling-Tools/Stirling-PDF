@@ -336,7 +336,7 @@ public class PdfUtils {
         }
     }
 
-    private static void addImageToDocument(
+    public static void addImageToDocument(
             PDDocument doc, PDImageXObject image, String fitOption, boolean autoRotate)
             throws IOException {
         boolean imageIsLandscape = image.getWidth() > image.getHeight();
