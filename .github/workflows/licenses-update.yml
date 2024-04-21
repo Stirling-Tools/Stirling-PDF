@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'build.gradle'
+      - "build.gradle"
 
 permissions:
   contents: write
@@ -17,13 +17,15 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'adopt'
+          java-version: "17"
+          distribution: "adopt"
+
+      - uses: gradle/actions/setup-gradle@v3
 
       - name: Run Gradle Command
         run: ./gradlew clean generateLicenseReport
@@ -44,7 +46,7 @@ jobs:
 
       - name: Create Pull Request
         if: env.CHANGES_DETECTED == 'true'
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Update 3rd Party Licenses"
@@ -58,4 +60,3 @@ jobs:
             [1]: https://github.com/peter-evans/create-pull-request
           draft: false
           delete-branch: true
-
