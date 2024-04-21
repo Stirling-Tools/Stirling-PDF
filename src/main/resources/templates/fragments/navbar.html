@@ -218,10 +218,10 @@
                     <input type="checkbox" class="form-check-input" id="cacheInputs" th:title="#{settings.cacheInputs.help}">
                     <label class="form-check-label" for="cacheInputs" th:text="#{settings.cacheInputs.name}"></label>
                   </div>
-                  <a th:if="${@loginEnabled}" href="account" class="btn btn-sm btn-outline-primary" role="button" th:text="#{settings.accountSettings}" target="_blank">Account Settings</a>
+                  <a th:if="${@loginEnabled and @activSecurity}" href="account" class="btn btn-sm btn-outline-primary" role="button" th:text="#{settings.accountSettings}" target="_blank">Account Settings</a>
                 </div>
                 <div class="modal-footer">
-                  <a th:if="${@loginEnabled}" class="btn btn-danger" role="button" th:text="#{settings.signOut}" href="logout">Sign Out</a>
+                  <a th:if="${@loginEnabled and @activSecurity}" class="btn btn-danger" role="button" th:text="#{settings.signOut}" href="logout">Sign Out</a>
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
                 </div>
               </div>
