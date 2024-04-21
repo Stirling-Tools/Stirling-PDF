@@ -54,6 +54,13 @@ public class OtherWebController {
         return "misc/add-page-numbers";
     }
 
+    @GetMapping("/fake-scan")
+    @Hidden
+    public String fakeScanForm(Model model) {
+        model.addAttribute("currentPage", "fake-scan");
+        return "misc/fake-scan";
+    }
+
     @GetMapping("/extract-images")
     @Hidden
     public String extractImagesForm(Model model) {
@@ -80,6 +87,13 @@ public class OtherWebController {
     public String compareForm(Model model) {
         model.addAttribute("currentPage", "compare");
         return "misc/compare";
+    }
+
+    @GetMapping("/print-file")
+    @Hidden
+    public String printFileForm(Model model) {
+        model.addAttribute("currentPage", "print-file");
+        return "misc/print-file";
     }
 
     public List<String> getAvailableTesseractLanguages() {
