@@ -121,6 +121,7 @@ docker run -d \
   -v /location/of/logs:/logs \
   -e DOCKER_ENABLE_SECURITY=false \
   -e INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
+  -e LANGS=en_GB \
   --name stirling-pdf \
   frooodle/s-pdf:latest
 
@@ -147,6 +148,7 @@ services:
     environment:
       - DOCKER_ENABLE_SECURITY=false
       - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
+      - LANGS=en_GB
 ```
 
 Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
@@ -164,9 +166,9 @@ Stirling PDF currently supports 27!
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
 | Arabic (العربية) (ar_AR)                    | ![58%](https://geps.dev/progress/58)   |
-| German (Deutsch) (de_DE)                    | ![97%](https://geps.dev/progress/97)   |
+| German (Deutsch) (de_DE)                    | ![98%](https://geps.dev/progress/98)   |
 | French (Français) (fr_FR)                   | ![93%](https://geps.dev/progress/93)   |
-| Spanish (Español) (es_ES)                   | ![95%](https://geps.dev/progress/95)   |
+| Spanish (Español) (es_ES)                   | ![99%](https://geps.dev/progress/99)   |
 | Simplified Chinese (简体中文) (zh_CN)       | ![98%](https://geps.dev/progress/98)   |
 | Traditional Chinese (繁體中文) (zh_TW)      | ![98%](https://geps.dev/progress/98)   |
 | Catalan (Català) (ca_CA)                    | ![64%](https://geps.dev/progress/64)   |
@@ -252,12 +254,12 @@ metrics:
 - ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
 - ``DOCKER_ENABLE_SECURITY`` to tell docker to download security jar (required as true for auth login)
 - ``INSTALL_BOOK_AND_ADVANCED_HTML_OPS`` to download calibre onto stirling-pdf enabling pdf to/from book and advanced html conversion
+- ``LANGS`` to define custom font libraries to install for use for document conversions
 
 ## API
 
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
 [here](https://app.swaggerhub.com/apis-docs/Stirling-Tools/Stirling-PDF/) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation (Or by following the API button in your settings of Stirling-PDF)
-
 
 ## Login authentication
 
