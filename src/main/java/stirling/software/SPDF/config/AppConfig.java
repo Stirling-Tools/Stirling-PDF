@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -84,5 +85,11 @@ public class AppConfig {
             installOps = System.getenv("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
         }
         return "true".equalsIgnoreCase(installOps);
+    }
+
+    @ConditionalOnMissingClass("stirling.software.SPDF.config.security.SecurityConfiguration")
+    @Bean(name = "activSecurity")
+    public boolean missingActivSecurity() {
+        return false;
     }
 }
