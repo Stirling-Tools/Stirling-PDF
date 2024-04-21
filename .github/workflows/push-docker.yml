@@ -14,105 +14,99 @@ jobs:
   push:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
 
-    - uses: actions/checkout@v3.5.2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3.11.0
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 7.6
 
+      - name: Run Gradle Command
+        run: ./gradlew clean build
+        env:
+          DOCKER_ENABLE_SECURITY: false
 
-    - uses: gradle/gradle-build-action@v2.4.2
-      env:
-        DOCKER_ENABLE_SECURITY: false
-      with:
-        gradle-version: 7.6
-        arguments: clean build
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Make Gradle wrapper executable
-      run: chmod +x gradlew
+      - name: Get version number
+        id: versionNumber
+        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
 
-    - name: Get version number
-      id: versionNumber
-      run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet | tail -1)"
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
 
-    - name: Login to Docker Hub
-      uses: docker/login-action@v2.1.0
-      with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_API }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
 
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v2.1.0
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ github.token }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-    - name: Convert repository owner to lowercase
-      id: repoowner
-      run: echo "::set-output name=lowercase::$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')"
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
 
-    - name: Generate tags
-      id: meta
-      uses: docker/metadata-action@v4.4.0
-      with:
-        images: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
-          ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
-        tags: |
-          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
+      - name: Generate tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
+          tags: |
+            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2.1.0
+      - name: Build and push main Dockerfile
+        uses: docker/build-push-action@v5
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./Dockerfile
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          platforms: linux/amd64,linux/arm64/v8
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2.5.0
+      - name: Generate tags ultra-lite
+        id: meta2
+        uses: docker/metadata-action@v5
+        if: github.ref != 'refs/heads/main'
+        with:
+          images: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
+          tags: |
+            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
 
-    - name: Build and push main Dockerfile
-      uses: docker/build-push-action@v4.0.0
-      with:
-        context: .
-        dockerfile: ./Dockerfile
-        push: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        build-args:
-          VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-        platforms: linux/amd64,linux/arm64/v8
-
-
-
-    - name: Generate tags ultra-lite
-      id: meta2
-      uses: docker/metadata-action@v4.4.0
-      if: github.ref != 'refs/heads/main'
-      with:
-        images: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
-          ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
-        tags: |
-          type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
-          type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
-
-
-    - name: Build and push Dockerfile-ultra-lite
-      uses: docker/build-push-action@v4.0.0
-      if: github.ref != 'refs/heads/main'
-      with:
-        context: .
-        file: ./Dockerfile-ultra-lite
-        push: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        tags: ${{ steps.meta2.outputs.tags }}
-        labels: ${{ steps.meta2.outputs.labels }}
-        build-args:
-          VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-        platforms: linux/amd64,linux/arm64/v8
+      - name: Build and push Dockerfile-ultra-lite
+        uses: docker/build-push-action@v5
+        if: github.ref != 'refs/heads/main'
+        with:
+          context: .
+          file: ./Dockerfile-ultra-lite
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta2.outputs.tags }}
+          labels: ${{ steps.meta2.outputs.labels }}
+          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          platforms: linux/amd64,linux/arm64/v8
