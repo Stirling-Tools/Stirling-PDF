@@ -61,7 +61,7 @@ public class PrintFileController {
 
             System.out.println("Selected Printer: " + selectedService.getName());
 
-            if (contentType.equals("application/pdf")) {
+            if ("application/pdf".equals(contentType)) {
                 PDDocument document = Loader.loadPDF(file.getBytes());
                 PrinterJob job = PrinterJob.getPrinterJob();
                 job.setPrintService(selectedService);

@@ -173,7 +173,7 @@ public class FakeScanControllerWIP {
 
 
     private void addGaussianNoise(BufferedImage image, double strength) {
-        Random rand = new Random();
+        Random rand = new SecureRandom();
         int width = image.getWidth();
         int height = image.getHeight();
 
