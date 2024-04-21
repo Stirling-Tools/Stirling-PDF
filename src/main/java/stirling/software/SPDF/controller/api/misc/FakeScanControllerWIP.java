@@ -10,24 +10,15 @@ import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
-import java.awt.image.RescaleOp;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import javax.imageio.ImageIO;
-
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
-import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -41,7 +32,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -55,7 +45,6 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class FakeScanControllerWIP {
 
     private static final Logger logger = LoggerFactory.getLogger(FakeScanControllerWIP.class);
-
 
     @PostMapping(consumes = "multipart/form-data", value = "/fake-scan")
     @Operation(
@@ -80,14 +69,14 @@ public class FakeScanControllerWIP {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PDDocument newDocument = new PDDocument();
         for (BufferedImage img : images) {
-            //PDPageContentStream contentStream = new PDPageContentStream(newDocument, new PDPage());
+            // PDPageContentStream contentStream = new PDPageContentStream(newDocument, new
+            // PDPage());
             PDImageXObject pdImage = JPEGFactory.createFromImage(newDocument, img);
             PdfUtils.addImageToDocument(newDocument, pdImage, "maintainAspectRatio", false);
         }
 
         newDocument.save(baos);
         newDocument.close();
-       
 
         // Return the optimized PDF as a response
         String outputFilename =
@@ -96,32 +85,30 @@ public class FakeScanControllerWIP {
                         + "_scanned.pdf";
         return WebResponseUtils.boasToWebResponse(baos, outputFilename);
     }
-    
-    
+
     public BufferedImage processImage(BufferedImage image) {
         // Rotation
-        
-    	image = rotate(image);
-        //image = softenEdges(image, 5);
-    	image = applyGaussianBlur(image, 0.5);
+
+        image = rotate(image);
+        // image = softenEdges(image, 5);
+        image = applyGaussianBlur(image, 0.5);
         addGaussianNoise(image, 0.25);
         image = linearStretch(image);
-       
 
         return image;
     }
-    
+
     private BufferedImage rotate(BufferedImage image) {
-    	
-    	double rotationRequired = Math.toRadians(1.0);
+
+        double rotationRequired = Math.toRadians(1.0);
         double locationX = image.getWidth() / 2;
         double locationY = image.getHeight() / 2;
-        AffineTransform tx = AffineTransform.getRotateInstance(rotationRequired, locationX, locationY);
+        AffineTransform tx =
+                AffineTransform.getRotateInstance(rotationRequired, locationX, locationY);
         AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BICUBIC);
         return op.filter(image, null);
-
     }
-    
+
     private BufferedImage applyGaussianBlur(BufferedImage image, double sigma) {
         int radius = 3; // Fixed radius size for simplicity
 
@@ -149,7 +136,6 @@ public class FakeScanControllerWIP {
         return op.filter(image, null);
     }
 
-    
     public BufferedImage softenEdges(BufferedImage image, int featherRadius) {
         int width = image.getWidth();
         int height = image.getHeight();
@@ -158,19 +144,36 @@ public class FakeScanControllerWIP {
         Graphics2D g2 = output.createGraphics();
         g2.drawImage(image, 0, 0, null);
         g2.setComposite(AlphaComposite.DstIn);
-        g2.setPaint(new GradientPaint(0, 0, new Color(0, 0, 0, 1f), 0, featherRadius, new Color(0, 0, 0, 0f)));
+        g2.setPaint(
+                new GradientPaint(
+                        0, 0, new Color(0, 0, 0, 1f), 0, featherRadius, new Color(0, 0, 0, 0f)));
         g2.fillRect(0, 0, width, featherRadius); // top edge
-        g2.setPaint(new GradientPaint(0, height - featherRadius, new Color(0, 0, 0, 0f), 0, height, new Color(0, 0, 0, 1f)));
+        g2.setPaint(
+                new GradientPaint(
+                        0,
+                        height - featherRadius,
+                        new Color(0, 0, 0, 0f),
+                        0,
+                        height,
+                        new Color(0, 0, 0, 1f)));
         g2.fillRect(0, height - featherRadius, width, featherRadius); // bottom edge
-        g2.setPaint(new GradientPaint(0, 0, new Color(0, 0, 0, 1f), featherRadius, 0, new Color(0, 0, 0, 0f)));
+        g2.setPaint(
+                new GradientPaint(
+                        0, 0, new Color(0, 0, 0, 1f), featherRadius, 0, new Color(0, 0, 0, 0f)));
         g2.fillRect(0, 0, featherRadius, height); // left edge
-        g2.setPaint(new GradientPaint(width - featherRadius, 0, new Color(0, 0, 0, 0f), width, 0, new Color(0, 0, 0, 1f)));
+        g2.setPaint(
+                new GradientPaint(
+                        width - featherRadius,
+                        0,
+                        new Color(0, 0, 0, 0f),
+                        width,
+                        0,
+                        new Color(0, 0, 0, 1f)));
         g2.fillRect(width - featherRadius, 0, featherRadius, height); // right edge
         g2.dispose();
 
         return output;
     }
-
 
     private void addGaussianNoise(BufferedImage image, double strength) {
         Random rand = new Random();
@@ -199,44 +202,47 @@ public class FakeScanControllerWIP {
             }
         }
     }
-    
 
-public BufferedImage linearStretch(BufferedImage image) {
-    int width = image.getWidth();
-    int height = image.getHeight();
-    int min = 255;
-    int max = 0;
+    public BufferedImage linearStretch(BufferedImage image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int min = 255;
+        int max = 0;
 
-    // First pass: find the min and max grayscale values
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int rgb = image.getRGB(x, y);
-            int gray = (int) (((rgb >> 16) & 0xff) * 0.299 + ((rgb >> 8) & 0xff) * 0.587 + (rgb & 0xff) * 0.114);  // Convert to grayscale
-            if (gray < min) min = gray;
-            if (gray > max) max = gray;
+        // First pass: find the min and max grayscale values
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int rgb = image.getRGB(x, y);
+                int gray =
+                        (int)
+                                (((rgb >> 16) & 0xff) * 0.299
+                                        + ((rgb >> 8) & 0xff) * 0.587
+                                        + (rgb & 0xff) * 0.114); // Convert to grayscale
+                if (gray < min) min = gray;
+                if (gray > max) max = gray;
+            }
         }
-    }
 
-    // Second pass: stretch the histogram
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int rgb = image.getRGB(x, y);
-            int alpha = (rgb >> 24) & 0xff;
-            int red = (rgb >> 16) & 0xff;
-            int green = (rgb >> 8) & 0xff;
-            int blue = rgb & 0xff;
+        // Second pass: stretch the histogram
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int rgb = image.getRGB(x, y);
+                int alpha = (rgb >> 24) & 0xff;
+                int red = (rgb >> 16) & 0xff;
+                int green = (rgb >> 8) & 0xff;
+                int blue = rgb & 0xff;
 
-            // Apply linear stretch to each channel
-            red = (int)(((red - min) / (float)(max - min)) * 255);
-            green = (int)(((green - min) / (float)(max - min)) * 255);
-            blue = (int)(((blue - min) / (float)(max - min)) * 255);
+                // Apply linear stretch to each channel
+                red = (int) (((red - min) / (float) (max - min)) * 255);
+                green = (int) (((green - min) / (float) (max - min)) * 255);
+                blue = (int) (((blue - min) / (float) (max - min)) * 255);
 
-            // Set new RGB value maintaining the alpha channel
-            rgb = (alpha << 24) | (red << 16) | (green << 8) | blue;
-            image.setRGB(x, y, rgb);
+                // Set new RGB value maintaining the alpha channel
+                rgb = (alpha << 24) | (red << 16) | (green << 8) | blue;
+                image.setRGB(x, y, rgb);
+            }
         }
-    }
 
-    return image;
-}
+        return image;
+    }
 }

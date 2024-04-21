@@ -52,14 +52,14 @@ public class OtherWebController {
         model.addAttribute("currentPage", "add-page-numbers");
         return "misc/add-page-numbers";
     }
-    
+
     @GetMapping("/fake-scan")
     @Hidden
     public String fakeScanForm(Model model) {
         model.addAttribute("currentPage", "fake-scan");
         return "misc/fake-scan";
     }
-    
+
     @GetMapping("/extract-images")
     @Hidden
     public String extractImagesForm(Model model) {

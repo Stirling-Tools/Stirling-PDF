@@ -121,6 +121,7 @@ docker run -d \
   -v /location/of/logs:/logs \
   -e DOCKER_ENABLE_SECURITY=false \
   -e INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
+  -e LANGS=en_GB \
   --name stirling-pdf \
   frooodle/s-pdf:latest
 
@@ -147,6 +148,7 @@ services:
     environment:
       - DOCKER_ENABLE_SECURITY=false
       - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
+      - LANGS=en_GB
 ```
 
 Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
@@ -250,6 +252,7 @@ metrics:
 - ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
 - ``DOCKER_ENABLE_SECURITY`` to tell docker to download security jar (required as true for auth login)
 - ``INSTALL_BOOK_AND_ADVANCED_HTML_OPS`` to download calibre onto stirling-pdf enabling pdf to/from book and advanced html conversion
+- ``LANGS`` to define custom font libraries to install for use for document conversions
 
 ## API
 

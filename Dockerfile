@@ -25,10 +25,13 @@ ENV DOCKER_ENABLE_SECURITY=false \
 RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk update && \
     apk add --no-cache \
         ca-certificates \
         tzdata \
         tini \
+        openssl \
+openssl-dev \
         bash \
         curl \
         openjdk17-jre \

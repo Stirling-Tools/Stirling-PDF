@@ -154,7 +154,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("CLI", "book-to-pdf");
         addEndpointToGroup("CLI", "pdf-to-book");
         addEndpointToGroup("CLI", "pdf-to-rtf");
-        
+
         // Calibre
         addEndpointToGroup("Calibre", "book-to-pdf");
         addEndpointToGroup("Calibre", "pdf-to-book");
@@ -219,7 +219,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "split-pdf-by-sections");
         addEndpointToGroup("Java", REMOVE_BLANKS);
         addEndpointToGroup("Java", "pdf-to-text");
-
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
