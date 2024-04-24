@@ -52,7 +52,7 @@
 
           document.addEventListener('DOMContentLoaded', function() {
 
-            const defaultLocale = document.documentElement.getAttribute('language') || 'en_GB';
+            const defaultLocale = document.documentElement.getAttribute('data-language') || 'en_GB';
             const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
 
             const currentURL = new URL(window.location.href);
