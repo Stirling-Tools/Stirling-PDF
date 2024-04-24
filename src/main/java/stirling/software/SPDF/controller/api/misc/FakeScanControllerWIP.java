@@ -1,10 +1,14 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Path2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
@@ -47,12 +51,11 @@ public class FakeScanControllerWIP {
 
     private static final Logger logger = LoggerFactory.getLogger(FakeScanControllerWIP.class);
 
-    //TODO
-    //@PostMapping(consumes = "multipart/form-data", value = "/fake-scan")
-    //@Operation(
-    //        summary = "Repair a PDF file",
-    //        description =
-    //                "This endpoint repairs a given PDF file by running Ghostscript command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response.")
+    @PostMapping(consumes = "multipart/form-data", value = "/fake-scan")
+    @Operation(
+            summary = "Repair a PDF file",
+            description =
+                    "This endpoint repairs a given PDF file by running Ghostscript command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response.")
     public ResponseEntity<byte[]> fakeScan(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();
 
@@ -91,18 +94,20 @@ public class FakeScanControllerWIP {
     public BufferedImage processImage(BufferedImage image) {
         // Rotation
 
-        image = rotate(image);
+        addDustAndHairs(image, 50);
+        // image = rotate(image, 1);
+
         // image = softenEdges(image, 5);
         image = applyGaussianBlur(image, 0.5);
-        addGaussianNoise(image, 0.25);
+        addGaussianNoise(image, 0.8);
         image = linearStretch(image);
 
         return image;
     }
 
-    private BufferedImage rotate(BufferedImage image) {
+    private BufferedImage rotate(BufferedImage image, double rotation) {
 
-        double rotationRequired = Math.toRadians(1.0);
+        double rotationRequired = Math.toRadians(rotation);
         double locationX = image.getWidth() / 2;
         double locationY = image.getHeight() / 2;
         AffineTransform tx =
@@ -144,6 +149,11 @@ public class FakeScanControllerWIP {
         BufferedImage output = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D g2 = output.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2.setRenderingHint(
+                RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+
         g2.drawImage(image, 0, 0, null);
         g2.setComposite(AlphaComposite.DstIn);
         g2.setPaint(
@@ -175,6 +185,49 @@ public class FakeScanControllerWIP {
         g2.dispose();
 
         return output;
+    }
+
+    private void addDustAndHairs(BufferedImage image, float intensity) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        Graphics2D g2d = image.createGraphics();
+        Random random = new SecureRandom();
+
+        // Set rendering hints for better quality
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Calculate the number of artifacts based on intensity
+        int numSpots = (int) (intensity * 10);
+        int numHairs = (int) (intensity * 20);
+
+        // Add spots with more variable sizes
+        g2d.setColor(new Color(100, 100, 100, 50)); // Semi-transparent gray
+        for (int i = 0; i < numSpots; i++) {
+            int x = random.nextInt(width);
+            int y = random.nextInt(height);
+            int ovalSize = 1 + random.nextInt(3); // Base size + variable component
+            if (random.nextFloat() > 0.9) {
+                // 10% chance to get a larger spot
+                ovalSize += random.nextInt(3);
+            }
+            g2d.fill(new Ellipse2D.Double(x, y, ovalSize, ovalSize));
+        }
+
+        // Add hairs
+        g2d.setStroke(new BasicStroke(0.5f)); // Thin stroke for hairs
+        g2d.setColor(new Color(80, 80, 80, 40)); // Slightly lighter and more transparent
+        for (int i = 0; i < numHairs; i++) {
+            int x1 = random.nextInt(width);
+            int y1 = random.nextInt(height);
+            int x2 = x1 + random.nextInt(20) - 10; // Random length and direction
+            int y2 = y1 + random.nextInt(20) - 10;
+            Path2D.Double hair = new Path2D.Double();
+            hair.moveTo(x1, y1);
+            hair.curveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2, x2, y2);
+            g2d.draw(hair);
+        }
+
+        g2d.dispose();
     }
 
     private void addGaussianNoise(BufferedImage image, double strength) {
