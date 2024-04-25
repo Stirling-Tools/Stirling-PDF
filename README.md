@@ -121,6 +121,7 @@ docker run -d \
   -v /location/of/logs:/logs \
   -e DOCKER_ENABLE_SECURITY=false \
   -e INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
+  -e LANGS=en_GB \
   --name stirling-pdf \
   frooodle/s-pdf:latest
 
@@ -147,6 +148,7 @@ services:
     environment:
       - DOCKER_ENABLE_SECURITY=false
       - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
+      - LANGS=en_GB
 ```
 
 Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
@@ -164,9 +166,9 @@ Stirling PDF currently supports 27!
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
 | Arabic (العربية) (ar_AR)                    | ![58%](https://geps.dev/progress/58)   |
-| German (Deutsch) (de_DE)                    | ![97%](https://geps.dev/progress/97)   |
+| German (Deutsch) (de_DE)                    | ![98%](https://geps.dev/progress/98)   |
 | French (Français) (fr_FR)                   | ![93%](https://geps.dev/progress/93)   |
-| Spanish (Español) (es_ES)                   | ![95%](https://geps.dev/progress/95)   |
+| Spanish (Español) (es_ES)                   | ![99%](https://geps.dev/progress/99)   |
 | Simplified Chinese (简体中文) (zh_CN)       | ![98%](https://geps.dev/progress/98)   |
 | Traditional Chinese (繁體中文) (zh_TW)      | ![98%](https://geps.dev/progress/98)   |
 | Catalan (Català) (ca_CA)                    | ![64%](https://geps.dev/progress/64)   |
@@ -180,12 +182,12 @@ Stirling PDF currently supports 27!
 | Basque (Euskara) (eu_ES)                    | ![75%](https://geps.dev/progress/75)   |
 | Japanese (日本語) (ja_JP)                   | ![93%](https://geps.dev/progress/93)   |
 | Dutch (Nederlands) (nl_NL)                  | ![91%](https://geps.dev/progress/91)   |
-| Greek (Ελληνικά) (el_GR)                    | ![92%](https://geps.dev/progress/92)   |
-| Turkish (Türkçe) (tr_TR)                    | ![98%](https://geps.dev/progress/98)   |
-| Indonesia (Bahasa Indonesia) (id_ID)        | ![87%](https://geps.dev/progress/87)   |
+| Greek (Ελληνικά) (el_GR)                    | ![91%](https://geps.dev/progress/91)   |
+| Turkish (Türkçe) (tr_TR)                    | ![99%](https://geps.dev/progress/99)   |
+| Indonesia (Bahasa Indonesia) (id_ID)        | ![86%](https://geps.dev/progress/86)   |
 | Hindi (हिंदी) (hi_IN)                          | ![87%](https://geps.dev/progress/87)   |
 | Hungarian (Magyar) (hu_HU)                  | ![86%](https://geps.dev/progress/86)   |
-| Bulgarian (Български) (bg_BG)               | ![82%](https://geps.dev/progress/82)   |
+| Bulgarian (Български) (bg_BG)               | ![81%](https://geps.dev/progress/81)   |
 | Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![88%](https://geps.dev/progress/88)   |
 | Ukrainian (Українська) (uk_UA)              | ![93%](https://geps.dev/progress/93)   |
 
@@ -225,6 +227,8 @@ system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
+  showUpdate: true # see when a new update is available
+  showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
 
 #ui:
 #  appName: exampleAppName # Application's visible name
@@ -250,12 +254,12 @@ metrics:
 - ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
 - ``DOCKER_ENABLE_SECURITY`` to tell docker to download security jar (required as true for auth login)
 - ``INSTALL_BOOK_AND_ADVANCED_HTML_OPS`` to download calibre onto stirling-pdf enabling pdf to/from book and advanced html conversion
+- ``LANGS`` to define custom font libraries to install for use for document conversions
 
 ## API
 
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
 [here](https://app.swaggerhub.com/apis-docs/Stirling-Tools/Stirling-PDF/) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation (Or by following the API button in your settings of Stirling-PDF)
-
 
 ## Login authentication
 
