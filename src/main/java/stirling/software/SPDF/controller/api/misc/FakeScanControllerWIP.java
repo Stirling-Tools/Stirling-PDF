@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -51,7 +52,9 @@ public class FakeScanControllerWIP {
 
     private static final Logger logger = LoggerFactory.getLogger(FakeScanControllerWIP.class);
 
+    //TODO finish
     @PostMapping(consumes = "multipart/form-data", value = "/fake-scan")
+    @Hidden
     @Operation(
             summary = "Repair a PDF file",
             description =
@@ -94,14 +97,14 @@ public class FakeScanControllerWIP {
     public BufferedImage processImage(BufferedImage image) {
         // Rotation
 
-        addDustAndHairs(image, 50);
-        // image = rotate(image, 1);
+    	image = softenEdges(image, 50);
+        image = rotate(image, 1);
 
-        // image = softenEdges(image, 5);
+        
         image = applyGaussianBlur(image, 0.5);
-        addGaussianNoise(image, 0.8);
+        addGaussianNoise(image, 0.5);
         image = linearStretch(image);
-
+        addDustAndHairs(image, 3);
         return image;
     }
 
@@ -151,41 +154,32 @@ public class FakeScanControllerWIP {
         Graphics2D g2 = output.createGraphics();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g2.setRenderingHint(
-                RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
         g2.drawImage(image, 0, 0, null);
         g2.setComposite(AlphaComposite.DstIn);
-        g2.setPaint(
-                new GradientPaint(
-                        0, 0, new Color(0, 0, 0, 1f), 0, featherRadius, new Color(0, 0, 0, 0f)));
-        g2.fillRect(0, 0, width, featherRadius); // top edge
-        g2.setPaint(
-                new GradientPaint(
-                        0,
-                        height - featherRadius,
-                        new Color(0, 0, 0, 0f),
-                        0,
-                        height,
-                        new Color(0, 0, 0, 1f)));
-        g2.fillRect(0, height - featherRadius, width, featherRadius); // bottom edge
-        g2.setPaint(
-                new GradientPaint(
-                        0, 0, new Color(0, 0, 0, 1f), featherRadius, 0, new Color(0, 0, 0, 0f)));
-        g2.fillRect(0, 0, featherRadius, height); // left edge
-        g2.setPaint(
-                new GradientPaint(
-                        width - featherRadius,
-                        0,
-                        new Color(0, 0, 0, 0f),
-                        width,
-                        0,
-                        new Color(0, 0, 0, 1f)));
-        g2.fillRect(width - featherRadius, 0, featherRadius, height); // right edge
+
+        // Top edge
+        g2.setPaint(new GradientPaint(0, 0, new Color(0, 0, 0, 1f), 0, featherRadius * 2, new Color(0, 0, 0, 0f)));
+        g2.fillRect(0, 0, width, featherRadius);
+
+        // Bottom edge
+        g2.setPaint(new GradientPaint(0, height - featherRadius * 2, new Color(0, 0, 0, 0f), 0, height, new Color(0, 0, 0, 1f)));
+        g2.fillRect(0, height - featherRadius, width, featherRadius);
+
+        // Left edge
+        g2.setPaint(new GradientPaint(0, 0, new Color(0, 0, 0, 1f), featherRadius * 2, 0, new Color(0, 0, 0, 0f)));
+        g2.fillRect(0, 0, featherRadius, height);
+
+        // Right edge
+        g2.setPaint(new GradientPaint(width - featherRadius * 2, 0, new Color(0, 0, 0, 0f), width, 0, new Color(0, 0, 0, 1f)));
+        g2.fillRect(width - featherRadius, 0, featherRadius, height);
+
         g2.dispose();
 
         return output;
     }
+
 
     private void addDustAndHairs(BufferedImage image, float intensity) {
         int width = image.getWidth();
