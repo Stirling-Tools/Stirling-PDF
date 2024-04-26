@@ -201,7 +201,7 @@ Stirling PDF allows easy customization of the app.
 Includes things like
 
 - Custom application name
-- Custom slogans, icons, images, and even custom HTML (via file overrides)
+- Custom slogans, icons, images css etc (via file overrides) (Does not currently support html)
 
 There are two options for this, either using the generated settings file ``settings.yml``
 This file is located in the ``/configs`` directory and follows standard YAML formatting

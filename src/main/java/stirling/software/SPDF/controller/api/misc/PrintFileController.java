@@ -20,12 +20,10 @@ import org.apache.pdfbox.printing.PDFPageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.misc.PrintFileRequest;
@@ -35,12 +33,13 @@ import stirling.software.SPDF.model.api.misc.PrintFileRequest;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class PrintFileController {
 
-	//TODO
-    //@PostMapping(value = "/print-file", consumes = "multipart/form-data")
-    //@Operation(
+    // TODO
+    // @PostMapping(value = "/print-file", consumes = "multipart/form-data")
+    // @Operation(
     //        summary = "Prints PDF/Image file to a set printer",
     //        description =
-    //                "Input of PDF or Image along with a printer name/URL/IP to match against to send it to (Fire and forget) Input:Any Output:N/A Type:SISO")
+    //                "Input of PDF or Image along with a printer name/URL/IP to match against to
+    // send it to (Fire and forget) Input:Any Output:N/A Type:SISO")
     public ResponseEntity<String> printFile(@ModelAttribute PrintFileRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();
