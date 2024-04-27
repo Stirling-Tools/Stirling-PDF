@@ -212,6 +212,15 @@ public class ApplicationProperties {
         private Integer maxFileSize;
         private boolean showUpdate;
         private Boolean showUpdateOnlyAdmin;
+        private boolean customHTMLFiles;
+
+        public boolean isCustomHTMLFiles() {
+            return customHTMLFiles;
+        }
+
+        public void setCustomHTMLFiles(boolean customHTMLFiles) {
+            this.customHTMLFiles = customHTMLFiles;
+        }
 
         public boolean getShowUpdateOnlyAdmin() {
             return showUpdateOnlyAdmin;
