@@ -7,6 +7,7 @@ on:
     paths:
       - "build.gradle"
       - "src/main/resources/messages_*.properties"
+      - "scripts/translation_status.toml"
 
 permissions:
   contents: write
@@ -58,6 +59,8 @@ jobs:
         uses: actions/setup-python@v5.1.0
         with:
           python-version: "3.x"
+      - name: Install dependencies
+        run: pip install tomlkit
       - name: Sync README
         run: python scripts/counter_translation.py
       - name: Set up git config
