@@ -30,6 +30,21 @@ public class UserService implements UserServiceInterface {
 
     @Autowired private PasswordEncoder passwordEncoder;
 
+     public boolean processOAuthPostLogin(String username, boolean autoCreateUser) {
+        Optional<User> existUser = userRepository.findByUsernameIgnoreCase(username);
+        if (existUser.isEmpty() && autoCreateUser) {
+            User user = new User();
+            user.setUsername(username);
+            //newUser.setProvider(Provider.GOOGLE);
+            user.setEnabled(true);
+            user.setFirstLogin(false);
+            user.addAuthority(new Authority( Role.USER.getRoleId(), user));
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
     public Authentication getAuthentication(String apiKey) {
         User user = getUserByApiKey(apiKey);
         if (user == null) {

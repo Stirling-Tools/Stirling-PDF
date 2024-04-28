@@ -24,6 +24,31 @@ public class AppConfig {
         return applicationProperties.getSecurity().getEnableLogin();
     }
 
+    @Bean(name = "OAUTH2Enabled")
+    public boolean OAUTH2Enabled() {
+        return applicationProperties.getSecurity().getOAUTH2().getEnabled();
+    }
+
+    @Bean(name = "OAUTH2Issuer")
+    public String OAUTH2Issuer() {
+        return applicationProperties.getSecurity().getOAUTH2().getIssuer();
+    }
+
+    @Bean(name = "OAUTH2ClientId")
+    public String OAUTH2ClientId() {
+        return applicationProperties.getSecurity().getOAUTH2().getClientId();
+    }
+
+    @Bean(name = "OAUTH2Secret")
+    public String OAUTH2Secret() {
+        return applicationProperties.getSecurity().getOAUTH2().getClientSecret();
+    }
+
+    @Bean(name = "OAUTH2AutoCreateUser")
+    public boolean OAUTH2AutoCreateUser() {
+        return applicationProperties.getSecurity().getOAUTH2().getAutoCreateUser();
+    }
+
     @Bean(name = "appName")
     public String appName() {
         String homeTitle = applicationProperties.getUi().getAppName();
