@@ -32,7 +32,10 @@ public class UserService implements UserServiceInterface {
 
      public boolean processOAuthPostLogin(String username, boolean autoCreateUser) {
         Optional<User> existUser = userRepository.findByUsernameIgnoreCase(username);
-        if (existUser.isEmpty() && autoCreateUser) {
+        if (existUser.isPresent()) {
+            return true;
+        }
+        if (autoCreateUser) {
             User user = new User();
             user.setUsername(username);
             //newUser.setProvider(Provider.GOOGLE);
