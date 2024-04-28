@@ -72,13 +72,12 @@ public class ConvertImgPDFController {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        // Assuming result, imageFormat, and filename are defined appropriately
+
         if (singleImage) {
-            String docName = filename + "." + imageFormat; // Adjust the file extension if necessary
+            String docName = filename + "." + imageFormat; 
             MediaType mediaType = MediaType.parseMediaType(getMediaType(imageFormat));
             return WebResponseUtils.bytesToWebResponse(result, docName, mediaType);
         } else {
-            // Assume result here is a byte array from a zip process
             String zipFilename = filename + "_convertedToImages.zip";
             return WebResponseUtils.bytesToWebResponse(
                     result, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
