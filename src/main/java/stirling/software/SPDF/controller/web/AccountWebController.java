@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -85,14 +86,23 @@ public class AccountWebController {
         }
         if (authentication != null && authentication.isAuthenticated()) {
             Object principal = authentication.getPrincipal();
+            String username = null;
 
             if (principal instanceof UserDetails) {
                 // Cast the principal object to UserDetails
                 UserDetails userDetails = (UserDetails) principal;
 
                 // Retrieve username and other attributes
-                String username = userDetails.getUsername();
+                username = userDetails.getUsername();
+            }
+            if (principal instanceof OAuth2User) {
+                // Cast the principal object to UserDetails
+                OAuth2User userDetails = (OAuth2User) principal;
 
+                // Retrieve username and other attributes
+                username = userDetails.getAttribute("email");
+            }
+            if (username != null) {
                 // Fetch user details from the database
                 Optional<User> user =
                         userRepository.findByUsernameIgnoreCase(
