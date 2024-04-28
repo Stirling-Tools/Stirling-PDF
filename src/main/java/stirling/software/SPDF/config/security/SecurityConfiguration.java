@@ -119,7 +119,7 @@ public class SecurityConfiguration {
                             logout ->
                                     logout.logoutRequestMatcher(
                                                     new AntPathRequestMatcher("/logout"))
-                                            .logoutSuccessUrl("/login?logout=true")
+                                            .logoutSuccessHandler(new CustomLogoutSuccessHandler())
                                             .invalidateHttpSession(true) // Invalidate session
                                             .deleteCookies("JSESSIONID", "remember-me")
                                             .addLogoutHandler(
@@ -192,7 +192,7 @@ public class SecurityConfiguration {
                                         response.sendRedirect("/");
                                     }
                                     else{
-                                        response.sendRedirect("/logout?error=true");
+                                        response.sendRedirect("/logout?oauth2AutoCreateDisabled=true");
                                     }
                                 }
                             }
