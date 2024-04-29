@@ -8,71 +8,118 @@ const DraggableUtils = {
 
   init() {
     interact(".draggable-canvas")
-      .draggable({
-        listeners: {
-          move: (event) => {
-            const target = event.target;
-            const x = (parseFloat(target.getAttribute("data-bs-x")) || 0) + event.dx;
-            const y = (parseFloat(target.getAttribute("data-bs-y")) || 0) + event.dy;
+    .draggable({
+      listeners: {
+        move: (event) => {
+          const target = event.target;
+          const x = (parseFloat(target.getAttribute("data-bs-x")) || 0)
+              + event.dx;
+          const y = (parseFloat(target.getAttribute("data-bs-y")) || 0)
+              + event.dy;
 
-            target.style.transform = `translate(${x}px, ${y}px)`;
-            target.setAttribute("data-bs-x", x);
-            target.setAttribute("data-bs-y", y);
+          target.style.transform = `translate(${x}px, ${y}px)`;
+          target.setAttribute("data-bs-x", x);
+          target.setAttribute("data-bs-y", y);
 
-            this.onInteraction(target);
-          },
+          this.onInteraction(target);
         },
-      })
-      .resizable({
-        edges: { left: true, right: true, bottom: true, top: true },
-        listeners: {
-          move: (event) => {
-            var target = event.target;
-            var x = parseFloat(target.getAttribute("data-bs-x")) || 0;
-            var y = parseFloat(target.getAttribute("data-bs-y")) || 0;
+      },
+    })
+    .resizable({
+      edges: {left: true, right: true, bottom: true, top: true},
+      listeners: {
+        move: (event) => {
+          var target = event.target;
+          var x = parseFloat(target.getAttribute("data-bs-x")) || 0;
+          var y = parseFloat(target.getAttribute("data-bs-y")) || 0;
 
-            // check if control key is pressed
-            if (event.ctrlKey) {
-              const aspectRatio = target.offsetWidth / target.offsetHeight;
-              // preserve aspect ratio
-              let width = event.rect.width;
-              let height = event.rect.height;
+          // check if control key is pressed
+          if (event.ctrlKey) {
+            const aspectRatio = target.offsetWidth / target.offsetHeight;
+            // preserve aspect ratio
+            let width = event.rect.width;
+            let height = event.rect.height;
 
-              if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
-                height = width / aspectRatio;
-              } else {
-                width = height * aspectRatio;
-              }
-
-              event.rect.width = width;
-              event.rect.height = height;
+            if (Math.abs(event.deltaRect.width) >= Math.abs(
+                event.deltaRect.height)) {
+              height = width / aspectRatio;
+            } else {
+              width = height * aspectRatio;
             }
 
-            target.style.width = event.rect.width + "px";
-            target.style.height = event.rect.height + "px";
+            event.rect.width = width;
+            event.rect.height = height;
+          }
 
-            // translate when resizing from top or left edges
-            x += event.deltaRect.left;
-            y += event.deltaRect.top;
+          target.style.width = event.rect.width + "px";
+          target.style.height = event.rect.height + "px";
 
-            target.style.transform = "translate(" + x + "px," + y + "px)";
+          // translate when resizing from top or left edges
+          x += event.deltaRect.left;
+          y += event.deltaRect.top;
 
-            target.setAttribute("data-bs-x", x);
-            target.setAttribute("data-bs-y", y);
-            target.textContent = Math.round(event.rect.width) + "\u00D7" + Math.round(event.rect.height);
+          target.style.transform = "translate(" + x + "px," + y + "px)";
 
-            this.onInteraction(target);
-          },
+          target.setAttribute("data-bs-x", x);
+          target.setAttribute("data-bs-y", y);
+          target.textContent = Math.round(event.rect.width) + "\u00D7"
+              + Math.round(event.rect.height);
+
+          this.onInteraction(target);
         },
+      },
 
-        modifiers: [
-          interact.modifiers.restrictSize({
-            min: { width: 5, height: 5 },
-          }),
-        ],
-        inertia: true,
+      modifiers: [
+        interact.modifiers.restrictSize({
+          min: {width: 5, height: 5},
+        }),
+      ],
+      inertia: true,
+    });
+    if(window.location.pathname.endsWith('sign')) {
+      window.addEventListener('keydown', (event) => {
+        // Get the currently selected element
+        const target = document.querySelector('.draggable-canvas');
+
+        // Define the step size for each key press
+        const step = 10; // Adjust step size as needed
+
+        // Get the current x and y coordinates
+        let x = (parseFloat(target.getAttribute('data-bs-x')) || 0);
+        let y = (parseFloat(target.getAttribute('data-bs-y')) || 0);
+
+        // Check which key was pressed and update the coordinates accordingly
+        switch (event.key) {
+          case 'ArrowUp':
+            y -= step;
+            event.preventDefault(); // Prevent the default action
+            break;
+          case 'ArrowDown':
+            y += step;
+            event.preventDefault();
+            break;
+          case 'ArrowLeft':
+            x -= step;
+            event.preventDefault();
+            break;
+          case 'ArrowRight':
+            x += step;
+            event.preventDefault();
+            break;
+          default:
+            return; // Listen only to arrow keys
+        }
+
+        // Update position
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute('data-bs-x', x);
+        target.setAttribute('data-bs-y', y);
+
+        DraggableUtils.onInteraction(target);
       });
+    }
   },
+
   onInteraction(target) {
     this.boxDragContainer.appendChild(target);
   },
