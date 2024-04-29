@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,11 +30,17 @@ import stirling.software.SPDF.repository.UserRepository;
 @Tag(name = "Account Security", description = "Account Security APIs")
 public class AccountWebController {
 
+    @Autowired
+    @Qualifier("OAUTH2Enabled")
+    public boolean OAUTH2EnabledValue;
+
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
             return "redirect:/";
         }
+
+        model.addAttribute("oAuth2Enabled", OAUTH2EnabledValue);
 
         model.addAttribute("currentPage", "login");
 
