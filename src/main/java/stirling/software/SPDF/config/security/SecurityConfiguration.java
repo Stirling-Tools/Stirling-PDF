@@ -32,6 +32,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
 import jakarta.servlet.http.HttpSession;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 
 import java.io.IOException;
@@ -54,25 +55,7 @@ public class SecurityConfiguration {
     @Qualifier("loginEnabled")
     public boolean loginEnabledValue;
 
-    @Autowired
-    @Qualifier("OAUTH2Enabled")
-    public boolean OAUTH2EnabledValue;
-
-    @Autowired
-    @Qualifier("OAUTH2Issuer")
-    public String OAUTH2IssuerValue;
-
-    @Autowired
-    @Qualifier("OAUTH2ClientId")
-    public String OAUTH2ClientIdValue;
-
-    @Autowired
-    @Qualifier("OAUTH2Secret")
-    public String OAUTH2SecretValue;
-
-    @Autowired
-    @Qualifier("OAUTH2AutoCreateUser")
-    public boolean OAUTH2AutoCreateUserValue;
+    @Autowired ApplicationProperties applicationProperties;
 
     @Autowired private UserAuthenticationFilter userAuthenticationFilter;
 
@@ -175,7 +158,7 @@ public class SecurityConfiguration {
                     .authenticationProvider(authenticationProvider());
 
             // Handle OAUTH2 Logins
-            if (OAUTH2EnabledValue) {
+            if (applicationProperties.getSecurity().getOAUTH2().getEnabled()) {
 
                  http.oauth2Login( oauth2 -> oauth2
                          .loginPage("/oauth2")
@@ -189,7 +172,7 @@ public class SecurityConfiguration {
                                 public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws ServletException , IOException{
                                     OAuth2User oauthUser =  (OAuth2User) authentication.getPrincipal();
-                                    if (userService.processOAuth2PostLogin(oauthUser.getAttribute("email"), OAUTH2AutoCreateUserValue)) {
+                                    if (userService.processOAuth2PostLogin(oauthUser.getAttribute("email"), applicationProperties.getSecurity().getOAUTH2().getAutoCreateUser())) {
                                         response.sendRedirect("/");
                                     }
                                     else{
@@ -215,10 +198,10 @@ public class SecurityConfiguration {
 	}
 
 	private ClientRegistration oidcClientRegistration() {
-		return ClientRegistrations.fromOidcIssuerLocation(OAUTH2IssuerValue)
+		return ClientRegistrations.fromOidcIssuerLocation(applicationProperties.getSecurity().getOAUTH2().getIssuer())
 			.registrationId("oidc")
-            .clientId(OAUTH2ClientIdValue)
-			.clientSecret(OAUTH2SecretValue)
+            .clientId(applicationProperties.getSecurity().getOAUTH2().getClientId())
+			.clientSecret(applicationProperties.getSecurity().getOAUTH2().getClientSecret())
 			.scope("openid", "profile", "email")
 			.userNameAttributeName("email")
 			.clientName("OIDC")

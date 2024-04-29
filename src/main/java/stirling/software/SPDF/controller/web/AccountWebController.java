@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
@@ -30,9 +31,7 @@ import stirling.software.SPDF.repository.UserRepository;
 @Tag(name = "Account Security", description = "Account Security APIs")
 public class AccountWebController {
 
-    @Autowired
-    @Qualifier("OAUTH2Enabled")
-    public boolean OAUTH2EnabledValue;
+    @Autowired ApplicationProperties applicationProperties;
 
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
@@ -40,7 +39,7 @@ public class AccountWebController {
             return "redirect:/";
         }
 
-        model.addAttribute("oAuth2Enabled", OAUTH2EnabledValue);
+        model.addAttribute("oAuth2Enabled", applicationProperties.getSecurity().getOAUTH2().getEnabled());
 
         model.addAttribute("currentPage", "login");
 
