@@ -94,13 +94,19 @@ public class AccountWebController {
 
                 // Retrieve username and other attributes
                 username = userDetails.getUsername();
+
+                // Add oAuth2 Login attributes to the model
+                model.addAttribute("oAuth2Login", false);
             }
             if (principal instanceof OAuth2User) {
-                // Cast the principal object to UserDetails
+                // Cast the principal object to OAuth2User
                 OAuth2User userDetails = (OAuth2User) principal;
 
                 // Retrieve username and other attributes
                 username = userDetails.getAttribute("email");
+
+                // Add oAuth2 Login attributes to the model
+                model.addAttribute("oAuth2Login", true);
             }
             if (username != null) {
                 // Fetch user details from the database
