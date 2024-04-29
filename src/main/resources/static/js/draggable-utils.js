@@ -26,7 +26,7 @@ const DraggableUtils = {
       },
     })
     .resizable({
-      edges: {left: true, right: true, bottom: true, top: true},
+      edges: { left: true, right: true, bottom: true, top: true },
       listeners: {
         move: (event) => {
           var target = event.target;
