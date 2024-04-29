@@ -38,7 +38,6 @@ public class UserService implements UserServiceInterface {
         if (autoCreateUser) {
             User user = new User();
             user.setUsername(username);
-            //newUser.setProvider(Provider.GOOGLE);
             user.setEnabled(true);
             user.setFirstLogin(false);
             user.addAuthority(new Authority( Role.USER.getRoleId(), user));

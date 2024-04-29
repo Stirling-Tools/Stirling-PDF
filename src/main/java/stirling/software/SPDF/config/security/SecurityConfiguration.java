@@ -178,15 +178,10 @@ public class SecurityConfiguration {
 
                  http.oauth2Login( oauth2 -> oauth2
                          .loginPage("/oauth2")
-//                         .userInfoEndpoint(userInfo -> userInfo
-//                                 .userService(oauthUserService)
-//                         )
                          .successHandler(new AuthenticationSuccessHandler() {
                                 @Override
                                 public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws ServletException , IOException{
-//                                    CustomOAuth2User oauthUser = (CustomOAuth2User) authentication.getPrincipal();
-//                                    userService.processOAuthPostLogin(oauthUser.getEmail());
                                     OAuth2User oauthUser =  (OAuth2User) authentication.getPrincipal();
                                     if (userService.processOAuthPostLogin(oauthUser.getAttribute("email"), OAUTH2AutoCreateUserValue)) {
                                         response.sendRedirect("/");
@@ -196,21 +191,16 @@ public class SecurityConfiguration {
                                     }
                                 }
                             }
-                          )
+                         )
                  );
-
              }
-
         } else {
             http.csrf(csrf -> csrf.disable())
                     .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
 
-
-
         return http.build();
     }
-
 
     @Bean
 	public ClientRegistrationRepository clientRegistrationRepository() {
