@@ -271,7 +271,7 @@ public class ApplicationProperties {
                         + ", clientId="
                         + clientId
                         + ", clientSecret="
-                        + clientSecret
+                        + (clientSecret!= null && !clientSecret.isEmpty() ? "MASKED" : "NULL")
                         + ", autoCreateUser="
                         + autoCreateUser
                         + "]";
