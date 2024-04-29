@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -193,6 +194,7 @@ public class SecurityConfiguration {
 
     // Client Registration Repository for OAUTH2 OIDC Login
     @Bean
+    @ConditionalOnProperty(value = "security.oauth2.enabled" , havingValue = "true", matchIfMissing = false)
 	public ClientRegistrationRepository clientRegistrationRepository() {
 		return new InMemoryClientRegistrationRepository(this.oidcClientRegistration());
 	}
