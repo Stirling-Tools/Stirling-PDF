@@ -30,6 +30,24 @@ public class UserService implements UserServiceInterface {
 
     @Autowired private PasswordEncoder passwordEncoder;
 
+    // Handle OAUTH2 login and user auto creation.
+    public boolean processOAuth2PostLogin(String username, boolean autoCreateUser) {
+        Optional<User> existUser = userRepository.findByUsernameIgnoreCase(username);
+        if (existUser.isPresent()) {
+            return true;
+        }
+        if (autoCreateUser) {
+            User user = new User();
+            user.setUsername(username);
+            user.setEnabled(true);
+            user.setFirstLogin(false);
+            user.addAuthority(new Authority( Role.USER.getRoleId(), user));
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
     public Authentication getAuthentication(String apiKey) {
         User user = getUserByApiKey(apiKey);
         if (user == null) {
