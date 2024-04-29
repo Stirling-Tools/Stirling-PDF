@@ -14,7 +14,8 @@ system:
   enableAlphaFunctionality: false # Set to enable functionality which might need more testing before it fully goes live (This feature might make no changes)
   showUpdate: true # see when a new update is available
   showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
-
+  customHTMLFiles: false # Enable to have files placed in /customFiles/templates override the existing template html files
+  
 #ui:
 #  appName: exampleAppName # Application's visible name
 #  homeDescription: I am a description # Short description or tagline shown on homepage.
