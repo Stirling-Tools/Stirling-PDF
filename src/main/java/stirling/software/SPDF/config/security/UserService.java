@@ -30,7 +30,8 @@ public class UserService implements UserServiceInterface {
 
     @Autowired private PasswordEncoder passwordEncoder;
 
-     public boolean processOAuthPostLogin(String username, boolean autoCreateUser) {
+    // Handle OAUTH2 login and user auto creation.
+    public boolean processOAuth2PostLogin(String username, boolean autoCreateUser) {
         Optional<User> existUser = userRepository.findByUsernameIgnoreCase(username);
         if (existUser.isPresent()) {
             return true;

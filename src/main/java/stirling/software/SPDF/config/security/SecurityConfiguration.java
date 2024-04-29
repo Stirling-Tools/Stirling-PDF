@@ -119,7 +119,7 @@ public class SecurityConfiguration {
                             logout ->
                                     logout.logoutRequestMatcher(
                                                     new AntPathRequestMatcher("/logout"))
-                                            .logoutSuccessHandler(new CustomLogoutSuccessHandler())
+                                            .logoutSuccessHandler(new CustomLogoutSuccessHandler()) // Use a Custom Logout Handler to handle custom error message if OAUTH2 Auto Create is disabled
                                             .invalidateHttpSession(true) // Invalidate session
                                             .deleteCookies("JSESSIONID", "remember-me")
                                             .addLogoutHandler(
@@ -174,16 +174,22 @@ public class SecurityConfiguration {
                     .userDetailsService(userDetailsService)
                     .authenticationProvider(authenticationProvider());
 
-             if (OAUTH2EnabledValue) {
+            // Handle OAUTH2 Logins
+            if (OAUTH2EnabledValue) {
 
                  http.oauth2Login( oauth2 -> oauth2
                          .loginPage("/oauth2")
+                         /*
+                         This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
+                         If user exists, login proceeds as usual. If user does not exist, then it is autocreated but only if 'OAUTH2AutoCreateUser'
+                         is set as true, else login fails with an error message advising the same.
+                          */
                          .successHandler(new AuthenticationSuccessHandler() {
                                 @Override
                                 public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws ServletException , IOException{
                                     OAuth2User oauthUser =  (OAuth2User) authentication.getPrincipal();
-                                    if (userService.processOAuthPostLogin(oauthUser.getAttribute("email"), OAUTH2AutoCreateUserValue)) {
+                                    if (userService.processOAuth2PostLogin(oauthUser.getAttribute("email"), OAUTH2AutoCreateUserValue)) {
                                         response.sendRedirect("/");
                                     }
                                     else{
@@ -202,6 +208,7 @@ public class SecurityConfiguration {
         return http.build();
     }
 
+    // Client Registration Repository for OAUTH2 OIDC Login
     @Bean
 	public ClientRegistrationRepository clientRegistrationRepository() {
 		return new InMemoryClientRegistrationRepository(this.oidcClientRegistration());
