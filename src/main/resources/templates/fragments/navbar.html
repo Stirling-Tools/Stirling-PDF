@@ -17,20 +17,20 @@
               </button>
               <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto flex-nowrap">
-                  <li class="nav-item">
+                  <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('multi-tool')}">
                     <a class="nav-link" href="#" th:href="@{multi-tool}" th:classappend="${currentPage}=='multi-tool' ? 'active' : ''" th:title="#{home.multiTool.desc}">
                       <img class="icon" src="images/tools.svg" alt="icon">
                       <span class="icon-text" th:text="#{home.multiTool.title}"></span>
                     </a>
                   </li>
-                  <li class="nav-item nav-item-separator"></li>
-                  <li class="nav-item">
+                  <li th:if="${@endpointConfiguration.isEndpointEnabled('multi-tool')}" class="nav-item nav-item-separator"></li>
+                  <li th:if="${@endpointConfiguration.isEndpointEnabled('pipeline')}" class="nav-item">
                     <a class="nav-link" href="#" th:href="@{pipeline}" th:classappend="${currentPage}=='pipeline' ? 'active' : ''" th:title="#{home.pipeline.desc}">
                       <img class="icon" src="images/pipeline.svg" alt="icon">
                       <span class="icon-text" th:text="#{home.pipeline.title}"></span>
                     </a>
                   </li>
-                  <li class="nav-item nav-item-separator"></li>
+                  <li th:if="${@endpointConfiguration.isEndpointEnabled('pipeline')}" class="nav-item nav-item-separator"></li>
                   <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='crop' OR ${currentPage}=='adjust-contrast' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' OR ${currentPage}=='multi-page-layout' OR ${currentPage}=='scale-pages' OR ${currentPage}=='auto-split-pdf' OR ${currentPage}=='extract-page' OR ${currentPage}=='pdf-to-single-page' ? 'active' : ''">
                     <a class="nav-link dropdown-toggle" id="navbarDropdown-1" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                       <img class="icon" src="images/file-earmark-pdf.svg" alt="icon">
@@ -211,7 +211,7 @@
                     <span id="zipThresholdValue" class="ms-2"></span>
                   </div>
                   <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input"id="boredWaiting" th:title="#{settings.bored.help}">
+                    <input type="checkbox" class="form-check-input" id="boredWaiting" th:title="#{settings.bored.help}">
                     <label class="form-check-label" for="boredWaiting" th:text="#{bored}"></label>
                   </div>
                   <div class="mb-3 form-check">

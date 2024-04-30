@@ -42,7 +42,7 @@
               </div>
               </th:block>
               <!-- Change Username Form -->
-              <form action="api/v1/user/change-username" method="post">
+              <form th:if="${!oAuth2Login}" action="api/v1/user/change-username" method="post">
                 <div class="mb-3">
                   <label for="newUsername" th:text="#{account.changeUsername}">Change Username</label>
                   <input type="text" class="form-control" name="newUsername" id="newUsername" th:placeholder="#{account.newUsername}">
@@ -59,8 +59,8 @@
               <hr> <!-- Separator Line -->
 
               <!-- Change Password Form -->
-              <h4 th:text="#{account.changePassword}">Change Password?</h4>
-              <form action="api/v1/user/change-password" method="post">
+              <h4 th:if="${!oAuth2Login}" th:text="#{account.changePassword}">Change Password?</h4>
+              <form th:if="${!oAuth2Login}" action="api/v1/user/change-password" method="post">
                 <div class="mb-3">
                   <label for="currentPassword" th:text="#{account.oldPassword}">Old Password</label>
                   <input type="password" class="form-control" name="currentPassword" id="currentPasswordPassword" th:placeholder="#{account.oldPassword}">

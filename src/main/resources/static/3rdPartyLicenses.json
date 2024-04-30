@@ -82,6 +82,13 @@
             "moduleLicenseUrl": "http://www.gnu.org/licenses/lgpl-3.0.html"
         },
         {
+            "moduleName": "com.github.stephenc.jcip:jcip-annotations",
+            "moduleUrl": "http://stephenc.github.com/jcip-annotations",
+            "moduleVersion": "1.0-1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "com.github.vladimir-bukhtoyarov:bucket4j-core",
             "moduleUrl": "http://github.com/vladimir-bukhtoyarov/bucket4j/bucket4j-core",
             "moduleVersion": "7.6.0",
@@ -108,6 +115,34 @@
             "moduleVersion": "2.1",
             "moduleLicense": "LGPL",
             "moduleLicenseUrl": "http://www.martiansoftware.com/jsap/license.html"
+        },
+        {
+            "moduleName": "com.nimbusds:content-type",
+            "moduleUrl": "https://connect2id.com",
+            "moduleVersion": "2.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.nimbusds:lang-tag",
+            "moduleUrl": "https://connect2id.com/",
+            "moduleVersion": "1.7",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.nimbusds:nimbus-jose-jwt",
+            "moduleUrl": "https://connect2id.com",
+            "moduleVersion": "9.24.4",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.nimbusds:oauth2-oidc-sdk",
+            "moduleUrl": "https://bitbucket.org/connect2id/oauth-2.0-sdk-with-openid-connect-extensions",
+            "moduleVersion": "9.43.3",
+            "moduleLicense": "Apache License, version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.html"
         },
         {
             "moduleName": "com.opencsv:opencsv",
@@ -336,6 +371,20 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "net.minidev:accessors-smart",
+            "moduleUrl": "https://urielch.github.io/",
+            "moduleVersion": "2.5.0",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "net.minidev:json-smart",
+            "moduleUrl": "https://urielch.github.io/",
+            "moduleVersion": "2.5.0",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.antlr:antlr4-runtime",
             "moduleUrl": "https://www.antlr.org/",
             "moduleVersion": "4.13.0",
@@ -548,6 +597,13 @@
             "moduleLicenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/"
         },
         {
+            "moduleName": "org.ow2.asm:asm",
+            "moduleUrl": "http://asm.ow2.org",
+            "moduleVersion": "9.3",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.slf4j:jul-to-slf4j",
             "moduleUrl": "http://www.slf4j.org",
             "moduleVersion": "2.0.12",
@@ -664,6 +720,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "org.springframework.boot:spring-boot-starter-oauth2-client",
+            "moduleUrl": "https://spring.io/projects/spring-boot",
+            "moduleVersion": "3.2.4",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
             "moduleName": "org.springframework.boot:spring-boot-starter-security",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "3.2.4",
@@ -721,6 +784,27 @@
         },
         {
             "moduleName": "org.springframework.security:spring-security-crypto",
+            "moduleUrl": "https://spring.io/projects/spring-security",
+            "moduleVersion": "6.2.3",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework.security:spring-security-oauth2-client",
+            "moduleUrl": "https://spring.io/projects/spring-security",
+            "moduleVersion": "6.2.3",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework.security:spring-security-oauth2-core",
+            "moduleUrl": "https://spring.io/projects/spring-security",
+            "moduleVersion": "6.2.3",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework.security:spring-security-oauth2-jose",
             "moduleUrl": "https://spring.io/projects/spring-security",
             "moduleVersion": "6.2.3",
             "moduleLicense": "Apache License, Version 2.0",
