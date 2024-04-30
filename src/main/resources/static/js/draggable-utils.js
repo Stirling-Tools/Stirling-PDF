@@ -5,6 +5,7 @@ const DraggableUtils = {
   pdfDoc: null,
   pageIndex: 0,
   documentsMap: new Map(),
+  lastInteracted: null,
 
   init() {
     interact(".draggable-canvas")
@@ -22,6 +23,8 @@ const DraggableUtils = {
           target.setAttribute("data-bs-y", y);
 
           this.onInteraction(target);
+          //update the last interacted element
+          this.lastInteracted = event.target;
         },
       },
     })
@@ -76,10 +79,15 @@ const DraggableUtils = {
       ],
       inertia: true,
     });
-    if(window.location.pathname.endsWith('sign')) {
+    //Arrow key Support for Add-Image and Sign pages
+    if(window.location.pathname.endsWith('sign') || window.location.pathname.endsWith('add-image')) {
       window.addEventListener('keydown', (event) => {
+        //Check for last interacted element
+        if (!this.lastInteracted){
+          return;
+        }
         // Get the currently selected element
-        const target = document.querySelector('.draggable-canvas');
+        const target = this.lastInteracted;
 
         // Step size relatively to the elements size
         const stepX = target.offsetWidth * 0.05;
@@ -136,9 +144,18 @@ const DraggableUtils = {
     createdCanvas.setAttribute("data-bs-x", x);
     createdCanvas.setAttribute("data-bs-y", y);
 
+    //Click element in order to enable arrow keys
+    createdCanvas.addEventListener('click', () => {
+      this.lastInteracted = createdCanvas;
+    });
+
     createdCanvas.onclick = (e) => this.onInteraction(e.target);
 
     this.boxDragContainer.appendChild(createdCanvas);
+
+    //Enable Arrow keys directly after the element is created
+    this.lastInteracted = createdCanvas;
+
     return createdCanvas;
   },
   createDraggableCanvasFromUrl(dataUrl) {
@@ -182,6 +199,11 @@ const DraggableUtils = {
   },
   deleteDraggableCanvas(element) {
     if (element) {
+      //Check if deleted element is the last interacted
+      if (this.lastInteracted === element) {
+        // If it is, set lastInteracted to null
+        this.lastInteracted = null;
+      }
       element.remove();
     }
   },
