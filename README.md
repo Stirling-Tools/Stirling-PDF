@@ -166,7 +166,7 @@ Stirling PDF currently supports 27!
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
 | Arabic (العربية) (ar_AR)                    | ![42%](https://geps.dev/progress/42)   |
-| German (Deutsch) (de_DE)                    | ![99%](https://geps.dev/progress/99)   |
+| German (Deutsch) (de_DE)                    | ![100%](https://geps.dev/progress/100)   |
 | French (Français) (fr_FR)                   | ![91%](https://geps.dev/progress/91)   |
 | Spanish (Español) (es_ES)                   | ![99%](https://geps.dev/progress/99)   |
 | Simplified Chinese (简体中文) (zh_CN)       | ![98%](https://geps.dev/progress/98)   |
