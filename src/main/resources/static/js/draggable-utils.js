@@ -81,8 +81,9 @@ const DraggableUtils = {
         // Get the currently selected element
         const target = document.querySelector('.draggable-canvas');
 
-        // Define the step size for each key press
-        const step = 10; // Adjust step size as needed
+        // Step size relatively to the elements size
+        const stepX = target.offsetWidth * 0.05;
+        const stepY = target.offsetHeight * 0.05;
 
         // Get the current x and y coordinates
         let x = (parseFloat(target.getAttribute('data-bs-x')) || 0);
@@ -91,19 +92,19 @@ const DraggableUtils = {
         // Check which key was pressed and update the coordinates accordingly
         switch (event.key) {
           case 'ArrowUp':
-            y -= step;
+            y -= stepY;
             event.preventDefault(); // Prevent the default action
             break;
           case 'ArrowDown':
-            y += step;
+            y += stepY;
             event.preventDefault();
             break;
           case 'ArrowLeft':
-            x -= step;
+            x -= stepX;
             event.preventDefault();
             break;
           case 'ArrowRight':
-            x += step;
+            x += stepX;
             event.preventDefault();
             break;
           default:
