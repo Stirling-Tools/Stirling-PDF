@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -214,6 +216,13 @@ public class UserService implements UserServiceInterface {
 
     public void changeFirstUse(User user, boolean firstUse) {
         user.setFirstLogin(firstUse);
+        userRepository.save(user);
+    }
+
+    public void changeRole(User user, String newRole) {
+        Set<Authority> authorities = new HashSet<>();
+        authorities.add(new Authority(newRole, user));
+        user.setAuthorities(authorities);
         userRepository.save(user);
     }
 

@@ -228,6 +228,49 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/admin/changeRole")
+    public RedirectView changeRole(
+            @RequestParam(name = "username") String username,
+            @RequestParam(name = "role") String role,
+            Authentication authentication) {
+
+        if (!userService.isUsernameValid(username)) {
+            return new RedirectView("/addUsers?messageType=invalidUsername");
+        }
+
+        Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
+
+        if (!userOpt.isPresent()) {
+            return new RedirectView("/addUsers?messageType=usernameDoesNotExists");
+        }
+        if (!userService.usernameExistsIgnoreCase(username)) {
+            return new RedirectView("/addUsers?messageType=usernameDoesNotExists");
+        }
+        // Get the currently authenticated username
+        String currentUsername = authentication.getName();
+
+        // Check if the provided username matches the current session's username
+        if (currentUsername.equalsIgnoreCase(username)) {
+            return new RedirectView("/addUsers?messageType=downgradeCurrentUser");
+        }
+        try {
+            // Validate the role
+            Role roleEnum = Role.fromString(role);
+            if (roleEnum == Role.INTERNAL_API_USER) {
+                // If the role is INTERNAL_API_USER, reject the request
+                return new RedirectView("/addUsers?messageType=invalidRole");
+            }
+        } catch (IllegalArgumentException e) {
+            // If the role ID is not valid, redirect with an error message
+            return new RedirectView("/addUsers?messageType=invalidRole");
+        }
+        User user = userOpt.get();
+
+        userService.changeRole(user, role);
+        return new RedirectView("/addUsers"); // Redirect to account page after adding the user
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/deleteUser/{username}")
     public RedirectView deleteUser(
             @PathVariable(name = "username") String username, Authentication authentication) {
