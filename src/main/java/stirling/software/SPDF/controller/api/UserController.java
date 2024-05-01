@@ -241,10 +241,10 @@ public class UserController {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
 
         if (!userOpt.isPresent()) {
-            return new RedirectView("/addUsers?messageType=usernameDoesNotExists");
+            return new RedirectView("/addUsers?messageType=userNotFound");
         }
         if (!userService.usernameExistsIgnoreCase(username)) {
-            return new RedirectView("/addUsers?messageType=usernameDoesNotExists");
+            return new RedirectView("/addUsers?messageType=userNotFound");
         }
         // Get the currently authenticated username
         String currentUsername = authentication.getName();
