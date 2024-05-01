@@ -80,7 +80,7 @@
                   <label for="username" th:text="#{username}">Username</label>
                   <select name="username" class="form-control" required>
                     <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
-                    <option th:each="user : ${users}" th:if="${user.username != currentUsername}" th:value="${user.username}" th:text="#{${user.username}}">Username</option>
+                    <option th:each="user : ${users}" th:if="${user.username != currentUsername}" th:value="${user.username}" th:text="${user.username}">Username</option>
                   </select>
                 </div>
                 <div class="mb-3">

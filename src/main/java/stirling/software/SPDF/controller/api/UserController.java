@@ -234,10 +234,6 @@ public class UserController {
             @RequestParam(name = "role") String role,
             Authentication authentication) {
 
-        if (!userService.isUsernameValid(username)) {
-            return new RedirectView("/addUsers?messageType=invalidUsername");
-        }
-
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
 
         if (!userOpt.isPresent()) {
