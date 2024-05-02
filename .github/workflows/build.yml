@@ -2,12 +2,12 @@ name: "Build repo"
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths-ignore:
       - ".github/**"
       - "**/*.md"
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
     paths-ignore:
       - ".github/**"
       - "**/*.md"
@@ -25,16 +25,18 @@ jobs:
       fail-fast: false
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
 
-    - uses: gradle/gradle-build-action@v2.4.2
-      with:
-        gradle-version: 7.6
-        arguments: build --no-build-cache
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 7.6
+
+      - name: Build with Gradle
+        run: ./gradlew build --no-build-cache

@@ -62,6 +62,7 @@ public class SPdfApplication {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
+
         SpringApplication app = new SpringApplication(SPdfApplication.class);
         app.addInitializers(new ConfigInitializer());
         if (Files.exists(Paths.get("configs/settings.yml"))) {
