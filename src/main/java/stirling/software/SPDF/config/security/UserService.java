@@ -21,12 +21,15 @@ import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.repository.AuthorityRepository;
 import stirling.software.SPDF.repository.UserRepository;
 
 @Service
 public class UserService implements UserServiceInterface {
 
     @Autowired private UserRepository userRepository;
+
+    @Autowired private AuthorityRepository authorityRepository;
 
     @Autowired private PasswordEncoder passwordEncoder;
 
@@ -202,6 +205,10 @@ public class UserService implements UserServiceInterface {
         return userRepository.findByUsernameIgnoreCase(username);
     }
 
+    public Authority findRole(User user) {
+        return authorityRepository.findByUserId(user.getId());
+    }
+
     public void changeUsername(User user, String newUsername) {
         user.setUsername(newUsername);
         userRepository.save(user);
@@ -215,6 +222,12 @@ public class UserService implements UserServiceInterface {
     public void changeFirstUse(User user, boolean firstUse) {
         user.setFirstLogin(firstUse);
         userRepository.save(user);
+    }
+
+    public void changeRole(User user, String newRole) {
+        Authority userAuthority = this.findRole(user);
+        userAuthority.setAuthority(newRole);
+        authorityRepository.save(userAuthority);
     }
 
     public boolean isPasswordCorrect(User user, String currentPassword) {
