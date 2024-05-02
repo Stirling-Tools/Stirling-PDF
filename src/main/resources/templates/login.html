@@ -52,7 +52,7 @@
 
           document.addEventListener('DOMContentLoaded', function() {
 
-            const defaultLocale = document.documentElement.getAttribute('language') || 'en_GB';
+            const defaultLocale = document.documentElement.getAttribute('data-language') || 'en_GB';
             const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
 
             const currentURL = new URL(window.location.href);
@@ -139,6 +139,13 @@
         <form th:action="@{login}" method="post">
           <img class="mb-4" src="favicon.svg?v=2" alt="" width="144" height="144">
           <h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
+          <div th:if="${oAuth2Enabled}">
+            <a href="oauth2/authorization/oidc" class="w-100 btn btn-lg btn-primary" th:text="#{login.ssoSignIn}">Login Via SSO</a>
+            <div class="text-danger text-center">
+              <div th:if="${error == 'oauth2AutoCreateDisabled'}" th:text="#{login.oauth2AutoCreateDisabled}">OAUTH2 Auto-Create User Disabled.</div>
+            </div>
+            <hr />
+          </div>
           <h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
 
           <div class="form-floating">

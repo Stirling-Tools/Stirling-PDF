@@ -17,6 +17,13 @@
               <p th:text="#{pdfToPDFA.tip}"></p>
               <form method="post" enctype="multipart/form-data" th:action="@{api/v1/convert/pdf/pdfa}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+					<div class="mb-3">
+						<label th:text="#{pdfToPDFA.outputFormat}"></label>
+						<select class="form-control" name="outputFormat">
+							<option value="pdfa-1">PDF/A-1b</option>
+							<option value="pdfa">PDF/A-2b</option>
+						</select>
+					</div>
                 <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfToPDFA.submit}"></button>
               </form>

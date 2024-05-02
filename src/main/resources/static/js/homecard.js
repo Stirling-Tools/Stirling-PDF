@@ -46,6 +46,12 @@ function reorderCards() {
   cards.sort(function (a, b) {
     var aIsFavorite = localStorage.getItem(a.id) === "favorite";
     var bIsFavorite = localStorage.getItem(b.id) === "favorite";
+    if (a.id === "update-link") {
+      return -1;
+    }
+    if (b.id === "update-link") {
+      return 1;
+    }
     if (aIsFavorite && !bIsFavorite) {
       return -1;
     }
