@@ -58,6 +58,7 @@
                 <div class="mb-3">
                   <label for="role" th:text="#{adminUserSettings.role}">Role</label>
                   <select name="role" class="form-control" required>
+                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
                     <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
                   </select>
                 </div>
@@ -87,6 +88,7 @@
                 <div class="mb-3">
                   <label for="role" th:text="#{adminUserSettings.role}">Role</label>
                   <select name="role" class="form-control" required>
+                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
                     <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
                   </select>
                 </div>
