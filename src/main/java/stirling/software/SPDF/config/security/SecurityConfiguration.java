@@ -15,6 +15,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -34,9 +38,11 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 
 import jakarta.servlet.http.HttpSession;
 import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 
 import java.io.IOException;
+import java.util.*;
 
 @Configuration
 @EnableWebSecurity()
@@ -182,6 +188,11 @@ public class SecurityConfiguration {
                                 }
                             }
                          )
+                         // Add existing Authorities from the database
+                         .userInfoEndpoint( userInfoEndpoint ->
+                                 userInfoEndpoint.userAuthoritiesMapper(userAuthoritiesMapper())
+                         )
+
                  );
              }
         } else {
@@ -209,6 +220,38 @@ public class SecurityConfiguration {
 			.clientName("OIDC")
 			.build();
 	}
+
+    /*
+    This following function is to grant Authorities to the OAUTH2 user from the values stored in the database.
+    This is required for the internal; 'hasRole()' function to give out the correct role.
+     */
+    @Bean
+    @ConditionalOnProperty(value = "security.oauth2.enabled" , havingValue = "true", matchIfMissing = false)
+    GrantedAuthoritiesMapper userAuthoritiesMapper() {
+        return (authorities) -> {
+            Set<GrantedAuthority> mappedAuthorities = new HashSet<>();
+
+            authorities.forEach(authority -> {
+                // Add existing OAUTH2 Authorities
+                mappedAuthorities.add(new SimpleGrantedAuthority(authority.getAuthority()));
+
+                // Add Authorities from database for existing user, if user is present.
+                if (authority instanceof OAuth2UserAuthority oauth2Auth) {
+                    Optional<User> userOpt = userService.findByUsernameIgnoreCase((String)oauth2Auth.getAttributes().get("email"));
+                    if (userOpt.isPresent()) {
+                        User user = userOpt.get();
+                        if (user != null){
+                            mappedAuthorities.add(new SimpleGrantedAuthority(
+                                    userService
+                                            .findRole(user)
+                                            .getAuthority()));
+                        }
+                    }
+                }
+            });
+            return mappedAuthorities;
+        };
+    }
 
     @Bean
     public IPRateLimitingFilter rateLimitingFilter() {

@@ -207,6 +207,10 @@ public class UserService implements UserServiceInterface {
         return userRepository.findByUsernameIgnoreCase(username);
     }
 
+    public Authority findRole(User user) {
+        return authorityRepository.findByUserId(user.getId());
+    }
+
     public void changeUsername(User user, String newUsername) {
         user.setUsername(newUsername);
         userRepository.save(user);
@@ -223,7 +227,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public void changeRole(User user, String newRole) {
-        Authority userAuthority = authorityRepository.findByUserId(user.getId());
+        Authority userAuthority = this.findRole(user);
         userAuthority.setAuthority(newRole);
         authorityRepository.save(userAuthority);
     }
