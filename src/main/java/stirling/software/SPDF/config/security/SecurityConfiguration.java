@@ -192,7 +192,6 @@ public class SecurityConfiguration {
                          .userInfoEndpoint( userInfoEndpoint ->
                                  userInfoEndpoint.userAuthoritiesMapper(userAuthoritiesMapper())
                          )
-
                  );
              }
         } else {
