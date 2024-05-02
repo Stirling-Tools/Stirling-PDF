@@ -100,7 +100,11 @@
           </div>
         </div>
       </div>
-      <script th:inline="javascript">$(document).ready(function() { $('[data-toggle="tooltip"]').tooltip() })</script>
+      <script th:inline="javascript">
+        $(document).ready(function() {
+          $('[data-toggle="tooltip"]').tooltip()
+        })
+      </script>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
   </body>
