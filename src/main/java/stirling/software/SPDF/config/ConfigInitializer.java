@@ -76,58 +76,82 @@ public class ConfigInitializer
             Files.createFile(customSettingsPath);
         }
     }
-
     private static Map<String, String> extractEntries(List<String> lines) {
         Map<String, String> entries = new HashMap<>();
-        String keyRegex = "^\\s*(\\w+)\\s*:\\s*(.*)"; // Capture key and value
-        Pattern pattern = Pattern.compile(keyRegex);
+        StringBuilder currentEntry = new StringBuilder();
+        String currentKey = null;
+        int blockIndent = -1;
 
         for (String line : lines) {
-            Matcher matcher = pattern.matcher(line);
-            if (matcher.find() && !line.trim().startsWith("#")) {
-                String key = matcher.group(1).trim();
-                String value = matcher.group(2).trim(); // Capture the value directly
-                entries.put(key, line);
+            if (line.trim().isEmpty()) {
+                if (currentKey != null) {
+                    currentEntry.append(line).append("\n");
+                }
+                continue;
+            }
+
+            int indentLevel = getIndentationLevel(line);
+            if (line.trim().startsWith("#")) {
+                if (indentLevel <= blockIndent || blockIndent == -1) {
+                    if (currentKey != null) {
+                        entries.put(currentKey, currentEntry.toString().trim());
+                        currentEntry = new StringBuilder();
+                    }
+                    currentKey = line.trim().replaceAll("#", "").split(":")[0].trim();
+                    blockIndent = indentLevel;
+                }
+                currentEntry.append(line).append("\n");
+            } else if (indentLevel == 0 || indentLevel <= blockIndent) {
+                if (currentKey != null) {
+                    entries.put(currentKey, currentEntry.toString().trim());
+                    currentEntry = new StringBuilder();
+                }
+                currentKey = line.split(":")[0].trim();
+                blockIndent = indentLevel;
+                currentEntry.append(line).append("\n");
+            } else {
+                currentEntry.append(line).append("\n");
             }
         }
+
+        if (currentKey != null) {
+            entries.put(currentKey, currentEntry.toString().trim());
+        }
+
         return entries;
     }
 
 
-    private static List<String> mergeConfigs(
-            List<String> templateLines,
-            Map<String, String> templateEntries,
-            Map<String, String> userEntries) {
+    private static List<String> mergeConfigs(List<String> templateLines, Map<String, String> templateEntries, Map<String, String> userEntries) {
         List<String> mergedLines = new ArrayList<>();
         Set<String> handledKeys = new HashSet<>();
 
-        for (String line : templateLines) {
-            String cleanLine = line.split("#")[0].trim();
-            if (!cleanLine.isEmpty() && cleanLine.contains(":")) {
-                String key = cleanLine.split(":")[0].trim();
-                if (userEntries.containsKey(key)) {
-                    // Always use user's entry if exists
-                    mergedLines.add(userEntries.get(key));
-                    handledKeys.add(key);
-                } else {
-                    // Use template's entry if no user entry
-                    mergedLines.add(line);
-                }
-            } else {
-                // Add comments and other lines directly
-                mergedLines.add(line);
-            }
-        }
+        String currentBlockKey = null;
+        int blockIndent = -1;
 
-        // Add user entries not present in the template at the end
-        for (String key : userEntries.keySet()) {
-            if (!handledKeys.contains(key)) {
-                mergedLines.add(userEntries.get(key));
+        for (String line : templateLines) {
+            if (line.trim().isEmpty()) {
+                mergedLines.add(line);
+                continue;
+            }
+
+            int indentLevel = getIndentationLevel(line);
+            if (indentLevel == 0 || (indentLevel <= blockIndent && !line.trim().startsWith("#"))) {
+                currentBlockKey = line.split(":")[0].trim();
+                blockIndent = indentLevel;
+            }
+
+            if (userEntries.containsKey(currentBlockKey) && !handledKeys.contains(currentBlockKey)) {
+                mergedLines.add(userEntries.get(currentBlockKey));
+                handledKeys.add(currentBlockKey);
+            } else if (!handledKeys.contains(currentBlockKey)) {
+                mergedLines.add(line);
             }
         }
 
         return mergedLines;
     }
+
 
 
     private static List<String> cleanInvalidYamlEntries(List<String> lines) {
@@ -136,7 +160,6 @@ public class ConfigInitializer
             String line = lines.get(i);
             String trimmedLine = line.trim();
 
-            // Ignore commented lines and lines that don't look like key-only entries
             if (trimmedLine.startsWith("#")
                     || !trimmedLine.endsWith(":")
                     || trimmedLine.contains(" ")) {
@@ -144,10 +167,7 @@ public class ConfigInitializer
                 continue;
             }
 
-            // For potential key-only lines, check the next line to determine context
             if (isKeyWithoutChildrenOrValue(i, lines)) {
-                // Skip adding the current line since it's a key without any following value or
-                // children
                 continue;
             }
 
