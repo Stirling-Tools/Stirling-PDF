@@ -2,41 +2,37 @@ package stirling.software.SPDF.config.security;
 
 import java.io.IOException;
 
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.ServletException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 
-public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler
-{
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     @Bean
     public SessionRegistry sessionRegistry() {
         return new SessionRegistryImpl();
     }
 
     @Override
-    public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException
-    {
+    public void onLogoutSuccess(
+            HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+            throws IOException, ServletException {
         HttpSession session = request.getSession(false);
         if (session != null) {
             String sessionId = session.getId();
-            sessionRegistry()
-                    .removeSessionInformation(
-                            sessionId);
+            sessionRegistry().removeSessionInformation(sessionId);
         }
 
-        if(request.getParameter("oauth2AutoCreateDisabled") != null)
-        {
-            response.sendRedirect(request.getContextPath()+"/login?error=oauth2AutoCreateDisabled");
-        }
-        else
-        {
+        if (request.getParameter("oauth2AutoCreateDisabled") != null) {
+            response.sendRedirect(
+                    request.getContextPath() + "/login?error=oauth2AutoCreateDisabled");
+        } else {
             response.sendRedirect(request.getContextPath() + "/login?logout=true");
         }
     }

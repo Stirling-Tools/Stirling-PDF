@@ -74,7 +74,7 @@ public class ConvertImgPDFController {
         }
 
         if (singleImage) {
-            String docName = filename + "." + imageFormat; 
+            String docName = filename + "." + imageFormat;
             MediaType mediaType = MediaType.parseMediaType(getMediaType(imageFormat));
             return WebResponseUtils.bytesToWebResponse(result, docName, mediaType);
         } else {
