@@ -79,18 +79,20 @@ public class ConfigInitializer
 
     private static Map<String, String> extractEntries(List<String> lines) {
         Map<String, String> entries = new HashMap<>();
-        String keyRegex = "^(\\w+):.*"; // Improved regex to capture the entire line including colon
+        String keyRegex = "^\\s*(\\w+)\\s*:\\s*(.*)"; // Capture key and value
         Pattern pattern = Pattern.compile(keyRegex);
 
         for (String line : lines) {
             Matcher matcher = pattern.matcher(line);
             if (matcher.find() && !line.trim().startsWith("#")) {
                 String key = matcher.group(1).trim();
+                String value = matcher.group(2).trim(); // Capture the value directly
                 entries.put(key, line);
             }
         }
         return entries;
     }
+
 
     private static List<String> mergeConfigs(
             List<String> templateLines,
@@ -104,16 +106,11 @@ public class ConfigInitializer
             if (!cleanLine.isEmpty() && cleanLine.contains(":")) {
                 String key = cleanLine.split(":")[0].trim();
                 if (userEntries.containsKey(key)) {
-                    // Add user's entry if exists, ensuring we get all sub-entries
-                    if (userEntries.get(key).endsWith("{}")) {
-                        // If the user entry ends with empty structure, add template version
-                        mergedLines.add(line);
-                    } else {
-                        mergedLines.add(userEntries.get(key));
-                    }
+                    // Always use user's entry if exists
+                    mergedLines.add(userEntries.get(key));
                     handledKeys.add(key);
                 } else {
-                    // Use template's entry
+                    // Use template's entry if no user entry
                     mergedLines.add(line);
                 }
             } else {
@@ -125,14 +122,13 @@ public class ConfigInitializer
         // Add user entries not present in the template at the end
         for (String key : userEntries.keySet()) {
             if (!handledKeys.contains(key)) {
-                if (!userEntries.get(key).endsWith("{}")) {
-                    mergedLines.add(userEntries.get(key));
-                }
+                mergedLines.add(userEntries.get(key));
             }
         }
 
         return mergedLines;
     }
+
 
     private static List<String> cleanInvalidYamlEntries(List<String> lines) {
         List<String> cleanedLines = new ArrayList<>();

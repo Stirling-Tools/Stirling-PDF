@@ -109,8 +109,7 @@ public class SecurityConfiguration {
                             logout ->
                                     logout.logoutRequestMatcher(
                                                     new AntPathRequestMatcher("/logout"))
-                                            .logoutSuccessHandler(
-                                                    new CustomLogoutSuccessHandler())
+                                            .logoutSuccessHandler(new CustomLogoutSuccessHandler())
                                             .invalidateHttpSession(true) // Invalidate session
                                             .deleteCookies("JSESSIONID", "remember-me")
                                             .addLogoutHandler(
