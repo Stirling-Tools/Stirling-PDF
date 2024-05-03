@@ -76,7 +76,6 @@ function attachMoveButtons() {
       //Dispatch a custom event with the name of the removed file
       var event = new CustomEvent("fileRemoved", { detail: fileName });
       document.dispatchEvent(event);
-      //end new code
     });
   }
 }
