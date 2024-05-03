@@ -37,7 +37,7 @@ public class FileFallbackTemplateResolver extends AbstractConfigurableTemplateRe
                 return new FileTemplateResource(resource.getFile().getPath(), characterEncoding);
             }
         } catch (IOException e) {
-            
+
         }
 
         return new ClassLoaderTemplateResource(
