@@ -10,7 +10,7 @@
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Stirling-Tools/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
 
-This is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. Originally developed entirely by ChatGPT, this locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
+This is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
 
 Stirling PDF does not initiate any outbound calls for record-keeping or tracking purposes.
 
@@ -166,7 +166,7 @@ Stirling PDF currently supports 27!
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
 | Arabic (العربية) (ar_AR)                    | ![42%](https://geps.dev/progress/42)   |
-| German (Deutsch) (de_DE)                    | ![99%](https://geps.dev/progress/99)   |
+| German (Deutsch) (de_DE)                    | ![100%](https://geps.dev/progress/100)   |
 | French (Français) (fr_FR)                   | ![91%](https://geps.dev/progress/91)   |
 | Spanish (Español) (es_ES)                   | ![99%](https://geps.dev/progress/99)   |
 | Simplified Chinese (简体中文) (zh_CN)       | ![98%](https://geps.dev/progress/98)   |
@@ -177,7 +177,7 @@ Stirling PDF currently supports 27!
 | Polish (Polski) (pl_PL)                     | ![44%](https://geps.dev/progress/44)   |
 | Romanian (Română) (ro_RO)                   | ![41%](https://geps.dev/progress/41)   |
 | Korean (한국어) (ko_KR)                     | ![91%](https://geps.dev/progress/91)   |
-| Portuguese Brazilian (Português) (pt_BR)    | ![63%](https://geps.dev/progress/63)   |
+| Portuguese Brazilian (Português) (pt_BR)    | ![64%](https://geps.dev/progress/64)   |
 | Russian (Русский) (ru_RU)                   | ![91%](https://geps.dev/progress/91)   |
 | Basque (Euskara) (eu_ES)                    | ![66%](https://geps.dev/progress/66)   |
 | Japanese (日本語) (ja_JP)                   | ![91%](https://geps.dev/progress/91)   |
