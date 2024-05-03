@@ -1,8 +1,7 @@
 package stirling.software.SPDF.config.security;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,6 +20,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.ClientRegistrations;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
@@ -29,14 +30,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.oauth2.client.registration.ClientRegistrations;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
-
-import java.io.IOException;
 
 @Configuration
 @EnableWebSecurity()
@@ -103,7 +103,18 @@ public class SecurityConfiguration {
                             logout ->
                                     logout.logoutRequestMatcher(
                                                     new AntPathRequestMatcher("/logout"))
-                                            .logoutSuccessHandler(new CustomLogoutSuccessHandler()) // Use a Custom Logout Handler to handle custom error message if OAUTH2 Auto Create is disabled
+                                            .logoutSuccessHandler(
+                                                    new CustomLogoutSuccessHandler()) // Use a
+                                            // Custom
+                                            // Logout
+                                            // Handler to
+                                            // handle
+                                            // custom
+                                            // error
+                                            // message if
+                                            // OAUTH2 Auto
+                                            // Create is
+                                            // disabled
                                             .invalidateHttpSession(true) // Invalidate session
                                             .deleteCookies("JSESSIONID", "remember-me")
                                             .addLogoutHandler(
@@ -161,29 +172,40 @@ public class SecurityConfiguration {
             // Handle OAUTH2 Logins
             if (applicationProperties.getSecurity().getOAUTH2().getEnabled()) {
 
-                 http.oauth2Login( oauth2 -> oauth2
-                         .loginPage("/oauth2")
-                         /*
-                         This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                         If user exists, login proceeds as usual. If user does not exist, then it is autocreated but only if 'OAUTH2AutoCreateUser'
-                         is set as true, else login fails with an error message advising the same.
-                          */
-                         .successHandler(new AuthenticationSuccessHandler() {
-                                @Override
-                                public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        Authentication authentication) throws ServletException , IOException{
-                                    OAuth2User oauthUser =  (OAuth2User) authentication.getPrincipal();
-                                    if (userService.processOAuth2PostLogin(oauthUser.getAttribute("email"), applicationProperties.getSecurity().getOAUTH2().getAutoCreateUser())) {
-                                        response.sendRedirect("/");
-                                    }
-                                    else{
-                                        response.sendRedirect("/logout?oauth2AutoCreateDisabled=true");
-                                    }
-                                }
-                            }
-                         )
-                 );
-             }
+                http.oauth2Login(
+                        oauth2 ->
+                                oauth2.loginPage("/oauth2")
+                                        /*
+                                        This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
+                                        If user exists, login proceeds as usual. If user does not exist, then it is autocreated but only if 'OAUTH2AutoCreateUser'
+                                        is set as true, else login fails with an error message advising the same.
+                                         */
+                                        .successHandler(
+                                                new AuthenticationSuccessHandler() {
+                                                    @Override
+                                                    public void onAuthenticationSuccess(
+                                                            HttpServletRequest request,
+                                                            HttpServletResponse response,
+                                                            Authentication authentication)
+                                                            throws ServletException, IOException {
+                                                        OAuth2User oauthUser =
+                                                                (OAuth2User)
+                                                                        authentication
+                                                                                .getPrincipal();
+                                                        if (userService.processOAuth2PostLogin(
+                                                                oauthUser.getAttribute("email"),
+                                                                applicationProperties
+                                                                        .getSecurity()
+                                                                        .getOAUTH2()
+                                                                        .getAutoCreateUser())) {
+                                                            response.sendRedirect("/");
+                                                        } else {
+                                                            response.sendRedirect(
+                                                                    "/logout?oauth2AutoCreateDisabled=true");
+                                                        }
+                                                    }
+                                                }));
+            }
         } else {
             http.csrf(csrf -> csrf.disable())
                     .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
@@ -194,21 +216,25 @@ public class SecurityConfiguration {
 
     // Client Registration Repository for OAUTH2 OIDC Login
     @Bean
-    @ConditionalOnProperty(value = "security.oauth2.enabled" , havingValue = "true", matchIfMissing = false)
-	public ClientRegistrationRepository clientRegistrationRepository() {
-		return new InMemoryClientRegistrationRepository(this.oidcClientRegistration());
-	}
+    @ConditionalOnProperty(
+            value = "security.oauth2.enabled",
+            havingValue = "true",
+            matchIfMissing = false)
+    public ClientRegistrationRepository clientRegistrationRepository() {
+        return new InMemoryClientRegistrationRepository(this.oidcClientRegistration());
+    }
 
-	private ClientRegistration oidcClientRegistration() {
-		return ClientRegistrations.fromOidcIssuerLocation(applicationProperties.getSecurity().getOAUTH2().getIssuer())
-			.registrationId("oidc")
-            .clientId(applicationProperties.getSecurity().getOAUTH2().getClientId())
-			.clientSecret(applicationProperties.getSecurity().getOAUTH2().getClientSecret())
-			.scope("openid", "profile", "email")
-			.userNameAttributeName("email")
-			.clientName("OIDC")
-			.build();
-	}
+    private ClientRegistration oidcClientRegistration() {
+        return ClientRegistrations.fromOidcIssuerLocation(
+                        applicationProperties.getSecurity().getOAUTH2().getIssuer())
+                .registrationId("oidc")
+                .clientId(applicationProperties.getSecurity().getOAUTH2().getClientId())
+                .clientSecret(applicationProperties.getSecurity().getOAUTH2().getClientSecret())
+                .scope("openid", "profile", "email")
+                .userNameAttributeName("email")
+                .clientName("OIDC")
+                .build();
+    }
 
     @Bean
     public IPRateLimitingFilter rateLimitingFilter() {

@@ -1,6 +1,6 @@
 # Welcome to settings file
 # Remove comment marker # if on start of line to enable the configuration
-# If you want to override with environment parameter follow parameter naming SECURITY_INITIALLOGIN_USERNAME
+# If you want to override with environment parameter follow parameter naming SECURITY_INITIALLOGIN_USERNAMEs
 
 security:
   enableLogin: false # set to 'true' to enable login
@@ -20,7 +20,6 @@ system:
   enableAlphaFunctionality: false # Set to enable functionality which might need more testing before it fully goes live (This feature might make no changes)
   showUpdate: true # see when a new update is available
   showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
-  customHTMLFiles: false # Enable to have files placed in /customFiles/templates override the existing template html files
   
 #ui:
 #  appName: exampleAppName # Application's visible name

@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -39,7 +38,8 @@ public class AccountWebController {
             return "redirect:/";
         }
 
-        model.addAttribute("oAuth2Enabled", applicationProperties.getSecurity().getOAUTH2().getEnabled());
+        model.addAttribute(
+                "oAuth2Enabled", applicationProperties.getSecurity().getOAUTH2().getEnabled());
 
         model.addAttribute("currentPage", "login");
 

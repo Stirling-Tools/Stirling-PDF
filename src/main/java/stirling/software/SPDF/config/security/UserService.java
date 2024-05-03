@@ -41,7 +41,7 @@ public class UserService implements UserServiceInterface {
             user.setUsername(username);
             user.setEnabled(true);
             user.setFirstLogin(false);
-            user.addAuthority(new Authority( Role.USER.getRoleId(), user));
+            user.addAuthority(new Authority(Role.USER.getRoleId(), user));
             userRepository.save(user);
             return true;
         }
