@@ -10,7 +10,7 @@
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Stirling-Tools/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
 
-This is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. Originally developed entirely by ChatGPT, this locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
+This is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
 
 Stirling PDF does not initiate any outbound calls for record-keeping or tracking purposes.
 
@@ -121,6 +121,7 @@ docker run -d \
   -v /location/of/logs:/logs \
   -e DOCKER_ENABLE_SECURITY=false \
   -e INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
+  -e LANGS=en_GB \
   --name stirling-pdf \
   frooodle/s-pdf:latest
 
@@ -147,6 +148,7 @@ services:
     environment:
       - DOCKER_ENABLE_SECURITY=false
       - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
+      - LANGS=en_GB
 ```
 
 Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
@@ -157,36 +159,37 @@ Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR
 
 ## Supported Languages
 
-Stirling PDF currently supports 26!
+Stirling PDF currently supports 27!
 
 | Language                                    | Progress                               |
 | ------------------------------------------- | -------------------------------------- |
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
-| Arabic (العربية) (ar_AR)                    | ![58%](https://geps.dev/progress/58)   |
-| German (Deutsch) (de_DE)                    | ![95%](https://geps.dev/progress/95)   |
-| French (Français) (fr_FR)                   | ![99%](https://geps.dev/progress/99)   |
-| Spanish (Español) (es_ES)                   | ![95%](https://geps.dev/progress/95)   |
-| Simplified Chinese (简体中文) (zh_CN)       | ![99%](https://geps.dev/progress/99)   |
-| Traditional Chinese (繁體中文) (zh_TW)      | ![97%](https://geps.dev/progress/97)   |
-| Catalan (Català) (ca_CA)                    | ![65%](https://geps.dev/progress/65)   |
+| Arabic (العربية) (ar_AR)                    | ![42%](https://geps.dev/progress/42)   |
+| German (Deutsch) (de_DE)                    | ![100%](https://geps.dev/progress/100)   |
+| French (Français) (fr_FR)                   | ![91%](https://geps.dev/progress/91)   |
+| Spanish (Español) (es_ES)                   | ![99%](https://geps.dev/progress/99)   |
+| Simplified Chinese (简体中文) (zh_CN)       | ![98%](https://geps.dev/progress/98)   |
+| Traditional Chinese (繁體中文) (zh_TW)      | ![98%](https://geps.dev/progress/98)   |
+| Catalan (Català) (ca_CA)                    | ![51%](https://geps.dev/progress/51)   |
 | Italian (Italiano) (it_IT)                  | ![99%](https://geps.dev/progress/99)   |
-| Swedish (Svenska) (sv_SE)                   | ![58%](https://geps.dev/progress/58)   |
-| Polish (Polski) (pl_PL)                     | ![60%](https://geps.dev/progress/60)   |
-| Romanian (Română) (ro_RO)                   | ![58%](https://geps.dev/progress/58)   |
-| Korean (한국어) (ko_KR)                     | ![92%](https://geps.dev/progress/92)   |
-| Portuguese Brazilian (Português) (pt_BR)    | ![74%](https://geps.dev/progress/74)   |
-| Russian (Русский) (ru_RU)                   | ![92%](https://geps.dev/progress/92)   |
-| Basque (Euskara) (eu_ES)                    | ![76%](https://geps.dev/progress/76)   |
-| Japanese (日本語) (ja_JP)                   | ![92%](https://geps.dev/progress/92)   |
-| Dutch (Nederlands) (nl_NL)                  | ![92%](https://geps.dev/progress/92)   |
-| Greek (Ελληνικά) (el_GR)                    | ![77%](https://geps.dev/progress/77)   |
+| Swedish (Svenska) (sv_SE)                   | ![42%](https://geps.dev/progress/42)   |
+| Polish (Polski) (pl_PL)                     | ![44%](https://geps.dev/progress/44)   |
+| Romanian (Română) (ro_RO)                   | ![41%](https://geps.dev/progress/41)   |
+| Korean (한국어) (ko_KR)                     | ![91%](https://geps.dev/progress/91)   |
+| Portuguese Brazilian (Português) (pt_BR)    | ![64%](https://geps.dev/progress/64)   |
+| Russian (Русский) (ru_RU)                   | ![91%](https://geps.dev/progress/91)   |
+| Basque (Euskara) (eu_ES)                    | ![66%](https://geps.dev/progress/66)   |
+| Japanese (日本語) (ja_JP)                   | ![91%](https://geps.dev/progress/91)   |
+| Dutch (Nederlands) (nl_NL)                  | ![88%](https://geps.dev/progress/88)   |
+| Greek (Ελληνικά) (el_GR)                    | ![88%](https://geps.dev/progress/88)   |
 | Turkish (Türkçe) (tr_TR)                    | ![99%](https://geps.dev/progress/99)   |
-| Indonesia (Bahasa Indonesia) (id_ID)        | ![87%](https://geps.dev/progress/87)   |
-| Hindi (हिंदी) (hi_IN)                          | ![88%](https://geps.dev/progress/88)   |
-| Hungarian (Magyar) (hu_HU)                  | ![87%](https://geps.dev/progress/87)   |
-| Bulgarian (Български) (bg_BG)               | ![82%](https://geps.dev/progress/82)   |
-| Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![89%](https://geps.dev/progress/89)   |
+| Indonesia (Bahasa Indonesia) (id_ID)        | ![82%](https://geps.dev/progress/82)   |
+| Hindi (हिंदी) (hi_IN)                          | ![82%](https://geps.dev/progress/82)   |
+| Hungarian (Magyar) (hu_HU)                  | ![81%](https://geps.dev/progress/81)   |
+| Bulgarian (Български) (bg_BG)               | ![75%](https://geps.dev/progress/75)   |
+| Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![84%](https://geps.dev/progress/84)   |
+| Ukrainian (Українська) (uk_UA)              | ![90%](https://geps.dev/progress/90)   |
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
@@ -198,7 +201,7 @@ Stirling PDF allows easy customization of the app.
 Includes things like
 
 - Custom application name
-- Custom slogans, icons, images, and even custom HTML (via file overrides)
+- Custom slogans, icons, HTML, images CSS etc (via file overrides) 
 
 There are two options for this, either using the generated settings file ``settings.yml``
 This file is located in the ``/configs`` directory and follows standard YAML formatting
@@ -224,6 +227,9 @@ system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
+  showUpdate: true # see when a new update is available
+  showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
+  customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template html files
 
 #ui:
 #  appName: exampleAppName # Application's visible name
@@ -238,6 +244,8 @@ metrics:
   enabled: true # 'true' to enable Info APIs endpoints (view http://localhost:8080/swagger-ui/index.html#/API to learn more), 'false' to disable
 ```
 
+There is an additional config file ``/configs/custom_settings.yml`` were users familiar with java and spring application.properties can input their own settings on-top of Stirling-PDFs existing ones
+
 ### Extra notes
 
 - Endpoints. Currently, the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma separate lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image-to-pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
@@ -249,12 +257,12 @@ metrics:
 - ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
 - ``DOCKER_ENABLE_SECURITY`` to tell docker to download security jar (required as true for auth login)
 - ``INSTALL_BOOK_AND_ADVANCED_HTML_OPS`` to download calibre onto stirling-pdf enabling pdf to/from book and advanced html conversion
+- ``LANGS`` to define custom font libraries to install for use for document conversions
 
 ## API
 
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
 [here](https://app.swaggerhub.com/apis-docs/Stirling-Tools/Stirling-PDF/) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation (Or by following the API button in your settings of Stirling-PDF)
-
 
 ## Login authentication
 

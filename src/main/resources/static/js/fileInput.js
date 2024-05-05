@@ -104,4 +104,9 @@ function setupFileInput(chooser) {
       $(inputElement).siblings(".custom-file-label").addClass("selected").html(pdfPrompt);
     }
   }
+  //Listen for event of file being removed and the filter it out of the allFiles array
+  document.addEventListener("fileRemoved", function (e) {
+    const fileName = e.detail;
+    allFiles = allFiles.filter(file => file.name !== fileName);
+  });
 }

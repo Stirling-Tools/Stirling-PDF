@@ -118,6 +118,7 @@ public class ApplicationProperties {
         private Boolean enableLogin;
         private Boolean csrfDisabled;
         private InitialLogin initialLogin;
+        private OAUTH2 oauth2;
         private int loginAttemptCount;
         private long loginResetTimeMinutes;
 
@@ -145,6 +146,14 @@ public class ApplicationProperties {
             this.initialLogin = initialLogin;
         }
 
+        public OAUTH2 getOAUTH2() {
+            return oauth2 != null ? oauth2 : new OAUTH2();
+        }
+
+        public void setOAUTH2(OAUTH2 oauth2) {
+            this.oauth2 = oauth2;
+        }
+
         public Boolean getEnableLogin() {
             return enableLogin;
         }
@@ -165,6 +174,8 @@ public class ApplicationProperties {
         public String toString() {
             return "Security [enableLogin="
                     + enableLogin
+                    + ", oauth2="
+                    + oauth2
                     + ", initialLogin="
                     + initialLogin
                     + ",  csrfDisabled="
@@ -202,6 +213,70 @@ public class ApplicationProperties {
                         + "]";
             }
         }
+
+        public static class OAUTH2 {
+
+            private boolean enabled;
+            private String issuer;
+            private String clientId;
+            private String clientSecret;
+            private boolean autoCreateUser;
+
+            public boolean getEnabled() {
+                return enabled;
+            }
+
+            public void setEnabled(boolean enabled) {
+                this.enabled = enabled;
+            }
+
+            public String getIssuer() {
+                return issuer;
+            }
+
+            public void setIssuer(String issuer) {
+                this.issuer = issuer;
+            }
+
+            public String getClientId() {
+                return clientId;
+            }
+
+            public void setClientId(String clientId) {
+                this.clientId = clientId;
+            }
+
+            public String getClientSecret() {
+                return clientSecret;
+            }
+
+            public void setClientSecret(String clientSecret) {
+                this.clientSecret = clientSecret;
+            }
+
+            public boolean getAutoCreateUser() {
+                return autoCreateUser;
+            }
+
+            public void setAutoCreateUser(boolean autoCreateUser) {
+                this.autoCreateUser = autoCreateUser;
+            }
+
+            @Override
+            public String toString() {
+                return "OAUTH2 [enabled="
+                        + enabled
+                        + ", issuer="
+                        + issuer
+                        + ", clientId="
+                        + clientId
+                        + ", clientSecret="
+                        + (clientSecret != null && !clientSecret.isEmpty() ? "MASKED" : "NULL")
+                        + ", autoCreateUser="
+                        + autoCreateUser
+                        + "]";
+            }
+        }
     }
 
     public static class System {
@@ -210,6 +285,33 @@ public class ApplicationProperties {
         private String rootURIPath;
         private String customStaticFilePath;
         private Integer maxFileSize;
+        private boolean showUpdate;
+        private Boolean showUpdateOnlyAdmin;
+        private boolean customHTMLFiles;
+
+        public boolean isCustomHTMLFiles() {
+            return customHTMLFiles;
+        }
+
+        public void setCustomHTMLFiles(boolean customHTMLFiles) {
+            this.customHTMLFiles = customHTMLFiles;
+        }
+
+        public boolean getShowUpdateOnlyAdmin() {
+            return showUpdateOnlyAdmin;
+        }
+
+        public void setShowUpdateOnlyAdmin(boolean showUpdateOnlyAdmin) {
+            this.showUpdateOnlyAdmin = showUpdateOnlyAdmin;
+        }
+
+        public boolean getShowUpdate() {
+            return showUpdate;
+        }
+
+        public void setShowUpdate(boolean showUpdate) {
+            this.showUpdate = showUpdate;
+        }
 
         private Boolean enableAlphaFunctionality;
 
@@ -275,6 +377,10 @@ public class ApplicationProperties {
                     + maxFileSize
                     + ", enableAlphaFunctionality="
                     + enableAlphaFunctionality
+                    + ", showUpdate="
+                    + showUpdate
+                    + ", showUpdateOnlyAdmin="
+                    + showUpdateOnlyAdmin
                     + "]";
         }
     }

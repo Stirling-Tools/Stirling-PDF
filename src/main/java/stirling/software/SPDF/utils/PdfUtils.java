@@ -6,6 +6,7 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -19,11 +20,8 @@ import javax.imageio.stream.ImageOutputStream;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
-import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
@@ -38,6 +36,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
+
+import stirling.software.SPDF.model.PdfMetadata;
 
 public class PdfUtils {
 
@@ -336,13 +336,11 @@ public class PdfUtils {
         }
     }
 
-    private static void addImageToDocument(
+    public static void addImageToDocument(
             PDDocument doc, PDImageXObject image, String fitOption, boolean autoRotate)
             throws IOException {
         boolean imageIsLandscape = image.getWidth() > image.getHeight();
         PDRectangle pageSize = PDRectangle.A4;
-
-        System.out.println(fitOption);
 
         if (autoRotate && imageIsLandscape) {
             pageSize = new PDRectangle(pageSize.getHeight(), pageSize.getWidth());
@@ -420,5 +418,29 @@ public class PdfUtils {
         document.save(baos);
         logger.info("PDF successfully saved to byte array");
         return baos.toByteArray();
+    }
+
+    public static PdfMetadata extractMetadataFromPdf(PDDocument pdf) {
+        return PdfMetadata.builder()
+                .author(pdf.getDocumentInformation().getAuthor())
+                .producer(pdf.getDocumentInformation().getProducer())
+                .title(pdf.getDocumentInformation().getTitle())
+                .creator(pdf.getDocumentInformation().getCreator())
+                .subject(pdf.getDocumentInformation().getSubject())
+                .keywords(pdf.getDocumentInformation().getKeywords())
+                .creationDate(pdf.getDocumentInformation().getCreationDate())
+                .modificationDate(pdf.getDocumentInformation().getModificationDate())
+                .build();
+    }
+
+    public static void setMetadataToPdf(PDDocument pdf, PdfMetadata pdfMetadata) {
+        pdf.getDocumentInformation().setAuthor(pdfMetadata.getAuthor());
+        pdf.getDocumentInformation().setProducer(pdfMetadata.getProducer());
+        pdf.getDocumentInformation().setTitle(pdfMetadata.getTitle());
+        pdf.getDocumentInformation().setCreator(pdfMetadata.getCreator());
+        pdf.getDocumentInformation().setSubject(pdfMetadata.getSubject());
+        pdf.getDocumentInformation().setKeywords(pdfMetadata.getKeywords());
+        pdf.getDocumentInformation().setCreationDate(pdfMetadata.getCreationDate());
+        pdf.getDocumentInformation().setModificationDate(Calendar.getInstance());
     }
 }

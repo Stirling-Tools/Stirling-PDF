@@ -56,7 +56,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
     }
 
     private boolean isDemoUser(String username) {
-        Optional<User> user = userService.findByUsername(username);
+        Optional<User> user = userService.findByUsernameIgnoreCase(username);
         return user.isPresent()
                 && user.get().getAuthorities().stream()
                         .anyMatch(authority -> "ROLE_DEMO_USER".equals(authority.getAuthority()));
