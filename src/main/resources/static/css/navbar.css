@@ -108,6 +108,7 @@
 
 .icon-text {
   margin-left: 4px;
+  margin-right: 4px;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
