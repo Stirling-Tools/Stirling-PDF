@@ -13,8 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -76,6 +74,7 @@ public class ConfigInitializer
             Files.createFile(customSettingsPath);
         }
     }
+
     private static Map<String, String> extractEntries(List<String> lines) {
         Map<String, String> entries = new HashMap<>();
         StringBuilder currentEntry = new StringBuilder();
@@ -121,8 +120,10 @@ public class ConfigInitializer
         return entries;
     }
 
-
-    private static List<String> mergeConfigs(List<String> templateLines, Map<String, String> templateEntries, Map<String, String> userEntries) {
+    private static List<String> mergeConfigs(
+            List<String> templateLines,
+            Map<String, String> templateEntries,
+            Map<String, String> userEntries) {
         List<String> mergedLines = new ArrayList<>();
         Set<String> handledKeys = new HashSet<>();
 
@@ -141,7 +142,8 @@ public class ConfigInitializer
                 blockIndent = indentLevel;
             }
 
-            if (userEntries.containsKey(currentBlockKey) && !handledKeys.contains(currentBlockKey)) {
+            if (userEntries.containsKey(currentBlockKey)
+                    && !handledKeys.contains(currentBlockKey)) {
                 mergedLines.add(userEntries.get(currentBlockKey));
                 handledKeys.add(currentBlockKey);
             } else if (!handledKeys.contains(currentBlockKey)) {
@@ -151,8 +153,6 @@ public class ConfigInitializer
 
         return mergedLines;
     }
-
-
 
     private static List<String> cleanInvalidYamlEntries(List<String> lines) {
         List<String> cleanedLines = new ArrayList<>();
