@@ -149,7 +149,7 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk18on:1.77'
     implementation 'org.bouncycastle:bcpkix-jdk18on:1.77'
     implementation 'org.springframework.boot:spring-boot-starter-actuator:3.2.4'
-    implementation 'io.micrometer:micrometer-core:1.12.4'
+    implementation 'io.micrometer:micrometer-core:1.12.5'
     implementation group: 'com.google.zxing', name: 'core', version: '3.5.3'
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation 'org.commonmark:commonmark:0.22.0'
