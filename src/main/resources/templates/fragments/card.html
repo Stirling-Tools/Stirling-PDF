@@ -1,12 +1,23 @@
-<div th:fragment="card" class="feature-card" th:id="${id}" th:if="${@endpointConfiguration.isEndpointEnabled(cardLink)}" th:data-bs-tags="${tags}">
-              <a th:href="${cardLink}">
-                <div class="d-flex align-items-center"> <!-- Add a flex container to align the SVG and title -->
-                  <img th:if="${svgPath}" class="card-icon home-card-icon home-card-icon-colour" th:src="${svgPath}" alt="Icon" width="30" height="30">
-                  <h5 class="card-title  ms-2" th:text="${cardTitle}"></h5> <!-- Add some margin-left (ms-2) for spacing between SVG and title -->
-                </div>
-                <p class="card-text" th:text="${cardText}"></p>
-              </a>
-              <div class="favorite-icon" onclick="toggleFavorite(this)">
-                <img src="images/star.svg" alt="Favorite">
-              </div>
-            </div>
+<div th:fragment="card" class="feature-card" th:id="${id}" th:if="${@endpointConfiguration.isEndpointEnabled(cardLink)}"
+  th:data-bs-tags="${tags}">
+  <a th:href="${cardLink}">
+    <div class="d-flex align-items-center"> <!-- Add a flex container to align the SVG and title -->
+
+
+      
+      <div class="icon" alt="icon" th:class="@{${toolGroup}}">
+        <span class="material-symbols-rounded nav-icon" th:text="@{${toolIcon}}"></span>
+      </div>
+
+
+      <h5 class="card-title  mx-2" th:text="${cardTitle}"></h5>
+      <!-- Add some margin-left (ms-2) for spacing between SVG and title -->
+    </div>
+    <p class="card-text" th:text="${cardText}"></p>
+  </a>
+  <div class="favorite-icon" onclick="toggleFavorite(this)">
+    <span class="material-symbols-rounded no-fill">
+      star
+    </span>
+  </div>
+</div>
