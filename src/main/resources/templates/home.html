@@ -1,104 +1,222 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
-  <head>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="http://www.thymeleaf.org">
+
+<head>
   <th:block th:insert="~{fragments/common :: head(title='')}"></th:block>
-  </head>
+</head>
 
-  <body>
-    <div id="page-container">
-      <div id="content-wrap">
-        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <!-- Jumbotron -->
-        <div class="bg-light p-5 rounded d-none d-md-block" id="jumbotron">
-          <div class="container">
-            <h1 class="display-4" th:text="${@appName}"></h1>
-            <p class="lead" th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}"></p>
-          </div>
+<body>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <!-- Jumbotron -->
+      <div class="p-5 rounded d-none d-md-block" id="jumbotron">
+        <div class="container">
+          <h1 class="display-4 fw-normal" th:text="${@appName}"></h1>
+          <p class="lead fs-4"
+            th:text="${@homeText != 'null' and @homeText != null and @homeText != ''} ? ${@homeText} : #{home.desc}">
+          </p>
         </div>
-        <br class="d-md-none">
-        <!-- Features -->
-        <script src="js/homecard.js"></script>
+      </div>
+      <br class="d-md-none">
+      <!-- Features -->
+      <script src="js/homecard.js"></script>
 
-        <div class=" container">
-          <br>
-          <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
-          <div class="features-container">
-            <div th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', svgPath='images/pipeline.svg', tags=#{pipeline.tags})}"></div>
+      <div class=" container">
+        <br>
+        <span class="material-symbols-rounded search-icon">
+          search
+        </span>
+        <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
+        <div class="features-container">
+          <div
+            th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', toolIcon='family_history', tags=#{pipeline.tags}, toolGroup='advance')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='view-pdf', cardTitle=#{home.viewPdf.title}, cardText=#{home.viewPdf.desc}, cardLink='view-pdf', toolIcon='menu_book', tags=#{viewPdf.tags}, toolGroup='other')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', toolIcon='construction', tags=#{multiTool.tags}, toolGroup='advance')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='merge-pdfs', cardTitle=#{home.merge.title}, cardText=#{home.merge.desc}, cardLink='merge-pdfs', toolIcon='add_to_photos', tags=#{merge.tags}, toolGroup='organize')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='split-pdfs', cardTitle=#{home.split.title}, cardText=#{home.split.desc}, cardLink='split-pdfs', toolIcon='cut', tags=#{split.tags}, toolGroup='organize')}">
+          </div>
 
-            <div th:replace="~{fragments/card :: card(id='view-pdf', cardTitle=#{home.viewPdf.title}, cardText=#{home.viewPdf.desc}, cardLink='view-pdf', svgPath='images/book-opened.svg', tags=#{viewPdf.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', svgPath='images/tools.svg', tags=#{multiTool.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='merge-pdfs', cardTitle=#{home.merge.title}, cardText=#{home.merge.desc}, cardLink='merge-pdfs', svgPath='images/union.svg', tags=#{merge.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='split-pdfs', cardTitle=#{home.split.title}, cardText=#{home.split.desc}, cardLink='split-pdfs', svgPath='images/layout-split.svg', tags=#{split.tags})}"></div>
+          <div
+            th:replace="~{fragments/card :: card(id='rotate-pdf', cardTitle=#{home.rotate.title}, cardText=#{home.rotate.desc}, cardLink='rotate-pdf', toolIcon='rotate_right', tags=#{rotate.tags}, toolGroup='organize')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='crop', cardTitle=#{home.crop.title}, cardText=#{home.crop.desc}, cardLink='crop', toolIcon='crop', tags=#{crop.tags}, toolGroup='organize')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='add-page-numbers', cardTitle=#{home.add-page-numbers.title}, cardText=#{home.add-page-numbers.desc}, cardLink='add-page-numbers', toolIcon='123', tags=#{add-page-numbers.tags}, toolGroup='other')}">
+          </div>
 
-            <div th:replace="~{fragments/card :: card(id='rotate-pdf', cardTitle=#{home.rotate.title}, cardText=#{home.rotate.desc}, cardLink='rotate-pdf', svgPath='images/arrow-clockwise.svg', tags=#{rotate.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='crop', cardTitle=#{home.crop.title}, cardText=#{home.crop.desc}, cardLink='crop', svgPath='images/crop.svg', tags=#{crop.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='add-page-numbers', cardTitle=#{home.add-page-numbers.title}, cardText=#{home.add-page-numbers.desc}, cardLink='add-page-numbers', svgPath='images/add-page-numbers.svg', tags=#{add-page-numbers.tags})}"></div>
+          <div
+            th:replace="~{fragments/card :: card(id='adjust-contrast', cardTitle=#{home.adjust-contrast.title}, cardText=#{home.adjust-contrast.desc}, cardLink='adjust-contrast', toolIcon='palette', tags=#{adjust-contrast.tags}, toolGroup='advance')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='img-to-pdf', cardTitle=#{home.imageToPdf.title}, cardText=#{home.imageToPdf.desc}, cardLink='img-to-pdf', toolIcon='image', tags=#{imageToPdf.tags}, toolGroup='image')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='pdf-to-img', cardTitle=#{home.pdfToImage.title}, cardText=#{home.pdfToImage.desc}, cardLink='pdf-to-img', toolIcon='image', tags=#{pdfToImage.tags}, toolGroup='image')}">
+          </div>
 
-            <div th:replace="~{fragments/card :: card(id='adjust-contrast', cardTitle=#{home.adjust-contrast.title}, cardText=#{home.adjust-contrast.desc}, cardLink='adjust-contrast', svgPath='images/adjust-contrast.svg', tags=#{adjust-contrast.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='img-to-pdf', cardTitle=#{home.imageToPdf.title}, cardText=#{home.imageToPdf.desc}, cardLink='img-to-pdf', svgPath='images/image.svg', tags=#{imageToPdf.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='pdf-to-img', cardTitle=#{home.pdfToImage.title}, cardText=#{home.pdfToImage.desc}, cardLink='pdf-to-img', svgPath='images/image.svg', tags=#{pdfToImage.tags})}"></div>
+          <div
+            th:replace="~{fragments/card :: card(id='pdf-organizer', cardTitle=#{home.pdfOrganiser.title}, cardText=#{home.pdfOrganiser.desc}, cardLink='pdf-organizer', toolIcon='format_list_bulleted', tags=#{pdfOrganiser.tags}, toolGroup='organize')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='add-image', cardTitle=#{home.addImage.title}, cardText=#{home.addImage.desc}, cardLink='add-image', toolIcon='text_fields', tags=#{addImage.tags}, toolGroup='other')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='add-watermark', cardTitle=#{home.watermark.title}, cardText=#{home.watermark.desc}, cardLink='add-watermark', toolIcon='water_drop', tags=#{watermark.tags}, toolGroup='security')}">
+          </div>
 
-            <div th:replace="~{fragments/card :: card(id='pdf-organizer', cardTitle=#{home.pdfOrganiser.title}, cardText=#{home.pdfOrganiser.desc}, cardLink='pdf-organizer', svgPath='images/sort-numeric-down.svg', tags=#{pdfOrganiser.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='add-image', cardTitle=#{home.addImage.title}, cardText=#{home.addImage.desc}, cardLink='add-image', svgPath='images/file-earmark-richtext.svg', tags=#{addImage.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='add-watermark', cardTitle=#{home.watermark.title}, cardText=#{home.watermark.desc}, cardLink='add-watermark', svgPath='images/droplet.svg', tags=#{watermark.tags})}"></div>
+          <div
+            th:replace="~{fragments/card :: card(id='file-to-pdf', cardTitle=#{home.fileToPDF.title}, cardText=#{home.fileToPDF.desc}, cardLink='file-to-pdf', toolIcon='draft', tags=#{fileToPDF.tags}, toolGroup='convert')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='remove-pages', cardTitle=#{home.removePages.title}, cardText=#{home.removePages.desc}, cardLink='remove-pages', toolIcon='delete', tags=#{removePages.tags}, toolGroup='organize')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='add-password', cardTitle=#{home.addPassword.title}, cardText=#{home.addPassword.desc}, cardLink='add-password', toolIcon='lock', tags=#{addPassword.tags}, toolGroup='security')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='remove-password', cardTitle=#{home.removePassword.title}, cardText=#{home.removePassword.desc}, cardLink='remove-password', toolIcon='lock_open_right', tags=#{removePassword.tags}, toolGroup='security')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='compress-pdf', cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf', toolIcon='zoom_in_map', tags=#{compressPdfs.tags}, toolGroup='advance')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='change-metadata', cardTitle=#{home.changeMetadata.title}, cardText=#{home.changeMetadata.desc}, cardLink='change-metadata', toolIcon='assignment', tags=#{changeMetadata.tags}, toolGroup='other')}">
+          </div>
 
-            <div th:replace="~{fragments/card :: card(id='file-to-pdf', cardTitle=#{home.fileToPDF.title}, cardText=#{home.fileToPDF.desc}, cardLink='file-to-pdf', svgPath='images/file.svg', tags=#{fileToPDF.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='remove-pages', cardTitle=#{home.removePages.title}, cardText=#{home.removePages.desc}, cardLink='remove-pages', svgPath='images/file-earmark-x.svg', tags=#{removePages.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='add-password', cardTitle=#{home.addPassword.title}, cardText=#{home.addPassword.desc}, cardLink='add-password', svgPath='images/lock.svg', tags=#{addPassword.tags})}"></div>
+          <div
+            th:replace="~{fragments/card :: card(id='change-permissions', cardTitle=#{home.permissions.title}, cardText=#{home.permissions.desc}, cardLink='change-permissions', toolIcon='encrypted', tags=#{permissions.tags}, toolGroup='security')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='ocr-pdf', cardTitle=#{home.ocr.title}, cardText=#{home.ocr.desc}, cardLink='ocr-pdf', toolIcon='quick_reference_all', tags=#{ocr.tags}, toolGroup='other')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='extract-images', cardTitle=#{home.extractImages.title}, cardText=#{home.extractImages.desc}, cardLink='extract-images', toolIcon='photo_library', tags=#{extractImages.tags}, toolGroup='other')}">
+          </div>
 
-            <div th:replace="~{fragments/card :: card(id='remove-password', cardTitle=#{home.removePassword.title}, cardText=#{home.removePassword.desc}, cardLink='remove-password', svgPath='images/unlock.svg', tags=#{removePassword.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='compress-pdf', cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf', svgPath='images/file-zip.svg', tags=#{compressPdfs.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='change-metadata', cardTitle=#{home.changeMetadata.title}, cardText=#{home.changeMetadata.desc}, cardLink='change-metadata', svgPath='images/clipboard-data.svg', tags=#{changeMetadata.tags})}"></div>
+          <div
+            th:replace="~{fragments/card :: card(id='pdf-to-pdfa', cardTitle=#{home.pdfToPDFA.title}, cardText=#{home.pdfToPDFA.desc}, cardLink='pdf-to-pdfa', toolIcon='picture_as_pdf', tags=#{pdfToPDFA.tags}, toolGroup='convert')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='pdf-to-word', cardTitle=#{home.PDFToWord.title}, cardText=#{home.PDFToWord.desc}, cardLink='pdf-to-word', toolIcon='description', tags=#{PDFToWord.tags}, toolGroup='word')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='pdf-to-presentation', cardTitle=#{home.PDFToPresentation.title}, cardText=#{home.PDFToPresentation.desc}, cardLink='pdf-to-presentation', toolIcon='slideshow', tags=#{PDFToPresentation.tags}, toolGroup='ppt')}">
+          </div>
 
-            <div th:replace="~{fragments/card :: card(id='change-permissions', cardTitle=#{home.permissions.title}, cardText=#{home.permissions.desc}, cardLink='change-permissions', svgPath='images/shield-lock.svg', tags=#{permissions.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='ocr-pdf', cardTitle=#{home.ocr.title}, cardText=#{home.ocr.desc}, cardLink='ocr-pdf', svgPath='images/search.svg', tags=#{ocr.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='extract-images', cardTitle=#{home.extractImages.title}, cardText=#{home.extractImages.desc}, cardLink='extract-images', svgPath='images/images.svg', tags=#{extractImages.tags})}"></div>
+          <div
+            th:replace="~{fragments/card :: card(id='pdf-to-text', cardTitle=#{home.PDFToText.title}, cardText=#{home.PDFToText.desc}, cardLink='pdf-to-text', toolIcon='text_fields', tags=#{PDFToText.tags}, toolGroup='convert')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='pdf-to-html', cardTitle=#{home.PDFToHTML.title}, cardText=#{home.PDFToHTML.desc}, cardLink='pdf-to-html', toolIcon='html', tags=#{PDFToHTML.tags}, toolGroup='convert')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='pdf-to-xml', cardTitle=#{home.PDFToXML.title}, cardText=#{home.PDFToXML.desc}, cardLink='pdf-to-xml', toolIcon='code', tags=#{PDFToXML.tags}, toolGroup='convert')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='extract-image-scans', cardTitle=#{home.ScannerImageSplit.title}, cardText=#{home.ScannerImageSplit.desc}, cardLink='extract-image-scans', toolIcon='scanner', tags=#{ScannerImageSplit.tags}, toolGroup='advance')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='sign', cardTitle=#{home.sign.title}, cardText=#{home.sign.desc}, cardLink='sign', toolIcon='signature', tags=#{sign.tags}, toolGroup='sign')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='flatten', cardTitle=#{home.flatten.title}, cardText=#{home.flatten.desc}, cardLink='flatten', toolIcon='layers_clear', tags=#{flatten.tags}, toolGroup='other')}">
+          </div>
 
-            <div th:replace="~{fragments/card :: card(id='pdf-to-pdfa', cardTitle=#{home.pdfToPDFA.title}, cardText=#{home.pdfToPDFA.desc}, cardLink='pdf-to-pdfa', svgPath='images/file-earmark-pdf.svg', tags=#{pdfToPDFA.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='pdf-to-word', cardTitle=#{home.PDFToWord.title}, cardText=#{home.PDFToWord.desc}, cardLink='pdf-to-word', svgPath='images/file-earmark-word.svg', tags=#{PDFToWord.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='pdf-to-presentation', cardTitle=#{home.PDFToPresentation.title}, cardText=#{home.PDFToPresentation.desc}, cardLink='pdf-to-presentation', svgPath='images/file-earmark-ppt.svg', tags=#{PDFToPresentation.tags})}"></div>
+          <div
+            th:replace="~{fragments/card :: card(id='repair', cardTitle=#{home.repair.title}, cardText=#{home.repair.desc}, cardLink='repair', toolIcon='build', tags=#{repair.tags}, toolGroup='advance')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='remove-blanks', cardTitle=#{home.removeBlanks.title}, cardText=#{home.removeBlanks.desc}, cardLink='remove-blanks', toolIcon='scan_delete', tags=#{removeBlanks.tags}, toolGroup='other')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='remove-annotations', cardTitle=#{home.removeAnnotations.title}, cardText=#{home.removeAnnotations.desc}, cardLink='remove-annotations', toolIcon='thread_unread', tags=#{removeAnnotations.tags}, toolGroup='other')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='compare', cardTitle=#{home.compare.title}, cardText=#{home.compare.desc}, cardLink='compare', toolIcon='compare', tags=#{compare.tags}, toolGroup='other')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='cert-sign', cardTitle=#{home.certSign.title}, cardText=#{home.certSign.desc}, cardLink='cert-sign', toolIcon='workspace_premium', tags=#{certSign.tags}, toolGroup='security')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='multi-page-layout', cardTitle=#{home.pageLayout.title}, cardText=#{home.pageLayout.desc}, cardLink='multi-page-layout', toolIcon='dashboard', tags=#{pageLayout.tags}, toolGroup='organize')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='scale-pages', cardTitle=#{home.scalePages.title}, cardText=#{home.scalePages.desc}, cardLink='scale-pages', toolIcon='fullscreen', tags=#{scalePages.tags}, toolGroup='organize')}">
+          </div>
 
-            <div th:replace="~{fragments/card :: card(id='pdf-to-text', cardTitle=#{home.PDFToText.title}, cardText=#{home.PDFToText.desc}, cardLink='pdf-to-text', svgPath='images/filetype-txt.svg', tags=#{PDFToText.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='pdf-to-html', cardTitle=#{home.PDFToHTML.title}, cardText=#{home.PDFToHTML.desc}, cardLink='pdf-to-html', svgPath='images/filetype-html.svg', tags=#{PDFToHTML.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='pdf-to-xml', cardTitle=#{home.PDFToXML.title}, cardText=#{home.PDFToXML.desc}, cardLink='pdf-to-xml', svgPath='images/filetype-xml.svg', tags=#{PDFToXML.tags})}"></div>
+          <div
+            th:replace="~{fragments/card :: card(id='auto-rename', cardTitle=#{home.auto-rename.title}, cardText=#{home.auto-rename.desc}, cardLink='auto-rename', toolIcon='text_fields_alt', tags=#{auto-rename.tags}, toolGroup='advance')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='auto-split-pdf', cardTitle=#{home.autoSplitPDF.title}, cardText=#{home.autoSplitPDF.desc}, cardLink='auto-split-pdf', toolIcon='cut', tags=#{autoSplitPDF.tags}, toolGroup='advance')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='sanitize-pdf', cardTitle=#{home.sanitizePdf.title}, cardText=#{home.sanitizePdf.desc}, cardLink='sanitize-pdf', toolIcon='sanitizer', tags=#{sanitizePdf.tags}, toolGroup='security')}">
+          </div>
 
-            <div th:replace="~{fragments/card :: card(id='extract-image-scans', cardTitle=#{home.ScannerImageSplit.title}, cardText=#{home.ScannerImageSplit.desc}, cardLink='extract-image-scans', svgPath='images/scanner.svg', tags=#{ScannerImageSplit.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='sign', cardTitle=#{home.sign.title}, cardText=#{home.sign.desc}, cardLink='sign', svgPath='images/sign.svg', tags=#{sign.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='flatten', cardTitle=#{home.flatten.title}, cardText=#{home.flatten.desc}, cardLink='flatten', svgPath='images/flatten.svg', tags=#{flatten.tags})}"></div>
+          <div
+            th:replace="~{fragments/card :: card(id='url-to-pdf', cardTitle=#{home.URLToPDF.title}, cardText=#{home.URLToPDF.desc}, cardLink='url-to-pdf', toolIcon='link', tags=#{URLToPDF.tags}, toolGroup='convert')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='html-to-pdf', cardTitle=#{home.HTMLToPDF.title}, cardText=#{home.HTMLToPDF.desc}, cardLink='html-to-pdf', toolIcon='html', tags=#{HTMLToPDF.tags}, toolGroup='convert')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='markdown-to-pdf', cardTitle=#{home.MarkdownToPDF.title}, cardText=#{home.MarkdownToPDF.desc}, cardLink='markdown-to-pdf', toolIcon='markdown', tags=#{MarkdownToPDF.tags}, toolGroup='convert')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='get-info-on-pdf', cardTitle=#{home.getPdfInfo.title}, cardText=#{home.getPdfInfo.desc}, cardLink='get-info-on-pdf', toolIcon='info', tags=#{getPdfInfo.tags}, toolGroup='other')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='extract-page', cardTitle=#{home.extractPage.title}, cardText=#{home.extractPage.desc}, cardLink='extract-page', toolIcon='upload', tags=#{extractPage.tags}, toolGroup='organize')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='pdf-to-single-page', cardTitle=#{home.PdfToSinglePage.title}, cardText=#{home.PdfToSinglePage.desc}, cardLink='pdf-to-single-page', toolIcon='looks_one', tags=#{PdfToSinglePage.tags}, toolGroup='organize')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='show-javascript', cardTitle=#{home.showJS.title}, cardText=#{home.showJS.desc}, cardLink='show-javascript', toolIcon='javascript', tags=#{showJS.tags}, toolGroup='advance')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='auto-redact', cardTitle=#{home.autoRedact.title}, cardText=#{home.autoRedact.desc}, cardLink='auto-redact', toolIcon='ink_eraser', tags=#{autoRedact.tags}, toolGroup='security')}">
+          </div>
 
-            <div th:replace="~{fragments/card :: card(id='repair', cardTitle=#{home.repair.title}, cardText=#{home.repair.desc}, cardLink='repair', svgPath='images/wrench.svg', tags=#{repair.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='remove-blanks', cardTitle=#{home.removeBlanks.title}, cardText=#{home.removeBlanks.desc}, cardLink='remove-blanks', svgPath='images/blank-file.svg', tags=#{removeBlanks.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='remove-annotations', cardTitle=#{home.removeAnnotations.title}, cardText=#{home.removeAnnotations.desc}, cardLink='remove-annotations', svgPath='images/no-chat.svg', tags=#{removeAnnotations.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='compare', cardTitle=#{home.compare.title}, cardText=#{home.compare.desc}, cardLink='compare', svgPath='images/scales.svg', tags=#{compare.tags})}"></div>
-
-            <div th:replace="~{fragments/card :: card(id='cert-sign', cardTitle=#{home.certSign.title}, cardText=#{home.certSign.desc}, cardLink='cert-sign', svgPath='images/award.svg', tags=#{certSign.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='multi-page-layout', cardTitle=#{home.pageLayout.title}, cardText=#{home.pageLayout.desc}, cardLink='multi-page-layout', svgPath='images/page-layout.svg', tags=#{pageLayout.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='scale-pages', cardTitle=#{home.scalePages.title}, cardText=#{home.scalePages.desc}, cardLink='scale-pages', svgPath='images/scale-pages.svg', tags=#{scalePages.tags})}"></div>
-
-            <div th:replace="~{fragments/card :: card(id='auto-rename', cardTitle=#{home.auto-rename.title}, cardText=#{home.auto-rename.desc}, cardLink='auto-rename', svgPath='images/fonts.svg', tags=#{auto-rename.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='auto-split-pdf', cardTitle=#{home.autoSplitPDF.title}, cardText=#{home.autoSplitPDF.desc}, cardLink='auto-split-pdf', svgPath='images/layout-split.svg', tags=#{autoSplitPDF.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='sanitize-pdf', cardTitle=#{home.sanitizePdf.title}, cardText=#{home.sanitizePdf.desc}, cardLink='sanitize-pdf', svgPath='images/sanitize.svg', tags=#{sanitizePdf.tags})}"></div>
-
-            <div th:replace="~{fragments/card :: card(id='url-to-pdf', cardTitle=#{home.URLToPDF.title}, cardText=#{home.URLToPDF.desc}, cardLink='url-to-pdf', svgPath='images/url.svg', tags=#{URLToPDF.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='html-to-pdf', cardTitle=#{home.HTMLToPDF.title}, cardText=#{home.HTMLToPDF.desc}, cardLink='html-to-pdf', svgPath='images/html.svg', tags=#{HTMLToPDF.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='markdown-to-pdf', cardTitle=#{home.MarkdownToPDF.title}, cardText=#{home.MarkdownToPDF.desc}, cardLink='markdown-to-pdf', svgPath='images/markdown.svg', tags=#{MarkdownToPDF.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='get-info-on-pdf', cardTitle=#{home.getPdfInfo.title}, cardText=#{home.getPdfInfo.desc}, cardLink='get-info-on-pdf', svgPath='images/info.svg', tags=#{getPdfInfo.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='extract-page', cardTitle=#{home.extractPage.title}, cardText=#{home.extractPage.desc}, cardLink='extract-page', svgPath='images/extract.svg', tags=#{extractPage.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='pdf-to-single-page', cardTitle=#{home.PdfToSinglePage.title}, cardText=#{home.PdfToSinglePage.desc}, cardLink='pdf-to-single-page', svgPath='images/single-page.svg', tags=#{PdfToSinglePage.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='show-javascript', cardTitle=#{home.showJS.title}, cardText=#{home.showJS.desc}, cardLink='show-javascript', svgPath='images/js.svg', tags=#{showJS.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='auto-redact', cardTitle=#{home.autoRedact.title}, cardText=#{home.autoRedact.desc}, cardLink='auto-redact', svgPath='images/eraser-fill.svg', tags=#{autoRedact.tags})}"></div>
-
-            <div th:replace="~{fragments/card :: card(id='pdf-to-csv', cardTitle=#{home.tableExtraxt.title}, cardText=#{home.tableExtraxt.desc}, cardLink='pdf-to-csv', svgPath='images/pdf-csv.svg', tags=#{tableExtraxt.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='split-by-size-or-count', cardTitle=#{home.autoSizeSplitPDF.title}, cardText=#{home.autoSizeSplitPDF.desc}, cardLink='split-by-size-or-count', svgPath='images/layout-split.svg', tags=#{autoSizeSplitPDF.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='overlay-pdf', cardTitle=#{home.overlay-pdfs.title}, cardText=#{home.overlay-pdfs.desc}, cardLink='overlay-pdf', svgPath='images/overlay.svg', tags=#{overlay-pdfs.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='split-pdf-by-sections', cardTitle=#{home.split-by-sections.title}, cardText=#{home.split-by-sections.desc}, cardLink='split-pdf-by-sections', svgPath='images/layout-split.svg', tags=#{split-by-sections.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='book-to-pdf', cardTitle=#{home.BookToPDF.title}, cardText=#{home.BookToPDF.desc}, cardLink='book-to-pdf', svgPath='images/book.svg', tags=#{BookToPDF.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='pdf-to-book', cardTitle=#{home.PDFToBook.title}, cardText=#{home.PDFToBook.desc}, cardLink='pdf-to-book', svgPath='images/book.svg', tags=#{PDFToBook.tags})}"></div>
-            <div th:replace="~{fragments/card :: card(id='stamp', cardTitle=#{home.AddStampRequest.title}, cardText=#{home.AddStampRequest.desc}, cardLink='stamp', svgPath='images/stamp.svg', tags=#{AddStampRequest.tags})}"></div>
+          <div
+            th:replace="~{fragments/card :: card(id='pdf-to-csv', cardTitle=#{home.tableExtraxt.title}, cardText=#{home.tableExtraxt.desc}, cardLink='pdf-to-csv', toolIcon='csv', tags=#{tableExtraxt.tags}, toolGroup='convert')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='split-by-size-or-count', cardTitle=#{home.autoSizeSplitPDF.title}, cardText=#{home.autoSizeSplitPDF.desc}, cardLink='split-by-size-or-count', toolIcon='vertical_split', tags=#{autoSizeSplitPDF.tags}, toolGroup='advance')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='overlay-pdf', cardTitle=#{home.overlay-pdfs.title}, cardText=#{home.overlay-pdfs.desc}, cardLink='overlay-pdf', toolIcon='layers', tags=#{overlay-pdfs.tags}, toolGroup='advance')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='split-pdf-by-sections', cardTitle=#{home.split-by-sections.title}, cardText=#{home.split-by-sections.desc}, cardLink='split-pdf-by-sections', toolIcon='grid_on', tags=#{split-by-sections.tags}, toolGroup='advance')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='book-to-pdf', cardTitle=#{home.BookToPDF.title}, cardText=#{home.BookToPDF.desc}, cardLink='book-to-pdf', toolIcon='images/book.svg', tags=#{BookToPDF.tags}, toolGroup='convert')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='pdf-to-book', cardTitle=#{home.PDFToBook.title}, cardText=#{home.PDFToBook.desc}, cardLink='pdf-to-book', toolIcon='images/book.svg', tags=#{PDFToBook.tags}, toolGroup='convert')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='stamp', cardTitle=#{home.AddStampRequest.title}, cardText=#{home.AddStampRequest.desc}, cardLink='stamp', toolIcon='approval', tags=#{AddStampRequest.tags}, toolGroup='security')}">
           </div>
         </div>
       </div>
-      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-  </body>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
 </html>

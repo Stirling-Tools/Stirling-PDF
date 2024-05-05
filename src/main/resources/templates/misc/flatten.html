@@ -11,8 +11,11 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{flatten.header}"></h2>
+            <div class="col-md-6" id="bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">layers_clear</span>
+                <span class="tool-header-text" th:text="#{flatten.header}"></span>
+              </div>
               <form id="pdfForm" class="mb-3">
                 <div class="custom-file">
                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
