@@ -44,7 +44,7 @@
             </th:block>
             <!-- Change Username Form -->
             <h4 th:text="#{account.changeUsername}">Change Username?</h4>
-            <form id="bg-card" class="mt-4 mb-4" action="api/v1/user/change-username" method="post">
+            <form th:if="${!oAuth2Login}" id="bg-card" class="mt-4 mb-4" action="api/v1/user/change-username" method="post">
               <div class="mb-3">
                 <label for="newUsername" th:text="#{account.newUsername}">Change Username</label>
                 <input type="text" class="form-control" name="newUsername" id="newUsername"
@@ -62,7 +62,7 @@
             </form>
 
             <!-- Change Password Form -->
-            <h4 th:text="#{account.changePassword}">Change Password?</h4>
+            <h4 th:if="${!oAuth2Login}" th:text="#{account.changePassword}">Change Password?</h4>
             <form id="bg-card" class="mt-4 mb-4" action="api/v1/user/change-password" method="post">
               <div class="mb-3">
                 <label for="currentPassword" th:text="#{account.oldPassword}">Old Password</label>
@@ -84,6 +84,7 @@
                   Password</button>
               </div>
             </form>
+
 
             <!-- API Key Form -->
             <h4 th:text="#{account.yourApiKey}">API Key</h4>

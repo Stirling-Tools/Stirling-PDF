@@ -3,6 +3,7 @@
   <script th:inline="javascript">
     const currentVersion = /*[[${@appVersion}]]*/ '';
     const noFavourites = /*[[#{noFavourites}]]*/ '';
+    const updateAvailable =  /*[[#{settings.updateAvailable}]]*/ '';
   </script>
   <script th:src="@{js/githubVersion.js}"></script>
   <nav class="navbar navbar-expand-lg">
@@ -367,7 +368,7 @@
 
             <a href="swagger-ui/index.html" class="btn btn-sm btn-outline-primary mx-1" role="button"
               target="_blank">API</a>
-            <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases"
+            <a th:if="${@shouldShow}" href="https://github.com/Stirling-Tools/Stirling-PDF/releases"
               class="btn btn-sm btn-outline-primary mx-1" id="update-btn" th:utext="#{settings.update}" role="button"
               target="_blank"></a>
           </div>
@@ -389,14 +390,19 @@
             <span id="zipThresholdValue" class="ms-2"></span>
           </div>
           <div class="form-check mb-3">
-            <input type="checkbox" id="boredWaiting">
+            <input type="checkbox" id="boredWaiting" th:title="#{settings.bored.help}">
             <label for="boredWaiting" th:text="#{bored}"></label>
           </div>
-          <a th:if="${@loginEnabled}" href="account" class="btn btn-sm btn-outline-primary" role="button"
+           <div class="form-check mb-3">
+            <input type="checkbox" id="cacheInputs" th:title="#{settings.cacheInputs.help}">
+            <label  for="cacheInputs" th:text="#{settings.cacheInputs.name}"></label>
+          </div>
+                  
+          <a th:if="${@loginEnabled and @activSecurity}" href="account" class="btn btn-sm btn-outline-primary" role="button"
             th:text="#{settings.accountSettings}" target="_blank">Account Settings</a>
         </div>
         <div class="modal-footer">
-          <a th:if="${@loginEnabled}" class="btn btn-danger" role="button" th:text="#{settings.signOut}"
+          <a th:if="${@loginEnabled and @activSecurity}" class="btn btn-danger" role="button" th:text="#{settings.signOut}"
             href="logout">Sign Out</a>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
         </div>
