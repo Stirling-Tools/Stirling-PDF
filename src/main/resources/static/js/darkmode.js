@@ -8,7 +8,6 @@ var elements = {
   darkModeIcon: null,
   searchBar: null,
   formControls: null,
-  navbar: null,
   navIcons: null,
   navDropdownMenus: null,
 };
@@ -20,8 +19,6 @@ function getElements() {
   elements.darkModeIcon = document.getElementById("dark-mode-icon");
   elements.searchBar = document.getElementById("searchBar");
   elements.formControls = document.querySelectorAll(".form-control");
-  elements.navbar = document.querySelectorAll("nav.navbar");
-  elements.navIcons = document.querySelectorAll("nav .icon, .navbar-icon");
   elements.navDropdownMenus = document.querySelectorAll(".dropdown-menu");
 }
 function setMode(mode) {
@@ -42,64 +39,20 @@ function setMode(mode) {
 
   if (mode === "on") {
     if (elements && elements.darkModeIcon) {
-      elements.darkModeIcon.src = "moon.svg";
-    }
-    if (elements && elements.searchBar) {
-      elements.searchBar.classList.add("dark-mode-search");
-    }
-    if (elements && elements.formControls) {
-      elements.formControls.forEach((input) => input.classList.add("bg-dark", "text-white"));
-    }
-    if (elements && elements.navbar) {
-      elements.navbar.forEach((navElement) => {
-        navElement.classList.remove("navbar-light", "bg-light");
-        navElement.classList.add("navbar-dark", "bg-dark");
-      });
-    }
-    if (elements && elements.navDropdownMenus) {
-      elements.navDropdownMenus.forEach((menu) => menu.classList.add("dropdown-menu-dark"));
-    }
-    if (elements && elements.navIcons) {
-      elements.navIcons.forEach((icon) => (icon.style.filter = "invert(1)"));
+      elements.darkModeIcon.textContent = "dark_mode";
     }
     var tables = document.querySelectorAll(".table");
     tables.forEach((table) => {
       table.classList.add("table-dark");
     });
-    if (jumbotron) {
-      jumbotron.classList.add("bg-dark");
-      jumbotron.classList.remove("bg-light");
-    }
   } else if (mode === "off") {
     if (elements && elements.darkModeIcon) {
-      elements.darkModeIcon.src = "sun.svg";
-    }
-    if (elements && elements.searchBar) {
-      elements.searchBar.classList.remove("dark-mode-search");
-    }
-    if (elements && elements.formControls) {
-      elements.formControls.forEach((input) => input.classList.remove("bg-dark", "text-white"));
-    }
-    if (elements && elements.navbar) {
-      elements.navbar.forEach((navElement) => {
-        navElement.classList.remove("navbar-dark", "bg-dark");
-        navElement.classList.add("navbar-light", "bg-light");
-      });
-    }
-    if (elements && elements.navDropdownMenus) {
-      elements.navDropdownMenus.forEach((menu) => menu.classList.remove("dropdown-menu-dark"));
-    }
-    if (elements && elements.navIcons) {
-      elements.navIcons.forEach((icon) => (icon.style.filter = "none"));
+      elements.darkModeIcon.textContent = "light_mode";
     }
     var tables = document.querySelectorAll(".table-dark");
     tables.forEach((table) => {
       table.classList.remove("table-dark");
     });
-    if (jumbotron) {
-      jumbotron.classList.remove("bg-dark");
-      jumbotron.classList.add("bg-light");
-    }
   } else if (mode === "rainbow") {
     if (elements && elements.darkModeIcon) {
       elements.darkModeIcon.src = "rainbow.svg";

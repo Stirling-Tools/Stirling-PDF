@@ -11,8 +11,11 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{autoRedact.header}"></h2>
+            <div class="col-md-6" id="bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon security">ink_eraser</span>
+                <span class="tool-header-text" th:text="#{autoRedact.header}"></span>
+              </div>
               <form action="api/v1/security/auto-redact" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                   <input type="file" class="form-control" id="fileInput" name="fileInput" required accept="application/pdf">
@@ -52,13 +55,13 @@
                   }
                 </script>
                 <div class="mb-3 form-check">
-                  <input type="checkbox" class="form-check-input" id="useRegex" name="useRegex">
-                  <label class="form-check-label" for="useRegex" th:text="#{autoRedact.useRegexLabel}"></label>
+                  <input type="checkbox" id="useRegex" name="useRegex">
+                  <label for="useRegex" th:text="#{autoRedact.useRegexLabel}"></label>
                 </div>
 
                 <div class="mb-3 form-check">
-                  <input type="checkbox" class="form-check-input" id="wholeWordSearch" name="wholeWordSearch">
-                  <label class="form-check-label" for="wholeWordSearch" th:text="#{autoRedact.wholeWordSearchLabel}"></label>
+                  <input type="checkbox" id="wholeWordSearch" name="wholeWordSearch">
+                  <label for="wholeWordSearch" th:text="#{autoRedact.wholeWordSearchLabel}"></label>
                 </div>
 
                 <div class="mb-3">
@@ -67,8 +70,8 @@
                 </div>
 
                 <div class="mb-3 form-check">
-                  <input type="checkbox" class="form-check-input" id="convertPDFToImage" name="convertPDFToImage" checked>
-                  <label class="form-check-label" for="convertPDFToImage" th:text="#{autoRedact.convertPDFToImageLabel}"></label>
+                  <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage" checked>
+                  <label for="convertPDFToImage" th:text="#{autoRedact.convertPDFToImageLabel}"></label>
                 </div>
 
                 <button type="submit" class="btn btn-primary" th:text="#{autoRedact.submitButton}"></button>

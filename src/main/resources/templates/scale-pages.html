@@ -11,13 +11,16 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{scalePages.header}"></h2>
+            <div class="col-md-6" id="bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon organize">fullscreen</span>
+                <span class="tool-header-text" th:text="#{scalePages.header}"></span>
+              </div>
               <form id="scalePagesFrom" th:action="@{api/v1/general/scale-pages}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label for="pageSize" th:text="#{scalePages.pageSize}"></label>
-                  <select id="pageSize" name="pageSize">
+                  <select class="form-control" id="pageSize" name="pageSize">
                     <option value="A0">A0</option>
                     <option value="A1">A1</option>
                     <option value="A2">A2</option>
@@ -31,7 +34,7 @@
                 </div>
                 <div class="mb-3">
                   <label for="scaleFactor" th:text="#{scalePages.scaleFactor}"></label>
-                  <input type="number" id="scaleFactor" name="scaleFactor" step="any" min="0" value="1">
+                  <input class="form-control" type="number" id="scaleFactor" name="scaleFactor" step="any" min="0" value="1">
                 </div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{scalePages.submit}"></button>
               </form>

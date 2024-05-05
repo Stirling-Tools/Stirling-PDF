@@ -92,44 +92,35 @@ class PdfActionsManager {
     const rightDirection = this.pageDirection === "rtl" ? "left" : "right";
     const buttonContainer = document.createElement("div");
 
-    buttonContainer.classList.add("pdf-actions_button-container", "hide-on-drag");
+    buttonContainer.classList.add("btn-group", "pdf-actions_button-container", "hide-on-drag");
 
     const moveUp = document.createElement("button");
     moveUp.classList.add("pdf-actions_move-left-button", "btn", "btn-secondary");
-    moveUp.innerHTML = `<i class="bi bi-arrow-${leftDirection}-short"></i>`;
+    moveUp.innerHTML = `<span class="material-symbols-rounded">arrow_${leftDirection}_alt</span>`;
     moveUp.onclick = this.moveUpButtonCallback;
     buttonContainer.appendChild(moveUp);
 
     const moveDown = document.createElement("button");
     moveDown.classList.add("pdf-actions_move-right-button", "btn", "btn-secondary");
-    moveDown.innerHTML = `<i class="bi bi-arrow-${rightDirection}-short"></i>`;
+    moveDown.innerHTML = `<span class="material-symbols-rounded">arrow_${rightDirection}_alt</span>`;
     moveDown.onclick = this.moveDownButtonCallback;
     buttonContainer.appendChild(moveDown);
 
     const rotateCCW = document.createElement("button");
     rotateCCW.classList.add("btn", "btn-secondary");
-    rotateCCW.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z" />
-                            <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z" />
-                        </svg>`;
+    rotateCCW.innerHTML = `<span class="material-symbols-rounded">rotate_left</span>`;
     rotateCCW.onclick = this.rotateCCWButtonCallback;
     buttonContainer.appendChild(rotateCCW);
 
     const rotateCW = document.createElement("button");
     rotateCW.classList.add("btn", "btn-secondary");
-    rotateCW.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
-                            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
-                        </svg>`;
+    rotateCW.innerHTML = `<span class="material-symbols-rounded">rotate_right</span>`;
     rotateCW.onclick = this.rotateCWButtonCallback;
     buttonContainer.appendChild(rotateCW);
 
     const deletePage = document.createElement("button");
     deletePage.classList.add("btn", "btn-danger");
-    deletePage.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
-                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
-                        </svg>`;
+    deletePage.innerHTML = `<span class="material-symbols-rounded">delete</span>`;
     deletePage.onclick = this.deletePageButtonCallback;
     buttonContainer.appendChild(deletePage);
 
@@ -145,10 +136,7 @@ class PdfActionsManager {
 
     const insertFileButton = document.createElement("button");
     insertFileButton.classList.add("btn", "btn-primary", "pdf-actions_insert-file-button");
-    insertFileButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
-                                <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
-                                <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-                            </svg>`;
+    insertFileButton.innerHTML = `<span class="material-symbols-rounded">add</span>`;
     insertFileButton.onclick = this.insertFileButtonCallback;
     insertFileButtonContainer.appendChild(insertFileButton);
 
@@ -164,10 +152,7 @@ class PdfActionsManager {
 
     const insertFileButtonRight = document.createElement("button");
     insertFileButtonRight.classList.add("btn", "btn-primary", "pdf-actions_insert-file-button");
-    insertFileButtonRight.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
-                                <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
-                                <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-                                insertFileButtonRight</svg>`;
+    insertFileButtonRight.innerHTML = `<span class="material-symbols-rounded">add</span>`;
     insertFileButtonRight.onclick = () => addPdfs();
     insertFileButtonRightContainer.appendChild(insertFileButtonRight);
 
