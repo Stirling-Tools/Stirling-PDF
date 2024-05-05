@@ -763,7 +763,6 @@ fieldset:disabled .btn {
 /* Forms */
 textarea.form-control {
   border-radius: 1.5rem !important;
-  ;
 }
 
 .form-control,
