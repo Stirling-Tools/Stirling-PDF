@@ -9,7 +9,7 @@ document.getElementById("fileInput-input").addEventListener("change", function (
 });
 
 /**
- * @param {FileList} files
+ * @param {File[]} files
  */
 function displayFiles(files) {
   const list = document.getElementById("selectedFiles");
