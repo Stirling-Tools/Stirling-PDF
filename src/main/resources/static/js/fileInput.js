@@ -47,12 +47,11 @@ function setupFileInput(chooser) {
     const dt = e.dataTransfer;
     const files = dt.files;
 
-    for (let i = 0; i < files.length; i++) {
-      allFiles.push(files[i]);
-    }
-
+    //Do not Update allFiles array here to prevent duplication, the change event listener will take care of that
     const dataTransfer = new DataTransfer();
-    allFiles.forEach((file) => dataTransfer.items.add(file));
+    for (let i = 0; i < files.length; i++) {
+      dataTransfer.items.add(files[i]);
+    }
 
     const fileInput = document.getElementById(elementId);
     fileInput.files = dataTransfer.files;
@@ -81,8 +80,21 @@ function setupFileInput(chooser) {
   document.body.addEventListener("drop", dropListener);
 
   $("#" + elementId).on("change", function (e) {
-    allFiles = Array.from(e.target.files);
+    //Get newly Added Files
+    const newFiles = Array.from(e.target.files);
+
+    //Add Files to existing Files
+    allFiles = allFiles.concat(newFiles);
+
+    //Update the file inout`s files property
+    const dataTransfer = new DataTransfer();
+    allFiles.forEach((file) => dataTransfer.items.add(file));
+    e.target.files = dataTransfer.files;
+
     handleFileInputChange(this);
+
+    //Call the displayFiles function with the allFiles array
+    displayFiles(allFiles)
   });
 
   function handleFileInputChange(inputElement) {
