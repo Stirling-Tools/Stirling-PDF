@@ -214,9 +214,11 @@ or
 java -jar /opt/Stirling-PDF/Stirling-PDF-*.jar
 ```
 
-Non-root users can run from the Stirling-PDF directory using the following commands:
+Non-root users can run from the Stirling-PDF directory using the following commands (can use any temp directory you want):
 
 ```bash
+mkdir temp
+export DBUS_SESSION_BUS_ADDRESS="unix:path=./temp"
 ./gradlew bootRun
 or
 java -jar ./Stirling-PDF-*.jar
