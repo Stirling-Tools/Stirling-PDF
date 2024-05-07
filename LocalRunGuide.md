@@ -161,8 +161,6 @@ If you plan to use the OCR (Optical Character Recognition) functionality, you mi
 ##### Installing Language Packs
 Easiest is to use the langpacks provided by your repositories. Skip the other steps.
 
-**Note:** Nix Package Manager pre-installs almost all the packages by default.
-
 Manual:
 
 1. Download the desired language pack(s) by selecting the `.traineddata` file(s) for the language(s) you need.
@@ -204,6 +202,8 @@ Nix:
 nix-env -iA nixpkgs.tesseract
 ```
 
+**Note:** Nix Package Manager pre-installs almost all the language packs when tesseract is installed.
+
 ### Step 7: Run Stirling-PDF
 
 Those who have pushed to the root directory, run the following commands:
@@ -214,7 +214,11 @@ or
 java -jar /opt/Stirling-PDF/Stirling-PDF-*.jar
 ```
 
-Non-root users can run from the Stirling-PDF directory using the following commands (can use any temp directory you want):
+Since libreoffice, soffice, and conversion tools have their dbus_tmp_dir set as `dbus_tmp_dir="/run/user/$(id -u)/libreoffice-dbus"`, you might get the following error when using their endpoints:
+```
+[Thread-7] INFO  s.s.SPDF.utils.ProcessExecutor - mkdir: cannot create directory ‘/run/user/1501’: Permission denied
+```
+To resolve this, before starting the Stirling-PDF, you have to set the environment variable to a directory you have write access to by using the following commands:
 
 ```bash
 mkdir temp
