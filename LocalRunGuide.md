@@ -41,7 +41,7 @@ Install the following software, if not already installed:
 For Debian-based systems, you can use the following command:
 
 ```bash
-sudo apt-get upda te
+sudo apt-get update
 sudo apt-get install -y git  automake  autoconf  libtool  libleptonica-dev  pkg-config zlib1g-dev make g++ openjdk-17-jdk python3 python3-pip
 ```
 
