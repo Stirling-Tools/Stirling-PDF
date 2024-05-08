@@ -33,13 +33,13 @@ public class PDFWithPageNums extends PDFFile {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        return GeneralUtils.parsePageString(pageNumbers, pageCount, zeroCount);
+        return GeneralUtils.parsePageList(pageNumbers, pageCount, zeroCount);
     }
 
     @Hidden
     public List<Integer> getPageNumbersList(PDDocument doc, boolean zeroCount) {
         int pageCount = 0;
         pageCount = doc.getNumberOfPages();
-        return GeneralUtils.parsePageString(pageNumbers, pageCount, zeroCount);
+        return GeneralUtils.parsePageList(pageNumbers, pageCount, zeroCount);
     }
 }

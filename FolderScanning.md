@@ -1,13 +1,5 @@
 ## User Guide for Local Directory Scanning and File Processing
 
-### Whilst Pipelines are in alpha...
-You must enable this alpha functionality by setting
-```yaml
-system:
-  enableAlphaFunctionality: true
-```
-To true like in the above for your `/config/settings.yml` file, after restarting Stirling-PDF you should see both UI and folder scanning enabled.
-
 ### Setting Up Watched Folders:
 - Create a folder where you want your files to be monitored. This is your 'watched folder'.
 - The default directory for this is `./pipeline/watchedFolders/`

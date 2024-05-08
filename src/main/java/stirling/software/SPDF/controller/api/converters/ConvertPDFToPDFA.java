@@ -16,7 +16,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import stirling.software.SPDF.model.api.PDFFile;
+import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -31,8 +31,10 @@ public class ConvertPDFToPDFA {
             summary = "Convert a PDF to a PDF/A",
             description =
                     "This endpoint converts a PDF file to a PDF/A file. PDF/A is a format designed for long-term archiving of digital documents. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> pdfToPdfA(@ModelAttribute PDFFile request) throws Exception {
+    public ResponseEntity<byte[]> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
+            throws Exception {
         MultipartFile inputFile = request.getFileInput();
+        String outputFormat = request.getOutputFormat();
 
         // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");
@@ -47,7 +49,7 @@ public class ConvertPDFToPDFA {
         command.add("--skip-text");
         command.add("--tesseract-timeout=0");
         command.add("--output-type");
-        command.add("pdfa");
+        command.add(outputFormat.toString());
         command.add(tempInputFile.toString());
         command.add(tempOutputFile.toString());
 

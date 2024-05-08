@@ -1,6 +1,7 @@
 name: Release Artifacts
 
 on:
+  workflow_dispatch:
   release:
     types: [created]
 permissions:
@@ -14,44 +15,61 @@ jobs:
         enable_security: [true, false]
         include:
           - enable_security: true
-            file_suffix: '-with-login'
+            file_suffix: "-with-login"
           - enable_security: false
-            file_suffix: ''
+            file_suffix: ""
     steps:
-    - uses: actions/checkout@v3.5.2
+      - uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3.11.0
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 7.6
 
-    - name: Generate jar (With Security=${{ matrix.enable_security }})
-      run: ./gradlew clean createExe
-      env:
-        DOCKER_ENABLE_SECURITY: ${{ matrix.enable_security }}
+      - name: Generate jar (With Security=${{ matrix.enable_security }})
+        run: ./gradlew clean createExe
+        env:
+          DOCKER_ENABLE_SECURITY: ${{ matrix.enable_security }}
 
-    - name: Upload binaries to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./build/launch4j/Stirling-PDF.exe
-        asset_name: Stirling-PDF${{ matrix.file_suffix }}.exe
-        tag: ${{ github.ref }}
-        overwrite: true
+      - name: Get version number
+        id: versionNumber
+        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
 
-    - name: Get version number
-      id: versionNumber
-      run: echo "::set-output name=versionNumber::$(./gradlew printVersion --quiet | tail -1)"
+      - name: Rename binarie
+        if: matrix.file_suffix != ''
+        run: cp ./build/launch4j/Stirling-PDF.exe ./build/launch4j/Stirling-PDF${{ matrix.file_suffix }}.exe
 
-    - name: Upload jar binaries to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar
-        asset_name: Stirling-PDF${{ matrix.file_suffix }}.jar
-        tag: ${{ github.ref }}
-        overwrite: true
+      - name: Upload Assets binarie
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./build/launch4j/Stirling-PDF${{ matrix.file_suffix }}.exe
+          name: Stirling-PDF${{ matrix.file_suffix }}.exe
+          overwrite: true
+          retention-days: 1
+          if-no-files-found: error
+      - name: Upload binaries to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./build/launch4j/Stirling-PDF${{ matrix.file_suffix }}.exe
+
+      - name: Rename jar binaries
+        run: cp ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+
+      - name: Upload Assets jar binaries
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+          name: Stirling-PDF${{ matrix.file_suffix }}.jar
+          overwrite: true
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload jar binaries to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar

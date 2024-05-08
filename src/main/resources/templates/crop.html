@@ -1,33 +1,33 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{crop.title}, header=#{crop.header})}"></th:block>
+  </head>
 
-<th:block th:insert="~{fragments/common :: head(title=#{crop.title}, header=#{crop.header})}"></th:block>
-
-
-<body>
-  <div id="page-container">
-    <div id="content-wrap">
-      <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-      <br> <br>
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-md-6">
-            <h2 th:text="#{crop.header}"></h2>
-             <form id="cropForm" action="/api/v1/general/crop" method="post" enctype="multipart/form-data">
-              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-              <input id="x" type="hidden" name="x">
-              <input id="y" type="hidden" name="y">
-              <input id="width" type="hidden" name="width">
-              <input id="height" type="hidden" name="height">
-              <button type="submit" class="btn btn-primary" th:text="#{crop.submit}"></button>
-            </form>
-            <div style="position: relative; display: inline-block;">
-			    <canvas id="crop-pdf-canvas" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
-			    <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2;"></canvas>
-			</div>
-
-            <script>
-
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6">
+              <h2 th:text="#{crop.header}"></h2>
+              <form id="cropForm" action="/api/v1/general/crop" method="post" enctype="multipart/form-data">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <input id="x" type="hidden" name="x">
+                <input id="y" type="hidden" name="y">
+                <input id="width" type="hidden" name="width">
+                <input id="height" type="hidden" name="height">
+                <button type="submit" class="btn btn-primary" th:text="#{crop.submit}"></button>
+              </form>
+              <div style="position: relative; display: inline-block;">
+                <canvas id="crop-pdf-canvas" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
+                <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2;"></canvas>
+              </div>
+            </div>
+          </div>
+          <script>
             let pdfCanvas  = document.getElementById('crop-pdf-canvas');
             let overlayCanvas = document.getElementById('overlayCanvas');
 
@@ -73,75 +73,66 @@
             });
 
             overlayCanvas.addEventListener('mousedown', function(e) {
-                // Clear previously drawn rectangle on the main canvas
-                context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
-                renderPage(currentPage); // Re-render the PDF
+              // Clear previously drawn rectangle on the main canvas
+              context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+              renderPage(currentPage); // Re-render the PDF
 
-                // Clear the overlay canvas to ensure old drawings are removed
-                overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+              // Clear the overlay canvas to ensure old drawings are removed
+              overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-                startX = e.offsetX;
-                startY = e.offsetY;
-                isDrawing = true;
+              startX = e.offsetX;
+              startY = e.offsetY;
+              isDrawing = true;
             });
 
             overlayCanvas.addEventListener('mousemove', function(e) {
-                if (!isDrawing) return;
-                overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); // Clear previous rectangle
+              if (!isDrawing) return;
+              overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); // Clear previous rectangle
 
-                rectWidth = e.offsetX - startX;
-                rectHeight = e.offsetY - startY;
-                overlayContext.strokeStyle = 'red';
-                overlayContext.strokeRect(startX, startY, rectWidth, rectHeight);
+              rectWidth = e.offsetX - startX;
+              rectHeight = e.offsetY - startY;
+              overlayContext.strokeStyle = 'red';
+              overlayContext.strokeRect(startX, startY, rectWidth, rectHeight);
             });
 
             overlayCanvas.addEventListener('mouseup', function(e) {
-                isDrawing = false;
+              isDrawing = false;
 
-                rectWidth = e.offsetX - startX;
-                rectHeight = e.offsetY - startY;
+              rectWidth = e.offsetX - startX;
+              rectHeight = e.offsetY - startY;
 
-                let flippedY = pdfCanvas.height - e.offsetY;
+              let flippedY = pdfCanvas.height - e.offsetY;
 
-                xInput.value = startX;
-                yInput.value = flippedY;
-                widthInput.value = rectWidth;
-                heightInput.value = rectHeight;
+              xInput.value = startX;
+              yInput.value = flippedY;
+              widthInput.value = rectWidth;
+              heightInput.value = rectHeight;
 
-                // Draw the final rectangle on the main canvas
-                context.strokeStyle = 'red';
-                context.strokeRect(startX, startY, rectWidth, rectHeight);
+              // Draw the final rectangle on the main canvas
+              context.strokeStyle = 'red';
+              context.strokeRect(startX, startY, rectWidth, rectHeight);
 
-                overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); // Clear the overlay
+              overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); // Clear the overlay
             });
 
-
             function renderPage(pageNumber) {
-                pdfDoc.getPage(pageNumber).then(function(page) {
-                    let viewport = page.getViewport({ scale: 1.0 });
-                    pdfCanvas.width = viewport.width;
-                    pdfCanvas.height = viewport.height;
+              pdfDoc.getPage(pageNumber).then(function(page) {
+                let viewport = page.getViewport({ scale: 1.0 });
+                pdfCanvas.width = viewport.width;
+                pdfCanvas.height = viewport.height;
 
-                    overlayCanvas.width = viewport.width;  // Match overlay canvas size with PDF canvas
-                    overlayCanvas.height = viewport.height;
+                overlayCanvas.width = viewport.width;  // Match overlay canvas size with PDF canvas
+                overlayCanvas.height = viewport.height;
 
-                    let renderContext = { canvasContext: context, viewport: viewport };
-                    page.render(renderContext);
-                    pdfCanvas.classList.add("shadow-canvas");
-                });
+                let renderContext = { canvasContext: context, viewport: viewport };
+                page.render(renderContext);
+                pdfCanvas.classList.add("shadow-canvas");
+              });
             }
-
-
-
-
-
-            </script>
-
-          </div>
+          </script>
         </div>
       </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-    <div th:insert="~{fragments/footer.html :: footer}"></div>
-  </div>
-</body>
+  </body>
 </html>

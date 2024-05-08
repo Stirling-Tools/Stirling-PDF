@@ -1,56 +1,39 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.toString()}"
-	th:lang-direction="#{language.direction}"
-	xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{licenses.title}, header=#{licenses.title})}"></th:block>
+  </head>
 
-<th:block
-	th:insert="~{fragments/common :: head(title=#{licenses.title}, header=#{licenses.title})}"></th:block>
-
-
-<style>
-td a {
-	text-decoration: none;
-}
-
-td a:hover, td a:focus {
-	text-decoration: underline;
-	/* Adds underline on hover/focus for clarity */
-}
-</style>
-<body>
-	<div id="page-container">
-		<div id="content-wrap">
-			<div th:insert="~{fragments/navbar.html :: navbar}"></div>
-			<br> <br>
-
-			<div class="container">
-				<div class="row justify-content-center">
-					<div class="col-md-6">
-						<h2 th:text="#{licenses.header}">3rd Party licenses</h2>
-						<table class="table table-striped">
-							<thead>
-								<tr>
-									<th th:text="#{licenses.module}">Module</th>
-									<th th:text="#{licenses.version}">Version</th>
-									<th th:text="#{licenses.license}">License</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr th:each="dep : ${dependencies}">
-									<td><a th:href="${dep.moduleUrl}"
-										th:text="${dep.moduleName}"></a></td>
-									<td th:text="${dep.moduleVersion}"></td>
-									<td><a th:href="${dep.moduleLicenseUrl}"
-										th:text="${dep.moduleLicense}"></a></td>
-								</tr>
-							</tbody>
-						</table>
-
-					</div>
-				</div>
-			</div>
-		</div>
-		<div th:insert="~{fragments/footer.html :: footer}"></div>
-	</div>
-</body>
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6">
+              <h2 th:text="#{licenses.header}">3rd Party licenses</h2>
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th th:text="#{licenses.module}">Module</th>
+                    <th th:text="#{licenses.version}">Version</th>
+                    <th th:text="#{licenses.license}">License</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="dep : ${dependencies}">
+                    <td><a th:href="${dep.moduleUrl}" th:text="${dep.moduleName}"></a></td>
+                    <td th:text="${dep.moduleVersion}"></td>
+                    <td><a th:href="${dep.moduleLicenseUrl}" th:text="${dep.moduleLicense}"></a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
 </html>

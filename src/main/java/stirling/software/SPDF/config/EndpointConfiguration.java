@@ -129,7 +129,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "sign");
         addEndpointToGroup("Other", "flatten");
         addEndpointToGroup("Other", "repair");
-        addEndpointToGroup("Other", "remove-blanks");
+        addEndpointToGroup("Other", REMOVE_BLANKS);
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "compare");
         addEndpointToGroup("Other", "add-page-numbers");
@@ -140,14 +140,12 @@ public class EndpointConfiguration {
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");
         addEndpointToGroup("CLI", "extract-image-scans");
-        addEndpointToGroup("CLI", "remove-blanks");
         addEndpointToGroup("CLI", "repair");
         addEndpointToGroup("CLI", "pdf-to-pdfa");
         addEndpointToGroup("CLI", "file-to-pdf");
         addEndpointToGroup("CLI", "xlsx-to-pdf");
         addEndpointToGroup("CLI", "pdf-to-word");
         addEndpointToGroup("CLI", "pdf-to-presentation");
-        addEndpointToGroup("CLI", "pdf-to-text");
         addEndpointToGroup("CLI", "pdf-to-html");
         addEndpointToGroup("CLI", "pdf-to-xml");
         addEndpointToGroup("CLI", "ocr-pdf");
@@ -155,6 +153,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("CLI", "url-to-pdf");
         addEndpointToGroup("CLI", "book-to-pdf");
         addEndpointToGroup("CLI", "pdf-to-book");
+        addEndpointToGroup("CLI", "pdf-to-rtf");
 
         // Calibre
         addEndpointToGroup("Calibre", "book-to-pdf");
@@ -162,13 +161,13 @@ public class EndpointConfiguration {
 
         // python
         addEndpointToGroup("Python", "extract-image-scans");
-        addEndpointToGroup("Python", "remove-blanks");
+        addEndpointToGroup("Python", REMOVE_BLANKS);
         addEndpointToGroup("Python", "html-to-pdf");
         addEndpointToGroup("Python", "url-to-pdf");
 
         // openCV
         addEndpointToGroup("OpenCV", "extract-image-scans");
-        addEndpointToGroup("OpenCV", "remove-blanks");
+        addEndpointToGroup("OpenCV", REMOVE_BLANKS);
 
         // LibreOffice
         addEndpointToGroup("LibreOffice", "repair");
@@ -176,7 +175,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("LibreOffice", "xlsx-to-pdf");
         addEndpointToGroup("LibreOffice", "pdf-to-word");
         addEndpointToGroup("LibreOffice", "pdf-to-presentation");
-        addEndpointToGroup("LibreOffice", "pdf-to-text");
+        addEndpointToGroup("LibreOffice", "pdf-to-rtf");
         addEndpointToGroup("LibreOffice", "pdf-to-html");
         addEndpointToGroup("LibreOffice", "pdf-to-xml");
 
@@ -218,6 +217,8 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "split-by-size-or-count");
         addEndpointToGroup("Java", "overlay-pdf");
         addEndpointToGroup("Java", "split-pdf-by-sections");
+        addEndpointToGroup("Java", REMOVE_BLANKS);
+        addEndpointToGroup("Java", "pdf-to-text");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
@@ -244,4 +245,6 @@ public class EndpointConfiguration {
             }
         }
     }
+
+    private static final String REMOVE_BLANKS = "remove-blanks";
 }

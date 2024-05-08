@@ -88,7 +88,7 @@ public class StampController {
         // Load the input PDF
         PDDocument document = Loader.loadPDF(pdfFile.getBytes());
 
-        List<Integer> pageNumbers = request.getPageNumbersList(document, false);
+        List<Integer> pageNumbers = request.getPageNumbersList(document, true);
 
         for (int pageIndex : pageNumbers) {
             int zeroBasedIndex = pageIndex - 1;

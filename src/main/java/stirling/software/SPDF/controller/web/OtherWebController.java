@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class OtherWebController {
+
     @GetMapping("/compress-pdf")
     @Hidden
     public String compressPdfForm(Model model) {
@@ -53,6 +54,13 @@ public class OtherWebController {
         return "misc/add-page-numbers";
     }
 
+    @GetMapping("/fake-scan")
+    @Hidden
+    public String fakeScanForm(Model model) {
+        model.addAttribute("currentPage", "fake-scan");
+        return "misc/fake-scan";
+    }
+
     @GetMapping("/extract-images")
     @Hidden
     public String extractImagesForm(Model model) {
@@ -81,8 +89,15 @@ public class OtherWebController {
         return "misc/compare";
     }
 
+    @GetMapping("/print-file")
+    @Hidden
+    public String printFileForm(Model model) {
+        model.addAttribute("currentPage", "print-file");
+        return "misc/print-file";
+    }
+
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = "/usr/share/tesseract-ocr/5/tessdata";
+        String tessdataDir = "/usr/share/tessdata";
         File[] files = new File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();

@@ -12,10 +12,11 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
+
+import com.fathzer.soft.javaluator.DoubleEvaluator;
 
 import io.github.pixee.security.HostValidator;
 import io.github.pixee.security.Urls;
@@ -87,6 +88,7 @@ public class GeneralUtils {
         }
 
         sizeStr = sizeStr.trim().toUpperCase();
+        sizeStr = sizeStr.replace(",", ".").replace(" ", "");
         try {
             if (sizeStr.endsWith("KB")) {
                 return (long)
@@ -115,91 +117,115 @@ public class GeneralUtils {
         return null;
     }
 
-    public static List<Integer> parsePageString(String pageOrder, int totalPages) {
-        return parsePageString(pageOrder, totalPages, false);
-    }
-
-    public static List<Integer> parsePageString(
-            String pageOrder, int totalPages, boolean isOneBased) {
-        if (pageOrder == null || pageOrder.isEmpty()) {
-            return Collections.singletonList(1);
+    public static List<Integer> parsePageList(String pages, int totalPages, boolean oneBased) {
+        if (pages == null) {
+            return List.of(1); // Default to first page if input is null
         }
-        if (pageOrder.matches("\\d+")) {
-            // Convert the single number string to an integer and return it in a list
-            return Collections.singletonList(Integer.parseInt(pageOrder));
+        try {
+            return parsePageList(pages.split(","), totalPages, oneBased);
+        } catch (NumberFormatException e) {
+            return List.of(1); // Default to first page if input is invalid
         }
-        return parsePageList(pageOrder.split(","), totalPages, isOneBased);
     }
 
-    public static List<Integer> parsePageList(String[] pageOrderArr, int totalPages) {
-        return parsePageList(pageOrderArr, totalPages, false);
+    public static List<Integer> parsePageList(String[] pages, int totalPages) {
+        return parsePageList(pages, totalPages, false);
     }
 
-    public static List<Integer> parsePageList(
-            String[] pageOrderArr, int totalPages, boolean isOneBased) {
-        List<Integer> newPageOrder = new ArrayList<>();
+    public static List<Integer> parsePageList(String[] pages, int totalPages, boolean oneBased) {
+        List<Integer> result = new ArrayList<>();
+        int offset = oneBased ? 1 : 0;
+        for (String page : pages) {
+            if ("all".equalsIgnoreCase(page)) {
 
-        int adjustmentFactor = isOneBased ? 1 : 0;
-
-        // loop through the page order array
-        for (String element : pageOrderArr) {
-            if ("all".equalsIgnoreCase(element)) {
                 for (int i = 0; i < totalPages; i++) {
-                    newPageOrder.add(i + adjustmentFactor);
+                    result.add(i + offset);
                 }
-                // As all pages are already added, no need to check further
-                break;
-            } else if (element.matches("\\d*n\\+?-?\\d*|\\d*\\+?n")) {
-                // Handle page order as a function
-                int coefficient = 0;
-                int constant = 0;
-                boolean coefficientExists = false;
-                boolean constantExists = false;
-
-                if (element.contains("n")) {
-                    String[] parts = element.split("n");
-                    if (!"".equals(parts[0]) && parts[0] != null) {
-                        coefficient = Integer.parseInt(parts[0]);
-                        coefficientExists = true;
-                    }
-                    if (parts.length > 1 && !"".equals(parts[1]) && parts[1] != null) {
-                        constant = Integer.parseInt(parts[1]);
-                        constantExists = true;
-                    }
-                } else if (element.contains("+")) {
-                    constant = Integer.parseInt(element.replace("+", ""));
-                    constantExists = true;
-                }
-
-                for (int i = 1; i <= totalPages; i++) {
-                    int pageNum = coefficientExists ? coefficient * i : i;
-                    pageNum += constantExists ? constant : 0;
-
-                    if (pageNum <= totalPages && pageNum > 0) {
-                        newPageOrder.add(pageNum - adjustmentFactor);
-                    }
-                }
-            } else if (element.contains("-")) {
-                // split the range into start and end page
-                String[] range = element.split("-");
-                int start = Integer.parseInt(range[0]);
-                int end = Integer.parseInt(range[1]);
-                // check if the end page is greater than total pages
-                if (end > totalPages) {
-                    end = totalPages;
-                }
-                // loop through the range of pages
-                for (int j = start; j <= end; j++) {
-                    // print the current index
-                    newPageOrder.add(j - adjustmentFactor);
+            } else if (page.contains(",")) {
+                // Split the string into parts, could be single pages or ranges
+                String[] parts = page.split(",");
+                for (String part : parts) {
+                    result.addAll(handlePart(part, totalPages, offset));
                 }
             } else {
-                // if the element is a single page
-                newPageOrder.add(Integer.parseInt(element) - adjustmentFactor);
+                result.addAll(handlePart(page, totalPages, offset));
             }
         }
+        return new ArrayList<>(
+                new java.util.LinkedHashSet<>(result)); // Remove duplicates and maintain order
+    }
 
-        return newPageOrder;
+    public static List<Integer> evaluateNFunc(String expression, int maxValue) {
+        List<Integer> results = new ArrayList<>();
+        DoubleEvaluator evaluator = new DoubleEvaluator();
+
+        // Validate the expression
+        if (!expression.matches("[0-9n+\\-*/() ]+")) {
+            throw new IllegalArgumentException("Invalid expression");
+        }
+
+        int n = 0;
+        while (true) {
+            // Replace 'n' with the current value of n, correctly handling numbers before 'n'
+            String sanitizedExpression = insertMultiplicationBeforeN(expression, n);
+            Double result = evaluator.evaluate(sanitizedExpression);
+
+            // Check if the result is null or not within bounds
+            if (result == null || result <= 0 || result.intValue() > maxValue) {
+                if (n != 0) break;
+            } else {
+                results.add(result.intValue());
+            }
+            n++;
+        }
+
+        return results;
+    }
+
+    private static String insertMultiplicationBeforeN(String expression, int nValue) {
+        // Insert multiplication between a number and 'n' (e.g., "4n" becomes "4*n")
+        String withMultiplication = expression.replaceAll("(\\d)n", "$1*n");
+        // Now replace 'n' with its current value
+        return withMultiplication.replace("n", String.valueOf(nValue));
+    }
+
+    private static List<Integer> handlePart(String part, int totalPages, int offset) {
+        List<Integer> partResult = new ArrayList<>();
+
+        // First check for n-syntax because it should not be processed as a range
+        if (part.contains("n")) {
+            partResult = evaluateNFunc(part, totalPages);
+            // Adjust the results according to the offset
+            for (int i = 0; i < partResult.size(); i++) {
+                int adjustedValue = partResult.get(i) - 1 + offset;
+                partResult.set(i, adjustedValue);
+            }
+        } else if (part.contains("-")) {
+            // Process ranges only if it's not n-syntax
+            String[] rangeParts = part.split("-");
+            try {
+                int start = Integer.parseInt(rangeParts[0]);
+                int end = Integer.parseInt(rangeParts[1]);
+                for (int i = start; i <= end; i++) {
+                    if (i >= 1 && i <= totalPages) {
+                        partResult.add(i - 1 + offset);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Range is invalid, ignore this part
+            }
+        } else {
+            // This is a single page number
+            try {
+                int pageNum = Integer.parseInt(part.trim());
+                if (pageNum >= 1 && pageNum <= totalPages) {
+                    partResult.add(pageNum - 1 + offset);
+                }
+            } catch (NumberFormatException ignored) {
+                // Ignore invalid numbers
+            }
+        }
+        return partResult;
     }
 
     public static boolean createDir(String path) {

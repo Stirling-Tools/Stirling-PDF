@@ -44,6 +44,9 @@ public class User {
     @Column(name = "isFirstLogin")
     private Boolean isFirstLogin = false;
 
+    @Column(name = "roleName")
+    private String roleName;
+
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> authorities = new HashSet<>();
 
@@ -52,6 +55,10 @@ public class User {
     @Column(name = "setting_value")
     @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "user_id"))
     private Map<String, String> settings = new HashMap<>(); // Key-value pairs of settings.
+
+    public String getRoleName() {
+        return Role.getRoleNameByRoleId(getRolesAsString());
+    }
 
     public boolean isFirstLogin() {
         return isFirstLogin != null && isFirstLogin;

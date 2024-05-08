@@ -1,30 +1,29 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{auto-rename.title}, header=#{auto-rename.header})}"></th:block>
+  </head>
 
-<th:block th:insert="~{fragments/common :: head(title=#{auto-rename.title}, header=#{auto-rename.header})}"></th:block>
-
-
-<body>
+  <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
-        <div id="content-wrap">
-            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-            <br> <br>
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-md-6">
-                        <h2 th:text="#{auto-rename.header}"></h2>
-                        <form method="post" enctype="multipart/form-data" th:action="@{api/v1/misc/auto-rename}">
-                            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-                            <br>
-                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{auto-rename.submit}"></button>
-                        </form>
-                    </div>
-                </div>
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6">
+              <h2 th:text="#{auto-rename.header}"></h2>
+              <form method="post" enctype="multipart/form-data" th:action="@{api/v1/misc/auto-rename}">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <br>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{auto-rename.submit}"></button>
+              </form>
             </div>
-
+          </div>
         </div>
-        <div th:insert="~{fragments/footer.html :: footer}"></div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-</body>
+  </body>
 </html>

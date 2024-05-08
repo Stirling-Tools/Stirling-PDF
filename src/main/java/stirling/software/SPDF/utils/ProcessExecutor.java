@@ -24,6 +24,7 @@ public class ProcessExecutor {
 
     public enum Processes {
         LIBRE_OFFICE,
+        PDFTOHTML,
         OCR_MY_PDF,
         PYTHON_OPENCV,
         GHOSTSCRIPT,
@@ -45,6 +46,7 @@ public class ProcessExecutor {
                     int semaphoreLimit =
                             switch (key) {
                                 case LIBRE_OFFICE -> 1;
+                                case PDFTOHTML -> 1;
                                 case OCR_MY_PDF -> 2;
                                 case PYTHON_OPENCV -> 8;
                                 case GHOSTSCRIPT -> 16;
@@ -56,9 +58,10 @@ public class ProcessExecutor {
                     long timeoutMinutes =
                             switch (key) {
                                 case LIBRE_OFFICE -> 30;
+                                case PDFTOHTML -> 20;
                                 case OCR_MY_PDF -> 30;
                                 case PYTHON_OPENCV -> 30;
-                                case GHOSTSCRIPT -> 5;
+                                case GHOSTSCRIPT -> 30;
                                 case WEASYPRINT -> 30;
                                 case INSTALL_APP -> 60;
                                 case CALIBRE -> 30;
@@ -169,27 +172,35 @@ public class ProcessExecutor {
             errorReaderThread.join();
             outputReaderThread.join();
 
-            if (!liveUpdates) {
-                if (outputLines.size() > 0) {
-                    String outputMessage = String.join("\n", outputLines);
-                    messages += outputMessage;
+            if (outputLines.size() > 0) {
+                String outputMessage = String.join("\n", outputLines);
+                messages += outputMessage;
+                if (!liveUpdates) {
                     logger.info("Command output:\n" + outputMessage);
                 }
+            }
 
-                if (errorLines.size() > 0) {
-                    String errorMessage = String.join("\n", errorLines);
-                    messages += errorMessage;
+            if (errorLines.size() > 0) {
+                String errorMessage = String.join("\n", errorLines);
+                messages += errorMessage;
+                if (!liveUpdates) {
                     logger.warn("Command error output:\n" + errorMessage);
-                    if (exitCode != 0) {
-                        throw new IOException(
-                                "Command process failed with exit code "
-                                        + exitCode
-                                        + ". Error message: "
-                                        + errorMessage);
-                    }
                 }
-            } else if (exitCode != 0) {
-                throw new IOException("Command process failed with exit code " + exitCode);
+                if (exitCode != 0) {
+                    throw new IOException(
+                            "Command process failed with exit code "
+                                    + exitCode
+                                    + ". Error message: "
+                                    + errorMessage);
+                }
+            }
+
+            if (exitCode != 0) {
+                throw new IOException(
+                        "Command process failed with exit code "
+                                + exitCode
+                                + "\nLogs: "
+                                + messages);
             }
         } finally {
             semaphore.release();

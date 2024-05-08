@@ -1,326 +1,283 @@
-<!doctype html>
-<html th:lang="${#locale.toString()}" th:lang-direction="#{language.direction}" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{account.title})}"></th:block>
+  </head>
 
-<th:block th:insert="~{fragments/common :: head(title=#{account.title}, header=#{account.header})}"></th:block>
-
-<body>
+  <body>
     <th:block th:insert="~{fragments/common :: game}"></th:block>
     <div id="page-container">
-        <div id="content-wrap">
-            <div th:insert="~{fragments/navbar.html :: navbar}"></div>
-            <br> <br>
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-md-9">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-9">
 
-                        <!-- User Settings Title -->
-                        <h2 class="text-center" th:text="#{account.accountSettings}">User Settings</h2>
-                        <hr>
-						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'notAuthenticated'}" class="alert alert-danger">
-						    <span th:text="#{notAuthenticatedMessage}">Default message if not found</span>
-						</div>
-						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'userNotFound'}" class="alert alert-danger">
-						    <span th:text="#{userNotFoundMessage}">Default message if not found</span>
-						</div>
-						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'incorrectPassword'}" class="alert alert-danger">
-						    <span th:text="#{incorrectPasswordMessage}">Default message if not found</span>
-						</div>
-						<div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
-						    <span th:text="#{usernameExistsMessage}">Default message if not found</span>
-						</div>
-
-
-
-
-
-
-						<!-- At the top of the user settings -->
-						<h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>
-
-						<div th:if="${error}" class="alert alert-danger" role="alert">
-						    <span th:text="${error}">Error Message</span>
-						</div>
-                        <!-- Change Username Form -->
-                        <h4></h4>
-                        <form action="api/v1/user/change-username" method="post">
-                            <div class="mb-3">
-                                <label for="newUsername" th:text="#{account.changeUsername}">Change Username</label>
-                                <input type="text" class="form-control" name="newUsername" id="newUsername" th:placeholder="#{account.newUsername}">
-                            </div>
-                            <div class="mb-3">
-                                <label for="currentPassword" th:text="#{password}">Password</label>
-                                <input type="password" class="form-control" name="currentPassword" id="currentPasswordUsername" th:placeholder="#{password}">
-                            </div>
-                            <div class="mb-3">
-                                <button type="submit" class="btn btn-primary" th:text="#{account.changeUsername}">Change Username</button>
-                            </div>
-                        </form>
-
-                        <hr> <!-- Separator Line -->
-
-                        <!-- Change Password Form -->
-                        <h4 th:text="#{account.changePassword}">Change Password?</h4>
-                        <form action="api/v1/user/change-password" method="post">
-                            <div class="mb-3">
-                                <label for="currentPassword" th:text="#{account.oldPassword}">Old Password</label>
-                                <input type="password" class="form-control" name="currentPassword" id="currentPasswordPassword"  th:placeholder="#{account.oldPassword}">
-                            </div>
-                            <div class="mb-3">
-                                <label for="newPassword" th:text="#{account.newPassword}">New Password</label>
-                                <input type="password" class="form-control" name="newPassword" id="newPassword" th:placeholder="#{account.newPassword}">
-                            </div>
-                            <div class="mb-3">
-                                <label for="confirmNewPassword" th:text="#{account.confirmNewPassword}">Confirm New Password</label>
-                                <input type="password" class="form-control" name="confirmNewPassword" id="confirmNewPassword" th:placeholder="#{account.confirmNewPassword}">
-                            </div>
-                            <div class="mb-3">
-                                <button type="submit" class="btn btn-primary" th:text="#{account.changePassword}">Change Password</button>
-                            </div>
-                        </form>
-
-						<hr>
-
-						<div class="card">
-					        <div class="card-header" th:text="#{account.yourApiKey}">
-
-					        </div>
-					        <div class="card-body">
-					            <div class="input-group mb-3">
-					                <input type="password" class="form-control" id="apiKey" th:placeholder="#{account.yourApiKey}" readonly>
-					                <div class="input-group-append">
-					                	<button class="btn btn-outline-secondary" id="copyBtn" type="button" onclick="copyToClipboard()">
-					                    	<img class="blackwhite-icon" src="images/clipboard.svg" alt="Copy" style="height:20px;">
-					                	</button>
-					                    <button class="btn btn-outline-secondary" id="showBtn" type="button" onclick="showApiKey()">
-										    <img class="blackwhite-icon" id="eyeIcon" src="images/eye.svg" alt="Toggle API Key Visibility" style="height:20px;">
-										</button>
-										<button class="btn btn-outline-secondary" id="refreshBtn" type="button" onclick="refreshApiKey()">
-										    <img class="blackwhite-icon" id="eyeIcon" src="images/arrow-clockwise.svg" alt="Refresh API-Key" style="height:20px;">
-										</button>
-
-
-					                </div>
-					            </div>
-					        </div>
-					    </div>
-
-					    <script>
-					    function copyToClipboard() {
-					        const apiKeyElement = document.getElementById("apiKey");
-					        apiKeyElement.select();
-					        document.execCommand("copy");
-					    }
-
-
-					    function showApiKey() {
-					        const apiKeyElement = document.getElementById("apiKey");
-					        const copyBtn = document.getElementById("copyBtn");
-					        const eyeIcon = document.getElementById("eyeIcon");
-					        if (apiKeyElement.type === "password") {
-					        	apiKeyElement.type = "text";
-					        	eyeIcon.src = "images/eye-slash.svg";
-					        	copyBtn.disabled = false;  // Enable copy button when API key is visible
-					        } else {
-					            apiKeyElement.type = "password";
-					            eyeIcon.src = "images/eye.svg";
-					            copyBtn.disabled = true;  // Disable copy button when API key is hidden
-					        }
-					    }
-
-					    document.addEventListener("DOMContentLoaded", async function() {
-					        try {
-					            let response = await fetch('/api/v1/user/get-api-key', { method: 'POST' });
-					            if (response.status === 200) {
-					                let apiKey = await response.text();
-					                manageUIState(apiKey);
-					            } else {
-					                manageUIState(null);
-					            }
-					        } catch (error) {
-					            console.error('There was an error:', error);
-					        }
-					    });
-
-					    async function refreshApiKey() {
-					        try {
-					            let response = await fetch('/api/v1/user/update-api-key', { method: 'POST' });
-					            if (response.status === 200) {
-					                let apiKey = await response.text();
-					                manageUIState(apiKey);
-					                document.getElementById("apiKey").type = 'text';
-					                document.getElementById("copyBtn").disabled = false;
-					            } else {
-					                alert('Error refreshing API key.');
-					            }
-					        } catch (error) {
-					            console.error('There was an error:', error);
-					        }
-					    }
-
-					    function manageUIState(apiKey) {
-					        const apiKeyElement = document.getElementById("apiKey");
-					        const showBtn = document.getElementById("showBtn");
-					        const copyBtn = document.getElementById("copyBtn");
-
-					        if (apiKey && apiKey.trim().length > 0) {
-					            apiKeyElement.value = apiKey;
-					            showBtn.disabled = false;
-					            copyBtn.disabled = true;
-					        } else {
-					            apiKeyElement.value = "";
-					            showBtn.disabled = true;
-					            copyBtn.disabled = true;
-					        }
-					    }
-
-
-					    document.addEventListener("DOMContentLoaded", function() {
-					        const form = document.querySelector('form[action="api/v1/user/change-password"]');
-
-					        form.addEventListener('submit', function(event) {
-					            const newPassword = document.getElementById('newPassword').value;
-					            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-
-					            if (newPassword !== confirmNewPassword) {
-					                alert('New Password and Confirm New Password must match.');
-					                event.preventDefault(); // Prevent form submission
-					            }
-					        });
-					    });
-					    </script>
-
-
-                        <hr> <!-- Separator Line -->
-
-                        <h4 th:text="#{account.syncTitle}">Sync browser settings with Account</h4>
-                        <div class="container mt-4">
-    <h3 th:text="#{account.settingsCompare}">Settings Comparison:</h3>
-    <table id="settingsTable" class="table table-bordered table-sm table-striped">
-        <thead>
-            <tr>
-                <th th:text="#{account.property}">Property</th>
-                <th  th:text="#{account.accountSettings}">Account Setting</th>
-                <th  th:text="#{account.webBrowserSettings}">Web Browser Setting</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- This will be dynamically populated by JavaScript -->
-        </tbody>
-    </table>
-
-    <div class="buttons-container mt-3 text-center">
-        <button id="syncToBrowser" class="btn btn-primary btn-sm" th:text="#{account.syncToBrowser}">Sync Account -> Browser</button>
-        <button id="syncToAccount" class="btn btn-secondary btn-sm" th:text="#{account.syncToAccount}">Sync Account <- Browser</button>
-    </div>
-</div>
-
-
-<style>
-    .container {
-        width: 100%;
-        max-width: 800px;
-        margin: 0 auto;
-    }
-    .buttons-container {
-        margin-top: 20px;
-        text-align: center;
-    }
-</style>
-
-
-
-
-
-							<script th:inline="javascript">
-							document.addEventListener("DOMContentLoaded", function() {
-							    const settingsTableBody = document.querySelector("#settingsTable tbody");
-
-							    /*<![CDATA[*/
-							    var accountSettingsString = /*[[${settings}]]*/ {};
-							    /*]]>*/
-							    var accountSettings = JSON.parse(accountSettingsString);
-
-							    let allKeys = new Set([...Object.keys(accountSettings), ...Object.keys(localStorage)]);
-
-							    allKeys.forEach(key => {
-							        if(key === 'debug' || key === '0' || key === '1') return;  // Ignoring specific keys
-
-							        const accountValue = accountSettings[key] || '-';
-							        const browserValue = localStorage.getItem(key) || '-';
-
-							        const row = settingsTableBody.insertRow();
-							        const propertyCell = row.insertCell(0);
-							        const accountCell = row.insertCell(1);
-							        const browserCell = row.insertCell(2);
-
-							        propertyCell.textContent = key;
-							        accountCell.textContent = accountValue;
-							        browserCell.textContent = browserValue;
-							    });
-
-							    document.getElementById('syncToBrowser').addEventListener('click', function() {
-							        // First, clear the local storage
-							        localStorage.clear();
-
-							        // Then, set the account settings to local storage
-							        for (let key in accountSettings) {
-							            if(key !== 'debug' && key !== '0' && key !== '1') { // Only sync non-ignored keys
-							                localStorage.setItem(key, accountSettings[key]);
-							            }
-							        }
-							        location.reload();  // Refresh the page after sync
-							    });
-
-
-							    document.getElementById('syncToAccount').addEventListener('click', function() {
-							        let form = document.createElement("form");
-							        form.method = "POST";
-							        form.action = "api/v1/user/updateUserSettings";  // Your endpoint URL
-
-							        for (let i = 0; i < localStorage.length; i++) {
-							            const key = localStorage.key(i);
-							            if(key !== 'debug' && key !== '0' && key !== '1') { // Only send non-ignored keys
-							                let hiddenField = document.createElement("input");
-							                hiddenField.type = "hidden";
-							                hiddenField.name = key;
-							                hiddenField.value = localStorage.getItem(key);
-							                form.appendChild(hiddenField);
-							            }
-							        }
-
-							        document.body.appendChild(form);
-							        form.submit();
-							    });
-
-							});
-
-
-
-
-
-							</script>
-
-
-
-
-
-
-                        <div class="mb-3 mt-4">
-                            <a href="logout">
-                                <button type="button" class="btn btn-danger" th:text="#{account.signOut}">Sign Out</button>
-                            </a>
-                            <a th:if="${role == 'ROLE_ADMIN'}" href="addUsers" target="_blank">
-						        <button type="button" class="btn btn-info"  th:text="#{account.adminSettings}">Admin Settings</button>
-						    </a>
-
-                        </div>
-
-                    </div>
+              <!-- User Settings Title -->
+              <h2 class="text-center" th:text="#{account.accountSettings}">User Settings</h2>
+              <hr>
+              <th:block th:if="${param.messageType != null and param.messageType.size() > 0}">
+              <div th:if="${param.messageType[0] == 'notAuthenticated'}" class="alert alert-danger">
+                <span th:text="#{notAuthenticatedMessage}">Default message if not found</span>
+              </div>
+              <div th:if="${param.messageType[0] == 'userNotFound'}" class="alert alert-danger">
+                <span th:text="#{userNotFoundMessage}">Default message if not found</span>
+              </div>
+              <div th:if="${param.messageType[0] == 'incorrectPassword'}" class="alert alert-danger">
+                <span th:text="#{incorrectPasswordMessage}">Default message if not found</span>
+              </div>
+              <div th:if="${param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
+                <span th:text="#{usernameExistsMessage}">Default message if not found</span>
+              </div>
+              <div th:if="${param.messageType[0] == 'invalidUsername'}" class="alert alert-danger">
+                <span th:text="#{invalidUsernameMessage}">Default message if not found</span>
+              </div>
+              </th:block>
+              <!-- At the top of the user settings -->
+              <h3 class="text-center"><span th:text="#{welcome} + ' ' + ${username}">User</span>!</h3>
+              <th:block th:if="${error}">
+              <div class="alert alert-danger" role="alert">
+                <span th:text="${error}">Error Message</span>
+              </div>
+              </th:block>
+              <!-- Change Username Form -->
+              <form th:if="${!oAuth2Login}" action="api/v1/user/change-username" method="post">
+                <div class="mb-3">
+                  <label for="newUsername" th:text="#{account.changeUsername}">Change Username</label>
+                  <input type="text" class="form-control" name="newUsername" id="newUsername" th:placeholder="#{account.newUsername}">
                 </div>
-            </div>
+                <div class="mb-3">
+                  <label for="currentPassword" th:text="#{password}">Password</label>
+                  <input type="password" class="form-control" name="currentPassword" id="currentPassword" th:placeholder="#{password}">
+                </div>
+                <div class="mb-3">
+                  <button type="submit" class="btn btn-primary" th:text="#{account.changeUsername}">Change Username</button>
+                </div>
+              </form>
 
+              <hr> <!-- Separator Line -->
+
+              <!-- Change Password Form -->
+              <h4 th:if="${!oAuth2Login}" th:text="#{account.changePassword}">Change Password?</h4>
+              <form th:if="${!oAuth2Login}" action="api/v1/user/change-password" method="post">
+                <div class="mb-3">
+                  <label for="currentPassword" th:text="#{account.oldPassword}">Old Password</label>
+                  <input type="password" class="form-control" name="currentPassword" id="currentPasswordPassword" th:placeholder="#{account.oldPassword}">
+                </div>
+                <div class="mb-3">
+                  <label for="newPassword" th:text="#{account.newPassword}">New Password</label>
+                  <input type="password" class="form-control" name="newPassword" id="newPassword" th:placeholder="#{account.newPassword}">
+                </div>
+                <div class="mb-3">
+                  <label for="confirmNewPassword" th:text="#{account.confirmNewPassword}">Confirm New Password</label>
+                  <input type="password" class="form-control" name="confirmNewPassword" id="confirmNewPassword" th:placeholder="#{account.confirmNewPassword}">
+                </div>
+                <div class="mb-3">
+                  <button type="submit" class="btn btn-primary" th:text="#{account.changePassword}">Change Password</button>
+                </div>
+              </form>
+
+              <hr>
+
+              <div class="card">
+                <div class="card-header" th:text="#{account.yourApiKey}"></div>
+                <div class="card-body">
+                  <div class="input-group mb-3">
+                    <input type="password" class="form-control" id="apiKey" th:placeholder="#{account.yourApiKey}" readonly>
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" id="copyBtn" type="button" onclick="copyToClipboard()">
+                        <img class="blackwhite-icon" src="images/clipboard.svg" alt="Copy" style="height:20px;">
+                      </button>
+                      <button class="btn btn-outline-secondary" id="showBtn" type="button" onclick="showApiKey()">
+                        <img class="blackwhite-icon" id="eyeIcon" src="images/eye.svg" alt="Toggle API Key Visibility" style="height:20px;">
+                      </button>
+                      <button class="btn btn-outline-secondary" id="refreshBtn" type="button" onclick="refreshApiKey()">
+                        <img class="blackwhite-icon" id="arrowIcon" src="images/arrow-clockwise.svg" alt="Refresh API-Key" style="height:20px;">
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <script>
+                function copyToClipboard() {
+                  const apiKeyElement = document.getElementById("apiKey");
+                  apiKeyElement.select();
+                  document.execCommand("copy");
+                }
+
+                function showApiKey() {
+                  const apiKeyElement = document.getElementById("apiKey");
+                  const copyBtn = document.getElementById("copyBtn");
+                  const eyeIcon = document.getElementById("eyeIcon");
+                  if (apiKeyElement.type === "password") {
+                    apiKeyElement.type = "text";
+                    eyeIcon.src = "images/eye-slash.svg";
+                    copyBtn.disabled = false;  // Enable copy button when API key is visible
+                  } else {
+                    apiKeyElement.type = "password";
+                    eyeIcon.src = "images/eye.svg";
+                    copyBtn.disabled = true;  // Disable copy button when API key is hidden
+                  }
+                }
+
+                document.addEventListener("DOMContentLoaded", async function() {
+                  try {
+                    let response = await fetch('/api/v1/user/get-api-key', { method: 'POST' });
+                    if (response.status === 200) {
+                      let apiKey = await response.text();
+                      manageUIState(apiKey);
+                    } else {
+                      manageUIState(null);
+                    }
+                  } catch (error) {
+                    console.error('There was an error:', error);
+                  }
+                });
+
+                async function refreshApiKey() {
+                  try {
+                    let response = await fetch('/api/v1/user/update-api-key', { method: 'POST' });
+                    if (response.status === 200) {
+                      let apiKey = await response.text();
+                      manageUIState(apiKey);
+                      document.getElementById("apiKey").type = 'text';
+                      document.getElementById("copyBtn").disabled = false;
+                    } else {
+                      alert('Error refreshing API key.');
+                    }
+                  } catch (error) {
+                    console.error('There was an error:', error);
+                  }
+                }
+
+                function manageUIState(apiKey) {
+                  const apiKeyElement = document.getElementById("apiKey");
+                  const showBtn = document.getElementById("showBtn");
+                  const copyBtn = document.getElementById("copyBtn");
+
+                  if (apiKey && apiKey.trim().length > 0) {
+                    apiKeyElement.value = apiKey;
+                    showBtn.disabled = false;
+                    copyBtn.disabled = true;
+                  } else {
+                    apiKeyElement.value = "";
+                    showBtn.disabled = true;
+                    copyBtn.disabled = true;
+                  }
+                }
+
+                document.addEventListener("DOMContentLoaded", function() {
+                  const form = document.querySelector('form[action="api/v1/user/change-password"]');
+
+                  form.addEventListener('submit', function(event) {
+                    const newPassword = document.getElementById('newPassword').value;
+                    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+                    if (newPassword !== confirmNewPassword) {
+                      alert('New Password and Confirm New Password must match.');
+                      event.preventDefault(); // Prevent form submission
+                    }
+                  });
+                });
+              </script>
+
+              <hr> <!-- Separator Line -->
+
+              <h4 th:text="#{account.syncTitle}">Sync browser settings with Account</h4>
+              <div class="container mt-4">
+                <h3 th:text="#{account.settingsCompare}">Settings Comparison:</h3>
+                <table id="settingsTable" class="table table-bordered table-sm table-striped">
+                  <thead>
+                    <tr>
+                      <th th:text="#{account.property}">Property</th>
+                      <th  th:text="#{account.accountSettings}">Account Setting</th>
+                      <th  th:text="#{account.webBrowserSettings}">Web Browser Setting</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- This will be dynamically populated by JavaScript -->
+                  </tbody>
+                </table>
+
+                <div class="buttons-container mt-3 text-center">
+                  <button id="syncToBrowser" class="btn btn-primary btn-sm" th:text="#{account.syncToBrowser}">Sync Account -> Browser</button>
+                  <button id="syncToAccount" class="btn btn-secondary btn-sm" th:text="#{account.syncToAccount}">Sync Account <- Browser</button>
+                </div>
+              </div>
+
+              <script th:inline="javascript">
+                document.addEventListener("DOMContentLoaded", function() {
+                  const settingsTableBody = document.querySelector("#settingsTable tbody");
+
+                  /*<![CDATA[*/
+                  var accountSettingsString = /*[[${settings}]]*/ {};
+                  /*]]>*/
+                  var accountSettings = JSON.parse(accountSettingsString);
+
+                  let allKeys = new Set([...Object.keys(accountSettings), ...Object.keys(localStorage)]);
+
+                  allKeys.forEach(key => {
+                    if(key === 'debug' || key === '0' || key === '1') return;  // Ignoring specific keys
+
+                    const accountValue = accountSettings[key] || '-';
+                    const browserValue = localStorage.getItem(key) || '-';
+
+                    const row = settingsTableBody.insertRow();
+                    const propertyCell = row.insertCell(0);
+                    const accountCell = row.insertCell(1);
+                    const browserCell = row.insertCell(2);
+
+                    propertyCell.textContent = key;
+                    accountCell.textContent = accountValue;
+                    browserCell.textContent = browserValue;
+                  });
+
+                  document.getElementById('syncToBrowser').addEventListener('click', function() {
+                    // First, clear the local storage
+                    localStorage.clear();
+
+                    // Then, set the account settings to local storage
+                    for (let key in accountSettings) {
+                      if(key !== 'debug' && key !== '0' && key !== '1') { // Only sync non-ignored keys
+                        localStorage.setItem(key, accountSettings[key]);
+                      }
+                    }
+                    location.reload();  // Refresh the page after sync
+                  });
+
+                  document.getElementById('syncToAccount').addEventListener('click', function() {
+                    let form = document.createElement("form");
+                    form.method = "POST";
+                    form.action = "api/v1/user/updateUserSettings";  // Your endpoint URL
+
+                    for (let i = 0; i < localStorage.length; i++) {
+                      const key = localStorage.key(i);
+                      if(key !== 'debug' && key !== '0' && key !== '1') { // Only send non-ignored keys
+                        let hiddenField = document.createElement("input");
+                        hiddenField.type = "hidden";
+                        hiddenField.name = key;
+                        hiddenField.value = localStorage.getItem(key);
+                        form.appendChild(hiddenField);
+                      }
+                    }
+
+                    document.body.appendChild(form);
+                    form.submit();
+                  });
+
+                });
+              </script>
+              <div class="mb-3 mt-4 text-center">
+                <a href="logout" role="button" class="btn btn-danger" th:text="#{account.signOut}">Sign Out</a>
+                <a th:if="${role == 'ROLE_ADMIN'}" class="btn btn-info" href="addUsers" role="button" th:text="#{account.adminSettings}" target="_blank">Admin Settings</a>
+              </div>
+            </div>
+          </div>
         </div>
-        <div th:insert="~{fragments/footer.html :: footer}"></div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-</body>
+  </body>
 </html>
