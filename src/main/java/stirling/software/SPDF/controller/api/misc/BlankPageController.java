@@ -59,7 +59,7 @@ public class BlankPageController {
             List<Integer> pagesToKeepIndex = new ArrayList<>();
             int pageIndex = 0;
             PDFRenderer pdfRenderer = new PDFRenderer(document);
-
+            pdfRenderer.setSubsamplingAllowed(true);
             for (PDPage page : pages) {
                 logger.info("checking page " + pageIndex);
                 textStripper.setStartPage(pageIndex + 1);

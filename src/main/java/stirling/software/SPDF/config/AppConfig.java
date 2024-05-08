@@ -6,17 +6,34 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
+@Lazy
 public class AppConfig {
 
     @Autowired ApplicationProperties applicationProperties;
+
+    @Bean
+    @ConditionalOnProperty(
+            name = "system.customHTMLFiles",
+            havingValue = "true",
+            matchIfMissing = false)
+    public SpringTemplateEngine templateEngine(ResourceLoader resourceLoader) {
+        SpringTemplateEngine templateEngine = new SpringTemplateEngine();
+        templateEngine.addTemplateResolver(new FileFallbackTemplateResolver(resourceLoader));
+        return templateEngine;
+    }
 
     @Bean(name = "loginEnabled")
     public boolean loginEnabled() {
@@ -79,9 +96,16 @@ public class AppConfig {
 
     @Bean(name = "bookAndHtmlFormatsInstalled")
     public boolean bookAndHtmlFormatsInstalled() {
-        return applicationProperties
-                .getSystem()
-                .getCustomApplications()
-                .isInstallBookAndHtmlFormats();
+        String installOps = System.getProperty("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
+        if (installOps == null) {
+            installOps = System.getenv("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
+        }
+        return "true".equalsIgnoreCase(installOps);
+    }
+
+    @ConditionalOnMissingClass("stirling.software.SPDF.config.security.SecurityConfiguration")
+    @Bean(name = "activSecurity")
+    public boolean missingActivSecurity() {
+        return false;
     }
 }

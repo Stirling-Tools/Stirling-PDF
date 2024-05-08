@@ -15,4 +15,7 @@ public class SplitPdfBySectionsRequest extends PDFFile {
 
     @Schema(description = "Number of vertical divisions for each PDF page", example = "2")
     private int verticalDivisions;
+
+    @Schema(description = "Merge the split documents into a single PDF", example = "true")
+    private boolean merge;
 }

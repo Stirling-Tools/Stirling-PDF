@@ -18,7 +18,8 @@ check_health() {
 		fi
 	done
 	echo -e "\n$service_name is healthy!"
-
+	echo "Printing logs for $service_name:"
+    docker logs "$service_name"
     return 0
 }
 
@@ -77,13 +78,11 @@ main() {
 
 
     # Building Docker images
-    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest -f ./Dockerfile .
-    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-lite -f ./Dockerfile-lite .
-    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
+    docker build --no-cache --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest -f ./Dockerfile .
+    docker build --no-cache --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
 
     # Test each configuration
     run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
-    run_tests "Stirling-PDF-Lite" "./exampleYmlFiles/docker-compose-latest-lite.yml"
     run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
 
     export DOCKER_ENABLE_SECURITY=true
@@ -95,13 +94,11 @@ main() {
 
 
     # Building Docker images with security enabled
-    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest -f ./Dockerfile .
-    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-lite -f ./Dockerfile-lite .
-    docker build --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
+    docker build --no-cache --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest -f ./Dockerfile .
+    docker build --no-cache --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
 
     # Test each configuration with security
     run_tests "Stirling-PDF-Ultra-Lite-Security" "./exampleYmlFiles/docker-compose-latest-ultra-lite-security.yml"
-    run_tests "Stirling-PDF-Lite-Security" "./exampleYmlFiles/docker-compose-latest-lite-security.yml"
     run_tests "Stirling-PDF-Security" "./exampleYmlFiles/docker-compose-latest-security.yml"
 
     # Report results

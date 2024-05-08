@@ -1,20 +1,18 @@
 package stirling.software.SPDF.config;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -26,12 +24,12 @@ public class ConfigInitializer
     public void initialize(ConfigurableApplicationContext applicationContext) {
         try {
             ensureConfigExists();
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Failed to initialize application configuration", e);
         }
     }
 
-    public void ensureConfigExists() throws IOException {
+    public void ensureConfigExists() throws IOException, URISyntaxException {
         // Define the path to the external config directory
         Path destPath = Paths.get("configs", "settings.yml");
 
@@ -51,93 +49,154 @@ public class ConfigInitializer
                 }
             }
         } else {
-            // If user file exists, we need to merge it with the template from the classpath
-            List<String> templateLines;
-            try (InputStream in =
-                    getClass().getClassLoader().getResourceAsStream("settings.yml.template")) {
-                templateLines =
-                        new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
-                                .lines()
-                                .collect(Collectors.toList());
-            }
+            Path templatePath =
+                    Paths.get(
+                            getClass()
+                                    .getClassLoader()
+                                    .getResource("settings.yml.template")
+                                    .toURI());
+            Path userPath = Paths.get("configs", "settings.yml");
 
-            mergeYamlFiles(templateLines, destPath, destPath);
+            List<String> templateLines = Files.readAllLines(templatePath);
+            List<String> userLines =
+                    Files.exists(userPath) ? Files.readAllLines(userPath) : new ArrayList<>();
+
+            Map<String, String> templateEntries = extractEntries(templateLines);
+            Map<String, String> userEntries = extractEntries(userLines);
+
+            List<String> mergedLines = mergeConfigs(templateLines, templateEntries, userEntries);
+            mergedLines = cleanInvalidYamlEntries(mergedLines);
+            Files.write(userPath, mergedLines);
+        }
+
+        Path customSettingsPath = Paths.get("configs", "custom_settings.yml");
+        if (!Files.exists(customSettingsPath)) {
+            Files.createFile(customSettingsPath);
         }
     }
 
-    public void mergeYamlFiles(List<String> templateLines, Path userFilePath, Path outputPath)
-            throws IOException {
-        List<String> userLines = Files.readAllLines(userFilePath);
+    private static Map<String, String> extractEntries(List<String> lines) {
+        Map<String, String> entries = new HashMap<>();
+        StringBuilder currentEntry = new StringBuilder();
+        String currentKey = null;
+        int blockIndent = -1;
+
+        for (String line : lines) {
+            if (line.trim().isEmpty()) {
+                if (currentKey != null) {
+                    currentEntry.append(line).append("\n");
+                }
+                continue;
+            }
+
+            int indentLevel = getIndentationLevel(line);
+            if (line.trim().startsWith("#")) {
+                if (indentLevel <= blockIndent || blockIndent == -1) {
+                    if (currentKey != null) {
+                        entries.put(currentKey, currentEntry.toString().trim());
+                        currentEntry = new StringBuilder();
+                    }
+                    currentKey = line.trim().replaceAll("#", "").split(":")[0].trim();
+                    blockIndent = indentLevel;
+                }
+                currentEntry.append(line).append("\n");
+            } else if (indentLevel == 0 || indentLevel <= blockIndent) {
+                if (currentKey != null) {
+                    entries.put(currentKey, currentEntry.toString().trim());
+                    currentEntry = new StringBuilder();
+                }
+                currentKey = line.split(":")[0].trim();
+                blockIndent = indentLevel;
+                currentEntry.append(line).append("\n");
+            } else {
+                currentEntry.append(line).append("\n");
+            }
+        }
+
+        if (currentKey != null) {
+            entries.put(currentKey, currentEntry.toString().trim());
+        }
+
+        return entries;
+    }
+
+    private static List<String> mergeConfigs(
+            List<String> templateLines,
+            Map<String, String> templateEntries,
+            Map<String, String> userEntries) {
         List<String> mergedLines = new ArrayList<>();
-        boolean insideAutoGenerated = false;
-        boolean beforeFirstKey = true;
+        Set<String> handledKeys = new HashSet<>();
 
-        Function<String, Boolean> isCommented = line -> line.trim().startsWith("#");
-        Function<String, String> extractKey =
-                line -> {
-                    String[] parts = line.split(":");
-                    return parts.length > 0 ? parts[0].trim().replace("#", "").trim() : "";
-                };
-
-        Set<String> userKeys = userLines.stream().map(extractKey).collect(Collectors.toSet());
+        String currentBlockKey = null;
+        int blockIndent = -1;
 
         for (String line : templateLines) {
-            String key = extractKey.apply(line);
-
-            if ("AutomaticallyGenerated:".equalsIgnoreCase(line.trim())) {
-                insideAutoGenerated = true;
-                mergedLines.add(line);
-                continue;
-            } else if (insideAutoGenerated && line.trim().isEmpty()) {
-                insideAutoGenerated = false;
+            if (line.trim().isEmpty()) {
                 mergedLines.add(line);
                 continue;
             }
 
-            if (beforeFirstKey && (isCommented.apply(line) || line.trim().isEmpty())) {
-                // Handle top comments and empty lines before the first key.
+            int indentLevel = getIndentationLevel(line);
+            if (indentLevel == 0 || (indentLevel <= blockIndent && !line.trim().startsWith("#"))) {
+                currentBlockKey = line.split(":")[0].trim();
+                blockIndent = indentLevel;
+            }
+
+            if (userEntries.containsKey(currentBlockKey)
+                    && !handledKeys.contains(currentBlockKey)) {
+                mergedLines.add(userEntries.get(currentBlockKey));
+                handledKeys.add(currentBlockKey);
+            } else if (!handledKeys.contains(currentBlockKey)) {
                 mergedLines.add(line);
-                continue;
-            }
-
-            if (!key.isEmpty()) beforeFirstKey = false;
-
-            if (userKeys.contains(key)) {
-                // If user has any version (commented or uncommented) of this key, skip the
-                // template line
-                Optional<String> userValue =
-                        userLines.stream()
-                                .filter(
-                                        l ->
-                                                extractKey.apply(l).equalsIgnoreCase(key)
-                                                        && !isCommented.apply(l))
-                                .findFirst();
-                if (userValue.isPresent()) mergedLines.add(userValue.get());
-                continue;
-            }
-
-            if (isCommented.apply(line) || line.trim().isEmpty() || !userKeys.contains(key)) {
-                mergedLines.add(
-                        line); // If line is commented, empty or key not present in user's file,
-                // retain the
-                // template line
-                continue;
             }
         }
 
-        // Add any additional uncommented user lines that are not present in the
-        // template
-        for (String userLine : userLines) {
-            String userKey = extractKey.apply(userLine);
-            boolean isPresentInTemplate =
-                    templateLines.stream()
-                            .map(extractKey)
-                            .anyMatch(templateKey -> templateKey.equalsIgnoreCase(userKey));
-            if (!isPresentInTemplate && !isCommented.apply(userLine)) {
-                mergedLines.add(userLine);
+        return mergedLines;
+    }
+
+    private static List<String> cleanInvalidYamlEntries(List<String> lines) {
+        List<String> cleanedLines = new ArrayList<>();
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            String trimmedLine = line.trim();
+
+            if (trimmedLine.startsWith("#")
+                    || !trimmedLine.endsWith(":")
+                    || trimmedLine.contains(" ")) {
+                cleanedLines.add(line);
+                continue;
             }
+
+            if (isKeyWithoutChildrenOrValue(i, lines)) {
+                continue;
+            }
+
+            cleanedLines.add(line);
+        }
+        return cleanedLines;
+    }
+
+    private static boolean isKeyWithoutChildrenOrValue(int currentIndex, List<String> lines) {
+        if (currentIndex + 1 < lines.size()) {
+            String currentLine = lines.get(currentIndex);
+            String nextLine = lines.get(currentIndex + 1);
+            int currentIndentation = getIndentationLevel(currentLine);
+            int nextIndentation = getIndentationLevel(nextLine);
+
+            // If the next line is less or equally indented, it's not a child or value
+            return nextIndentation <= currentIndentation;
         }
 
-        Files.write(outputPath, mergedLines, StandardCharsets.UTF_8);
+        // If it's the last line, then it definitely has no children or value
+        return true;
+    }
+
+    private static int getIndentationLevel(String line) {
+        int count = 0;
+        for (char ch : line.toCharArray()) {
+            if (ch == ' ') count++;
+            else break;
+        }
+        return count;
     }
 }

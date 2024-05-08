@@ -45,7 +45,7 @@ public class ConvertPDFToBookController {
 
         if (!bookAndHtmlFormatsInstalled) {
             throw new IllegalArgumentException(
-                    "bookAndHtmlFormatsInstalled flag is False, this functionality is not avaiable");
+                    "bookAndHtmlFormatsInstalled flag is False, this functionality is not available");
         }
 
         if (fileInput == null) {

@@ -1,34 +1,35 @@
-<p align="center"><img src="https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png" width="80" ><br><h1 align="center">Stirling-PDF</h1>
-</p>
+<p align="center"><img src="https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png" width="80" ></p>
+<h1 align="center">Stirling-PDF</h1>
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/frooodle/s-pdf)](https://hub.docker.com/r/frooodle/s-pdf)
 [![Discord](https://img.shields.io/discord/1068636748814483718?label=Discord)](https://discord.gg/Cn8pWhQRxZ)
 [![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest)](https://github.com/Stirling-Tools/Stirling-PDF/)
 [![GitHub Repo stars](https://img.shields.io/github/stars/stirling-tools/stirling-pdf?style=social)](https://github.com/Stirling-Tools/stirling-pdf)
 [![Paypal Donate](https://img.shields.io/badge/Paypal%20Donate-yellow?style=flat&logo=paypal)](https://www.paypal.com/paypalme/froodleplex)
-[![Github Sponser](https://img.shields.io/badge/Github%20Sponsor-yellow?style=flat&logo=github)](https://github.com/sponsors/Frooodle)
+[![Github Sponsor](https://img.shields.io/badge/Github%20Sponsor-yellow?style=flat&logo=github)](https://github.com/sponsors/Frooodle)
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Stirling-Tools/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
 
-This is a powerful locally hosted web based PDF manipulation tool using docker that allows you to perform various operations on PDF files, such as splitting merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application started as a 100% ChatGPT-made application and has evolved to include a wide range of features to handle all your PDF needs.
+This is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
 
-Stirling PDF makes no outbound calls for any record keeping or tracking.
+Stirling PDF does not initiate any outbound calls for record-keeping or tracking purposes.
 
 All files and PDFs exist either exclusively on the client side, reside in server memory only during task execution, or temporarily reside in a file solely for the execution of the task. Any file downloaded by the user will have been deleted from the server by that point.
 
-![stirling-home](images/stirling-home.png)
+![stirling-home](images/stirling-home.jpg)
 
 ## Features
+
 - Dark mode support.
 - Custom download options (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/images/settings.png) for example)
 - Parallel file processing and downloads
 - API for integration with external scripts
 - Optional Login and Authentication support (see [here](https://github.com/Stirling-Tools/Stirling-PDF/tree/main#login-authentication) for documentation)
 
-
 ## **PDF Features**
 
 ### **Page Operations**
+
 - View and modify PDFs - View multi page PDFs with custom viewing sorting and searching. Plus on page edit features like annotate, draw and adding text and images. (Using PDF.js with Joxit and Liberation.Liberation fonts)
 - Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages.
 - Merge multiple PDFs together into a single resultant file.
@@ -45,6 +46,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Convert PDF to a single page.
 
 ### **Conversion Operations**
+
 - Convert PDFs to and from images.
 - Convert any common file to PDF (using LibreOffice).
 - Convert PDF to Word/Powerpoint/Others (using LibreOffice).
@@ -53,6 +55,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Markdown to PDF.
 
 ### **Security & Permissions**
+
 - Add and remove passwords.
 - Change/set PDF Permissions.
 - Add watermark(s).
@@ -61,6 +64,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Auto-redact text.
 
 ### **Other Operations**
+
 - Add/Generate/Write signatures.
 - Repair PDFs.
 - Detect and remove blank pages.
@@ -77,11 +81,11 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Flatten PDFs.
 - Get all information on a PDF to view or export as JSON.
 
-
 For a overview of the tasks and the technology each uses please view [Endpoint-groups.md](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
 Demo of the app is available [here](https://stirlingpdf.io). username: demo, password: demo
 
 ## Technologies used
+
 - Spring Boot + Thymeleaf
 - [PDFBox](https://github.com/apache/pdfbox/tree/trunk)
 - [LibreOffice](https://www.libreoffice.org/discover/libreoffice/) for advanced conversions
@@ -94,19 +98,21 @@ Demo of the app is available [here](https://stirlingpdf.io). username: demo, pas
 ## How to use
 
 ### Locally
+
 Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LocalRunGuide.md
 
 ### Docker / Podman
+
 https://hub.docker.com/r/frooodle/s-pdf
 
-Stirling PDF has 3 different versions, a Full version, Lite, and ultra-Lite. Depending on the types of features you use you may want a smaller image to save on space.
+Stirling PDF has 2 different versions, a Full version and ultra-Lite version. Depending on the types of features you use you may want a smaller image to save on space.
 To see what the different versions offer please look at our [version mapping](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Version-groups.md)
 For people that don't mind about space optimization just use the latest tag.
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest?label=Stirling-PDF%20Full)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-lite?label=Stirling-PDF%20Lite)
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
 
 Docker Run
+
 ```bash
 docker run -d \
   -p 8080:8080 \
@@ -114,6 +120,8 @@ docker run -d \
   -v /location/of/extraConfigs:/configs \
   -v /location/of/logs:/logs \
   -e DOCKER_ENABLE_SECURITY=false \
+  -e INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
+  -e LANGS=en_GB \
   --name stirling-pdf \
   frooodle/s-pdf:latest
 
@@ -122,7 +130,9 @@ docker run -d \
 
   -v /location/of/customFiles:/customFiles \
 ```
+
 Docker Compose
+
 ```yaml
 version: '3.3'
 services:
@@ -137,59 +147,68 @@ services:
 #      - /location/of/logs:/logs/
     environment:
       - DOCKER_ENABLE_SECURITY=false
+      - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
+      - LANGS=en_GB
 ```
 
 Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
 
 ## Enable OCR/Compression feature
+
 Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md
 
 ## Supported Languages
 
-Stirling PDF currently supports 26!
-- English (English) (en_GB)
-- English (US) (en_US)
-- Arabic (العربية) (ar_AR)
-- German (Deutsch) (de_DE)
-- French (Français) (fr_FR)
-- Spanish (Español) (es_ES)
-- Simplified Chinese (简体中文) (zh_CN)
-- Traditional Chinese (繁體中文) (zh_TW)
-- Catalan (Català) (ca_CA)
-- Italian (Italiano) (it_IT)
-- Swedish (Svenska) (sv_SE)
-- Polish (Polski) (pl_PL)
-- Romanian (Română) (ro_RO)
-- Korean (한국어) (ko_KR)
-- Portuguese Brazilian (Português) (pt_BR)
-- Russian (Русский) (ru_RU)
-- Basque (Euskara) (eu_ES)
-- Japanese (日本語) (ja_JP)
-- Dutch (Nederlands) (nl_NL)
-- Greek (el_GR)
-- Turkish (Türkçe) (tr_TR)
-- Indonesia (Bahasa Indonesia) (id_ID)
-- Hindi (हिंदी) (hi_IN)
-- Hungarian (Magyar) (hu_HU)
-- Bulgarian (Български) (bg_BG)
-- Sebian Latin alphabet (Srpski) (sr-Latn-RS)
+Stirling PDF currently supports 27!
+
+| Language                                    | Progress                               |
+| ------------------------------------------- | -------------------------------------- |
+| English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
+| English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
+| Arabic (العربية) (ar_AR)                    | ![42%](https://geps.dev/progress/42)   |
+| German (Deutsch) (de_DE)                    | ![99%](https://geps.dev/progress/99)   |
+| French (Français) (fr_FR)                   | ![91%](https://geps.dev/progress/91)   |
+| Spanish (Español) (es_ES)                   | ![99%](https://geps.dev/progress/99)   |
+| Simplified Chinese (简体中文) (zh_CN)       | ![98%](https://geps.dev/progress/98)   |
+| Traditional Chinese (繁體中文) (zh_TW)      | ![98%](https://geps.dev/progress/98)   |
+| Catalan (Català) (ca_CA)                    | ![51%](https://geps.dev/progress/51)   |
+| Italian (Italiano) (it_IT)                  | ![99%](https://geps.dev/progress/99)   |
+| Swedish (Svenska) (sv_SE)                   | ![42%](https://geps.dev/progress/42)   |
+| Polish (Polski) (pl_PL)                     | ![44%](https://geps.dev/progress/44)   |
+| Romanian (Română) (ro_RO)                   | ![41%](https://geps.dev/progress/41)   |
+| Korean (한국어) (ko_KR)                     | ![91%](https://geps.dev/progress/91)   |
+| Portuguese Brazilian (Português) (pt_BR)    | ![64%](https://geps.dev/progress/64)   |
+| Russian (Русский) (ru_RU)                   | ![90%](https://geps.dev/progress/90)   |
+| Basque (Euskara) (eu_ES)                    | ![66%](https://geps.dev/progress/66)   |
+| Japanese (日本語) (ja_JP)                   | ![91%](https://geps.dev/progress/91)   |
+| Dutch (Nederlands) (nl_NL)                  | ![88%](https://geps.dev/progress/88)   |
+| Greek (Ελληνικά) (el_GR)                    | ![89%](https://geps.dev/progress/89)   |
+| Turkish (Türkçe) (tr_TR)                    | ![99%](https://geps.dev/progress/99)   |
+| Indonesia (Bahasa Indonesia) (id_ID)        | ![82%](https://geps.dev/progress/82)   |
+| Hindi (हिंदी) (hi_IN)                          | ![82%](https://geps.dev/progress/82)   |
+| Hungarian (Magyar) (hu_HU)                  | ![81%](https://geps.dev/progress/81)   |
+| Bulgarian (Български) (bg_BG)               | ![75%](https://geps.dev/progress/75)   |
+| Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![84%](https://geps.dev/progress/84)   |
+| Ukrainian (Українська) (uk_UA)              | ![90%](https://geps.dev/progress/90)   |
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
 Please see our [Contributing Guide](CONTRIBUTING.md)!
 
 ## Customisation
+
 Stirling PDF allows easy customization of the app.
 Includes things like
-- Custom application name
-- Custom slogans, icons, images, and even custom HTML (via file overrides)
 
+- Custom application name
+- Custom slogans, icons, HTML, images CSS etc (via file overrides) 
 
 There are two options for this, either using the generated settings file ``settings.yml``
 This file is located in the ``/configs`` directory and follows standard YAML formatting
 
 Environment variables are also supported and would override the settings file
 For example in the settings.yml you have
+
 ```yaml
 system:
   defaultLocale: 'en-US'
@@ -198,6 +217,7 @@ system:
 To have this via an environment variable you would have ``SYSTEM_DEFAULTLOCALE``
 
 The Current list of settings is
+
 ```yaml
 security:
   enableLogin: false # set to 'true' to enable login
@@ -207,6 +227,9 @@ system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
+  showUpdate: true # see when a new update is available
+  showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
+  customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template html files
 
 #ui:
 #  appName: exampleAppName # Application's visible name
@@ -220,25 +243,35 @@ endpoints:
 metrics:
   enabled: true # 'true' to enable Info APIs endpoints (view http://localhost:8080/swagger-ui/index.html#/API to learn more), 'false' to disable
 ```
+
+There is an additional config file ``/configs/custom_settings.yml`` were users familiar with java and spring application.properties can input their own settings on-top of Stirling-PDFs existing ones
+
 ### Extra notes
+
 - Endpoints. Currently, the endpoints ENDPOINTS_TO_REMOVE and GROUPS_TO_REMOVE can include comma separate lists of endpoints and groups to disable as example ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages would disable both image-to-pdf and remove pages, GROUPS_TO_REMOVE=LibreOffice Would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
 - customStaticFilePath. Customise static files such as the app logo by placing files in the /customFiles/static/ directory. An example of customising app logo is placing a /customFiles/static/favicon.svg to override current SVG. This can be used to change any images/icons/css/fonts/js etc in Stirling-PDF
 
 ### Environment only parameters
+
 - ``SYSTEM_ROOTURIPATH`` ie set to ``/pdf-app`` to Set the application's root URI to ``localhost:8080/pdf-app``
 - ``SYSTEM_CONNECTIONTIMEOUTMINUTES`` to set custom connection timeout values
 - ``DOCKER_ENABLE_SECURITY`` to tell docker to download security jar (required as true for auth login)
+- ``INSTALL_BOOK_AND_ADVANCED_HTML_OPS`` to download calibre onto stirling-pdf enabling pdf to/from book and advanced html conversion
+- ``LANGS`` to define custom font libraries to install for use for document conversions
 
 ## API
+
 For those wanting to use Stirling-PDFs backend API to link with their own custom scripting to edit PDFs you can view all existing API documentation
 [here](https://app.swaggerhub.com/apis-docs/Stirling-Tools/Stirling-PDF/) or navigate to /swagger-ui/index.html of your stirling-pdf instance for your versions documentation (Or by following the API button in your settings of Stirling-PDF)
 
-
 ## Login authentication
+
 ![stirling-login](images/login-light.png)
+
 ### Prerequisites:
+
 - User must have the folder ./configs volumed within docker so that it is retained during updates.
-- Docker uses must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables.
+- Docker users must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables.
 - Then either enable login via the settings.yml file or via setting ``SECURITY_ENABLE_LOGIN`` to ``true``
 - Now the initial user will be generated with username ``admin`` and password ``stirling``. On login you will be forced to change the password to a new one. You can also use the environment variables ``SECURITY_INITIALLOGIN_USERNAME`` and  ``SECURITY_INITIALLOGIN_PASSWORD`` to set your own straight away (Recommended to remove them after user creation).
 
@@ -252,20 +285,22 @@ To add new users go to the bottom of Account settings and hit 'Admin Settings', 
 
 For API usage you must provide a header with 'X-API-Key' and the associated API key for that user.
 
-
 ## FAQ
 
 ### Q1: What are your planned features?
+
 - Progress bar/Tracking
 - Full custom logic pipelines to combine multiple operations together.
 - Folder support with auto scanning to perform operations on
 - Redact text (Via UI not just automated way)
 - Add Forms
 - Multi page layout (Stich PDF pages together) support x rows y columns and custom page sizing
-- Fill forms mannual and automatic
+- Fill forms manually or automatically
 
 ### Q2: Why is my application downloading .htm files?
+
 This is an issue caused commonly by your NGINX configuration. The default file upload size for NGINX is 1MB, you need to add the following in your Nginx sites-available file. ``client_max_body_size SIZE;`` Where "SIZE" is 50M for example for 50MB files.
 
 ### Q3: Why is my download timing out
+
 NGINX has timeout values by default so if you are running Stirling-PDF behind NGINX you may need to set a timeout value such as adding the config ``proxy_read_timeout 3600;``

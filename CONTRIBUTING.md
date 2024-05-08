@@ -27,6 +27,10 @@ Please make sure your Pull Request adheres to the following guidelines:
 
 If you would like to add or modify a translation, please see [How to add new languages to Stirling-PDF](HowToAddNewLanguage.md). Also, please create a Pull Request so others can use it!
 
+## Docs
+
+Documentation for Stirling-PDF is handled in a seperate repository. Please see [Docs repository](https://github.com/Stirling-Tools/Stirling-Tools.github.io) or use "edit this page"-button at the bottom of each page at [https://stirlingtools.com/docs/](https://stirlingtools.com/docs/).
+
 ## Fixing Bugs or Adding a New Feature
 
 First, make sure you've read the section [Pull Requests](#pull-requests).

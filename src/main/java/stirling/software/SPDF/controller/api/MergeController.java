@@ -38,7 +38,7 @@ public class MergeController {
 
     private static final Logger logger = LoggerFactory.getLogger(MergeController.class);
 
-    private PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
+    public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
         PDDocument mergedDoc = new PDDocument();
         for (PDDocument doc : documents) {
             for (PDPage page : doc.getPages()) {

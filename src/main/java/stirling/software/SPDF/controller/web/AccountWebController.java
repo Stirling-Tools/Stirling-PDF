@@ -2,12 +2,14 @@ package stirling.software.SPDF.controller.web;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
@@ -27,11 +30,18 @@ import stirling.software.SPDF.repository.UserRepository;
 @Tag(name = "Account Security", description = "Account Security APIs")
 public class AccountWebController {
 
+    @Autowired ApplicationProperties applicationProperties;
+
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
             return "redirect:/";
         }
+
+        model.addAttribute(
+                "oAuth2Enabled", applicationProperties.getSecurity().getOAUTH2().getEnabled());
+
+        model.addAttribute("currentPage", "login");
 
         if (request.getParameter("error") != null) {
 
@@ -53,6 +63,7 @@ public class AccountWebController {
     public String showAddUserForm(Model model, Authentication authentication) {
         List<User> allUsers = userRepository.findAll();
         Iterator<User> iterator = allUsers.iterator();
+        Map<String, String> roleDetails = Role.getAllRoleDetails();
 
         while (iterator.hasNext()) {
             User user = iterator.next();
@@ -60,6 +71,7 @@ public class AccountWebController {
                 for (Authority authority : user.getAuthorities()) {
                     if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
                         iterator.remove();
+                        roleDetails.remove(Role.INTERNAL_API_USER.getRoleId());
                         break; // Break out of the inner loop once the user is removed
                     }
                 }
@@ -68,6 +80,7 @@ public class AccountWebController {
 
         model.addAttribute("users", allUsers);
         model.addAttribute("currentUsername", authentication.getName());
+        model.addAttribute("roleDetails", roleDetails);
         return "addUsers";
     }
 
@@ -79,17 +92,32 @@ public class AccountWebController {
         }
         if (authentication != null && authentication.isAuthenticated()) {
             Object principal = authentication.getPrincipal();
+            String username = null;
 
             if (principal instanceof UserDetails) {
                 // Cast the principal object to UserDetails
                 UserDetails userDetails = (UserDetails) principal;
 
                 // Retrieve username and other attributes
-                String username = userDetails.getUsername();
+                username = userDetails.getUsername();
 
+                // Add oAuth2 Login attributes to the model
+                model.addAttribute("oAuth2Login", false);
+            }
+            if (principal instanceof OAuth2User) {
+                // Cast the principal object to OAuth2User
+                OAuth2User userDetails = (OAuth2User) principal;
+
+                // Retrieve username and other attributes
+                username = userDetails.getAttribute("email");
+
+                // Add oAuth2 Login attributes to the model
+                model.addAttribute("oAuth2Login", true);
+            }
+            if (username != null) {
                 // Fetch user details from the database
                 Optional<User> user =
-                        userRepository.findByUsername(
+                        userRepository.findByUsernameIgnoreCase(
                                 username); // Assuming findByUsername method exists
                 if (!user.isPresent()) {
                     // Handle error appropriately
@@ -112,6 +140,7 @@ public class AccountWebController {
                 model.addAttribute("role", user.get().getRolesAsString());
                 model.addAttribute("settings", settingsJson);
                 model.addAttribute("changeCredsFlag", user.get().isFirstLogin());
+                model.addAttribute("currentPage", "account");
             }
         } else {
             return "redirect:/";
@@ -138,7 +167,7 @@ public class AccountWebController {
 
                 // Fetch user details from the database
                 Optional<User> user =
-                        userRepository.findByUsername(
+                        userRepository.findByUsernameIgnoreCase(
                                 username); // Assuming findByUsername method exists
                 if (!user.isPresent()) {
                     // Handle error appropriately

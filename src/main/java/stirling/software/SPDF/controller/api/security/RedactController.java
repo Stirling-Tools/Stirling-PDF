@@ -83,6 +83,7 @@ public class RedactController {
         if (convertPDFToImage) {
             PDDocument imageDocument = new PDDocument();
             PDFRenderer pdfRenderer = new PDFRenderer(document);
+            pdfRenderer.setSubsamplingAllowed(true);
             for (int page = 0; page < document.getNumberOfPages(); ++page) {
                 BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
                 PDPage newPage = new PDPage(new PDRectangle(bim.getWidth(), bim.getHeight()));

@@ -1,4 +1,4 @@
- .list-group-item {
+.list-group-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -25,5 +25,4 @@
 .move-down span {
   font-weight: bold;
   font-size: 1.2em;
-
 }

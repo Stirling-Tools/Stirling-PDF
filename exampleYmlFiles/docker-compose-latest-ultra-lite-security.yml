@@ -15,7 +15,7 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - /stirling/latest/data:/usr/share/tesseract-ocr/5/tessdata:rw
+      - /stirling/latest/data:/usr/share/tessdata:rw
       - /stirling/latest/config:/configs:rw
       - /stirling/latest/logs:/logs:rw
     environment:

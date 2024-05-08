@@ -16,11 +16,11 @@ commonLabels: {}
 # team_name: dev
 
 envs: []
-# - name: PP_HOME_NAME
+# - name: UI_APP_NAME
 #   value: "Stirling PDF"
-# - name: APP_HOME_DESCRIPTION
+# - name: UI_HOME_DESCRIPTION
 #   value: "Your locally hosted one-stop-shop for all your PDF needs."
-# - name: APP_NAVBAR_NAME
+# - name: UI_APP_NAVBAR_NAME
 #   value: "Stirling PDF"
 # - name: ALLOW_GOOGLE_VISIBILITY
 #   value: "true"

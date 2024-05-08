@@ -1,0 +1,41 @@
+.a4container {
+  position: relative;
+  width: 50%;
+  aspect-ratio: 0.707;
+  border: 1px solid #ddd;
+  box-sizing: border-box;
+  background-color: white;
+}
+
+.pageNumber {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1em;
+  color: #333;
+  cursor: pointer;
+  background-color: #ccc;
+  width: 15%;
+  height: 15%;
+  transform: translate(-50%, -50%);
+}
+
+.pageNumber:hover {
+  background-color: #eee;
+}
+
+#myForm {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.selectedPosition {
+  background-color: #0a0;
+}
+
+.selectedPosition.selectedHovered {
+  background-color: #006600;
+}

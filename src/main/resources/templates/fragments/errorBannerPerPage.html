@@ -1,58 +1,49 @@
 <th:block th:fragment="errorBannerPerPage">
+          <div id="errorContainer" class="alert alert-danger alert-dismissible fade show" role="alert" style="display: none;">
+            <h4 class="alert-heading" th:text="#{error}"></h4>
+            <p></p>
+            <button type="button" class="btn btn-danger" onclick="toggletrace()" th:text="#{error.showStack}"></button>
+            <button type="button" class="btn btn-secondary" onclick="copytrace()" th:text="#{error.copyStack}"></button>
+            <button type="button" class="btn btn-info" onclick="showHelp()" th:text="#{help}"></button>
+            <button type="button" class="close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <!-- Stack trace section -->
+            <div id="trace" style="max-height: 0; overflow: hidden;">
+              <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; padding: 10px; margin-top: 5px;">
+                <pre id="traceContent"></pre>
+              </div>
+            </div>
+          </div>
 
-
-  <div id="errorContainer" class="alert alert-danger alert-dismissible fade show" role="alert" style="display: none;">
-  <h4 class="alert-heading">Error</h4>
-  <p></p>
-  <button type="button" class="btn btn-danger" onclick="toggletrace()">Show Stack Trace</button>
-  <button type="button" class="btn btn-secondary" onclick="copytrace()">Copy Stack Trace</button>
-  <button type="button" class="btn btn-info" onclick="showHelp()">Help</button>
-  <button type="button" class="close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
-    <span aria-hidden="true">&times;</span>
-  </button>
-  <!-- Stack trace section -->
-  <div id="trace" style="max-height: 0; overflow: hidden;">
-    <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; padding: 10px; margin-top: 5px;">
-      <pre id="traceContent"></pre>
-    </div>
-  </div>
-
-
-
-</div>
-
-<!-- Help Modal -->
-<link rel="stylesheet" href="css/errorBanner.css">
-
-	<div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
-	  <div class="modal-dialog modal-dialog-centered" role="document" id="helpModalDialog">
-	    <div class="modal-content">
-	      <div class="modal-header">
-	        <h5 class="modal-title" id="helpModalLabel">Help</h5>
-	        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-	          <span aria-hidden="true">&times;</span>
-	        </button>
-	      </div>
-	      <div class="modal-body">
-
-	        <div class="container">
-	          <div id="support-section">
-	            <h1 class="display-2">Oops!</h1>
-	            <p class="lead">Sorry for the issue!.</p>
-	            <br>
-	            <h2>Need help / Found an issue?</h2>
-	            <p>If you're still having trouble, don't hesitate to reach out to us for help. You can submit a ticket on our GitHub page or contact us through Discord:</p>
-	            <div id="button-group">
-	              <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" target="_blank">GitHub - Submit a ticket</a>
-	              <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" target="_blank">Discord - Submit Support post</a>
-	            </div>
-	            <a href="/" id="home-button">Go to Homepage</a>
-	            <a data-bs-dismiss="modal" id="home-button">Close</a>
-	          </div>
-	        </div>
-	      </div>
-	    </div>
-	  </div>
-	</div>
-  <script src="js/errorBanner.js"></script>
+          <div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document" id="helpModalDialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="helpModalLabel" th:text="#{help}"></h5>
+                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <div class="container">
+                    <div id="support-section">
+                      <h1 class="display-2" th:text="#{oops}"></h1>
+                      <p class="lead" th:text="#{error.sorry}"></p>
+                      <br>
+                      <h2 th:text="#{error.needHelp}"></h2>
+                      <p th:text="#{error.contactTip}"></p>
+                      <div id="button-group">
+                        <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" target="_blank" th:text="#{error.githubSubmit}"></a>
+                        <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" target="_blank" th:text="#{error.discordSubmit}"></a>
+                      </div>
+                      <a href="/" class="home-button" th:text="#{goHomepage}"></a>
+                      <a data-bs-dismiss="modal" class="home-button" th:text="#{close}"></a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <script src="js/errorBanner.js"></script>
 </th:block>
