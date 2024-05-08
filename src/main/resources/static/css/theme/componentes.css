@@ -249,6 +249,10 @@ td {
   color: var(--md-sys-color-on-surface);
 }
 
+.modal-header .btn-close {
+  margin: 0;
+}
+
 /* Primary btn */
 .btn-primary {
   color: var(--md-sys-color-on-primary);
