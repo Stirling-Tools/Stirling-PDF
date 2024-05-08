@@ -48,7 +48,6 @@
 
 .feature-card .card-text {
   flex: 1;
-  margin-left: 3.5rem;
 }
 
 .feature-card:hover {
@@ -75,6 +74,18 @@
   color: var(--md-sys-color-secondary);
 }
 
+#tool-icon {
+height: 100%;
+}
+
+#tool-text {
+margin: 0.5rem 0.5rem 0rem;
+}
+
+.card-title {
+  margin-bottom: 1rem;
+}
+
 /* Only show the favorite icons when the parent card is being hovered over */
 .feature-card:hover .favorite-icon {
   display: block;
@@ -88,9 +99,6 @@
   padding: 3rem 3rem;
   /* Reduce vertical padding */
 }
-
-
-
 
 .lookatme {
   opacity: 1;
