@@ -880,3 +880,30 @@ textarea.form-control {
 .list-group-item .btn {
   padding: .375rem .5rem;
 }
+
+/*Alert */
+.alert-container {
+  padding: 2rem 3rem;
+  border-radius: 3rem;
+  margin: 1rem 0rem 2rem;
+}
+
+.alert-header {
+  display: flex !important;
+  justify-content: space-between;
+}
+
+.alert-heading {
+  font-size: calc(1.275rem + .3vw);
+}
+
+.alert-dismissible .btn-close {
+  position: relative;
+  padding: 0;
+}
+
+.alert-danger {
+  color: var(--md-sys-color-on-error-container);
+  background-color: var(--md-sys-color-error-container);
+  border-color: transparent;
+}
