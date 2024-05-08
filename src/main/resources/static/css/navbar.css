@@ -277,3 +277,37 @@ span.icon-text::after {
 .dropdown-mw-20 {
   min-width: 200px;
 }
+
+/* Dropdown open on hover */
+.dropdown-menu {
+  padding-top: 0.5rem;
+  top: auto;
+  left: 0;
+}
+
+.dropdown-menu[data-bs-popper] {
+  top: auto;
+  left: 0;
+  margin-top: 0 !important;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+  margin-top: 0;
+}
+
+.dropdown-menu-wrapper {
+  padding: 1.5rem 0;
+  border-radius: 1rem;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-surface-5);
+  box-shadow: var(--md-sys-elevation-2);
+}
+
+.dropdown-menu-tp {
+  color: transparent;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+}
