@@ -51,7 +51,15 @@ For Fedora-based systems use this command:
 sudo dnf install -y git automake autoconf libtool leptonica-devel pkg-config zlib-devel make gcc-c++ java-17-openjdk python3 python3-pip
 ```
 
+For non-root users with Nix Package Manager, use the following command:
+```bash
+nix-channel --update
+nix-env -iA nixpkgs.jdk17 nixpkgs.git nixpkgs.python38 nixpkgs.gnumake nixpkgs.libgcc nixpkgs.automake nixpkgs.autoconf nixpkgs.libtool nixpkgs.pkg-config nixpkgs.zlib nixpkgs.leptonica
+```
+
 ### Step 2: Clone and Build jbig2enc (Only required for certain OCR functionality)
+
+For Debian and Fedora, you can build it from source using the following commands:
 
 ```bash
 mkdir ~/.git
@@ -62,6 +70,11 @@ cd jbig2enc &&\
 ./configure &&\
 make &&\
 sudo make install
+```
+
+For Nix, you will face `Leptonica not detected`. Bypass this by installing it directly using the following command:
+```bash
+nix-env -iA nixpkgs.jbig2enc
 ```
 
 ### Step 3: Install Additional Software
@@ -105,6 +118,13 @@ sudo dnf install -y libreoffice-writer libreoffice-calc libreoffice-impress unpa
 pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint
 ```
 
+For Nix:
+
+```bash
+nix-env -iA nixpkgs.unpaper nixpkgs.libreoffice nixpkgs.ocrmypdf nixpkgs.poppler_utils
+pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint
+```
+
 ### Step 4: Clone and Build Stirling-PDF
 
 ```bash
@@ -115,13 +135,12 @@ chmod +x ./gradlew &&\
 ./gradlew build
 ```
 
-
 ### Step 5: Move jar to desired location
 
 After the build process, a `.jar` file will be generated in the `build/libs` directory.
 You can move this file to a desired location, for example, `/opt/Stirling-PDF/`.
 You must also move the Script folder within the Stirling-PDF repo that you have downloaded to this directory.
-This folder is required for the python scripts using OpenCV
+This folder is required for the python scripts using OpenCV.
 
 ```bash
 sudo mkdir /opt/Stirling-PDF &&\
@@ -129,19 +148,25 @@ sudo mv ./build/libs/Stirling-PDF-*.jar /opt/Stirling-PDF/ &&\
 sudo mv scripts /opt/Stirling-PDF/ &&\
 echo "Scripts installed."
 ```
+
+For non-root users, you can just keep the jar in the main directory of Stirling-PDF using the following command:
+```bash
+mv ./build/libs/Stirling-PDF-*.jar ./Stirling-PDF-*.jar
+```
+
 ### Step 6: Other files
 #### OCR
 If you plan to use the OCR (Optical Character Recognition) functionality, you might need to install language packs for Tesseract if running non-english scanning.
 
 ##### Installing Language Packs
-Easiest is to use the langpacks provided by your repositories. Skip the other steps
+Easiest is to use the langpacks provided by your repositories. Skip the other steps.
 
 Manual:
 
 1. Download the desired language pack(s) by selecting the `.traineddata` file(s) for the language(s) you need.
 2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tessdata`
-3.
-Please view  [OCRmyPDF install guide](https://ocrmypdf.readthedocs.io/en/latest/installation.html) for more info.
+3. Please view  [OCRmyPDF install guide](https://ocrmypdf.readthedocs.io/en/latest/installation.html) for more info.
+
 **IMPORTANT:** DO NOT REMOVE EXISTING `eng.traineddata`, IT'S REQUIRED.
 
 Debian based systems, install languages with this command:
@@ -171,12 +196,36 @@ dnf search -C tesseract-langpack-
 rpm -qa | grep tesseract-langpack | sed 's/tesseract-langpack-//g'
 ```
 
+Nix:
+
+```bash
+nix-env -iA nixpkgs.tesseract
+```
+
+**Note:** Nix Package Manager pre-installs almost all the language packs when tesseract is installed.
+
 ### Step 7: Run Stirling-PDF
+
+Those who have pushed to the root directory, run the following commands:
 
 ```bash
 ./gradlew bootRun
 or
 java -jar /opt/Stirling-PDF/Stirling-PDF-*.jar
+```
+
+Since libreoffice, soffice, and conversion tools have their dbus_tmp_dir set as `dbus_tmp_dir="/run/user/$(id -u)/libreoffice-dbus"`, you might get the following error when using their endpoints:
+```
+[Thread-7] INFO  s.s.SPDF.utils.ProcessExecutor - mkdir: cannot create directory ‘/run/user/1501’: Permission denied
+```
+To resolve this, before starting the Stirling-PDF, you have to set the environment variable to a directory you have write access to by using the following commands:
+
+```bash
+mkdir temp
+export DBUS_SESSION_BUS_ADDRESS="unix:path=./temp"
+./gradlew bootRun
+or
+java -jar ./Stirling-PDF-*.jar
 ```
 
 ### Step 8: Adding a Desktop icon
@@ -202,7 +251,19 @@ EOF
 
 Note: Currently the app will run in the background until manually closed.
 
-### Optional: Run Stirling-PDF as a service
+### Optional: Changing the host and port of the application:
+
+To override the default configuration, you can add the following to `/.git/Stirling-PDF/configs/custom_settings.yml` file:
+
+```bash
+server:
+  host: 0.0.0.0
+  port: 3000
+```
+
+**Note:** This file is created after the first application launch. To have it before that, you can create the directory and add the file yourself.
+
+### Optional: Run Stirling-PDF as a service (requires root).
 
 First create a .env file, where you can store environment variables:
 ```
@@ -239,6 +300,7 @@ WantedBy=multi-user.target
 ```
 
 Notify systemd that it has to rebuild its internal service database (you have to run this command every time you make a change in the service file):
+
 ```
 sudo systemctl daemon-reload
 ```
