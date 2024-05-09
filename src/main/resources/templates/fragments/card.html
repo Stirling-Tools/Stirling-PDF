@@ -1,7 +1,7 @@
 <div th:fragment="card" class="feature-card" th:id="${id}" th:if="${@endpointConfiguration.isEndpointEnabled(cardLink)}"
   th:data-bs-tags="${tags}">
   <a th:href="${cardLink}">
-    <div class="d-flex align-items-center"> <!-- Add a flex container to align the SVG and title -->
+    <div class="d-flex align-items-center">
 
       <div id="tool-icon" class="icon" alt="icon" th:class="@{${toolGroup}}">
         <span class="material-symbols-rounded nav-icon" th:text="@{${toolIcon}}"></span>
