@@ -85,6 +85,7 @@ public class InitialSecuritySetup {
         // Write back to the file
         Files.write(path, lines);
     }
+
     private boolean isValidUUID(String uuid) {
         if (uuid == null) {
             return false;
@@ -96,5 +97,4 @@ public class InitialSecuritySetup {
             return false;
         }
     }
-    
 }
