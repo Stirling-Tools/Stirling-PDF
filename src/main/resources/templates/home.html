@@ -29,20 +29,20 @@
         </span>
         <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
         <div class="features-container">
-        
-          <div th:if="${@shouldShow}" class="feature-card favorite" id="update-link" style="display: none;">
-			  <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" class="nav-link text-body-secondary px-2" rel="noopener">
-			    <div class="d-flex align-items-center">
-			      <!-- Replace the existing icon markup with the new one -->
-			      <div class="icon" alt="icon" th:class="advance">
-			        <img class="card-icon home-card-icon home-card-icon-colour" src="images/update.svg" alt="Icon" width="30" height="30">
-			      </div>
-			      <!-- End of icon markup replacement -->
-			      <h5 class="card-title lookatme ms-2" th:text="#{settings.update}" th:data-lookatme-text="#{settings.update}"></h5>
-			    </div>
-			    <p class="card-text" id="app-update"></p>
-			  </a>
-			</div>
+
+          <div th:if="${@shouldShow}" class="feature-card favorite update-notice" id="update-link" style="display: none;">
+            <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" rel="noopener">
+              <div class="d-flex align-items-center">
+                <div id="tool-icon" class="advance" alt="icon">
+                  <span class="material-symbols-rounded nav-icon">update</span>
+                </div>
+                <div id="tool-text">
+                  <h5 class="card-title" th:text="#{settings.update}"></h5>
+                  <p class="card-text" id="app-update"></p>
+                </div>
+              </div>
+            </a>
+          </div>
 
 
           <div
