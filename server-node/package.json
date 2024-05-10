@@ -11,9 +11,9 @@
         "canvas": "^2.11.2"
     },
     "scripts": {
-        "dev": "rollup -c -w",
-        "build": "rollup -c --forceExit",
-        "start": "node ./dist/bundle.js"
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "start": "node ./dist/index.js"
     },
     "keywords": [],
     "author": "",
