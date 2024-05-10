@@ -5,7 +5,6 @@ import { getOperatorByName } from "./operatorAccessor";
 /** This function validates the "workflow-json" from the API */
 export async function validateOperations(actions: Action[]): Promise<{ valid: boolean, reason?: string}> {
     const done: Action[] = [];
-
     for (const action of actions) {
         if (action.type === "done") {
             if(done[action.values.id] !== undefined) {

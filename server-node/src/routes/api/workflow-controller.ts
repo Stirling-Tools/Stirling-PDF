@@ -43,6 +43,11 @@ router.post("/:workflowUuid?", [
             }
         }
 
+        if(!workflow.actions) {
+            res.status(400).json({error: "The provided workflow does not contain any actions."});
+            return
+        }
+
         const validationResults = await JoiPDFFileSchema.validateAsync(req.files);
         if(validationResults.error) {
             res.status(400).json({error: "PDF validation failed", details: validationResults.error.message});

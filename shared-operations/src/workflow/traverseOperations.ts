@@ -5,16 +5,16 @@ import { Progress } from "../functions";
 import { validateOperations } from "./validateOperations";
 import { getOperatorByName } from "./operatorAccessor";
 
-export async function traverseOperations(operations: Action[], input: PdfFile[], progressCallback: (state: Progress) => void): Promise<PdfFile[]> {
-    const validationResult = await validateOperations(operations);
+export async function traverseOperations(actions: Action[], input: PdfFile[], progressCallback: (state: Progress) => void): Promise<PdfFile[]> {
+    const validationResult = await validateOperations(actions);
     if(!validationResult.valid) {
         return Promise.reject({validationError: validationResult.reason});
     }
     
-    const waitOperations = organizeWaitOperations(operations);
+    const waitOperations = organizeWaitOperations(actions);
 
     let results: PdfFile[] = [];
-    await nextOperation(operations, input, progressCallback);
+    await nextOperation(actions, input, progressCallback);
     return results;
 
     async function nextOperation(actions: Action[] | undefined, input: PdfFile[], progressCallback: (state: Progress) => void): Promise<void> {

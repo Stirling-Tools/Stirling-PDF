@@ -51,6 +51,8 @@
         "rimraf": "^5.0.5",
         "rollup": "^4.9.6",
         "ts-node-dev": "^2.0.0",
-        "typescript": "^5.2.2"
+        "typescript": "^5.2.2",
+        "vite": "^5.2.11",
+        "vite-plugin-node": "^3.1.0"
     }
 }
