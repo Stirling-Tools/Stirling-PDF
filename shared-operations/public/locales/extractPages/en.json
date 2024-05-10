@@ -1,0 +1,10 @@
+{
+    "friendlyName": "Extract",
+    "description": "Extract one ore more pages from a PDF-File",
+    "values": {
+        "pageIndexes": {
+            "friendlyName": "Page Indexes",
+            "description": "An array of indexes of pages you want to extract."
+        }
+    }
+}

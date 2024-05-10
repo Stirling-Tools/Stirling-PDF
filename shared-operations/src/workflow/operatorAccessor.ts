@@ -1,7 +1,7 @@
 import { Operator } from "../functions";
 import i18next from "i18next";
 
-const compileTimeOperatorList: string[] = ["impose"]; import.meta.compileTime("./listOperatorsInDir.ts"); // The will compile to ["impose", "extractPages", etc...]
+const compileTimeOperatorList: string[] = import.meta.compileTime("./listOperatorsInDir.ts"); // The will compile to ["impose", "extractPages", etc...]
 
 export async function getOperatorByName(name: string): Promise<typeof Operator | undefined> {
     // Check if exists
@@ -9,7 +9,11 @@ export async function getOperatorByName(name: string): Promise<typeof Operator |
 
     i18next.loadNamespaces(name, (err, t) => { if (err) throw err; });
     const loadedModule = await import("../functions/" + name + ".ts");
-    return loadedModule[capitalizeFirstLetter(name)];
+    const operator = loadedModule[capitalizeFirstLetter(name)];
+    if(!operator) {
+        throw Error("This operator does not export its class in the correct format.")
+    }
+    return operator;
 }
 
 export function listOperatorNames(): string[] {
