@@ -13,6 +13,7 @@ document.getElementById("fileInput-input").addEventListener("change", function (
  */
 function displayFiles(files) {
   const list = document.getElementById("selectedFiles");
+  const processedFiles = [];
 
   while (list.firstChild) {
     list.removeChild(list.firstChild);
@@ -21,9 +22,23 @@ function displayFiles(files) {
   for (let i = 0; i < files.length; i++) {
     const item = document.createElement("li");
     item.className = "list-group-item";
+    const fileNameDiv = document.createElement("div");
+    fileNameDiv.className = "filename";
+    fileNameDiv.textContent = files[i].name;
+
+    // Check for duplicates
+    if (processedFiles.includes(files[i].name)) {
+      const warning = document.createElement("span");
+      warning.className = "duplicate-warning";
+      warning.textContent = "(Duplicate)";
+      fileNameDiv.appendChild(warning);
+    } else {
+      processedFiles.push(files[i].name);
+    }
+
     item.innerHTML = `
             <div class="d-flex justify-content-between align-items-center w-100">
-                <div class="filename">${files[i].name}</div>
+                ${fileNameDiv.outerHTML}
                 <div class="arrows d-flex">
                     <button class="btn btn-secondary move-up"><span>&uarr;</span></button>
                     <button class="btn btn-secondary move-down"><span>&darr;</span></button>
@@ -33,7 +48,6 @@ function displayFiles(files) {
         `;
     list.appendChild(item);
   }
-
   attachMoveButtons();
 }
 

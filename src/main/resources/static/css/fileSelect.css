@@ -8,3 +8,7 @@
   overflow-y: auto;
   white-space: pre-wrap;
 }
+.duplicate-warning {
+    color: red;
+    font-weight: bold;
+}
