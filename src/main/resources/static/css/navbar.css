@@ -291,11 +291,6 @@ span.icon-text::after {
   margin-top: 0 !important;
 }
 
-.dropdown:hover .dropdown-menu {
-  display: block;
-  margin-top: 0;
-}
-
 .dropdown-menu-wrapper {
   padding: 1.5rem 0;
   border-radius: 1rem;
@@ -310,4 +305,18 @@ span.icon-text::after {
   background-color: transparent;
   border: none;
   box-shadow: none;
+}
+
+.icon-hide {
+  display: inline-flex;
+}
+
+@media (min-width:992px) {
+  .dropdown:hover .dropdown-menu {
+    display: block;
+    margin-top: 0;
+  }
+  .icon-hide {
+    display: none;
+  }
 }
