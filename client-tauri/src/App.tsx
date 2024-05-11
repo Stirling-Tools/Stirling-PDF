@@ -21,7 +21,7 @@ import resourcesToBackend from "i18next-resources-to-backend";
 
 i18next.use(LanguageDetector).use(initReactI18next).use(resourcesToBackend((language: string, namespace: string) => import(`../../shared-operations/public/locales/${namespace}/${language}.json`)))
 .init({
-    debug: true,
+    debug: false,
     ns: ["common"], // Preload this namespace, no need to add the others, they will load once their module is loaded
     defaultNS: "common",
     fallbackLng: "en",

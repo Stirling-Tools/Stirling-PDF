@@ -38,24 +38,15 @@ function Dynamic() {
         });
     }
 
-    function formDataToObject(formData: FormData): Record<string, string> {
-        const result: Record<string, string> = {};
-      
-        formData.forEach((value, key) => {
-          result[key] = value.toString();
-        });
-      
-        return result;
-    }
-
     async function handleSubmit(e: BaseSyntheticEvent) {
+        console.clear();
         if(!activeOperator.current) {
             throw new Error("Please select an Operator in the Dropdown");
         }
 
         const formData = new FormData(e.target);
-        
-        const action: Action = {type: activeOperator.current.constructor.name, values: formDataToObject(formData)};
+        const values = Object.fromEntries(formData.entries());
+        let action: Action = {type: activeOperator.current.type, values: values};
 
         // Validate PDF File
 
@@ -68,7 +59,6 @@ function Dynamic() {
             for (let i = 0; i < files.length; i++) {
                 const file = filesArray[i];
                 if(file) {
-                    console.log(new Uint8Array(await file.arrayBuffer()));
                     inputs.push(new PdfFile(
                         file.name.replace(/\.[^/.]+$/, ""), // Strip Extension
                         new Uint8Array(await file.arrayBuffer()),
@@ -80,26 +70,25 @@ function Dynamic() {
             }
         }
 
-        const pdfValidationResults = await JoiPDFFileSchema.validate(inputs);
-        if(pdfValidationResults.error) {
-            console.log({error: "PDF validation failed", details: pdfValidationResults.error.message});
-        }
-        const pdfFiles: PdfFile[] = pdfValidationResults.value;
+        const validationResults = activeOperator.current.schema.validate({input: inputs, values: action.values});
 
-        // Validate Action Values
-        const actionValidationResults = activeOperator.current.schema.validate({input: pdfFiles, values: action.values});
-
-        if(actionValidationResults.error) {
-            console.log({error: "Value validation failed", details: actionValidationResults.error.message});
-            return;
+        if(validationResults.error) {
+            console.log({error: "Validation failed", details: validationResults.error.message});
         }
-        
-        action.values = pdfValidationResults.value.values;
-        const operation = new activeOperator.current(action);
-        
-        operation.run(pdfValidationResults.value, (progress) => {}).then(pdfFiles => {
-            console.log("Done");
-        });
+        else {
+            action.values = validationResults.value.values;
+            const operation = new activeOperator.current(action);
+            operation.run(validationResults.value.input, (progress) => {}).then(async pdfFiles => {
+                console.log("Done");
+                console.log(pdfFiles);
+
+                for await (const pdfFile of (pdfFiles as PdfFile[])) {
+                    var blob = new Blob([await pdfFile.uint8Array], {type: "application/pdf"});
+                    var objectUrl = URL.createObjectURL(blob);
+                    window.open(objectUrl);
+                }
+            });
+        }
     };
 
     function capitalizeFirstLetter(string: String) {

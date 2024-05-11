@@ -1,14 +1,27 @@
 import { defineConfig } from "vite";
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import react from "@vitejs/plugin-react";
 import topLevelAwait from "vite-plugin-top-level-await";
-import dynamicImport from 'vite-plugin-dynamic-import'
-import compileTime from "vite-plugin-compile-time"
-import { fileURLToPath, URL } from 'node:url'
+import dynamicImport from 'vite-plugin-dynamic-import';
+import compileTime from "vite-plugin-compile-time";
+import { fileURLToPath, URL } from 'node:url';
 
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
     plugins: [
+        // Thanks: https://stackoverflow.com/questions/74417822/how-can-i-use-buffer-process-in-vite-app
+        nodePolyfills({
+            include: [],
+
+            globals: {
+                Buffer: true, // can also be 'build', 'dev', or false
+                global: false,
+                process: true,
+            },
+            // Whether to polyfill `node:` protocol imports.
+            protocolImports: false,
+        }),
         react(),
         topLevelAwait({
             // The export name of top-level await promise for each chunk module

@@ -10,8 +10,10 @@
   "license": "ISC",
   "dependencies": {
     "@stirling-tools/joi": "github:Stirling-Tools/joi",
+    "buffer": "^6.0.3",
     "i18next-resources-to-backend": "^1.2.0",
     "image-js": "^0.35.5",
+    "memfs": "^4.9.2",
     "next-i18next": "^15.1.1",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^4.0.269"

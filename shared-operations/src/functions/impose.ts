@@ -87,12 +87,10 @@ export class Impose extends Operator {
                 [
                     "pdfcpu.wasm",
                     "nup",
-                    "-c",
-                    "disable",
-                    "f:" + this.actionValues.format,
-                    "/output.pdf",
-                    String(this.actionValues.nup),
-                    "input.pdf",
+                    "formsize:" + this.actionValues.format, // configuration string
+                    "/output.pdf", // outFile
+                    String(this.actionValues.nup), // nupvalue
+                    "/input.pdf" // infile
                 ],
                 await input.uint8Array
             );
