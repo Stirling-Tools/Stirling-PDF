@@ -30,9 +30,16 @@ async function getLatestReleaseVersion() {
 
 async function checkForUpdate() {
   // Initialize the update button as hidden
-  var updateBtn = document.getElementById("update-btn");
+  var updateBtn = document.getElementById("update-btn") || null;
+  var updateLink = document.getElementById("update-link") || null;
   if (updateBtn !== null) {
     updateBtn.style.display = "none";
+  }
+  if (updateLink !== null) {
+    console.log("hidden!");
+    if (!updateLink.classList.contains("visually-hidden")) {
+      updateLink.classList.add("visually-hidden");
+    }
   }
 
   const latestVersion = await getLatestReleaseVersion();
@@ -40,9 +47,22 @@ async function checkForUpdate() {
   console.log("currentVersion=" + currentVersion);
   console.log("compareVersions(latestVersion, currentVersion) > 0)=" + compareVersions(latestVersion, currentVersion));
   if (latestVersion && compareVersions(latestVersion, currentVersion) > 0) {
-    document.getElementById("update-btn").style.display = "block";
+    if (updateBtn != null) {
+      document.getElementById("update-btn").style.display = "block";
+    }
+    if (updateLink !== null) {
+      document.getElementById("app-update").innerHTML = updateAvailable.replace("{0}", '<b>' + currentVersion + '</b>').replace("{1}", '<b>' + latestVersion + '</b>');
+      if (updateLink.classList.contains("visually-hidden")) {
+        updateLink.classList.remove("visually-hidden");
+      }
+    }
     console.log("visible");
   } else {
+    if (updateLink !== null) {
+      if (!updateLink.classList.contains("visually-hidden")) {
+        updateLink.classList.add("visually-hidden");
+      }
+    }
     console.log("hidden");
   }
 }

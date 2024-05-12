@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: 0.22.8
+appVersion: 0.23.2
 description: locally hosted web application that allows you to perform various operations
   on PDF files
 home: https://github.com/Stirling-Tools/Stirling-PDF

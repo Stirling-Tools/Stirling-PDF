@@ -50,7 +50,7 @@ public class InitialSecuritySetup {
     @PostConstruct
     public void initSecretKey() throws IOException {
         String secretKey = applicationProperties.getAutomaticallyGenerated().getKey();
-        if (secretKey == null || secretKey.isEmpty()) {
+        if (!isValidUUID(secretKey)) {
             secretKey = UUID.randomUUID().toString(); // Generating a random UUID as the secret key
             saveKeyToConfig(secretKey);
         }
@@ -84,5 +84,17 @@ public class InitialSecuritySetup {
 
         // Write back to the file
         Files.write(path, lines);
+    }
+
+    private boolean isValidUUID(String uuid) {
+        if (uuid == null) {
+            return false;
+        }
+        try {
+            UUID.fromString(uuid);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }

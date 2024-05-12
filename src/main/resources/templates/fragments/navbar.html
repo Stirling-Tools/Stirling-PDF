@@ -3,6 +3,7 @@
           <script th:inline="javascript">
             const currentVersion = /*[[${@appVersion}]]*/ '';
             const noFavourites = /*[[#{noFavourites}]]*/ '';
+            const updateAvailable =  /*[[#{settings.updateAvailable}]]*/ '';
           </script>
           <script th:src="@{js/githubVersion.js}"></script>
           <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -16,20 +17,20 @@
               </button>
               <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto flex-nowrap">
-                  <li class="nav-item">
+                  <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('multi-tool')}">
                     <a class="nav-link" href="#" th:href="@{multi-tool}" th:classappend="${currentPage}=='multi-tool' ? 'active' : ''" th:title="#{home.multiTool.desc}">
                       <img class="icon" src="images/tools.svg" alt="icon">
                       <span class="icon-text" th:text="#{home.multiTool.title}"></span>
                     </a>
                   </li>
-                  <li class="nav-item nav-item-separator"></li>
-                  <li class="nav-item">
+                  <li th:if="${@endpointConfiguration.isEndpointEnabled('multi-tool')}" class="nav-item nav-item-separator"></li>
+                  <li th:if="${@endpointConfiguration.isEndpointEnabled('pipeline')}" class="nav-item">
                     <a class="nav-link" href="#" th:href="@{pipeline}" th:classappend="${currentPage}=='pipeline' ? 'active' : ''" th:title="#{home.pipeline.desc}">
                       <img class="icon" src="images/pipeline.svg" alt="icon">
                       <span class="icon-text" th:text="#{home.pipeline.title}"></span>
                     </a>
                   </li>
-                  <li class="nav-item nav-item-separator"></li>
+                  <li th:if="${@endpointConfiguration.isEndpointEnabled('pipeline')}" class="nav-item nav-item-separator"></li>
                   <li class="nav-item dropdown" th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='crop' OR ${currentPage}=='adjust-contrast' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' OR ${currentPage}=='multi-page-layout' OR ${currentPage}=='scale-pages' OR ${currentPage}=='auto-split-pdf' OR ${currentPage}=='extract-page' OR ${currentPage}=='pdf-to-single-page' ? 'active' : ''">
                     <a class="nav-link dropdown-toggle" id="navbarDropdown-1" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                       <img class="icon" src="images/file-earmark-pdf.svg" alt="icon">
@@ -194,7 +195,7 @@
                     <p class="mb-0" th:utext="#{settings.appVersion} + ' ' + ${@appVersion}"></p>
                     <a href="https://github.com/sponsors/Frooodle" class="btn btn-sm btn-outline-primary" role="button" target="_blank" th:text="#{sponsor}+' Stirling-PDF'"></a>
                     <a href="swagger-ui/index.html" class="btn btn-sm btn-outline-primary" role="button" target="_blank">API</a>
-                    <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" class="btn btn-sm btn-outline-primary" id="update-btn" th:utext="#{settings.update}" role="button" target="_blank"></a>
+                    <a th:if="${@shouldShow}" href="https://github.com/Stirling-Tools/Stirling-PDF/releases" class="btn btn-sm btn-outline-primary" id="update-btn" th:utext="#{settings.update}" role="button" target="_blank" rel="noopener"></a>
                   </div>
                   <div class="mb-3">
                     <label for="downloadOption" th:utext="#{settings.downloadOption.title}"></label>
@@ -210,13 +211,17 @@
                     <span id="zipThresholdValue" class="ms-2"></span>
                   </div>
                   <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="boredWaiting">
+                    <input type="checkbox" class="form-check-input" id="boredWaiting" th:title="#{settings.bored.help}">
                     <label class="form-check-label" for="boredWaiting" th:text="#{bored}"></label>
                   </div>
-                  <a th:if="${@loginEnabled}" href="account" class="btn btn-sm btn-outline-primary" role="button" th:text="#{settings.accountSettings}" target="_blank">Account Settings</a>
+                  <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="cacheInputs" th:title="#{settings.cacheInputs.help}">
+                    <label class="form-check-label" for="cacheInputs" th:text="#{settings.cacheInputs.name}"></label>
+                  </div>
+                  <a th:if="${@loginEnabled and @activSecurity}" href="account" class="btn btn-sm btn-outline-primary" role="button" th:text="#{settings.accountSettings}" target="_blank">Account Settings</a>
                 </div>
                 <div class="modal-footer">
-                  <a th:if="${@loginEnabled}" class="btn btn-danger" role="button" th:text="#{settings.signOut}" href="logout">Sign Out</a>
+                  <a th:if="${@loginEnabled and @activSecurity}" class="btn btn-danger" role="button" th:text="#{settings.signOut}" href="logout">Sign Out</a>
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
                 </div>
               </div>
