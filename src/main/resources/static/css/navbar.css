@@ -11,7 +11,7 @@
 }
 
 #searchForm {
-  width: 200px; /* Adjust this value as needed */
+  width: 300px; /* Adjust this value as needed */
 }
 
 /* Style the search results to match the navbar */
@@ -21,6 +21,7 @@
   width: 100%;
   max-width: 300px; /* Adjust to your preferred width */
   transition: height 0.3s ease; /* Smooth height transition */
+  padding: 0px !important;
 }
 
 #searchResults .dropdown-item {
