@@ -21,6 +21,7 @@ import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.repository.AuthorityRepository;
 import stirling.software.SPDF.repository.UserRepository;
 
 @Service
@@ -28,7 +29,27 @@ public class UserService implements UserServiceInterface {
 
     @Autowired private UserRepository userRepository;
 
+    @Autowired private AuthorityRepository authorityRepository;
+
     @Autowired private PasswordEncoder passwordEncoder;
+
+    // Handle OAUTH2 login and user auto creation.
+    public boolean processOAuth2PostLogin(String username, boolean autoCreateUser) {
+        Optional<User> existUser = userRepository.findByUsernameIgnoreCase(username);
+        if (existUser.isPresent()) {
+            return true;
+        }
+        if (autoCreateUser) {
+            User user = new User();
+            user.setUsername(username);
+            user.setEnabled(true);
+            user.setFirstLogin(false);
+            user.addAuthority(new Authority(Role.USER.getRoleId(), user));
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
 
     public Authentication getAuthentication(String apiKey) {
         User user = getUserByApiKey(apiKey);
@@ -184,6 +205,10 @@ public class UserService implements UserServiceInterface {
         return userRepository.findByUsernameIgnoreCase(username);
     }
 
+    public Authority findRole(User user) {
+        return authorityRepository.findByUserId(user.getId());
+    }
+
     public void changeUsername(User user, String newUsername) {
         user.setUsername(newUsername);
         userRepository.save(user);
@@ -197,6 +222,12 @@ public class UserService implements UserServiceInterface {
     public void changeFirstUse(User user, boolean firstUse) {
         user.setFirstLogin(firstUse);
         userRepository.save(user);
+    }
+
+    public void changeRole(User user, String newRole) {
+        Authority userAuthority = this.findRole(user);
+        userAuthority.setAuthority(newRole);
+        authorityRepository.save(userAuthority);
     }
 
     public boolean isPasswordCorrect(User user, String currentPassword) {

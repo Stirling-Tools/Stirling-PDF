@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,16 +64,39 @@ public class SPdfApplication {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
+
         SpringApplication app = new SpringApplication(SPdfApplication.class);
         app.addInitializers(new ConfigInitializer());
+        Map<String, String> propertyFiles = new HashMap<>();
+
+        // stirling pdf settings file
         if (Files.exists(Paths.get("configs/settings.yml"))) {
-            app.setDefaultProperties(
-                    Collections.singletonMap(
-                            "spring.config.additional-location", "file:configs/settings.yml"));
+            propertyFiles.put("spring.config.additional-location", "file:configs/settings.yml");
         } else {
             logger.warn(
                     "External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
         }
+
+        // custom javs settings file
+        if (Files.exists(Paths.get("configs/custom_settings.yml"))) {
+            String existing = propertyFiles.getOrDefault("spring.config.additional-location", "");
+            if (!existing.isEmpty()) {
+                existing += ",";
+            }
+            propertyFiles.put(
+                    "spring.config.additional-location",
+                    existing + "file:configs/custom_settings.yml");
+        } else {
+            logger.warn("Custom configuration file 'configs/custom_settings.yml' does not exist.");
+        }
+
+        if (!propertyFiles.isEmpty()) {
+            app.setDefaultProperties(
+                    Collections.singletonMap(
+                            "spring.config.additional-location",
+                            propertyFiles.get("spring.config.additional-location")));
+        }
+
         app.run(args);
 
         try {

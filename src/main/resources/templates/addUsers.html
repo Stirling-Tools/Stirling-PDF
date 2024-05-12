@@ -58,6 +58,7 @@
                 <div class="mb-3">
                   <label for="role" th:text="#{adminUserSettings.role}">Role</label>
                   <select name="role" class="form-control" required>
+                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
                     <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
                   </select>
                 </div>
@@ -69,10 +70,41 @@
                 <!-- Add other fields as required -->
                 <button type="submit" class="btn btn-primary" th:text="#{adminUserSettings.submit}">Save User</button>
               </form>
+              <hr />
+              <h2 th:text="#{adminUserSettings.changeUserRole}">Change User's Role</h2>
+              <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{downgradeCurrentUserLongMessage}" th:text="#{help}">Help</button>
+              <div th:if="${param.messageType != null and param.messageType.size() > 0 and (param.messageType[0] == 'userNotFound' or param.messageType[0] == 'downgradeCurrentUser')}" class="alert alert-danger">
+                <span th:if="${param.messageType[0] == 'userNotFound'}" th:text="#{userNotFoundMessage}">Username not found</span>
+                <span th:if="${param.messageType[0] == 'downgradeCurrentUser'}" th:text="#{downgradeCurrentUserMessage}">Cannot downgrade current user's role</span>
+              </div>
+              <form action="/api/v1/user/admin/changeRole" method="post">
+                <div class="mb-3">
+                  <label for="username" th:text="#{username}">Username</label>
+                  <select name="username" class="form-control" required>
+                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
+                    <option th:each="user : ${users}" th:if="${user.username != currentUsername}" th:value="${user.username}" th:text="${user.username}">Username</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="role" th:text="#{adminUserSettings.role}">Role</label>
+                  <select name="role" class="form-control" required>
+                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
+                    <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
+                  </select>
+                </div>
+
+                <!-- Add other fields as required -->
+                <button type="submit" class="btn btn-primary" th:text="#{adminUserSettings.submit}">Save User</button>
+              </form>
             </div>
           </div>
         </div>
       </div>
+      <script th:inline="javascript">
+        $(document).ready(function() {
+          $('[data-toggle="tooltip"]').tooltip()
+        })
+      </script>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
   </body>

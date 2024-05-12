@@ -12,7 +12,7 @@ plugins {
 import com.github.jk1.license.render.*
 
 group = 'stirling.software'
-version = '0.22.8'
+version = '0.23.2'
 sourceCompatibility = '17'
 
 repositories {
@@ -99,6 +99,7 @@ dependencies {
         implementation 'org.springframework.boot:spring-boot-starter-security:3.2.4'
         implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:3.2.4"
+        implementation 'org.springframework.boot:spring-boot-starter-oauth2-client:3.2.4'
 
         //2.2.x requires rebuild of DB file.. need migration path
         implementation "com.h2database:h2:2.1.214"

@@ -7,16 +7,24 @@ security:
   csrfDisabled: true
   loginAttemptCount: 5 # lock user account after 5 tries
   loginResetTimeMinutes : 120 # lock account for 2 hours after x attempts
+  #oauth2:
+  #  enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
+  #  issuer: "" # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) end-point
+  #  clientId: "" # Client ID from your provider
+  #  clientSecret: "" # Client Secret from your provider
+  #  autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
 
 system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   enableAlphaFunctionality: false # Set to enable functionality which might need more testing before it fully goes live (This feature might make no changes)
+  showUpdate: true # see when a new update is available
+  showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   
-#ui:
-#  appName: exampleAppName # Application's visible name
-#  homeDescription: I am a description # Short description or tagline shown on homepage.
-#  appNameNavbar: navbarName # Name displayed on the navigation bar
+ui:
+  appName: null # Application's visible name
+  homeDescription: null # Short description or tagline shown on homepage.
+  appNameNavbar: null # Name displayed on the navigation bar
 
 endpoints:
   toRemove: [] # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
@@ -24,3 +32,7 @@ endpoints:
 
 metrics:
   enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
+
+# Automatically Generated Settings (Do Not Edit Directly)
+AutomaticallyGenerated:
+  key: example

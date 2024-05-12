@@ -23,6 +23,15 @@
           <br>
           <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
           <div class="features-container">
+            <div th:if="${@shouldShow}" class="feature-card favorite" id="update-link" style="display: none;">
+              <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" class="nav-link text-body-secondary px-2" rel="noopener">
+                <div class="d-flex align-items-center">
+                  <img class="card-icon home-card-icon home-card-icon-colour" src="images/update.svg" alt="Icon" width="30" height="30">
+                  <h5 class="card-title lookatme ms-2" th:text="#{settings.update}" th:data-lookatme-text="#{settings.update}"></h5>
+                </div>
+                <p class="card-text" id="app-update"></p>
+              </a>
+            </div>
             <div th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', svgPath='images/pipeline.svg', tags=#{pipeline.tags})}"></div>
 
             <div th:replace="~{fragments/card :: card(id='view-pdf', cardTitle=#{home.viewPdf.title}, cardText=#{home.viewPdf.desc}, cardLink='view-pdf', svgPath='images/book-opened.svg', tags=#{viewPdf.tags})}"></div>

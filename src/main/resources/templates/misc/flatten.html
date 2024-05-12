@@ -13,36 +13,14 @@
           <div class="row justify-content-center">
             <div class="col-md-6">
               <h2 th:text="#{flatten.header}"></h2>
-              <form id="pdfForm" class="mb-3">
-                <div class="custom-file">
-                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
-                </div>
+              <form method="post" enctype="multipart/form-data" th:action="@{api/v1/misc/flatten}">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+				<div class="mb-3-inline form-check">
+                  <input type="checkbox" class="form-check-input" id="flattenOnlyForms" name="flattenOnlyForms">
+                  <label class="ms-3" for="flattenOnlyForms" th:text="#{flatten.flattenOnlyForms}" ></label>
+                </div>	
+                <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{flatten.submit}"></button>
-                <script src="js/local-pdf-input-download.js"></script>
-                <script>
-                  document.getElementById('pdfForm').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-
-                    const { PDFDocument } = PDFLib;
-
-                    const processFile = async (file) => {
-                      const origFileUrl = URL.createObjectURL(file);
-                      const formPdfBytes = await fetch(origFileUrl).then(res => res.arrayBuffer());
-                      const pdfDoc = await PDFDocument.load(formPdfBytes, { ignoreEncryption: true });
-
-                      const form = pdfDoc.getForm();
-                      form.flatten();
-
-                      const pdfBytes = await pdfDoc.save();
-                      const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-                      const fileName = (file.name ? file.name.replace('.pdf', '') : 'pdf') + '_flattened.pdf';
-
-                      return { processedData: pdfBlob, fileName };
-                    };
-
-                    await downloadFilesWithCallback(processFile);
-                  });
-                </script>
               </form>
             </div>
           </div>
