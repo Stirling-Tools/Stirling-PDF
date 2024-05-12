@@ -47,6 +47,9 @@ public class User {
     @Column(name = "roleName")
     private String roleName;
 
+    @Column(name = "authenticationtype")
+    private String authenticationType;
+
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> authorities = new HashSet<>();
 
@@ -116,6 +119,14 @@ public class User {
         this.enabled = enabled;
     }
 
+    public void setAuthenticationType(AuthenticationType authenticationType) {
+        this.authenticationType = authenticationType.toString().toLowerCase();
+    }
+
+    public String getAuthenticationType() {
+        return authenticationType;
+    }
+
     public Set<Authority> getAuthorities() {
         return authorities;
     }
@@ -136,5 +147,9 @@ public class User {
         return this.authorities.stream()
                 .map(Authority::getAuthority)
                 .collect(Collectors.joining(", "));
+    }
+
+    public boolean hasPassword() {
+        return this.getPassword() != "" ? true : false;
     }
 }

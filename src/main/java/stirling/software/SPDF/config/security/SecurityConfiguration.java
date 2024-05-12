@@ -1,6 +1,5 @@
 package stirling.software.SPDF.config.security;
 
-import java.io.IOException;
 import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,33 +13,30 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.ClientRegistrations;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
+import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
+import stirling.software.SPDF.config.security.oauth2.CustomOAuth2LogoutSuccessHandler;
+import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 
@@ -49,7 +45,7 @@ import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-    @Autowired private UserDetailsService userDetailsService;
+    @Autowired private CustomUserDetailsService userDetailsService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -111,18 +107,7 @@ public class SecurityConfiguration {
                                                     new AntPathRequestMatcher("/logout"))
                                             .logoutSuccessHandler(new CustomLogoutSuccessHandler())
                                             .invalidateHttpSession(true) // Invalidate session
-                                            .deleteCookies("JSESSIONID", "remember-me")
-                                            .addLogoutHandler(
-                                                    (request, response, authentication) -> {
-                                                        HttpSession session =
-                                                                request.getSession(false);
-                                                        if (session != null) {
-                                                            String sessionId = session.getId();
-                                                            sessionRegistry()
-                                                                    .removeSessionInformation(
-                                                                            sessionId);
-                                                        }
-                                                    }))
+                                            .deleteCookies("JSESSIONID", "remember-me"))
                     .rememberMe(
                             rememberMeConfigurer ->
                                     rememberMeConfigurer // Use the configurator directly
@@ -168,43 +153,33 @@ public class SecurityConfiguration {
             if (applicationProperties.getSecurity().getOAUTH2().getEnabled()) {
 
                 http.oauth2Login(
-                        oauth2 ->
-                                oauth2.loginPage("/oauth2")
-                                        /*
-                                        This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                                        If user exists, login proceeds as usual. If user does not exist, then it is autocreated but only if 'OAUTH2AutoCreateUser'
-                                        is set as true, else login fails with an error message advising the same.
-                                         */
-                                        .successHandler(
-                                                new AuthenticationSuccessHandler() {
-                                                    @Override
-                                                    public void onAuthenticationSuccess(
-                                                            HttpServletRequest request,
-                                                            HttpServletResponse response,
-                                                            Authentication authentication)
-                                                            throws ServletException, IOException {
-                                                        OAuth2User oauthUser =
-                                                                (OAuth2User)
-                                                                        authentication
-                                                                                .getPrincipal();
-                                                        if (userService.processOAuth2PostLogin(
-                                                                oauthUser.getAttribute("email"),
-                                                                applicationProperties
-                                                                        .getSecurity()
-                                                                        .getOAUTH2()
-                                                                        .getAutoCreateUser())) {
-                                                            response.sendRedirect("/");
-                                                        } else {
-                                                            response.sendRedirect(
-                                                                    "/logout?oauth2AutoCreateDisabled=true");
-                                                        }
-                                                    }
-                                                })
-                                        // Add existing Authorities from the database
-                                        .userInfoEndpoint(
-                                                userInfoEndpoint ->
-                                                        userInfoEndpoint.userAuthoritiesMapper(
-                                                                userAuthoritiesMapper())));
+                                oauth2 ->
+                                        oauth2.loginPage("/oauth2")
+                                                /*
+                                                This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
+                                                If user exists, login proceeds as usual. If user does not exist, then it is autocreated but only if 'OAUTH2AutoCreateUser'
+                                                is set as true, else login fails with an error message advising the same.
+                                                 */
+                                                .successHandler(
+                                                        new CustomOAuth2AuthenticationSuccessHandler(
+                                                                applicationProperties, userService))
+                                                .failureHandler(
+                                                        new CustomOAuth2AuthenticationFailureHandler())
+                                                // Add existing Authorities from the database
+                                                .userInfoEndpoint(
+                                                        userInfoEndpoint ->
+                                                                userInfoEndpoint
+                                                                        .oidcUserService(
+                                                                                new CustomOAuth2UserService(
+                                                                                        applicationProperties))
+                                                                        .userAuthoritiesMapper(
+                                                                                userAuthoritiesMapper())))
+                        .userDetailsService(userDetailsService)
+                        .logout(
+                                logout ->
+                                        logout.logoutSuccessHandler(
+                                                new CustomOAuth2LogoutSuccessHandler(
+                                                        this.applicationProperties)));
             }
         } else {
             http.csrf(csrf -> csrf.disable())
@@ -225,13 +200,13 @@ public class SecurityConfiguration {
     }
 
     private ClientRegistration oidcClientRegistration() {
-        return ClientRegistrations.fromOidcIssuerLocation(
-                        applicationProperties.getSecurity().getOAUTH2().getIssuer())
+        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        return ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
                 .registrationId("oidc")
-                .clientId(applicationProperties.getSecurity().getOAUTH2().getClientId())
-                .clientSecret(applicationProperties.getSecurity().getOAUTH2().getClientSecret())
-                .scope("openid", "profile", "email")
-                .userNameAttributeName("email")
+                .clientId(oauth.getClientId())
+                .clientSecret(oauth.getClientSecret())
+                .scope(oauth.getScopes())
+                .userNameAttributeName(oauth.getUseAsUsername())
                 .clientName("OIDC")
                 .build();
     }
@@ -256,9 +231,14 @@ public class SecurityConfiguration {
 
                         // Add Authorities from database for existing user, if user is present.
                         if (authority instanceof OAuth2UserAuthority oauth2Auth) {
+                            String useAsUsername =
+                                    applicationProperties
+                                            .getSecurity()
+                                            .getOAUTH2()
+                                            .getUseAsUsername();
                             Optional<User> userOpt =
                                     userService.findByUsernameIgnoreCase(
-                                            (String) oauth2Auth.getAttributes().get("email"));
+                                            (String) oauth2Auth.getAttributes().get(useAsUsername));
                             if (userOpt.isPresent()) {
                                 User user = userOpt.get();
                                 if (user != null) {

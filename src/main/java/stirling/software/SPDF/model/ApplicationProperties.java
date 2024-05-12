@@ -1,6 +1,10 @@
 package stirling.software.SPDF.model;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -221,6 +225,10 @@ public class ApplicationProperties {
             private String clientId;
             private String clientSecret;
             private boolean autoCreateUser;
+            private String useAsUsername;
+            private String provider;
+
+            private Collection<String> scopes = new ArrayList<String>();
 
             public boolean getEnabled() {
                 return enabled;
@@ -262,6 +270,37 @@ public class ApplicationProperties {
                 this.autoCreateUser = autoCreateUser;
             }
 
+            public String getUseAsUsername() {
+                if (useAsUsername != null && useAsUsername.trim().length() > 0) {
+                    return useAsUsername;
+                }
+                return "email";
+            }
+
+            public void setUseAsUsername(String useAsUsername) {
+                this.useAsUsername = useAsUsername;
+            }
+
+            public String getProvider() {
+                return provider;
+            }
+
+            public void setProvider(String provider) {
+                this.provider = provider;
+            }
+
+            public Collection<String> getScopes() {
+                return scopes;
+            }
+
+            public void setScopes(String scpoes) {
+                List<String> scopesList =
+                        Arrays.stream(scpoes.split(","))
+                                .map(String::trim)
+                                .collect(Collectors.toList());
+                this.scopes.addAll(scopesList);
+            }
+
             @Override
             public String toString() {
                 return "OAUTH2 [enabled="
@@ -274,6 +313,12 @@ public class ApplicationProperties {
                         + (clientSecret != null && !clientSecret.isEmpty() ? "MASKED" : "NULL")
                         + ", autoCreateUser="
                         + autoCreateUser
+                        + ", useAsUsername="
+                        + useAsUsername
+                        + ", provider"
+                        + provider
+                        + ", scopes="
+                        + scopes
                         + "]";
             }
         }
