@@ -109,8 +109,9 @@ public class AccountWebController {
                 OAuth2User userDetails = (OAuth2User) principal;
 
                 // Retrieve username and other attributes
-                username = userDetails.getAttribute("email");
-
+                username =
+                        userDetails.getAttribute(
+                                applicationProperties.getSecurity().getOAUTH2().getUseAsUsername());
                 // Add oAuth2 Login attributes to the model
                 model.addAttribute("oAuth2Login", true);
             }

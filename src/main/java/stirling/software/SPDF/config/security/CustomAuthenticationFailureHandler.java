@@ -3,10 +3,12 @@ package stirling.software.SPDF.config.security;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
@@ -18,9 +20,12 @@ import stirling.software.SPDF.model.User;
 @Component
 public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-    @Autowired private final LoginAttemptService loginAttemptService;
+    private LoginAttemptService loginAttemptService;
 
-    @Autowired private final UserService userService; // Inject the UserService
+    private UserService userService;
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(CustomAuthenticationFailureHandler.class);
 
     public CustomAuthenticationFailureHandler(
             LoginAttemptService loginAttemptService, UserService userService) {
@@ -34,22 +39,28 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
             HttpServletResponse response,
             AuthenticationException exception)
             throws IOException, ServletException {
+
         String ip = request.getRemoteAddr();
         logger.error("Failed login attempt from IP: " + ip);
 
         String username = request.getParameter("username");
         if (!isDemoUser(username)) {
             if (loginAttemptService.loginAttemptCheck(username)) {
-                setDefaultFailureUrl("/login?error=locked");
-
+                response.sendRedirect("/login?error=locked");
+                return;
             } else {
                 if (exception.getClass().isAssignableFrom(LockedException.class)) {
-                    setDefaultFailureUrl("/login?error=locked");
+                    response.sendRedirect("/login?error=locked");
+                    return;
+                } else if (exception instanceof UsernameNotFoundException) {
+                    response.sendRedirect("/login?error=oauth2AuthenticationError");
+                    return;
                 }
             }
         }
         if (exception.getClass().isAssignableFrom(BadCredentialsException.class)) {
-            setDefaultFailureUrl("/login?error=badcredentials");
+            response.sendRedirect("/login?error=badcredentials");
+            return;
         }
 
         super.onAuthenticationFailure(request, response, exception);

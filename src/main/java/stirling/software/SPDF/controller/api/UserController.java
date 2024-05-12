@@ -47,8 +47,11 @@ public class UserController {
             model.addAttribute("error", "Username already exists");
             return "register";
         }
-
-        userService.saveUser(requestModel.getUsername(), requestModel.getPassword());
+        try {
+            userService.saveUser(requestModel.getUsername(), requestModel.getPassword());
+        } catch (IllegalArgumentException e) {
+            return "redirect:/login?messageType=invalidUsername";
+        }
         return "redirect:/login?registered=true";
     }
 
@@ -92,7 +95,11 @@ public class UserController {
         }
 
         if (newUsername != null && newUsername.length() > 0) {
-            userService.changeUsername(user, newUsername);
+            try {
+                userService.changeUsername(user, newUsername);
+            } catch (IllegalArgumentException e) {
+                return new RedirectView("/account?messageType=invalidUsername");
+            }
         }
 
         // Logout using Spring's utility

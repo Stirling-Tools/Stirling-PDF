@@ -8,6 +8,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
+import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
@@ -33,19 +36,19 @@ public class UserService implements UserServiceInterface {
 
     @Autowired private PasswordEncoder passwordEncoder;
 
+    @Autowired private MessageSource messageSource;
+
     // Handle OAUTH2 login and user auto creation.
     public boolean processOAuth2PostLogin(String username, boolean autoCreateUser) {
+        if (!isUsernameValidWithReturn(username).equals(username)) {
+            return false;
+        }
         Optional<User> existUser = userRepository.findByUsernameIgnoreCase(username);
         if (existUser.isPresent()) {
             return true;
         }
         if (autoCreateUser) {
-            User user = new User();
-            user.setUsername(username);
-            user.setEnabled(true);
-            user.setFirstLogin(false);
-            user.addAuthority(new Authority(Role.USER.getRoleId(), user));
-            userRepository.save(user);
+            saveUser(username, AuthenticationType.OAUTH2);
             return true;
         }
         return false;
@@ -128,30 +131,46 @@ public class UserService implements UserServiceInterface {
         return userOpt.isPresent() && userOpt.get().getApiKey().equals(apiKey);
     }
 
-    public void saveUser(String username, String password) {
+    public void saveUser(String username, AuthenticationType authenticationType)
+            throws IllegalArgumentException {
         User user = new User();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
+        user.setUsername(isUsernameValidWithReturn(username));
         user.setEnabled(true);
+        user.setFirstLogin(false);
+        user.addAuthority(new Authority(Role.USER.getRoleId(), user));
+        user.setAuthenticationType(authenticationType);
         userRepository.save(user);
     }
 
-    public void saveUser(String username, String password, String role, boolean firstLogin) {
+    public void saveUser(String username, String password) throws IllegalArgumentException {
         User user = new User();
-        user.setUsername(username);
+        user.setUsername(isUsernameValidWithReturn(username));
+        user.setPassword(passwordEncoder.encode(password));
+        user.setEnabled(true);
+        user.setAuthenticationType(AuthenticationType.WEB);
+        userRepository.save(user);
+    }
+
+    public void saveUser(String username, String password, String role, boolean firstLogin)
+            throws IllegalArgumentException {
+        User user = new User();
+        user.setUsername(isUsernameValidWithReturn(username));
         user.setPassword(passwordEncoder.encode(password));
         user.addAuthority(new Authority(role, user));
         user.setEnabled(true);
+        user.setAuthenticationType(AuthenticationType.WEB);
         user.setFirstLogin(firstLogin);
         userRepository.save(user);
     }
 
-    public void saveUser(String username, String password, String role) {
+    public void saveUser(String username, String password, String role)
+            throws IllegalArgumentException {
         User user = new User();
-        user.setUsername(username);
+        user.setUsername(isUsernameValidWithReturn(username));
         user.setPassword(passwordEncoder.encode(password));
         user.addAuthority(new Authority(role, user));
         user.setEnabled(true);
+        user.setAuthenticationType(AuthenticationType.WEB);
         user.setFirstLogin(false);
         userRepository.save(user);
     }
@@ -209,8 +228,8 @@ public class UserService implements UserServiceInterface {
         return authorityRepository.findByUserId(user.getId());
     }
 
-    public void changeUsername(User user, String newUsername) {
-        user.setUsername(newUsername);
+    public void changeUsername(User user, String newUsername) throws IllegalArgumentException {
+        user.setUsername(isUsernameValidWithReturn(newUsername));
         userRepository.save(user);
     }
 
@@ -235,6 +254,40 @@ public class UserService implements UserServiceInterface {
     }
 
     public boolean isUsernameValid(String username) {
-        return username.matches("[a-zA-Z0-9]+");
+        // Checks whether the simple username is formatted correctly
+        boolean isValidSimpleUsername =
+                username.matches("^[a-zA-Z0-9][a-zA-Z0-9@._+-]*[a-zA-Z0-9]$");
+        // Checks whether the email address is formatted correctly
+        boolean isValidEmail =
+                username.matches(
+                        "^(?=.{1,64}@)[A-Za-z0-9]+(\\.[A-Za-z0-9_+.-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$");
+        return isValidSimpleUsername || isValidEmail;
+    }
+
+    public String isUsernameValidWithReturn(String username) throws IllegalArgumentException {
+        if (!isUsernameValid(username)) {
+            String message =
+                    messageSource.getMessage(
+                            "invalidUsernameMessage", null, LocaleContextHolder.getLocale());
+            throw new IllegalArgumentException(message);
+        }
+        return username;
+    }
+
+    public boolean hasPassword(String username) {
+        Optional<User> user = userRepository.findByUsernameIgnoreCase(username);
+        if (user.isPresent() && user.get().hasPassword()) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isAuthenticationTypeByUsername(
+            String username, AuthenticationType authenticationType) {
+        Optional<User> user = userRepository.findByUsernameIgnoreCase(username);
+        if (user.isPresent() && user.get().getAuthenticationType() != null) {
+            return user.get().getAuthenticationType().equalsIgnoreCase(authenticationType.name());
+        }
+        return false;
     }
 }

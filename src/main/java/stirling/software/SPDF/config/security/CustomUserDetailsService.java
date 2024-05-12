@@ -22,7 +22,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired private UserRepository userRepository;
 
-    @Autowired private LoginAttemptService loginAttemptService;
+    private LoginAttemptService loginAttemptService;
+
+    CustomUserDetailsService(LoginAttemptService loginAttemptService) {
+        this.loginAttemptService = loginAttemptService;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -37,6 +41,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         if (loginAttemptService.isBlocked(username)) {
             throw new LockedException(
                     "Your account has been locked due to too many failed login attempts.");
+        }
+
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            throw new UsernameNotFoundException("Password must not be null");
         }
 
         return new org.springframework.security.core.userdetails.User(

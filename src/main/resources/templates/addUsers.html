@@ -26,6 +26,7 @@
                     <th th:text="#{username}">Username</th>
                     <th th:text="#{adminUserSettings.roles}">Roles</th>
                     <th th:text="#{adminUserSettings.actions}">Actions</th>
+                    <th th:text="#{adminUserSettings.authenticated}">Authentication type</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -37,6 +38,7 @@
                         <button type="submit" th:text="#{delete}">Delete</button>
                       </form>
                     </td>
+                    <td th:text="${user.authenticationType}"></td>
                   </tr>
                 </tbody>
               </table>
@@ -46,10 +48,11 @@
                 <span th:if="${param.messageType[0] == 'usernameExists'}" th:text="#{usernameExistsMessage}">Default message if not found</span>
                 <span th:if="${param.messageType[0] == 'invalidUsername'}" th:text="#{invalidUsernameMessage}">Default message if not found</span>
               </div>
+              <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{adminUserSettings.usernameInfo}" th:text="#{help}">Help</button>
               <form action="/api/v1/user/admin/saveUser" method="post">
                 <div class="mb-3">
                   <label for="username" th:text="#{username}">Username</label>
-                  <input type="text" class="form-control" name="username" pattern="[a-zA-Z0-9]+" th:title="#{adminUserSettings.usernameInfo}" required>
+                  <input type="text" class="form-control" name="username" id="username" th:title="#{adminUserSettings.usernameInfo}" required>
                 </div>
                 <div class="mb-3">
                   <label for="password" th:text="#{password}">Password</label>
