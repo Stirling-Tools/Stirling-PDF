@@ -20,7 +20,7 @@ export const JoiPDFFileSchema = Joi.custom((value: Express.Multer.File[] /* <- a
             throw new Error("an invalid type (unhandeled, non-file-type) was provided to pdf validation process. Please report this to maintainers.");
         }
     }
-}, "pdffile validation");
+}, "pdffile");
 
 function isPdfFileArray(value: any[]): value is PdfFile[] { // "is" is a ts-typeguard - https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates
     return value.every((e) => e instanceof PdfFile);

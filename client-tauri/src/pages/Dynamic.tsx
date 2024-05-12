@@ -30,6 +30,8 @@ function Dynamic() {
             LoadingModule.then((Module) => {
                 const Operator = Module[capitalizeFirstLetter(selectedValue)];
                 const description = Operator.schema.describe();
+                console.log(Operator.schema);
+                console.log(description);
 
                 activeOperator.current = Operator;
                 // This will update children
