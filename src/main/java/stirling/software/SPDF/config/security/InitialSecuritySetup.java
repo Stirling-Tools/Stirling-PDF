@@ -33,21 +33,21 @@ public class InitialSecuritySetup {
                     applicationProperties.getSecurity().getInitialLogin().getUsername();
             String initialPassword =
                     applicationProperties.getSecurity().getInitialLogin().getPassword();
-            try {
-                // https://github.com/Stirling-Tools/Stirling-PDF/issues/976
-                userService.isUsernameValidWithReturn(initialUsername);
-            } catch (IllegalArgumentException e) {
-                Path pathToFile = Paths.get("configs/settings.yml");
-                try {
-                    if (Files.exists(pathToFile)) {
-                        Files.delete(pathToFile);
-                    }
-                } catch (IOException ex) {
-                    logger.info(ex.getMessage());
-                }
-                throw e;
-            }
             if (initialUsername != null && initialPassword != null) {
+                try {
+                    // https://github.com/Stirling-Tools/Stirling-PDF/issues/976
+                    userService.isUsernameValidWithReturn(initialUsername);
+                } catch (IllegalArgumentException e) {
+                    Path pathToFile = Paths.get("configs/settings.yml");
+                    try {
+                        if (Files.exists(pathToFile)) {
+                            Files.delete(pathToFile);
+                        }
+                    } catch (IOException ex) {
+                        logger.info(ex.getMessage());
+                    }
+                    throw e;
+                }
                 userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
             } else {
                 initialUsername = "admin";
