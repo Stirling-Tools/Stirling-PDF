@@ -36,7 +36,7 @@ export class ExtractPages extends Operator {
      * Logic
      */
 
-    /** PDF-Imposition, PDF-N-Up: Put multiple pages of the input document into a single page of the output document. - see: {@link https://en.wikipedia.org/wiki/N-up}  */
+    /** PDF extraction, specify pages from one pdf and output them to a new pdf */
     async run(input: PdfFile[], progressCallback: (state: Progress) => void): Promise<PdfFile[]> {
         return oneToOne<PdfFile, PdfFile>(input, async (input, index, max) => {
             const pdfLibDocument = await input.pdfLibDocument;
