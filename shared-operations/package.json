@@ -11,6 +11,7 @@
   "dependencies": {
     "@stirling-tools/joi": "github:Stirling-Tools/joi",
     "buffer": "^6.0.3",
+    "canvas": "^2.11.2",
     "i18next-resources-to-backend": "^1.2.0",
     "image-js": "^0.35.5",
     "memfs": "^4.9.2",

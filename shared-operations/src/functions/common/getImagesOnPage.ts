@@ -3,6 +3,8 @@ import { PDFPageProxy } from "pdfjs-dist/types/src/display/api";
 
 import * as PDFJS from "pdfjs-dist";
 
+import { createCanvas } from "canvas";
+
 export interface PDFJSImage {
     width: number;
     height: number;
@@ -16,7 +18,9 @@ export async function getImagesOnPage(page: PDFPageProxy): Promise<PDFJSImage[]>
     const images: PDFJSImage[] = [];
     for (let j=0; j < ops.fnArray.length; j++) {
         if (ops.fnArray[j] == PDFJS.OPS.paintImageXObject) {
-            const image = page.objs.get(ops.argsArray[j][0]) as PDFJSImage;
+            const image: PDFJSImage = page.objs.get(ops.argsArray[j][0])
+
+            console.log("Image: ", image);
             images.push(image);
         }
     }

@@ -1,0 +1,10 @@
+{
+    "friendlyName": "Remove Blank Pages",
+    "description": "Remove pages without .",
+    "values": {
+        "whiteThreashold": {
+            "friendlyName": "Image White Threashold",
+            "description": "0-255 the tolerance for near white images. 0 - Almost white is detected as empty. 255 - No images are detected as empty."
+        }
+    }
+}
