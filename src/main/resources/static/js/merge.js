@@ -2,39 +2,52 @@ let currentSort = {
   field: null,
   descending: false,
 };
+let filesWithUniqueId = [];
+let processedFiles = [];
 
 document.getElementById("fileInput-input").addEventListener("change", function () {
-  var files = this.files;
+  var files = Array.from(this.files).map(file => {
+    return {
+      file: file,
+      uniqueId: file.name + Date.now()
+    };
+  });
+  filesWithUniqueId = files;
   displayFiles(files);
 });
+document.addEventListener("filesUpdated", function (e) {
+  filesWithUniqueId = e.detail;
+  displayFiles(filesWithUniqueId);
+});
 
-/**
- * @param {File[]} files
- */
+
 function displayFiles(files) {
   const list = document.getElementById("selectedFiles");
-  const processedFiles = [];
 
   while (list.firstChild) {
     list.removeChild(list.firstChild);
   }
 
+  // Clear the processedFiles array
+  processedFiles = [];
+
   for (let i = 0; i < files.length; i++) {
     const item = document.createElement("li");
     item.className = "list-group-item";
+    item.dataset.id = files[i].uniqueId; // Assign the uniqueId to the list item
     const fileNameDiv = document.createElement("div");
     fileNameDiv.className = "filename";
-    fileNameDiv.textContent = files[i].name;
+    fileNameDiv.textContent = files[i].file.name;
 
     // Check for duplicates
-    if (processedFiles.includes(files[i].name)) {
+    const duplicateFiles = files.filter(file => file.file.name === files[i].file.name);
+    if (duplicateFiles.length > 1) {
       const warning = document.createElement("span");
       warning.className = "duplicate-warning";
       warning.textContent = "(Duplicate)";
       fileNameDiv.appendChild(warning);
-    } else {
-      processedFiles.push(files[i].name);
     }
+
 
     item.innerHTML = `
             <div class="d-flex justify-content-between align-items-center w-100">
@@ -80,16 +93,18 @@ function attachMoveButtons() {
 
   var removeButtons = document.querySelectorAll(".remove-file");
   for (var i = 0; i < removeButtons.length; i++) {
+    // When the delete button is clicked
     removeButtons[i].addEventListener("click", function (event) {
       event.preventDefault();
       var parent = this.closest(".list-group-item");
-      //Get name of removed file
-      var fileName = parent.querySelector(".filename").innerText;
+      var fileId = parent.dataset.id; // Get the unique identifier of the file to be deleted
       parent.remove();
+      // Remove the file from the filesWithUniqueId array
+      filesWithUniqueId = filesWithUniqueId.filter(fileObj => fileObj.uniqueId !== fileId);
       updateFiles();
-      //Dispatch a custom event with the name of the removed file
-      var event = new CustomEvent("fileRemoved", { detail: fileName });
-      document.dispatchEvent(event);
+      // Dispatch a custom event with the unique identifier of the file to be deleted
+      var fileRemoved = new CustomEvent("fileRemoved", { detail: fileId });
+      document.dispatchEvent(fileRemoved);
     });
   }
 }
@@ -129,18 +144,18 @@ function sortFiles(comparator) {
   document.getElementById("fileInput-input").files = dataTransfer.files;
 }
 
+
 function updateFiles() {
   var dataTransfer = new DataTransfer();
   var liElements = document.querySelectorAll("#selectedFiles li");
-  const files = document.getElementById("fileInput-input").files;
 
   for (var i = 0; i < liElements.length; i++) {
-    var fileNameFromList = liElements[i].querySelector(".filename").innerText;
+    var fileIdFromList = liElements[i].dataset.id; // Get the unique identifier from the list item
     var fileFromFiles;
-    for (var j = 0; j < files.length; j++) {
-      var file = files[j];
-      if (file.name === fileNameFromList) {
-        dataTransfer.items.add(file);
+    for (var j = 0; j < filesWithUniqueId.length; j++) {
+      var fileObj = filesWithUniqueId[j];
+      if (fileObj.uniqueId === fileIdFromList) {
+        dataTransfer.items.add(fileObj.file);
         break;
       }
     }

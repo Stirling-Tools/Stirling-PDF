@@ -79,22 +79,43 @@ function setupFileInput(chooser) {
   document.body.addEventListener("dragleave", dragleaveListener);
   document.body.addEventListener("drop", dropListener);
 
+  // When adding files
   $("#" + elementId).on("change", function (e) {
-    //Get newly Added Files
-    const newFiles = Array.from(e.target.files);
+    // Get newly Added Files
+    const newFiles = Array.from(e.target.files).map(file => {
+      return {
+        file: file,
+        uniqueId: file.name + Date.now()// Assign a unique identifier to each file
+      };
+    });
 
-    //Add Files to existing Files
-    allFiles = allFiles.concat(newFiles);
+    // Add new files to existing files
+    allFiles = [...allFiles, ...newFiles];
 
-    //Update the file inout`s files property
+    // Update the file input's files property
     const dataTransfer = new DataTransfer();
-    allFiles.forEach((file) => dataTransfer.items.add(file));
+    allFiles.forEach((fileObj) => dataTransfer.items.add(fileObj.file));
     e.target.files = dataTransfer.files;
 
     handleFileInputChange(this);
 
-    //Call the displayFiles function with the allFiles array
+    // Call the displayFiles function with the allFiles array
     displayFiles(allFiles)
+    // Dispatch a custom event with the allFiles array
+    var filesUpdated = new CustomEvent("filesUpdated", { detail: allFiles });
+    document.dispatchEvent(filesUpdated);
+  });
+
+// Listen for event of file being removed and then filter it out of the allFiles array
+  document.addEventListener("fileRemoved", function (e) {
+    const fileId = e.detail;
+    console.log('File to be removed:', fileId); // Log the uniqueId of the file to be removed
+    console.log('All files before removal:', allFiles); // Log all files before removal
+    allFiles = allFiles.filter(fileObj => fileObj.uniqueId !== fileId); // Remove the file from the allFiles array using the unique identifier
+    console.log('All files after removal:', allFiles); // Log all files after removal
+    // Dispatch a custom event with the allFiles array
+    var filesUpdated = new CustomEvent("filesUpdated", { detail: allFiles });
+    document.dispatchEvent(filesUpdated);
   });
 
   function handleFileInputChange(inputElement) {
@@ -116,9 +137,4 @@ function setupFileInput(chooser) {
       $(inputElement).siblings(".custom-file-label").addClass("selected").html(pdfPrompt);
     }
   }
-  //Listen for event of file being removed and the filter it out of the allFiles array
-  document.addEventListener("fileRemoved", function (e) {
-    const fileName = e.detail;
-    allFiles = allFiles.filter(file => file.name !== fileName);
-  });
 }
