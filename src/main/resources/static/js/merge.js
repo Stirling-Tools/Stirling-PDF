@@ -132,15 +132,15 @@ document.getElementById("sortByDateBtn").addEventListener("click", function () {
 });
 
 function sortFiles(comparator) {
-  // Convert FileList to array and sort
-  const sortedFilesArray = Array.from(document.getElementById("fileInput-input").files).sort(comparator);
+  // Sort the filesWithUniqueId array
+  const sortedFilesArray = filesWithUniqueId.sort((a, b) => comparator(a.file, b.file));
 
   // Refresh displayed list
   displayFiles(sortedFilesArray);
 
   // Update the files property
   const dataTransfer = new DataTransfer();
-  sortedFilesArray.forEach((file) => dataTransfer.items.add(file));
+  sortedFilesArray.forEach((fileObj) => dataTransfer.items.add(fileObj.file));
   document.getElementById("fileInput-input").files = dataTransfer.files;
 }
 
