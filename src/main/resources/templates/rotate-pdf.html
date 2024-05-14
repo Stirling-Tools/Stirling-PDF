@@ -55,7 +55,11 @@
         console.log("loading pdf");
 
         document.querySelector("#editSection").style.display = "";
-
+        
+        const existingPreview = document.getElementById("pdf-preview");
+        if (existingPreview) {
+          existingPreview.remove();
+        }
         var url = URL.createObjectURL(fileInput.files[0])
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
         const pdf = await pdfjsLib.getDocument(url).promise;
