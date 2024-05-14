@@ -109,10 +109,7 @@ function setupFileInput(chooser) {
 // Listen for event of file being removed and then filter it out of the allFiles array
   document.addEventListener("fileRemoved", function (e) {
     const fileId = e.detail;
-    console.log('File to be removed:', fileId); // Log the uniqueId of the file to be removed
-    console.log('All files before removal:', allFiles); // Log all files before removal
     allFiles = allFiles.filter(fileObj => fileObj.uniqueId !== fileId); // Remove the file from the allFiles array using the unique identifier
-    console.log('All files after removal:', allFiles); // Log all files after removal
     // Dispatch a custom event with the allFiles array
     var filesUpdated = new CustomEvent("filesUpdated", { detail: allFiles });
     document.dispatchEvent(filesUpdated);

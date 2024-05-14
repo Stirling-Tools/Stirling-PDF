@@ -2,6 +2,7 @@ let currentSort = {
   field: null,
   descending: false,
 };
+//New Array to keep track of unique id
 let filesWithUniqueId = [];
 let processedFiles = [];
 
@@ -15,6 +16,7 @@ document.getElementById("fileInput-input").addEventListener("change", function (
   filesWithUniqueId = files;
   displayFiles(files);
 });
+//Get Files Updated Event from FileInput
 document.addEventListener("filesUpdated", function (e) {
   filesWithUniqueId = e.detail;
   displayFiles(filesWithUniqueId);
@@ -39,7 +41,7 @@ function displayFiles(files) {
     fileNameDiv.className = "filename";
     fileNameDiv.textContent = files[i].file.name;
 
-    // Check for duplicates
+    // Check for duplicates and add a warning if necessary
     const duplicateFiles = files.filter(file => file.file.name === files[i].file.name);
     if (duplicateFiles.length > 1) {
       const warning = document.createElement("span");
@@ -151,7 +153,6 @@ function updateFiles() {
 
   for (var i = 0; i < liElements.length; i++) {
     var fileIdFromList = liElements[i].dataset.id; // Get the unique identifier from the list item
-    var fileFromFiles;
     for (var j = 0; j < filesWithUniqueId.length; j++) {
       var fileObj = filesWithUniqueId[j];
       if (fileObj.uniqueId === fileIdFromList) {
