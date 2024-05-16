@@ -15,7 +15,7 @@ function Dynamic() {
     const operators = listOperatorNames();
     const activeOperator = useRef<typeof Operator>();
 
-    function selectionChanged(s: BaseSyntheticEvent) {
+    async function selectionChanged(s: BaseSyntheticEvent) {
         const selectedValue = s.target.value;
         console.log("Selection changed to", selectedValue);
         if(selectedValue == "none") {
@@ -23,20 +23,23 @@ function Dynamic() {
             return;
         }
 
-        i18next.loadNamespaces(selectedValue, (err, t) => {
+        console.log("Loading namespaces for", selectedValue);
+        await i18next.loadNamespaces(selectedValue, (err, t) => {
             if (err) throw err;
+        });
+        console.log("Loading namespaces done");
 
-            const LoadingModule = import(`@stirling-pdf/shared-operations/src/functions/${selectedValue}`) as Promise<{ [key: string]: typeof Operator }>;
-            LoadingModule.then((Module) => {
-                const Operator = Module[capitalizeFirstLetter(selectedValue)];
-                const description = Operator.schema.describe();
-                console.log(Operator.schema);
-                console.log(description);
+        console.log("Loading modules for", selectedValue);
+        const LoadingModule = import(`@stirling-pdf/shared-operations/src/functions/${selectedValue}`) as Promise<{ [key: string]: typeof Operator }>;
+        LoadingModule.then((Module) => {
+            const Operator = Module[capitalizeFirstLetter(selectedValue)];
+            const description = Operator.schema.describe();
+            console.log(Operator.schema);
+            console.log(description);
 
-                activeOperator.current = Operator;
-                // This will update children
-                setSchemaDescription(description);
-            });
+            activeOperator.current = Operator;
+            // This will update children
+            setSchemaDescription(description);
         });
     }
 
@@ -75,7 +78,7 @@ function Dynamic() {
         const validationResults = activeOperator.current.schema.validate({input: inputs, values: action.values});
 
         if(validationResults.error) {
-            console.log({error: "Validation failed", details: validationResults.error.message});
+            console.error({error: "Validation failed", details: validationResults.error.message}, validationResults.error.stack);
         }
         else {
             action.values = validationResults.value.values;

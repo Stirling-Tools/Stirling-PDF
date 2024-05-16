@@ -8,7 +8,7 @@ export const JoiPDFFileSchema = Joi.custom((value: Express.Multer.File[] /* <- a
         else { // File(s)
             const firstWrongFile = value.find(f => f.mimetype != "application/pdf")
             if(firstWrongFile) 
-                throw new Error(`at least one of the files provided doesn't seem to be a PDF. Got ${firstWrongFile.mimetype} instead.`);
+                throw new Error(`at least one of the files provided doesn't seem to be a PDF. Got the file ${JSON.stringify(firstWrongFile)} instead.`);
 
             return PdfFile.fromMulterFiles(value);
         }
