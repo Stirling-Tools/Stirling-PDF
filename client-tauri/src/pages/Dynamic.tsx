@@ -8,7 +8,6 @@ import { BuildFields } from "../components/fields/BuildFields";
 import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
 import { PdfFile, RepresentationType } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
 import { Action } from "@stirling-pdf/shared-operations/declarations/Action";
-import { JoiPDFFileSchema } from "@stirling-pdf/shared-operations/src/wrappers/PdfFileJoi";
 
 function Dynamic() {
     const [schemaDescription, setSchemaDescription] = useState<Joi.Description>();
@@ -18,6 +17,7 @@ function Dynamic() {
 
     function selectionChanged(s: BaseSyntheticEvent) {
         const selectedValue = s.target.value;
+        console.log("Selection changed to", selectedValue);
         if(selectedValue == "none") {
             setSchemaDescription(undefined);
             return;

@@ -3,8 +3,6 @@ import { PDFPageProxy } from "pdfjs-dist/types/src/display/api";
 
 import * as PDFJS from "pdfjs-dist";
 
-import { createCanvas } from "canvas";
-
 export interface PDFJSImage {
     width: number;
     height: number;

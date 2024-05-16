@@ -2,11 +2,11 @@
 
 This file should introduce you with the concepts and tools used in this project.
 
-## PDF Library Docs
-- [pdf-lib](https://pdf-lib.js.org) - js
-- [pdfcpu](https://pdfcpu.io) - go-wasm
-- [opencv-wasm](https://www.npmjs.com/package/opencv-wasm) - ?-wasm
-- [pdfjs](https://www.npmjs.com/package/pdfjs-dist) - js
+## Basic Setup
+
+- Install/Update **Node (v22.2.0, [nvm](https://github.com/coreybutler/nvm-windows))** & NPM(>10.2.1)
+- To install all dependecies `npm run update-all-dependencies` (in [root](/))
+- To test your current setup and boot a complete install of spdf v2 run `npm run dev-all` (in [root](/))
 
 ## Nomenclature
 
@@ -25,12 +25,11 @@ This file should introduce you with the concepts and tools used in this project.
 - (abandoned) client-vanilla - The initial test to see if it is possible to run Operators in the browser environment of the user in addition to having a backend. Will be removed once development on the fronend/client-tauri has started.
 - server-node - Functions and Classes that are shared between frontend and backend e.g. Operators
 
-## Basic Setup
-
-- Install/Update Node (>v20.9.0) & NPM(>10.2.1)
-- To install all dependecies `npm run update-all-dependencies` (in [root](/))
-- To test your current setup and boot a complete install of spdf v2 run `npm run dev-all` (in [root](/))
-
 ## Adding a PDF Operation
 StirlingPDF aims to support as many types of operations as possible, including some that cannot be executed in the client. Because of this, we have decided to move some of the shared functionality into it's own node module so that it can be shared by both client and server.
 
+## PDF Library Docs
+- [pdf-lib](https://pdf-lib.js.org) - js
+- [pdfcpu](https://pdfcpu.io) - go-wasm
+- [opencv-wasm](https://www.npmjs.com/package/opencv-wasm) - ?-wasm
+- [mozilla's pdfjs-dist/pdf.js](https://www.npmjs.com/package/pdfjs-dist) - js
