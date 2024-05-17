@@ -35,7 +35,8 @@ export class Operator {
     }
 
     async run(input: PdfFile[] | any[], progressCallback: (progress: Progress) => void): Promise<PdfFile[] | any[]> {
-        return [];
+        progressCallback({ curFileProgress: 1, operationProgress: 1 })
+        return input;
     }
 }
 

@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri-dev (currently broken)": "tauri dev",
+    "tauri-build-debug": "tauri build --debug",
+    "tauri-build": "tauri build"
   },
   "dependencies": {
     "@stirling-pdf/shared-operations": "^0.0.0",

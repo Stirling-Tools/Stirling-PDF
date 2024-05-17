@@ -7,7 +7,7 @@ export async function getOperatorByName(name: string): Promise<typeof Operator |
     // Check if exists
     if(!compileTimeOperatorList.includes(name)) return;
 
-    i18next.loadNamespaces(name, (err, t) => { if (err) throw err; });
+    i18next.loadNamespaces(name, (err, t) => { if (err) throw err; console.log(t) });
     const loadedModule = await import("../functions/" + name + ".ts");
     const operator = loadedModule[capitalizeFirstLetter(name)];
     if(!operator) {

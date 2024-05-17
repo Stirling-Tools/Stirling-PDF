@@ -20,7 +20,7 @@ export function BuildFields({ schemaDescription, onSubmit }: BuildFieldsProps) {
             <hr />
             <form onSubmit={(e) => { onSubmit(e); e.preventDefault(); }}>
             {
-                values ? Object.keys(values).map((key, i) => {  
+                values ? Object.keys(values).map((key) => {  
                     return (<GenericField key={key} fieldName={key} joiDefinition={values[key]} />) 
                 }) : undefined
             }

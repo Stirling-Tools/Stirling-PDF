@@ -5,8 +5,8 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import Dynamic from "./pages/Dynamic";
-import ToPdf from "./pages/convert/ToPdf";
-import Impose from "./pages/page-operations/Impose";
+// import ToPdf from "./pages/convert/ToPdf";
+// import Impose from "./pages/page-operations/Impose";
 import NoMatch from "./pages/NoMatch";
 import NavBar from "./components/NavBar";
 
@@ -53,11 +53,11 @@ export default function App() {
                     <Route path="*" element={<NoMatch />} />
                 </Route>
                 <Route path="/convert" element={<Layout />}>
-                    <Route path="file-to-pdf" element={<ToPdf />} />
+                    {/* <Route path="file-to-pdf" element={<ToPdf />} /> */}
                     <Route path="*" element={<NoMatch />} />
                 </Route>
                 <Route path="/page-operations" element={<Layout />}>
-                    <Route path="impose" element={<Impose />} />
+                    {/* <Route path="impose" element={<Impose />} /> */}
                     <Route path="*" element={<NoMatch />} />
                 </Route>
             </Routes>

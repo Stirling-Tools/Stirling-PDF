@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-import { BaseSyntheticEvent, createContext, useRef, useState } from "react";
+import { BaseSyntheticEvent, useRef, useState } from "react";
 import { Operator } from "@stirling-pdf/shared-operations/src/functions";
 import i18next from "i18next";
 import Joi from "@stirling-tools/joi";
@@ -26,6 +26,7 @@ function Dynamic() {
         console.log("Loading namespaces for", selectedValue);
         await i18next.loadNamespaces(selectedValue, (err, t) => {
             if (err) throw err;
+            console.log(t);
         });
         console.log("Loading namespaces done");
 
@@ -110,7 +111,7 @@ function Dynamic() {
             <br />
             <select id="pdfOptions" onChange={selectionChanged}>
                 <option value="none">none</option>
-                { operators.map((operator, i) => {
+                { operators.map((operator) => {
                     return (<option key={operator} value={operator}>{operator}</option>)
                 }) }
             </select>

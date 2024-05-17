@@ -22,7 +22,8 @@
   },
   "include": [
     "src",
-    "declarations/*.d.ts"
+    "declarations/*.d.ts",
+    "../shared-operations/declarations/*.d.ts"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
