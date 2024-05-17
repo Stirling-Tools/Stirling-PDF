@@ -1,4 +1,9 @@
 import * as PDFJS from "pdfjs-dist";
+import pdfJSWorkerURL from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+const isBrowser = import.meta.env.SSR === false
+if(isBrowser){
+    PDFJS.GlobalWorkerOptions.workerSrc = pdfJSWorkerURL;
+}
 
 import type { PDFDocumentProxy as PDFJSDocument } from "pdfjs-dist/types/src/display/api";
 import { PDFDocument as PDFLibDocument } from "pdf-lib";
@@ -73,7 +78,7 @@ export class PdfFile {
             });
         default:
             return new Promise(async (resolve) => {
-                const pdfjsDoc = await PDFJS.getDocument(await this.uint8Array).promise;
+                const pdfjsDoc = await PDFJS.getDocument({ data: await this.uint8Array, isOffscreenCanvasSupported: false }).promise; 
                 this.pdfJsDocument = pdfjsDoc;
                 resolve(pdfjsDoc);
             });
