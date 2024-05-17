@@ -84,7 +84,7 @@ function Dynamic() {
             action.values = validationResults.value.values;
             const operation = new activeOperator.current(action);
             operation.run(validationResults.value.input, (progress) => {
-                console.log("Progress: " + progress.operationProgress);
+                console.log("OperationProgress: " + progress.operationProgress, "CurFileProgress: " + progress.curFileProgress);
             }).then(async pdfFiles => {
                 console.log("Done");
                 console.log(pdfFiles);

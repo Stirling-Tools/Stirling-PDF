@@ -1,33 +1,75 @@
+import { Operator, Progress, oneToOne } from ".";
+
+import Joi from "@stirling-tools/joi";
+import { JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
+
+import i18next from "i18next";
+
+import CommaArrayJoiExt from "../wrappers/CommaArrayJoiExt";
 
 import { degrees } from "pdf-lib";
 import { PdfFile, RepresentationType } from "../wrappers/PdfFile";
 
-export interface RotateParamsType {
-    file: PdfFile;
-    rotation: number|number[];
-}
+export class RotatePages extends Operator {
+    static type = "rotatePages";
 
-export async function rotatePages(params: RotateParamsType): Promise<PdfFile> {
-    const { file, rotation } = params;
-    
-    const pdfDoc = await file.pdfLibDocument;
-    const pages = pdfDoc.getPages();
+    /**
+     * Validation & Localisation
+     */
 
-    if (Array.isArray(rotation)) {
-        if (rotation.length != pages.length) {
-            throw new Error(`Number of given rotations '${rotation.length}' is not the same as the number of pages '${pages.length}'`);
-        }
-        for (let i=0; i<rotation.length; i++) {
-            const oldRotation = pages[i].getRotation().angle;
-            pages[i].setRotation(degrees(oldRotation + rotation[i]));
-        }
-    } else {
-        pages.forEach(page => {
-            // Change page size
-            const oldRotation = page.getRotation().angle;
-            page.setRotation(degrees(oldRotation + rotation));
+    protected static inputSchema = JoiPDFFileSchema.label(i18next.t("inputs.pdffile.name")).description(i18next.t("inputs.pdffile.description"));
+    protected static valueSchema = Joi.object({
+        rotation: Joi.alternatives().try(
+                Joi.number().min(0).max(360).allow(null),
+                CommaArrayJoiExt.comma_array().items(Joi.number().integer().min(0).max(360))
+            ).label(i18next.t("values.rotation.friendlyName", { ns: "rotatePages" })).description(i18next.t("values.rotation.description", { ns: "rotatePages" }))
+            .example("90").example("-180").example("[90, 0, 270]"),
+    });
+    protected static outputSchema = JoiPDFFileSchema.label(i18next.t("outputs.pdffile.name")).description(i18next.t("outputs.pdffile.description"));
+
+    static schema = Joi.object({
+        input: RotatePages.inputSchema,
+        values: RotatePages.valueSchema.required(),
+        output: RotatePages.outputSchema
+    }).label(i18next.t("friendlyName", { ns: "rotatePages" })).description(i18next.t("description", { ns: "rotatePages" }));
+
+
+    /**
+     * Logic
+     */
+
+    /** Detect and remove white pages */
+    async run(input: PdfFile[], progressCallback: (state: Progress) => void): Promise<PdfFile[]> {
+        return oneToOne<PdfFile, PdfFile>(input, async (input, index, max) => {
+
+            const pdfDoc = await input.pdfLibDocument;
+            const pages = pdfDoc.getPages();
+
+            // Different rotations applied to each page
+            if (Array.isArray(this.actionValues.rotation)) {
+                if (this.actionValues.rotation.length != pages.length) {
+                    throw new Error(`Number of given rotations '${this.actionValues.rotation.length}' is not the same as the number of pages '${pages.length}'`);
+                }
+                for (let pageIdx = 0; pageIdx < this.actionValues.rotation.length; pageIdx++) {
+                    const oldRotation = pages[pageIdx].getRotation().angle;
+                    pages[pageIdx].setRotation(degrees(oldRotation + this.actionValues.rotation[pageIdx]));
+
+                    progressCallback({ curFileProgress: pageIdx/pages.length, operationProgress: index/max });
+                }
+            } 
+            // Only one rotation applied to each page
+            else {
+                pages.forEach((page, pageIdx) => {
+                    // Change page size
+                    const oldRotation = page.getRotation().angle;
+                    page.setRotation(degrees(oldRotation + this.actionValues.rotation));
+                    progressCallback({ curFileProgress: pageIdx/pages.length, operationProgress: index/max });
+                });
+            }
+
+            progressCallback({ curFileProgress: 1, operationProgress: index/max });
+
+            return new PdfFile(input.originalFilename, pdfDoc, RepresentationType.PDFLibDocument, input.filename + "_rotated");
         });
     }
-
-    return new PdfFile(file.originalFilename, pdfDoc, RepresentationType.PDFLibDocument, file.filename+"_rotated");
 }

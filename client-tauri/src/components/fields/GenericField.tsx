@@ -67,18 +67,35 @@ export function GenericField({ fieldName, joiDefinition }: GenericFieldProps) {
                 const item: Joi.Description = joiDefinition.items[0];
 
                 if(item.type == "number") {
-                    if(item.rules.length == 1) {
-                        return (
-                            <Fragment>
-                                <label htmlFor={fieldName}>{flags.label}:</label>
-                                <input type="text" pattern="(\d+)(,\s*\d+)*" list={fieldName} name={fieldName}/>
-                                <br/>
-                            </Fragment>
-                        );
-                    }
-                    else {
-                        return (<div>comma_array, item rules are empty or bigger than one, this is not implemented.</div>);
-                    }
+                    const props: any = {};
+
+                    item.rules.forEach((rule: { args: any, name: string}) => {
+
+                        switch (rule.name) {
+                            case "integer":
+                                if(props.pattern) {
+                                    return (<div>props.pattern was already set, this is not implemented.</div>);
+                                }
+                                props.pattern = `(\\d+)(,\\s*\\d+)*`;
+                                break;
+                            case "min":
+                                // TODO: Could validate this in frontend first.
+                                break;
+                            case "max":
+                                // TODO: Could validate this in frontend first.
+                                break;
+                            default:
+                                return (<div>comma_array, item rule {rule.name} is not implemented.</div>);
+                        }
+                    });
+
+                    return (
+                        <Fragment>
+                            <label htmlFor={fieldName}>{flags.label}:</label>
+                            <input type="text" pattern={props.pattern} list={fieldName} name={fieldName}/>
+                            <br/>
+                        </Fragment>
+                    );
                 }
                 else {
                     return (<div>comma_array, other types than numbers are not implemented yet.</div>);
@@ -89,6 +106,14 @@ export function GenericField({ fieldName, joiDefinition }: GenericFieldProps) {
                 return (<div>comma_array, joi items are empty or bigger than one, this is not implemented</div>);
             }
             break;
+        case "alternatives":
+            return (
+                <Fragment>
+                    <label htmlFor={fieldName}>{flags.label}:</label>
+                    <input type="text" list={fieldName} name={fieldName}/>
+                    <br/>
+                </Fragment>
+            );
         default:
             console.log(joiDefinition);
             return (<div>GenericField.tsx: <br/> "{fieldName}": requested type "{joiDefinition.type}" not found. Check console for further info.</div>)
