@@ -14,7 +14,7 @@ You could theoretically use a Distrobox/Toolbox, if your Distribution has old or
 
 Install the following software, if not already installed:
 
-- Java 17 or later
+- Java 17 or later (21 recommended)
 
 - Gradle 7.0 or later (included within repo so not needed on server)
 
@@ -42,19 +42,19 @@ For Debian-based systems, you can use the following command:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y git  automake  autoconf  libtool  libleptonica-dev  pkg-config zlib1g-dev make g++ openjdk-17-jdk python3 python3-pip
+sudo apt-get install -y git  automake  autoconf  libtool  libleptonica-dev  pkg-config zlib1g-dev make g++ openjdk-21-jdk python3 python3-pip
 ```
 
 For Fedora-based systems use this command:
 
 ```bash
-sudo dnf install -y git automake autoconf libtool leptonica-devel pkg-config zlib-devel make gcc-c++ java-17-openjdk python3 python3-pip
+sudo dnf install -y git automake autoconf libtool leptonica-devel pkg-config zlib-devel make gcc-c++ java-21-openjdk python3 python3-pip
 ```
 
 For non-root users with Nix Package Manager, use the following command:
 ```bash
 nix-channel --update
-nix-env -iA nixpkgs.jdk17 nixpkgs.git nixpkgs.python38 nixpkgs.gnumake nixpkgs.libgcc nixpkgs.automake nixpkgs.autoconf nixpkgs.libtool nixpkgs.pkg-config nixpkgs.zlib nixpkgs.leptonica
+nix-env -iA nixpkgs.jdk21 nixpkgs.git nixpkgs.python38 nixpkgs.gnumake nixpkgs.libgcc nixpkgs.automake nixpkgs.autoconf nixpkgs.libtool nixpkgs.pkg-config nixpkgs.zlib nixpkgs.leptonica
 ```
 
 ### Step 2: Clone and Build jbig2enc (Only required for certain OCR functionality)
