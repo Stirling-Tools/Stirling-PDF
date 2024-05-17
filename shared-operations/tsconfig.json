@@ -8,7 +8,8 @@
             "#pdfcpu": ["../../shared-operations/src/wasm/pdfcpu/pdfcpu-wrapper.server"],
         },
         "types": [
-            "vite/client"
+            "vite/client",
+            "multer"
         ],
     }                                     /* Specify a set of entries that re-map imports to additional lookup locations. */ 
 }

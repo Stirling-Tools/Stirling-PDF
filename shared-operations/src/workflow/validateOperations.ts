@@ -24,6 +24,7 @@ export async function validateOperations(actions: Action[]): Promise<{ valid: bo
         if(validationResult.error) {
             return { valid: false, reason: validationResult.error.message};
         }
+        action.values = validationResult.value.values;
 
         if (action.actions) {
             // Check io compatibility of the operators

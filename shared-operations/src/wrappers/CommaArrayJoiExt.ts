@@ -12,14 +12,16 @@ export default Joi.extend((joi) => {
             from: 'string',
             method(value, helpers) {
     
-                if (typeof value !== 'string' || !/(\d+)(,\s*\d+)*/.test(value)) { // is string and in format "[number], [number]"
+                if (typeof value !== 'string') {
                     return;
                 }
     
                 try {
                     return { value: value.split(",").map(v => v.trim()) };
                 }
-                catch (ignoreErr) { }
+                catch (err) { 
+                    helpers.error(err);
+                }
             }
         }
 
