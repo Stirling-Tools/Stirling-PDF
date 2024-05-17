@@ -1,6 +1,5 @@
 package stirling.software.SPDF.config.security;
 
-import io.github.pixee.security.Newlines;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
@@ -21,6 +20,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.Refill;
+import io.github.pixee.security.Newlines;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -126,12 +126,16 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
         ConsumptionProbe probe = userBucket.tryConsumeAndReturnRemaining(1);
 
         if (probe.isConsumed()) {
-            response.setHeader("X-Rate-Limit-Remaining", Newlines.stripAll(Long.toString(probe.getRemainingTokens())));
+            response.setHeader(
+                    "X-Rate-Limit-Remaining",
+                    Newlines.stripAll(Long.toString(probe.getRemainingTokens())));
             filterChain.doFilter(request, response);
         } else {
             long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.setHeader("X-Rate-Limit-Retry-After-Seconds", Newlines.stripAll(String.valueOf(waitForRefill)));
+            response.setHeader(
+                    "X-Rate-Limit-Retry-After-Seconds",
+                    Newlines.stripAll(String.valueOf(waitForRefill)));
             response.getWriter().write("Rate limit exceeded for POST requests.");
         }
     }
