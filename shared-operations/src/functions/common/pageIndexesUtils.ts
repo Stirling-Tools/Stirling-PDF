@@ -1,17 +1,22 @@
 
 /**
  * @param selection An array of page indexes already selected.
- * @param pages A list of page indexes, or the number of total pages in the document (which will be converted into a list of page indexes).
+ * @param pageCount The number of pages of the pdfDocument.
  * @returns An inverted selection array of page indexes.
  */
-export function invertSelection(selection: number[], pages: number|number[]): number[] {
-    const indexes = Array.isArray(pages) ? pages : [...Array(pages).keys()];
-    const pageIndexesCopy = [...indexes];
-    return pageIndexesCopy.filter(x => !selection.includes(x));
+export function invertSelection(selection: number[], pageCount: number): number[] {
+    const newSelection = [];
+    for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+        if(!selection.includes(pageIndex))
+            newSelection.push(pageIndex);
+    }
+    return newSelection;
 }
 
+
+// TODO: Port this to CommaArrayJoiExt.ts
 /**
- * Parse the page selector string used in the 'PDF Page Organizer'
+ * Parse the page selector string
  * @param specification 
  * @param totalPages 
  * @returns 

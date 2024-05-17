@@ -7,7 +7,6 @@ import { JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
 import i18next from "i18next";
 
 import { getPages } from "./common/getPagesByIndex";
-import { parsePageIndexSpecification } from "./common/pageIndexesUtils";
 import CommaArrayJoiExt from "../wrappers/CommaArrayJoiExt";
 
 export class ExtractPages extends Operator {
@@ -39,15 +38,8 @@ export class ExtractPages extends Operator {
     /** PDF extraction, specify pages from one pdf and output them to a new pdf */
     async run(input: PdfFile[], progressCallback: (state: Progress) => void): Promise<PdfFile[]> {
         return oneToOne<PdfFile, PdfFile>(input, async (input, index, max) => {
-            const pdfLibDocument = await input.pdfLibDocument;
 
-            let indexes = this.actionValues.pageIndexes;
-
-            if (!Array.isArray(indexes)) {
-                indexes = parsePageIndexSpecification(indexes, pdfLibDocument.getPageCount());
-            }
-
-            const newFile = await getPages(input, indexes);
+            const newFile = await getPages(input, this.actionValues.pageIndexes);
             newFile.filename += "_extractedPages";
             progressCallback({ curFileProgress: 1, operationProgress: index/max });
 

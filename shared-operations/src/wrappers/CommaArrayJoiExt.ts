@@ -6,13 +6,13 @@ export default Joi.extend((joi) => {
         type: 'comma_array',
         base: joi.array(), 
         messages: {
-            'million.base': '{{#label}} must be a comma seperated list',
+            'comma_array.base': '{{#label}} must be a comma seperated list',
         },
         coerce: {
             from: 'string',
             method(value, helpers) {
     
-                if (typeof value !== 'string' || !/(\d+)(,\s*\d+)*/.test(value)) {
+                if (typeof value !== 'string' || !/(\d+)(,\s*\d+)*/.test(value)) { // is string and in format "[number], [number]"
                     return;
                 }
     
