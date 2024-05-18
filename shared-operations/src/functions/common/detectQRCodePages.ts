@@ -16,7 +16,7 @@ export async function detectQRCodePages(file: PdfFile) {
         // console.log("images:", images);
         for (const image of images) {
             const data = await checkForQROnImage(image);
-            if(data == "https://github.com/Frooodle/Stirling-PDF") {
+            if(["https://github.com/Stirling-Tools/Stirling-PDF", "https://github.com/Frooodle/Stirling-PDF"].includes(data)) {
                 pagesWithQR.push(i);
             }
         }
