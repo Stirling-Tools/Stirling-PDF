@@ -8,12 +8,11 @@ security:
   loginAttemptCount: 5 # lock user account after 5 tries
   loginResetTimeMinutes : 120 # lock account for 2 hours after x attempts
   # oauth2:
-  #   enabled: true # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
+  #   enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
   #   issuer: "" # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) end-point
   #   clientId: "" # Client ID from your provider
   #   clientSecret: "" # Client Secret from your provider
-  #   autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
-  #   autoCreateUser: true # Set to 'true' to automatically create users who do not already exist in the system
+  #   autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
   #   useAsUsername: "email" # Default is 'email'; custom fields can be used as the username
   #   scopes: "openid, profile, email" # Specify the scopes for which the application will request permissions
   #   provider: "google" # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
@@ -24,7 +23,7 @@ system:
   enableAlphaFunctionality: false # Set to enable functionality which might need more testing before it fully goes live (This feature might make no changes)
   showUpdate: true # see when a new update is available
   showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
-  
+
 ui:
   appName: null # Application's visible name
   homeDescription: null # Short description or tagline shown on homepage.

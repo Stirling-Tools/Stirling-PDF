@@ -150,6 +150,6 @@ public class User {
     }
 
     public boolean hasPassword() {
-        return this.getPassword() != "" ? true : false;
+        return this.password != null && !this.password.isEmpty();
     }
 }

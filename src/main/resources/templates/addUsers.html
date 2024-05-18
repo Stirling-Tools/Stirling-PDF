@@ -16,9 +16,8 @@
 
               <!-- User Settings Title -->
               <h2 class="text-center" th:text="#{adminUserSettings.header}">Admin User Control Settings</h2>
-              <div th:if="${param.messageType != null and param.messageType.size() > 0 and (param.messageType[0] == 'deleteCurrentUser' or param.messageType[0] == 'deleteUsernameExists')}" class="alert alert-danger">
-                <span th:if="${param.messageType[0] == 'deleteCurrentUser'}" th:text="#{deleteCurrentUserMessage}">Cannot delete currently logged in user.</span>
-                <span th:if="${param.messageType[0] == 'deleteUsernameExists'}" th:text="#{deleteUsernameExistsMessage}">The username does not exist and cannot be deleted.</span>
+              <div th:if="${deleteMessage}" class="alert alert-danger">
+                <span th:text="#{${deleteMessage}}">Message</span>
               </div>
               <table class="table">
                 <thead>
@@ -26,7 +25,7 @@
                     <th th:text="#{username}">Username</th>
                     <th th:text="#{adminUserSettings.roles}">Roles</th>
                     <th th:text="#{adminUserSettings.actions}">Actions</th>
-                    <th th:text="#{adminUserSettings.authenticated}">Authentication type</th>
+                    <th th:text="#{adminUserSettings.authenticated}">Authenticated</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -44,15 +43,15 @@
               </table>
 
               <h2 th:text="#{adminUserSettings.addUser}">Add New User</h2>
-              <div th:if="${param.messageType != null and param.messageType.size() > 0 and (param.messageType[0] == 'usernameExists' or param.messageType[0] == 'invalidUsername')}" class="alert alert-danger">
-                <span th:if="${param.messageType[0] == 'usernameExists'}" th:text="#{usernameExistsMessage}">Default message if not found</span>
-                <span th:if="${param.messageType[0] == 'invalidUsername'}" th:text="#{invalidUsernameMessage}">Default message if not found</span>
+              <div th:if="${addMessage}" class="alert alert-danger">
+                <span th:text="#{${addMessage}}">Default message if not found</span>
               </div>
               <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{adminUserSettings.usernameInfo}" th:text="#{help}">Help</button>
-              <form action="/api/v1/user/admin/saveUser" method="post">
+              <form id="formsaveuser" action="/api/v1/user/admin/saveUser" method="post">
                 <div class="mb-3">
                   <label for="username" th:text="#{username}">Username</label>
                   <input type="text" class="form-control" name="username" id="username" th:title="#{adminUserSettings.usernameInfo}" required>
+                  <span id="usernameError" style="display: none;" th:text="#{invalidUsernameMessage}">Invalid username!</span>
                 </div>
                 <div class="mb-3">
                   <label for="password" th:text="#{password}">Password</label>
@@ -76,9 +75,8 @@
               <hr />
               <h2 th:text="#{adminUserSettings.changeUserRole}">Change User's Role</h2>
               <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{downgradeCurrentUserLongMessage}" th:text="#{help}">Help</button>
-              <div th:if="${param.messageType != null and param.messageType.size() > 0 and (param.messageType[0] == 'userNotFound' or param.messageType[0] == 'downgradeCurrentUser')}" class="alert alert-danger">
-                <span th:if="${param.messageType[0] == 'userNotFound'}" th:text="#{userNotFoundMessage}">Username not found</span>
-                <span th:if="${param.messageType[0] == 'downgradeCurrentUser'}" th:text="#{downgradeCurrentUserMessage}">Cannot downgrade current user's role</span>
+              <div th:if="${changeMessage}" class="alert alert-danger">
+                <span th:text="#{${changeMessage}}">Default message if not found</span>
               </div>
               <form action="/api/v1/user/admin/changeRole" method="post">
                 <div class="mb-3">
@@ -104,9 +102,55 @@
         </div>
       </div>
       <script th:inline="javascript">
+        jQuery.validator.addMethod("usernamePattern", function(value, element) {
+            return this.optional(element) || /^[a-zA-Z0-9][a-zA-Z0-9@._+-]*[a-zA-Z0-9]$|^(?=.{1,64}@)[A-Za-z0-9]+(\.[A-Za-z0-9_+.-]+)*@[^-][A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(\.[A-Za-z]{2,})$/.test(value);
+        }, /*[[#{invalidUsernameMessage}]]*/ "Invalid username format");
         $(document).ready(function() {
-          $('[data-toggle="tooltip"]').tooltip()
-        })
+          $('[data-toggle="tooltip"]').tooltip();
+
+          $('#formsaveuser').validate({
+            rules: {
+              username: {
+                required: true,
+                usernamePattern: true
+              },
+              password: {
+                required: true
+              }
+              },
+              messages: {
+                  username: {
+                      usernamePattern: /*[[#{invalidUsernameMessage}]]*/ "Invalid username format"
+                  },
+              },
+              errorPlacement: function(error, element) {
+                  if (element.attr("name") === "username") {
+                      $("#usernameError").text(error.text()).show();
+                  } else {
+                      error.insertAfter(element);
+                  }
+              },
+              success: function(label, element) {
+                  if ($(element).attr("name") === "username") {
+                      $("#usernameError").hide();
+                  }
+              }
+          });
+
+          $('#username').on('input', function() {
+              var usernameInput = $(this);
+              var isValid = usernameInput[0].checkValidity();
+              var errorSpan = $('#usernameError');
+
+              if (isValid) {
+                  usernameInput.removeClass('invalid').addClass('valid');
+                  errorSpan.hide();
+              } else {
+                  usernameInput.removeClass('valid').addClass('invalid');
+                  errorSpan.show();
+              }
+          });
+        });
       </script>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>

@@ -24,6 +24,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
         if (session != null) {
             String sessionId = session.getId();
             sessionRegistry.removeSessionInformation(sessionId);
+            session.invalidate();
+            logger.debug("Session invalidated: " + sessionId);
         }
 
         response.sendRedirect(request.getContextPath() + "/login?logout=true");
