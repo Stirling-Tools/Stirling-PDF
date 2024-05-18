@@ -112,8 +112,7 @@
             }
           }
         </script>
-        <img class="mb-4" src="favicon.svg?v=2" alt="" width="144" height="144">
-        <h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
+
         <div th:if="${oAuth2Enabled}">
           <a href="oauth2/authorization/oidc" class="w-100 btn btn-lg btn-primary" th:text="#{login.ssoSignIn}">Login Via SSO</a>
           <br>
@@ -131,7 +130,6 @@
           </div>
           <hr />
         </div>  
-        <h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
         <div class="text-danger text-center">
           <div th:if="${logoutMessage}" class="alert alert-success" th:text="${logoutMessage}"></div>
           <div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'credsUpdated'}" class="alert alert-success">
@@ -139,7 +137,16 @@
           </div>
         </div>
         <form th:action="@{login}" method="post">
-
+			<div class="text-center">
+				 <img class="mb-4" src="favicon.svg?v=2" alt="" width="144" height="144">
+	            <h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
+	            <div th:if="${oAuth2Enabled}">
+	            <a href="oauth2/authorization/oidc" class="w-100 btn btn-lg btn-primary" th:text="#{login.ssoSignIn}">Login Via SSO</a>
+	            <div class="text-danger text-center">
+	              <div th:if="${error == 'oauth2AutoCreateDisabled'}" th:text="#{login.oauth2AutoCreateDisabled}">OAUTH2 Auto-Create User Disabled.</div>
+	            </div>
+            </div>
+            
           <div class="form-floating">
             <input type="text" class="form-control" id="username" name="username" placeholder="admin">
             <label for="username" th:text="#{username}">Username</label>
