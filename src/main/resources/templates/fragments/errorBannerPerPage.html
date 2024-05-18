@@ -5,12 +5,14 @@
             <button type="button" class="btn btn-danger" onclick="toggletrace()" th:text="#{error.showStack}"></button>
             <button type="button" class="btn btn-secondary" onclick="copytrace()" th:text="#{error.copyStack}"></button>
             <button type="button" class="btn btn-info" onclick="showHelp()" th:text="#{help}"></button>
-            <button type="button" class="close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
-              <span aria-hidden="true">&times;</span>
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
+	        <span class="material-symbols-rounded">
+	          close
+	        </span>
+	      </button>
             <!-- Stack trace section -->
             <div id="trace" style="max-height: 0; overflow: hidden;">
-              <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; padding: 10px; margin-top: 5px;">
+              <div>
                 <pre id="traceContent"></pre>
               </div>
             </div>
@@ -21,9 +23,11 @@
               <div class="modal-content">
                 <div class="modal-header">
                   <h5 class="modal-title" id="helpModalLabel" th:text="#{help}"></h5>
-                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
+                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
+			        <span class="material-symbols-rounded">
+			          close
+			        </span>
+			      </button>
                 </div>
                 <div class="modal-body">
                   <div class="container">
