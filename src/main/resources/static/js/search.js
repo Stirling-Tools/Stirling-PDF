@@ -1,9 +1,4 @@
-// Toggle search bar when the search icon is clicked
-document.querySelector("#search-icon").addEventListener("click", function (e) {
-  e.preventDefault();
-  var searchBar = document.querySelector("#navbarSearch");
-  searchBar.classList.toggle("show");
-});
+
 window.onload = function () {
   var items = document.querySelectorAll(".dropdown-item, .nav-link");
   var dummyContainer = document.createElement("div");
@@ -32,45 +27,47 @@ window.onload = function () {
 
 // Show search results as user types in search box
 document.querySelector("#navbarSearchInput").addEventListener("input", function (e) {
-  var searchText = e.target.value.toLowerCase();
+  var searchText = e.target.value.trim().toLowerCase(); // Trim whitespace and convert to lowercase
   var items = document.querySelectorAll(".dropdown-item, .nav-link");
   var resultsBox = document.querySelector("#searchResults");
 
   // Clear any previous results
   resultsBox.innerHTML = "";
-
+  if (searchText !== "") {
   items.forEach(function (item) {
     var titleElement = item.querySelector(".icon-text");
-    var iconElement = item.querySelector(".icon");
+    var iconElement = item.querySelector(".material-symbols-rounded, .icon");
     var itemHref = item.getAttribute("href");
     var tags = item.getAttribute("data-bs-tags") || ""; // If no tags, default to empty string
 
-    if (titleElement && iconElement && itemHref !== "#") {
-      var title = titleElement.innerText;
-      if (
-        (title.toLowerCase().indexOf(searchText) !== -1 || tags.toLowerCase().indexOf(searchText) !== -1) &&
-        !resultsBox.querySelector(`a[href="${item.getAttribute("href")}"]`)
-      ) {
-        var result = document.createElement("a");
-        result.href = itemHref;
-        result.classList.add("dropdown-item");
+	
+      if (titleElement && iconElement && itemHref !== "#") {
+        var title = titleElement.innerText;
+        if (
+          (title.toLowerCase().indexOf(searchText) !== -1 || tags.toLowerCase().indexOf(searchText) !== -1) &&
+          !resultsBox.querySelector(`a[href="${itemHref}"]`)
+        ) {
+          var result = document.createElement("a");
+          result.href = itemHref;
+          result.classList.add("dropdown-item");
 
-        var resultIcon = document.createElement("img");
-        resultIcon.src = iconElement.src;
-        resultIcon.alt = "icon";
-        resultIcon.classList.add("icon");
+        var resultIcon = document.createElement("span");
+        resultIcon.classList.add("material-symbols-rounded");
+        resultIcon.textContent = iconElement.textContent;
         result.appendChild(resultIcon);
 
-        var resultText = document.createElement("span");
-        resultText.textContent = title;
-        resultText.classList.add("icon-text");
-        result.appendChild(resultText);
+          var resultText = document.createElement("span");
+          resultText.textContent = title;
+          resultText.classList.add("icon-text");
+          result.appendChild(resultText);
 
-        resultsBox.appendChild(result);
+          resultsBox.appendChild(result);
+        }
       }
-    }
-  });
+    });
+  }
 
   // Set the width of the search results box to the maximum width
   resultsBox.style.width = window.navItemMaxWidth + "px";
 });
+

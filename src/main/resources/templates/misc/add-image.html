@@ -13,8 +13,11 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{addImage.header}"></h2>
+            <div class="col-md-6" id="bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">add_photo_alternate</span>
+                <span class="tool-header-text" th:text="#{addImage.header}"></span>
+              </div>
 
               <!-- pdf selector -->
               <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multiple=false, accept='application/pdf')}"></div>

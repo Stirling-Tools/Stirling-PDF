@@ -5,7 +5,7 @@ FROM alpine:20240329
 COPY scripts /scripts
 COPY pipeline /pipeline
 COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
+#COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
 COPY build/libs/*.jar app.jar
 
 ARG VERSION_TAG
@@ -34,7 +34,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
 openssl-dev \
         bash \
         curl \
-        openjdk17-jre \
+        openjdk21-jre \
         su-exec \
         shadow \
 # Doc conversion

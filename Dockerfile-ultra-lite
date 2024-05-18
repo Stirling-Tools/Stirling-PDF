@@ -31,7 +31,7 @@ RUN mkdir /configs /logs /customFiles && \
         curl \
         su-exec \
         shadow \
-        openjdk17-jre && \
+        openjdk21-jre && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
