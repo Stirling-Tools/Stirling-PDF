@@ -1,4 +1,4 @@
-import { PdfFile, RepresentationType } from "../wrappers/PdfFile";
+import { PdfFile } from "../wrappers/PdfFile";
 import { Operator, Progress, oneToN } from ".";
 
 import Joi from "@stirling-tools/joi";
@@ -21,7 +21,7 @@ export class SplitPdfByIndex extends Operator {
     protected static valueSchema = Joi.object({
         pageIndexes: CommaArrayJoiExt.comma_array().items(Joi.number().integer()).required()
             .label(i18next.t("values.pageIndexes.friendlyName", { ns: "splitPdfByIndex" })).description(i18next.t("values.pageIndexes.description", { ns: "splitPdfByIndex" }))
-            .example("1").example("1, 2, 3, 4").example("4, 2, 4, 3").required()
+            .example("1").example("1, 2, 3, 4").example("4, 2, 4, 3")
     });
     protected static outputSchema = JoiPDFFileSchema.label(i18next.t("outputs.pdffile.name")).description(i18next.t("outputs.pdffile.description"));
 

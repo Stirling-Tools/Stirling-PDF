@@ -58,8 +58,13 @@ export function GenericField({ fieldName, joiDefinition }: GenericFieldProps) {
                 );
             }
             else {
-                // TODO: Implement unrestrained text input
-                return (<div>string, unrestrained text input is not implemented</div>)
+                return (
+                    <Fragment>
+                        <label htmlFor={fieldName}>{flags.label}:</label>
+                        <input type="text" list={fieldName} name={fieldName}/>
+                        <br/>
+                    </Fragment>
+                )
             }
             break;
         case "comma_array":
@@ -111,6 +116,22 @@ export function GenericField({ fieldName, joiDefinition }: GenericFieldProps) {
                 <Fragment>
                     <label htmlFor={fieldName}>{flags.label}:</label>
                     <input type="text" list={fieldName} name={fieldName}/>
+                    <br/>
+                </Fragment>
+            );
+        case "boolean":
+            return (
+                <Fragment>
+                    <label htmlFor={fieldName}>{flags.label}:</label>
+                    <input type="checkbox" list={fieldName} name={fieldName}/>
+                    <br/>
+                </Fragment>
+            );
+        case "date":
+            return (
+                <Fragment>
+                    <label htmlFor={fieldName}>{flags.label}:</label>
+                    <input type="date" list={fieldName} name={fieldName}/>
                     <br/>
                 </Fragment>
             );
