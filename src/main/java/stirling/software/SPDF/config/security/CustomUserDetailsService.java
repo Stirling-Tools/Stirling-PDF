@@ -39,6 +39,10 @@ public class CustomUserDetailsService implements UserDetailsService {
                     "Your account has been locked due to too many failed login attempts.");
         }
 
+        if (!user.hasPassword()) {
+            throw new IllegalArgumentException("Password must not be null");
+        }
+
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),

@@ -15,7 +15,14 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
 
     private static final List<String> ALLOWED_PARAMS =
             Arrays.asList(
-                    "lang", "endpoint", "endpoints", "logout", "error", "file", "messageType");
+                    "lang",
+                    "endpoint",
+                    "endpoints",
+                    "logout",
+                    "error",
+                    "erroroauth",
+                    "file",
+                    "messageType");
 
     @Override
     public boolean preHandle(

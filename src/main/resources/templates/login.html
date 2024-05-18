@@ -112,25 +112,32 @@
             }
           }
         </script>
-        <div th:if="${logoutMessage}" class="alert alert-success" th:text="${logoutMessage}"></div>
-        <div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'credsUpdated'}" class="alert alert-success">
-          <span th:text="#{changedCredsMessage}">Default message if not found</span>
-        </div>
-        <form th:action="@{login}" method="post">
-          <div class="text-center">
-            <img class="mb-4" src="favicon.svg?v=2" alt="" width="144" height="144">
-            <h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
-            <div th:if="${oAuth2Enabled}">
+        <div class="text-center">
+          <img class="mb-4" src="favicon.svg?v=2" alt="favicon" width="144" height="144">
+
+          <h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
+          <div th:if="${oAuth2Enabled}">
             <a href="oauth2/authorization/oidc" class="w-100 btn btn-lg btn-primary" th:text="#{login.ssoSignIn}">Login Via SSO</a>
-            <div class="text-danger text-center">
-              <div th:if="${error == 'oauth2AutoCreateDisabled'}" th:text="#{login.oauth2AutoCreateDisabled}">OAUTH2 Auto-Create User Disabled.</div>
+            <br>
+            <br>
+            <div th:if="${erroroauth}" class="alert alert-danger text-center">
+              <div th:if="${erroroauth}" th:text="#{${erroroauth}}">OAuth2: Error Message</div>
             </div>
             <hr />
           </div>
-            <h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
+
+          <div th:if="${error}" class="alert alert-danger text-danger text-center">
+            <div th:if="${error}" th:text="#{${error}}">OAuth2: Error Message</div>
           </div>
-
-
+          <div class="text-danger text-center">
+            <div th:if="${logoutMessage}" class="alert alert-success" th:text="${logoutMessage}"></div>
+            <div th:if="${messageType}" class="alert alert-success">
+              <span th:text="#{${messageType}}">Default message if not found</span>
+            </div>
+          </div>
+        </div>
+        <form th:action="@{login}" method="post">
+          <h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
           <div class="form-floating">
             <input type="text" class="form-control" id="username" name="username" placeholder="admin">
             <label for="username" th:text="#{username}">Username</label>
@@ -155,14 +162,10 @@
             <div class="dropdown-menu" aria-labelledby="languageDropdown">
               <!-- Here's where the fragment will be included -->
               <div class="scrollable-y">
-                <th:block th:replace="~{fragments/languages :: langs}"></th:block>
+              <th:block th:replace="~{fragments/languages :: langs}"></th:block>
               </div>
             </div>
           </div>
-        </div>
-        <div class="text-danger text-center">
-          <div th:if="${error == 'badcredentials'}" th:text="#{login.invalid}">Invalid username or password.</div>
-          <div th:if="${error == 'locked'}" th:text="#{login.locked}">Your account has been locked. </div>
         </div>
       </main>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
