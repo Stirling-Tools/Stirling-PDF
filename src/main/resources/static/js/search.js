@@ -1,9 +1,5 @@
 // Toggle search bar when the search icon is clicked
-document.querySelector("#search-icon").addEventListener("click", function (e) {
-  e.preventDefault();
-  var searchBar = document.querySelector("#navbarSearch");
-  searchBar.classList.toggle("show");
-});
+
 window.onload = function () {
   var items = document.querySelectorAll(".dropdown-item, .nav-link");
   var dummyContainer = document.createElement("div");
@@ -41,7 +37,7 @@ document.querySelector("#navbarSearchInput").addEventListener("input", function 
 
   items.forEach(function (item) {
     var titleElement = item.querySelector(".icon-text");
-    var iconElement = item.querySelector(".icon");
+    var iconElement = item.querySelector(".material-symbols-rounded, .icon");
     var itemHref = item.getAttribute("href");
     var tags = item.getAttribute("data-bs-tags") || ""; // If no tags, default to empty string
 
@@ -55,10 +51,9 @@ document.querySelector("#navbarSearchInput").addEventListener("input", function 
         result.href = itemHref;
         result.classList.add("dropdown-item");
 
-        var resultIcon = document.createElement("img");
-        resultIcon.src = iconElement.src;
-        resultIcon.alt = "icon";
-        resultIcon.classList.add("icon");
+        var resultIcon = document.createElement("span");
+        resultIcon.classList.add("material-symbols-rounded");
+        resultIcon.textContent = iconElement.textContent;
         result.appendChild(resultIcon);
 
         var resultText = document.createElement("span");
@@ -74,3 +69,4 @@ document.querySelector("#navbarSearchInput").addEventListener("input", function 
   // Set the width of the search results box to the maximum width
   resultsBox.style.width = window.navItemMaxWidth + "px";
 });
+
