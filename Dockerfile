@@ -34,7 +34,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
 openssl-dev \
         bash \
         curl \
-        openjdk17-jre \
+        openjdk21-jre \
         su-exec \
         shadow \
 # Doc conversion

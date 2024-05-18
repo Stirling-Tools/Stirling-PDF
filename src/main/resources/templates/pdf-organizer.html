@@ -11,8 +11,11 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{pdfOrganiser.header}"></h2>
+            <div class="col-md-6" id="bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon organize">format_list_bulleted</span>
+                <span class="tool-header-text" th:text="#{pdfOrganiser.header}"></span>
+              </div>
 
               <form th:action="@{api/v1/general/rearrange-pages}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
