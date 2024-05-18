@@ -123,6 +123,11 @@ ignore = [
     'language.direction',
 ]
 
+[sk_SK]
+ignore = [
+    'language.direction',
+]
+
 [sr_LATN_RS]
 ignore = [
     'language.direction',
