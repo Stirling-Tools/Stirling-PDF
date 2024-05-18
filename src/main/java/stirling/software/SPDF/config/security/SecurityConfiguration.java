@@ -94,7 +94,8 @@ public class SecurityConfiguration {
                                     formLogin
                                             .loginPage("/login")
                                             .successHandler(
-                                                    new CustomAuthenticationSuccessHandler())
+                                                    new CustomAuthenticationSuccessHandler(
+                                                            loginAttemptService))
                                             .defaultSuccessUrl("/")
                                             .failureHandler(
                                                     new CustomAuthenticationFailureHandler(
@@ -146,7 +147,6 @@ public class SecurityConfiguration {
                                             .permitAll()
                                             .anyRequest()
                                             .authenticated())
-                    .userDetailsService(userDetailsService)
                     .authenticationProvider(authenticationProvider());
 
             // Handle OAUTH2 Logins
@@ -162,7 +162,9 @@ public class SecurityConfiguration {
                                                  */
                                                 .successHandler(
                                                         new CustomOAuth2AuthenticationSuccessHandler(
-                                                                applicationProperties, userService))
+                                                                loginAttemptService,
+                                                                applicationProperties,
+                                                                userService))
                                                 .failureHandler(
                                                         new CustomOAuth2AuthenticationFailureHandler())
                                                 // Add existing Authorities from the database
@@ -171,15 +173,17 @@ public class SecurityConfiguration {
                                                                 userInfoEndpoint
                                                                         .oidcUserService(
                                                                                 new CustomOAuth2UserService(
-                                                                                        applicationProperties))
+                                                                                        applicationProperties,
+                                                                                        userService,
+                                                                                        loginAttemptService))
                                                                         .userAuthoritiesMapper(
                                                                                 userAuthoritiesMapper())))
-                        .userDetailsService(userDetailsService)
                         .logout(
                                 logout ->
                                         logout.logoutSuccessHandler(
                                                 new CustomOAuth2LogoutSuccessHandler(
-                                                        this.applicationProperties)));
+                                                        this.applicationProperties,
+                                                        sessionRegistry())));
             }
         } else {
             http.csrf(csrf -> csrf.disable())

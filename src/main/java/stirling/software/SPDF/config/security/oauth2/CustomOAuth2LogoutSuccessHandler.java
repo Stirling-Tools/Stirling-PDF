@@ -2,13 +2,11 @@ package stirling.software.SPDF.config.security.oauth2;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
-import org.springframework.stereotype.Component;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,14 +15,17 @@ import jakarta.servlet.http.HttpSession;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 
-@Component
 public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
-    @Autowired SessionRegistry sessionRegistry;
+    private static final Logger logger =
+            LoggerFactory.getLogger(CustomOAuth2LogoutSuccessHandler.class);
 
-    private ApplicationProperties applicationProperties;
+    private final SessionRegistry sessionRegistry;
+    private final ApplicationProperties applicationProperties;
 
-    public CustomOAuth2LogoutSuccessHandler(ApplicationProperties applicationProperties) {
+    public CustomOAuth2LogoutSuccessHandler(
+            ApplicationProperties applicationProperties, SessionRegistry sessionRegistry) {
+        this.sessionRegistry = sessionRegistry;
         this.applicationProperties = applicationProperties;
     }
 
@@ -33,32 +34,27 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException, ServletException {
 
-        boolean isOAuthUser = true;
         String param = "logout=true";
-        if (authentication == null) {
-            response.sendRedirect("/");
-            return;
-        }
-        Object pri = authentication.getPrincipal();
-        if (pri instanceof UserDetails) {
-            UserDetails userDetails = (UserDetails) pri;
-            isOAuthUser = userDetails.getPassword() == null;
-        } else if (pri instanceof OAuth2User) {
-            isOAuthUser = true;
-        }
 
         OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
-        String provider = oauth.getProvider() != null && isOAuthUser ? oauth.getProvider() : "";
+        String provider = oauth.getProvider() != null ? oauth.getProvider() : "";
 
-        if (request.getParameter("oauth2AuthenticationError") != null) {
-            param = "error=oauth2AuthenticationError";
-        } else if (request.getParameter("invalidUsername") != null) {
-            param = "error=invalidUsername";
+        if (request.getParameter("oauth2AuthenticationErrorWeb") != null) {
+            param = "erroroauth=oauth2AuthenticationErrorWeb";
+        } else if (request.getParameter("error") != null) {
+            param = "error=" + request.getParameter("error");
+        } else if (request.getParameter("erroroauth") != null) {
+            param = "erroroauth=" + request.getParameter("erroroauth");
+        } else if (request.getParameter("oauth2AutoCreateDisabled") != null) {
+            param = "error=oauth2AutoCreateDisabled";
         }
+
         HttpSession session = request.getSession(false);
         if (session != null) {
             String sessionId = session.getId();
             sessionRegistry.removeSessionInformation(sessionId);
+            session.invalidate();
+            logger.debug("Session invalidated: " + sessionId);
         }
 
         switch (provider) {
@@ -70,17 +66,20 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
                                 + oauth.getClientId()
                                 + "&post_logout_redirect_uri="
                                 + response.encodeRedirectURL(
-                                        "http://" + request.getHeader("host") + "/login?" + param);
+                                        request.getScheme()
+                                                + "://"
+                                                + request.getHeader("host")
+                                                + "/login?"
+                                                + param);
+                logger.debug("Redirecting to Keycloak logout URL: " + logoutUrl);
                 response.sendRedirect(logoutUrl);
                 break;
             case "google":
+                // Add Google specific logout URL if needed
             default:
-                if (request.getParameter("oauth2AutoCreateDisabled") != null) {
-                    response.sendRedirect(
-                            request.getContextPath() + "/login?error=oauth2AutoCreateDisabled");
-                } else {
-                    response.sendRedirect(request.getContextPath() + "/login?logout=true");
-                }
+                String redirectUrl = request.getContextPath() + "/login?" + param;
+                logger.debug("Redirecting to default logout URL: " + redirectUrl);
+                response.sendRedirect(redirectUrl);
                 break;
         }
     }

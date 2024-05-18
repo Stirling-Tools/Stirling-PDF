@@ -21,47 +21,16 @@ public class InitialSecuritySetup {
 
     @Autowired private UserService userService;
 
-    @Autowired ApplicationProperties applicationProperties;
+    @Autowired private ApplicationProperties applicationProperties;
 
     private static final Logger logger = LoggerFactory.getLogger(InitialSecuritySetup.class);
 
     @PostConstruct
     public void init() {
         if (!userService.hasUsers()) {
-
-            String initialUsername =
-                    applicationProperties.getSecurity().getInitialLogin().getUsername();
-            String initialPassword =
-                    applicationProperties.getSecurity().getInitialLogin().getPassword();
-            if (initialUsername != null && initialPassword != null) {
-                try {
-                    // https://github.com/Stirling-Tools/Stirling-PDF/issues/976
-                    userService.isUsernameValidWithReturn(initialUsername);
-                } catch (IllegalArgumentException e) {
-                    Path pathToFile = Paths.get("configs/settings.yml");
-
-                    if (Files.exists(pathToFile)) {
-                        logger.error(
-                                "Invalid initial username provided , username can only contain letters, numbers and the following special characters @._+- or must be a valid email address.");
-                        System.exit(1);
-                    }
-                    throw e;
-                }
-                userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
-            } else {
-                initialUsername = "admin";
-                initialPassword = "stirling";
-                userService.saveUser(
-                        initialUsername, initialPassword, Role.ADMIN.getRoleId(), true);
-            }
+            initializeAdminUser();
         }
-        if (!userService.usernameExistsIgnoreCase(Role.INTERNAL_API_USER.getRoleId())) {
-            userService.saveUser(
-                    Role.INTERNAL_API_USER.getRoleId(),
-                    UUID.randomUUID().toString(),
-                    Role.INTERNAL_API_USER.getRoleId());
-            userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
-        }
+        initializeInternalApiUser();
     }
 
     @PostConstruct
@@ -70,6 +39,51 @@ public class InitialSecuritySetup {
         if (!isValidUUID(secretKey)) {
             secretKey = UUID.randomUUID().toString(); // Generating a random UUID as the secret key
             saveKeyToConfig(secretKey);
+        }
+    }
+
+    private void initializeAdminUser() {
+        String initialUsername =
+                applicationProperties.getSecurity().getInitialLogin().getUsername();
+        String initialPassword =
+                applicationProperties.getSecurity().getInitialLogin().getPassword();
+
+        if (initialUsername != null
+                && !initialUsername.isEmpty()
+                && initialPassword != null
+                && !initialPassword.isEmpty()
+                && !userService.findByUsernameIgnoreCase(initialUsername).isPresent()) {
+            try {
+                if (userService.isUsernameValid(initialUsername)) {
+                    userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
+                    logger.info("Admin user created: " + initialUsername);
+                }
+            } catch (IllegalArgumentException e) {
+                logger.error("Failed to initialize security setup", e);
+                System.exit(1);
+            }
+        } else {
+            createDefaultAdminUser();
+        }
+    }
+
+    private void createDefaultAdminUser() {
+        String defaultUsername = "admin";
+        String defaultPassword = "stirling";
+        if (!userService.findByUsernameIgnoreCase(defaultUsername).isPresent()) {
+            userService.saveUser(defaultUsername, defaultPassword, Role.ADMIN.getRoleId(), true);
+            logger.info("Default admin user created: " + defaultUsername);
+        }
+    }
+
+    private void initializeInternalApiUser() {
+        if (!userService.usernameExistsIgnoreCase(Role.INTERNAL_API_USER.getRoleId())) {
+            userService.saveUser(
+                    Role.INTERNAL_API_USER.getRoleId(),
+                    UUID.randomUUID().toString(),
+                    Role.INTERNAL_API_USER.getRoleId());
+            userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
+            logger.info("Internal API user created: " + Role.INTERNAL_API_USER.getRoleId());
         }
     }
 

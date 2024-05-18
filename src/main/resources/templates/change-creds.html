@@ -17,18 +17,9 @@
               <!-- User Settings Title -->
               <h2 class="text-center" th:text="#{changeCreds.header}">User Settings</h2>
               <hr>
-              <th:block th:if="${param.messageType != null and param.messageType.size() > 0}">
-              <div th:if="${param.messageType[0] == 'notAuthenticated'}" class="alert alert-danger">
-                <span th:text="#{notAuthenticatedMessage}">Default message if not found</span>
-              </div>
-              <div th:if="${param.messageType[0] == 'userNotFound'}" class="alert alert-danger">
-                <span th:text="#{userNotFoundMessage}">Default message if not found</span>
-              </div>
-              <div th:if="${param.messageType[0] == 'incorrectPassword'}" class="alert alert-danger">
-                <span th:text="#{incorrectPasswordMessage}">Default message if not found</span>
-              </div>
-              <div th:if="${param.messageType[0] == 'usernameExists'}" class="alert alert-danger">
-                <span th:text="#{usernameExistsMessage}">Default message if not found</span>
+              <th:block th:if="${messageType}">
+              <div class="alert alert-danger">
+                <span th:text="#{${messageType}}">Default message if not found</span>
               </div>
               </th:block>
               <!-- At the top of the user settings -->

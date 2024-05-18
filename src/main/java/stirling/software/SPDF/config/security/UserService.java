@@ -40,11 +40,11 @@ public class UserService implements UserServiceInterface {
 
     // Handle OAUTH2 login and user auto creation.
     public boolean processOAuth2PostLogin(String username, boolean autoCreateUser) {
-        if (!isUsernameValidWithReturn(username).equals(username)) {
+        if (!isUsernameValid(username)) {
             return false;
         }
-        Optional<User> existUser = userRepository.findByUsernameIgnoreCase(username);
-        if (existUser.isPresent()) {
+        Optional<User> existingUser = userRepository.findByUsernameIgnoreCase(username);
+        if (existingUser.isPresent()) {
             return true;
         }
         if (autoCreateUser) {
@@ -114,9 +114,8 @@ public class UserService implements UserServiceInterface {
     }
 
     public UserDetails loadUserByApiKey(String apiKey) {
-        User userOptional = userRepository.findByApiKey(apiKey);
-        if (userOptional != null) {
-            User user = userOptional;
+        User user = userRepository.findByApiKey(apiKey);
+        if (user != null) {
             // Convert your User entity to a UserDetails object with authorities
             return new org.springframework.security.core.userdetails.User(
                     user.getUsername(),
@@ -128,13 +127,16 @@ public class UserService implements UserServiceInterface {
 
     public boolean validateApiKeyForUser(String username, String apiKey) {
         Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
-        return userOpt.isPresent() && userOpt.get().getApiKey().equals(apiKey);
+        return userOpt.isPresent() && apiKey.equals(userOpt.get().getApiKey());
     }
 
     public void saveUser(String username, AuthenticationType authenticationType)
             throws IllegalArgumentException {
+        if (!isUsernameValid(username)) {
+            throw new IllegalArgumentException(getInvalidUsernameMessage());
+        }
         User user = new User();
-        user.setUsername(isUsernameValidWithReturn(username));
+        user.setUsername(username);
         user.setEnabled(true);
         user.setFirstLogin(false);
         user.addAuthority(new Authority(Role.USER.getRoleId(), user));
@@ -143,8 +145,11 @@ public class UserService implements UserServiceInterface {
     }
 
     public void saveUser(String username, String password) throws IllegalArgumentException {
+        if (!isUsernameValid(username)) {
+            throw new IllegalArgumentException(getInvalidUsernameMessage());
+        }
         User user = new User();
-        user.setUsername(isUsernameValidWithReturn(username));
+        user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.setEnabled(true);
         user.setAuthenticationType(AuthenticationType.WEB);
@@ -153,8 +158,11 @@ public class UserService implements UserServiceInterface {
 
     public void saveUser(String username, String password, String role, boolean firstLogin)
             throws IllegalArgumentException {
+        if (!isUsernameValid(username)) {
+            throw new IllegalArgumentException(getInvalidUsernameMessage());
+        }
         User user = new User();
-        user.setUsername(isUsernameValidWithReturn(username));
+        user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.addAuthority(new Authority(role, user));
         user.setEnabled(true);
@@ -165,14 +173,7 @@ public class UserService implements UserServiceInterface {
 
     public void saveUser(String username, String password, String role)
             throws IllegalArgumentException {
-        User user = new User();
-        user.setUsername(isUsernameValidWithReturn(username));
-        user.setPassword(passwordEncoder.encode(password));
-        user.addAuthority(new Authority(role, user));
-        user.setEnabled(true);
-        user.setAuthenticationType(AuthenticationType.WEB);
-        user.setFirstLogin(false);
-        userRepository.save(user);
+        saveUser(username, password, role, false);
     }
 
     public void deleteUser(String username) {
@@ -206,7 +207,7 @@ public class UserService implements UserServiceInterface {
             Map<String, String> settingsMap = user.getSettings();
 
             if (settingsMap == null) {
-                settingsMap = new HashMap<String, String>();
+                settingsMap = new HashMap<>();
             }
             settingsMap.clear();
             settingsMap.putAll(updates);
@@ -229,7 +230,10 @@ public class UserService implements UserServiceInterface {
     }
 
     public void changeUsername(User user, String newUsername) throws IllegalArgumentException {
-        user.setUsername(isUsernameValidWithReturn(newUsername));
+        if (!isUsernameValid(newUsername)) {
+            throw new IllegalArgumentException(getInvalidUsernameMessage());
+        }
+        user.setUsername(newUsername);
         userRepository.save(user);
     }
 
@@ -264,30 +268,20 @@ public class UserService implements UserServiceInterface {
         return isValidSimpleUsername || isValidEmail;
     }
 
-    public String isUsernameValidWithReturn(String username) throws IllegalArgumentException {
-        if (!isUsernameValid(username)) {
-            String message =
-                    messageSource.getMessage(
-                            "invalidUsernameMessage", null, LocaleContextHolder.getLocale());
-            throw new IllegalArgumentException(message);
-        }
-        return username;
+    private String getInvalidUsernameMessage() {
+        return messageSource.getMessage(
+                "invalidUsernameMessage", null, LocaleContextHolder.getLocale());
     }
 
     public boolean hasPassword(String username) {
         Optional<User> user = userRepository.findByUsernameIgnoreCase(username);
-        if (user.isPresent() && user.get().hasPassword()) {
-            return true;
-        }
-        return false;
+        return user.isPresent() && user.get().hasPassword();
     }
 
     public boolean isAuthenticationTypeByUsername(
             String username, AuthenticationType authenticationType) {
         Optional<User> user = userRepository.findByUsernameIgnoreCase(username);
-        if (user.isPresent() && user.get().getAuthenticationType() != null) {
-            return user.get().getAuthenticationType().equalsIgnoreCase(authenticationType.name());
-        }
-        return false;
+        return user.isPresent()
+                && authenticationType.name().equalsIgnoreCase(user.get().getAuthenticationType());
     }
 }
