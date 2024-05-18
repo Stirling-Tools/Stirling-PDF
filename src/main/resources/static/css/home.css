@@ -148,3 +148,7 @@
     transform: scale(1);
   }
 }
+
+.hidden {
+    visibility: hidden;
+}
