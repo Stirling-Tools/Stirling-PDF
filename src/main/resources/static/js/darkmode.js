@@ -55,7 +55,7 @@ function setMode(mode) {
     });
   } else if (mode === "rainbow") {
     if (elements && elements.darkModeIcon) {
-      elements.darkModeIcon.src = "rainbow.svg";
+      elements.darkModeIcon.textContent = "looks";
     }
   }
 }
@@ -68,6 +68,8 @@ function toggleDarkMode() {
     toggleCount = 1;
   }
   lastToggleTime = currentTime;
+
+  document.body.classList.add("transition-theme");
 
   if (toggleCount >= 18) {
     localStorage.setItem("dark-mode", "rainbow");
