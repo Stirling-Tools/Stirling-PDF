@@ -23,15 +23,17 @@ function filterCards() {
 }
 
 function toggleFavorite(element) {
-  var img = element.querySelector("img");
+  var span = element.querySelector("span.material-symbols-rounded");
   var card = element.closest(".feature-card");
   var cardId = card.id;
-  if (img.src.endsWith("star.svg")) {
-    img.src = "images/star-fill.svg";
+  if (span.classList.contains("no-fill")) {
+    span.classList.remove("no-fill");
+    span.classList.add("fill");
     card.classList.add("favorite");
     localStorage.setItem(cardId, "favorite");
   } else {
-    img.src = "images/star.svg";
+    span.classList.remove("fill");
+    span.classList.add("no-fill");
     card.classList.remove("favorite");
     localStorage.removeItem(cardId);
   }
@@ -39,6 +41,7 @@ function toggleFavorite(element) {
   updateFavoritesDropdown();
   filterCards();
 }
+
 
 function reorderCards() {
   var container = document.querySelector(".features-container");
@@ -64,13 +67,15 @@ function reorderCards() {
     container.appendChild(card);
   });
 }
+
 function initializeCards() {
   var cards = document.querySelectorAll(".feature-card");
   cards.forEach(function (card) {
     var cardId = card.id;
-    var img = card.querySelector(".favorite-icon img");
+    var span = card.querySelector(".favorite-icon span.material-symbols-rounded");
     if (localStorage.getItem(cardId) === "favorite") {
-      img.src = "images/star-fill.svg";
+      span.classList.remove("no-fill");
+      span.classList.add("fill");
       card.classList.add("favorite");
     }
   });
@@ -80,3 +85,15 @@ function initializeCards() {
 }
 
 window.onload = initializeCards;
+
+  document.addEventListener("DOMContentLoaded", function() {
+    const materialIcons = new FontFaceObserver('Material Symbols Rounded');
+    
+    materialIcons.load().then(() => {
+      document.querySelectorAll('.feature-card.hidden').forEach(el => {
+        el.classList.remove('hidden');
+      });
+    }).catch(() => {
+      console.error('Material Symbols Rounded font failed to load.');
+    });
+  });

@@ -3,43 +3,80 @@
   margin: 0 auto;
 }
 
-.global-buttons-container {
+label {
+  text-align: left;
+  display: block;
+  padding: 0rem 0.25rem;
+  font-size: 1.25rem;
+}
+
+.form-control {
+  border-radius: 16px !important;
+  padding: 0.75rem;
+  border: 1px solid var(--theme-color-outline-variant);
+}
+
+.mt-action-bar {
   display: flex;
   gap: 10px;
   align-items: start;
-
-  background-color: rgba(13, 110, 253, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  background-color: var(--md-sys-color-surface-5); 
+  border: none;
   backdrop-filter: blur(2px);
-
   top: 10px;
   z-index: 10;
-  padding: 10px;
-  border-radius: 8px;
-}
-.global-buttons-container > * {
-  padding: 0.6rem 0.75rem;
+  padding: 1.25rem;
+  border-radius: 2rem;
+  margin: 0px 25px;
 }
 
-.global-buttons-container svg {
+.mt-action-bar>* {
+  padding-bottom: 0.5rem;
+}
+
+.mt-action-bar svg,
+.mt-action-btn svg {
   width: 20px;
   height: 20px;
 }
+
+.mt-action-bar .mt-filename {
+  width: 100%;
+}
+
+.mt-action-btn {
+  display: flex;
+  gap: 10px;
+  align-items: start;
+  top: 10px;
+  z-index: 10;
+  padding: 12px 0px 0px;
+  width: 100%;
+}
+
+.mt-action-btn .btn {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 20px;
+  padding: 0;
+}
+
 #export-button {
   margin-left: auto;
 }
 
+#bg-card {
+  background-color: var(--md-sys-color-surface-5);
+  border-radius: 3rem;
+  padding: 25px 0 0;
+}
+
 #pages-container-wrapper {
-  --background-color: rgba(0, 0, 0, 0.025);
-  --scroll-bar-color: #f1f1f1;
-  --scroll-bar-thumb: #888;
-  --scroll-bar-thumb-hover: #555;
-  background-color: var(--background-color);
   width: 100%;
   display: flex;
   flex-direction: column;
-  padding: 10px 25px;
-  border-radius: 10px;
+  padding: 1rem;
+  border-radius: 25px;
   overflow-y: hidden;
   overflow-x: auto;
   min-height: 275px;
@@ -47,11 +84,11 @@
 }
 
 #pages-container {
-  margin: auto;
   gap: 0px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-wrap: wrap;
+  margin-left: -15px;
+  margin-right: -15px;
 }
 
 /* width */
@@ -86,6 +123,58 @@
   position: relative;
   user-select: none;
   transition: width 1s linear;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+/* Pushes the last item to the left */
+.page-container:last-child {
+  margin-right: auto;
+}
+
+.page-container:last-child:lang(ar),
+/* Arabic */
+.page-container:last-child:lang(he),
+/* Hebrew */
+.page-container:last-child:lang(fa),
+/* Persian */
+.page-container:last-child:lang(ur),
+/* Urdu */
+.page-container:last-child:lang(ckb),
+/* Sorani Kurdish */
+.page-container:last-child:lang(ks),
+/* Kashmiri */
+.page-container:last-child:lang(kk),
+/* Kazakh */
+.page-container:last-child:lang(uz),
+/* Uzbek */
+.page-container:last-child:lang(ky),
+/* Kyrgyz */
+.page-container:last-child:lang(bal),
+/* Baluchi */
+.page-container:last-child:lang(dv),
+/* Divehi */
+.page-container:last-child:lang(ps),
+/* Pashto */
+.page-container:last-child:lang(sdg),
+/* Southern Kurdish */
+.page-container:last-child:lang(syr),
+/* Syriac */
+.page-container:last-child:lang(mzn),
+/* Mazanderani */
+.page-container:last-child:lang(tgl),
+/* Tagalog */
+.page-container:last-child:lang(pnb),
+/* Western Punjabi */
+.page-container:last-child:lang(ug),
+/* Uyghur */
+.page-container:last-child:lang(nqo),
+/* N'Ko */
+.page-container:last-child:lang(bqi)
+/* Bakhtiari */
+{
+  margin-left: auto !important;
+  margin-right: 0 !important;
 }
 
 .page-container img {
@@ -109,11 +198,15 @@
 .page-number {
   position: absolute;
   top: 5px;
-  right: 5px;
-  color: white;
-  background-color: #007bff; /* Primary blue color */
-  padding: 3px 6px;
-  border-radius: 4px;
-  font-size: 12px;
+  right: 0px;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-5);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 16px;
   z-index: 2;
+}
+
+.tool-header {
+  margin: 0.5rem 1rem 2rem;
 }

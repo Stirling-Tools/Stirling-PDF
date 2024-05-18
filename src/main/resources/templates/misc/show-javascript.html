@@ -20,8 +20,11 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-12">
-              <h2 th:text="#{showJS.header}"></h2>
+            <div class="col-md-12" id="bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon advance">javascript</span>
+                <span class="tool-header-text" th:text="#{showJS.header}"></span>
+              </div>
               <form id="pdfInfoForm" method="post" enctype="multipart/form-data" th:action="@{show-javascript}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false', accept='application/pdf')}"></div>
                 <br>

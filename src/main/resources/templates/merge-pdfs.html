@@ -12,8 +12,11 @@
         <br><br>
         <div class="container" id="dropContainer">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{merge.header}"></h2>
+            <div class="col-md-6" id="bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon organize">add_to_photos</span>
+                <span class="tool-header-text" th:text="#{merge.header}"></span>
+              </div>
               <form action="api/v1/general/merge-pdfs" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                   <label th:text="#{multiPdfDropPrompt}"></label>
@@ -22,7 +25,7 @@
                 <div class="mb-3">
                   <ul id="selectedFiles" class="list-group"></ul>
                 </div>
-                <div class="mb-3 text-center">
+                <div class="mb-3">
                   <button type="button" id="sortByNameBtn" class="btn btn-info" th:text="#{merge.sortByName}"></button>
                   <button type="button" id="sortByDateBtn" class="btn btn-info" th:text="#{merge.sortByDate}"></button>
                   <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{merge.submit}"></button>
