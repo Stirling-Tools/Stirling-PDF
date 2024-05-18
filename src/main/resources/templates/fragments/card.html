@@ -1,4 +1,4 @@
-<div th:fragment="card" class="feature-card" th:id="${id}" th:if="${@endpointConfiguration.isEndpointEnabled(cardLink)}"
+<div th:fragment="card" class="feature-card hidden" th:id="${id}" th:if="${@endpointConfiguration.isEndpointEnabled(cardLink)}"
   th:data-bs-tags="${tags}">
   <a th:href="${cardLink}">
     <div class="d-flex align-items-center">
@@ -19,4 +19,5 @@
       star
     </span>
   </div>
+</div>
 </div>
