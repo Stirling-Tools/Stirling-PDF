@@ -15,7 +15,7 @@
     <p th:text="${message} + ' for path: ' + ${path}"></p>
     <!-- Stack trace section -->
     <div id="trace" th:if="${trace}" style="max-height: 0; overflow: hidden;">
-      <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; padding: 10px; margin-top: 5px;">
+      <div>
         <pre id="traceContent" th:text="${trace}"></pre>
       </div>
       <!-- Buttons to submit a ticket on GitHub and join Discord server -->
