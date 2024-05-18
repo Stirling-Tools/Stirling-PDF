@@ -250,12 +250,14 @@ span.icon-text::after {
 .dropdown-menu {
   padding-top: 0.5rem;
   top: auto;
-  left: 0;
+  left: auto;
+  right: 0;
 }
 
 .dropdown-menu[data-bs-popper] {
   top: auto;
-  left: 0;
+  left: auto;
+  right: 0;
   margin-top: 0 !important;
 }
 
