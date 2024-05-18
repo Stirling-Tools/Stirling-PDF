@@ -11,23 +11,6 @@
   /* Adjust this to your desired max height */
 }
 
-#searchForm {
-  width: 200px;
-  /* Adjust this value as needed */
-}
-
-/* Style the search results to match the navbar */
-#searchResults {
-  max-height: 200px;
-  /* Adjust this value as needed */
-  overflow-y: auto;
-  width: 100%;
-  max-width: 300px;
-  /* Adjust to your preferred width */
-  transition: height 0.3s ease;
-  /* Smooth height transition */
-}
-
 #searchResults .dropdown-item {
   display: flex;
   align-items: center;
