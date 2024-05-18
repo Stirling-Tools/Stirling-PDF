@@ -22,7 +22,8 @@ export class RotatePages extends Operator {
         rotation: Joi.alternatives().try(
                 Joi.number().integer().min(-360).max(360),
                 CommaArrayJoiExt.comma_array().items(Joi.number().integer().min(-360).max(360))
-            ).label(i18next.t("values.rotation.friendlyName", { ns: "rotatePages" })).description(i18next.t("values.rotation.description", { ns: "rotatePages" }))
+            ).required()
+            .label(i18next.t("values.rotation.friendlyName", { ns: "rotatePages" })).description(i18next.t("values.rotation.description", { ns: "rotatePages" }))
             .example("90").example("-180").example("[90, 0, 270]"),
     });
     protected static outputSchema = JoiPDFFileSchema.label(i18next.t("outputs.pdffile.name")).description(i18next.t("outputs.pdffile.description"));

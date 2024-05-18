@@ -1,91 +1,77 @@
+import { Operator, Progress, oneToOne } from ".";
 
 import Joi from "@stirling-tools/joi";
-import { PDFPage } from "pdf-lib";
-import { PdfFile, RepresentationType } from "../wrappers/PdfFile";
 import { JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
 
+import i18next from "i18next";
 
-const whSchema = Joi.string().custom((value, helpers) => {
-    console.log("value.pageSize", typeof value);
-    try {
-        const obj = JSON.parse(value);
-        if (!obj.width && !obj.height) {
-            return helpers.error("any.required", { message: "At least one of width/height must be present" });
-        }
-        if (typeof obj.width != "number" && typeof obj.width != "undefined") {
-            return helpers.error("any.invalid", { message: "Width must be a number if present" });
-        }
-        if (typeof obj.height != "number" && typeof obj.height != "undefined") {
-            return helpers.error("any.invalid", { message: "Height must be a number if present" });
-        }
-        return obj;
-    } catch (error) {
-        return helpers.error("any.invalid", { message: "Value must be a valid JSON" });
+import { PDFPage } from "pdf-lib";
+import { PdfFile, RepresentationType } from "../wrappers/PdfFile";
+
+export class ScalePage extends Operator {
+    static type = "scalePage";
+
+    /**
+     * Validation & Localisation
+     */
+
+    protected static inputSchema = JoiPDFFileSchema.label(i18next.t("inputs.pdffile.name")).description(i18next.t("inputs.pdffile.description"));
+    protected static valueSchema = Joi.object({
+        height: Joi.number().min(0)
+            .label(i18next.t("values.height.friendlyName", { ns: "scalePage" })).description(i18next.t("values.height.description", { ns: "scalePage" }))
+            .example("842").example("595").example("1190"),
+        width: Joi.number().min(0)
+            .label(i18next.t("values.width.friendlyName", { ns: "scalePage" })).description(i18next.t("values.width.description", { ns: "scalePage" }))
+            .example("595").example("420").example("842"),
+    }).or("height", "width");
+    protected static outputSchema = JoiPDFFileSchema.label(i18next.t("outputs.pdffile.name")).description(i18next.t("outputs.pdffile.description"));
+
+    static schema = Joi.object({
+        input: ScalePage.inputSchema,
+        values: ScalePage.valueSchema.required(),
+        output: ScalePage.outputSchema
+    }).label(i18next.t("friendlyName", { ns: "scalePage" })).description(i18next.t("description", { ns: "scalePage" }));
+
+
+    /**
+     * Logic
+     */
+
+    /** Detect and remove white pages */
+    async run(input: PdfFile[], progressCallback: (state: Progress) => void): Promise<PdfFile[]> {
+        return oneToOne<PdfFile, PdfFile>(input, async (input, index, max) => {
+            const pdfDoc = await input.pdfLibDocument;
+            const pages = pdfDoc.getPages();
+    
+            pages.forEach(page => { ScalePage.resize(page, { height: this.actionValues.height, width: this.actionValues.width }) });
+            
+            progressCallback({ curFileProgress: 1, operationProgress: index/max });
+            
+            return new PdfFile(input.originalFilename, pdfDoc, RepresentationType.PDFLibDocument, input.filename+"_scaledPages");
+        });
     }
-});
 
-export const ScalePageSchema = Joi.object({
-    file: JoiPDFFileSchema.required(),
-    pageSize: Joi.alternatives().try(whSchema, Joi.array().items(whSchema)).required(),
-});
-
-
-export interface ScalePageParamsType {
-    file: PdfFile;
-    pageSize: { width?:number,height?:number }|{ width?:number,height?:number }[];
-}
-
-export async function scalePage(params: ScalePageParamsType): Promise<PdfFile> {
-    const { file, pageSize } = params;
-
-    const pdfDoc = await file.pdfLibDocument;
-    const pages = pdfDoc.getPages();
-
-    if (Array.isArray(pageSize)) {
-        if (pageSize.length != pages.length) {
-            throw new Error(`Number of given sizes '${pageSize.length}' is not the same as the number of pages '${pages.length}'`);
-        }
-        for (let i=0; i<pageSize.length; i++) {
-            resize(pages[i], pageSize[i]);
-        }
-    } else {
-        pages.forEach(page => { resize(page, pageSize) });
+    static resize(page: PDFPage, newSize: {width?:number,height?:number}) {
+        const calculatedSize = ScalePage.calculateSize(page, newSize);
+        const xRatio = calculatedSize.width / page.getWidth();
+        const yRatio = calculatedSize.height / page.getHeight();
+    
+        page.setSize(calculatedSize.width, calculatedSize.height);
+        page.scaleContent(xRatio, yRatio);
     }
     
-    return new PdfFile(file.originalFilename, pdfDoc, RepresentationType.PDFLibDocument, file.filename+"_scaledPages");
-}
-
-function resize(page: PDFPage, newSize: {width?:number,height?:number}) {
-    const calculatedSize = calculateSize(page, newSize);
-    const xRatio = calculatedSize.width / page.getWidth();
-    const yRatio = calculatedSize.height / page.getHeight();
-
-    page.setSize(calculatedSize.width, calculatedSize.height);
-    page.scaleContent(xRatio, yRatio);
-}
-
-function calculateSize(page: PDFPage, newSize: {width?:number,height?:number}): {width:number,height:number} {
-    if (!newSize.width && !newSize.height){
-        throw new Error(`Sizes '${newSize}' cannot have null width and null height`);
-    } else if (!newSize.width && newSize.height) {
-        const oldSize = page.getSize();
-        const ratio = oldSize.width / oldSize.height;
-        return { width: newSize.height * ratio, height: newSize.height };
-    } else if (newSize.width && !newSize.height) {
-        const oldSize = page.getSize();
-        const ratio = oldSize.height / oldSize.width;
-        return { width: newSize.width, height: newSize.width * ratio };
+    static calculateSize(page: PDFPage, newSize: {width?:number,height?:number}): {width:number,height:number} {
+        if (!newSize.width && !newSize.height){
+            throw new Error(`Sizes '${newSize}' cannot have null width and null height`);
+        } else if (!newSize.width && newSize.height) {
+            const oldSize = page.getSize();
+            const ratio = oldSize.width / oldSize.height;
+            return { width: newSize.height * ratio, height: newSize.height };
+        } else if (newSize.width && !newSize.height) {
+            const oldSize = page.getSize();
+            const ratio = oldSize.height / oldSize.width;
+            return { width: newSize.width, height: newSize.width * ratio };
+        }
+        return { width: newSize.width, height: newSize.height };
     }
-    return { width: newSize.width, height: newSize.height };
 }
-
-export const PageSize = Object.freeze({
-    a4: {
-        width: 594.96,
-        height: 841.92
-    },
-    letter: {
-        width: 612,
-        height: 792
-    }
-});

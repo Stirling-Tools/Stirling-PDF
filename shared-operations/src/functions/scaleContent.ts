@@ -22,7 +22,8 @@ export class ScaleContent extends Operator {
         scaleFactor: Joi.alternatives().try(
                 Joi.number(),
                 CommaArrayJoiExt.comma_array().items(Joi.number())
-            ).label(i18next.t("values.scaleFactor.friendlyName", { ns: "scaleContent" })).description(i18next.t("values.scaleFactor.description", { ns: "scaleContent" }))
+            ).required()
+            .label(i18next.t("values.scaleFactor.friendlyName", { ns: "scaleContent" })).description(i18next.t("values.scaleFactor.description", { ns: "scaleContent" }))
             .example("2").example("1.5").example("[1, 1.5, 0.9]"),
     });
     protected static outputSchema = JoiPDFFileSchema.label(i18next.t("outputs.pdffile.name")).description(i18next.t("outputs.pdffile.description"));
