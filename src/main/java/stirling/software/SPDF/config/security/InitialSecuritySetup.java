@@ -39,12 +39,11 @@ public class InitialSecuritySetup {
                     userService.isUsernameValidWithReturn(initialUsername);
                 } catch (IllegalArgumentException e) {
                     Path pathToFile = Paths.get("configs/settings.yml");
-                    try {
-                        if (Files.exists(pathToFile)) {
-                            Files.delete(pathToFile);
-                        }
-                    } catch (IOException ex) {
-                        logger.info(ex.getMessage());
+
+                    if (Files.exists(pathToFile)) {
+                        logger.error(
+                                "Invalid initial username provided , username can only contain letters, numbers and the following special characters @._+- or must be a valid email address.");
+                        System.exit(1);
                     }
                     throw e;
                 }
