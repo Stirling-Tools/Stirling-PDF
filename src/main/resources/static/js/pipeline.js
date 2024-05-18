@@ -251,14 +251,14 @@ document.getElementById("addOperationBtn").addEventListener("click", function ()
       <div class="d-flex justify-content-between align-items-center w-100">
           <div class="operationName">${selectedOperation}</div>
           <div class="arrows d-flex">
-              <button class="btn btn-secondary move-up ms-1"><span>&uarr;</span></button>
-              <button class="btn btn-secondary move-down ms-1"><span>&darr;</span></button>
+              <button class="btn btn-secondary move-up ms-1"><span class="material-symbols-rounded">arrow_upward</span></button>
+              <button class="btn btn-secondary move-down ms-1"><span class="material-symbols-rounded">arrow_downward</span></button>
               <button class="btn ${hasSettings ? "btn-warning" : "btn-secondary"} pipelineSettings ms-1" ${
                 hasSettings ? "" : "disabled"
               }>
-              <span style="color: ${hasSettings ? "white" : "grey"};">⚙️</span>
+              <span class="material-symbols-rounded">settings</span>
           </button>
-              <button class="btn btn-danger remove ms-1"><span>X</span></button>
+              <button class="btn btn-danger remove ms-1"><span class="material-symbols-rounded">close</span></button>
           </div>
       </div>
   `;
