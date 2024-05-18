@@ -11,8 +11,11 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{certSign.header}"></h2>
+            <div class="col-md-6" id="bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon security">workspace_premium</span>
+                <span class="tool-header-text" th:text="#{certSign.header}"></span>
+              </div>
               <form action="api/v1/security/cert-sign" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                   <label th:text="#{certSign.selectPDF}"></label>
@@ -53,7 +56,7 @@
                   <label th:text="#{certSign.password}" for="password"></label>
                   <input type="password" class="form-control" id="password" name="password">
                 </div>
-                <div class="mb-3">
+                <div class="form-check mb-3">
                   <input type="checkbox" id="showSignature" name="showSignature">
                   <label th:text="#{certSign.showSig}" for="showSignature"></label>
                 </div>

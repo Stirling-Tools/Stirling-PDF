@@ -11,18 +11,21 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{changeMetadata.header}"></h2>
+            <div class="col-md-6" id="bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">assignment</span>
+                <span class="tool-header-text" th:text="#{changeMetadata.header}"></span>
+              </div>
               <form method="post" id="form1" enctype="multipart/form-data" th:action="@{api/v1/misc/update-metadata}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <p class="text-muted" th:text="#{changeMetadata.selectText.1}"></p>
-                <div class="mb-3-inline form-check">
-                  <input type="checkbox" class="form-check-input" id="deleteAll" name="deleteAll">
-                  <label class="ms-3" for="deleteAll" th:text="#{changeMetadata.selectText.2}" ></label>
+                <div class="form-check mb-3-inline ms-3">
+                  <input type="checkbox" id="deleteAll" name="deleteAll">
+                  <label for="deleteAll" th:text="#{changeMetadata.selectText.2}" ></label>
                 </div>
-                <div class="mb-3-inline form-check">
-                  <input type="checkbox" class="form-check-input" id="customModeCheckbox">
-                  <label class="ms-3" for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
+                <div class="form-check mb-3-inline ms-3">
+                  <input type="checkbox" id="customModeCheckbox">
+                  <label for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
                 </div>
                 <div class="mb-3">
                   <label class="form-check-label" for="author" th:text="#{changeMetadata.author}"></label>

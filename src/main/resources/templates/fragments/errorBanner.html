@@ -1,12 +1,18 @@
 <th:block th:fragment="errorBanner">
 
-  <br  th:if="${message}">
-  <div id="errorContainer" th:if="${message}" class="alert alert-danger alert-dismissible fade show" role="alert">
-    <h4 class="alert-heading" th:text="'Error:  ' + ${status} + '  ' + ${error}"></h4>
+  <br th:if="${message}">
+  <div id="errorContainer" th:if="${message}" class="alert alert-danger alert-dismissible alert-container fade show" role="alert">
+    <div class="alert-header d-flex">
+      <span class="alert-heading" th:text="'Error:  ' + ${status} + '  ' + ${error}"></span>
+      <button type="button" class="btn btn-danger" th:if="${trace}" onclick="toggletrace()" th:text="#{error.showStack}"></button>
+      <button type="button" class="btn btn-secondary" th:if="${trace}" onclick="copytrace()" th:text="#{error.copyStack}"></button>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
+        <span class="material-symbols-rounded">
+          close
+        </span>
+      </button>
+    </div>
     <p th:text="${message} + ' for path: ' + ${path}"></p>
-    <button type="button" class="btn btn-danger" th:if="${trace}" onclick="toggletrace()" th:text="#{error.showStack}"></button>
-    <button type="button" class="btn btn-secondary" th:if="${trace}" onclick="copytrace()" th:text="#{error.copyStack}"></button>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()"></button>
     <!-- Stack trace section -->
     <div id="trace" th:if="${trace}" style="max-height: 0; overflow: hidden;">
       <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; padding: 10px; margin-top: 5px;">
@@ -34,7 +40,7 @@
 
     function copytrace() {
       var flip = false
-      if(!traceVisible) {
+      if (!traceVisible) {
         toggletrace()
         flip = true
       }
@@ -45,7 +51,7 @@
       window.getSelection().addRange(range);
       document.execCommand("copy");
       window.getSelection().removeAllRanges();
-      if(flip){
+      if (flip) {
         toggletrace()
       }
     }
@@ -53,7 +59,7 @@
     function dismissError() {
       var errorContainer = document.getElementById("errorContainer");
       errorContainer.style.display = "none";
-      errorContainer.style.height ="0";
+      errorContainer.style.height = "0";
     }
 
     function adjustContainerHeight() {
