@@ -20,9 +20,9 @@ export class RotatePages extends Operator {
     protected static inputSchema = JoiPDFFileSchema.label(i18next.t("inputs.pdffile.name")).description(i18next.t("inputs.pdffile.description"));
     protected static valueSchema = Joi.object({
         rotation: Joi.alternatives().try(
-                Joi.number().integer().min(-360).max(360),
-                CommaArrayJoiExt.comma_array().items(Joi.number().integer().min(-360).max(360))
-            ).required()
+                Joi.number().integer().min(-360).max(360).required(),
+                CommaArrayJoiExt.comma_array().items(Joi.number().integer().min(-360).max(360)).required()
+            )
             .label(i18next.t("values.rotation.friendlyName", { ns: "rotatePages" })).description(i18next.t("values.rotation.description", { ns: "rotatePages" }))
             .example("90").example("-180").example("[90, 0, 270]"),
     });

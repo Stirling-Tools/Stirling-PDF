@@ -5,9 +5,7 @@ import { PdfFile } from "../../wrappers/PdfFile";
 import { getImagesOnPage, PDFJSImage } from "./getImagesOnPage";
 
 export async function detectQRCodePages(file: PdfFile) {
-    console.log("FileInQRPrev: ", file);
     const pdfDoc = await file.pdfJsDocument;
-    console.log("FileInQRAfter: ", file);
 
     const pagesWithQR: number[] = [];
     for (let i = 0; i < pdfDoc.numPages; i++) {
