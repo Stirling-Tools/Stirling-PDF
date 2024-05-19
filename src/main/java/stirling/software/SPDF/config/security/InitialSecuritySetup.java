@@ -54,10 +54,8 @@ public class InitialSecuritySetup {
                 && !initialPassword.isEmpty()
                 && !userService.findByUsernameIgnoreCase(initialUsername).isPresent()) {
             try {
-                if (userService.isUsernameValid(initialUsername)) {
-                    userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
-                    logger.info("Admin user created: " + initialUsername);
-                }
+                userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
+                logger.info("Admin user created: " + initialUsername);
             } catch (IllegalArgumentException e) {
                 logger.error("Failed to initialize security setup", e);
                 System.exit(1);
