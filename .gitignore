@@ -6,3 +6,5 @@ android/
 ios/
 releases/
 .vscode/
+.env
+/server-node/jobs

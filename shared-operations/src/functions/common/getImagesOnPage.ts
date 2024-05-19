@@ -16,10 +16,11 @@ export async function getImagesOnPage(page: PDFPageProxy): Promise<PDFJSImage[]>
     const images: PDFJSImage[] = [];
     for (let j=0; j < ops.fnArray.length; j++) {
         if (ops.fnArray[j] == PDFJS.OPS.paintImageXObject) {
-            const image: PDFJSImage = page.objs.get(ops.argsArray[j][0])
-
-            console.log("Image: ", image);
-            images.push(image);
+            console.log("Found", ops.argsArray[j])
+            page.objs.get(ops.argsArray[j][0], (image: PDFJSImage) => {
+                console.log("Image: ", image);
+                images.push(image);
+            })
         }
     }
     return images;

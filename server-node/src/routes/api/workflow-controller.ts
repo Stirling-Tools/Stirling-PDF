@@ -81,7 +81,7 @@ router.post("/:workflowUuid?", [
             });
         }
         else {
-            console.log("Start Aync Workflow");
+            console.log("Start Async Workflow");
             // TODO: UUID collision checks
             let workflowID = req.params.workflowUuid;
             if(!workflowID)

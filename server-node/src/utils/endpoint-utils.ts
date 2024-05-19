@@ -3,7 +3,7 @@ import { Response } from "express";
 import { PdfFile } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
 import Archiver from "archiver";
 
-export async function respondWithFile(res: Response, uint8Array: Uint8Array, filename: string, mimeType: string): Promise<void> {
+async function respondWithFile(res: Response, uint8Array: Uint8Array, filename: string, mimeType: string): Promise<void> {
     res.writeHead(200, {
         "Content-Type": mimeType,
         "Content-disposition": `attachment; filename="${filename}"`,
@@ -12,12 +12,12 @@ export async function respondWithFile(res: Response, uint8Array: Uint8Array, fil
     res.end(uint8Array);
 }
 
-export async function respondWithPdfFile(res: Response, file: PdfFile): Promise<void> {
+async function respondWithPdfFile(res: Response, file: PdfFile): Promise<void> {
     const byteArray = await file.uint8Array;
     respondWithFile(res, byteArray, file.filename+".pdf", "application/pdf");
 }
 
-export async function respondWithZip(res: Response, filename: string, files: {uint8Array: Uint8Array, filename: string}[]): Promise<void> {
+async function respondWithZip(res: Response, filename: string, files: {uint8Array: Uint8Array, filename: string}[]): Promise<void> {
     if (files.length == 0) {
         res.status(500).json({"warning": "The workflow had no outputs."});
         return;
@@ -57,29 +57,4 @@ export async function respondWithPdfFiles(res: Response, pdfFiles: PdfFile[] | u
         const files = await Promise.all(promises);
         respondWithZip(res, filename, files);
     }
-}
-
-export function response_mustHaveExactlyOneFile(res: Response): void {
-    res.status(400).send([
-        {
-            "message": "file is required",
-            "path": [
-                "pdfFile"
-            ],
-            "type": "file",
-            "context": {
-                "label": "pdfFile",
-                "key": "pdfFile"
-            }
-        }
-    ]);
-}
-
-export function response_dependencyNotConfigured(res: Response, dependencyName: string): void {
-    res.status(400).send([
-        {
-            "message": `${dependencyName} is not configured correctly on the server.`,
-            "type": "dependency_error",
-        }
-    ]);
 }

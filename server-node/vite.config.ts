@@ -12,13 +12,17 @@ export default defineConfig({
   },
   plugins: [
     ...VitePluginNode({
-      // Nodejs native Request adapter
-      // currently this plugin support 'express', 'nest', 'koa' and 'fastify' out of box,
-      // you can also pass a function if you are using other frameworks, see Custom Adapter section
-      adapter: 'express',
+        // Nodejs native Request adapter
+        // currently this plugin support 'express', 'nest', 'koa' and 'fastify' out of box,
+        // you can also pass a function if you are using other frameworks, see Custom Adapter section
+        adapter: 'express',
 
-      // tell the plugin where is your project entry
-      appPath: './src/index.ts',
+        // tell the plugin where is your project entry
+        appPath: './src/index.ts',
+
+        // Optional, default: false
+        // if you want to init your app on boot, set this to true
+        initAppOnBoot: true,
     }),
     topLevelAwait({
         // The export name of top-level await promise for each chunk module

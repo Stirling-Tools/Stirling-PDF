@@ -1,3 +1,7 @@
+/*
+ * Translation
+*/
+
 import i18next from "i18next";
 import resourcesToBackend from "i18next-resources-to-backend";
 
@@ -13,19 +17,28 @@ i18next.use(resourcesToBackend((language: string, namespace: string) => import(`
         initImmediate: false // Makes loading blocking but sync
     });
 
+// list available modules
+import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
+console.log("Available Modules: ", listOperatorNames());
+
+/*
+ * jobs
+*/
+
+import "./jobs";
+
+/*
+ * API
+*/
+
 import express from "express";
 const app = express();
 const PORT = 8000;
 
-
-import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
-console.log("Available Modules: ", listOperatorNames())
-
-// server-node: backend api
 import api from "./routes/api/api-controller";
 app.use("/api", api);
 
-// serve
+// viteNode
 if (import.meta.env.PROD) {
     app.listen(PORT, () => {
         console.log(`http://localhost:${PORT}`);

@@ -13,16 +13,19 @@ export async function detectQRCodePages(file: PdfFile) {
         const page = await pdfDoc.getPage(i + 1);
 
         const images = await getImagesOnPage(page);
-        // console.log("images:", images);
+        console.log("images:", images);
         for (const image of images) {
             const data = await checkForQROnImage(image);
             if(["https://github.com/Stirling-Tools/Stirling-PDF", "https://github.com/Frooodle/Stirling-PDF"].includes(data)) {
                 pagesWithQR.push(i);
             }
+            else {
+                console.log("Found QR code with unrelated data: " + data);
+            }
         }
     }
     if(pagesWithQR.length == 0) {
-        console.warn("Could not find any QR Codes in the provided PDF.");
+        console.warn("Could not find any QR Codes in the provided PDF. This may happen if the provided QR-Code is not an image but a path (e.g. SVG).");
     }
     return pagesWithQR;
 }
