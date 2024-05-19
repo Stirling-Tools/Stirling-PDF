@@ -222,27 +222,47 @@ The Current list of settings is
 ```yaml
 security:
   enableLogin: false # set to 'true' to enable login
-  csrfDisabled: true
+  csrfDisabled: true  # Set to 'true' to disable CSRF protection (not recommended for production)
+  loginAttemptCount: 5 # lock user account after 5 tries
+  loginResetTimeMinutes : 120 # lock account for 2 hours after x attempts
+  # initialLogin:
+  #   username: "admin" # Initial username for the first login
+  #   password: "stirling" # Initial password for the first login
+  # oauth2:
+  #   enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
+  #   issuer: "" # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) end-point
+  #   clientId: "" # Client ID from your provider
+  #   clientSecret: "" # Client Secret from your provider
+  #   autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
+  #   useAsUsername: "email" # Default is 'email'; custom fields can be used as the username
+  #   scopes: "openid, profile, email" # Specify the scopes for which the application will request permissions
+  #   provider: "google" # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
 
 system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
-  customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
+  rootURIPath: '/pdf-app' # ie set to /pdf-app to Set the application's root URI to localhost:8080/pdf-app
+  customStaticFilePath: '/customFiles/static/' # Customise static files (e.g., logo, images, CSS) by placing them in this directory.
+  maxFileSize: 10485760 # Maximum file size for uploads in bytes.
+  enableAlphaFunctionality: false # Set to enable functionality which might need more testing before it fully goes live (This feature might make no changes)
   showUpdate: true # see when a new update is available
   showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template html files
 
-#ui:
-#  appName: exampleAppName # Application's visible name
-#  homeDescription: I am a description # Short description or tagline shown on homepage.
-#  appNameNavbar: navbarName # Name displayed on the navigation bar
+ui:
+  appName: null # Application's visible name
+  homeDescription: null # Short description or tagline shown on homepage.
+  appNameNavbar: null # Name displayed on the navigation bar
 
 endpoints:
   toRemove: [] # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
   groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
 
 metrics:
-  enabled: true # 'true' to enable Info APIs endpoints (view http://localhost:8080/swagger-ui/index.html#/API to learn more), 'false' to disable
+  enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
+
+autoPipeline:
+  outputFolder: /output # Directory for auto-pipeline outputs.
 ```
 
 There is an additional config file ``/configs/custom_settings.yml`` were users familiar with java and spring application.properties can input their own settings on-top of Stirling-PDFs existing ones
