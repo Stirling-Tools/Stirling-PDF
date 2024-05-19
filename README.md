@@ -263,10 +263,6 @@ metrics:
 
 autoPipeline:
   outputFolder: /output # Directory for auto-pipeline outputs.
-
-# Automatically Generated Settings (Do Not Edit Directly)
-AutomaticallyGenerated:
-  key: example
 ```
 
 There is an additional config file ``/configs/custom_settings.yml`` were users familiar with java and spring application.properties can input their own settings on-top of Stirling-PDFs existing ones
