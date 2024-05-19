@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{sign.title}, header=#{sign.header})}"></th:block>
-    <link rel="stylesheet" href="css/sign.css">
+    <link rel="stylesheet" href="css/sign.css?v=2">
   <th:block th:each="font : ${fonts}">
     <style th:inline="text">
       @font-face {
