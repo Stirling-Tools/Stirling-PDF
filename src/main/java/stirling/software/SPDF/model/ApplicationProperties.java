@@ -327,9 +327,6 @@ public class ApplicationProperties {
     public static class System {
         private String defaultLocale;
         private Boolean googlevisibility;
-        private String rootURIPath;
-        private String customStaticFilePath;
-        private Integer maxFileSize;
         private boolean showUpdate;
         private Boolean showUpdateOnlyAdmin;
         private boolean customHTMLFiles;
@@ -384,29 +381,8 @@ public class ApplicationProperties {
             this.googlevisibility = googlevisibility;
         }
 
-        public String getRootURIPath() {
-            return rootURIPath;
-        }
+      
 
-        public void setRootURIPath(String rootURIPath) {
-            this.rootURIPath = rootURIPath;
-        }
-
-        public String getCustomStaticFilePath() {
-            return customStaticFilePath;
-        }
-
-        public void setCustomStaticFilePath(String customStaticFilePath) {
-            this.customStaticFilePath = customStaticFilePath;
-        }
-
-        public Integer getMaxFileSize() {
-            return maxFileSize;
-        }
-
-        public void setMaxFileSize(Integer maxFileSize) {
-            this.maxFileSize = maxFileSize;
-        }
 
         @Override
         public String toString() {
@@ -414,12 +390,6 @@ public class ApplicationProperties {
                     + defaultLocale
                     + ", googlevisibility="
                     + googlevisibility
-                    + ", rootURIPath="
-                    + rootURIPath
-                    + ", customStaticFilePath="
-                    + customStaticFilePath
-                    + ", maxFileSize="
-                    + maxFileSize
                     + ", enableAlphaFunctionality="
                     + enableAlphaFunctionality
                     + ", showUpdate="
