@@ -167,7 +167,7 @@ Stirling PDF currently supports 27!
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
 | Arabic (العربية) (ar_AR)                    | ![41%](https://geps.dev/progress/41)   |
 | German (Deutsch) (de_DE)                    | ![97%](https://geps.dev/progress/97)   |
-| French (Français) (fr_FR)                   | ![89%](https://geps.dev/progress/89)   |
+| French (Français) (fr_FR)                   | ![94%](https://geps.dev/progress/94)   |
 | Spanish (Español) (es_ES)                   | ![97%](https://geps.dev/progress/97)   |
 | Simplified Chinese (简体中文) (zh_CN)       | ![96%](https://geps.dev/progress/96)   |
 | Traditional Chinese (繁體中文) (zh_TW)      | ![96%](https://geps.dev/progress/96)   |
@@ -183,7 +183,7 @@ Stirling PDF currently supports 27!
 | Japanese (日本語) (ja_JP)                   | ![89%](https://geps.dev/progress/89)   |
 | Dutch (Nederlands) (nl_NL)                  | ![86%](https://geps.dev/progress/86)   |
 | Greek (Ελληνικά) (el_GR)                    | ![87%](https://geps.dev/progress/87)   |
-| Turkish (Türkçe) (tr_TR)                    | ![97%](https://geps.dev/progress/97)   |
+| Turkish (Türkçe) (tr_TR)                    | ![99%](https://geps.dev/progress/99)   |
 | Indonesia (Bahasa Indonesia) (id_ID)        | ![80%](https://geps.dev/progress/80)   |
 | Hindi (हिंदी) (hi_IN)                          | ![81%](https://geps.dev/progress/81)   |
 | Hungarian (Magyar) (hu_HU)                  | ![79%](https://geps.dev/progress/79)   |
