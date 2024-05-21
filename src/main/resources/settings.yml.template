@@ -6,7 +6,7 @@ security:
   enableLogin: false # set to 'true' to enable login
   csrfDisabled: true # Set to 'true' to disable CSRF protection (not recommended for production)
   loginAttemptCount: 5 # lock user account after 5 tries
-  loginResetTimeMinutes : 120 # lock account for 2 hours after x attempts
+  loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
 #  initialLogin:
 #    username: "admin" # Initial username for the first login
 #    password: "stirling" # Initial password for the first login
