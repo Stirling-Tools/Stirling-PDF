@@ -60,23 +60,22 @@ function handleDropdownItemClick(event) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll(".nav-item.dropdown").forEach((element) => {
-    const dropdownMenu = element.querySelector(".dropdown-menu");
-    if (
-      dropdownMenu.id !== "favoritesDropdown" &&
-      dropdownMenu.children.length <= 2 &&
-      dropdownMenu.querySelectorAll("hr.dropdown-divider").length === dropdownMenu.children.length
-    ) {
-      if (
-        element.previousElementSibling &&
-        element.previousElementSibling.classList.contains("nav-item") &&
-        element.previousElementSibling.classList.contains("nav-item-separator")
-      ) {
-        element.previousElementSibling.remove();
-      }
-      element.remove();
+	
+document.querySelectorAll(".col-lg-2.col-sm-6").forEach((element) => {
+    const dropdownItems = element.querySelectorAll(".dropdown-item");
+    const items = Array.from(dropdownItems).filter(item => !item.querySelector("hr.dropdown-divider"));
+    
+    if (items.length <= 2) {
+        if (
+            element.previousElementSibling &&
+            element.previousElementSibling.classList.contains("col-lg-2") &&
+            element.previousElementSibling.classList.contains("nav-item-separator")
+        ) {
+            element.previousElementSibling.remove();
+        }
+        element.remove();
     }
-  });
+});
 
   //Sort languages by alphabet
   const list = Array.from(document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').children).filter(
