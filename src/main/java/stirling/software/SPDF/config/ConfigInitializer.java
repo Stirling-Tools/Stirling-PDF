@@ -70,7 +70,6 @@ public class ConfigInitializer
                     if (!entry.isEmpty()) {
                         // Check if this comment has been uncommented in userLines
                         String key = entry.split(":")[0].trim();
-                        System.out.println("key=" + key + ", entry=" + entry );
                         addLine(resultLines, userLines, templateLine, key);
                     } else {
                         resultLines.add(templateLine);
@@ -104,7 +103,6 @@ public class ConfigInitializer
         boolean added = false;
         int templateIndentationLevel = getIndentationLevel(templateLine);
         for (String settingsLine : userLines) {
-        	if(settingsLine.contains("oauth2") || settingsLine.contains("enabled") )
             if (settingsLine.trim().startsWith(key + ":")) {
                 int settingsIndentationLevel = getIndentationLevel(settingsLine);
                 // Check if it is correct settingsLine and has the same parent as templateLine
