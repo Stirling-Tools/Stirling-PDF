@@ -26,6 +26,7 @@ services:
       SECURITY_OAUTH2_ISSUER: "https://accounts.google.com"  # Change with any other provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) end-point
       SECURITY_OAUTH2_CLIENTID: "<YOUR CLIENT ID>.apps.googleusercontent.com" # Client ID from your provider
       SECURITY_OAUTH2_CLIENTSECRET: "<YOUR CLIENT SECRET>"  # Client Secret from your provider
+      SECURITY_OAUTH2_SCOPES: "openid,profile,email" # Expected OAuth2 Scope
       PUID: 1002
       PGID: 1002
       UMASK: "022"
