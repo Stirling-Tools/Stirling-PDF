@@ -28,13 +28,13 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         ca-certificates \
         tzdata \
         tini \
-        openssl \
-        openssl-dev \
         bash \
         curl \
-        openjdk21-jre \
-        su-exec \
         shadow \
+        su-exec \
+        openssl \
+        openssl-dev \
+        openjdk21-jre \
 # Doc conversion
         libreoffice \
 # pdftohtml
