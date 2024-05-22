@@ -5,11 +5,11 @@
     const noFavourites = /*[[#{noFavourites}]]*/ '';
     const updateAvailable =  /*[[#{settings.updateAvailable}]]*/ '';
   </script>
-  <script th:src="@{js/githubVersion.js}"></script>
+  <script src="js/githubVersion.js"></script>
   <nav class="navbar navbar-expand-lg">
     <div class="container ">
-      <a class="navbar-brand" href="#" th:href="@{/}" style="display: flex;">
-        <img class="main-icon" src="favicon.svg?v=2" alt="icon">
+      <a class="navbar-brand" href="/" style="display: flex;">
+        <img class="main-icon" src="favicon.svg" alt="icon">
         <span class="icon-text" th:text="${@navBarText}"></span>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
