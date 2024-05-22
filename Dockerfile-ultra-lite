@@ -1,5 +1,5 @@
 # use alpine
-FROM alpine:3.19.1
+FROM alpine:3.20.0
 
 ARG VERSION_TAG
 
@@ -8,7 +8,7 @@ ENV DOCKER_ENABLE_SECURITY=false \
     HOME=/home/stirlingpdfuser \
     VERSION_TAG=$VERSION_TAG \
     JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS -XX:MaxRAMPercentage=75" \
-	PUID=1000 \
+    PUID=1000 \
     PGID=1000 \
     UMASK=022
 
@@ -18,24 +18,23 @@ COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
 COPY pipeline /pipeline
 COPY build/libs/*.jar app.jar
 
-
 # Set up necessary directories and permissions
-
-RUN mkdir /configs /logs /customFiles && \
-    chmod +x /scripts/*.sh && \
+RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
+    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
+    apk upgrade --no-cache -a && \
     apk add --no-cache \
         ca-certificates \
         tzdata \
         tini \
         bash \
         curl \
-        su-exec \
         shadow \
+        su-exec \
         openjdk21-jre && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
     # User permissions
+    mkdir /configs /logs /customFiles && \
+    chmod +x /scripts/*.sh && \
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts  /configs /customFiles /pipeline && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar    
@@ -43,9 +42,8 @@ RUN mkdir /configs /logs /customFiles && \
 # Set environment variables
 ENV ENDPOINTS_GROUPS_TO_REMOVE=CLI
 
-EXPOSE 8080
-
-ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
+EXPOSE 8080/tcp
 
 # Run the application
+ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
 CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/app.jar"]
