@@ -1,5 +1,5 @@
 # Main stage
-FROM alpine:20240329
+FROM alpine:3.20.0
 
 # Copy necessary files
 COPY scripts /scripts
@@ -10,35 +10,33 @@ COPY build/libs/*.jar app.jar
 
 ARG VERSION_TAG
 
-
 # Set Environment Variables
 ENV DOCKER_ENABLE_SECURITY=false \
     VERSION_TAG=$VERSION_TAG \
     JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS -XX:MaxRAMPercentage=75" \
-	HOME=/home/stirlingpdfuser \
-	PUID=1000 \
+    HOME=/home/stirlingpdfuser \
+    PUID=1000 \
     PGID=1000 \
     UMASK=022
-
 
 # JDK for app
 RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
-    apk update && \
+    apk upgrade --no-cache -a && \
     apk add --no-cache \
         ca-certificates \
         tzdata \
         tini \
-        openssl \
-openssl-dev \
         bash \
         curl \
-        openjdk21-jre \
-        su-exec \
         shadow \
+        su-exec \
+        openssl \
+        openssl-dev \
+        openjdk21-jre \
 # Doc conversion
-        libreoffice@testing \
+        libreoffice \
 # pdftohtml
         poppler-utils \
 # OCR MY PDF (unpaper for descew and other advanced featues)
@@ -60,10 +58,9 @@ openssl-dev \
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
     chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
     chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
-    tesseract --list-langs && \
-    rm -rf /var/cache/apk/*
+    tesseract --list-langs
 
-EXPOSE 8080
+EXPOSE 8080/tcp
 
 # Set user and run command
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
