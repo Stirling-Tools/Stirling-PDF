@@ -2,8 +2,10 @@ package stirling.software.SPDF.config;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.function.Predicate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
@@ -107,5 +109,29 @@ public class AppConfig {
     @Bean(name = "activSecurity")
     public boolean missingActivSecurity() {
         return false;
+    }
+
+    @Bean(name = "watchedFoldersDir")
+    public String watchedFoldersDir() {
+        return "./pipeline/watchedFolders/";
+    }
+
+    @Bean(name = "finishedFoldersDir")
+    public String finishedFoldersDir() {
+        return "./pipeline/finishedFolders/";
+    }
+
+    @Bean(name = "directoryFilter")
+    public Predicate<Path> processPDFOnlyFilter() {
+        return path -> {
+            if (Files.isDirectory(path)) {
+                return !path.toString()
+                        .contains(
+                                "processing");
+            } else {
+                String fileName = path.getFileName().toString();
+                return fileName.endsWith(".pdf");
+            }
+        };
     }
 }
