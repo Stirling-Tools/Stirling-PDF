@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
+import stirling.software.SPDF.utils.FileMonitor;
 
 @Service
 public class PipelineDirectoryProcessor {
@@ -35,11 +37,18 @@ public class PipelineDirectoryProcessor {
     private static final Logger logger = LoggerFactory.getLogger(PipelineDirectoryProcessor.class);
     @Autowired private ObjectMapper objectMapper;
     @Autowired private ApiDocService apiDocService;
-
-    final String watchedFoldersDir = "./pipeline/watchedFolders/";
-    final String finishedFoldersDir = "./pipeline/finishedFolders/";
-
     @Autowired PipelineProcessor processor;
+    @Autowired FileMonitor fileMonitor;
+
+    final String watchedFoldersDir;
+    final String finishedFoldersDir;
+
+    public PipelineDirectoryProcessor(
+            @Qualifier("watchedFoldersDir") String watchedFoldersDir,
+            @Qualifier("finishedFoldersDir") String finishedFoldersDir) {
+        this.watchedFoldersDir = watchedFoldersDir;
+        this.finishedFoldersDir = finishedFoldersDir;
+    }
 
     @Scheduled(fixedRate = 60000)
     public void scanFolders() {
@@ -130,7 +139,7 @@ public class PipelineDirectoryProcessor {
             throws IOException {
         try (Stream<Path> paths = Files.list(dir)) {
             if ("automated".equals(operation.getParameters().get("fileInput"))) {
-                return paths.filter(path -> !Files.isDirectory(path) && !path.equals(jsonFile))
+                return paths.filter(path -> !Files.isDirectory(path) && !path.equals(jsonFile) && fileMonitor.isFileReadyForProcessing(path))
                         .map(Path::toFile)
                         .toArray(File[]::new);
             } else {
