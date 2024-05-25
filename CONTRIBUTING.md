@@ -29,7 +29,7 @@ If you would like to add or modify a translation, please see [How to add new lan
 
 ## Docs
 
-Documentation for Stirling-PDF is handled in a seperate repository. Please see [Docs repository](https://github.com/Stirling-Tools/Stirling-Tools.github.io) or use "edit this page"-button at the bottom of each page at [https://stirlingtools.com/docs/](https://stirlingtools.com/docs/).
+Documentation for Stirling-PDF is handled in a separate repository. Please see [Docs repository](https://github.com/Stirling-Tools/Stirling-Tools.github.io) or use "edit this page"-button at the bottom of each page at [https://stirlingtools.com/docs/](https://stirlingtools.com/docs/).
 
 ## Fixing Bugs or Adding a New Feature
 
