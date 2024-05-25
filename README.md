@@ -159,7 +159,7 @@ Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR
 
 ## Supported Languages
 
-Stirling PDF currently supports 27!
+Stirling PDF currently supports 28!
 
 | Language                                    | Progress                               |
 | ------------------------------------------- | -------------------------------------- |
@@ -191,6 +191,7 @@ Stirling PDF currently supports 27!
 | Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![82%](https://geps.dev/progress/82)   |
 | Ukrainian (Українська) (uk_UA)              | ![88%](https://geps.dev/progress/88)   |
 | Slovakian (Slovensky) (sk_SK)               | ![96%](https://geps.dev/progress/96)   |
+| Czech (Česky) (cs_CZ)                       | ![96%](https://geps.dev/progress/96)   |
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
@@ -226,7 +227,7 @@ security:
   loginAttemptCount: 5 # lock user account after 5 tries
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
 #  initialLogin:
-#    username: "admin" # Initial username for the first login (these are defaulted)
+#    username: "admin" # Initial username for the first login
 #    password: "stirling" # Initial password for the first login
 #  oauth2:
 #    enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
@@ -237,6 +238,23 @@ security:
 #    useAsUsername: "email" # Default is 'email'; custom fields can be used as the username
 #    scopes: "openid, profile, email" # Specify the scopes for which the application will request permissions
 #    provider: "google" # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
+#    client:
+#      google:
+#        clientId: "" # Client ID for Google OAuth2
+#        clientSecret: "" # Client Secret for Google OAuth2
+#        scopes: "https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile" # Scopes for Google OAuth2
+#        useAsUsername: "email" # Field to use as the username for Google OAuth2
+#      github:
+#        clientId: "" # Client ID for GitHub OAuth2
+#        clientSecret: "" # Client Secret for GitHub OAuth2
+#        scopes: "read:user" # Scope for GitHub OAuth2
+#        useAsUsername: "login" # Field to use as the username for GitHub OAuth2
+#      keycloak:
+#        issuer: "http://192.168.0.123:8888/realms/stirling-pdf" # URL of the Keycloak realm's OpenID Connect Discovery endpoint
+#        clientId: "stirling-pdf" # Client ID for Keycloak OAuth2
+#        clientSecret: "" # Client Secret for Keycloak OAuth2
+#        scopes: "openid, profile, email" # Scopes for Keycloak OAuth2
+#        useAsUsername: "email" # Field to use as the username for Keycloak OAuth2
 
 system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
