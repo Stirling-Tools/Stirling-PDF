@@ -37,7 +37,7 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException, ServletException {
         String param = "logout=true";
-        String provider = null;
+        String registrationId = null;
         String issuer = null;
         String clientId = null;
 
@@ -45,21 +45,18 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
 
         if (authentication instanceof OAuth2AuthenticationToken) {
             OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-            String registrationId = oauthToken.getAuthorizedClientRegistrationId();
+            registrationId = oauthToken.getAuthorizedClientRegistrationId();
 
-            provider = registrationId;
-            logger.info(registrationId);
-            Provider pro;
             try {
-                pro = oauth.getClient().get(registrationId);
-                issuer = pro.getIssuer();
-                clientId = pro.getClientId();
+                Provider provider = oauth.getClient().get(registrationId);
+                issuer = provider.getIssuer();
+                clientId = provider.getClientId();
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
         } else {
-            provider = oauth.getProvider() != null ? oauth.getProvider() : "";
+            registrationId = oauth.getProvider() != null ? oauth.getProvider() : "";
             issuer = oauth.getIssuer();
             clientId = oauth.getClientId();
         }
@@ -84,7 +81,7 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
             logger.info("Session invalidated: " + sessionId);
         }
 
-        switch (provider) {
+        switch (registrationId) {
             case "keycloak":
                 // Add Keycloak specific logout URL if needed
                 String logoutUrl =
