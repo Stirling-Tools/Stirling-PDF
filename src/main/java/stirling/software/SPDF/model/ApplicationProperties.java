@@ -750,9 +750,6 @@ public class ApplicationProperties {
             this.googlevisibility = googlevisibility;
         }
 
-      
-
-
         @Override
         public String toString() {
             return "System [defaultLocale="
