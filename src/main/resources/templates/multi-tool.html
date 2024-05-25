@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
-  xmlns:th="http://www.thymeleaf.org">
+  xmlns:th="https://www.thymeleaf.org">
 
 <head>
   <th:block th:insert="~{fragments/common :: head(title=#{multiTool.title}, header=#{multiTool.header})}"></th:block>
@@ -15,7 +15,7 @@
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-md-12">
-            <div id="bg-card">
+            <div class="bg-card">
               <div class="tool-header">
                 <span class="material-symbols-rounded tool-header-icon advance">construction</span>
                 <span class="tool-header-text" th:text="#{multiTool.header}"></span>

@@ -58,7 +58,7 @@ td {
   border-bottom: none;
 }
 
-#bg-card {
+.bg-card {
   background-color: var(--md-sys-color-surface-5);
   border-radius: 3rem;
   padding: 2.5rem;
