@@ -5,7 +5,7 @@
 [![Discord](https://img.shields.io/discord/1068636748814483718?label=Discord)](https://discord.gg/Cn8pWhQRxZ)
 [![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest)](https://github.com/Stirling-Tools/Stirling-PDF/)
 [![GitHub Repo stars](https://img.shields.io/github/stars/stirling-tools/stirling-pdf?style=social)](https://github.com/Stirling-Tools/stirling-pdf)
-[![Paypal Donate](https://img.shields.io/badge/Paypal%20Donate-yellow?style=flat&logo=paypal)](https://www.paypal.com/paypalme/froodleplex)
+[![Paypal Donate](https://img.shields.io/badge/Paypal%20Donate-yellow?style=flat&logo=paypal)](https://www.paypal.com/donate/?hosted_button_id=MN7JPG5G6G3JL)
 [![Github Sponsor](https://img.shields.io/badge/Github%20Sponsor-yellow?style=flat&logo=github)](https://github.com/sponsors/Frooodle)
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Stirling-Tools/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
@@ -167,12 +167,12 @@ Stirling PDF currently supports 27!
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
 | Arabic (العربية) (ar_AR)                    | ![41%](https://geps.dev/progress/41)   |
 | German (Deutsch) (de_DE)                    | ![97%](https://geps.dev/progress/97)   |
-| French (Français) (fr_FR)                   | ![89%](https://geps.dev/progress/89)   |
+| French (Français) (fr_FR)                   | ![94%](https://geps.dev/progress/94)   |
 | Spanish (Español) (es_ES)                   | ![97%](https://geps.dev/progress/97)   |
 | Simplified Chinese (简体中文) (zh_CN)       | ![96%](https://geps.dev/progress/96)   |
 | Traditional Chinese (繁體中文) (zh_TW)      | ![96%](https://geps.dev/progress/96)   |
 | Catalan (Català) (ca_CA)                    | ![50%](https://geps.dev/progress/50)   |
-| Italian (Italiano) (it_IT)                  | ![97%](https://geps.dev/progress/97)   |
+| Italian (Italiano) (it_IT)                  | ![99%](https://geps.dev/progress/99)   |
 | Swedish (Svenska) (sv_SE)                   | ![41%](https://geps.dev/progress/41)   |
 | Polish (Polski) (pl_PL)                     | ![43%](https://geps.dev/progress/43)   |
 | Romanian (Română) (ro_RO)                   | ![40%](https://geps.dev/progress/40)   |
@@ -183,7 +183,7 @@ Stirling PDF currently supports 27!
 | Japanese (日本語) (ja_JP)                   | ![89%](https://geps.dev/progress/89)   |
 | Dutch (Nederlands) (nl_NL)                  | ![86%](https://geps.dev/progress/86)   |
 | Greek (Ελληνικά) (el_GR)                    | ![87%](https://geps.dev/progress/87)   |
-| Turkish (Türkçe) (tr_TR)                    | ![97%](https://geps.dev/progress/97)   |
+| Turkish (Türkçe) (tr_TR)                    | ![99%](https://geps.dev/progress/99)   |
 | Indonesia (Bahasa Indonesia) (id_ID)        | ![80%](https://geps.dev/progress/80)   |
 | Hindi (हिंदी) (hi_IN)                          | ![81%](https://geps.dev/progress/81)   |
 | Hungarian (Magyar) (hu_HU)                  | ![79%](https://geps.dev/progress/79)   |
@@ -222,27 +222,41 @@ The Current list of settings is
 ```yaml
 security:
   enableLogin: false # set to 'true' to enable login
-  csrfDisabled: true
+  csrfDisabled: true # Set to 'true' to disable CSRF protection (not recommended for production)
+  loginAttemptCount: 5 # lock user account after 5 tries
+  loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
+#  initialLogin:
+#    username: "admin" # Initial username for the first login (these are defaulted)
+#    password: "stirling" # Initial password for the first login
+#  oauth2:
+#    enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
+#    issuer: "" # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) end-point
+#    clientId: "" # Client ID from your provider
+#    clientSecret: "" # Client Secret from your provider
+#    autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
+#    useAsUsername: "email" # Default is 'email'; custom fields can be used as the username
+#    scopes: "openid, profile, email" # Specify the scopes for which the application will request permissions
+#    provider: "google" # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
 
 system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
-  customStaticFilePath: '/customFiles/static/' # Directory path for custom static files
+  enableAlphaFunctionality: false # Set to enable functionality which might need more testing before it fully goes live (This feature might make no changes)
   showUpdate: true # see when a new update is available
   showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template html files
 
-#ui:
-#  appName: exampleAppName # Application's visible name
-#  homeDescription: I am a description # Short description or tagline shown on homepage.
-#  appNameNavbar: navbarName # Name displayed on the navigation bar
+ui:
+  appName: null # Application's visible name
+  homeDescription: null # Short description or tagline shown on homepage.
+  appNameNavbar: null # Name displayed on the navigation bar
 
 endpoints:
   toRemove: [] # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
   groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
 
 metrics:
-  enabled: true # 'true' to enable Info APIs endpoints (view http://localhost:8080/swagger-ui/index.html#/API to learn more), 'false' to disable
+  enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
 ```
 
 There is an additional config file ``/configs/custom_settings.yml`` were users familiar with java and spring application.properties can input their own settings on-top of Stirling-PDFs existing ones

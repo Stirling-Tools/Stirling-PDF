@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{flatten.title}, header=#{flatten.header})}"></th:block>
   </head>
@@ -12,7 +12,7 @@
         <div class="container">
           <div class="row justify-content-center">
 
-            <div class="col-md-6" id="bg-card">
+            <div class="col-md-6 bg-card">
               <div class="tool-header">
                 <span class="material-symbols-rounded tool-header-icon other">layers_clear</span>
                 <span class="tool-header-text" th:text="#{flatten.header}"></span>

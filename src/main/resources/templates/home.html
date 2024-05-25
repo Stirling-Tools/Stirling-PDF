@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
-  xmlns:th="http://www.thymeleaf.org">
+  xmlns:th="https://www.thymeleaf.org">
 
 <head>
   <th:block th:insert="~{fragments/common :: head(title='')}"></th:block>
@@ -219,10 +219,10 @@
             th:replace="~{fragments/card :: card(id='split-pdf-by-sections', cardTitle=#{home.split-by-sections.title}, cardText=#{home.split-by-sections.desc}, cardLink='split-pdf-by-sections', toolIcon='grid_on', tags=#{split-by-sections.tags}, toolGroup='advance')}">
           </div>
           <div
-            th:replace="~{fragments/card :: card(id='book-to-pdf', cardTitle=#{home.BookToPDF.title}, cardText=#{home.BookToPDF.desc}, cardLink='book-to-pdf', toolIcon='images/book.svg', tags=#{BookToPDF.tags}, toolGroup='convert')}">
+            th:replace="~{fragments/card :: card(id='book-to-pdf', cardTitle=#{home.BookToPDF.title}, cardText=#{home.BookToPDF.desc}, cardLink='book-to-pdf', toolIcon='book', tags=#{BookToPDF.tags}, toolGroup='convert')}">
           </div>
           <div
-            th:replace="~{fragments/card :: card(id='pdf-to-book', cardTitle=#{home.PDFToBook.title}, cardText=#{home.PDFToBook.desc}, cardLink='pdf-to-book', toolIcon='images/book.svg', tags=#{PDFToBook.tags}, toolGroup='convert')}">
+            th:replace="~{fragments/card :: card(id='pdf-to-book', cardTitle=#{home.PDFToBook.title}, cardText=#{home.PDFToBook.desc}, cardLink='pdf-to-book', toolIcon='book', tags=#{PDFToBook.tags}, toolGroup='convert')}">
           </div>
           <div
             th:replace="~{fragments/card :: card(id='stamp', cardTitle=#{home.AddStampRequest.title}, cardText=#{home.AddStampRequest.desc}, cardLink='stamp', toolIcon='approval', tags=#{AddStampRequest.tags}, toolGroup='security')}">

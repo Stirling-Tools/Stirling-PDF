@@ -197,7 +197,13 @@ public class UserService implements UserServiceInterface {
     }
 
     public boolean hasUsers() {
-        return userRepository.count() > 0;
+        long userCount = userRepository.count();
+        if (userRepository
+                .findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId())
+                .isPresent()) {
+            userCount -= 1;
+        }
+        return userCount > 0;
     }
 
     public void updateUserSettings(String username, Map<String, String> updates) {
