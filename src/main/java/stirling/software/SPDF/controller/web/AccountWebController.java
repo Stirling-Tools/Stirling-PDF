@@ -1,10 +1,13 @@
 package stirling.software.SPDF.controller.web;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -21,6 +24,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.GithubProvider;
+import stirling.software.SPDF.model.ApplicationProperties.GoogleProvider;
+import stirling.software.SPDF.model.ApplicationProperties.KeycloakProvider;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
@@ -31,12 +39,40 @@ import stirling.software.SPDF.repository.UserRepository;
 public class AccountWebController {
 
     @Autowired ApplicationProperties applicationProperties;
+    private static final Logger logger = LoggerFactory.getLogger(AccountWebController.class);
 
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
             return "redirect:/";
         }
+
+        Map<String, String> providerList = new HashMap<>();
+
+        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        if (oauth != null) {
+            if (oauth.isSettingsValid()) {
+                providerList.put("oidc", "OpenID Connect");
+            }
+            Client client = oauth.getClient();
+            if (client != null) {
+                GoogleProvider google = client.getGoogle();
+                if (google.isSettingsValid()) {
+                    providerList.put("google", "Google");
+                }
+
+                GithubProvider github = client.getGithub();
+                if (github.isSettingsValid()) {
+                    providerList.put("github", "Github");
+                }
+
+                KeycloakProvider keycloak = client.getKeycloak();
+                if (keycloak.isSettingsValid()) {
+                    providerList.put("keycloak", "Keycloak");
+                }
+            }
+        }
+        model.addAttribute("providerlist", providerList);
 
         model.addAttribute(
                 "oAuth2Enabled", applicationProperties.getSecurity().getOAUTH2().getEnabled());
@@ -80,6 +116,19 @@ public class AccountWebController {
                     break;
                 case "invalid_token_response":
                     erroroauth = "login.oauth2InvalidTokenResponse";
+                    break;
+                case "authorization_request_not_found":
+                    erroroauth = "login.oauth2RequestNotFound";
+                    break;
+                case "access_denied":
+                    erroroauth = "login.oauth2AccessDenied";
+                    break;
+                case "invalid_user_info_response":
+                    erroroauth = "login.oauth2InvalidUserInfoResponse";
+                    break;
+                case "invalid_request":
+                    erroroauth = "login.oauth2invalidRequest";
+                    break;
                 default:
                     break;
             }

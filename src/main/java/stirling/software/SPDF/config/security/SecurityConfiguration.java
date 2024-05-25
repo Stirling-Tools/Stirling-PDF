@@ -2,6 +2,8 @@ package stirling.software.SPDF.config.security;
 
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -36,7 +38,11 @@ import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationS
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2LogoutSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.GithubProvider;
+import stirling.software.SPDF.model.ApplicationProperties.GoogleProvider;
+import stirling.software.SPDF.model.ApplicationProperties.KeycloakProvider;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 
@@ -46,6 +52,8 @@ import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 public class SecurityConfiguration {
 
     @Autowired private CustomUserDetailsService userDetailsService;
+
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -140,6 +148,7 @@ public class SecurityConfiguration {
                                                                 || trimmedUri.startsWith("/images/")
                                                                 || trimmedUri.startsWith("/public/")
                                                                 || trimmedUri.startsWith("/css/")
+                                                                || trimmedUri.startsWith("/fonts/")
                                                                 || trimmedUri.startsWith("/js/")
                                                                 || trimmedUri.startsWith(
                                                                         "/api/v1/info/status");
@@ -150,7 +159,8 @@ public class SecurityConfiguration {
                     .authenticationProvider(authenticationProvider());
 
             // Handle OAUTH2 Logins
-            if (applicationProperties.getSecurity().getOAUTH2().getEnabled()) {
+            if (applicationProperties.getSecurity().getOAUTH2() != null
+                    && applicationProperties.getSecurity().getOAUTH2().getEnabled()) {
 
                 http.oauth2Login(
                                 oauth2 ->
@@ -181,9 +191,10 @@ public class SecurityConfiguration {
                         .logout(
                                 logout ->
                                         logout.logoutSuccessHandler(
-                                                new CustomOAuth2LogoutSuccessHandler(
-                                                        this.applicationProperties,
-                                                        sessionRegistry())));
+                                                        new CustomOAuth2LogoutSuccessHandler(
+                                                                this.applicationProperties,
+                                                                sessionRegistry()))
+                                                .invalidateHttpSession(true));
             }
         } else {
             http.csrf(csrf -> csrf.disable())
@@ -200,19 +211,127 @@ public class SecurityConfiguration {
             havingValue = "true",
             matchIfMissing = false)
     public ClientRegistrationRepository clientRegistrationRepository() {
-        return new InMemoryClientRegistrationRepository(this.oidcClientRegistration());
+        List<ClientRegistration> registrations = new ArrayList<>();
+
+        githubClientRegistration().ifPresent(registrations::add);
+        oidcClientRegistration().ifPresent(registrations::add);
+        googleClientRegistration().ifPresent(registrations::add);
+        keycloakClientRegistration().ifPresent(registrations::add);
+
+        if (registrations.isEmpty()) {
+            logger.error("At least one OAuth2 provider must be configured");
+            System.exit(1);
+        }
+
+        return new InMemoryClientRegistrationRepository(registrations);
     }
 
-    private ClientRegistration oidcClientRegistration() {
+    private Optional<ClientRegistration> googleClientRegistration() {
         OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
-        return ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
-                .registrationId("oidc")
-                .clientId(oauth.getClientId())
-                .clientSecret(oauth.getClientSecret())
-                .scope(oauth.getScopes())
-                .userNameAttributeName(oauth.getUseAsUsername())
-                .clientName("OIDC")
-                .build();
+        if (oauth == null || !oauth.getEnabled()) {
+            return Optional.empty();
+        }
+        Client client = oauth.getClient();
+        if (client == null) {
+            return Optional.empty();
+        }
+        GoogleProvider google = client.getGoogle();
+        return google != null && google.isSettingsValid()
+                ? Optional.of(
+                        ClientRegistration.withRegistrationId("google")
+                                .clientId(google.getClientId())
+                                .clientSecret(google.getClientSecret())
+                                .scope(google.getScopes())
+                                .authorizationUri(google.getAuthorizationuri())
+                                .tokenUri(google.getTokenuri())
+                                .userInfoUri(google.getUserinfouri())
+                                .userNameAttributeName(google.getUseAsUsername())
+                                .clientName("Google")
+                                .redirectUri("{baseUrl}/login/oauth2/code/google")
+                                .authorizationGrantType(
+                                        org.springframework.security.oauth2.core
+                                                .AuthorizationGrantType.AUTHORIZATION_CODE)
+                                .build())
+                : Optional.empty();
+    }
+
+    private Optional<ClientRegistration> keycloakClientRegistration() {
+        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        if (oauth == null || !oauth.getEnabled()) {
+            return Optional.empty();
+        }
+        Client client = oauth.getClient();
+        if (client == null) {
+            return Optional.empty();
+        }
+        KeycloakProvider keycloak = client.getKeycloak();
+
+        return keycloak != null && keycloak.isSettingsValid()
+                ? Optional.of(
+                        ClientRegistrations.fromIssuerLocation(keycloak.getIssuer())
+                                .registrationId("keycloak")
+                                .clientId(keycloak.getClientId())
+                                .clientSecret(keycloak.getClientSecret())
+                                .scope(keycloak.getScopes())
+                                .userNameAttributeName(keycloak.getUseAsUsername())
+                                .clientName("Keycloak")
+                                .build())
+                : Optional.empty();
+    }
+
+    private Optional<ClientRegistration> githubClientRegistration() {
+        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        if (oauth == null || !oauth.getEnabled()) {
+            return Optional.empty();
+        }
+        Client client = oauth.getClient();
+        if (client == null) {
+            return Optional.empty();
+        }
+        GithubProvider github = client.getGithub();
+        return github != null && github.isSettingsValid()
+                ? Optional.of(
+                        ClientRegistration.withRegistrationId("github")
+                                .clientId(github.getClientId())
+                                .clientSecret(github.getClientSecret())
+                                .scope(github.getScopes())
+                                .authorizationUri(github.getAuthorizationuri())
+                                .tokenUri(github.getTokenuri())
+                                .userInfoUri(github.getUserinfouri())
+                                .userNameAttributeName(github.getUseAsUsername())
+                                .clientName("GitHub")
+                                .redirectUri("{baseUrl}/login/oauth2/code/github")
+                                .authorizationGrantType(
+                                        org.springframework.security.oauth2.core
+                                                .AuthorizationGrantType.AUTHORIZATION_CODE)
+                                .build())
+                : Optional.empty();
+    }
+
+    private Optional<ClientRegistration> oidcClientRegistration() {
+        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        if (oauth == null
+                || oauth.getIssuer() == null
+                || oauth.getIssuer().isEmpty()
+                || oauth.getClientId() == null
+                || oauth.getClientId().isEmpty()
+                || oauth.getClientSecret() == null
+                || oauth.getClientSecret().isEmpty()
+                || oauth.getScopes() == null
+                || oauth.getScopes().isEmpty()
+                || oauth.getUseAsUsername() == null
+                || oauth.getUseAsUsername().isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(
+                ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
+                        .registrationId("oidc")
+                        .clientId(oauth.getClientId())
+                        .clientSecret(oauth.getClientSecret())
+                        .scope(oauth.getScopes())
+                        .userNameAttributeName(oauth.getUseAsUsername())
+                        .clientName("OIDC")
+                        .build());
     }
 
     /*

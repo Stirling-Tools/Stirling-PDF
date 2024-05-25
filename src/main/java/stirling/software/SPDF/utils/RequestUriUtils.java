@@ -5,6 +5,7 @@ public class RequestUriUtils {
     public static boolean isStaticResource(String requestURI) {
 
         return requestURI.startsWith("/css/")
+                || requestURI.startsWith("/fonts/")
                 || requestURI.startsWith("/js/")
                 || requestURI.startsWith("/images/")
                 || requestURI.startsWith("/public/")
