@@ -13,6 +13,11 @@ ignore = [
     'language.direction',
 ]
 
+[cs_CZ]
+ignore = [
+    'language.direction',
+]
+
 [de_DE]
 ignore = [
     'AddStampRequest.alphabet',
