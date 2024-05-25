@@ -233,7 +233,6 @@
 
           </li>
 
-
           <li class="nav-item">
             <a class="nav-link" href="#" th:href="@{multi-tool}"
               th:classappend="${currentPage}=='multi-tool' ? 'active' : ''" th:title="#{home.multiTool.desc}">
@@ -253,7 +252,6 @@
               <span class="icon-text" th:data-text="#{home.pipeline.title}" th:text="#{home.pipeline.title}"></span>
             </a>
           </li>
-
 
           <li class="nav-item">
             <a class="nav-link" href="#" title="#{home.compressPdfs.title}" th:href="@{compress-pdf}"
@@ -276,8 +274,7 @@
             </a>
           </li>
 
-<!--
-          <li class="nav-item">
+          <!-- <li class="nav-item">
             <a class="nav-link" href="#" th:href="@{merge-pdfs}"
               th:classappend="${currentPage}=='merge-pdfs' ? 'active' : ''" th:title="#{home.merge.desc}">
               <span class="material-symbols-rounded">
@@ -285,8 +282,8 @@
               </span>
               <span class="icon-text" th:data-text="#{home.merge.title}" th:text="#{home.merge.title}"></span>
             </a>
-          </li>
--->
+          </li> -->
+
         </ul>
         <ul class="navbar-nav  flex-nowrap">
           <li class="nav-item dropdown">
@@ -329,24 +326,22 @@
           </li>
           
           <li class="nav-item dropdown">
-			  <a class="nav-link" href="#" id="searchDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-			    <span class="material-symbols-rounded">
-			      search
-			    </span>
-			    <span class="icon-text icon-hide">Search</span>
-			  </a>
-			  <div class="dropdown-menu dropdown-menu-tp" aria-labelledby="searchDropdown">
-			    <div class="dropdown-menu-wrapper px-xl-2 px-2">
-			      <form class="d-flex p-2 search-form" id="searchForm">
-			        <input class="form-control search-input" type="search" placeholder="Search" aria-label="Search" id="navbarSearchInput">
-			      </form>
-			      <!-- Search Results -->
-			      <div id="searchResults" class="search-results scrollable-y dropdown-mw-20"></div>
-			    </div>
-			  </div>
-			</li>
-
-
+            <a class="nav-link" href="#" id="searchDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <span class="material-symbols-rounded">
+                search
+              </span>
+              <span class="icon-text icon-hide">Search</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-tp" aria-labelledby="searchDropdown">
+              <div class="dropdown-menu-wrapper px-xl-2 px-2">
+                <form class="d-flex p-2 search-form" id="searchForm">
+                  <input class="form-control search-input" type="search" placeholder="Search" aria-label="Search" id="navbarSearchInput">
+                </form>
+                <!-- Search Results -->
+                <div id="searchResults" class="search-results scrollable-y dropdown-mw-20"></div>
+              </div>
+            </div>
+          </li>
 
           <li class="nav-item">
             <!-- Settings Button -->
@@ -404,9 +399,6 @@
               class="btn btn-sm btn-outline-primary mx-1" id="update-btn" th:utext="#{settings.update}" role="button"
               target="_blank"></a>
           </div>
-
-
-
 
           <div class="mb-3">
             <label for="downloadOption" th:utext="#{settings.downloadOption.title}"></label>

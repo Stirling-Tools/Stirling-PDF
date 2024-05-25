@@ -56,7 +56,7 @@ public class ConvertImgPDFController {
         String filename =
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
-        
+
         result =
                 PdfUtils.convertFromPdf(
                         pdfBytes,
@@ -65,10 +65,9 @@ public class ConvertImgPDFController {
                         singleImage,
                         Integer.valueOf(dpi),
                         filename);
-        
 
-        if(result == null || result.length == 0) {
-        	logger.error("resultant bytes for {} is null, error converting ", filename);
+        if (result == null || result.length == 0) {
+            logger.error("resultant bytes for {} is null, error converting ", filename);
         }
         if (singleImage) {
             String docName = filename + "." + imageFormat;
