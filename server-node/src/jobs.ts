@@ -37,6 +37,7 @@ function setupJobs(jobsDir: string) {
         else {
             console.log("jobs.toml is not present, if you want to use jobs please configure it");
         }
+        // TODO: Cleanup the folder?
     });
 }
 
