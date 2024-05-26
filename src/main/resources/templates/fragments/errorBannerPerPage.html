@@ -6,10 +6,10 @@
             <button type="button" class="btn btn-secondary" onclick="copytrace()" th:text="#{error.copyStack}"></button>
             <button type="button" class="btn btn-info" onclick="showHelp()" th:text="#{help}"></button>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
-	        <span class="material-symbols-rounded">
-	          close
-	        </span>
-	      </button>
+              <span class="material-symbols-rounded">
+                close
+              </span>
+            </button>
             <!-- Stack trace section -->
             <div id="trace" style="max-height: 0; overflow: hidden;">
               <div>
@@ -23,11 +23,11 @@
               <div class="modal-content">
                 <div class="modal-header">
                   <h5 class="modal-title" id="helpModalLabel" th:text="#{help}"></h5>
-                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
-			        <span class="material-symbols-rounded">
-			          close
-			        </span>
-			      </button>
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
+                    <span class="material-symbols-rounded">
+                      close
+                    </span>
+                  </button>
                 </div>
                 <div class="modal-body">
                   <div class="container">

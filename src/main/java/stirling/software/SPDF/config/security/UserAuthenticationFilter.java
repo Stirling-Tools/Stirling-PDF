@@ -101,6 +101,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             contextPath + "/images/",
             contextPath + "/public/",
             contextPath + "/css/",
+            contextPath + "/fonts/",
             contextPath + "/js/",
             contextPath + "/pdfjs/",
             contextPath + "/api/v1/info/status",

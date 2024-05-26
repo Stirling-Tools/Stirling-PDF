@@ -41,6 +41,7 @@ public class CustomOAuth2AuthenticationFailureHandler
         } else if (exception instanceof LockedException) {
             logger.error("Account locked: ", exception);
             getRedirectStrategy().sendRedirect(request, response, "/logout?error=locked");
+            return;
         } else {
             logger.error("Unhandled authentication exception", exception);
             super.onAuthenticationFailure(request, response, exception);
