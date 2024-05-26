@@ -5,7 +5,7 @@ const upload = multer();
 
 import { traverseOperations } from "@stirling-pdf/shared-operations/src/workflow/traverseOperations";
 import { PdfFile, RepresentationType } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
-import { respondWithPdfFiles } from "../../utils/endpoint-utils";
+import { respondWithPdfFiles } from "../../utils/response-utils";
 import { JoiPDFFileSchema } from "@stirling-pdf/shared-operations/src/wrappers/PdfFileJoi";
 
 interface Workflow {

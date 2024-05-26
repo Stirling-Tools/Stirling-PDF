@@ -6,7 +6,7 @@ import { getOperatorByName } from "@stirling-pdf/shared-operations/src/workflow/
 import { Operator } from "@stirling-pdf/shared-operations/src/functions";
 
 import { PdfFile } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
-import { respondWithPdfFiles } from "../../utils/endpoint-utils";
+import { respondWithPdfFiles } from "../../utils/response-utils";
 import { Action } from "@stirling-pdf/shared-operations/declarations/Action";
 import { JoiPDFFileSchema } from "@stirling-pdf/shared-operations/src/wrappers/PdfFileJoi";
 

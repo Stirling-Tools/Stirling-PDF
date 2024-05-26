@@ -1,3 +1,5 @@
+// TODO: This file can probably be removed by now
+
 export interface Action {
     values: any;
     type: "wait" | "done" | "impose" | string;
