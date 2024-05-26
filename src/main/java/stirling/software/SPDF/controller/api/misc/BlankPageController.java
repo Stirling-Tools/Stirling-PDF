@@ -67,7 +67,7 @@ public class BlankPageController {
                 String pageText = textStripper.getText(document);
                 boolean hasText = !pageText.trim().isEmpty();
 
-                Boolean blank = false;
+                Boolean blank = true;
                 if (hasText) {
                     logger.info("page " + pageIndex + " has text, not blank");
                     blank = false;
