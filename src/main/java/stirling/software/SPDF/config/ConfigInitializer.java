@@ -8,11 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -85,8 +81,8 @@ public class ConfigInitializer
                     resultLines.add("");
                 }
             }
-            
-         // Write the result to the user settings file
+
+            // Write the result to the user settings file
             Files.write(userPath, resultLines);
         }
 
@@ -95,11 +91,10 @@ public class ConfigInitializer
             Files.createFile(customSettingsPath);
         }
     }
-    
-    
-    
-    //TODO check parent value instead of just indent lines for duplicate keys (like enabled etc)
-    private static void addLine(List<String> resultLines, List<String> userLines, String templateLine, String key) {
+
+    // TODO check parent value instead of just indent lines for duplicate keys (like enabled etc)
+    private static void addLine(
+            List<String> resultLines, List<String> userLines, String templateLine, String key) {
         boolean added = false;
         int templateIndentationLevel = getIndentationLevel(templateLine);
         for (String settingsLine : userLines) {
@@ -116,13 +111,13 @@ public class ConfigInitializer
         if (!added) {
             resultLines.add(templateLine);
         }
-    } 
+    }
 
     private static int getIndentationLevel(String line) {
         int indentationLevel = 0;
         String trimmedLine = line.trim();
         if (trimmedLine.startsWith("#")) {
-        	line = trimmedLine.substring(1);
+            line = trimmedLine.substring(1);
         }
         for (char c : line.toCharArray()) {
             if (c == ' ') {

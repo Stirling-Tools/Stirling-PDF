@@ -34,7 +34,10 @@ public class PDFToFile {
 
         // Get the original PDF file name without the extension
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
-        String pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
+        String pdfBaseName = originalPdfFileName;
+        if (originalPdfFileName.contains(".")) {
+            pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
+        }
 
         Path tempInputFile = null;
         Path tempOutputDir = null;
@@ -100,8 +103,15 @@ public class PDFToFile {
 
         // Get the original PDF file name without the extension
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
-        String pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
 
+        if (originalPdfFileName == null || "".equals(originalPdfFileName.trim())) {
+            originalPdfFileName = "output.pdf";
+        }
+        // Assume file is pdf if no extension
+        String pdfBaseName = originalPdfFileName;
+        if (originalPdfFileName.contains(".")) {
+            pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
+        }
         // Validate output format
         List<String> allowedFormats =
                 Arrays.asList("doc", "docx", "odt", "ppt", "pptx", "odp", "rtf", "xml", "txt:Text");
@@ -173,6 +183,7 @@ public class PDFToFile {
             if (tempInputFile != null) Files.delete(tempInputFile);
             if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
+        System.out.println("fileBytes=" + fileBytes.length);
         return WebResponseUtils.bytesToWebResponse(
                 fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
     }
