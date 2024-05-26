@@ -58,7 +58,7 @@ public class ConfigInitializer
                     Files.exists(userPath) ? Files.readAllLines(userPath) : new ArrayList<>();
 
             List<String> resultLines = new ArrayList<>();
-
+            int position = 0;
             for (String templateLine : templateLines) {
                 // Check if the line is a comment
                 if (templateLine.trim().startsWith("#")) {
@@ -66,7 +66,7 @@ public class ConfigInitializer
                     if (!entry.isEmpty()) {
                         // Check if this comment has been uncommented in userLines
                         String key = entry.split(":")[0].trim();
-                        addLine(resultLines, userLines, templateLine, key);
+                        addLine(resultLines, userLines, templateLine, key, position);
                     } else {
                         resultLines.add(templateLine);
                     }
@@ -74,12 +74,13 @@ public class ConfigInitializer
                 // Check if the line is a key-value pair
                 else if (templateLine.contains(":")) {
                     String key = templateLine.split(":")[0].trim();
-                    addLine(resultLines, userLines, templateLine, key);
+                    addLine(resultLines, userLines, templateLine, key, position);
                 }
                 // Handle empty lines
                 else if (templateLine.trim().length() == 0) {
                     resultLines.add("");
                 }
+                position++;
             }
 
             // Write the result to the user settings file
@@ -94,11 +95,16 @@ public class ConfigInitializer
 
     // TODO check parent value instead of just indent lines for duplicate keys (like enabled etc)
     private static void addLine(
-            List<String> resultLines, List<String> userLines, String templateLine, String key) {
+            List<String> resultLines,
+            List<String> userLines,
+            String templateLine,
+            String key,
+            int position) {
         boolean added = false;
         int templateIndentationLevel = getIndentationLevel(templateLine);
+        int pos = 0;
         for (String settingsLine : userLines) {
-            if (settingsLine.trim().startsWith(key + ":")) {
+            if (settingsLine.trim().startsWith(key + ":") && position == pos) {
                 int settingsIndentationLevel = getIndentationLevel(settingsLine);
                 // Check if it is correct settingsLine and has the same parent as templateLine
                 if (settingsIndentationLevel == templateIndentationLevel) {
@@ -107,6 +113,7 @@ public class ConfigInitializer
                     break;
                 }
             }
+            pos++;
         }
         if (!added) {
             resultLines.add(templateLine);
