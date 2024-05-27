@@ -87,12 +87,12 @@ public class PdfOverlayController {
         } finally {
             for (File overlayPdfFile : overlayPdfFiles) {
                 if (overlayPdfFile != null) {
-                    overlayPdfFile.delete();
+                    Files.deleteIfExists(overlayPdfFile.toPath());
                 }
             }
             for (File tempFile : tempFiles) { // Delete temporary files
                 if (tempFile != null) {
-                    tempFile.delete();
+                    Files.deleteIfExists(tempFile.toPath());
                 }
             }
         }

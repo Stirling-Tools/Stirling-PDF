@@ -135,7 +135,9 @@ public class MergeController {
             throw ex;
         } finally {
             for (File file : filesToDelete) {
-                file.delete();
+                if (file != null) {
+                    Files.deleteIfExists(file.toPath());
+                }
             }
         }
     }
