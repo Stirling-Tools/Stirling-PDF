@@ -1,7 +1,7 @@
 select#font-select,
 select#font-select option {
-  height: 60px; /* Adjust as needed */
-  font-size: 30px; /* Adjust as needed */
+  height: 60px;
+  font-size: 30px;
 }
 
 .drawing-pad-container {
@@ -17,18 +17,7 @@ select#font-select option {
   position: relative;
   margin: 20px 0;
 }
-.draggable-buttons-box {
-  position: absolute;
-  top: 0;
-  padding: 10px;
-  width: 100%;
-  display: flex;
-  gap: 5px;
-}
-.draggable-buttons-box > button {
-  z-index: 10;
-  background-color: rgba(13, 110, 253, 0.1);
-}
+
 .draggable-canvas {
   border: 1px solid red;
   position: absolute;
@@ -36,4 +25,31 @@ select#font-select option {
   user-select: none;
   top: 0px;
   left: 0;
+}
+.draggable-buttons-box {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+}
+
+.button-group > button {
+  background-color: rgba(13, 110, 253, 0.1);
+  z-index: 10;
+}
+#page-container {
+  position: relative;
+  height: 100vh;
+}
+#pdf-viewer {
+  height: calc(100% - 100px); /* Adjust according to the size of your banners */
+  overflow: auto;
 }
