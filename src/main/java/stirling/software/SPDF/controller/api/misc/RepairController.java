@@ -59,18 +59,17 @@ public class RepairController {
 
             // Read the optimized PDF file
             pdfBytes = Files.readAllBytes(tempOutputFile);
-        
-        // Return the optimized PDF as a response
-        String outputFilename =
-                Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_repaired.pdf";
-        return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+
+            // Return the optimized PDF as a response
+            String outputFilename =
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
+                            + "_repaired.pdf";
+            return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
         } finally {
             // Clean up the temporary files
             Files.deleteIfExists(tempInputFile);
             Files.deleteIfExists(tempOutputFile);
         }
-
     }
 }
