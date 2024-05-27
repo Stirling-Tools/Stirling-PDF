@@ -176,10 +176,11 @@ public class ExtractImageScansController {
 
                 return WebResponseUtils.bytesToWebResponse(
                         zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
-            } if (processedImageBytes.size() == 0) { 
-            	throw new IllegalArgumentException("No images detected");
-            }else {
-            
+            }
+            if (processedImageBytes.size() == 0) {
+                throw new IllegalArgumentException("No images detected");
+            } else {
+
                 // Return the processed image as a response
                 byte[] imageBytes = processedImageBytes.get(0);
                 return WebResponseUtils.bytesToWebResponse(
