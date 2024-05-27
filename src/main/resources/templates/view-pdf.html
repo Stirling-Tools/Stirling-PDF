@@ -20,12 +20,20 @@ Adobe CMap resources are covered by their own copyright but the same license:
 
 See https://github.com/adobe-type-tools/cmap-resources
 -->
-<html dir="ltr" mozdisallowselectionprint>
+<html dir="ltr" mozdisallowselectionprint  th:lang="${#locale.language}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="google" content="notranslate">
     <title>PDF.js viewer</title>
+
+    <!-- Bootstrap -->
+    <script src="js/thirdParty/popper.min.js"></script>
+    <script src="js/thirdParty/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <link rel="stylesheet" href="css/theme/componentes.css">
+    <link rel="stylesheet" href="css/navbar.css">
 
     <!-- This snippet is used in production (included from view-pdf.html) -->
     <link rel="resource" type="application/l10n" href="./pdfjs/locale/locale.json">
@@ -291,6 +299,10 @@ See https://github.com/adobe-type-tools/cmap-resources
                   <input type="number" id="pageNumber" class="toolbarField" title="Page" value="1" min="1" tabindex="15" data-l10n-id="pdfjs-page-input" autocomplete="off">
                 </span>
                 <span id="numPages" class="toolbarLabel"></span>
+                <a class="navbar-brand hiddenMediumView" href="/" tabindex="16" >
+                  <img class="main-icon" src="favicon.svg" alt="icon" style="max-height: 1.6rem; width: auto;">
+                  <span class="icon-text" style="color: #ffffff;" th:text="${@appName}">Stirling PDF</span>
+                </a>
               </div>
               <div id="toolbarViewerRight">
                 <div id="editorModeButtons" class="splitToolbarButton toggled" role="radiogroup">
