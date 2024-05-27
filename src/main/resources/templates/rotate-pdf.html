@@ -64,7 +64,7 @@
           existingPreview.remove();
         }
         var url = URL.createObjectURL(fileInput.files[0])
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
+        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.mjs'
         const pdf = await pdfjsLib.getDocument(url).promise;
         const page = await pdf.getPage(1);
 
