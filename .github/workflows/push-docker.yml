@@ -24,7 +24,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: 7.6
+          gradle-version: 8.7
 
       - name: Run Gradle Command
         run: ./gradlew clean build
