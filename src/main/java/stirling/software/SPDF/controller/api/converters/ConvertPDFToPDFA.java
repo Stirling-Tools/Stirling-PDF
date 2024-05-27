@@ -61,8 +61,8 @@ public class ConvertPDFToPDFA {
         byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
 
         // Clean up the temporary files
-        Files.delete(tempInputFile);
-        Files.delete(tempOutputFile);
+        Files.deleteIfExists(tempInputFile);
+        Files.deleteIfExists(tempOutputFile);
 
         // Return the optimized PDF as a response
         String outputFilename =
