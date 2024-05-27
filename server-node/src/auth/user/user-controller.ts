@@ -1,6 +1,6 @@
 import { User } from "./user-model";
 
-export function findOne(params: {id?: number, username?: string}, cb: (err: Error | null, user: User) => void): undefined {
+export function findOne(params: {id?: number, username?: string, apikey?: string}, cb: (err: Error | null, user: User) => void): undefined {
     //TODO: replace with db connection.
     cb(null, {
         id: 1,

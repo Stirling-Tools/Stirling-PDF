@@ -51,7 +51,9 @@ app.use(session({
 }));
 
 app.use(passport.initialize());
-app.use(passport.session());
+app.use(passport.authenticate(['headerapikey', 'session'], { 
+    session: false, // Only set a session on the login request.
+}));
 
 initialize(passport);
 

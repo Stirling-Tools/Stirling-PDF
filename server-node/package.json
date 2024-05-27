@@ -36,6 +36,7 @@
         "jsqr": "^1.4.0",
         "multer": "^1.4.5-lts.1",
         "passport": "^0.7.0",
+        "passport-headerapikey": "^1.2.2",
         "passport-local": "^1.0.0",
         "pdf-lib": "^1.17.1",
         "rollup-plugin-copy": "^3.5.0",

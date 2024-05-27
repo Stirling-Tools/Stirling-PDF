@@ -1,8 +1,10 @@
-import LocalStrategy from "passport-local";
 import * as User from "./user/user-controller";
 
+import { Strategy as LocalStrategy} from "passport-local";
+import { HeaderAPIKeyStrategy as HeaderAPIKeyStrategy } from "passport-headerapikey";
+
 export function initialize(passport: typeof import("passport")) {
-    passport.use("local", new LocalStrategy.Strategy(
+    passport.use("local", new LocalStrategy(
         function(username, password, done) {
             User.findOne({ username: username }, function (err, user) {
                 if (err) { 
@@ -19,8 +21,24 @@ export function initialize(passport: typeof import("passport")) {
         }
     ));
 
+    passport.use(new HeaderAPIKeyStrategy(
+        { header: 'Authorization', prefix: 'Bearer ' },
+        false,
+        function(apikey, done) {
+            User.findOne({ apikey: apikey }, function (err, user) {
+                if (err) { 
+                    return done(err); 
+                }
+                if (!user) { 
+                    return done(null, false);
+                }
+                return done(null, user);
+            });
+        }
+      ));
+
     passport.serializeUser((user, done) => {
-        done(null, user.id)
+        done(null, user.id) //TODO: Extend Express.User to include id wich is set by passport
     });
     
     passport.deserializeUser((id: number, done) => {
