@@ -2,3 +2,4 @@ behave
 requests
 PyPDF2
 reportlab
+PyCryptodome
