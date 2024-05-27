@@ -9,6 +9,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import mimetypes
 import requests
+import zipfile
+import shutil
 
 #########
 # GIVEN #
@@ -25,6 +27,23 @@ def step_generate_pdf(context, fileInput):
     if not hasattr(context, 'files'):
         context.files = {}
     context.files[context.param_name] = open(context.file_name, 'rb')
+
+
+@given('I use an example file at "{filePath}" as parameter "{fileInput}"')
+def step_use_example_file(context, filePath, fileInput):
+    context.param_name = fileInput
+    context.file_name = filePath.split('/')[-1]
+    if not hasattr(context, 'files'):
+        context.files = {}
+    
+    # Ensure the file exists before opening
+    try:
+        example_file = open(filePath, 'rb')
+        context.files[context.param_name] = example_file
+    except FileNotFoundError:
+        raise FileNotFoundError(f"The example file '{filePath}' does not exist.")
+
+        
 
 @given('the pdf contains {page_count:d} pages')
 def step_pdf_contains_pages(context, page_count):
@@ -47,6 +66,59 @@ def step_pdf_contains_blank_pages(context, page_count):
     context.files[context.param_name].close()
     context.files[context.param_name] = open(context.file_name, 'rb')
 
+
+
+def create_black_box_image(file_name, size):
+    can = canvas.Canvas(file_name, pagesize=size)
+    width, height = size
+    can.setFillColorRGB(0, 0, 0)
+    can.rect(0, 0, width, height, fill=1)
+    can.showPage()
+    can.save()
+
+def create_pdf_with_black_boxes(file_name, image_count, page_count):
+    page_width, page_height = letter
+    box_size = 72  # 1 inch by 1 inch black box
+    boxes_per_page = image_count // page_count + (1 if image_count % page_count != 0 else 0)
+    
+    writer = PdfWriter()
+    box_counter = 0
+    
+    for page in range(page_count):
+        packet = io.BytesIO()
+        can = canvas.Canvas(packet, pagesize=letter)
+        
+        for i in range(boxes_per_page):
+            if box_counter >= image_count:
+                break
+            x = (i % (page_width // box_size)) * box_size
+            y = page_height - ((i // (page_width // box_size) + 1) * box_size)
+            can.setFillColorRGB(0, 0, 0)
+            can.rect(x, y, box_size, box_size, fill=1)
+            box_counter += 1
+            
+        can.showPage()
+        can.save()
+        packet.seek(0)
+        new_pdf = PdfReader(packet)
+        writer.add_page(new_pdf.pages[0])
+    
+    with open(file_name, 'wb') as f:
+        writer.write(f)
+
+@given('the pdf contains {image_count:d} images on {page_count:d} pages')
+def step_pdf_contains_images(context, image_count, page_count):
+    if not hasattr(context, 'param_name'):
+        context.param_name = "default"
+    context.file_name = "genericNonCustomisableName.pdf"
+    create_pdf_with_black_boxes(context.file_name, image_count, page_count)
+    if not hasattr(context, 'files'):
+        context.files = {}
+    if context.param_name in context.files:
+        context.files[context.param_name].close()
+    context.files[context.param_name] = open(context.file_name, 'rb')
+
+    
 @given('the pdf contains {page_count:d} pages with random text')
 def step_pdf_contains_pages_with_random_text(context, page_count):
     buffer = io.BytesIO()
@@ -129,7 +201,7 @@ def step_send_api_request(context, endpoint):
     for key, file in files.items():
         mime_type, _ = mimetypes.guess_type(file.name)
         mime_type = mime_type or 'application/octet-stream'
-        print("form_data " + file.name + " with " + mime_type)
+        print(f"form_data {file.name} with {mime_type}")
         form_data.append((key, (file.name, file, mime_type)))
 
     response = requests.post(url, files=form_data)
@@ -205,3 +277,31 @@ def step_save_response_file(context, filename):
     with open(filename, 'wb') as f:
         f.write(context.response.content)
     print(f"Saved response content to {filename}")
+
+
+@then('the response PDF should contain {page_count:d} pages')
+def step_check_response_pdf_page_count(context, page_count):
+    response_file = io.BytesIO(context.response.content)
+    reader = PdfReader(io.BytesIO(response_file.getvalue()))
+    actual_page_count = len(reader.pages)
+    assert actual_page_count == page_count, f"Expected {page_count} pages but got {actual_page_count} pages"
+
+@then('the response ZIP should contain {file_count:d} files')
+def step_check_response_zip_file_count(context, file_count):
+    response_file = io.BytesIO(context.response.content)
+    with zipfile.ZipFile(io.BytesIO(response_file.getvalue())) as zip_file:
+      actual_file_count = len(zip_file.namelist())
+    assert actual_file_count == file_count, f"Expected {file_count} files but got {actual_file_count} files"
+
+@then('the response ZIP file should contain {doc_count:d} documents each having {pages_per_doc:d} pages')
+def step_check_response_zip_doc_page_count(context, doc_count, pages_per_doc):
+    response_file = io.BytesIO(context.response.content)
+    with zipfile.ZipFile(io.BytesIO(response_file.getvalue())) as zip_file:
+        actual_doc_count = len(zip_file.namelist())
+        assert actual_doc_count == doc_count, f"Expected {doc_count} documents but got {actual_doc_count} documents"
+        
+        for file_name in zip_file.namelist():
+            with zip_file.open(file_name) as pdf_file:
+                reader = PdfReader(pdf_file)
+                actual_pages_per_doc = len(reader.pages)
+                assert actual_pages_per_doc == pages_per_doc, f"Expected {pages_per_doc} pages per document but got {actual_pages_per_doc} pages in document {file_name}"
