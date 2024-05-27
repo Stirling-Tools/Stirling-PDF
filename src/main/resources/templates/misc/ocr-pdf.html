@@ -232,7 +232,7 @@
 
                 // Step 3: Apply the function to your labels
                 document.addEventListener('DOMContentLoaded', () => {
-                  const labels = document.querySelectorAll('#languages .form-check-label');
+                  const labels = document.querySelectorAll('#languages label');
                   labels.forEach(label => {
                     const languageCode = label.getAttribute('for').split('-')[1];
                     label.textContent = getFullLanguageName(languageCode);

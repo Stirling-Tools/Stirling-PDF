@@ -59,7 +59,7 @@ public class ConvertWebsiteToPDF {
             pdfBytes = Files.readAllBytes(tempOutputFile);
         } finally {
             // Clean up the temporary files
-            Files.delete(tempOutputFile);
+            Files.deleteIfExists(tempOutputFile);
         }
         // Convert URL to a safe filename
         String outputFilename = convertURLToFileName(URL);
