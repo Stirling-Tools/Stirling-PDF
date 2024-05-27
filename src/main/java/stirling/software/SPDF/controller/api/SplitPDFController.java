@@ -121,7 +121,7 @@ public class SplitPDFController {
 
         logger.info("Successfully created zip file with split documents: {}", zipFile.toString());
         byte[] data = Files.readAllBytes(zipFile);
-        Files.delete(zipFile);
+        Files.deleteIfExists(zipFile);
 
         // return the Resource in the response
         return WebResponseUtils.bytesToWebResponse(

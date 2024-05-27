@@ -9,6 +9,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import mimetypes
 import requests
+import zipfile
+import shutil
 
 #########
 # GIVEN #
@@ -25,6 +27,23 @@ def step_generate_pdf(context, fileInput):
     if not hasattr(context, 'files'):
         context.files = {}
     context.files[context.param_name] = open(context.file_name, 'rb')
+
+
+@given('I use an example file at "{filePath}" as parameter "{fileInput}"')
+def step_use_example_file(context, filePath, fileInput):
+    context.param_name = fileInput
+    context.file_name = filePath.split('/')[-1]
+    if not hasattr(context, 'files'):
+        context.files = {}
+    
+    # Ensure the file exists before opening
+    try:
+        example_file = open(filePath, 'rb')
+        context.files[context.param_name] = example_file
+    except FileNotFoundError:
+        raise FileNotFoundError(f"The example file '{filePath}' does not exist.")
+
+        
 
 @given('the pdf contains {page_count:d} pages')
 def step_pdf_contains_pages(context, page_count):
@@ -129,7 +148,7 @@ def step_send_api_request(context, endpoint):
     for key, file in files.items():
         mime_type, _ = mimetypes.guess_type(file.name)
         mime_type = mime_type or 'application/octet-stream'
-        print("form_data " + file.name + " with " + mime_type)
+        print(f"form_data {file.name} with {mime_type}")
         form_data.append((key, (file.name, file, mime_type)))
 
     response = requests.post(url, files=form_data)
@@ -205,3 +224,31 @@ def step_save_response_file(context, filename):
     with open(filename, 'wb') as f:
         f.write(context.response.content)
     print(f"Saved response content to {filename}")
+
+
+@then('the response PDF should contain {page_count:d} pages')
+def step_check_response_pdf_page_count(context, page_count):
+    response_file = io.BytesIO(context.response.content)
+    reader = PdfReader(io.BytesIO(response_file.getvalue()))
+    actual_page_count = len(reader.pages)
+    assert actual_page_count == page_count, f"Expected {page_count} pages but got {actual_page_count} pages"
+
+@then('the response ZIP should contain {file_count:d} files')
+def step_check_response_zip_file_count(context, file_count):
+    response_file = io.BytesIO(context.response.content)
+    with zipfile.ZipFile(io.BytesIO(response_file.getvalue())) as zip_file:
+      actual_file_count = len(zip_file.namelist())
+    assert actual_file_count == file_count, f"Expected {file_count} files but got {actual_file_count} files"
+
+@then('the response ZIP file should contain {doc_count:d} documents each having {pages_per_doc:d} pages')
+def step_check_response_zip_doc_page_count(context, doc_count, pages_per_doc):
+    response_file = io.BytesIO(context.response.content)
+    with zipfile.ZipFile(io.BytesIO(response_file.getvalue())) as zip_file:
+        actual_doc_count = len(zip_file.namelist())
+        assert actual_doc_count == doc_count, f"Expected {doc_count} documents but got {actual_doc_count} documents"
+        
+        for file_name in zip_file.namelist():
+            with zip_file.open(file_name) as pdf_file:
+                reader = PdfReader(pdf_file)
+                actual_pages_per_doc = len(reader.pages)
+                assert actual_pages_per_doc == pages_per_doc, f"Expected {pages_per_doc} pages per document but got {actual_pages_per_doc} pages in document {file_name}"
