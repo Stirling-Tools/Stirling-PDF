@@ -289,7 +289,7 @@ const DraggableUtils = {
   },
 
   parseTransform(element) {},
-  async getOverlayedPdfDocument() {
+  async getOverlayedPdfDocument(scale, width, height) {
     const pdfBytes = await this.pdfDoc.getData();
     const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, {
       ignoreEncryption: true,
@@ -301,7 +301,6 @@ const DraggableUtils = {
       if (pageIdx.includes("offset")) {
         continue;
       }
-      console.log(typeof pageIdx);
 
       const page = pdfDocModified.getPage(parseInt(pageIdx));
       const draggablesData = pagesMap[pageIdx];
@@ -309,38 +308,48 @@ const DraggableUtils = {
       const offsetHeight = pagesMap[pageIdx + "-offsetHeight"];
 
       for (const draggableData of draggablesData) {
-        // embed the draggable canvas
         const draggableElement = draggableData.element;
         const response = await fetch(draggableElement.toDataURL());
         const draggableImgBytes = await response.arrayBuffer();
         const pdfImageObject = await pdfDocModified.embedPng(draggableImgBytes);
 
-        // calculate the position in the pdf document
-        const tansform = draggableElement.style.transform.replace(/[^.,-\d]/g, "");
-        const transformComponents = tansform.split(",");
+        // Ensure transform extraction and parsing
+        const transform = draggableElement.style.transform.match(/translate\(([^px]+)px, ([^px]+)px\)/);
+        if (!transform) {
+          console.error('Transform parsing error', draggableElement.style.transform);
+          continue;
+        }
+
         const draggablePositionPixels = {
-          x: parseFloat(transformComponents[0]),
-          y: parseFloat(transformComponents[1]),
-          width: draggableData.offsetWidth,
-          height: draggableData.offsetHeight,
+          x: parseFloat(transform[1]) / scale,
+          y: parseFloat(transform[2]) / scale,
+          width: draggableData.offsetWidth / scale,
+          height: draggableData.offsetHeight / scale,
         };
+
+        console.log('draggablePositionPixels:', draggablePositionPixels);
+
         const draggablePositionRelative = {
           x: draggablePositionPixels.x / offsetWidth,
           y: draggablePositionPixels.y / offsetHeight,
           width: draggablePositionPixels.width / offsetWidth,
           height: draggablePositionPixels.height / offsetHeight,
         };
+
+        console.log('draggablePositionRelative:', draggablePositionRelative);
+
         const draggablePositionPdf = {
-          x: draggablePositionRelative.x * page.getWidth(),
-          y: draggablePositionRelative.y * page.getHeight(),
-          width: draggablePositionRelative.width * page.getWidth(),
-          height: draggablePositionRelative.height * page.getHeight(),
+          x: draggablePositionRelative.x * width,
+          y: (1 - draggablePositionRelative.y - draggablePositionRelative.height) * height, // adjust the y-coordinate
+          width: draggablePositionRelative.width * width,
+          height: draggablePositionRelative.height * height,
         };
 
-        // draw the image
+        console.log('draggablePositionPdf:', draggablePositionPdf);
+
         page.drawImage(pdfImageObject, {
           x: draggablePositionPdf.x,
-          y: page.getHeight() - draggablePositionPdf.y - draggablePositionPdf.height,
+          y: draggablePositionPdf.y,
           width: draggablePositionPdf.width,
           height: draggablePositionPdf.height,
         });
@@ -349,7 +358,10 @@ const DraggableUtils = {
 
     this.loadPageContents();
     return pdfDocModified;
-  },
+  }
+
+
+
 };
 
 document.addEventListener("DOMContentLoaded", () => {

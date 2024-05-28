@@ -267,7 +267,9 @@
 
               <script>
                 document.getElementById("download-pdf").addEventListener('click', async() => {
-                  const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
+                  const pdfWidth = DraggableUtils.pdfCanvas.width;
+                  const pdfHeight = DraggableUtils.pdfCanvas.height;
+                  const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument(scale, pdfWidth, pdfHeight);
                   const modifiedPdfBytes = await modifiedPdf.save();
                   const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
                   const link = document.createElement('a');
@@ -281,7 +283,6 @@
 
                 // Initial scale
                 var scale = 1;
-
 
                 // Set transform origin
                 pdfContainer.style.transformOrigin = '0 0';
@@ -308,7 +309,7 @@
                 // Event listener for zoom out button
                 document.getElementById('zoomOut').addEventListener('mousedown', function() {
                   zoomInterval = setInterval(function() {
-                    if (scale > 1) { //Don't allow to zoom out more than original size
+                    if (scale > 1) { // Don't allow to zoom out more than original size
                       scale -= 0.1;
                       pdfContainer.style.transform = 'scale(' + scale + ')';
                       adjustScrollPosition();
@@ -333,6 +334,7 @@
                   viewer.scrollLeft = viewer.scrollWidth / 2 - viewer.clientWidth / 2;
                   viewer.scrollTop = viewer.scrollHeight / 2 - viewer.clientHeight / 2;
                 }
+
 
               </script>
 
