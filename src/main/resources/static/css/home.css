@@ -52,7 +52,7 @@
 
 .feature-card:hover {
   cursor: pointer;
-  transform: scale(1.025);
+  transform: scale(1.08);
   box-shadow: var(--md-sys-elevation-2);
 }
 
