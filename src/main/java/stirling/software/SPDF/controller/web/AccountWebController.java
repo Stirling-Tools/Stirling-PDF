@@ -129,6 +129,8 @@ public class AccountWebController {
                 case "invalid_request":
                     erroroauth = "login.oauth2invalidRequest";
                     break;
+                case "invalid_id_token":
+                    erroroauth = "login.oauth2InvalidIdToken";
                 default:
                     break;
             }
