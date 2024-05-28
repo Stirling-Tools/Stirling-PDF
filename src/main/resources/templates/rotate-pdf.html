@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{rotate.title}, header=#{rotate.header})}"></th:block>
   </head>
@@ -11,8 +11,11 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{rotate.header}"></h2>
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon organize">rotate_right</span>
+                <span class="tool-header-text" th:text="#{rotate.header}"></span>
+              </div>
 
               <form action="#" th:action="@{api/v1/general/rotate-pdf}" th:object="${rotateForm}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
@@ -55,9 +58,13 @@
         console.log("loading pdf");
 
         document.querySelector("#editSection").style.display = "";
-
+        
+        const existingPreview = document.getElementById("pdf-preview");
+        if (existingPreview) {
+          existingPreview.remove();
+        }
         var url = URL.createObjectURL(fileInput.files[0])
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
+        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.mjs'
         const pdf = await pdfjsLib.getDocument(url).promise;
         const page = await pdf.getPage(1);
 

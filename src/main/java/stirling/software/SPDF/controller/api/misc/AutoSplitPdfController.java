@@ -118,7 +118,7 @@ public class AutoSplitPdfController {
             e.printStackTrace();
         } finally {
             data = Files.readAllBytes(zipFile);
-            Files.delete(zipFile);
+            Files.deleteIfExists(zipFile);
         }
 
         return WebResponseUtils.bytesToWebResponse(

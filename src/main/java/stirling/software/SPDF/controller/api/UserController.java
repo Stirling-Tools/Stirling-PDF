@@ -47,8 +47,11 @@ public class UserController {
             model.addAttribute("error", "Username already exists");
             return "register";
         }
-
-        userService.saveUser(requestModel.getUsername(), requestModel.getPassword());
+        try {
+            userService.saveUser(requestModel.getUsername(), requestModel.getPassword());
+        } catch (IllegalArgumentException e) {
+            return "redirect:/login?messageType=invalidUsername";
+        }
         return "redirect:/login?registered=true";
     }
 
@@ -92,7 +95,11 @@ public class UserController {
         }
 
         if (newUsername != null && newUsername.length() > 0) {
-            userService.changeUsername(user, newUsername);
+            try {
+                userService.changeUsername(user, newUsername);
+            } catch (IllegalArgumentException e) {
+                return new RedirectView("/account?messageType=invalidUsername");
+            }
         }
 
         // Logout using Spring's utility
@@ -224,6 +231,45 @@ public class UserController {
         }
 
         userService.saveUser(username, password, role, forceChange);
+        return new RedirectView("/addUsers"); // Redirect to account page after adding the user
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/admin/changeRole")
+    public RedirectView changeRole(
+            @RequestParam(name = "username") String username,
+            @RequestParam(name = "role") String role,
+            Authentication authentication) {
+
+        Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
+
+        if (!userOpt.isPresent()) {
+            return new RedirectView("/addUsers?messageType=userNotFound");
+        }
+        if (!userService.usernameExistsIgnoreCase(username)) {
+            return new RedirectView("/addUsers?messageType=userNotFound");
+        }
+        // Get the currently authenticated username
+        String currentUsername = authentication.getName();
+
+        // Check if the provided username matches the current session's username
+        if (currentUsername.equalsIgnoreCase(username)) {
+            return new RedirectView("/addUsers?messageType=downgradeCurrentUser");
+        }
+        try {
+            // Validate the role
+            Role roleEnum = Role.fromString(role);
+            if (roleEnum == Role.INTERNAL_API_USER) {
+                // If the role is INTERNAL_API_USER, reject the request
+                return new RedirectView("/addUsers?messageType=invalidRole");
+            }
+        } catch (IllegalArgumentException e) {
+            // If the role ID is not valid, redirect with an error message
+            return new RedirectView("/addUsers?messageType=invalidRole");
+        }
+        User user = userOpt.get();
+
+        userService.changeRole(user, role);
         return new RedirectView("/addUsers"); // Redirect to account page after adding the user
     }
 

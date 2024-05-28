@@ -3,27 +3,31 @@ package stirling.software.SPDF.config.security;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
-import org.springframework.stereotype.Component;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.SPDF.model.User;
 
-@Component
 public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-    @Autowired private final LoginAttemptService loginAttemptService;
+    private LoginAttemptService loginAttemptService;
 
-    @Autowired private final UserService userService; // Inject the UserService
+    private UserService userService;
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(CustomAuthenticationFailureHandler.class);
 
     public CustomAuthenticationFailureHandler(
-            LoginAttemptService loginAttemptService, UserService userService) {
+            final LoginAttemptService loginAttemptService, UserService userService) {
         this.loginAttemptService = loginAttemptService;
         this.userService = userService;
     }
@@ -34,22 +38,33 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
             HttpServletResponse response,
             AuthenticationException exception)
             throws IOException, ServletException {
+
         String ip = request.getRemoteAddr();
-        logger.error("Failed login attempt from IP: " + ip);
+        logger.error("Failed login attempt from IP: {}", ip);
+
+        if (exception.getClass().isAssignableFrom(InternalAuthenticationServiceException.class)
+                || "Password must not be null".equalsIgnoreCase(exception.getMessage())) {
+            response.sendRedirect("/login?error=oauth2AuthenticationError");
+            return;
+        }
 
         String username = request.getParameter("username");
-        if (!isDemoUser(username)) {
-            if (loginAttemptService.loginAttemptCheck(username)) {
-                setDefaultFailureUrl("/login?error=locked");
-
-            } else {
-                if (exception.getClass().isAssignableFrom(LockedException.class)) {
-                    setDefaultFailureUrl("/login?error=locked");
-                }
+        if (username != null && !isDemoUser(username)) {
+            logger.info(
+                    "Remaining attempts for user {}: {}",
+                    username,
+                    loginAttemptService.getRemainingAttempts(username));
+            loginAttemptService.loginFailed(username);
+            if (loginAttemptService.isBlocked(username)
+                    || exception.getClass().isAssignableFrom(LockedException.class)) {
+                response.sendRedirect("/login?error=locked");
+                return;
             }
         }
-        if (exception.getClass().isAssignableFrom(BadCredentialsException.class)) {
-            setDefaultFailureUrl("/login?error=badcredentials");
+        if (exception.getClass().isAssignableFrom(BadCredentialsException.class)
+                || exception.getClass().isAssignableFrom(UsernameNotFoundException.class)) {
+            response.sendRedirect("/login?error=badcredentials");
+            return;
         }
 
         super.onAuthenticationFailure(request, response, exception);

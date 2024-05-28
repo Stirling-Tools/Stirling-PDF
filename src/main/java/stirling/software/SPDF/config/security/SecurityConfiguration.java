@@ -1,8 +1,9 @@
 package stirling.software.SPDF.config.security;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.util.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,36 +15,45 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.ClientRegistrations;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.oauth2.client.registration.ClientRegistrations;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
-import jakarta.servlet.http.HttpSession;
+import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
+import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
+import stirling.software.SPDF.config.security.oauth2.CustomOAuth2LogoutSuccessHandler;
+import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.GithubProvider;
+import stirling.software.SPDF.model.ApplicationProperties.GoogleProvider;
+import stirling.software.SPDF.model.ApplicationProperties.KeycloakProvider;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
+import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
-
-import java.io.IOException;
 
 @Configuration
 @EnableWebSecurity()
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-    @Autowired private UserDetailsService userDetailsService;
+    @Autowired private CustomUserDetailsService userDetailsService;
+
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -92,7 +102,8 @@ public class SecurityConfiguration {
                                     formLogin
                                             .loginPage("/login")
                                             .successHandler(
-                                                    new CustomAuthenticationSuccessHandler())
+                                                    new CustomAuthenticationSuccessHandler(
+                                                            loginAttemptService))
                                             .defaultSuccessUrl("/")
                                             .failureHandler(
                                                     new CustomAuthenticationFailureHandler(
@@ -103,20 +114,9 @@ public class SecurityConfiguration {
                             logout ->
                                     logout.logoutRequestMatcher(
                                                     new AntPathRequestMatcher("/logout"))
-                                            .logoutSuccessHandler(new CustomLogoutSuccessHandler()) // Use a Custom Logout Handler to handle custom error message if OAUTH2 Auto Create is disabled
+                                            .logoutSuccessHandler(new CustomLogoutSuccessHandler())
                                             .invalidateHttpSession(true) // Invalidate session
-                                            .deleteCookies("JSESSIONID", "remember-me")
-                                            .addLogoutHandler(
-                                                    (request, response, authentication) -> {
-                                                        HttpSession session =
-                                                                request.getSession(false);
-                                                        if (session != null) {
-                                                            String sessionId = session.getId();
-                                                            sessionRegistry()
-                                                                    .removeSessionInformation(
-                                                                            sessionId);
-                                                        }
-                                                    }))
+                                            .deleteCookies("JSESSIONID", "remember-me"))
                     .rememberMe(
                             rememberMeConfigurer ->
                                     rememberMeConfigurer // Use the configurator directly
@@ -148,6 +148,7 @@ public class SecurityConfiguration {
                                                                 || trimmedUri.startsWith("/images/")
                                                                 || trimmedUri.startsWith("/public/")
                                                                 || trimmedUri.startsWith("/css/")
+                                                                || trimmedUri.startsWith("/fonts/")
                                                                 || trimmedUri.startsWith("/js/")
                                                                 || trimmedUri.startsWith(
                                                                         "/api/v1/info/status");
@@ -155,35 +156,46 @@ public class SecurityConfiguration {
                                             .permitAll()
                                             .anyRequest()
                                             .authenticated())
-                    .userDetailsService(userDetailsService)
                     .authenticationProvider(authenticationProvider());
 
             // Handle OAUTH2 Logins
-            if (applicationProperties.getSecurity().getOAUTH2().getEnabled()) {
+            if (applicationProperties.getSecurity().getOAUTH2() != null
+                    && applicationProperties.getSecurity().getOAUTH2().getEnabled()) {
 
-                 http.oauth2Login( oauth2 -> oauth2
-                         .loginPage("/oauth2")
-                         /*
-                         This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                         If user exists, login proceeds as usual. If user does not exist, then it is autocreated but only if 'OAUTH2AutoCreateUser'
-                         is set as true, else login fails with an error message advising the same.
-                          */
-                         .successHandler(new AuthenticationSuccessHandler() {
-                                @Override
-                                public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        Authentication authentication) throws ServletException , IOException{
-                                    OAuth2User oauthUser =  (OAuth2User) authentication.getPrincipal();
-                                    if (userService.processOAuth2PostLogin(oauthUser.getAttribute("email"), applicationProperties.getSecurity().getOAUTH2().getAutoCreateUser())) {
-                                        response.sendRedirect("/");
-                                    }
-                                    else{
-                                        response.sendRedirect("/logout?oauth2AutoCreateDisabled=true");
-                                    }
-                                }
-                            }
-                         )
-                 );
-             }
+                http.oauth2Login(
+                                oauth2 ->
+                                        oauth2.loginPage("/oauth2")
+                                                /*
+                                                This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
+                                                If user exists, login proceeds as usual. If user does not exist, then it is autocreated but only if 'OAUTH2AutoCreateUser'
+                                                is set as true, else login fails with an error message advising the same.
+                                                 */
+                                                .successHandler(
+                                                        new CustomOAuth2AuthenticationSuccessHandler(
+                                                                loginAttemptService,
+                                                                applicationProperties,
+                                                                userService))
+                                                .failureHandler(
+                                                        new CustomOAuth2AuthenticationFailureHandler())
+                                                // Add existing Authorities from the database
+                                                .userInfoEndpoint(
+                                                        userInfoEndpoint ->
+                                                                userInfoEndpoint
+                                                                        .oidcUserService(
+                                                                                new CustomOAuth2UserService(
+                                                                                        applicationProperties,
+                                                                                        userService,
+                                                                                        loginAttemptService))
+                                                                        .userAuthoritiesMapper(
+                                                                                userAuthoritiesMapper())))
+                        .logout(
+                                logout ->
+                                        logout.logoutSuccessHandler(
+                                                        new CustomOAuth2LogoutSuccessHandler(
+                                                                this.applicationProperties,
+                                                                sessionRegistry()))
+                                                .invalidateHttpSession(true));
+            }
         } else {
             http.csrf(csrf -> csrf.disable())
                     .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
@@ -194,21 +206,175 @@ public class SecurityConfiguration {
 
     // Client Registration Repository for OAUTH2 OIDC Login
     @Bean
-    @ConditionalOnProperty(value = "security.oauth2.enabled" , havingValue = "true", matchIfMissing = false)
-	public ClientRegistrationRepository clientRegistrationRepository() {
-		return new InMemoryClientRegistrationRepository(this.oidcClientRegistration());
-	}
+    @ConditionalOnProperty(
+            value = "security.oauth2.enabled",
+            havingValue = "true",
+            matchIfMissing = false)
+    public ClientRegistrationRepository clientRegistrationRepository() {
+        List<ClientRegistration> registrations = new ArrayList<>();
 
-	private ClientRegistration oidcClientRegistration() {
-		return ClientRegistrations.fromOidcIssuerLocation(applicationProperties.getSecurity().getOAUTH2().getIssuer())
-			.registrationId("oidc")
-            .clientId(applicationProperties.getSecurity().getOAUTH2().getClientId())
-			.clientSecret(applicationProperties.getSecurity().getOAUTH2().getClientSecret())
-			.scope("openid", "profile", "email")
-			.userNameAttributeName("email")
-			.clientName("OIDC")
-			.build();
-	}
+        githubClientRegistration().ifPresent(registrations::add);
+        oidcClientRegistration().ifPresent(registrations::add);
+        googleClientRegistration().ifPresent(registrations::add);
+        keycloakClientRegistration().ifPresent(registrations::add);
+
+        if (registrations.isEmpty()) {
+            logger.error("At least one OAuth2 provider must be configured");
+            System.exit(1);
+        }
+
+        return new InMemoryClientRegistrationRepository(registrations);
+    }
+
+    private Optional<ClientRegistration> googleClientRegistration() {
+        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        if (oauth == null || !oauth.getEnabled()) {
+            return Optional.empty();
+        }
+        Client client = oauth.getClient();
+        if (client == null) {
+            return Optional.empty();
+        }
+        GoogleProvider google = client.getGoogle();
+        return google != null && google.isSettingsValid()
+                ? Optional.of(
+                        ClientRegistration.withRegistrationId("google")
+                                .clientId(google.getClientId())
+                                .clientSecret(google.getClientSecret())
+                                .scope(google.getScopes())
+                                .authorizationUri(google.getAuthorizationuri())
+                                .tokenUri(google.getTokenuri())
+                                .userInfoUri(google.getUserinfouri())
+                                .userNameAttributeName(google.getUseAsUsername())
+                                .clientName("Google")
+                                .redirectUri("{baseUrl}/login/oauth2/code/google")
+                                .authorizationGrantType(
+                                        org.springframework.security.oauth2.core
+                                                .AuthorizationGrantType.AUTHORIZATION_CODE)
+                                .build())
+                : Optional.empty();
+    }
+
+    private Optional<ClientRegistration> keycloakClientRegistration() {
+        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        if (oauth == null || !oauth.getEnabled()) {
+            return Optional.empty();
+        }
+        Client client = oauth.getClient();
+        if (client == null) {
+            return Optional.empty();
+        }
+        KeycloakProvider keycloak = client.getKeycloak();
+
+        return keycloak != null && keycloak.isSettingsValid()
+                ? Optional.of(
+                        ClientRegistrations.fromIssuerLocation(keycloak.getIssuer())
+                                .registrationId("keycloak")
+                                .clientId(keycloak.getClientId())
+                                .clientSecret(keycloak.getClientSecret())
+                                .scope(keycloak.getScopes())
+                                .userNameAttributeName(keycloak.getUseAsUsername())
+                                .clientName("Keycloak")
+                                .build())
+                : Optional.empty();
+    }
+
+    private Optional<ClientRegistration> githubClientRegistration() {
+        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        if (oauth == null || !oauth.getEnabled()) {
+            return Optional.empty();
+        }
+        Client client = oauth.getClient();
+        if (client == null) {
+            return Optional.empty();
+        }
+        GithubProvider github = client.getGithub();
+        return github != null && github.isSettingsValid()
+                ? Optional.of(
+                        ClientRegistration.withRegistrationId("github")
+                                .clientId(github.getClientId())
+                                .clientSecret(github.getClientSecret())
+                                .scope(github.getScopes())
+                                .authorizationUri(github.getAuthorizationuri())
+                                .tokenUri(github.getTokenuri())
+                                .userInfoUri(github.getUserinfouri())
+                                .userNameAttributeName(github.getUseAsUsername())
+                                .clientName("GitHub")
+                                .redirectUri("{baseUrl}/login/oauth2/code/github")
+                                .authorizationGrantType(
+                                        org.springframework.security.oauth2.core
+                                                .AuthorizationGrantType.AUTHORIZATION_CODE)
+                                .build())
+                : Optional.empty();
+    }
+
+    private Optional<ClientRegistration> oidcClientRegistration() {
+        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        if (oauth == null
+                || oauth.getIssuer() == null
+                || oauth.getIssuer().isEmpty()
+                || oauth.getClientId() == null
+                || oauth.getClientId().isEmpty()
+                || oauth.getClientSecret() == null
+                || oauth.getClientSecret().isEmpty()
+                || oauth.getScopes() == null
+                || oauth.getScopes().isEmpty()
+                || oauth.getUseAsUsername() == null
+                || oauth.getUseAsUsername().isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(
+                ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
+                        .registrationId("oidc")
+                        .clientId(oauth.getClientId())
+                        .clientSecret(oauth.getClientSecret())
+                        .scope(oauth.getScopes())
+                        .userNameAttributeName(oauth.getUseAsUsername())
+                        .clientName("OIDC")
+                        .build());
+    }
+
+    /*
+    This following function is to grant Authorities to the OAUTH2 user from the values stored in the database.
+    This is required for the internal; 'hasRole()' function to give out the correct role.
+     */
+    @Bean
+    @ConditionalOnProperty(
+            value = "security.oauth2.enabled",
+            havingValue = "true",
+            matchIfMissing = false)
+    GrantedAuthoritiesMapper userAuthoritiesMapper() {
+        return (authorities) -> {
+            Set<GrantedAuthority> mappedAuthorities = new HashSet<>();
+
+            authorities.forEach(
+                    authority -> {
+                        // Add existing OAUTH2 Authorities
+                        mappedAuthorities.add(new SimpleGrantedAuthority(authority.getAuthority()));
+
+                        // Add Authorities from database for existing user, if user is present.
+                        if (authority instanceof OAuth2UserAuthority oauth2Auth) {
+                            String useAsUsername =
+                                    applicationProperties
+                                            .getSecurity()
+                                            .getOAUTH2()
+                                            .getUseAsUsername();
+                            Optional<User> userOpt =
+                                    userService.findByUsernameIgnoreCase(
+                                            (String) oauth2Auth.getAttributes().get(useAsUsername));
+                            if (userOpt.isPresent()) {
+                                User user = userOpt.get();
+                                if (user != null) {
+                                    mappedAuthorities.add(
+                                            new SimpleGrantedAuthority(
+                                                    userService.findRole(user).getAuthority()));
+                                }
+                            }
+                        }
+                    });
+            return mappedAuthorities;
+        };
+    }
 
     @Bean
     public IPRateLimitingFilter rateLimitingFilter() {
