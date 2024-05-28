@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{login.title}, header=#{login.header})}"></th:block>
     <link rel="stylesheet" href="css/login.css">
@@ -8,33 +8,11 @@
   <body>
     <div class="your-container-class"></div>
     <div class="container-flex">
-      <main class="form-signin text-center">
+      <main class="form-signin">
         <script>
-          function setInputMode(elementId, mode) {
-            var inputElement = document.getElementById(elementId);
-
-            if (!inputElement) return;  // If the element doesn't exist, exit the function
-
-            switch (mode) {
-              case "on":
-                inputElement.classList.add("bg-dark", "text-light");
-                inputElement.classList.remove("bg-light", "text-dark");
-                break;
-              case "off":
-                inputElement.classList.add("bg-light", "text-dark");
-                inputElement.classList.remove("bg-dark", "text-light");
-                break;
-              case "rainbow":
-                // Assuming you have defined some classes for rainbow mode
-                break;
-            }
-          }
-
           document.addEventListener('modeChanged', function(e) {
             var mode = e.detail;
 
-            setInputMode("username", mode);
-            setInputMode("password", mode);
             document.body.classList.remove("light-mode", "dark-mode", "rainbow-mode"); // remove all mode classes first
 
             switch (mode) {
@@ -132,55 +110,85 @@
             }
           }
         </script>
-        <div th:if="${logoutMessage}" class="alert alert-success" th:text="${logoutMessage}"></div>
-        <div th:if="${param.messageType != null and param.messageType.size() > 0 and param.messageType[0] == 'credsUpdated'}" class="alert alert-success">
-          <span th:text="#{changedCredsMessage}">Default message if not found</span>
-        </div>
-        <form th:action="@{login}" method="post">
-          <img class="mb-4" src="favicon.svg?v=2" alt="" width="144" height="144">
+        <div class="text-center">
+          <img class="mb-4" src="favicon.svg" alt="favicon" width="144" height="144">
+
           <h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
           <div th:if="${oAuth2Enabled}">
-            <a href="oauth2/authorization/oidc" class="w-100 btn btn-lg btn-primary" th:text="#{login.ssoSignIn}">Login Via SSO</a>
-            <div class="text-danger text-center">
-              <div th:if="${error == 'oauth2AutoCreateDisabled'}" th:text="#{login.oauth2AutoCreateDisabled}">OAUTH2 Auto-Create User Disabled.</div>
+            <a href="#" class="w-100 btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#loginsModal" th:text="#{login.ssoSignIn}">Login Via SSO</a>
+            <br>
+            <br>
+            <div th:if="${erroroauth}" class="alert alert-danger text-center">
+              <div th:if="${erroroauth}" th:text="#{${erroroauth}}">OAuth2: Error Message</div>
             </div>
             <hr />
           </div>
-          <h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
 
+          <div th:if="${error}" class="alert alert-danger text-center">
+            <div th:if="${error}" th:text="#{${error}}">OAuth2: Error Message</div>
+          </div>
+          <div class="text-danger text-center">
+            <div th:if="${logoutMessage}" class="alert alert-success" th:text="${logoutMessage}"></div>
+            <div th:if="${messageType}" class="alert alert-success">
+              <span th:text="#{${messageType}}">Default message if not found</span>
+            </div>
+          </div>
+        </div>
+        <form th:action="@{login}" method="post">
+          <h2 class="h5 mb-3 fw-normal" th:text="#{login.signinTitle}">Please sign in</h2>
           <div class="form-floating">
-            <input type="text" class="form-control bg-dark text-light" id="username" name="username" placeholder="admin">
+            <input type="text" class="form-control" id="username" name="username" placeholder="admin">
             <label for="username" th:text="#{username}">Username</label>
           </div>
           <div class="form-floating">
-            <input type="password" class="form-control bg-dark text-light" id="password" name="password" placeholder="Password">
+            <input type="password" class="form-control" id="password" name="password" placeholder="Password">
             <label for="password" th:text="#{password}">Password</label>
           </div>
 
-          <div class="checkbox mb-3">
+          <div class="form-check m-2 mb-3">
             <input type="checkbox" id="remember" value="remember-me">
             <label for="remember" th:text="#{login.rememberme}"></label> 
           </div>
           <button class="w-100 btn btn-lg btn-primary" type="submit" th:text="#{login.signin}">Sign in</button>
         </form>
         <div class="mt-3"> <!-- Added a margin-top for spacing -->
-          <div class="dropdown">
+          <div class="dropdown text-center">
             <button class="btn btn-secondary dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
               <img src="images/flags/gb.svg" alt="icon" width="20" height="15"> English (GB)
               <!-- Default language placeholder -->
             </button>
             <div class="dropdown-menu" aria-labelledby="languageDropdown">
               <!-- Here's where the fragment will be included -->
+              <div class="scrollable-y">
               <th:block th:replace="~{fragments/languages :: langs}"></th:block>
+              </div>
             </div>
           </div>
         </div>
-        <div class="text-danger text-center">
-          <div th:if="${error == 'badcredentials'}" th:text="#{login.invalid}">Invalid username or password.</div>
-          <div th:if="${error == 'locked'}" th:text="#{login.locked}">Your account has been locked. </div>
-        </div>
       </main>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+    <div th:if="${oAuth2Enabled}" class="modal fade" id="loginsModal" tabindex="-1" role="dialog" aria-labelledby="loginsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="loginsModalLabel" th:text="#{login.ssoSignIn}"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+              <span class="material-symbols-rounded">
+                close
+              </span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3" th:each="provider : ${providerlist}">
+              <a th:href="@{|/oauth2/authorization/${provider.key}|}" th:text="${provider.value}" class="w-100 btn btn-lg btn-primary">OpenID Connect</a>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{licenses.title}, header=#{licenses.title})}"></th:block>
   </head>
@@ -11,7 +11,7 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
+            <div class="col-md-6 bg-card">
               <h2 th:text="#{licenses.header}">3rd Party licenses</h2>
               <table class="table table-striped">
                 <thead>

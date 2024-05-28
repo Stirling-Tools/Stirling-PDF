@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,7 +33,10 @@ public class PDFToFile {
 
         // Get the original PDF file name without the extension
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
-        String pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
+        String pdfBaseName = originalPdfFileName;
+        if (originalPdfFileName.contains(".")) {
+            pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
+        }
 
         Path tempInputFile = null;
         Path tempOutputDir = null;
@@ -44,8 +46,7 @@ public class PDFToFile {
         try {
             // Save the uploaded file to a temporary location
             tempInputFile = Files.createTempFile("input_", ".pdf");
-            Files.copy(
-                    inputFile.getInputStream(), tempInputFile, StandardCopyOption.REPLACE_EXISTING);
+            inputFile.transferTo(tempInputFile);
 
             // Prepare the output directory
             tempOutputDir = Files.createTempDirectory("output_");
@@ -82,7 +83,7 @@ public class PDFToFile {
 
         } finally {
             // Clean up the temporary files
-            if (tempInputFile != null) Files.delete(tempInputFile);
+            if (tempInputFile != null) Files.deleteIfExists(tempInputFile);
             if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
 
@@ -100,8 +101,15 @@ public class PDFToFile {
 
         // Get the original PDF file name without the extension
         String originalPdfFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
-        String pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
 
+        if (originalPdfFileName == null || "".equals(originalPdfFileName.trim())) {
+            originalPdfFileName = "output.pdf";
+        }
+        // Assume file is pdf if no extension
+        String pdfBaseName = originalPdfFileName;
+        if (originalPdfFileName.contains(".")) {
+            pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
+        }
         // Validate output format
         List<String> allowedFormats =
                 Arrays.asList("doc", "docx", "odt", "ppt", "pptx", "odp", "rtf", "xml", "txt:Text");
@@ -117,8 +125,7 @@ public class PDFToFile {
         try {
             // Save the uploaded file to a temporary location
             tempInputFile = Files.createTempFile("input_", ".pdf");
-            Files.copy(
-                    inputFile.getInputStream(), tempInputFile, StandardCopyOption.REPLACE_EXISTING);
+            inputFile.transferTo(tempInputFile);
 
             // Prepare the output directory
             tempOutputDir = Files.createTempDirectory("output_");
@@ -170,9 +177,10 @@ public class PDFToFile {
 
         } finally {
             // Clean up the temporary files
-            if (tempInputFile != null) Files.delete(tempInputFile);
+            Files.deleteIfExists(tempInputFile);
             if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
+        System.out.println("fileBytes=" + fileBytes.length);
         return WebResponseUtils.bytesToWebResponse(
                 fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
     }

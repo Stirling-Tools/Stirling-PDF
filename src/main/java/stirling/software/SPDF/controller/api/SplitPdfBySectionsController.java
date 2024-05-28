@@ -63,10 +63,7 @@ public class SplitPdfBySectionsController {
             MergeController mergeController = new MergeController();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             mergeController.mergeDocuments(splitDocuments).save(baos);
-            return WebResponseUtils.bytesToWebResponse(
-                    baos.toByteArray(),
-                    filename + "_split.pdf",
-                    MediaType.APPLICATION_OCTET_STREAM);
+            return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), filename + "_split.pdf");
         }
         for (PDDocument doc : splitDocuments) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -98,7 +95,7 @@ public class SplitPdfBySectionsController {
             e.printStackTrace();
         } finally {
             data = Files.readAllBytes(zipFile);
-            Files.delete(zipFile);
+            Files.deleteIfExists(zipFile);
         }
 
         return WebResponseUtils.bytesToWebResponse(

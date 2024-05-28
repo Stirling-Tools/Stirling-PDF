@@ -36,7 +36,7 @@ public class ConvertImgPDFController {
             description =
                     "This endpoint converts a PDF file to image(s) with the specified image format, color type, and DPI. Users can choose to get a single image or multiple images.  Input:PDF Output:Image Type:SI-Conditional")
     public ResponseEntity<byte[]> convertToImage(@ModelAttribute ConvertToImageRequest request)
-            throws IOException {
+            throws NumberFormatException, Exception {
         MultipartFile file = request.getFileInput();
         String imageFormat = request.getImageFormat();
         String singleOrMultiple = request.getSingleOrMultiple();
@@ -56,25 +56,21 @@ public class ConvertImgPDFController {
         String filename =
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
-        try {
-            result =
-                    PdfUtils.convertFromPdf(
-                            pdfBytes,
-                            imageFormat.toUpperCase(),
-                            colorTypeResult,
-                            singleImage,
-                            Integer.valueOf(dpi),
-                            filename);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
 
+        result =
+                PdfUtils.convertFromPdf(
+                        pdfBytes,
+                        imageFormat.toUpperCase(),
+                        colorTypeResult,
+                        singleImage,
+                        Integer.valueOf(dpi),
+                        filename);
+
+        if (result == null || result.length == 0) {
+            logger.error("resultant bytes for {} is null, error converting ", filename);
+        }
         if (singleImage) {
-            String docName = filename + "." + imageFormat; 
+            String docName = filename + "." + imageFormat;
             MediaType mediaType = MediaType.parseMediaType(getMediaType(imageFormat));
             return WebResponseUtils.bytesToWebResponse(result, docName, mediaType);
         } else {

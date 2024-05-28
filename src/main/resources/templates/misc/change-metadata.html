@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{changeMetadata.title}, header=#{changeMetadata.header})}"></th:block>
   </head>
@@ -11,18 +11,21 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{changeMetadata.header}"></h2>
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">assignment</span>
+                <span class="tool-header-text" th:text="#{changeMetadata.header}"></span>
+              </div>
               <form method="post" id="form1" enctype="multipart/form-data" th:action="@{api/v1/misc/update-metadata}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <p class="text-muted" th:text="#{changeMetadata.selectText.1}"></p>
-                <div class="mb-3-inline form-check">
-                  <input type="checkbox" class="form-check-input" id="deleteAll" name="deleteAll">
-                  <label class="ms-3" for="deleteAll" th:text="#{changeMetadata.selectText.2}" ></label>
+                <div class="form-check mb-3-inline ms-3">
+                  <input type="checkbox" id="deleteAll" name="deleteAll">
+                  <label for="deleteAll" th:text="#{changeMetadata.selectText.2}" ></label>
                 </div>
-                <div class="mb-3-inline form-check">
-                  <input type="checkbox" class="form-check-input" id="customModeCheckbox">
-                  <label class="ms-3" for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
+                <div class="form-check mb-3-inline ms-3">
+                  <input type="checkbox" id="customModeCheckbox">
+                  <label for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
                 </div>
                 <div class="mb-3">
                   <label class="form-check-label" for="author" th:text="#{changeMetadata.author}"></label>
@@ -122,7 +125,7 @@
                     }
                     const file = this.files[0];
                     var url = URL.createObjectURL(file)
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.mjs'
                     const pdf = await pdfjsLib.getDocument(url).promise;
                     const pdfMetadata = await pdf.getMetadata();
                     lastPDFFile = pdfMetadata?.info

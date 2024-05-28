@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{home.ScannerImageSplit.title}, header=#{home.ScannerImageSplit.header})}"></th:block>
   </head>
@@ -12,8 +12,11 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{home.ScannerImageSplit.title}"></h2>
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon advance">scanner</span>
+                <span class="tool-header-text" th:text="#{home.ScannerImageSplit.title}"></span>
+              </div>
 
               <form id="multiPdfForm" th:action="@{api/v1/misc/extract-image-scans}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*, application/pdf')}"></div>

@@ -12,7 +12,9 @@ plugins {
 import com.github.jk1.license.render.*
 
 group = 'stirling.software'
-version = '0.23.1'
+version = '0.24.6'
+
+//17 is lowest but we support and recommend 21
 sourceCompatibility = '17'
 
 repositories {
@@ -54,8 +56,8 @@ launch4j {
   headerType="console"
   jarTask = tasks.bootJar
 
-  errTitle="Encountered error, Do you have Java 17?"
-  downloadUrl="https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.exe"
+  errTitle="Encountered error, Do you have Java 21?"
+  downloadUrl="https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
   variables=["BROWSER_OPEN=true", "ENDPOINTS_GROUPS_TO_REMOVE=CLI"]
   jreMinVersion="17"
 
@@ -64,8 +66,8 @@ launch4j {
 
   messagesStartupError="An error occurred while starting Stirling-PDF"
   //messagesJreNotFoundError="This application requires a Java Runtime Environment, Please download Java 17."
-  messagesJreVersionError="You are running the wrong version of Java, Please download Java 17."
-  messagesLauncherError="Java is corrupted. Please uninstall and then install  Java 17."
+  messagesJreVersionError="You are running the wrong version of Java, Please download Java 21."
+  messagesLauncherError="Java is corrupted. Please uninstall and then install  Java 21."
   messagesInstanceAlreadyExists="Stirling-PDF is already running."
 }
 
@@ -92,7 +94,13 @@ dependencies {
     implementation("io.github.pixee:java-security-toolkit:1.1.3")
 
     implementation 'org.yaml:snakeyaml:2.2'
-    implementation 'org.springframework.boot:spring-boot-starter-web:3.2.4'
+    
+    // Exclude Tomcat and include Jetty
+    implementation('org.springframework.boot:spring-boot-starter-web:3.2.4') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+    }
+    implementation 'org.springframework.boot:spring-boot-starter-jetty:3.2.4'
+    
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.2.4'
 
     if (System.getenv('DOCKER_ENABLE_SECURITY') != 'false') {

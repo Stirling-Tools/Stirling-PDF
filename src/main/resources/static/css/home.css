@@ -1,18 +1,19 @@
 #searchBar {
-  background-image: url("../images/search.svg");
-  background-position: 16px 16px;
-  background-repeat: no-repeat;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-container-low);
   width: 100%;
   font-size: 16px;
-  margin-bottom: 12px;
-  padding: 12px 20px 12px 40px;
-  border: 1px solid #ddd;
+  margin-bottom: 2rem;
+  padding: 0.75rem 3.5rem;
+  border: 0.1rem solid var(--md-sys-color-outline-variant);
+  border-radius: 3rem;
+  outline-color: var(--md-sys-color-outline-variant);
 }
-.dark-mode-search {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' hei… 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") !important;
-  color: #f8f9fa !important;
-  background-color: #212529 !important;
-  border-color: #343a40 !important;
+
+.search-icon {
+  position: absolute;
+  margin: 0.75rem 1rem;
+  border: 0.1rem solid transparent;
 }
 
 .features-container {
@@ -22,23 +23,23 @@
 }
 
 .feature-card {
-  border: 2px solid rgba(0, 0, 0, 0.25);
-  border-radius: 0.25rem;
+  border: 2px solid var(--md-sys-color-surface-5);
+  border-radius: 2rem;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  background: rgba(13, 110, 253, 0.05);
+  background: var(--md-sys-color-surface-5);
   transition:
     transform 0.3s,
     border 0.3s;
   transform-origin: center center;
-  outline: 2px solid transparent;
+  outline: 0px solid transparent;
 }
 
 .feature-card a {
   text-decoration: none;
-  color: inherit;
+  color: var(--md-sys-color-on-surface);
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -50,25 +51,19 @@
 }
 
 .feature-card:hover {
-  outline: 1px solid rgba(0, 0, 0, 0.5);
   cursor: pointer;
   transform: scale(1.1);
+  box-shadow: var(--md-sys-elevation-3);
 }
 
-.feature-card:hover .card-title {
-  text-decoration: underline;
-}
 .card-title.text-primary {
-  color: #000; /* Replace with your desired shade of blue */
+  color: #000;
 }
 
 .home-card-icon {
-  width: 30px;
-  height: 30px;
+  width: 3rem;
+  height: 3rem;
   transform: translateY(-5px);
-}
-.home-card-icon-colour {
-  filter: invert(0.2) sepia(2) saturate(50) hue-rotate(190deg);
 }
 
 .favorite-icon {
@@ -76,18 +71,33 @@
   position: absolute;
   top: 10px;
   right: 10px;
+  color: var(--md-sys-color-secondary);
+}
+
+#tool-icon {
+  height: 100%;
+}
+
+#tool-text {
+  margin: 0.5rem 0.5rem 0rem;
+}
+
+.card-title {
+  margin-bottom: 1rem;
 }
 
 /* Only show the favorite icons when the parent card is being hovered over */
 .feature-card:hover .favorite-icon {
   display: block;
 }
+
 .favorite-icon img {
-  filter: brightness(0);
+  filter: brightness(0) invert(var(--md-theme-filter-color));
 }
 
 .jumbotron {
-  padding: 3rem 3rem; /* Reduce vertical padding */
+  padding: 3rem 3rem;
+  /* Reduce vertical padding */
 }
 
 .lookatme {
@@ -123,4 +133,22 @@
   to {
     opacity: 0;
   }
+}
+
+.update-notice {
+  animation: scale 1s infinite alternate;
+}
+
+@keyframes scale {
+  0% {
+    transform: scale(0.96);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.hidden {
+    visibility: hidden;
 }

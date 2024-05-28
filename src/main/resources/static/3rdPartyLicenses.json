@@ -344,6 +344,13 @@
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
         {
+            "moduleName": "jakarta.servlet:jakarta.servlet-api",
+            "moduleUrl": "https://www.eclipse.org",
+            "moduleVersion": "6.0.0",
+            "moduleLicense": "GPL2 w/ CPE",
+            "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
+        },
+        {
             "moduleName": "jakarta.transaction:jakarta.transaction-api",
             "moduleUrl": "https://projects.eclipse.org/projects/ee4j.jta",
             "moduleVersion": "2.0.1",
@@ -354,6 +361,20 @@
             "moduleName": "jakarta.validation:jakarta.validation-api",
             "moduleUrl": "https://www.eclipse.org",
             "moduleVersion": "3.0.2",
+            "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
+            "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
+        },
+        {
+            "moduleName": "jakarta.websocket:jakarta.websocket-api",
+            "moduleUrl": "https://www.eclipse.org",
+            "moduleVersion": "2.1.1",
+            "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
+            "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
+        },
+        {
+            "moduleName": "jakarta.websocket:jakarta.websocket-client-api",
+            "moduleUrl": "https://www.eclipse.org",
+            "moduleVersion": "2.1.1",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
@@ -453,21 +474,7 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "org.apache.tomcat.embed:tomcat-embed-core",
-            "moduleUrl": "https://tomcat.apache.org/",
-            "moduleVersion": "10.1.19",
-            "moduleLicense": "Eclipse Public License - v 2.0",
-            "moduleLicenseUrl": "https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.txt"
-        },
-        {
             "moduleName": "org.apache.tomcat.embed:tomcat-embed-el",
-            "moduleUrl": "https://tomcat.apache.org/",
-            "moduleVersion": "10.1.19",
-            "moduleLicense": "Apache License, Version 2.0",
-            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "org.apache.tomcat.embed:tomcat-embed-websocket",
             "moduleUrl": "https://tomcat.apache.org/",
             "moduleVersion": "10.1.19",
             "moduleLicense": "Apache License, Version 2.0",
@@ -541,6 +548,188 @@
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
         {
+            "moduleName": "org.eclipse.jetty.ee10.websocket:jetty-ee10-websocket-jakarta-client",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.ee10.websocket:jetty-ee10-websocket-jakarta-common",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.ee10.websocket:jetty-ee10-websocket-jakarta-server",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.ee10.websocket:jetty-ee10-websocket-jetty-server",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.ee10.websocket:jetty-ee10-websocket-servlet",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.ee10:jetty-ee10-annotations",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.ee10:jetty-ee10-plus",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.ee10:jetty-ee10-servlet",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.ee10:jetty-ee10-servlets",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.ee10:jetty-ee10-webapp",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.websocket:jetty-websocket-core-client",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.websocket:jetty-websocket-core-common",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.websocket:jetty-websocket-core-server",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.websocket:jetty-websocket-jetty-api",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty.websocket:jetty-websocket-jetty-common",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty:jetty-alpn-client",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty:jetty-client",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty:jetty-http",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty:jetty-io",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty:jetty-jndi",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty:jetty-plus",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty:jetty-security",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty:jetty-server",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty:jetty-session",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty:jetty-util",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
+            "moduleName": "org.eclipse.jetty:jetty-xml",
+            "moduleUrl": "https://eclipse.dev/jetty/",
+            "moduleVersion": "12.0.7",
+            "moduleLicense": "Eclipse Public License - Version 2.0",
+            "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
+        },
+        {
             "moduleName": "org.glassfish.jaxb:jaxb-core",
             "moduleUrl": "https://www.eclipse.org",
             "moduleVersion": "4.0.5",
@@ -599,7 +788,21 @@
         {
             "moduleName": "org.ow2.asm:asm",
             "moduleUrl": "http://asm.ow2.org",
-            "moduleVersion": "9.3",
+            "moduleVersion": "9.6",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.ow2.asm:asm-commons",
+            "moduleUrl": "http://asm.ow2.org",
+            "moduleVersion": "9.6",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.ow2.asm:asm-tree",
+            "moduleUrl": "http://asm.ow2.org",
+            "moduleVersion": "9.6",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -706,6 +909,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "org.springframework.boot:spring-boot-starter-jetty",
+            "moduleUrl": "https://spring.io/projects/spring-boot",
+            "moduleVersion": "3.2.4",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
             "moduleName": "org.springframework.boot:spring-boot-starter-json",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "3.2.4",
@@ -735,13 +945,6 @@
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-thymeleaf",
-            "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "3.2.4",
-            "moduleLicense": "Apache License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
-        },
-        {
-            "moduleName": "org.springframework.boot:spring-boot-starter-tomcat",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "3.2.4",
             "moduleLicense": "Apache License, Version 2.0",
