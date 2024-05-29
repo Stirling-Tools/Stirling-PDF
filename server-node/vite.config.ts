@@ -10,6 +10,11 @@ export default defineConfig({
         // vite server configs, for details see [vite doc](https://vitejs.dev/config/#server-host)
         port: 8000
     },
+    optimizeDeps: {
+        exclude: [
+            "pg-hstore" // sequelize
+        ]
+    },
     plugins: [
         ...VitePluginNode({
             // Nodejs native Request adapter

@@ -27,6 +27,12 @@ console.log("Available Modules: ", listOperatorNames());
 
 import "./jobs/jobs-controller";
 
+/**
+ * database
+ */
+
+import "./data/sequelize-relations";
+
 /*
  * EXPRESS
 */

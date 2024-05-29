@@ -41,6 +41,8 @@
         "pdf-lib": "^1.17.1",
         "rollup-plugin-copy": "^3.5.0",
         "rollup-plugin-dynamic-import-variables": "^1.1.0",
+        "sequelize": "^6.37.3",
+        "sqlite3": "^5.1.7",
         "toml": "^3.0.0",
         "tsconfig-paths": "^4.2.0",
         "vite-plugin-compile-time": "^0.2.1",

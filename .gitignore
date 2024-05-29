@@ -6,5 +6,5 @@ android/
 ios/
 releases/
 .vscode/
-.env
+.env.local
 /server-node/jobs

@@ -6,14 +6,14 @@ import { HeaderAPIKeyStrategy as HeaderAPIKeyStrategy } from "passport-headerapi
 export function initialize(passport: typeof import("passport")) {
     passport.use("local", new LocalStrategy(
         function(username, password, done) {
-            User.findOne({ username: username }, function (err, user) {
+            User.findOne({ username: username }, async function (err, user) {
                 if (err) { 
-                    return done(err); 
+                    return done(err, false); 
                 }
                 if (!user) { 
                     return done(null, false); 
                 }
-                if (!User.verifyPassword(user, password)) { 
+                if (!await User.verifyPassword(user, password)) {
                     return done(null, false); 
                 }
                 return done(null, user);
@@ -35,7 +35,7 @@ export function initialize(passport: typeof import("passport")) {
                 return done(null, user);
             });
         }
-      ));
+    ));
 
     passport.serializeUser((user, done) => {
         done(null, user.id) //TODO: Extend Express.User to include id wich is set by passport
