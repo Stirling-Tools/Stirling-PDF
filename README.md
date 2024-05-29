@@ -213,10 +213,10 @@ For example in the settings.yml you have
 
 ```yaml
 system:
-  defaultLocale: 'en-US'
+  enableLogin: 'true'
 ```
 
-To have this via an environment variable you would have ``SYSTEM_DEFAULTLOCALE``
+To have this via an environment variable you would have ``SYSTEM_ENABLELOGIN``
 
 The Current list of settings is
 
