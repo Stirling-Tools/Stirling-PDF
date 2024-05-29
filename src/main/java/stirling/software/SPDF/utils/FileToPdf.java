@@ -42,6 +42,7 @@ public class FileToPdf {
             List<String> command = new ArrayList<>();
             if (!htmlFormatsInstalled) {
                 command.add("weasyprint");
+                command.add("-e utf-8");
                 command.add(tempInputFile.toString());
                 command.add(tempOutputFile.toString());
 
