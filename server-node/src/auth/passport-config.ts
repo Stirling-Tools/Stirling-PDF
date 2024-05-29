@@ -38,7 +38,7 @@ export function initialize(passport: typeof import("passport")) {
     ));
 
     passport.serializeUser((user, done) => {
-        done(null, user.id) //TODO: Extend Express.User to include id wich is set by passport
+        done(null, user.id)
     });
     
     passport.deserializeUser((id: number, done) => {

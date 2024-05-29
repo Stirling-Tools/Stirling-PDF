@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 /*
  * translation
 */
@@ -25,13 +27,15 @@ console.log("Available Modules: ", listOperatorNames());
  * jobs
 */
 
-import "./jobs/jobs-controller";
+if(process.env.JOBS_ENABLED === "True")
+    import("./jobs/jobs-controller");
 
 /**
  * database
  */
 
-import "./data/sequelize-relations";
+if(process.env.AUTH_ENABLED === "True")
+    import("./data/sequelize-relations");
 
 /*
  * EXPRESS
@@ -45,25 +49,8 @@ const PORT = 8000;
  * auth
 */
 
-import passport from "passport";
-import session from "express-session";
-import { initialize } from "./auth/passport-config";
-import auth from "./routes/auth/auth-controller";
-
-app.use(session({
-    secret: process.env.SESSION_SECRET || "default-secret",
-    resave: false,
-    saveUninitialized: false
-}));
-
-app.use(passport.initialize());
-app.use(passport.authenticate(['headerapikey', 'session'], { 
-    session: false, // Only set a session on the login request.
-}));
-
-initialize(passport);
-
-app.use("/auth", auth);
+if(process.env.AUTH_ENABLED === "True")
+    import("./auth/auth-controller.ts").then(router => router.connect(app));
 
 /*
  * api

@@ -33,13 +33,13 @@ export async function verifyPassword(user: User, password: string): Promise<bool
     if(!passwordRecord) {
         throw new Error("This user does not have a password set!");
     }
-    return passwordRecord.password == password;
+    return passwordRecord.password == password; // TODO: Replace with web-crypto
 }
 
 export function createUser(params: { username: string, password: string }, cb: (err: SequelizeError | null, user: User | null) => void ) {
     User.create({ username: params.username, authenticationMethod: "password" }).then(async user => {
         user.setPassword(await Password.create({
-            password: params.password,
+            password: params.password, // TODO: Replace with web-crypto
         })).then(password => {
             cb(null, user as any as User)
         }).catch(e => 

@@ -1,6 +1,5 @@
 import { traverseOperations } from '@stirling-pdf/shared-operations/src/workflow/traverseOperations';
 import { PdfFile, RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile';
-import { JoiPDFFileSchema } from '@stirling-pdf/shared-operations/src/wrappers/PdfFileJoi';
 import 'dotenv/config';
 import fs from 'fs';
 import path from "path";
