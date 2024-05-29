@@ -24,13 +24,12 @@ public class FileMonitor {
     private final ConcurrentHashMap.KeySetView<Path, Boolean> readyForProcessingFiles;
     private final WatchService watchService;
     private final Predicate<Path> pathFilter;
+    private final Path rootDir;
     private Set<Path> stagingFiles;
 
     /**
      * @param rootDirectory the root directory to monitor
-     * @param pathFilter the filter to apply to the paths, return true if the path should be
-     *     monitored, false otherwise
-     * @throws IOException
+     * @param pathFilter the filter to apply to the paths, return true if the path should be monitored, false otherwise
      */
     @Autowired
     public FileMonitor(
@@ -43,11 +42,7 @@ public class FileMonitor {
         this.pathFilter = pathFilter;
         this.readyForProcessingFiles = ConcurrentHashMap.newKeySet();
         this.watchService = FileSystems.getDefault().newWatchService();
-
-        Path path = Path.of(rootDirectory);
-        recursivelyRegisterEntry(path);
-
-        logger.info("Created a new file tracker for directory: {}", rootDirectory);
+        this.rootDir = Path.of(rootDirectory);
     }
 
     private boolean shouldNotProcess(Path path) {
@@ -82,6 +77,20 @@ public class FileMonitor {
         */
         stagingFiles = new HashSet<>(newlyDiscoveredFiles);
         readyForProcessingFiles.clear();
+
+        if (path2KeyMapping.isEmpty()) {
+            logger.warn(
+                    "not monitoring any directory, even the root directory itself: {}", rootDir);
+            if (Files.exists(
+                    rootDir)) { // if the root directory exists, re-register the root directory
+                try {
+                    recursivelyRegisterEntry(rootDir);
+                } catch (IOException e) {
+                    logger.error("unable to register monitoring", e);
+                }
+            }
+        }
+
         WatchKey key;
         while ((key = watchService.poll()) != null) {
             final Path watchingDir = (Path) key.watchable();
@@ -119,10 +128,6 @@ public class FileMonitor {
             boolean isKeyValid = key.reset();
             if (!isKeyValid) { // key is invalid when the directory itself is no longer exists
                 path2KeyMapping.remove((Path) key.watchable());
-                if (path2KeyMapping.isEmpty()) {
-                    logger.warn(
-                            "FileMonitor is not monitoring any directory, no even the root directory.");
-                }
             }
         }
         readyForProcessingFiles.addAll(stagingFiles);
