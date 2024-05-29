@@ -3,7 +3,6 @@ const router = express.Router();
 import multer from "multer";
 const upload = multer();
 import { getOperatorByName } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
-import { Operator } from "@stirling-pdf/shared-operations/src/functions";
 
 import { PdfFile } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
 import { respondWithPdfFiles } from "../../utils/response-utils";

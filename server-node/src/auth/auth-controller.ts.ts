@@ -6,7 +6,7 @@ import { Express } from "express";
 
 export function connect(app: Express) {
     app.use(session({
-        secret: process.env.SESSION_SECRET || "default-secret",
+        secret: import.meta.env.VITE_SESSION_SECRET || "default-secret",
         resave: false,
         saveUninitialized: false
     }));

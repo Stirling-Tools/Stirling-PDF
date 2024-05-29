@@ -1,11 +1,10 @@
 import { traverseOperations } from '@stirling-pdf/shared-operations/src/workflow/traverseOperations';
 import { PdfFile, RepresentationType } from '@stirling-pdf/shared-operations/src/wrappers/PdfFile';
-import 'dotenv/config';
 import fs from 'fs';
 import path from "path";
 import toml from 'toml';
 
-const jobsDir = process.env.JOBS_DIR;
+const jobsDir = import.meta.env.VITE_JOBS_DIR;
 
 // TODO: Also remove watched folders
 const watchedFolders: { 

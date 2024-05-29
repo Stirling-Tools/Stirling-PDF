@@ -1,5 +1,3 @@
-import 'dotenv/config';
-
 /*
  * translation
 */
@@ -27,14 +25,14 @@ console.log("Available Modules: ", listOperatorNames());
  * jobs
 */
 
-if(process.env.JOBS_ENABLED === "True")
+if(import.meta.env.VITE_JOBS_ENABLED === "True")
     import("./jobs/jobs-controller");
 
 /**
  * database
  */
 
-if(process.env.AUTH_ENABLED === "True")
+if(import.meta.env.VITE_AUTH_ENABLED === "True")
     import("./data/sequelize-relations");
 
 /*
@@ -45,22 +43,29 @@ import express from "express";
 const app = express();
 const PORT = 8000;
 
-/*
- * auth
-*/
-
-if(process.env.AUTH_ENABLED === "True")
-    import("./auth/auth-controller.ts").then(router => router.connect(app));
-
-/*
- * api
-*/
-
 import api from "./routes/api/api-controller";
-app.use("/api", api);
+
+/*
+* auth
+*/
+
+console.log(import.meta.env)
+
+if(import.meta.env.VITE_AUTH_ENABLED === "True") {
+    import("./auth/auth-controller.ts").then(router => router.connect(app)).finally(() => {
+        /*
+        * api
+        */
+
+        app.use("/api", api);
+    });
+}
+else {
+    app.use("/api", api);
+}
 
 // viteNode
-if (import.meta.env.PROD) {
+if (import.meta.env.VITE_PROD) {
     app.listen(PORT, () => {
         console.log(`http://localhost:${PORT}`);
     });

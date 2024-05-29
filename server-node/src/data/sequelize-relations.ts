@@ -1,10 +1,8 @@
-import 'dotenv/config';
-
 import { Sequelize, DataTypes } from "sequelize";
 
 //TODO: Make this configurable
 const sequelize = new Sequelize("sqlite::memory:", {
-    logging: process.env.SEQUELIZE_LOGGING === "True" ? console.log : false
+    logging: import.meta.env.VITE_SEQUELIZE_LOGGING === "True" ? console.log : false
 });
 
 import { User, AccessRule, APIKey, Password } from "../auth/user/user-model";
