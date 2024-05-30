@@ -23,10 +23,6 @@ User.init(
             type: DataTypes.STRING,
             unique: true,
         },
-        authenticationMethod: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
         createdAt: DataTypes.DATE,
         updatedAt: DataTypes.DATE,
     },
@@ -41,6 +37,7 @@ Password.init(
             primaryKey: true
         },
         password: DataTypes.STRING,
+        salt: DataTypes.STRING,
         createdAt: DataTypes.DATE,
         updatedAt: DataTypes.DATE,
     },

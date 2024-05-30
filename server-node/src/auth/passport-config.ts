@@ -6,17 +6,21 @@ import { HeaderAPIKeyStrategy as HeaderAPIKeyStrategy } from "passport-headerapi
 export function initialize(passport: typeof import("passport")) {
     passport.use("local", new LocalStrategy(
         function(username, password, done) {
-            User.findOne({ username: username }, async function (err, user) {
+            User.findOne({ username: username }, function (err, user) {
                 if (err) { 
                     return done(err, false); 
                 }
                 if (!user) { 
                     return done(null, false); 
                 }
-                if (!await User.verifyPassword(user, password)) {
-                    return done(null, false); 
-                }
-                return done(null, user);
+
+                User.verifyPassword(user, password, (error, success) => {
+                    if(error) return done(error, false);
+
+                    if(!success) return done(null, false);
+
+                    return done(null, user)
+                });
             });
         }
     ));

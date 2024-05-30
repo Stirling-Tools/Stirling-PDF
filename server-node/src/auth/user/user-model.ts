@@ -14,7 +14,6 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
     declare id: CreationOptional<number>;
     declare username: string;
     declare mail?: string;
-    declare authenticationMethod: string;
 
     declare getPassword: HasOneGetAssociationMixin<Password | undefined>; // Note the null assertions!
     declare setPassword: HasOneSetAssociationMixin<Password | undefined, number>;
@@ -29,7 +28,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
     declare hasAccessRule: HasManyHasAssociationMixin<AccessRule | undefined, number>;
     declare hasAccessRules: HasManyHasAssociationsMixin<AccessRule | undefined, number>;
     declare countAccessRules: HasManyCountAssociationsMixin;
-    declare createAccessRule: HasManyCreateAssociationMixin<AccessRule, 'userId'>;
+    declare createAccessRule: HasManyCreateAssociationMixin<AccessRule, 'ownerId'>;
 
     declare getAPIKeys: HasManyGetAssociationsMixin<APIKey | undefined>; // Note the null assertions!
     declare addAPIKey: HasManyAddAssociationMixin<APIKey | undefined, number>;
@@ -40,7 +39,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
     declare hasAPIKey: HasManyHasAssociationMixin<APIKey | undefined, number>;
     declare hasAPIKeys: HasManyHasAssociationsMixin<APIKey | undefined, number>;
     declare countAPIKeys: HasManyCountAssociationsMixin;
-    declare createAPIKey: HasManyCreateAssociationMixin<APIKey, 'userId'>;
+    declare createAPIKey: HasManyCreateAssociationMixin<APIKey, 'ownerId'>;
 
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
@@ -49,6 +48,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
 export class Password extends Model<InferAttributes<Password>, InferCreationAttributes<Password>> {
     declare id: CreationOptional<number>;
     declare password: string;
+    declare salt: string;
 
     declare ownerId: ForeignKey<User['id']>;
     declare owner?: NonAttribute<User>;
@@ -61,8 +61,8 @@ export class AccessRule extends Model<InferAttributes<AccessRule>, InferCreation
     declare id: CreationOptional<number>;
     declare grants: string;
 
-    declare userId: ForeignKey<User['id']>;
-    declare user?: NonAttribute<User>;
+    declare ownerId: ForeignKey<User['id']>;
+    declare owner?: NonAttribute<User>;
     
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
@@ -72,8 +72,8 @@ export class APIKey extends Model<InferAttributes<APIKey>, InferCreationAttribut
     declare id: CreationOptional<number>;
     declare apikey: string;
 
-    declare userId: ForeignKey<User['id']>;
-    declare user?: NonAttribute<User>;
+    declare ownerId: ForeignKey<User['id']>;
+    declare owner?: NonAttribute<User>;
     
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;

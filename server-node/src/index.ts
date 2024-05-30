@@ -49,10 +49,11 @@ import api from "./routes/api/api-controller";
 * auth
 */
 
-console.log(import.meta.env)
+console.log("env", import.meta.env)
 
 if(import.meta.env.VITE_AUTH_ENABLED === "True") {
-    import("./auth/auth-controller.ts").then(router => router.connect(app)).finally(() => {
+    console.log("Attatching Auth")
+    import("./auth/auth-controller").then(router => router.connect(app)).finally(() => {
         /*
         * api
         */
