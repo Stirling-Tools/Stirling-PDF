@@ -357,7 +357,7 @@ public class ApplicationProperties {
 
                 public Provider get(String registrationId) throws Exception {
                     switch (registrationId) {
-                        case "gogole":
+                        case "google":
                             return getGoogle();
                         case "github":
                             return getGithub();
