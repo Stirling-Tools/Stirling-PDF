@@ -1,5 +1,7 @@
+type UserModel = import("../src/auth/user/user-model").User;
+
 declare namespace Express {
-    interface User {
-        id?: number;
+    interface User extends UserModel {
+        
     }
 }

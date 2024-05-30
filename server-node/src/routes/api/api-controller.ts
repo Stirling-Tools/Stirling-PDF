@@ -1,18 +1,13 @@
 import express, { Request, Response } from "express";
 
+import { checkAuthorized } from "../../auth/checkAuthorizedMiddleware";
+
 import workflow from "./workflow-controller";
 import dynamicOperations from "./dynamic-operations-controller";
 
 const router = express.Router();
 
-router.use((req, res, next) => {
-    console.log(import.meta.env.VITE_AUTH_ENABLED);
-    if(import.meta.env.VITE_AUTH_ENABLED === "False" || req.user) {
-        next();
-        return;
-    }
-    res.status(403).json({"Error": "Authentication failed."});
-});
+router.use(checkAuthorized);
 
 router.get("/", (req: Request, res: Response) => {
     // TODO: Implement root api endpoint
