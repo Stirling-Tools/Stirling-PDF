@@ -165,6 +165,9 @@
             th:replace="~{fragments/card :: card(id='cert-sign', cardTitle=#{home.certSign.title}, cardText=#{home.certSign.desc}, cardLink='cert-sign', toolIcon='workspace_premium', tags=#{certSign.tags}, toolGroup='security')}">
           </div>
           <div
+            th:replace="~{fragments/card :: card(id='remove-cert-sign', cardTitle=#{home.removeCertSign.title}, cardText=#{home.removeCertSign.desc}, cardLink='remove-cert-sign', toolIcon='remove_moderator', tags=#{removeCertSign.tags}, toolGroup='security')}">
+          </div>
+          <div
             th:replace="~{fragments/card :: card(id='multi-page-layout', cardTitle=#{home.pageLayout.title}, cardText=#{home.pageLayout.desc}, cardLink='multi-page-layout', toolIcon='dashboard', tags=#{pageLayout.tags}, toolGroup='organize')}">
           </div>
           <div
