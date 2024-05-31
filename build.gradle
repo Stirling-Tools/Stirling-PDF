@@ -21,7 +21,6 @@ repositories {
     mavenCentral()
 }
 
-
 licenseReport {
     renderers = [new JsonReportRenderer()]
 }
