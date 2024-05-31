@@ -192,7 +192,7 @@ Stirling PDF currently supports 28!
 | Ukrainian (Українська) (uk_UA)              | ![87%](https://geps.dev/progress/87)   |
 | Slovakian (Slovensky) (sk_SK)               | ![96%](https://geps.dev/progress/96)   |
 | Czech (Česky) (cs_CZ)                       | ![94%](https://geps.dev/progress/94)   |
-
+| Croatian (Hrvatski) (hr_HR)                 | ![94%](https://geps.dev/progress/94)   | 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
 Please see our [Contributing Guide](CONTRIBUTING.md)!
