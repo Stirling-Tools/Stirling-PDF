@@ -34,7 +34,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         su-exec \
         openssl \
         openssl-dev \
-        openjdk21-jre-headless \
+        openjdk21-jre \
 # Doc conversion
         libreoffice \
 # pdftohtml
