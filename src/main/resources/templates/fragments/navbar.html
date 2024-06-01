@@ -233,7 +233,7 @@
 
           </li>
 
-          <li class="nav-item">
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('multi-tool')}">
             <a class="nav-link" href="#" th:href="@{multi-tool}"
               th:classappend="${currentPage}=='multi-tool' ? 'active' : ''" th:title="#{home.multiTool.desc}">
               <span class="material-symbols-rounded">
@@ -243,7 +243,7 @@
             </a>
           </li>
 
-          <li class="nav-item">
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('pipeline')}" >
             <a class="nav-link" href="#" th:href="@{pipeline}"
               th:classappend="${currentPage}=='pipeline' ? 'active' : ''" th:title="#{home.pipeline.desc}">
               <span class="material-symbols-rounded">
@@ -253,7 +253,7 @@
             </a>
           </li>
 
-          <li class="nav-item">
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('compress-pdf')}" >
             <a class="nav-link" href="#" title="#{home.compressPdfs.title}" th:href="@{compress-pdf}"
               th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''" th:title="#{home.compressPdfs.desc}">
               <span class="material-symbols-rounded">

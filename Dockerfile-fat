@@ -1,3 +1,16 @@
+# Build the application
+FROM gradle:7.6-jdk17 AS build
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the entire project to the working directory
+COPY . .
+
+# Build the application with DOCKER_ENABLE_SECURITY=false
+RUN DOCKER_ENABLE_SECURITY=true \
+./gradlew clean build 
+
 # Main stage
 FROM alpine:3.20.0
 
@@ -5,8 +18,7 @@ FROM alpine:3.20.0
 COPY scripts /scripts
 COPY pipeline /pipeline
 COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-#COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
-COPY build/libs/*.jar app.jar
+COPY --from=build /app/build/libs/*.jar app.jar
 
 ARG VERSION_TAG
 
@@ -17,7 +29,10 @@ ENV DOCKER_ENABLE_SECURITY=false \
     HOME=/home/stirlingpdfuser \
     PUID=1000 \
     PGID=1000 \
-    UMASK=022
+    UMASK=022 \
+    FAT_DOCKER=true \
+    INSTALL_BOOK_AND_ADVANCED_HTML_OPS=true
+    
 
 # JDK for app
 RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
@@ -30,6 +45,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         tini \
         bash \
         curl \
+        calibre@testing \
         shadow \
         su-exec \
         openssl \
@@ -42,6 +58,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
 # OCR MY PDF (unpaper for descew and other advanced featues)
         ocrmypdf \
         tesseract-ocr-data-eng \
+        font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra \
 # CV
         py3-opencv \
 # python3/pip

@@ -31,7 +31,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         curl \
         shadow \
         su-exec \
-        openjdk21-jre && \
+        openjdk21-jre-headless && \
     # User permissions
     mkdir /configs /logs /customFiles && \
     chmod +x /scripts/*.sh && \
