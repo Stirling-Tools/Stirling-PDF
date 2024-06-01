@@ -125,9 +125,7 @@ public class AppConfig {
     public Predicate<Path> processPDFOnlyFilter() {
         return path -> {
             if (Files.isDirectory(path)) {
-                return !path.toString()
-                        .contains(
-                                "processing");
+                return !path.toString().contains("processing");
             } else {
                 String fileName = path.getFileName().toString();
                 return fileName.endsWith(".pdf");
