@@ -115,6 +115,7 @@ jobs:
       - name: Generate tags fat
         id: meta3
         uses: docker/metadata-action@v5
+        if: github.ref != 'refs/heads/main'
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -125,6 +126,7 @@ jobs:
 
       - name: Build and push main Dockerfile fat
         uses: docker/build-push-action@v5
+        if: github.ref != 'refs/heads/main'
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
