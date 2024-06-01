@@ -90,6 +90,9 @@
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('markdown-to-pdf', 'markdown', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags', 'convert')}">
                         </div>
+                         <div
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('book-to-pdf', 'book', 'home.BookToPDF.title', 'home.BookToPDF.desc', 'BookToPDF.tags', 'convert')}">
+                        </div>
                       </div>
                       <!-- Convert from PDF menu items -->
                       <div class="col-lg-2 col-sm-6 py px-xl-1 px-2">
@@ -117,6 +120,9 @@
                         </div>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-csv', 'csv', 'home.tableExtraxt.title', 'home.tableExtraxt.desc', 'pdfToPDFA.tags', 'convert')}">
+                        </div>
+                        <div
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-book', 'book', 'home.PDFToBook.title', 'home.PDFToBook.desc', 'PDFToBook.tags', 'convert')}">
                         </div>
                       </div>
                       <!-- Security menu items -->
