@@ -1,11 +1,14 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.io.ByteArrayOutputStream;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +57,15 @@ public class RemoveCertSignController {
         // Get the AcroForm
         PDAcroForm acroForm = catalog.getAcroForm();
         if (acroForm != null) {
-            // Remove signature fields
-            acroForm.getFields().removeIf(field -> field instanceof PDSignatureField);
+            // Remove signature fields safely
+            List<PDField> fieldsToRemove =
+                    acroForm.getFields().stream()
+                            .filter(field -> field instanceof PDSignatureField)
+                            .collect(Collectors.toList());
+
+            if (!fieldsToRemove.isEmpty()) {
+                acroForm.flatten(fieldsToRemove, false);
+            }
         }
 
         // Save the modified document to the ByteArrayOutputStream
