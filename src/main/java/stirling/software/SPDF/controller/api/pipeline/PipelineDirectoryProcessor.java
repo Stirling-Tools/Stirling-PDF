@@ -139,7 +139,11 @@ public class PipelineDirectoryProcessor {
             throws IOException {
         try (Stream<Path> paths = Files.list(dir)) {
             if ("automated".equals(operation.getParameters().get("fileInput"))) {
-                return paths.filter(path -> !Files.isDirectory(path) && !path.equals(jsonFile) && fileMonitor.isFileReadyForProcessing(path))
+                return paths.filter(
+                                path ->
+                                        !Files.isDirectory(path)
+                                                && !path.equals(jsonFile)
+                                                && fileMonitor.isFileReadyForProcessing(path))
                         .map(Path::toFile)
                         .toArray(File[]::new);
             } else {
