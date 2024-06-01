@@ -5,7 +5,8 @@ const sequelize = new Sequelize("sqlite::memory:", {
     logging: import.meta.env.VITE_SEQUELIZE_LOGGING === "True" ? console.log : false
 });
 
-import { User, AccessRule, APIKey, Password } from "../auth/user/user-model";
+import { User, AccessRule, Password } from "../auth/user/user-model";
+import { APIKey } from "../auth/apikey/apikey-model";
 
 User.init(
     {

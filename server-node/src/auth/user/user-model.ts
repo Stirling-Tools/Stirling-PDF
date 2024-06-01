@@ -10,6 +10,8 @@ import {
     HasOneGetAssociationMixin, HasOneSetAssociationMixin, HasOneCreateAssociationMixin,
 } from 'sequelize';
 
+import { APIKey } from '../apikey/apikey-model';
+
 export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
     declare id: CreationOptional<number>;
     declare username: string;
@@ -60,17 +62,6 @@ export class Password extends Model<InferAttributes<Password>, InferCreationAttr
 export class AccessRule extends Model<InferAttributes<AccessRule>, InferCreationAttributes<AccessRule>> {
     declare id: CreationOptional<number>;
     declare grants: string;
-
-    declare ownerId: ForeignKey<User['id']>;
-    declare owner?: NonAttribute<User>;
-    
-    declare createdAt: CreationOptional<Date>;
-    declare updatedAt: CreationOptional<Date>;
-}
-
-export class APIKey extends Model<InferAttributes<APIKey>, InferCreationAttributes<APIKey>> {
-    declare id: CreationOptional<number>;
-    declare apikey: string;
 
     declare ownerId: ForeignKey<User['id']>;
     declare owner?: NonAttribute<User>;

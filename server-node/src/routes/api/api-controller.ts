@@ -1,13 +1,13 @@
 import express, { Request, Response } from "express";
 
-import { checkAuthorized } from "../../auth/checkAuthorizedMiddleware";
+import { isAuthorized } from "../../auth/authenticationMiddleware";
 
 import workflow from "./workflow-controller";
 import dynamicOperations from "./dynamic-operations-controller";
 
 const router = express.Router();
 
-router.use(checkAuthorized);
+router.use(isAuthorized);
 
 router.get("/", (req: Request, res: Response) => {
     // TODO: Implement root api endpoint

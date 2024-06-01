@@ -1,10 +1,10 @@
 import { Error as SequelizeError, Op } from "sequelize";
-import { APIKey, Password, User } from "./user-model";
+import { Password, User } from "./user-model";
 import crypto from "crypto";
 
 type PickOne<T, F extends keyof T> = Pick<T, F> & { [K in keyof Omit<T, F>]?: never };
 
-export function findOne(params: {id?: number, username?: string, apikey?: string}, cb: (err: Error | null, user: User | null) => void): undefined {
+export function findOne(params: {id?: number, username?: string}, cb: (err: Error | null, apikey?: User | undefined, info?: Object | undefined) => void): undefined {
     const query: any = params;
 
     for (let key in query) {
@@ -14,7 +14,7 @@ export function findOne(params: {id?: number, username?: string, apikey?: string
     }
 
     if(Object.keys(query).length == 0) {
-        cb(new Error("You need to provide at least one argument."), null)
+        cb(new Error("You need to provide at least one argument."), undefined)
     }
 
     User.findOne({
@@ -23,9 +23,9 @@ export function findOne(params: {id?: number, username?: string, apikey?: string
         if(user)
             cb(null, user);
         else
-            cb(new Error("The requested user was not found."), null);
+            cb(null, undefined, { message: "The requested user was not found."});
     }).catch(e => 
-        cb(e, null)
+        cb(e, undefined)
     );
 }
 
@@ -70,8 +70,4 @@ function hashPassword(password: string, salt: string, cb: (err: Error | null, de
         if (err) return cb(err, null);
         cb(null, derivedKey.toString('hex'));
     });
-}
-
-export function createAPIKey(user: User, cb: (err: SequelizeError | null, apikey: APIKey | null) => void ) {
-    user.addAPIKey()
 }

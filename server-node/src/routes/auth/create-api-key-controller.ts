@@ -1,11 +1,10 @@
-import { checkAuthorized } from "../../auth/checkAuthorizedMiddleware";
-import { APIKey } from "../../auth/user/user-model";
+import * as APIKey from "../../auth/apikey/apikey-controller";
+import { whenAuthIsEnabled, isAuthorized } from "../../auth/authenticationMiddleware";
 import express, { Request, Response } from "express";
 const router = express.Router();
 
-router.post('/create-api-key', checkAuthorized, async function(req: Request, res: Response) {
-    const apikey: APIKey | undefined = await req.user?.createAPIKey({apikey: "test"}); //TODO: Replace with random string
-    res.json({apikey: apikey});
+router.post('/create-api-key', whenAuthIsEnabled, isAuthorized, async function(req: Request, res: Response) {
+    res.json({apikey: await APIKey.createAPIKey(req.user)});
 });
 
 export default router;

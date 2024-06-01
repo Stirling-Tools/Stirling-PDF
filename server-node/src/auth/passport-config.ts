@@ -1,12 +1,13 @@
-import * as User from "./user/user-controller";
-
 import { Strategy as LocalStrategy} from "passport-local";
 import { HeaderAPIKeyStrategy as HeaderAPIKeyStrategy } from "passport-headerapikey";
+
+import * as User from "./user/user-controller";
+import * as APIKey from "./apikey/apikey-controller";
 
 export function initialize(passport: typeof import("passport")) {
     passport.use("local", new LocalStrategy(
         function(username, password, done) {
-            User.findOne({ username: username }, function (err, user) {
+            User.findOne({username: username}, function (err, user) {
                 if (err) { 
                     return done(err, false); 
                 }
@@ -29,14 +30,14 @@ export function initialize(passport: typeof import("passport")) {
         { header: 'Authorization', prefix: 'Bearer ' },
         false,
         function(apikey, done) {
-            User.findOne({ apikey: apikey }, function (err, user) {
+            APIKey.findOne({ apikey: apikey }, function (err, apikey, info) {
                 if (err) { 
-                    return done(err); 
+                    return done(err, false); 
                 }
-                if (!user) { 
-                    return done(null, false);
+                if (!apikey) { 
+                    return done(null, false, info);
                 }
-                return done(null, user);
+                return done(null, apikey.owner);
             });
         }
     ));
@@ -46,7 +47,7 @@ export function initialize(passport: typeof import("passport")) {
     });
     
     passport.deserializeUser((id: number, done) => {
-        User.findOne({id: id}, function (err, user) {
+        User.findOne({ id: id }, function (err, user) {
             done(err, user);
         });
     });
