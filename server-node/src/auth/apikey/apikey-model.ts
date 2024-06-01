@@ -7,8 +7,10 @@ export class APIKey extends Model<InferAttributes<APIKey>, InferCreationAttribut
     declare id: CreationOptional<number>;
     declare apikey: string;
 
-    declare ownerId: ForeignKey<User['id']>;
-    declare owner?: NonAttribute<User>;
+    declare UserId: ForeignKey<User['id']>;
+
+    // `User` is an eagerly-loaded association.
+    declare User?: NonAttribute<User>;
     
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;

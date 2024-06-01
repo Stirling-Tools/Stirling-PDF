@@ -44,8 +44,8 @@ Password.init(
     },
     { sequelize },
 );
-Password.hasOne(User);
 User.hasOne(Password);
+Password.belongsTo(User);
 
 AccessRule.init(
     {
@@ -60,8 +60,8 @@ AccessRule.init(
     },
     { sequelize },
 );
-AccessRule.hasOne(User);
 User.hasMany(AccessRule);
+AccessRule.belongsTo(User);
 
 APIKey.init(
     {
@@ -76,8 +76,8 @@ APIKey.init(
     },
     { sequelize },
 );
-APIKey.hasOne(User);
 User.hasMany(APIKey);
+APIKey.belongsTo(User);
 
 export default sequelize;
 

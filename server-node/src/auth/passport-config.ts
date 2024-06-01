@@ -37,7 +37,7 @@ export function initialize(passport: typeof import("passport")) {
                 if (!apikey) { 
                     return done(null, false, info);
                 }
-                return done(null, apikey.owner);
+                return done(null, apikey.User);
             });
         }
     ));

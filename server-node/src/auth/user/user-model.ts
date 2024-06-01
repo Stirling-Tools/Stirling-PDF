@@ -30,7 +30,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
     declare hasAccessRule: HasManyHasAssociationMixin<AccessRule | undefined, number>;
     declare hasAccessRules: HasManyHasAssociationsMixin<AccessRule | undefined, number>;
     declare countAccessRules: HasManyCountAssociationsMixin;
-    declare createAccessRule: HasManyCreateAssociationMixin<AccessRule, 'ownerId'>;
+    declare createAccessRule: HasManyCreateAssociationMixin<AccessRule, 'UserId'>;
 
     declare getAPIKeys: HasManyGetAssociationsMixin<APIKey | undefined>; // Note the null assertions!
     declare addAPIKey: HasManyAddAssociationMixin<APIKey | undefined, number>;
@@ -41,7 +41,11 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
     declare hasAPIKey: HasManyHasAssociationMixin<APIKey | undefined, number>;
     declare hasAPIKeys: HasManyHasAssociationsMixin<APIKey | undefined, number>;
     declare countAPIKeys: HasManyCountAssociationsMixin;
-    declare createAPIKey: HasManyCreateAssociationMixin<APIKey, 'ownerId'>;
+    declare createAPIKey: HasManyCreateAssociationMixin<APIKey, 'UserId'>;
+
+    // You can also pre-declare possible inclusions, these will only be populated if you
+    // actively include a relation.
+    declare apikeys?: NonAttribute<APIKey[]>;
 
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
@@ -63,8 +67,8 @@ export class AccessRule extends Model<InferAttributes<AccessRule>, InferCreation
     declare id: CreationOptional<number>;
     declare grants: string;
 
-    declare ownerId: ForeignKey<User['id']>;
-    declare owner?: NonAttribute<User>;
+    declare UserId: ForeignKey<User['id']>;
+    declare User?: NonAttribute<User>;
     
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;

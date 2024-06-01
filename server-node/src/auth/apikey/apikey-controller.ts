@@ -1,6 +1,6 @@
 import { Error as SequelizeError } from "sequelize";
-import { APIKey } from "./apikey-model";
 import { User } from "../user/user-model";
+import { APIKey } from "./apikey-model";
 
 export function findOne(params: {apikey?: string}, cb: (err: Error | null, apikey?: APIKey | undefined, info?: Object | undefined) => void): undefined {
     const query: any = params;
@@ -16,7 +16,8 @@ export function findOne(params: {apikey?: string}, cb: (err: Error | null, apike
     }
 
     APIKey.findOne({
-        where: query
+        where: query,
+        include: APIKey.associations.User
     }).then(apikey => {
         if(apikey)
             cb(null, apikey);
@@ -27,9 +28,11 @@ export function findOne(params: {apikey?: string}, cb: (err: Error | null, apike
     );
 }
 
-export async function createAPIKey(user: User | undefined): Promise<APIKey> {
+export async function createAPIKey(user: User | undefined): Promise<APIKey | undefined> {
+    if(!user) throw new Error("User was undefined");
+
     const apikey = crypto.randomUUID(); // TODO: Is this secure enough?
-    const apikeyEntry = await APIKey.create({ apikey: apikey })
-    await user?.addAPIKey(apikeyEntry);
+    const apikeyEntry = await user.createAPIKey({ apikey: apikey });
+
     return apikeyEntry;
 }
