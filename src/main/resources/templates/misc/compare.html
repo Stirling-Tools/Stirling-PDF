@@ -60,7 +60,7 @@
                     console.error("Please select two PDF files to compare");
                     return;
                   }
-                  pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
+                  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.mjs'
                   const [pdf1, pdf2] = await Promise.all([
                     pdfjsLib.getDocument(URL.createObjectURL(file1)).promise,
                     pdfjsLib.getDocument(URL.createObjectURL(file2)).promise

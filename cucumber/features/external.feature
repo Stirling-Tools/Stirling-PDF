@@ -28,7 +28,28 @@ Feature: API Validation
     And the response file should have size greater than 0
 	And the response status code should be 200
 
+
   @ocr @positive
+  Scenario: Extract Image Scans
+    Given I generate a PDF file as "fileInput"
+	And the pdf contains 3 images on 2 pages
+    And the request data includes
+      | parameter        | value       |
+      | angleThreshold        | 5         |
+      | tolerance          | 20        |
+      | minArea           | 8000        |
+      | minContourArea            | 500        |
+      | borderSize       | 1        |
+    When I send the API request to the endpoint "/api/v1/misc/extract-image-scans"
+    Then the response content type should be "application/octet-stream"
+	And the response file should have extension ".zip"
+	And the response ZIP should contain 2 files
+    And the response file should have size greater than 0
+	And the response status code should be 200
+	
+	
+	
+  @ocr @negative
   Scenario: Process PDF with text and OCR with type normal 
     Given I generate a PDF file as "fileInput"
     And the pdf contains 3 pages with random text
@@ -79,6 +100,7 @@ Feature: API Validation
     When I send the API request to the endpoint "/api/v1/misc/ocr-pdf"
     Then the response content type should be "application/octet-stream"
 	And the response file should have extension ".zip"
+	And the response ZIP should contain 2 files
     And the response file should have size greater than 0
 	And the response status code should be 200
 
@@ -101,8 +123,30 @@ Feature: API Validation
     | odt    | .odt      |
     | doc    | .doc      |
 
-
-
+  @ocr
+  Scenario: PDFA
+    Given I generate a PDF file as "fileInput"
+    And the pdf contains 3 pages with random text
+	And the request data includes
+      | parameter        | value     |
+      | outputFormat     | pdfa       |
+    When I send the API request to the endpoint "/api/v1/convert/pdf/pdfa"
+	Then the response status code should be 200
+    And the response file should have extension ".pdf"
+    And the response file should have size greater than 100
+	
+  @ocr
+  Scenario: PDFA1
+    Given I generate a PDF file as "fileInput"
+    And the pdf contains 3 pages with random text
+	And the request data includes
+      | parameter        | value     |
+      | outputFormat     | pdfa-1       |
+    When I send the API request to the endpoint "/api/v1/convert/pdf/pdfa"
+	Then the response status code should be 200
+    And the response file should have extension ".pdf"
+    And the response file should have size greater than 100
+	
   @compress @ghostscript @positive
   Scenario: Compress
     Given I generate a PDF file as "fileInput"

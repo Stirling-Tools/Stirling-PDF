@@ -66,6 +66,59 @@ def step_pdf_contains_blank_pages(context, page_count):
     context.files[context.param_name].close()
     context.files[context.param_name] = open(context.file_name, 'rb')
 
+
+
+def create_black_box_image(file_name, size):
+    can = canvas.Canvas(file_name, pagesize=size)
+    width, height = size
+    can.setFillColorRGB(0, 0, 0)
+    can.rect(0, 0, width, height, fill=1)
+    can.showPage()
+    can.save()
+
+def create_pdf_with_black_boxes(file_name, image_count, page_count):
+    page_width, page_height = letter
+    box_size = 72  # 1 inch by 1 inch black box
+    boxes_per_page = image_count // page_count + (1 if image_count % page_count != 0 else 0)
+    
+    writer = PdfWriter()
+    box_counter = 0
+    
+    for page in range(page_count):
+        packet = io.BytesIO()
+        can = canvas.Canvas(packet, pagesize=letter)
+        
+        for i in range(boxes_per_page):
+            if box_counter >= image_count:
+                break
+            x = (i % (page_width // box_size)) * box_size
+            y = page_height - ((i // (page_width // box_size) + 1) * box_size)
+            can.setFillColorRGB(0, 0, 0)
+            can.rect(x, y, box_size, box_size, fill=1)
+            box_counter += 1
+            
+        can.showPage()
+        can.save()
+        packet.seek(0)
+        new_pdf = PdfReader(packet)
+        writer.add_page(new_pdf.pages[0])
+    
+    with open(file_name, 'wb') as f:
+        writer.write(f)
+
+@given('the pdf contains {image_count:d} images on {page_count:d} pages')
+def step_pdf_contains_images(context, image_count, page_count):
+    if not hasattr(context, 'param_name'):
+        context.param_name = "default"
+    context.file_name = "genericNonCustomisableName.pdf"
+    create_pdf_with_black_boxes(context.file_name, image_count, page_count)
+    if not hasattr(context, 'files'):
+        context.files = {}
+    if context.param_name in context.files:
+        context.files[context.param_name].close()
+    context.files[context.param_name] = open(context.file_name, 'rb')
+
+    
 @given('the pdf contains {page_count:d} pages with random text')
 def step_pdf_contains_pages_with_random_text(context, page_count):
     buffer = io.BytesIO()

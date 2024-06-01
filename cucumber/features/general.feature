@@ -1,7 +1,8 @@
 @general
 Feature: API Validation
 
-  @split-pdf-by-sections
+	
+  @split-pdf-by-sections @positive
   Scenario Outline: split-pdf-by-sections with different parameters
     Given I generate a PDF file as "fileInput"
     And the pdf contains 2 pages
@@ -23,7 +24,7 @@ Feature: API Validation
     | 1                   | 2                 | 12          |
     | 2                   | 2                 | 18          |
 
-  @split-pdf-by-sections
+  @split-pdf-by-sections @positive
   Scenario Outline: split-pdf-by-sections with different parameters
     Given I generate a PDF file as "fileInput"
     And the pdf contains 2 pages
@@ -47,7 +48,7 @@ Feature: API Validation
 
 
 
-  @split-pdf-by-pages
+  @split-pdf-by-pages @positive
   Scenario Outline: split-pdf-by-pages with different parameters
   Given I generate a PDF file as "fileInput"
   And the pdf contains 20 pages
@@ -70,7 +71,7 @@ Feature: API Validation
 
 
 
-  @split-pdf-by-size-or-count
+  @split-pdf-by-size-or-count @positive
   Scenario Outline: split-pdf-by-size-or-count with different parameters
   Given I generate a PDF file as "fileInput"
   And the pdf contains 20 pages

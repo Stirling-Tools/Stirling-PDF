@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,8 +46,7 @@ public class PDFToFile {
         try {
             // Save the uploaded file to a temporary location
             tempInputFile = Files.createTempFile("input_", ".pdf");
-            Files.copy(
-                    inputFile.getInputStream(), tempInputFile, StandardCopyOption.REPLACE_EXISTING);
+            inputFile.transferTo(tempInputFile);
 
             // Prepare the output directory
             tempOutputDir = Files.createTempDirectory("output_");
@@ -85,7 +83,7 @@ public class PDFToFile {
 
         } finally {
             // Clean up the temporary files
-            if (tempInputFile != null) Files.delete(tempInputFile);
+            if (tempInputFile != null) Files.deleteIfExists(tempInputFile);
             if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
 
@@ -127,8 +125,7 @@ public class PDFToFile {
         try {
             // Save the uploaded file to a temporary location
             tempInputFile = Files.createTempFile("input_", ".pdf");
-            Files.copy(
-                    inputFile.getInputStream(), tempInputFile, StandardCopyOption.REPLACE_EXISTING);
+            inputFile.transferTo(tempInputFile);
 
             // Prepare the output directory
             tempOutputDir = Files.createTempDirectory("output_");
@@ -180,7 +177,7 @@ public class PDFToFile {
 
         } finally {
             // Clean up the temporary files
-            if (tempInputFile != null) Files.delete(tempInputFile);
+            Files.deleteIfExists(tempInputFile);
             if (tempOutputDir != null) FileUtils.deleteDirectory(tempOutputDir.toFile());
         }
         System.out.println("fileBytes=" + fileBytes.length);

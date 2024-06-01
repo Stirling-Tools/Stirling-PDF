@@ -187,8 +187,8 @@ td {
 .feature-card .nav-icon {
   vertical-align: middle;
   font-size: 2rem !important;
-  padding: 0.5rem;
-  border-radius: 1.25rem;
+  padding: 0.75rem;
+  border-radius: 0.9rem;
   color: var(--md-sys-color-surface);
 }
 
@@ -798,6 +798,8 @@ textarea.form-control {
 }
 
 .nav-link {
+  display: flex;
+  align-items: center;
   transition: none !important;
   padding: 0.5rem 1rem !important;
   border: 1px transparent;

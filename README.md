@@ -165,33 +165,34 @@ Stirling PDF currently supports 28!
 | ------------------------------------------- | -------------------------------------- |
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
-| Arabic (العربية) (ar_AR)                    | ![41%](https://geps.dev/progress/41)   |
-| German (Deutsch) (de_DE)                    | ![100%](https://geps.dev/progress/100)   |
+| Arabic (العربية) (ar_AR)                    | ![40%](https://geps.dev/progress/40)   |
+| German (Deutsch) (de_DE)                    | ![99%](https://geps.dev/progress/99)   |
 | French (Français) (fr_FR)                   | ![94%](https://geps.dev/progress/94)   |
-| Spanish (Español) (es_ES)                   | ![96%](https://geps.dev/progress/96)   |
-| Simplified Chinese (简体中文) (zh_CN)       | ![96%](https://geps.dev/progress/96)   |
-| Traditional Chinese (繁體中文) (zh_TW)      | ![95%](https://geps.dev/progress/95)   |
+| Spanish (Español) (es_ES)                   | ![95%](https://geps.dev/progress/95)   |
+| Simplified Chinese (简体中文) (zh_CN)       | ![95%](https://geps.dev/progress/95)   |
+| Traditional Chinese (繁體中文) (zh_TW)      | ![94%](https://geps.dev/progress/94)   |
 | Catalan (Català) (ca_CA)                    | ![49%](https://geps.dev/progress/49)   |
-| Italian (Italiano) (it_IT)                  | ![99%](https://geps.dev/progress/99)   |
-| Swedish (Svenska) (sv_SE)                   | ![41%](https://geps.dev/progress/41)   |
+| Italian (Italiano) (it_IT)                  | ![98%](https://geps.dev/progress/98)   |
+| Swedish (Svenska) (sv_SE)                   | ![40%](https://geps.dev/progress/40)   |
 | Polish (Polski) (pl_PL)                     | ![43%](https://geps.dev/progress/43)   |
 | Romanian (Română) (ro_RO)                   | ![40%](https://geps.dev/progress/40)   |
-| Korean (한국어) (ko_KR)                     | ![88%](https://geps.dev/progress/88)   |
-| Portuguese Brazilian (Português) (pt_BR)    | ![62%](https://geps.dev/progress/62)   |
-| Russian (Русский) (ru_RU)                   | ![88%](https://geps.dev/progress/88)   |
-| Basque (Euskara) (eu_ES)                    | ![64%](https://geps.dev/progress/64)   |
-| Japanese (日本語) (ja_JP)                   | ![88%](https://geps.dev/progress/88)   |
-| Dutch (Nederlands) (nl_NL)                  | ![86%](https://geps.dev/progress/86)   |
-| Greek (Ελληνικά) (el_GR)                    | ![86%](https://geps.dev/progress/86)   |
-| Turkish (Türkçe) (tr_TR)                    | ![99%](https://geps.dev/progress/99)   |
+| Korean (한국어) (ko_KR)                     | ![87%](https://geps.dev/progress/87)   |
+| Portuguese Brazilian (Português) (pt_BR)    | ![61%](https://geps.dev/progress/61)   |
+| Russian (Русский) (ru_RU)                   | ![87%](https://geps.dev/progress/87)   |
+| Basque (Euskara) (eu_ES)                    | ![63%](https://geps.dev/progress/63)   |
+| Japanese (日本語) (ja_JP)                   | ![87%](https://geps.dev/progress/87)   |
+| Dutch (Nederlands) (nl_NL)                  | ![85%](https://geps.dev/progress/85)   |
+| Greek (Ελληνικά) (el_GR)                    | ![85%](https://geps.dev/progress/85)   |
+| Turkish (Türkçe) (tr_TR)                    | ![98%](https://geps.dev/progress/98)   |
 | Indonesia (Bahasa Indonesia) (id_ID)        | ![79%](https://geps.dev/progress/79)   |
-| Hindi (हिंदी) (hi_IN)                          | ![80%](https://geps.dev/progress/80)   |
-| Hungarian (Magyar) (hu_HU)                  | ![79%](https://geps.dev/progress/79)   |
-| Bulgarian (Български) (bg_BG)               | ![96%](https://geps.dev/progress/96)   |
+| Hindi (हिंदी) (hi_IN)                          | ![79%](https://geps.dev/progress/79)   |
+| Hungarian (Magyar) (hu_HU)                  | ![78%](https://geps.dev/progress/78)   |
+| Bulgarian (Български) (bg_BG)               | ![98%](https://geps.dev/progress/98)   |
 | Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![81%](https://geps.dev/progress/81)   |
 | Ukrainian (Українська) (uk_UA)              | ![87%](https://geps.dev/progress/87)   |
 | Slovakian (Slovensky) (sk_SK)               | ![96%](https://geps.dev/progress/96)   |
 | Czech (Česky) (cs_CZ)                       | ![94%](https://geps.dev/progress/94)   |
+| Croatian (Hrvatski) (hr_HR)                 | ![94%](https://geps.dev/progress/94)   | 
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
@@ -213,10 +214,10 @@ For example in the settings.yml you have
 
 ```yaml
 system:
-  defaultLocale: 'en-US'
+  enableLogin: 'true'
 ```
 
-To have this via an environment variable you would have ``SYSTEM_DEFAULTLOCALE``
+To have this via an environment variable you would have ``SYSTEM_ENABLELOGIN``
 
 The Current list of settings is
 
