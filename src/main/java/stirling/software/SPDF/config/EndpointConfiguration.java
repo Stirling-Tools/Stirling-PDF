@@ -116,6 +116,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "change-permissions");
         addEndpointToGroup("Security", "add-watermark");
         addEndpointToGroup("Security", "cert-sign");
+        addEndpointToGroup("Security", "remove-cert-sign");
         addEndpointToGroup("Security", "sanitize-pdf");
         addEndpointToGroup("Security", "auto-redact");
 
@@ -200,6 +201,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "extract-images");
         addEndpointToGroup("Java", "change-metadata");
         addEndpointToGroup("Java", "cert-sign");
+        addEndpointToGroup("Java", "remove-cert-sign");
         addEndpointToGroup("Java", "multi-page-layout");
         addEndpointToGroup("Java", "scale-pages");
         addEndpointToGroup("Java", "add-page-numbers");
