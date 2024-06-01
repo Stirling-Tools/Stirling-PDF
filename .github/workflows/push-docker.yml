@@ -110,3 +110,29 @@ jobs:
           labels: ${{ steps.meta2.outputs.labels }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8
+
+
+      - name: Generate tags fat
+        id: meta3
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
+          tags: |
+            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-fat,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=latest-fat,enable=${{ github.ref == 'refs/heads/master' }}
+
+      - name: Build and push main Dockerfile fat
+        uses: docker/build-push-action@v5
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./Dockerfile
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta3.outputs.tags }}
+          labels: ${{ steps.meta3.outputs.labels }}
+          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          platforms: linux/amd64,linux/arm64/v8
