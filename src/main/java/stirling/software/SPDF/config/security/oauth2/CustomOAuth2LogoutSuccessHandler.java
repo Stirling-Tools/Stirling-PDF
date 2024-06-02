@@ -52,7 +52,7 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
                 issuer = provider.getIssuer();
                 clientId = provider.getClientId();
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("exception", e);
             }
 
         } else {
@@ -60,13 +60,13 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
             issuer = oauth.getIssuer();
             clientId = oauth.getClientId();
         }
-
+        String errorMessage = "";
         if (request.getParameter("oauth2AuthenticationErrorWeb") != null) {
             param = "erroroauth=oauth2AuthenticationErrorWeb";
-        } else if (request.getParameter("error") != null) {
-            param = "error=" + request.getParameter("error");
-        } else if (request.getParameter("erroroauth") != null) {
-            param = "erroroauth=" + request.getParameter("erroroauth");
+        } else if ((errorMessage = request.getParameter("error")) != null) {
+            param = "error=" + sanitizeInput(errorMessage);
+        } else if ((errorMessage = request.getParameter("erroroauth")) != null) {
+            param = "erroroauth=" + sanitizeInput(errorMessage);
         } else if (request.getParameter("oauth2AutoCreateDisabled") != null) {
             param = "error=oauth2AutoCreateDisabled";
         }
@@ -114,5 +114,9 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
                 response.sendRedirect(redirectUrl);
                 break;
         }
+    }
+
+    private String sanitizeInput(String input) {
+        return input.replaceAll("[^a-zA-Z0-9 ]", "");
     }
 }
