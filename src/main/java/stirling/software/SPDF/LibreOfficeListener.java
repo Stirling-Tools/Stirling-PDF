@@ -31,14 +31,12 @@ public class LibreOfficeListener {
     private LibreOfficeListener() {}
 
     private boolean isListenerRunning() {
-        try {
-            System.out.println("waiting for listener to start");
-            try (Socket socket = new Socket()) {
-                socket.connect(
-                        new InetSocketAddress("localhost", 2002), 1000); // Timeout after 1 second
-                return true;
-            }
-        } catch (IOException e) {
+        System.out.println("waiting for listener to start");
+        try (Socket socket = new Socket()) {
+            socket.connect(
+                    new InetSocketAddress("localhost", 2002), 1000); // Timeout after 1 second
+            return true;
+        } catch (Exception e) {
             return false;
         }
     }
