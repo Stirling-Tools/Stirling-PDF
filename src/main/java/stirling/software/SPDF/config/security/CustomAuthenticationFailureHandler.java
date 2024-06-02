@@ -47,12 +47,14 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
             response.sendRedirect("/login?error=oauth2AuthenticationError");
             return;
         }
-
+        
         String username = request.getParameter("username");
-        if (username != null && !isDemoUser(username)) {
+        Optional<User> optUser = userService.findByUsernameIgnoreCase(username);
+        
+        if (username != null && optUser.isPresent() && !isDemoUser(optUser) ) {
             logger.info(
                     "Remaining attempts for user {}: {}",
-                    username,
+                    optUser.get().getUsername(),
                     loginAttemptService.getRemainingAttempts(username));
             loginAttemptService.loginFailed(username);
             if (loginAttemptService.isBlocked(username)
@@ -70,8 +72,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         super.onAuthenticationFailure(request, response, exception);
     }
 
-    private boolean isDemoUser(String username) {
-        Optional<User> user = userService.findByUsernameIgnoreCase(username);
+    private boolean isDemoUser(Optional<User> user) {
         return user.isPresent()
                 && user.get().getAuthorities().stream()
                         .anyMatch(authority -> "ROLE_DEMO_USER".equals(authority.getAuthority()));
