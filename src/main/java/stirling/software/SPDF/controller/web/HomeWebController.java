@@ -6,6 +6,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -25,6 +27,8 @@ import stirling.software.SPDF.model.Dependency;
 
 @Controller
 public class HomeWebController {
+
+    private static final Logger logger = LoggerFactory.getLogger(HomeWebController.class);
 
     @GetMapping("/about")
     @Hidden
@@ -46,7 +50,7 @@ public class HomeWebController {
                     mapper.readValue(json, new TypeReference<Map<String, List<Dependency>>>() {});
             model.addAttribute("dependencies", data.get("dependencies"));
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return "licenses";
     }

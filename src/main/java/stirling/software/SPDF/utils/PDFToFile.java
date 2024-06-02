@@ -14,16 +14,19 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
-
+import stirling.software.SPDF.controller.web.AccountWebController;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 
 public class PDFToFile {
+	private static final Logger logger = LoggerFactory.getLogger(PDFToFile.class);
 
     public ResponseEntity<byte[]> processPdfToHtml(MultipartFile inputFile)
             throws IOException, InterruptedException {
@@ -67,18 +70,20 @@ public class PDFToFile {
             // Return output files in a ZIP archive
             fileName = pdfBaseName + "ToHtml.zip";
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream);
-
-            for (File outputFile : outputFiles) {
-                ZipEntry entry = new ZipEntry(outputFile.getName());
-                zipOutputStream.putNextEntry(entry);
-                FileInputStream fis = new FileInputStream(outputFile);
-                IOUtils.copy(fis, zipOutputStream);
-                fis.close();
-                zipOutputStream.closeEntry();
+            try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
+                for (File outputFile : outputFiles) {
+                    ZipEntry entry = new ZipEntry(outputFile.getName());
+                    zipOutputStream.putNextEntry(entry);
+                    try (FileInputStream fis = new FileInputStream(outputFile)) {
+                        IOUtils.copy(fis, zipOutputStream);
+                    } catch (IOException e) {
+                        logger.error("Exception writing zip entry", e);
+                    }
+                    zipOutputStream.closeEntry();
+                }
+            } catch (IOException e) {
+                logger.error("Exception writing zip", e);
             }
-
-            zipOutputStream.close();
             fileBytes = byteArrayOutputStream.toByteArray();
 
         } finally {
@@ -158,21 +163,25 @@ public class PDFToFile {
                 fileBytes = FileUtils.readFileToByteArray(outputFile);
             } else {
                 // Return output files in a ZIP archive
-                fileName = pdfBaseName + "To" + outputFormat + ".zip";
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream);
+            	fileName = pdfBaseName + "To" + outputFormat + ".zip";
+            	ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            	try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
+            	    for (File outputFile : outputFiles) {
+            	        ZipEntry entry = new ZipEntry(outputFile.getName());
+            	        zipOutputStream.putNextEntry(entry);
+            	        try (FileInputStream fis = new FileInputStream(outputFile)) {
+            	            IOUtils.copy(fis, zipOutputStream);
+            	        } catch (IOException e) {
+            	            logger.error("Exception writing zip entry", e);
+            	        }
+            	        
+            	        zipOutputStream.closeEntry();
+            	    }
+            	} catch (IOException e) {
+            		logger.error("Exception writing zip", e);
+            	}
 
-                for (File outputFile : outputFiles) {
-                    ZipEntry entry = new ZipEntry(outputFile.getName());
-                    zipOutputStream.putNextEntry(entry);
-                    FileInputStream fis = new FileInputStream(outputFile);
-                    IOUtils.copy(fis, zipOutputStream);
-                    fis.close();
-                    zipOutputStream.closeEntry();
-                }
-
-                zipOutputStream.close();
-                fileBytes = byteArrayOutputStream.toByteArray();
+            	fileBytes = byteArrayOutputStream.toByteArray();
             }
 
         } finally {
