@@ -6,10 +6,14 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.github.pixee.security.SystemCommand;
 
 public class LibreOfficeListener {
 
+    private static final Logger logger = LoggerFactory.getLogger(LibreOfficeListener.class);
     private static final long ACTIVITY_TIMEOUT = 20L * 60 * 1000; // 20 minutes
 
     private static final LibreOfficeListener INSTANCE = new LibreOfficeListener();
@@ -31,7 +35,7 @@ public class LibreOfficeListener {
             System.out.println("waiting for listener to start");
             try (Socket socket = new Socket()) {
                 socket.connect(
-                    new InetSocketAddress("localhost", 2002), 1000); // Timeout after 1 second
+                        new InetSocketAddress("localhost", 2002), 1000); // Timeout after 1 second
                 return true;
             }
         } catch (IOException e) {
@@ -63,7 +67,7 @@ public class LibreOfficeListener {
                         try {
                             Thread.sleep(5000); // Check for inactivity every 5 seconds
                         } catch (InterruptedException e) {
-                        	Thread.currentThread().interrupt();
+                            Thread.currentThread().interrupt();
                             break;
                         }
                     }
@@ -81,8 +85,8 @@ public class LibreOfficeListener {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-            	Thread.currentThread().interrupt();
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
+                logger.error("exception", e);
             } // Check every 1 second
         }
     }

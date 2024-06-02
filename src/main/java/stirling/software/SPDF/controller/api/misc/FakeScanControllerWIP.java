@@ -110,8 +110,8 @@ public class FakeScanControllerWIP {
     private BufferedImage rotate(BufferedImage image, double rotation) {
 
         double rotationRequired = Math.toRadians(rotation);
-        double locationX = image.getWidth() / 2;
-        double locationY = image.getHeight() / 2;
+        double locationX = (double) image.getWidth() / 2;
+        double locationY = (double) image.getHeight() / 2;
         AffineTransform tx =
                 AffineTransform.getRotateInstance(rotationRequired, locationX, locationY);
         AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BICUBIC);
@@ -127,8 +127,8 @@ public class FakeScanControllerWIP {
 
         for (int i = -radius; i <= radius; i++) {
             for (int j = -radius; j <= radius; j++) {
-                double xDistance = i * i;
-                double yDistance = j * j;
+                double xDistance = (double) i * i;
+                double yDistance = (double) j * j;
                 double g = Math.exp(-(xDistance + yDistance) / (2 * sigma * sigma));
                 data[(i + radius) * size + j + radius] = (float) g;
                 sum += g;
@@ -137,7 +137,8 @@ public class FakeScanControllerWIP {
 
         // Normalize the kernel
         for (int i = 0; i < data.length; i++) {
-            data[i] /= sum;
+        	if(sum != 0)
+        		data[i] /= sum;
         }
 
         Kernel kernel = new Kernel(size, size, data);
@@ -166,7 +167,7 @@ public class FakeScanControllerWIP {
                         0,
                         new Color(0, 0, 0, 1f),
                         0,
-                        featherRadius * 2,
+                        featherRadius * 2f,
                         new Color(0, 0, 0, 0f)));
         g2.fillRect(0, 0, width, featherRadius);
 
@@ -174,7 +175,7 @@ public class FakeScanControllerWIP {
         g2.setPaint(
                 new GradientPaint(
                         0,
-                        height - featherRadius * 2,
+                        height - featherRadius * 2f,
                         new Color(0, 0, 0, 0f),
                         0,
                         height,
@@ -187,7 +188,7 @@ public class FakeScanControllerWIP {
                         0,
                         0,
                         new Color(0, 0, 0, 1f),
-                        featherRadius * 2,
+                        featherRadius * 2f,
                         0,
                         new Color(0, 0, 0, 0f)));
         g2.fillRect(0, 0, featherRadius, height);
@@ -195,7 +196,7 @@ public class FakeScanControllerWIP {
         // Right edge
         g2.setPaint(
                 new GradientPaint(
-                        width - featherRadius * 2,
+                        width - featherRadius * 2f,
                         0,
                         new Color(0, 0, 0, 0f),
                         width,
@@ -244,7 +245,7 @@ public class FakeScanControllerWIP {
             int y2 = y1 + random.nextInt(20) - 10;
             Path2D.Double hair = new Path2D.Double();
             hair.moveTo(x1, y1);
-            hair.curveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2, x2, y2);
+            hair.curveTo(x1, y1, (double) (x1 + x2) / 2, (double) (y1 + y2) / 2, x2, y2);
             g2d.draw(hair);
         }
 

@@ -47,11 +47,11 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
             response.sendRedirect("/login?error=oauth2AuthenticationError");
             return;
         }
-        
+
         String username = request.getParameter("username");
         Optional<User> optUser = userService.findByUsernameIgnoreCase(username);
-        
-        if (username != null && optUser.isPresent() && !isDemoUser(optUser) ) {
+
+        if (username != null && optUser.isPresent() && !isDemoUser(optUser)) {
             logger.info(
                     "Remaining attempts for user {}: {}",
                     optUser.get().getUsername(),

@@ -52,7 +52,7 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
                 issuer = provider.getIssuer();
                 clientId = provider.getClientId();
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("exception", e);
             }
 
         } else {
@@ -115,10 +115,8 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
                 break;
         }
     }
-    
 
     private String sanitizeInput(String input) {
         return input.replaceAll("[^a-zA-Z0-9 ]", "");
     }
-    
 }
