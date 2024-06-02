@@ -130,7 +130,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./Dockerfile
+          file: ./Dockerfile-fat
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
