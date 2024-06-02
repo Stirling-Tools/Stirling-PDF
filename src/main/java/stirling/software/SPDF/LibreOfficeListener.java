@@ -10,7 +10,7 @@ import io.github.pixee.security.SystemCommand;
 
 public class LibreOfficeListener {
 
-    private static final long ACTIVITY_TIMEOUT = 20 * 60 * 1000; // 20 minutes
+    private static final long ACTIVITY_TIMEOUT = 20L * 60 * 1000; // 20 minutes
 
     private static final LibreOfficeListener INSTANCE = new LibreOfficeListener();
     private static final int LISTENER_PORT = 2002;
@@ -29,11 +29,11 @@ public class LibreOfficeListener {
     private boolean isListenerRunning() {
         try {
             System.out.println("waiting for listener to start");
-            Socket socket = new Socket();
-            socket.connect(
+            try (Socket socket = new Socket()) {
+                socket.connect(
                     new InetSocketAddress("localhost", 2002), 1000); // Timeout after 1 second
-            socket.close();
-            return true;
+                return true;
+            }
         } catch (IOException e) {
             return false;
         }
@@ -63,6 +63,7 @@ public class LibreOfficeListener {
                         try {
                             Thread.sleep(5000); // Check for inactivity every 5 seconds
                         } catch (InterruptedException e) {
+                        	Thread.currentThread().interrupt();
                             break;
                         }
                     }
@@ -80,7 +81,7 @@ public class LibreOfficeListener {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
+            	Thread.currentThread().interrupt();
                 e.printStackTrace();
             } // Check every 1 second
         }
