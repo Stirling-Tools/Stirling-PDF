@@ -137,8 +137,7 @@ public class FakeScanControllerWIP {
 
         // Normalize the kernel
         for (int i = 0; i < data.length; i++) {
-        	if(sum != 0)
-        		data[i] /= sum;
+            if (sum != 0) data[i] /= sum;
         }
 
         Kernel kernel = new Kernel(size, size, data);
