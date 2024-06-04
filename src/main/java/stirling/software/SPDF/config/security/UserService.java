@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config.security;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -135,12 +136,16 @@ public class UserService implements UserServiceInterface {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
+        LocalDate currentDate = LocalDate.now();
         User user = new User();
         user.setUsername(username);
         user.setEnabled(true);
         user.setFirstLogin(false);
         user.addAuthority(new Authority(Role.USER.getRoleId(), user));
         user.setAuthenticationType(authenticationType);
+        user.setChargeDate(currentDate);
+        user.setExpireDate(currentDate.plusMonths(3).plusDays(1));
+        user.setExpire(false);
         userRepository.save(user);
     }
 
@@ -148,11 +153,15 @@ public class UserService implements UserServiceInterface {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
+        LocalDate currentDate = LocalDate.now();
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.setEnabled(true);
         user.setAuthenticationType(AuthenticationType.WEB);
+        user.setChargeDate(currentDate);
+        user.setExpireDate(currentDate.plusMonths(3).plusDays(1));
+        user.setExpire(false);
         userRepository.save(user);
     }
 
@@ -161,6 +170,7 @@ public class UserService implements UserServiceInterface {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
+        LocalDate currentDate = LocalDate.now();
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
@@ -168,6 +178,9 @@ public class UserService implements UserServiceInterface {
         user.setEnabled(true);
         user.setAuthenticationType(AuthenticationType.WEB);
         user.setFirstLogin(firstLogin);
+        user.setChargeDate(currentDate);
+        user.setExpireDate(currentDate.plusMonths(3).plusDays(1));
+        user.setExpire(false);
         userRepository.save(user);
     }
 
