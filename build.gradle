@@ -195,8 +195,6 @@ swaggerhubUpload {
     oas '3.0.0'  // The version of the OpenAPI Specification you're using
 }
 
-
-
 jar {
     enabled = false
     manifest {
