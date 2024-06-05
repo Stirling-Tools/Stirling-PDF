@@ -171,14 +171,14 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     dependsOn 'spotlessApply'
 }
 compileJava {
     options.compilerArgs << '-parameters'
 }
 
-task writeVersion {
+tasks.register('writeVersion') {
     def propsFile = file('src/main/resources/version.properties')
     def props = new Properties()
     props.setProperty('version', version)
@@ -210,6 +210,6 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-task printVersion {
-  println project.version
+tasks.register('printVersion') {
+    println project.version
 }

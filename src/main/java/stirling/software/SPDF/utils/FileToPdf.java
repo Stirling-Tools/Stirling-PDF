@@ -53,7 +53,7 @@ public class FileToPdf {
                 command.add("--paper-size");
                 command.add("a4");
 
-                if (request.getZoom() != 1.0) {
+                if (request != null && request.getZoom() != 1.0) {
                     // Create a temporary CSS file
                     File tempCssFile = Files.createTempFile("customStyle", ".css").toFile();
                     try (FileWriter writer = new FileWriter(tempCssFile)) {
