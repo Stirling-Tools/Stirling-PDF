@@ -356,7 +356,7 @@ public class ApplicationProperties {
                 private KeycloakProvider keycloak = new KeycloakProvider();
 
                 public Provider get(String registrationId) throws Exception {
-                    switch (registrationId) {
+                    switch (registrationId.toLowerCase()) {
                         case "google":
                             return getGoogle();
                         case "github":
@@ -495,6 +495,11 @@ public class ApplicationProperties {
             return "google";
         }
 
+        @Override
+        public String getClientName() {
+            return "Google";
+        }
+
         public boolean isSettingsValid() {
             return super.isValid(this.getClientId(), "clientId")
                     && super.isValid(this.getClientSecret(), "clientSecret")
@@ -594,6 +599,11 @@ public class ApplicationProperties {
             return "github";
         }
 
+        @Override
+        public String getClientName() {
+            return "GitHub";
+        }
+
         public boolean isSettingsValid() {
             return super.isValid(this.getClientId(), "clientId")
                     && super.isValid(this.getClientSecret(), "clientSecret")
@@ -642,7 +652,6 @@ public class ApplicationProperties {
         @Override
         public Collection<String> getScopes() {
             if (scopes == null || scopes.isEmpty()) {
-                scopes.add("openid");
                 scopes.add("profile");
                 scopes.add("email");
             }
@@ -682,6 +691,11 @@ public class ApplicationProperties {
         @Override
         public String getName() {
             return "keycloak";
+        }
+
+        @Override
+        public String getClientName() {
+            return "Keycloak";
         }
 
         public boolean isSettingsValid() {
