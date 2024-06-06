@@ -47,7 +47,7 @@
                 <span th:text="#{${addMessage}}">Default message if not found</span>
               </div>
               <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{adminUserSettings.usernameInfo}" th:text="#{help}">Help</button>
-              <form id="formsaveuser" action="/api/v1/user/admin/saveUser" method="post">
+              <form id="formsaveuser" th:action="@{/api/v1/user/admin/saveUser}" method="post">
                 <div class="mb-3">
                   <label for="username" th:text="#{username}">Username</label>
                   <input type="text" class="form-control" name="username" id="username" th:title="#{adminUserSettings.usernameInfo}" required>
