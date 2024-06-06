@@ -37,9 +37,9 @@ public class InputStreamTemplateResource implements ITemplateResource {
         return "streamResource";
     }
 
-	@Override
-	public boolean exists() {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public boolean exists() {
+        // TODO Auto-generated method stub
+        return false;
+    }
 }
