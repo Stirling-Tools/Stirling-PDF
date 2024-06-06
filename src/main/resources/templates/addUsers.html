@@ -78,7 +78,7 @@
               <div th:if="${changeMessage}" class="alert alert-danger">
                 <span th:text="#{${changeMessage}}">Default message if not found</span>
               </div>
-              <form action="/api/v1/user/admin/changeRole" method="post">
+              <form th:action="@{/api/v1/user/admin/changeRole}" method="post">
                 <div class="mb-3">
                   <label for="username" th:text="#{username}">Username</label>
                   <select name="username" class="form-control" required>
