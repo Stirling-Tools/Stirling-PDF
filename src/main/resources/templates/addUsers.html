@@ -34,7 +34,7 @@
                     <td th:text="#{${user.roleName}}"></td>
                     <td>
                       <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post">
-                        <button type="submit" th:text="#{delete}">Delete</button>
+                        <button class="btn btn-danger" type="submit" th:text="#{delete}">Delete</button>
                       </form>
                     </td>
                     <td th:text="${user.authenticationType}"></td>
