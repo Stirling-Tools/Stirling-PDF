@@ -16,6 +16,8 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import stirling.software.SPDF.config.security.LoginAttemptService;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.SPDF.model.User;
 
 public class CustomOAuth2UserService implements OAuth2UserService<OidcUserRequest, OidcUser> {
@@ -41,11 +43,27 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
 
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
-        String usernameAttribute =
-                applicationProperties.getSecurity().getOAUTH2().getUseAsUsername();
+        OAUTH2 oauth2 = applicationProperties.getSecurity().getOAUTH2();
+        String usernameAttribute = oauth2.getUseAsUsername();
+        if (usernameAttribute == null || usernameAttribute.trim().isEmpty()) {
+            Client client = oauth2.getClient();
+            if (client != null && client.getKeycloak() != null) {
+                usernameAttribute = client.getKeycloak().getUseAsUsername();
+            } else {
+                usernameAttribute = "email";
+            }
+        }
+
         try {
             OidcUser user = delegate.loadUser(userRequest);
             String username = user.getUserInfo().getClaimAsString(usernameAttribute);
+
+            // Check if the username claim is null or empty
+            if (username == null || username.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Claim '" + usernameAttribute + "' cannot be null or empty");
+            }
+
             Optional<User> duser = userService.findByUsernameIgnoreCase(username);
             if (duser.isPresent()) {
                 if (loginAttemptService.isBlocked(username)) {
@@ -56,13 +74,14 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
                     throw new IllegalArgumentException("Password must not be null");
                 }
             }
+
             // Return a new OidcUser with adjusted attributes
             return new DefaultOidcUser(
                     user.getAuthorities(),
                     userRequest.getIdToken(),
                     user.getUserInfo(),
                     usernameAttribute);
-        } catch (java.lang.IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             logger.error("Error loading OIDC user: {}", e.getMessage());
             throw new OAuth2AuthenticationException(new OAuth2Error(e.getMessage()), e);
         } catch (Exception e) {
