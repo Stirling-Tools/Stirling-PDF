@@ -298,7 +298,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                   <input type="number" id="pageNumber" class="toolbarField" title="Page" value="1" min="1" tabindex="15" data-l10n-id="pdfjs-page-input" autocomplete="off">
                 </span>
                 <span id="numPages" class="toolbarLabel"></span>
-                <a class="navbar-brand hiddenMediumView" href="/" tabindex="16" >
+                <a class="navbar-brand hiddenMediumView" th:href="@{/}" tabindex="16" >
                   <img class="main-icon" src="favicon.svg" alt="icon" style="max-height: 1.6rem; width: auto;">
                   <span class="icon-text" style="color: #ffffff;" th:text="${@appName}">Stirling PDF</span>
                 </a>
@@ -308,7 +308,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                   <button id="editorHighlight" class="toolbarButton" hidden="true" disabled="disabled" title="Highlight" role="radio" aria-checked="false" aria-controls="editorHighlightParamsToolbar" tabindex="31" data-l10n-id="pdfjs-editor-highlight-button">
                     <span data-l10n-id="pdfjs-editor-highlight-button-label">Highlight</span>
                   </button>
-                  <a id="backToHome" class="toolbarButton hiddenMediumView" title="Back to Main Page" role="radio" aria-checked="false" tabindex="32" href="/">
+                  <a id="backToHome" class="toolbarButton hiddenMediumView" title="Back to Main Page" role="radio" aria-checked="false" tabindex="32" th:href="@{/}">
                     <span data-l10n-id="pdfjs-open-file-button-label">Back to Main Page</span>
                   </a>
                   <button id="openFile" class="toolbarButton hiddenMediumView" title="Open File" role="radio" aria-checked="false" tabindex="33" data-l10n-id="pdfjs-open-file-button">
