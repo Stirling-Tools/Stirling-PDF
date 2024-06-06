@@ -178,7 +178,7 @@ compileJava {
     options.compilerArgs << '-parameters'
 }
 
-tasks.register('writeVersion') {
+task writeVersion  {
     def propsFile = file('src/main/resources/version.properties')
     def props = new Properties()
     props.setProperty('version', version)
@@ -208,6 +208,6 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-tasks.register('printVersion') {
+task printVersion  {
     println project.version
 }
