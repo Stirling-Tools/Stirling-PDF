@@ -8,7 +8,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.IEngineConfiguration;
 import org.thymeleaf.templateresolver.AbstractConfigurableTemplateResolver;
-import org.thymeleaf.templateresource.ClassLoaderTemplateResource;
 import org.thymeleaf.templateresource.FileTemplateResource;
 import org.thymeleaf.templateresource.ITemplateResource;
 
@@ -43,7 +42,10 @@ public class FileFallbackTemplateResolver extends AbstractConfigurableTemplateRe
 
         }
 
-        InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("templates/" + resourceName);
+        InputStream inputStream =
+                Thread.currentThread()
+                        .getContextClassLoader()
+                        .getResourceAsStream("templates/" + resourceName);
         if (inputStream != null) {
             return new InputStreamTemplateResource(inputStream, "UTF-8");
         }
