@@ -52,23 +52,23 @@ public class AccountWebController {
         OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
         if (oauth != null) {
             if (oauth.isSettingsValid()) {
-                providerList.put("oidc", "OpenID Connect");
+                providerList.put("oidc", oauth.getProvider());
             }
             Client client = oauth.getClient();
             if (client != null) {
                 GoogleProvider google = client.getGoogle();
                 if (google.isSettingsValid()) {
-                    providerList.put("google", "Google");
+                    providerList.put(google.getName(), google.getClientName());
                 }
 
                 GithubProvider github = client.getGithub();
                 if (github.isSettingsValid()) {
-                    providerList.put("github", "Github");
+                    providerList.put(github.getName(), github.getClientName());
                 }
 
                 KeycloakProvider keycloak = client.getKeycloak();
                 if (keycloak.isSettingsValid()) {
-                    providerList.put("keycloak", "Keycloak");
+                    providerList.put(keycloak.getName(), keycloak.getClientName());
                 }
             }
         }
