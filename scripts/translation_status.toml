@@ -15,7 +15,10 @@ ignore = [
 
 [cs_CZ]
 ignore = [
+    'info',
     'language.direction',
+    'pipeline.header',
+    'text',
 ]
 
 [de_DE]
@@ -65,6 +68,16 @@ ignore = [
     'language.direction',
 ]
 
+[hr_HR]
+ignore = [
+    'font',
+    'home.pipeline.title',
+    'info',
+    'language.direction',
+    'pdfOrganiser.tags',
+    'showJS.tags',
+]
+
 [hu_HU]
 ignore = [
     'language.direction',
@@ -99,6 +112,11 @@ ignore = [
 ]
 
 [nl_NL]
+ignore = [
+    'language.direction',
+]
+
+[no_NB]
 ignore = [
     'language.direction',
 ]
