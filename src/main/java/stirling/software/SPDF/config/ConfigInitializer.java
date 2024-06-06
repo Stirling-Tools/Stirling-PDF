@@ -1,10 +1,8 @@
 package stirling.software.SPDF.config;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,61 +45,48 @@ public class ConfigInitializer
                 }
             }
         } else {
-            // Load the template content from classpath
-            List<String> templateLines;
-            try (InputStream in =
-                    getClass().getClassLoader().getResourceAsStream("settings.yml.template")) {
-                if (in == null) {
-                    throw new FileNotFoundException(
-                            "Resource file not found: settings.yml.template");
-                }
-                templateLines = new ArrayList<>();
-                try (var reader = new InputStreamReader(in)) {
-                    try (var bufferedReader = new BufferedReader(reader)) {
-                        String line;
-                        while ((line = bufferedReader.readLine()) != null) {
-                            templateLines.add(line);
-                        }
-                    }
-                }
-            }
-
-            // Read the user settings file if it exists
-            Path userPath = Paths.get("configs", "settings.yml");
-            List<String> userLines =
-                    Files.exists(userPath) ? Files.readAllLines(userPath) : new ArrayList<>();
-
-            List<String> resultLines = new ArrayList<>();
-            int position = 0;
-            for (String templateLine : templateLines) {
-                // Check if the line is a comment
-                if (templateLine.trim().startsWith("#")) {
-                    String entry = templateLine.trim().substring(1).trim();
-                    if (!entry.isEmpty()) {
-                        // Check if this comment has been uncommented in userLines
-                        String key = entry.split(":")[0].trim();
-                        addLine(resultLines, userLines, templateLine, key, position);
-                    } else {
-                        resultLines.add(templateLine);
-                    }
-                }
-                // Check if the line is a key-value pair
-                else if (templateLine.contains(":")) {
-                    String key = templateLine.split(":")[0].trim();
-                    addLine(resultLines, userLines, templateLine, key, position);
-                }
-                // Handle empty lines
-                else if (templateLine.trim().length() == 0) {
-                    resultLines.add("");
-                }
-                position++;
-            }
-
-            // Write the result to the user settings file
-            Files.write(userPath, resultLines);
+//            Path templatePath =
+//                    Paths.get(
+//                            getClass()
+//                                    .getClassLoader()
+//                                    .getResource("settings.yml.template")
+//                                    .toURI());
+//            Path userPath = Paths.get("configs", "settings.yml");
+//
+//            List<String> templateLines = Files.readAllLines(templatePath);
+//            List<String> userLines =
+//                    Files.exists(userPath) ? Files.readAllLines(userPath) : new ArrayList<>();
+//
+//            List<String> resultLines = new ArrayList<>();
+//            int position = 0;
+//            for (String templateLine : templateLines) {
+//                // Check if the line is a comment
+//                if (templateLine.trim().startsWith("#")) {
+//                    String entry = templateLine.trim().substring(1).trim();
+//                    if (!entry.isEmpty()) {
+//                        // Check if this comment has been uncommented in userLines
+//                        String key = entry.split(":")[0].trim();
+//                        addLine(resultLines, userLines, templateLine, key, position);
+//                    } else {
+//                        resultLines.add(templateLine);
+//                    }
+//                }
+//                // Check if the line is a key-value pair
+//                else if (templateLine.contains(":")) {
+//                    String key = templateLine.split(":")[0].trim();
+//                    addLine(resultLines, userLines, templateLine, key, position);
+//                }
+//                // Handle empty lines
+//                else if (templateLine.trim().length() == 0) {
+//                    resultLines.add("");
+//                }
+//                position++;
+//            }
+//
+//            // Write the result to the user settings file
+//            Files.write(userPath, resultLines);
         }
 
-        // Ensure the custom settings file exists
         Path customSettingsPath = Paths.get("configs", "custom_settings.yml");
         if (!Files.exists(customSettingsPath)) {
             Files.createFile(customSettingsPath);
