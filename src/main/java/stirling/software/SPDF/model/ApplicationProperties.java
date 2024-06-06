@@ -455,6 +455,7 @@ public class ApplicationProperties {
         @Override
         public Collection<String> getScopes() {
             if (scopes == null || scopes.isEmpty()) {
+                scopes = new ArrayList<>();
                 scopes.add("https://www.googleapis.com/auth/userinfo.email");
                 scopes.add("https://www.googleapis.com/auth/userinfo.profile");
             }
@@ -560,6 +561,7 @@ public class ApplicationProperties {
 
         public Collection<String> getScopes() {
             if (scopes == null || scopes.isEmpty()) {
+                scopes = new ArrayList<>();
                 scopes.add("read:user");
             }
             return scopes;
@@ -652,6 +654,7 @@ public class ApplicationProperties {
         @Override
         public Collection<String> getScopes() {
             if (scopes == null || scopes.isEmpty()) {
+                scopes = new ArrayList<>();
                 scopes.add("profile");
                 scopes.add("email");
             }
