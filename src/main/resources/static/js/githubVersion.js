@@ -40,7 +40,8 @@ async function getCurrentVersionFromBypass() {
     const response = await fetch(url);
     if (response.status === 200) {
       const text = await response.text();
-      const match = text.match(/version\s*=\s*['"](\d+\.\d+\.\d+)['"]/);
+      const versionRegex = /version\s*=\s*['"](\d+\.\d+\.\d+)['"]/;
+      const match = versionRegex.exec(text);
       if (match) {
         return match[1];
       }
