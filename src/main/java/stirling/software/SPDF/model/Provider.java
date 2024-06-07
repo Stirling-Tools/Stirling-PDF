@@ -4,9 +4,14 @@ import java.util.Collection;
 
 public class Provider implements ProviderInterface {
     private String name;
+    private String clientName;
 
     public String getName() {
         return name;
+    }
+
+    public String getClientName() {
+        return clientName;
     }
 
     protected boolean isValid(String value, String name) {

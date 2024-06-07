@@ -356,8 +356,8 @@ public class ApplicationProperties {
                 private KeycloakProvider keycloak = new KeycloakProvider();
 
                 public Provider get(String registrationId) throws Exception {
-                    switch (registrationId) {
-                        case "gogole":
+                    switch (registrationId.toLowerCase()) {
+                        case "google":
                             return getGoogle();
                         case "github":
                             return getGithub();
@@ -455,6 +455,7 @@ public class ApplicationProperties {
         @Override
         public Collection<String> getScopes() {
             if (scopes == null || scopes.isEmpty()) {
+                scopes = new ArrayList<>();
                 scopes.add("https://www.googleapis.com/auth/userinfo.email");
                 scopes.add("https://www.googleapis.com/auth/userinfo.profile");
             }
@@ -493,6 +494,11 @@ public class ApplicationProperties {
         @Override
         public String getName() {
             return "google";
+        }
+
+        @Override
+        public String getClientName() {
+            return "Google";
         }
 
         public boolean isSettingsValid() {
@@ -553,8 +559,10 @@ public class ApplicationProperties {
             this.clientSecret = clientSecret;
         }
 
+        @Override
         public Collection<String> getScopes() {
             if (scopes == null || scopes.isEmpty()) {
+                scopes = new ArrayList<>();
                 scopes.add("read:user");
             }
             return scopes;
@@ -592,6 +600,11 @@ public class ApplicationProperties {
         @Override
         public String getName() {
             return "github";
+        }
+
+        @Override
+        public String getClientName() {
+            return "GitHub";
         }
 
         public boolean isSettingsValid() {
@@ -642,13 +655,14 @@ public class ApplicationProperties {
         @Override
         public Collection<String> getScopes() {
             if (scopes == null || scopes.isEmpty()) {
-                scopes.add("openid");
+                scopes = new ArrayList<>();
                 scopes.add("profile");
                 scopes.add("email");
             }
             return scopes;
         }
 
+        @Override
         public void setScopes(String scopes) {
             this.scopes =
                     Arrays.stream(scopes.split(",")).map(String::trim).collect(Collectors.toList());
@@ -682,6 +696,11 @@ public class ApplicationProperties {
         @Override
         public String getName() {
             return "keycloak";
+        }
+
+        @Override
+        public String getClientName() {
+            return "Keycloak";
         }
 
         public boolean isSettingsValid() {

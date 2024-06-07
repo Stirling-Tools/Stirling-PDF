@@ -11,14 +11,16 @@ if [ ! -z "$PGID" ] && [ "$PGID" != "$(getent group stirlingpdfgroup | cut -d: -
 fi
 umask "$UMASK" || true
 
-if [[ "$INSTALL_BOOK_AND_ADVANCED_HTML_OPS" == "true" ]]; then
+if [[ "$INSTALL_BOOK_AND_ADVANCED_HTML_OPS" == "true" && "$FAT_DOCKER" != "true" ]]; then
   apk add --no-cache calibre@testing
 fi
 
-/scripts/download-security-jar.sh
+if [[ "$FAT_DOCKER" != "true" ]]; then
+  /scripts/download-security-jar.sh	
+fi
 
 if [[ -n "$LANGS" ]]; then
-	/scripts/installFonts.sh $LANGS
+  /scripts/installFonts.sh $LANGS
 fi
 
 echo "Setting permissions and ownership for necessary directories..."

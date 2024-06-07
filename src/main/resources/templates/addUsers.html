@@ -34,7 +34,7 @@
                     <td th:text="#{${user.roleName}}"></td>
                     <td>
                       <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post">
-                        <button type="submit" th:text="#{delete}">Delete</button>
+                        <button class="btn btn-danger" type="submit" th:text="#{delete}">Delete</button>
                       </form>
                     </td>
                     <td th:text="${user.authenticationType}"></td>
@@ -47,7 +47,7 @@
                 <span th:text="#{${addMessage}}">Default message if not found</span>
               </div>
               <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{adminUserSettings.usernameInfo}" th:text="#{help}">Help</button>
-              <form id="formsaveuser" action="/api/v1/user/admin/saveUser" method="post">
+              <form id="formsaveuser" th:action="@{/api/v1/user/admin/saveUser}" method="post">
                 <div class="mb-3">
                   <label for="username" th:text="#{username}">Username</label>
                   <input type="text" class="form-control" name="username" id="username" th:title="#{adminUserSettings.usernameInfo}" required>
@@ -78,7 +78,7 @@
               <div th:if="${changeMessage}" class="alert alert-danger">
                 <span th:text="#{${changeMessage}}">Default message if not found</span>
               </div>
-              <form action="/api/v1/user/admin/changeRole" method="post">
+              <form th:action="@{/api/v1/user/admin/changeRole}" method="post">
                 <div class="mb-3">
                   <label for="username" th:text="#{username}">Username</label>
                   <select name="username" class="form-control" required>

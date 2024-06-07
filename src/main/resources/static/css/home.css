@@ -5,7 +5,7 @@
   font-size: 16px;
   margin-bottom: 2rem;
   padding: 0.75rem 3.5rem;
-  border: 0.1rem solid var(--md-sys-color-outline-variant);
+  border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 3rem;
   outline-color: var(--md-sys-color-outline-variant);
 }
@@ -19,12 +19,12 @@
 .features-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 3fr));
-  gap: 25px 30px;
+  gap: 30px 30px;
 }
 
 .feature-card {
-  border: 2px solid var(--md-sys-color-surface-5);
-  border-radius: 2rem;
+  border: 1px solid var(--md-sys-color-surface-5);
+  border-radius: 1.75rem;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -47,13 +47,13 @@
 }
 
 .feature-card .card-text {
-  flex: 1;
+  font-size: .875rem;
 }
 
 .feature-card:hover {
   cursor: pointer;
-  transform: scale(1.1);
-  box-shadow: var(--md-sys-elevation-3);
+  transform: scale(1.08);
+  box-shadow: var(--md-sys-elevation-2);
 }
 
 .card-title.text-primary {
@@ -79,11 +79,12 @@
 }
 
 #tool-text {
-  margin: 0.5rem 0.5rem 0rem;
+  margin: 0.0rem 0 0 1.25rem;
 }
 
 .card-title {
   margin-bottom: 1rem;
+  font-size: 1.1rem;
 }
 
 /* Only show the favorite icons when the parent card is being hovered over */
