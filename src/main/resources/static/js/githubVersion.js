@@ -20,10 +20,34 @@ async function getLatestReleaseVersion() {
   const url = "https://api.github.com/repos/Stirling-Tools/Stirling-PDF/releases/latest";
   try {
     const response = await fetch(url);
-    const data = await response.json();
-    return data.tag_name ? data.tag_name.substring(1) : "";
+    if (response.status === 200) {
+      const data = await response.json();
+      return data.tag_name ? data.tag_name.substring(1) : "";
+    } else {
+      // If the status is not 200, try to get the version from build.gradle
+      return await getCurrentVersionFromBypass();
+    }
   } catch (error) {
-    console.error("Failed to fetch latest version:", error);
+    console.error("Failed to fetch latest version from GitHub:", error);
+    // If an error occurs, try to get the version from build.gradle
+    return await getCurrentVersionFromBypass();
+  }
+}
+
+async function getCurrentVersionFromBypass() {
+  const url = "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/build.gradle";
+  try {
+    const response = await fetch(url);
+    if (response.status === 200) {
+      const text = await response.text();
+      const match = text.match(/version\s*=\s*['"](\d+\.\d+\.\d+)['"]/);
+      if (match) {
+        return match[1];
+      }
+    }
+    throw new Error("Version number not found");
+  } catch (error) {
+    console.error("Failed to fetch latest version from build.gradle:", error);
     return ""; // Return an empty string if the fetch fails
   }
 }
