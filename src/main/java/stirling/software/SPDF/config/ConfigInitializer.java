@@ -93,32 +93,6 @@ public class ConfigInitializer
         }
     }
 
-    // TODO check parent value instead of just indent lines for duplicate keys (like enabled etc)
-    private static void addLine(
-            List<String> resultLines,
-            List<String> userLines,
-            String templateLine,
-            String key,
-            int position) {
-        boolean added = false;
-        int templateIndentationLevel = getIndentationLevel(templateLine);
-        int pos = 0;
-        for (String settingsLine : userLines) {
-            if (settingsLine.trim().startsWith(key + ":") && position == pos) {
-                int settingsIndentationLevel = getIndentationLevel(settingsLine);
-                // Check if it is correct settingsLine and has the same parent as templateLine
-                if (settingsIndentationLevel == templateIndentationLevel) {
-                    resultLines.add(settingsLine);
-                    added = true;
-                    break;
-                }
-            }
-            pos++;
-        }
-        if (!added) {
-            resultLines.add(templateLine);
-        }
-    }
 
     private static int getIndentationLevel(String line) {
         int indentationLevel = 0;
