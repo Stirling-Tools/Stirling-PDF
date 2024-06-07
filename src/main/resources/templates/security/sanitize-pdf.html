@@ -20,23 +20,23 @@
                 <div class="mb-3">
                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 </div>
-                <div class="form-check">
+                <div class="form-check ms-3">
                   <input type="checkbox" id="removeJavaScript" name="removeJavaScript" checked>
                   <label for="removeJavaScript" th:text="#{sanitizePDF.selectText.1}"></label>
                 </div>
-                <div class="form-check">
+                <div class="form-check ms-3">
                   <input type="checkbox" id="removeEmbeddedFiles" name="removeEmbeddedFiles" checked>
                   <label for="removeEmbeddedFiles" th:text="#{sanitizePDF.selectText.2}"></label>
                 </div>
-                <div class="form-check">
+                <div class="form-check ms-3">
                   <input type="checkbox" id="removeMetadata" name="removeMetadata" checked>
                   <label for="removeMetadata" th:text="#{sanitizePDF.selectText.3}"></label>
                 </div>
-                <div class="form-check">
+                <div class="form-check ms-3">
                   <input type="checkbox" id="removeLinks" name="removeLinks">
                   <label for="removeLinks" th:text="#{sanitizePDF.selectText.4}"></label>
                 </div>
-                <div class="form-check">
+                <div class="form-check ms-3">
                   <input type="checkbox" id="removeFonts" name="removeFonts">
                   <label for="removeFonts" th:text="#{sanitizePDF.selectText.5}"></label>
                 </div>

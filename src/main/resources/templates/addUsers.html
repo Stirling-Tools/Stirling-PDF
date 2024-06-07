@@ -16,6 +16,16 @@
 
               <!-- User Settings Title -->
               <h2 class="text-center" th:text="#{adminUserSettings.header}">Admin User Control Settings</h2>
+              <div style="background: var(--md-sys-color-outline-variant);padding: .8rem; margin: 10px 0; border-radius: 2rem; text-align: center;">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#addUserModal" class="btn btn-outline-info" th:title="#{adminUserSettings.addUser}">
+                  <span class="material-symbols-rounded">person_add</span>
+                  <span th:text="#{adminUserSettings.addUser}">Add New User</span>
+                </a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#changeUserRoleModal" class="btn btn-outline-info" th:title="#{adminUserSettings.changeUserRole}">
+                  <span class="material-symbols-rounded">edit</span>
+                  <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
+                </a>
+              </div>
               <div th:if="${deleteMessage}" class="alert alert-danger">
                 <span th:text="#{${deleteMessage}}">Message</span>
               </div>
@@ -30,55 +40,47 @@
                 </thead>
                 <tbody>
                   <tr th:each="user : ${users}">
-                    <td th:text="${user.username}"></td>
-                    <td th:text="#{${user.roleName}}"></td>
-                    <td>
-                      <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post">
-                        <button class="btn btn-danger" type="submit" th:text="#{delete}">Delete</button>
+                    <td style="align-content: center;" th:text="${user.username}"></td>
+                    <td style="align-content: center;" th:text="#{${user.roleName}}"></td>
+                    <td style="align-content: center;">
+                      <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post" onsubmit="return confirmDelete()">
+                        <button type="submit" th:title="#{adminUserSettings.deleteUser}" class="btn btn-info"><span class="material-symbols-rounded">person_remove</span></button>
                       </form>
+                      <script th:inline="javascript">
+                        const confirm_text = /*[[#{adminUserSettings.confirmDeleteUser}]]*/ 'Should the user be deleted?';
+                        function confirmDelete() {
+                          return confirm(confirm_text);
+                        }
+                      </script>
+                      <a th:if="${user.username == currentUsername}" th:href="@{'/account'}" class="btn btn-outline-info"><span class="material-symbols-rounded">edit</span></a>
                     </td>
-                    <td th:text="${user.authenticationType}"></td>
+                    <td style="align-content: center;" th:text="${user.authenticationType}"></td>
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      </div>
 
-              <h2 th:text="#{adminUserSettings.addUser}">Add New User</h2>
-              <div th:if="${addMessage}" class="alert alert-danger">
-                <span th:text="#{${addMessage}}">Default message if not found</span>
-              </div>
-              <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{adminUserSettings.usernameInfo}" th:text="#{help}">Help</button>
-              <form id="formsaveuser" th:action="@{/api/v1/user/admin/saveUser}" method="post">
-                <div class="mb-3">
-                  <label for="username" th:text="#{username}">Username</label>
-                  <input type="text" class="form-control" name="username" id="username" th:title="#{adminUserSettings.usernameInfo}" required>
-                  <span id="usernameError" style="display: none;" th:text="#{invalidUsernameMessage}">Invalid username!</span>
-                </div>
-                <div class="mb-3">
-                  <label for="password" th:text="#{password}">Password</label>
-                  <input type="password" class="form-control" name="password" required>
-                </div>
-                <div class="mb-3">
-                  <label for="role" th:text="#{adminUserSettings.role}">Role</label>
-                  <select name="role" class="form-control" required>
-                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
-                    <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
-                  </select>
-                </div>
-                <div class="mb-3">
-                  <input type="checkbox" class="form-check-input" id="forceChange" name="forceChange">
-                  <label class="form-check-label" for="forceChange" th:text="#{adminUserSettings.forceChange}">Force user to change username/password on login</label>
-                </div>
-
-                <!-- Add other fields as required -->
-                <button type="submit" class="btn btn-primary" th:text="#{adminUserSettings.submit}">Save User</button>
-              </form>
-              <hr />
+      <!-- change User role Modal start -->
+      <div class="modal fade" id="changeUserRoleModal" tabindex="-1" aria-labelledby="changeUserRoleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
               <h2 th:text="#{adminUserSettings.changeUserRole}">Change User's Role</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <span class="material-symbols-rounded">
+                  close
+                </span>
+              </button>
+            </div>
+            <div class="modal-body">
               <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{downgradeCurrentUserLongMessage}" th:text="#{help}">Help</button>
               <div th:if="${changeMessage}" class="alert alert-danger">
                 <span th:text="#{${changeMessage}}">Default message if not found</span>
               </div>
-              <form th:action="@{/api/v1/user/admin/changeRole}" method="post">
+              <form th:action="@{'/api/v1/user/admin/changeRole'}" method="post">
                 <div class="mb-3">
                   <label for="username" th:text="#{username}">Username</label>
                   <select name="username" class="form-control" required>
@@ -98,9 +100,59 @@
                 <button type="submit" class="btn btn-primary" th:text="#{adminUserSettings.submit}">Save User</button>
               </form>
             </div>
+            <div class="modal-footer"></div>
           </div>
         </div>
       </div>
+      <!-- change User role Modal end -->
+
+      <!-- Add User Modal start -->
+      <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="addUserModalLabel" th:text="#{adminUserSettings.addUser}">Add New User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <span class="material-symbols-rounded">
+                  close
+                </span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div th:if="${addMessage}" class="alert alert-danger">
+                <span th:text="#{${addMessage}}">Default message if not found</span>
+              </div>
+              <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{adminUserSettings.usernameInfo}" th:text="#{help}">Help</button>
+              <form id="formsaveuser" th:action="@{'/api/v1/user/admin/saveUser'}" method="post">
+                <div class="mb-3">
+                  <label for="username" th:text="#{username}">Username</label>
+                  <input type="text" class="form-control" name="username" id="username" th:title="#{adminUserSettings.usernameInfo}" required>
+                  <span id="usernameError" style="display: none;" th:text="#{invalidUsernameMessage}">Invalid username!</span>
+                </div>
+                <div class="mb-3">
+                  <label for="password" th:text="#{password}">Password</label>
+                  <input type="password" class="form-control" name="password" required>
+                </div>
+                <div class="mb-3">
+                  <label for="role" th:text="#{adminUserSettings.role}">Role</label>
+                  <select name="role" class="form-control" required>
+                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
+                    <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
+                  </select>
+                </div>
+                <div class="form-check mb-3">
+                  <input type="checkbox" class="form-check-input" id="forceChange" name="forceChange">
+                  <label class="form-check-label" for="forceChange" th:text="#{adminUserSettings.forceChange}">Force user to change username/password on login</label>
+                </div>
+                <button type="submit" class="btn btn-primary" th:text="#{adminUserSettings.submit}">Save User</button>
+              </form>
+            </div>
+            <div class="modal-footer"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Add User Modal end -->
+
       <script th:inline="javascript">
         jQuery.validator.addMethod("usernamePattern", function(value, element) {
             return this.optional(element) || /^[a-zA-Z0-9][a-zA-Z0-9@._+-]*[a-zA-Z0-9]$|^(?=.{1,64}@)[A-Za-z0-9]+(\.[A-Za-z0-9_+.-]+)*@[^-][A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(\.[A-Za-z]{2,})$/.test(value);
@@ -153,6 +205,28 @@
         });
       </script>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+    <div th:if="${oAuth2Enabled}" class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editUserModalLabel" th:text="#{login.ssoSignIn}"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+              <span class="material-symbols-rounded">
+                close
+              </span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3" th:each="provider : ${providerlist}">
+              <a th:href="@{|/oauth2/authorization/${provider.key}|}" th:text="${provider.value}" class="w-100 btn btn-lg btn-primary">OpenID Connect</a>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>
