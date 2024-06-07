@@ -148,7 +148,7 @@ public class CertSignController {
             doc.addSignature(signature, instance);
             doc.saveIncremental(output);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
     }
 

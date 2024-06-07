@@ -12,7 +12,7 @@ plugins {
 import com.github.jk1.license.render.*
 
 group = 'stirling.software'
-version = '0.24.6'
+version = '0.25.2'
 
 //17 is lowest but we support and recommend 21
 sourceCompatibility = '17'
@@ -20,7 +20,6 @@ sourceCompatibility = '17'
 repositories {
     mavenCentral()
 }
-
 
 licenseReport {
     renderers = [new JsonReportRenderer()]
@@ -172,14 +171,14 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     dependsOn 'spotlessApply'
 }
 compileJava {
     options.compilerArgs << '-parameters'
 }
 
-task writeVersion {
+task writeVersion  {
     def propsFile = file('src/main/resources/version.properties')
     def props = new Properties()
     props.setProperty('version', version)
@@ -196,8 +195,6 @@ swaggerhubUpload {
     oas '3.0.0'  // The version of the OpenAPI Specification you're using
 }
 
-
-
 jar {
     enabled = false
     manifest {
@@ -211,6 +208,6 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-task printVersion {
-  println project.version
+task printVersion  {
+    println project.version
 }
