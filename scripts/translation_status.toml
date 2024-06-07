@@ -61,7 +61,6 @@ ignore = [
 [fr_FR]
 ignore = [
     'language.direction',
-    'pipelineOptions.pipelineHeader',
     'sponsor',
 ]
 
