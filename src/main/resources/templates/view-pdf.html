@@ -30,7 +30,6 @@ See https://github.com/adobe-type-tools/cmap-resources
     <!-- Bootstrap -->
     <script src="js/thirdParty/popper.min.js"></script>
     <script src="js/thirdParty/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
 
     <link rel="stylesheet" href="css/theme/componentes.css">
     <link rel="stylesheet" href="css/navbar.css">
@@ -299,7 +298,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                   <input type="number" id="pageNumber" class="toolbarField" title="Page" value="1" min="1" tabindex="15" data-l10n-id="pdfjs-page-input" autocomplete="off">
                 </span>
                 <span id="numPages" class="toolbarLabel"></span>
-                <a class="navbar-brand hiddenMediumView" href="/" tabindex="16" >
+                <a class="navbar-brand hiddenMediumView" th:href="@{/}" tabindex="16" >
                   <img class="main-icon" src="favicon.svg" alt="icon" style="max-height: 1.6rem; width: auto;">
                   <span class="icon-text" style="color: #ffffff;" th:text="${@appName}">Stirling PDF</span>
                 </a>
@@ -309,7 +308,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                   <button id="editorHighlight" class="toolbarButton" hidden="true" disabled="disabled" title="Highlight" role="radio" aria-checked="false" aria-controls="editorHighlightParamsToolbar" tabindex="31" data-l10n-id="pdfjs-editor-highlight-button">
                     <span data-l10n-id="pdfjs-editor-highlight-button-label">Highlight</span>
                   </button>
-                  <a id="backToHome" class="toolbarButton hiddenMediumView" title="Back to Main Page" role="radio" aria-checked="false" tabindex="32" href="/">
+                  <a id="backToHome" class="toolbarButton hiddenMediumView" title="Back to Main Page" role="radio" aria-checked="false" tabindex="32" th:href="@{/}">
                     <span data-l10n-id="pdfjs-open-file-button-label">Back to Main Page</span>
                   </a>
                   <button id="openFile" class="toolbarButton hiddenMediumView" title="Open File" role="radio" aria-checked="false" tabindex="33" data-l10n-id="pdfjs-open-file-button">
@@ -321,10 +320,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                   <button id="download" class="toolbarButton hiddenMediumView" title="Save" role="radio" aria-checked="false" tabindex="35" data-l10n-id="pdfjs-save-button">
                     <span data-l10n-id="pdfjs-save-button-label">Save</span>
                   </button>
-                  <button id="editorInk" class="toolbarButton" hidden="true" disabled="disabled" title="Draw" role="radio" aria-checked="false" aria-controls="editorInkParamsToolbar" tabindex="36" data-l10n-id="pdfjs-editor-ink-button">
-                    <span data-l10n-id="pdfjs-editor-ink-button-label">Draw</span>
-                  </button>
-                  <button id="editorStamp" class="toolbarButton hidden" hidden="true" disabled="disabled" title="Add or edit images" role="radio" aria-checked="false" aria-controls="editorStampParamsToolbar" tabindex="37" data-l10n-id="pdfjs-editor-stamp-button">
+                  <button id="editorStamp" class="toolbarButton hiddenMediumView" title="Add or edit images" role="radio" aria-checked="false" aria-controls="editorStampParamsToolbar" tabindex="36" data-l10n-id="pdfjs-editor-stamp-button">
                     <span data-l10n-id="pdfjs-editor-stamp-button-label">Add or edit images</span>
                   </button>
                 </div>
@@ -334,21 +330,14 @@ See https://github.com/adobe-type-tools/cmap-resources
                 <button id="editorFreeText" class="toolbarButton hiddenMediumView" title="Text" tabindex="41" data-l10n-id="pdfjs-editor-free-text-button">
                   <span data-l10n-id="pdfjs-editor-free-text-button-label">Text</span>
                 </button>
-                <button id="print" class="toolbarButton hiddenMediumView" hidden="true" title="Print" tabindex="42" data-l10n-id="pdfjs-print-button">
-                  <span data-l10n-id="pdfjs-print-button-label">Print</span>
-                </button>
 
-                <button id="download" class="toolbarButton hiddenMediumView" hidden="true" title="Save" tabindex="43" data-l10n-id="pdfjs-save-button">
-                  <span data-l10n-id="pdfjs-save-button-label">Save</span>
-                </button>
-
-                <button id="editorInk" class="toolbarButton hiddenMediumView" title="Draw" tabindex="44" data-l10n-id="pdfjs-editor-ink-button">
+                <button id="editorInk" class="toolbarButton hiddenMediumView" title="Draw" tabindex="42" data-l10n-id="pdfjs-editor-ink-button">
                   <span data-l10n-id="pdfjs-editor-ink-button-label">Draw</span>
                 </button>
 
                 <div class="verticalToolbarSeparator hiddenMediumView"></div>
 
-                <button id="secondaryToolbarToggle" class="toolbarButton" title="Tools" tabindex="45" data-l10n-id="pdfjs-tools-button">
+                <button id="secondaryToolbarToggle" class="toolbarButton" title="Tools" tabindex="43" data-l10n-id="pdfjs-tools-button">
                   <span data-l10n-id="pdfjs-tools-button-label">Tools</span>
                 </button>
               </div>

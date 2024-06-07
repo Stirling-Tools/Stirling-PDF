@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
-  <th:block th:insert="~{fragments/common :: head(title=#{crop.title}, header=#{crop.header})}"></th:block>
+    <th:block th:insert="~{fragments/common :: head(title=#{crop.title}, header=#{crop.header})}"></th:block>
   </head>
 
   <body>
@@ -16,7 +16,7 @@
                 <span class="material-symbols-rounded tool-header-icon organize">crop</span>
                 <span class="tool-header-text" th:text="#{crop.header}"></span>
               </div>
-              <form id="cropForm" action="/api/v1/general/crop" method="post" enctype="multipart/form-data">
+              <form id="cropForm" th:action="@{/api/v1/general/crop}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <input id="x" type="hidden" name="x">
                 <input id="y" type="hidden" name="y">
@@ -72,6 +72,16 @@
                   });
                 };
                 reader.readAsArrayBuffer(file);
+              }
+            });
+
+            cropForm.addEventListener('submit', function(e) {
+              if (xInput.value == "" && yInput.value == "" && widthInput.value == "" && heightInput.value == "") {
+                // Ορίστε συντεταγμένες για ολόκληρη την επιφάνεια του PDF
+                xInput.value = 0;
+                yInput.value = 0;
+                widthInput.value = pdfCanvas.width;
+                heightInput.value = pdfCanvas.height;
               }
             });
 
