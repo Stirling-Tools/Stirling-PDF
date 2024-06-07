@@ -559,6 +559,7 @@ public class ApplicationProperties {
             this.clientSecret = clientSecret;
         }
 
+        @Override
         public Collection<String> getScopes() {
             if (scopes == null || scopes.isEmpty()) {
                 scopes = new ArrayList<>();
@@ -661,6 +662,7 @@ public class ApplicationProperties {
             return scopes;
         }
 
+        @Override
         public void setScopes(String scopes) {
             this.scopes =
                     Arrays.stream(scopes.split(",")).map(String::trim).collect(Collectors.toList());
