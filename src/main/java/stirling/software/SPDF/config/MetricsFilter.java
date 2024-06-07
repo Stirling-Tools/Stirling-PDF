@@ -36,7 +36,6 @@ public class MetricsFilter extends OncePerRequestFilter {
                 || uri.startsWith("/v1/api-docs")
                 || uri.endsWith("robots.txt")
                 || uri.startsWith("/images")
-                || uri.startsWith("/images")
                 || uri.endsWith(".png")
                 || uri.endsWith(".ico")
                 || uri.endsWith(".css")

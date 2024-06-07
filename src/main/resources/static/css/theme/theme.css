@@ -30,5 +30,5 @@
 }
 
 .no-fill {
-  font-variation-settings: var(--md-sys-icon-fill-0);
+  /* font-variation-settings: var(--md-sys-icon-fill-0); */
 }

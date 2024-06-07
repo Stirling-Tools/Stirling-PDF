@@ -8,7 +8,7 @@
   <script src="js/githubVersion.js"></script>
   <nav class="navbar navbar-expand-lg">
     <div class="container ">
-      <a class="navbar-brand" href="/" style="display: flex;">
+      <a class="navbar-brand" th:href="@{/}" style="display: flex;">
         <img class="main-icon" src="favicon.svg" alt="icon">
         <span class="icon-text" th:text="${@navBarText}"></span>
       </a>
@@ -22,8 +22,7 @@
         <ul class="navbar-nav me-auto flex-nowrap">
 
           <!-- All Tools -->
-          <li class="nav-item dropdown dropdown-mega position-static"
-            th:classappend="${currentPage}=='remove-pages' OR ${currentPage}=='merge-pdfs' OR ${currentPage}=='split-pdfs' OR ${currentPage}=='crop' OR ${currentPage}=='adjust-contrast' OR ${currentPage}=='pdf-organizer' OR ${currentPage}=='rotate-pdf' OR ${currentPage}=='multi-page-layout' OR ${currentPage}=='scale-pages' OR ${currentPage}=='auto-split-pdf' OR ${currentPage}=='extract-page' OR ${currentPage}=='pdf-to-single-page' OR ${currentPage}=='add-password' OR ${currentPage}=='remove-password' OR ${currentPage}=='add-watermark' OR ${currentPage}=='cert-sign' OR ${currentPage}=='sanitize-pdf' OR ${currentPage}=='img-to-pdf' OR ${currentPage}=='file-to-pdf' OR ${currentPage}=='html-to-pdf' OR ${currentPage}=='url-to-pdf' OR ${currentPage}=='pdf-to-img' OR ${currentPage}=='pdf-to-word' OR ${currentPage}=='pdf-to-presentation' OR ${currentPage}=='pdf-to-text' OR ${currentPage}=='pdf-to-html' OR ${currentPage}=='pdf-to-xml' OR ${currentPage}=='pdf-to-pdfa' OR ${currentPage}=='sign' OR ${currentPage}=='repair' OR ${currentPage}=='compare' OR ${currentPage}=='show-javascript' OR ${currentPage}=='flatten' OR ${currentPage}=='remove-blanks' OR ${currentPage}=='remove-annotations' OR ${currentPage}=='extract-image-scans' OR ${currentPage}=='change-metadata' OR ${currentPage}=='add-image' OR ${currentPage}=='ocr-pdf' OR ${currentPage}=='change-permissions' OR ${currentPage}=='extract-images' OR ${currentPage}=='compress-pdf' OR ${currentPage}=='add-page-numbers' OR ${currentPage}=='auto-rename' OR ${currentPage}=='get-info-on-pdf' ? 'active' : ''">
+          <li class="nav-item dropdown dropdown-mega position-static">
             <a class="nav-link" id="navbarDropdown-1" href="#" role="button" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               <span class="material-symbols-rounded">
@@ -91,6 +90,9 @@
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('markdown-to-pdf', 'markdown', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags', 'convert')}">
                         </div>
+                         <div
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('book-to-pdf', 'book', 'home.BookToPDF.title', 'home.BookToPDF.desc', 'BookToPDF.tags', 'convert')}">
+                        </div>
                       </div>
                       <!-- Convert from PDF menu items -->
                       <div class="col-lg-2 col-sm-6 py px-xl-1 px-2">
@@ -119,6 +121,9 @@
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-csv', 'csv', 'home.tableExtraxt.title', 'home.tableExtraxt.desc', 'pdfToPDFA.tags', 'convert')}">
                         </div>
+                        <div
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-book', 'book', 'home.PDFToBook.title', 'home.PDFToBook.desc', 'PDFToBook.tags', 'convert')}">
+                        </div>
                       </div>
                       <!-- Security menu items -->
                       <div class="col-lg-2 col-sm-6 py px-xl-1 px-2">
@@ -140,6 +145,9 @@
                         </div>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('cert-sign', 'workspace_premium', 'home.certSign.title', 'home.certSign.desc', 'certSign.tags', 'security')}">
+                        </div>
+                        <div
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-cert-sign', 'remove_moderator', 'home.removeCertSign.title', 'home.removeCertSign.desc', 'removeCertSign.tags', 'security')}">
                         </div>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('sanitize-pdf', 'sanitizer', 'home.sanitizePdf.title', 'home.sanitizePdf.desc', 'sanitizePdf.tags', 'security')}">
@@ -233,7 +241,7 @@
 
           </li>
 
-          <li class="nav-item">
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('multi-tool')}">
             <a class="nav-link" href="#" th:href="@{multi-tool}"
               th:classappend="${currentPage}=='multi-tool' ? 'active' : ''" th:title="#{home.multiTool.desc}">
               <span class="material-symbols-rounded">
@@ -243,7 +251,7 @@
             </a>
           </li>
 
-          <li class="nav-item">
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('pipeline')}" >
             <a class="nav-link" href="#" th:href="@{pipeline}"
               th:classappend="${currentPage}=='pipeline' ? 'active' : ''" th:title="#{home.pipeline.desc}">
               <span class="material-symbols-rounded">
@@ -253,7 +261,7 @@
             </a>
           </li>
 
-          <li class="nav-item">
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('compress-pdf')}" >
             <a class="nav-link" href="#" title="#{home.compressPdfs.title}" th:href="@{compress-pdf}"
               th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''" th:title="#{home.compressPdfs.desc}">
               <span class="material-symbols-rounded">

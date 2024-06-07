@@ -18,6 +18,7 @@ class AppUpdateAuthService implements ShowAdminInterface {
     @Autowired private UserRepository userRepository;
     @Autowired private ApplicationProperties applicationProperties;
 
+    @Override
     public boolean getShowUpdateOnlyAdmins() {
         boolean showUpdate = applicationProperties.getSystem().getShowUpdate();
         if (!showUpdate) {

@@ -117,7 +117,6 @@ public class PDFTableStripper extends PDFTextStripper {
     /**
      * Instantiate a new PDFTableStripper object.
      *
-     * @param document
      * @throws IOException If there is an error loading the properties.
      */
     public PDFTableStripper() throws IOException {

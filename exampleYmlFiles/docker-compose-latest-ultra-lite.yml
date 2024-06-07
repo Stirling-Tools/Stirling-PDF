@@ -13,7 +13,7 @@ services:
       timeout: 10s
       retries: 16
     ports:
-      - 8080:8080
+      - "8080:8080"
     volumes:
       - /stirling/latest/config:/configs:rw
       - /stirling/latest/logs:/logs:rw
