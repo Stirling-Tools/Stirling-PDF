@@ -45,7 +45,11 @@ public class ProcessExecutorTest {
             processExecutor.runCommandWithOutputHandling(command);
         });
 
-        // Check the exception message to ensure it is about the nonexistent command
-        assertTrue(thrown.getMessage().contains("CreateProcess error=2, The system cannot find the file specified"));
+        // Log the actual error message
+        System.out.println("Caught IOException: " + thrown.getMessage());
+
+        // Check the exception message to ensure it indicates the command was not found
+        String errorMessage = thrown.getMessage();
+        assertTrue(errorMessage.contains("error=2") || errorMessage.contains("No such file or directory"), "Unexpected error message: " + errorMessage);
     }
 }
