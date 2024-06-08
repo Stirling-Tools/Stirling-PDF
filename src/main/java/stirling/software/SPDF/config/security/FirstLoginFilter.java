@@ -44,7 +44,7 @@ public class FirstLoginFilter extends OncePerRequestFilter {
                     && user.isPresent()
                     && user.get().isFirstLogin()
                     && !"/change-creds".equals(requestURI)) {
-                response.sendRedirect("/change-creds");
+                response.sendRedirect(request.getContextPath() + "/change-creds");
                 return;
             }
         }
