@@ -642,7 +642,7 @@ async function processPipelineConfig(configString) {
           case "text":
           case "textarea":
           default:
-            input.value = JSON.stringify(operationConfig.parameters[parameterName]);
+            input.value = operationConfig.parameters[parameterName];
         }
       }
     });

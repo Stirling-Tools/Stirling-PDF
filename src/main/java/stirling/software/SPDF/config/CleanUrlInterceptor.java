@@ -58,7 +58,7 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
 
                 // Redirect to the URL with only allowed query parameters
                 String redirectUrl = requestURI + "?" + newQueryString;
-                
+
                 response.sendRedirect(request.getContextPath() + redirectUrl);
                 return false;
             }

@@ -43,7 +43,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         logger.error("Failed login attempt from IP: {}", ip);
 
         String contextPath = request.getContextPath();
-        
+
         if (exception.getClass().isAssignableFrom(InternalAuthenticationServiceException.class)
                 || "Password must not be null".equalsIgnoreCase(exception.getMessage())) {
             response.sendRedirect(contextPath + "/login?error=oauth2AuthenticationError");
