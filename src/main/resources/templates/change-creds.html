@@ -27,7 +27,7 @@
 
               <!-- Change Username Form -->
               <h4 th:text="#{changeCreds.changePassword}">Change password</h4>
-              <form action="api/v1/user/change-password-on-login" method="post">
+              <form action="api/v1/user/change-password-on-login" method="post" id="formsavechangecreds">
                 <div class="mb-3">
                   <label for="currentPassword" th:text="#{changeCreds.oldPassword}">Old Password</label>
                   <input type="password" class="form-control" name="currentPassword" id="currentPassword" th:placeholder="#{changeCreds.oldPassword}">
@@ -41,20 +41,39 @@
                   <input type="password" class="form-control" name="confirmNewPassword" id="confirmNewPassword" th:placeholder="#{account.confirmNewPassword}">
                 </div>
                 <div class="mb-3">
+                  <span id="confirmPasswordError" style="display: none;" th:text="#{confirmPasswordErrorMessage}">New Password and Confirm New Password must match.</span>
                   <button type="submit" class="btn btn-primary" th:text="#{changeCreds.submit}">Change credentials!</button>
                 </div>
               </form>
-              <script>
-                document.addEventListener("DOMContentLoaded", function() {
-                  const form = document.querySelector('form[action="api/v1/user/change-password-on-login"]');
-
-                  form.addEventListener('submit', function(event) {
-                    const newPassword = document.getElementById('newPassword').value;
-                    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-
-                    if (newPassword !== confirmNewPassword) {
-                      alert('New Password and Confirm New Password must match.');
-                      event.preventDefault(); // Prevent form submission
+              <script th:inline="javascript">
+                $(document).ready(function() {
+                  $.validator.addMethod("passwordMatch", function(value, element) {
+                    return $('#newPassword').val() === $('#confirmNewPassword').val();
+                  }, /*[[#{confirmPasswordErrorMessage}]]*/ "New Password and Confirm New Password must match.");
+                  $('#formsavechangecreds').validate({
+                    rules: {
+                      currentPassword: {
+                        required: true
+                      },
+                      newPassword: {
+                        required: true
+                      },
+                      confirmNewPassword: {
+                        required: true,
+                        passwordMatch: true
+                      },
+                      errorPlacement: function(error, element) {
+                          if ($(element).attr("name") === "newPassword" || $(element).attr("name") === "confirmNewPassword") {
+                            $("#confirmPasswordError").text(error.text()).show();
+                          } else {
+                              error.insertAfter(element);
+                          }
+                      },
+                      success: function(label, element) {
+                          if ($(element).attr("name") === "newPassword" || $(element).attr("name") === "confirmNewPassword") {
+                            $("#confirmPasswordError").hide();
+                          }
+                      }
                     }
                   });
                 });
