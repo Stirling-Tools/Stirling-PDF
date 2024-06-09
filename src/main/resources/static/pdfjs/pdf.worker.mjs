@@ -8930,11 +8930,10 @@ class Parser {
     if (this.tryShift() && isCmd(this.buf2, "endstream")) {
       this.shift();
     } else {
-      const actualLength = this.#findStreamLength(startPos);
-      if (actualLength < 0) {
+      length = this.#findStreamLength(startPos);
+      if (length < 0) {
         throw new FormatError("Missing endstream command.");
       }
-      length = actualLength;
       lexer.nextChar();
       this.shift();
       this.shift();
@@ -29696,7 +29695,7 @@ class PartialEvaluator {
     this.globalImageCache = globalImageCache;
     this.systemFontCache = systemFontCache;
     this.options = options || DefaultPartialEvaluatorOptions;
-    this.parsingType3Font = false;
+    this.type3FontRefs = null;
     this._regionalImageCache = new RegionalImageCache();
     this._fetchBuiltInCMapBound = this.fetchBuiltInCMap.bind(this);
     ImageResizer.setMaxArea(this.options.canvasMaxAreaInBytes);
@@ -29707,6 +29706,9 @@ class PartialEvaluator {
       isEvalSupported: this.options.isEvalSupported
     });
     return shadow(this, "_pdfFunctionFactory", pdfFunctionFactory);
+  }
+  get parsingType3Font() {
+    return !!this.type3FontRefs;
   }
   clone(newOptions = null) {
     const newEvaluator = Object.create(this);
@@ -30396,7 +30398,7 @@ class PartialEvaluator {
       }
     }
     if (fontRef) {
-      if (this.parsingType3Font && this.type3FontRefs.has(fontRef)) {
+      if (this.type3FontRefs?.has(fontRef)) {
         return errorFont();
       }
       if (this.fontCache.has(fontRef)) {
@@ -32831,7 +32833,6 @@ class TranslatedFont {
     const type3Evaluator = evaluator.clone({
       ignoreErrors: false
     });
-    type3Evaluator.parsingType3Font = true;
     const type3FontRefs = new RefSet(evaluator.type3FontRefs);
     if (this.dict.objId && !type3FontRefs.has(this.dict.objId)) {
       type3FontRefs.put(this.dict.objId);
@@ -53722,52 +53723,49 @@ class Page {
       systemFontCache: this.systemFontCache,
       options: this.evaluatorOptions
     });
-    const newAnnotationsByPage = !this.xfaFactory ? getNewAnnotationsMap(annotationStorage) : null;
-    let deletedAnnotations = null;
+    const newAnnotsByPage = !this.xfaFactory ? getNewAnnotationsMap(annotationStorage) : null;
+    const newAnnots = newAnnotsByPage?.get(this.pageIndex);
     let newAnnotationsPromise = Promise.resolve(null);
-    if (newAnnotationsByPage) {
-      const newAnnotations = newAnnotationsByPage.get(this.pageIndex);
-      if (newAnnotations) {
-        const annotationGlobalsPromise = this.pdfManager.ensureDoc("annotationGlobals");
-        let imagePromises;
-        const missingBitmaps = new Set();
-        for (const {
-          bitmapId,
-          bitmap
-        } of newAnnotations) {
-          if (bitmapId && !bitmap && !missingBitmaps.has(bitmapId)) {
-            missingBitmaps.add(bitmapId);
-          }
+    let deletedAnnotations = null;
+    if (newAnnots) {
+      const annotationGlobalsPromise = this.pdfManager.ensureDoc("annotationGlobals");
+      let imagePromises;
+      const missingBitmaps = new Set();
+      for (const {
+        bitmapId,
+        bitmap
+      } of newAnnots) {
+        if (bitmapId && !bitmap && !missingBitmaps.has(bitmapId)) {
+          missingBitmaps.add(bitmapId);
         }
-        const {
-          isOffscreenCanvasSupported
-        } = this.evaluatorOptions;
-        if (missingBitmaps.size > 0) {
-          const annotationWithBitmaps = newAnnotations.slice();
-          for (const [key, annotation] of annotationStorage) {
-            if (!key.startsWith(AnnotationEditorPrefix)) {
-              continue;
-            }
-            if (annotation.bitmap && missingBitmaps.has(annotation.bitmapId)) {
-              annotationWithBitmaps.push(annotation);
-            }
-          }
-          imagePromises = AnnotationFactory.generateImages(annotationWithBitmaps, this.xref, isOffscreenCanvasSupported);
-        } else {
-          imagePromises = AnnotationFactory.generateImages(newAnnotations, this.xref, isOffscreenCanvasSupported);
-        }
-        deletedAnnotations = new RefSet();
-        this.#replaceIdByRef(newAnnotations, deletedAnnotations, null);
-        newAnnotationsPromise = annotationGlobalsPromise.then(annotationGlobals => {
-          if (!annotationGlobals) {
-            return null;
-          }
-          return AnnotationFactory.printNewAnnotations(annotationGlobals, partialEvaluator, task, newAnnotations, imagePromises);
-        });
       }
+      const {
+        isOffscreenCanvasSupported
+      } = this.evaluatorOptions;
+      if (missingBitmaps.size > 0) {
+        const annotationWithBitmaps = newAnnots.slice();
+        for (const [key, annotation] of annotationStorage) {
+          if (!key.startsWith(AnnotationEditorPrefix)) {
+            continue;
+          }
+          if (annotation.bitmap && missingBitmaps.has(annotation.bitmapId)) {
+            annotationWithBitmaps.push(annotation);
+          }
+        }
+        imagePromises = AnnotationFactory.generateImages(annotationWithBitmaps, this.xref, isOffscreenCanvasSupported);
+      } else {
+        imagePromises = AnnotationFactory.generateImages(newAnnots, this.xref, isOffscreenCanvasSupported);
+      }
+      deletedAnnotations = new RefSet();
+      this.#replaceIdByRef(newAnnots, deletedAnnotations, null);
+      newAnnotationsPromise = annotationGlobalsPromise.then(annotationGlobals => {
+        if (!annotationGlobals) {
+          return null;
+        }
+        return AnnotationFactory.printNewAnnotations(annotationGlobals, partialEvaluator, task, newAnnots, imagePromises);
+      });
     }
-    const dataPromises = Promise.all([contentStreamPromise, resourcesPromise]);
-    const pageListPromise = dataPromises.then(([contentStream]) => {
+    const pageListPromise = Promise.all([contentStreamPromise, resourcesPromise]).then(([contentStream]) => {
       const opList = new OperatorList(intent, sink);
       handler.send("StartRenderPage", {
         transparency: partialEvaluator.hasBlendModes(this.resources, this.nonBlendModesSet),
@@ -55532,7 +55530,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "4.3.118";
+    const workerVersion = "4.3.136";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -56102,8 +56100,8 @@ if (typeof window === "undefined" && !isNodeJS && typeof self !== "undefined" &&
 
 ;// CONCATENATED MODULE: ./src/pdf.worker.js
 
-const pdfjsVersion = "4.3.118";
-const pdfjsBuild = "17e09e547";
+const pdfjsVersion = "4.3.136";
+const pdfjsBuild = "0cec64437";
 
 var __webpack_exports__WorkerMessageHandler = __webpack_exports__.WorkerMessageHandler;
 export { __webpack_exports__WorkerMessageHandler as WorkerMessageHandler };
