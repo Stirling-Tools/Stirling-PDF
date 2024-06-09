@@ -103,6 +103,7 @@ body:
         - Chrome
         - Safari
         - Microsoft Edge
+        - Other
 
   - type: checkboxes
     id: terms
@@ -111,5 +112,5 @@ body:
       description: |
         Please confirm that you have searched for similar issues and none of them match your problem.
       options:
-        - label: I have verified that there are no issues related to my problem.
+        - label: I have verified that there are no existing issues raised related to my problem.
           required: true
