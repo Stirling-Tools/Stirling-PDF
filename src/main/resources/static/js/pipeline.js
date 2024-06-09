@@ -216,6 +216,41 @@ fetch("v1/api-docs")
     });
   });
 
+document.getElementById('deletePipelineBtn').addEventListener('click', function(event) {
+    event.preventDefault();
+    let pipelineName = document.getElementById('pipelineName').value; 
+	if (confirm(deletePipelineText + pipelineName)) {
+		removePipelineFromUI(pipelineName);
+	    let key = "#Pipeline-" + pipelineName;
+	    if (localStorage.getItem(key)) {
+	            localStorage.removeItem(key);
+	    } 
+	    let pipelineSelect = document.getElementById("pipelineSelect");
+	    let modal = document.getElementById('pipelineSettingsModal');
+	    if (modal.style.display !== 'none') {
+	        $('#pipelineSettingsModal').modal('hide');
+	    }
+
+	    if (pipelineSelect.options.length > 0) {
+	        pipelineSelect.selectedIndex = 0;
+	        pipelineSelect.dispatchEvent(new Event('change'));
+	    }
+    }
+});
+
+function removePipelineFromUI(pipelineName) {
+    let pipelineSelect = document.getElementById("pipelineSelect");
+    for (let i = 0; i < pipelineSelect.options.length; i++) {
+		console.log(pipelineSelect.options[i])
+		console.log("list " + pipelineSelect.options[i].innerText + " vs " + pipelineName)
+        if (pipelineSelect.options[i].innerText === pipelineName) {
+            pipelineSelect.remove(i);
+            break;
+        }
+    }
+}
+
+
 document.getElementById("addOperationBtn").addEventListener("click", function () {
   let selectedOperation = document.getElementById("operationsDropdown").value;
   let pipelineList = document.getElementById("pipelineList");
