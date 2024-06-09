@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{login.title}, header=#{login.header})}"></th:block>
-    <link rel="stylesheet" href="css/login.css?v=2">
+    <link rel="stylesheet" href="css/login.css">
   </head>
 
   <body>
@@ -13,8 +13,6 @@
           document.addEventListener('modeChanged', function(e) {
             var mode = e.detail;
 
-            setInputMode("username", mode);
-            setInputMode("password", mode);
             document.body.classList.remove("light-mode", "dark-mode", "rainbow-mode"); // remove all mode classes first
 
             switch (mode) {
@@ -113,11 +111,11 @@
           }
         </script>
         <div class="text-center">
-          <img class="mb-4" src="favicon.svg?v=2" alt="favicon" width="144" height="144">
+          <img class="mb-4" src="favicon.svg" alt="favicon" width="144" height="144">
 
           <h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
           <div th:if="${oAuth2Enabled}">
-            <a href="oauth2/authorization/oidc" class="w-100 btn btn-lg btn-primary" th:text="#{login.ssoSignIn}">Login Via SSO</a>
+            <a href="#" class="w-100 btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#loginsModal" th:text="#{login.ssoSignIn}">Login Via SSO</a>
             <br>
             <br>
             <div th:if="${erroroauth}" class="alert alert-danger text-center">
@@ -126,7 +124,7 @@
             <hr />
           </div>
 
-          <div th:if="${error}" class="alert alert-danger text-danger text-center">
+          <div th:if="${error}" class="alert alert-danger text-center">
             <div th:if="${error}" th:text="#{${error}}">OAuth2: Error Message</div>
           </div>
           <div class="text-danger text-center">
@@ -169,6 +167,28 @@
         </div>
       </main>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+    <div th:if="${oAuth2Enabled}" class="modal fade" id="loginsModal" tabindex="-1" role="dialog" aria-labelledby="loginsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="loginsModalLabel" th:text="#{login.ssoSignIn}"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+              <span class="material-symbols-rounded">
+                close
+              </span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3" th:each="provider : ${providerlist}">
+              <a th:href="@{|/oauth2/authorization/${provider.key}|}" th:text="${provider.value}" class="w-100 btn btn-lg btn-primary">OpenID Connect</a>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>

@@ -10,12 +10,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=2">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=2">
-    <link rel="manifest" href="site.webmanifest?v=2">
-    <link rel="mask-icon" href="safari-pinned-tab.svg?v=2" color="#ca2b2a">
-    <link rel="shortcut icon" href="favicon.ico?v=2">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="mask-icon" href="safari-pinned-tab.svg" color="#ca2b2a">
+    <link rel="shortcut icon" href="favicon.ico">
     <meta name="apple-mobile-web-app-title" content="Stirling PDF">
     <meta name="application-name" content="Stirling PDF">
     <meta name="msapplication-TileColor" content="#00aba9">
@@ -35,42 +35,42 @@
     <link rel="stylesheet" href="css/bootstrap-icons.min.css">
 
     <!-- PDF.js -->
-    <script th:src="@{pdfjs/pdf.js}"></script>
+    <script type="module" src="./pdfjs/pdf.mjs"></script>
 
     <!-- PDF-Lib -->
     <script src="js/thirdParty/pdf-lib.min.js"></script>
 
     <!-- Custom -->
-    <link rel="stylesheet" href="css/general.css?v=2">
-    <link rel="stylesheet" th:href="@{css/theme/theme.css?v=2}">
-    <link rel="stylesheet" th:href="@{css/theme/componentes.css?v=2}">
-    <link rel="stylesheet" th:href="@{css/theme/theme.light.css?v=2}" id="light-mode-styles">
-    <link rel="stylesheet" th:href="@{css/theme/theme.dark.css?v=2}" id="dark-mode-styles">
-    <link rel="stylesheet" th:href="@{css/rainbow-mode.css?v=2}" id="rainbow-mode-styles" disabled>
-    <link rel="stylesheet" href="css/tab-container.css?v=2">
-    <link rel="stylesheet" href="css/navbar.css?v=2">
+    <link rel="stylesheet" href="css/general.css">
+    <link rel="stylesheet" href="css/theme/theme.css">
+    <link rel="stylesheet" href="css/theme/componentes.css">
+    <link rel="stylesheet" href="css/theme/theme.light.css" id="light-mode-styles">
+    <link rel="stylesheet" href="css/theme/theme.dark.css" id="dark-mode-styles">
+    <link rel="stylesheet" href="css/rainbow-mode.css" id="rainbow-mode-styles" disabled>
+    <link rel="stylesheet" href="css/tab-container.css">
+    <link rel="stylesheet" href="css/navbar.css">
 
-    <link rel="stylesheet" th:href="@{/css/error.css?v=2}" th:if="${error}">
+    <link rel="stylesheet" href="css/error.css" th:if="${error}">
 
-    <link rel="stylesheet" href="css/home.css?v=2" th:if="${currentPage == 'home'}">
-    <link rel="stylesheet" href="css/account.css?v=2" th:if="${currentPage == 'account'}">
-    <link rel="stylesheet" href="css/licenses.css?v=2" th:if="${currentPage == 'licenses'}">
-    <link rel="stylesheet" href="css/multi-tool.css?v=2" th:if="${currentPage == 'multi-tool'}">
-    <link rel="stylesheet" href="css/rotate-pdf.css?v=2" th:if="${currentPage == 'rotate-pdf'}">
-    <link rel="stylesheet" href="css/stamp.css?v=2" th:if="${currentPage == 'stamp'}">
-    <link rel="stylesheet" href="css/fileSelect.css?v=2">
-    <link rel="stylesheet" href="css/footer.css?v=2">
+    <link rel="stylesheet" href="css/home.css" th:if="${currentPage == 'home'}">
+    <link rel="stylesheet" href="css/account.css" th:if="${currentPage == 'account'}">
+    <link rel="stylesheet" href="css/licenses.css" th:if="${currentPage == 'licenses'}">
+    <link rel="stylesheet" href="css/multi-tool.css" th:if="${currentPage == 'multi-tool'}">
+    <link rel="stylesheet" href="css/rotate-pdf.css" th:if="${currentPage == 'rotate-pdf'}">
+    <link rel="stylesheet" href="css/stamp.css" th:if="${currentPage == 'stamp'}">
+    <link rel="stylesheet" href="css/fileSelect.css">
+    <link rel="stylesheet" href="css/footer.css">
     <script src="js/thirdParty/fontfaceobserver.standalone.js"></script>
 
     <!-- Google MD Icons -->
     <link rel="stylesheet" href="css/theme/font.css">
 
     <!-- Help Modal -->
-    <link rel="stylesheet" href="css/errorBanner.css?v=2">
+    <link rel="stylesheet" href="css/errorBanner.css">
 
-    <script src="js/cacheFormInputs.js?v=2"></script>
-    <script src="js/tab-container.js?v=2"></script>
-    <script src="js/darkmode.js?v=2"></script>
+    <script src="js/cacheFormInputs.js"></script>
+    <script src="js/tab-container.js"></script>
+    <script src="js/darkmode.js"></script>
   </th:block>
 
 <th:block th:fragment="game">
@@ -140,7 +140,7 @@
         <div id="level">Level: 1</div>
         <img src="favicon.svg" class="player" id="player" alt="favicon">
       </div>
-      <link rel="stylesheet" href="css/game.css?v=2">
+      <link rel="stylesheet" href="css/game.css">
     </dialog>
 </th:block>
 
@@ -150,7 +150,7 @@
                   const multiple = [[${multiple}]] || false;
                   const remoteCall = [[${remoteCall}]] || true;
                 </script>
-                <script src="js/downloader.js?v=2"></script>
+                <script src="js/downloader.js"></script>
 
                 <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
                   <div class="mb-3">
@@ -166,5 +166,5 @@
                     </div>
                   </div>
                 </div>
-                <script src="js/fileInput.js?v=2"></script>
+                <script src="js/fileInput.js"></script>
 </th:block>

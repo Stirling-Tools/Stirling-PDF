@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
-  xmlns:th="http://www.thymeleaf.org">
+  xmlns:th="https://www.thymeleaf.org">
 
 <head>
   <th:block th:insert="~{fragments/common :: head(title='')}"></th:block>
@@ -21,7 +21,7 @@
       </div>
       <br class="d-md-none">
       <!-- Features -->
-      <script src="js/homecard.js?v=2"></script>
+      <script src="js/homecard.js"></script>
       <div class=" container">
         <br>
         <span class="material-symbols-rounded search-icon">
@@ -43,7 +43,6 @@
               </div>
             </a>
           </div>
-
 
           <div
             th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', toolIcon='family_history', tags=#{pipeline.tags}, toolGroup='advance')}">
@@ -163,6 +162,9 @@
           </div>
           <div
             th:replace="~{fragments/card :: card(id='cert-sign', cardTitle=#{home.certSign.title}, cardText=#{home.certSign.desc}, cardLink='cert-sign', toolIcon='workspace_premium', tags=#{certSign.tags}, toolGroup='security')}">
+          </div>
+          <div
+            th:replace="~{fragments/card :: card(id='remove-cert-sign', cardTitle=#{home.removeCertSign.title}, cardText=#{home.removeCertSign.desc}, cardLink='remove-cert-sign', toolIcon='remove_moderator', tags=#{removeCertSign.tags}, toolGroup='security')}">
           </div>
           <div
             th:replace="~{fragments/card :: card(id='multi-page-layout', cardTitle=#{home.pageLayout.title}, cardText=#{home.pageLayout.desc}, cardLink='multi-page-layout', toolIcon='dashboard', tags=#{pageLayout.tags}, toolGroup='organize')}">

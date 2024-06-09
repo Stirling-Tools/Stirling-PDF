@@ -3,7 +3,7 @@
   th:lang="${#locale.language}"
   th:dir="#{language.direction}"
   th:data-language="${#locale.toString()}"
-  xmlns:th="http://www.thymeleaf.org"
+  xmlns:th="https://www.thymeleaf.org"
 >
   <head>
     <th:block
@@ -16,6 +16,7 @@
     />
     <script th:inline="javascript">
       const saveSettings = /*[[#{pipelineOptions.saveSettings}]]*/ "";
+      const deletePipelineText = /*[[#{pipeline.pipeline.deletePrompt}]]*/ "Are you sure you want to delete pipeline";
     </script>
   </head>
 
@@ -92,7 +93,7 @@
 
               <!-- The Modal -->
               <div class="modal" id="pipelineSettingsModal">
-                <div class="modal-dialog">
+                <div class="modal-dialog modal-lg">
                   <div class="modal-content dark-card">
                     <!-- Modal Header -->
                     <div class="modal-header">
@@ -158,6 +159,12 @@
 
                     <!-- Modal footer -->
                     <div class="modal-footer">
+                      <button
+                        id="deletePipelineBtn"
+                        class="btn btn-danger"
+                        th:text="#{delete}"
+                      ></button>
+                      
                       <button
                         id="saveBrowserPipelineBtn"
                         class="btn btn-success"
