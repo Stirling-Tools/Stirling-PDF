@@ -19,8 +19,12 @@
               </div>
               <form action="api/v1/general/merge-pdfs" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
-                  <label th:text="#{multiPdfDropPrompt}"></label>
+                  <label th:text="#{multiPdfDropPrompt}" for="fileInput-input"></label>
                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=true, accept='application/pdf')}"></div>
+                </div>
+                <div class="mb-3">
+                  <input type="checkbox" name="removeCertSign" id="removeCertSign">
+                  <label for="removeCertSign" th:text="#{merge.removeCertSign}">Remove digital signature in the merged file?</label>
                 </div>
                 <div class="mb-3">
                   <ul id="selectedFiles" class="list-group"></ul>
