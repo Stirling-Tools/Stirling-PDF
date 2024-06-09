@@ -242,7 +242,7 @@
         {
             "moduleName": "commons-io:commons-io",
             "moduleUrl": "https://commons.apache.org/proper/commons-io/",
-            "moduleVersion": "2.15.1",
+            "moduleVersion": "2.16.1",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
