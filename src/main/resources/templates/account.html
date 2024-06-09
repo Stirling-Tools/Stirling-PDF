@@ -12,7 +12,7 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-9">
+            <div class="col-md-9 bg-card">
 
               <!-- User Settings Title -->
               <h2 class="text-center" th:text="#{account.accountSettings}">User Settings</h2>
@@ -33,15 +33,15 @@
               <!-- Change Username Form -->
               <th:block th:if="${!oAuth2Login}">
               <h4 th:text="#{account.changeUsername}">Change Username?</h4>
-              <form id="formsavechangeusername" class="bg-card mt-4 mb-4" action="api/v1/user/change-username" method="post">
+              <form id="formsavechangeusername" class="bg-card mt-4 mb-4" th:action="@{'/api/v1/user/change-username'}" method="post">
                 <div class="mb-3">
                   <label for="newUsername" th:text="#{account.newUsername}">Change Username</label>
                   <input type="text" class="form-control" name="newUsername" id="newUsername" th:placeholder="#{account.newUsername}">
                   <span id="usernameError" style="display: none;" th:text="#{invalidUsernameMessage}">Invalid username!</span>
                 </div>
                 <div class="mb-3">
-                  <label for="currentPassword" th:text="#{password}">Password</label>
-                  <input type="password" class="form-control" name="currentPassword" id="currentPassword" th:placeholder="#{password}">
+                  <label for="currentPasswordChangeUsername" th:text="#{password}">Password</label>
+                  <input type="password" class="form-control" name="currentPasswordChangeUsername" id="currentPasswordChangeUsername" th:placeholder="#{password}">
                 </div>
                 <div class="mb-3">
                   <button type="submit" class="btn btn-primary" th:text="#{account.changeUsername}">Change Username</button>
@@ -52,7 +52,7 @@
               <!-- Change Password Form -->
               <th:block th:if="${!oAuth2Login}">
               <h4 th:text="#{account.changePassword}">Change Password?</h4>
-              <form id="formsavechangepassword" class="bg-card mt-4 mb-4" action="api/v1/user/change-password" method="post">
+              <form id="formsavechangepassword" class="bg-card mt-4 mb-4" th:action="@{'/api/v1/user/change-password'}" method="post">
                 <div class="mb-3">
                   <label for="currentPassword" th:text="#{account.oldPassword}">Old Password</label>
                   <input type="password" class="form-control" name="currentPassword" id="currentPassword" th:placeholder="#{account.oldPassword}">
@@ -66,6 +66,7 @@
                   <input type="password" class="form-control" name="confirmNewPassword" id="confirmNewPassword" th:placeholder="#{account.confirmNewPassword}">
                 </div>
                 <div class="mb-3">
+                  <span id="confirmPasswordError" style="display: none;" th:text="#{confirmPasswordErrorMessage}">New Password and Confirm New Password must match.</span>
                   <button type="submit" class="btn btn-primary" th:text="#{account.changePassword}">Change Password</button>
                 </div>
               </form>
@@ -103,6 +104,9 @@
                     return this.optional(element) || /^[a-zA-Z0-9][a-zA-Z0-9@._+-]*[a-zA-Z0-9]$|^(?=.{1,64}@)[A-Za-z0-9]+(\.[A-Za-z0-9_+.-]+)*@[^-][A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(\.[A-Za-z]{2,})$/.test(value);
                 }, /*[[#{invalidUsernameMessage}]]*/ "Invalid username format");
                 $(document).ready(function() {
+                  $.validator.addMethod("passwordMatch", function(value, element) {
+                    return $('#newPassword').val() === $('#confirmNewPassword').val();
+                  }, /*[[#{confirmPasswordErrorMessage}]]*/ "New Password and Confirm New Password must match.");
                   $('#formsavechangepassword').validate({
                     rules: {
                       currentPassword: {
@@ -112,17 +116,31 @@
                         required: true
                       },
                       confirmNewPassword: {
-                        required: true
+                        required: true,
+                        passwordMatch: true
+                      },
+                      errorPlacement: function(error, element) {
+                          if ($(element).attr("name") === "newPassword" || $(element).attr("name") === "confirmNewPassword") {
+                            $("#confirmPasswordError").text(error.text()).show();
+                          } else {
+                              error.insertAfter(element);
+                          }
+                      },
+                      success: function(label, element) {
+                          if ($(element).attr("name") === "newPassword" || $(element).attr("name") === "confirmNewPassword") {
+                            $("#confirmPasswordError").hide();
+                          }
                       }
                     }
                   });
+
                   $('#formsavechangeusername').validate({
                     rules: {
                       newUsername: {
                         required: true,
                         usernamePattern: true
                       },
-                      currentPassword: {
+                      currentPasswordChangeUsername: {
                         required: true
                       }
                       },
@@ -144,32 +162,10 @@
                           }
                       }
                   });
-                  $('#formsavechangepassword').on('submit', function(event) {
-                    var newPassword = $('#newPassword').val();
-                    var confirmNewPassword = $('#confirmNewPassword').val();
-
-                    if (newPassword !== confirmNewPassword) {
-                      alert('New Password and Confirm New Password must match.');
-                      event.preventDefault();
-                    }
-                  });
-                  $('#newUsername').on('input', function() {
-                      var usernameInput = $(this);
-                      var isValid = usernameInput[0].checkValidity();
-                      var errorSpan = $('#usernameError');
-        
-                      if (isValid) {
-                          usernameInput.removeClass('invalid').addClass('valid');
-                          errorSpan.hide();
-                      } else {
-                          usernameInput.removeClass('valid').addClass('invalid');
-                          errorSpan.show();
-                      }
-                  });
                 });
               </script>
 
-              <script>
+              <script th:inline="javascript">
                 function copyToClipboard() {
                   const apiKeyElement = document.getElementById("apiKey");
                   apiKeyElement.select();
@@ -192,8 +188,12 @@
                 }
 
                 document.addEventListener("DOMContentLoaded", async function() {
+                  showApiKey();
                   try {
-                    let response = await fetch('/api/v1/user/get-api-key', { method: 'POST' });
+                    /*<![CDATA[*/
+                    const urlGetApiKey = /*[[@{/api/v1/user/get-api-key}]]*/ "/api/v1/user/get-api-key";
+                    /*]]>*/
+                    let response = await fetch(urlGetApiKey, { method: 'POST' });
                     if (response.status === 200) {
                       let apiKey = await response.text();
                       manageUIState(apiKey);
@@ -207,7 +207,10 @@
 
                 async function refreshApiKey() {
                   try {
-                    let response = await fetch('/api/v1/user/update-api-key', { method: 'POST' });
+                    /*<![CDATA[*/
+                    const urlUpdateApiKey = /*[[@{/api/v1/user/update-api-key}]]*/ "/api/v1/user/update-api-key";
+                    /*]]>*/
+                    let response = await fetch(urlUpdateApiKey, { method: 'POST' });
                     if (response.status === 200) {
                       let apiKey = await response.text();
                       manageUIState(apiKey);
@@ -229,27 +232,13 @@
                   if (apiKey && apiKey.trim().length > 0) {
                     apiKeyElement.value = apiKey;
                     showBtn.disabled = false;
-                    copyBtn.disabled = true;
+                    copyBtn.disabled = false;
                   } else {
                     apiKeyElement.value = "";
                     showBtn.disabled = true;
                     copyBtn.disabled = true;
                   }
                 }
-
-                document.addEventListener("DOMContentLoaded", function() {
-                  const form = document.querySelector('form[action="api/v1/user/change-password"]');
-
-                  form.addEventListener('submit', function(event) {
-                    const newPassword = document.getElementById('newPassword').value;
-                    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-
-                    if (newPassword !== confirmNewPassword) {
-                      alert('New Password and Confirm New Password must match.');
-                      event.preventDefault(); // Prevent form submission
-                    }
-                  });
-                });
               </script>
 
               <h4 th:text="#{account.syncTitle}">Sync browser settings with Account</h4>
@@ -315,9 +304,12 @@
                   });
 
                   document.getElementById('syncToAccount').addEventListener('click', function() {
+                    /*<![CDATA[*/
+                    const urlUpdateUserSettings = /*[[@{/api/v1/user/updateUserSettings}]]*/ "/api/v1/user/updateUserSettings";
+                    /*]]>*/
                     let form = document.createElement("form");
                     form.method = "POST";
-                    form.action = "api/v1/user/updateUserSettings";  // Your endpoint URL
+                    form.action = urlUpdateUserSettings;  // Your endpoint URL
 
                     for (let i = 0; i < localStorage.length; i++) {
                       const key = localStorage.key(i);
