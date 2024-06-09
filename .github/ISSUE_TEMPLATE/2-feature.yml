@@ -72,5 +72,5 @@ body:
       description: |
         Please confirm that you have searched for similar features in our repository and found none that match your request.
       options:
-        - label: I have verified that there are no existing features similar to my request.
+        - label: I have verified that there are no existing features requests similar to my request.
           required: true
