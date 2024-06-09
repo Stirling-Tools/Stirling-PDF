@@ -56,21 +56,6 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Alternatives Considered
-
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Alternatives
-      description: |
-        Have you considered any alternative solutions or features? If so, describe them here.
-
-        Explain why the proposed feature would be better than existing alternatives.
-      placeholder: Describe any alternative solutions or features considered.
-
-  - type: markdown
-    attributes:
-      value: |
         ## Additional Information
 
   - type: textarea
