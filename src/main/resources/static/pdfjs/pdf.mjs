@@ -10256,7 +10256,6 @@ class TextLayer {
     this.#pageWidth = pageWidth;
     this.#pageHeight = pageHeight;
     setLayerDimensions(container, viewport);
-    TextLayer.#pendingTextLayers.add(this);
     this.#capability.promise.catch(() => {}).then(() => {
       TextLayer.#pendingTextLayers.delete(this);
       this.#layoutTextParams = null;
@@ -10280,6 +10279,7 @@ class TextLayer {
       }, this.#capability.reject);
     };
     this.#reader = this.#textContentSource.getReader();
+    TextLayer.#pendingTextLayers.add(this);
     pump();
     return this.#capability.promise;
   }
@@ -10724,7 +10724,7 @@ function getDocument(src) {
   }
   const docParams = {
     docId,
-    apiVersion: "4.3.118",
+    apiVersion: "4.3.136",
     data,
     password,
     disableAutoFetch,
@@ -12491,8 +12491,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.3.118";
-const build = "17e09e547";
+const version = "4.3.136";
+const build = "0cec64437";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -19367,8 +19367,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.3.118";
-const pdfjsBuild = "17e09e547";
+const pdfjsVersion = "4.3.136";
+const pdfjsBuild = "0cec64437";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
