@@ -35,7 +35,7 @@ async function getLatestReleaseVersion() {
 }
 
 async function getCurrentVersionFromBypass() {
-  const url = "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/build.gradle";
+  const url = "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/master/build.gradle";
   try {
     const response = await fetch(url);
     if (response.status === 200) {
