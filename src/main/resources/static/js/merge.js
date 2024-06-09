@@ -69,8 +69,13 @@ function attachMoveButtons() {
     removeButtons[i].addEventListener("click", function (event) {
       event.preventDefault();
       var parent = this.closest(".list-group-item");
+      //Get name of removed file
+      var fileName = parent.querySelector(".filename").innerText;
       parent.remove();
       updateFiles();
+      //Dispatch a custom event with the name of the removed file
+      var event = new CustomEvent("fileRemoved", { detail: fileName });
+      document.dispatchEvent(event);
     });
   }
 }

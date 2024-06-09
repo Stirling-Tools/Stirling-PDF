@@ -8,7 +8,6 @@ body {
   align-items: center;
   padding-top: 40px;
   padding-bottom: 40px;
-  background-color: #f5f5f5;
 }
 
 .form-signin {
@@ -37,6 +36,7 @@ body {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
+
 .container-flex {
   display: flex;
   flex-direction: column;
@@ -44,41 +44,22 @@ body {
   width: 100%; /* Set width to 100% */
   align-items: center; /* Center its children horizontally */
 }
+
 .footer-bottom {
   margin-top: auto;
 }
-body.light-mode input:-webkit-autofill,
-body.light-mode input:-webkit-autofill:hover,
-body.light-mode input:-webkit-autofill:focus,
-body.light-mode input:-webkit-autofill:active {
-  -webkit-text-fill-color: #212529; /* Dark font color */
-  -webkit-box-shadow: 0 0 0 1000px #f8f9fa inset; /* Light background color */
+
+.form-control {
+  border-radius: 1.25rem !important;
 }
 
-/* Dark Mode */
-body.dark-mode input:-webkit-autofill,
-body.dark-mode input:-webkit-autofill:hover,
-body.dark-mode input:-webkit-autofill:focus,
-body.dark-mode input:-webkit-autofill:active {
-  -webkit-text-fill-color: #f8f9fa; /* Light font color */
-  -webkit-box-shadow: 0 0 0 1000px #212529 inset; /* Dark background color */
-}
-/* Light Mode */
-body.light-mode .form-floating > input:focus + label {
-  color: #212529 !important; /* Dark text for light background */
+.form-signin .form-floating {
+  margin: 1rem 0px;
 }
 
-/* Dark Mode */
-body.dark-mode .form-floating > input:focus + label {
-  color: #fff !important; /* Light text for dark background */
-}
-
-body.light-mode .form-floating > label {
-  color: #212529 !important; /* Dark text for light background */
-}
-
-body.dark-mode .form-floating > label {
-  color: #fff !important; /* Light text for dark background */
+input[type="checkbox" i] {
+  margin: 0px 5px;
+  vertical-align: middle;
 }
 
 /* Removing default styles for ul and li */

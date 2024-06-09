@@ -1,0 +1,34 @@
+:where(html, .light-theme, .dark-theme),
+.tokens,
+:host {
+  /* Define surface colors based on primary color */
+  --md-sys-color-surface-1: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 0, 0.05) 5%);
+  --md-sys-color-surface-2: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 0, 0.08) 5%);
+  --md-sys-color-surface-3: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 0, 0.11) 5%);
+  --md-sys-color-surface-4: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 0, 0.12) 5%);
+  --md-sys-color-surface-5: color-mix(in srgb, var(--md-sys-color-primary) 13%, rgba(0, 0, 0, 0.14) 5%);
+  /* Icon fill */
+  --md-sys-icon-fill-0: 'FILL' 0, 'wght' 500;
+  --md-sys-icon-fill-1: 'FILL' 1, 'wght' 500;
+  /* Hover Color */
+  --md-sys-state-hover-opacity: color-mix(in srgb, var(--md-sys-color-primary), rgba(0, 0, 0, 0) 80%);
+  /* Shadow */
+  --md-sys-color-shadow: #000000;
+  --md-elevation-shadow-color-rgb: 0, 0, 0;
+  --md-elevation-shadow-color: var(--md-elevation-shadow-color-rgb);
+  /* Shadow Elevation*/
+  --md-sys-elevation-0: 0px 0px 0px 0px rgb(var(--md-elevation-shadow-color), 0.2), 0px 0px 0px 0px rgb(var(--md-elevation-shadow-color), 0.14), 0px 0px 0px 0px rgb(var(--md-elevation-shadow-color), 0.12);
+  --md-sys-elevation-1: 0px 3px 1px -2px rgb(var(--md-elevation-shadow-color), 0.2), 0px 2px 2px 0px rgb(var(--md-elevation-shadow-color), 0.14), 0px 1px 5px 0px rgb(var(--md-elevation-shadow-color), 0.12);
+  --md-sys-elevation-2: 0px 2px 4px -1px rgb(var(--md-elevation-shadow-color), 0.2), 0px 4px 5px 0px rgb(var(--md-elevation-shadow-color), 0.14), 0px 1px 10px 0px rgb(var(--md-elevation-shadow-color), 0.12);
+  --md-sys-elevation-3: 0px 5px 5px -3px rgb(var(--md-elevation-shadow-color), 0.2), 0px 8px 10px 1px rgb(var(--md-elevation-shadow-color), 0.14), 0px 3px 14px 2px rgb(var(--md-elevation-shadow-color), 0.12);
+  --md-sys-elevation-4: 0px 5px 5px -3px rgb(var(--md-elevation-shadow-color) / 0.2), 0px 8px 10px 1px rgb(var(--md-elevation-shadow-color), 0.14), 0px 3px 14px 2px rgb(var(--md-elevation-shadow-color), 0.12);
+  --md-sys-elevation-5: 0px 8px 10px -6px rgb(var(--md-elevation-shadow-color), 0.2), 0px 16px 24px 2px rgb(var(--md-elevation-shadow-color), 0.14), 0px 6px 30px 5px rgb(var(--md-elevation-shadow-color), 0.12);
+}
+
+.fill {
+  font-variation-settings: var(--md-sys-icon-fill-1);
+}
+
+.no-fill {
+  /* font-variation-settings: var(--md-sys-icon-fill-0); */
+}
