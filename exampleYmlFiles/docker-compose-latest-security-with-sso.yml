@@ -13,7 +13,7 @@ services:
       timeout: 10s
       retries: 16
     ports:
-      - 8080:8080
+      - "8080:8080"
     volumes:
       - /stirling/latest/data:/usr/share/tessdata:rw
       - /stirling/latest/config:/configs:rw
@@ -22,10 +22,13 @@ services:
       DOCKER_ENABLE_SECURITY: "true"
       SECURITY_ENABLELOGIN: "true"
       SECURITY_OAUTH2_ENABLED: "true"
-      SECURITY_OAUTH2_AUTOCREATEUSER: "true" # This is set to true to allow auto-creation of non-existing users in Striling-PDF
+      SECURITY_OAUTH2_AUTOCREATEUSER: "true" # This is set to true to allow auto-creation of non-existing users in Stirling-PDF
       SECURITY_OAUTH2_ISSUER: "https://accounts.google.com"  # Change with any other provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) end-point
       SECURITY_OAUTH2_CLIENTID: "<YOUR CLIENT ID>.apps.googleusercontent.com" # Client ID from your provider
       SECURITY_OAUTH2_CLIENTSECRET: "<YOUR CLIENT SECRET>"  # Client Secret from your provider
+      SECURITY_OAUTH2_SCOPES: "openid,profile,email" # Expected OAuth2 Scope
+      SECURITY_OAUTH2_USEASUSERNAME: "email" # Default is 'email'; custom fields can be used as the username
+      SECURITY_OAUTH2_PROVIDER: "google" # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
       PUID: 1002
       PGID: 1002
       UMASK: "022"

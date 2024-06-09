@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{ocr.title}, header=#{ocr.header})}"></th:block>
     <script>
@@ -232,7 +232,7 @@
 
                 // Step 3: Apply the function to your labels
                 document.addEventListener('DOMContentLoaded', () => {
-                  const labels = document.querySelectorAll('#languages .form-check-label');
+                  const labels = document.querySelectorAll('#languages label');
                   labels.forEach(label => {
                     const languageCode = label.getAttribute('for').split('-')[1];
                     label.textContent = getFullLanguageName(languageCode);

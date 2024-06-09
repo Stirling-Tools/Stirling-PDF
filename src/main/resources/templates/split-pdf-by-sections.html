@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{split-by-sections.title}, header=#{split-by-sections.header})}"></th:block>
-    <link rel="stylesheet" href="css/split-pdf-by-sections.css?v=2">
+    <link rel="stylesheet" href="css/split-pdf-by-sections.css">
   </head>
 
   <body>

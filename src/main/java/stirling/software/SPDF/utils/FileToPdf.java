@@ -42,6 +42,7 @@ public class FileToPdf {
             List<String> command = new ArrayList<>();
             if (!htmlFormatsInstalled) {
                 command.add("weasyprint");
+                command.add("-e utf-8");
                 command.add(tempInputFile.toString());
                 command.add(tempOutputFile.toString());
 
@@ -52,7 +53,7 @@ public class FileToPdf {
                 command.add("--paper-size");
                 command.add("a4");
 
-                if (request.getZoom() != 1.0) {
+                if (request != null && request.getZoom() != 1.0) {
                     // Create a temporary CSS file
                     File tempCssFile = Files.createTempFile("customStyle", ".css").toFile();
                     try (FileWriter writer = new FileWriter(tempCssFile)) {
@@ -79,8 +80,8 @@ public class FileToPdf {
         } finally {
 
             // Clean up temporary files
-            Files.delete(tempOutputFile);
-            Files.delete(tempInputFile);
+            Files.deleteIfExists(tempOutputFile);
+            Files.deleteIfExists(tempInputFile);
         }
 
         return pdfBytes;

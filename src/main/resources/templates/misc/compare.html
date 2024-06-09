@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{compare.title}, header=#{compare.header})}"></th:block>
     <style>
@@ -60,7 +60,7 @@
                     console.error("Please select two PDF files to compare");
                     return;
                   }
-                  pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
+                  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.mjs'
                   const [pdf1, pdf2] = await Promise.all([
                     pdfjsLib.getDocument(URL.createObjectURL(file1)).promise,
                     pdfjsLib.getDocument(URL.createObjectURL(file2)).promise

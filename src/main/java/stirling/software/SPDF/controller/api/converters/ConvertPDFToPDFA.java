@@ -1,10 +1,22 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +38,8 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToPDFA {
 
+    private static final Logger logger = LoggerFactory.getLogger(ConvertPDFToPDFA.class);
+
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
     @Operation(
             summary = "Convert a PDF to a PDF/A",
@@ -36,9 +50,39 @@ public class ConvertPDFToPDFA {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
 
-        // Save the uploaded file to a temporary location
+        // Convert MultipartFile to byte[]
+        byte[] pdfBytes = inputFile.getBytes();
+
+        // Load the PDF document
+        PDDocument document = Loader.loadPDF(pdfBytes);
+
+        // Get the document catalog
+        PDDocumentCatalog catalog = document.getDocumentCatalog();
+
+        // Get the AcroForm
+        PDAcroForm acroForm = catalog.getAcroForm();
+        if (acroForm != null) {
+            // Remove signature fields safely
+            List<PDField> fieldsToRemove =
+                    acroForm.getFields().stream()
+                            .filter(field -> field instanceof PDSignatureField)
+                            .collect(Collectors.toList());
+
+            if (!fieldsToRemove.isEmpty()) {
+                acroForm.flatten(fieldsToRemove, false);
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                document.save(baos);
+                pdfBytes = baos.toByteArray();
+            }
+        }
+        document.close();
+
+        // Save the uploaded (and possibly modified) file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");
-        inputFile.transferTo(tempInputFile.toFile());
+        try (OutputStream outputStream = new FileOutputStream(tempInputFile.toFile())) {
+            outputStream.write(pdfBytes);
+        }
 
         // Prepare the output file path
         Path tempOutputFile = Files.createTempFile("output_", ".pdf");
@@ -58,17 +102,17 @@ public class ConvertPDFToPDFA {
                         .runCommandWithOutputHandling(command);
 
         // Read the optimized PDF file
-        byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
+        byte[] optimizedPdfBytes = Files.readAllBytes(tempOutputFile);
 
         // Clean up the temporary files
-        Files.delete(tempInputFile);
-        Files.delete(tempOutputFile);
+        Files.deleteIfExists(tempInputFile);
+        Files.deleteIfExists(tempOutputFile);
 
         // Return the optimized PDF as a response
         String outputFilename =
                 Filenames.toSimpleFileName(inputFile.getOriginalFilename())
                                 .replaceFirst("[.][^.]+$", "")
                         + "_PDFA.pdf";
-        return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+        return WebResponseUtils.bytesToWebResponse(optimizedPdfBytes, outputFilename);
     }
 }
