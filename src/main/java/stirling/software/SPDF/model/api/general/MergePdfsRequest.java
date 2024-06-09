@@ -21,4 +21,10 @@ public class MergePdfsRequest extends MultiplePDFFiles {
             },
             defaultValue = "orderProvided")
     private String sortType = "orderProvided";
+
+    @Schema(
+            description =
+                    "Flag indicating whether to remove certification signatures from the merged PDF. If true, all certification signatures will be removed from the final merged document.",
+            example = "true")
+    private boolean isRemoveCertSign;
 }
