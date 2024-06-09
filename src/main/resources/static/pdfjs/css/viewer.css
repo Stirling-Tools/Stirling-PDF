@@ -13,6 +13,242 @@
  * limitations under the License.
  */
 
+.dialog{
+  --dialog-bg-color:white;
+  --dialog-border-color:white;
+  --dialog-shadow:0 2px 14px 0 rgb(58 57 68 / 0.2);
+  --text-primary-color:#15141a;
+  --text-secondary-color:#5b5b66;
+  --hover-filter:brightness(0.9);
+  --focus-ring-color:#0060df;
+  --focus-ring-outline:2px solid var(--focus-ring-color);
+
+  --textarea-border-color:#8f8f9d;
+  --textarea-bg-color:white;
+  --textarea-fg-color:var(--text-secondary-color);
+
+  --radio-bg-color:#f0f0f4;
+  --radio-checked-bg-color:#fbfbfe;
+  --radio-border-color:#8f8f9d;
+  --radio-checked-border-color:#0060df;
+
+  --button-secondary-bg-color:#f0f0f4;
+  --button-secondary-fg-color:var(--text-primary-color);
+  --button-secondary-border-color:var(--button-secondary-bg-color);
+  --button-secondary-hover-bg-color:var(--button-secondary-bg-color);
+  --button-secondary-hover-fg-color:var(--button-secondary-fg-color);
+  --button-secondary-hover-border-color:var(--button-secondary-hover-bg-color);
+
+  --button-primary-bg-color:#0060df;
+  --button-primary-fg-color:#fbfbfe;
+  --button-primary-hover-bg-color:var(--button-primary-bg-color);
+  --button-primary-hover-fg-color:var(--button-primary-fg-color);
+  --button-primary-hover-border-color:var(--button-primary-hover-bg-color);
+
+  font:message-box;
+  font-size:13px;
+  font-weight:400;
+  line-height:150%;
+  border-radius:4px;
+  padding:12px 16px;
+  border:1px solid var(--dialog-border-color);
+  background:var(--dialog-bg-color);
+  color:var(--text-primary-color);
+  box-shadow:var(--dialog-shadow);
+}
+
+@media (prefers-color-scheme: dark){
+
+:where(html:not(.is-light)) .dialog{
+    --dialog-bg-color:#1c1b22;
+    --dialog-border-color:#1c1b22;
+    --dialog-shadow:0 2px 14px 0 #15141a;
+    --text-primary-color:#fbfbfe;
+    --text-secondary-color:#cfcfd8;
+    --focus-ring-color:#0df;
+    --hover-filter:brightness(1.4);
+
+    --textarea-bg-color:#42414d;
+
+    --radio-bg-color:#2b2a33;
+    --radio-checked-bg-color:#15141a;
+    --radio-checked-border-color:#0df;
+
+    --button-secondary-bg-color:#2b2a33;
+    --button-primary-bg-color:#0df;
+    --button-primary-fg-color:#15141a;
+}
+  }
+
+:where(html.is-dark) .dialog{
+    --dialog-bg-color:#1c1b22;
+    --dialog-border-color:#1c1b22;
+    --dialog-shadow:0 2px 14px 0 #15141a;
+    --text-primary-color:#fbfbfe;
+    --text-secondary-color:#cfcfd8;
+    --focus-ring-color:#0df;
+    --hover-filter:brightness(1.4);
+
+    --textarea-bg-color:#42414d;
+
+    --radio-bg-color:#2b2a33;
+    --radio-checked-bg-color:#15141a;
+    --radio-checked-border-color:#0df;
+
+    --button-secondary-bg-color:#2b2a33;
+    --button-primary-bg-color:#0df;
+    --button-primary-fg-color:#15141a;
+}
+
+@media screen and (forced-colors: active){
+
+.dialog{
+    --dialog-bg-color:Canvas;
+    --dialog-border-color:CanvasText;
+    --dialog-shadow:none;
+    --text-primary-color:CanvasText;
+    --text-secondary-color:CanvasText;
+    --hover-filter:none;
+    --focus-ring-color:ButtonBorder;
+
+    --textarea-border-color:ButtonBorder;
+    --textarea-bg-color:Field;
+    --textarea-fg-color:ButtonText;
+
+    --radio-bg-color:ButtonFace;
+    --radio-checked-bg-color:ButtonFace;
+    --radio-border-color:ButtonText;
+    --radio-checked-border-color:ButtonText;
+
+    --button-secondary-bg-color:ButtonFace;
+    --button-secondary-fg-color:ButtonText;
+    --button-secondary-border-color:ButtonText;
+    --button-secondary-hover-bg-color:AccentColor;
+    --button-secondary-hover-fg-color:AccentColorText;
+
+    --button-primary-bg-color:ButtonText;
+    --button-primary-fg-color:ButtonFace;
+    --button-primary-hover-bg-color:AccentColor;
+    --button-primary-hover-fg-color:AccentColorText;
+}
+  }
+
+.dialog .mainContainer *:focus-visible{
+      outline:var(--focus-ring-outline);
+      outline-offset:2px;
+    }
+
+.dialog .mainContainer .radio{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:4px;
+    }
+
+.dialog .mainContainer .radio > .radioButton{
+        display:flex;
+        gap:8px;
+        align-self:stretch;
+        align-items:center;
+      }
+
+.dialog .mainContainer .radio > .radioButton input{
+          -webkit-appearance:none;
+             -moz-appearance:none;
+                  appearance:none;
+          box-sizing:border-box;
+          width:16px;
+          height:16px;
+          border-radius:50%;
+          background-color:var(--radio-bg-color);
+          border:1px solid var(--radio-border-color);
+        }
+
+.dialog .mainContainer .radio > .radioButton input:hover{
+            filter:var(--hover-filter);
+          }
+
+.dialog .mainContainer .radio > .radioButton input:checked{
+            background-color:var(--radio-checked-bg-color);
+            border:4px solid var(--radio-checked-border-color);
+          }
+
+.dialog .mainContainer .radio > .radioLabel{
+        display:flex;
+        padding-inline-start:24px;
+        align-items:flex-start;
+        gap:10px;
+        align-self:stretch;
+      }
+
+.dialog .mainContainer .radio > .radioLabel > span{
+          flex:1 0 0;
+          font-size:11px;
+          color:var(--text-secondary-color);
+        }
+
+.dialog .mainContainer button{
+      border-radius:4px;
+      border:1px solid;
+      font:menu;
+      font-weight:600;
+      padding:4px 16px;
+      width:auto;
+      height:32px;
+    }
+
+.dialog .mainContainer button:hover{
+        cursor:pointer;
+        filter:var(--hover-filter);
+      }
+
+.dialog .mainContainer button.secondaryButton{
+        color:var(--button-secondary-fg-color);
+        background-color:var(--button-secondary-bg-color);
+        border-color:var(--button-secondary-border-color);
+      }
+
+.dialog .mainContainer button.secondaryButton:hover{
+          color:var(--button-secondary-hover-fg-color);
+          background-color:var(--button-secondary-hover-bg-color);
+          border-color:var(--button-secondary-hover-border-color);
+        }
+
+.dialog .mainContainer button.primaryButton{
+        color:var(--button-primary-hover-fg-color);
+        background-color:var(--button-primary-hover-bg-color);
+        border-color:var(--button-primary-hover-border-color);
+        opacity:1;
+      }
+
+.dialog .mainContainer button.primaryButton:hover{
+          color:var(--button-primary-hover-fg-color);
+          background-color:var(--button-primary-hover-bg-color);
+          border-color:var(--button-primary-hover-border-color);
+        }
+
+.dialog .mainContainer textarea{
+      font:inherit;
+      padding:8px;
+      resize:none;
+      margin:0;
+      box-sizing:border-box;
+      border-radius:4px;
+      border:1px solid var(--textarea-border-color);
+      background:var(--textarea-bg-color);
+      color:var(--textarea-fg-color);
+    }
+
+.dialog .mainContainer textarea:focus{
+        outline-offset:0;
+        border-color:transparent;
+      }
+
+.dialog .mainContainer textarea:disabled{
+        pointer-events:none;
+        opacity:0.4;
+      }
+
 .textLayer{
   position:absolute;
   text-align:initial;
@@ -1946,136 +2182,16 @@
         inset-block-start:0;
       }
 
-#altTextDialog{
-  --dialog-bg-color:white;
-  --dialog-border-color:white;
-  --dialog-shadow:0 2px 14px 0 rgb(58 57 68 / 0.2);
-  --text-primary-color:#15141a;
-  --text-secondary-color:#5b5b66;
-  --hover-filter:brightness(0.9);
-  --focus-ring-color:#0060df;
-  --focus-ring-outline:2px solid var(--focus-ring-color);
-
-  --textarea-border-color:#8f8f9d;
-  --textarea-bg-color:white;
-  --textarea-fg-color:var(--text-secondary-color);
-
-  --radio-bg-color:#f0f0f4;
-  --radio-checked-bg-color:#fbfbfe;
-  --radio-border-color:#8f8f9d;
-  --radio-checked-border-color:#0060df;
-
-  --button-cancel-bg-color:#f0f0f4;
-  --button-cancel-fg-color:var(--text-primary-color);
-  --button-cancel-border-color:var(--button-cancel-bg-color);
-  --button-cancel-hover-bg-color:var(--button-cancel-bg-color);
-  --button-cancel-hover-fg-color:var(--button-cancel-fg-color);
-  --button-cancel-hover-border-color:var(--button-cancel-hover-bg-color);
-
-  --button-save-bg-color:#0060df;
-  --button-save-fg-color:#fbfbfe;
-  --button-save-hover-bg-color:var(--button-save-bg-color);
-  --button-save-hover-fg-color:var(--button-save-fg-color);
-  --button-save-hover-border-color:var(--button-save-hover-bg-color);
-
-  font:message-box;
-  font-size:13px;
-  font-weight:400;
-  line-height:150%;
-  border-radius:4px;
-  padding:12px 16px;
-  border:1px solid var(--dialog-border-color);
-  background:var(--dialog-bg-color);
-  color:var(--text-primary-color);
-  box-shadow:var(--dialog-shadow);
-}
-
-@media (prefers-color-scheme: dark){
-
-:where(html:not(.is-light)) #altTextDialog{
-    --dialog-bg-color:#1c1b22;
-    --dialog-border-color:#1c1b22;
-    --dialog-shadow:0 2px 14px 0 #15141a;
-    --text-primary-color:#fbfbfe;
-    --text-secondary-color:#cfcfd8;
-    --focus-ring-color:#0df;
-    --hover-filter:brightness(1.4);
-
-    --textarea-bg-color:#42414d;
-
-    --radio-bg-color:#2b2a33;
-    --radio-checked-bg-color:#15141a;
-    --radio-checked-border-color:#0df;
-
-    --button-cancel-bg-color:#2b2a33;
-    --button-save-bg-color:#0df;
-    --button-save-fg-color:#15141a;
-}
-  }
-
-:where(html.is-dark) #altTextDialog{
-    --dialog-bg-color:#1c1b22;
-    --dialog-border-color:#1c1b22;
-    --dialog-shadow:0 2px 14px 0 #15141a;
-    --text-primary-color:#fbfbfe;
-    --text-secondary-color:#cfcfd8;
-    --focus-ring-color:#0df;
-    --hover-filter:brightness(1.4);
-
-    --textarea-bg-color:#42414d;
-
-    --radio-bg-color:#2b2a33;
-    --radio-checked-bg-color:#15141a;
-    --radio-checked-border-color:#0df;
-
-    --button-cancel-bg-color:#2b2a33;
-    --button-save-bg-color:#0df;
-    --button-save-fg-color:#15141a;
-}
-
-@media screen and (forced-colors: active){
-
-#altTextDialog{
-    --dialog-bg-color:Canvas;
-    --dialog-border-color:CanvasText;
-    --dialog-shadow:none;
-    --text-primary-color:CanvasText;
-    --text-secondary-color:CanvasText;
-    --hover-filter:none;
-    --focus-ring-color:ButtonBorder;
-
-    --textarea-border-color:ButtonBorder;
-    --textarea-bg-color:Field;
-    --textarea-fg-color:ButtonText;
-
-    --radio-bg-color:ButtonFace;
-    --radio-checked-bg-color:ButtonFace;
-    --radio-border-color:ButtonText;
-    --radio-checked-border-color:ButtonText;
-
-    --button-cancel-bg-color:ButtonFace;
-    --button-cancel-fg-color:ButtonText;
-    --button-cancel-border-color:ButtonText;
-    --button-cancel-hover-bg-color:AccentColor;
-    --button-cancel-hover-fg-color:AccentColorText;
-
-    --button-save-bg-color:ButtonText;
-    --button-save-fg-color:ButtonFace;
-    --button-save-hover-bg-color:AccentColor;
-    --button-save-hover-fg-color:AccentColorText;
-}
-  }
-
-#altTextDialog::backdrop{
+.dialog.altText::backdrop{
     -webkit-mask:url(#alttext-manager-mask);
             mask:url(#alttext-manager-mask);
   }
 
-#altTextDialog.positioned{
+.dialog.altText.positioned{
     margin:0;
   }
 
-#altTextDialog #altTextContainer{
+.dialog.altText #altTextContainer{
     width:300px;
     height:-moz-fit-content;
     height:fit-content;
@@ -2085,61 +2201,7 @@
     gap:16px;
   }
 
-#altTextDialog #altTextContainer *:focus-visible{
-      outline:var(--focus-ring-outline);
-      outline-offset:2px;
-    }
-
-#altTextDialog #altTextContainer .radio{
-      display:flex;
-      flex-direction:column;
-      align-items:flex-start;
-      gap:4px;
-    }
-
-#altTextDialog #altTextContainer .radio .radioButton{
-        display:flex;
-        gap:8px;
-        align-self:stretch;
-        align-items:center;
-      }
-
-#altTextDialog #altTextContainer .radio .radioButton input{
-          -webkit-appearance:none;
-             -moz-appearance:none;
-                  appearance:none;
-          box-sizing:border-box;
-          width:16px;
-          height:16px;
-          border-radius:50%;
-          background-color:var(--radio-bg-color);
-          border:1px solid var(--radio-border-color);
-        }
-
-#altTextDialog #altTextContainer .radio .radioButton input:hover{
-            filter:var(--hover-filter);
-          }
-
-#altTextDialog #altTextContainer .radio .radioButton input:checked{
-            background-color:var(--radio-checked-bg-color);
-            border:4px solid var(--radio-checked-border-color);
-          }
-
-#altTextDialog #altTextContainer .radio .radioLabel{
-        display:flex;
-        padding-inline-start:24px;
-        align-items:flex-start;
-        gap:10px;
-        align-self:stretch;
-      }
-
-#altTextDialog #altTextContainer .radio .radioLabel span{
-          flex:1 0 0;
-          font-size:11px;
-          color:var(--text-secondary-color);
-        }
-
-#altTextDialog #altTextContainer #overallDescription{
+.dialog.altText #altTextContainer #overallDescription{
       display:flex;
       flex-direction:column;
       align-items:flex-start;
@@ -2147,99 +2209,40 @@
       align-self:stretch;
     }
 
-#altTextDialog #altTextContainer #overallDescription span{
+.dialog.altText #altTextContainer #overallDescription span{
         align-self:stretch;
       }
 
-#altTextDialog #altTextContainer #overallDescription .title{
+.dialog.altText #altTextContainer #overallDescription .title{
         font-size:13px;
         font-style:normal;
         font-weight:590;
       }
 
-#altTextDialog #altTextContainer #addDescription{
+.dialog.altText #altTextContainer #addDescription{
       display:flex;
       flex-direction:column;
       align-items:stretch;
       gap:8px;
     }
 
-#altTextDialog #altTextContainer #addDescription .descriptionArea{
+.dialog.altText #altTextContainer #addDescription .descriptionArea{
         flex:1;
         padding-inline:24px 10px;
       }
 
-#altTextDialog #altTextContainer #addDescription .descriptionArea textarea{
-          font:inherit;
+.dialog.altText #altTextContainer #addDescription .descriptionArea textarea{
           width:100%;
           min-height:75px;
-          padding:8px;
-          resize:none;
-          margin:0;
-          box-sizing:border-box;
-          border-radius:4px;
-          border:1px solid var(--textarea-border-color);
-          background:var(--textarea-bg-color);
-          color:var(--textarea-fg-color);
         }
 
-#altTextDialog #altTextContainer #addDescription .descriptionArea textarea:focus{
-            outline-offset:0;
-            border-color:transparent;
-          }
-
-#altTextDialog #altTextContainer #addDescription .descriptionArea textarea:disabled{
-            pointer-events:none;
-            opacity:0.4;
-          }
-
-#altTextDialog #altTextContainer #buttons{
+.dialog.altText #altTextContainer #buttons{
       display:flex;
       justify-content:flex-end;
       align-items:flex-start;
       gap:8px;
       align-self:stretch;
     }
-
-#altTextDialog #altTextContainer #buttons button{
-        border-radius:4px;
-        border:1px solid;
-        font:menu;
-        font-weight:600;
-        padding:4px 16px;
-        width:auto;
-        height:32px;
-      }
-
-#altTextDialog #altTextContainer #buttons button:hover{
-          cursor:pointer;
-          filter:var(--hover-filter);
-        }
-
-#altTextDialog #altTextContainer #buttons button#altTextCancel{
-          color:var(--button-cancel-fg-color);
-          background-color:var(--button-cancel-bg-color);
-          border-color:var(--button-cancel-border-color);
-        }
-
-#altTextDialog #altTextContainer #buttons button#altTextCancel:hover{
-            color:var(--button-cancel-hover-fg-color);
-            background-color:var(--button-cancel-hover-bg-color);
-            border-color:var(--button-cancel-hover-border-color);
-          }
-
-#altTextDialog #altTextContainer #buttons button#altTextSave{
-          color:var(--button-save-hover-fg-color);
-          background-color:var(--button-save-hover-bg-color);
-          border-color:var(--button-save-hover-border-color);
-          opacity:1;
-        }
-
-#altTextDialog #altTextContainer #buttons button#altTextSave:hover{
-            color:var(--button-save-hover-fg-color);
-            background-color:var(--button-save-hover-bg-color);
-            border-color:var(--button-save-hover-border-color);
-          }
 
 .colorPicker{
   --hover-outline-color:#0250bb;
