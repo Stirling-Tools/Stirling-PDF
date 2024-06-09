@@ -1,0 +1,115 @@
+name: Bug Report
+description: File a bug report.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report
+
+        Thanks for taking the time to fill out this bug report!
+
+        This issue form is for reporting bugs only. Please fill out the following sections to help us understand the issue you are facing.
+  
+  - type: textarea
+    id: problem
+    validations:
+      required: true
+    attributes:
+      label: The Problem
+      description: |
+        Describe the issue you are experiencing here. Tell us what you were trying to do and what happened.
+
+        Provide a clear and concise description of what the problem is.
+      placeholder: Provide a detailed description of the issue.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Environment
+
+  - type: input
+    id: version
+    validations:
+      required: true
+    attributes:
+      label: Version of Stirling-PDF
+      placeholder: e.g., 0.0.2
+      description: What version of Stirling-PDF has the issue?
+
+  - type: input
+    id: last-working-version
+    attributes:
+      label: Last Working Version of Stirling-PDF
+      placeholder: e.g., 0.0.1
+      description: |
+        If known, please provide the last version where the issue did not occur. Otherwise, leave blank.
+
+  - type: input
+    id: url
+    attributes:
+      label: Page Where the Problem Occurred
+      placeholder: e.g., http://localhost:8080/pdf/pipeline
+      description: |
+        If applicable, provide the URL where the issue occurred. Otherwise, leave blank.
+
+  - type: textarea
+    id: docker
+    attributes:
+      label: Docker Configuration
+      description: |
+        Enter your Docker configuration here if it is relevant to the error. Remove any personal data. Otherwise, leave the field blank.
+      render: txt
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Logs
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Log Output
+      description: |
+        Provide any log output that might help us diagnose the issue, such as error messages or stack traces.
+      render: txt
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Additional Information
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: |
+        If you have any additional information that might help us understand and resolve the issue, provide it here.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Browser Information
+
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: Browsers Affected
+      description: |
+        If applicable, select the browsers where you are experiencing the issue. Otherwise, leave blank.
+      multiple: true
+      options:
+        - Firefox
+        - Chrome
+        - Safari
+        - Microsoft Edge
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: No Duplicate of the Issue
+      description: |
+        Please confirm that you have searched for similar issues and none of them match your problem.
+      options:
+        - label: I have verified that there are no issues related to my problem.
+          required: true
