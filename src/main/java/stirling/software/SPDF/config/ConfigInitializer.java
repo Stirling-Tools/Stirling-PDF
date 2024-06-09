@@ -7,12 +7,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -49,24 +44,47 @@ public class ConfigInitializer
                 }
             }
         } else {
-            Path templatePath =
-                    Paths.get(
-                            getClass()
-                                    .getClassLoader()
-                                    .getResource("settings.yml.template")
-                                    .toURI());
-            Path userPath = Paths.get("configs", "settings.yml");
-
-            List<String> templateLines = Files.readAllLines(templatePath);
-            List<String> userLines =
-                    Files.exists(userPath) ? Files.readAllLines(userPath) : new ArrayList<>();
-
-            Map<String, String> templateEntries = extractEntries(templateLines);
-            Map<String, String> userEntries = extractEntries(userLines);
-
-            List<String> mergedLines = mergeConfigs(templateLines, templateEntries, userEntries);
-            mergedLines = cleanInvalidYamlEntries(mergedLines);
-            Files.write(userPath, mergedLines);
+            //            Path templatePath =
+            //                    Paths.get(
+            //                            getClass()
+            //                                    .getClassLoader()
+            //                                    .getResource("settings.yml.template")
+            //                                    .toURI());
+            //            Path userPath = Paths.get("configs", "settings.yml");
+            //
+            //            List<String> templateLines = Files.readAllLines(templatePath);
+            //            List<String> userLines =
+            //                    Files.exists(userPath) ? Files.readAllLines(userPath) : new
+            // ArrayList<>();
+            //
+            //            List<String> resultLines = new ArrayList<>();
+            //            int position = 0;
+            //            for (String templateLine : templateLines) {
+            //                // Check if the line is a comment
+            //                if (templateLine.trim().startsWith("#")) {
+            //                    String entry = templateLine.trim().substring(1).trim();
+            //                    if (!entry.isEmpty()) {
+            //                        // Check if this comment has been uncommented in userLines
+            //                        String key = entry.split(":")[0].trim();
+            //                        addLine(resultLines, userLines, templateLine, key, position);
+            //                    } else {
+            //                        resultLines.add(templateLine);
+            //                    }
+            //                }
+            //                // Check if the line is a key-value pair
+            //                else if (templateLine.contains(":")) {
+            //                    String key = templateLine.split(":")[0].trim();
+            //                    addLine(resultLines, userLines, templateLine, key, position);
+            //                }
+            //                // Handle empty lines
+            //                else if (templateLine.trim().length() == 0) {
+            //                    resultLines.add("");
+            //                }
+            //                position++;
+            //            }
+            //
+            //            // Write the result to the user settings file
+            //            Files.write(userPath, resultLines);
         }
 
         Path customSettingsPath = Paths.get("configs", "custom_settings.yml");
@@ -75,128 +93,46 @@ public class ConfigInitializer
         }
     }
 
-    private static Map<String, String> extractEntries(List<String> lines) {
-        Map<String, String> entries = new HashMap<>();
-        StringBuilder currentEntry = new StringBuilder();
-        String currentKey = null;
-        int blockIndent = -1;
-
-        for (String line : lines) {
-            if (line.trim().isEmpty()) {
-                if (currentKey != null) {
-                    currentEntry.append(line).append("\n");
+    // TODO check parent value instead of just indent lines for duplicate keys (like enabled etc)
+    private static void addLine(
+            List<String> resultLines,
+            List<String> userLines,
+            String templateLine,
+            String key,
+            int position) {
+        boolean added = false;
+        int templateIndentationLevel = getIndentationLevel(templateLine);
+        int pos = 0;
+        for (String settingsLine : userLines) {
+            if (settingsLine.trim().startsWith(key + ":") && position == pos) {
+                int settingsIndentationLevel = getIndentationLevel(settingsLine);
+                // Check if it is correct settingsLine and has the same parent as templateLine
+                if (settingsIndentationLevel == templateIndentationLevel) {
+                    resultLines.add(settingsLine);
+                    added = true;
+                    break;
                 }
-                continue;
             }
-
-            int indentLevel = getIndentationLevel(line);
-            if (line.trim().startsWith("#")) {
-                if (indentLevel <= blockIndent || blockIndent == -1) {
-                    if (currentKey != null) {
-                        entries.put(currentKey, currentEntry.toString().trim());
-                        currentEntry = new StringBuilder();
-                    }
-                    currentKey = line.trim().replaceAll("#", "").split(":")[0].trim();
-                    blockIndent = indentLevel;
-                }
-                currentEntry.append(line).append("\n");
-            } else if (indentLevel == 0 || indentLevel <= blockIndent) {
-                if (currentKey != null) {
-                    entries.put(currentKey, currentEntry.toString().trim());
-                    currentEntry = new StringBuilder();
-                }
-                currentKey = line.split(":")[0].trim();
-                blockIndent = indentLevel;
-                currentEntry.append(line).append("\n");
-            } else {
-                currentEntry.append(line).append("\n");
-            }
+            pos++;
         }
-
-        if (currentKey != null) {
-            entries.put(currentKey, currentEntry.toString().trim());
+        if (!added) {
+            resultLines.add(templateLine);
         }
-
-        return entries;
-    }
-
-    private static List<String> mergeConfigs(
-            List<String> templateLines,
-            Map<String, String> templateEntries,
-            Map<String, String> userEntries) {
-        List<String> mergedLines = new ArrayList<>();
-        Set<String> handledKeys = new HashSet<>();
-
-        String currentBlockKey = null;
-        int blockIndent = -1;
-
-        for (String line : templateLines) {
-            if (line.trim().isEmpty()) {
-                mergedLines.add(line);
-                continue;
-            }
-
-            int indentLevel = getIndentationLevel(line);
-            if (indentLevel == 0 || (indentLevel <= blockIndent && !line.trim().startsWith("#"))) {
-                currentBlockKey = line.split(":")[0].trim();
-                blockIndent = indentLevel;
-            }
-
-            if (userEntries.containsKey(currentBlockKey)
-                    && !handledKeys.contains(currentBlockKey)) {
-                mergedLines.add(userEntries.get(currentBlockKey));
-                handledKeys.add(currentBlockKey);
-            } else if (!handledKeys.contains(currentBlockKey)) {
-                mergedLines.add(line);
-            }
-        }
-
-        return mergedLines;
-    }
-
-    private static List<String> cleanInvalidYamlEntries(List<String> lines) {
-        List<String> cleanedLines = new ArrayList<>();
-        for (int i = 0; i < lines.size(); i++) {
-            String line = lines.get(i);
-            String trimmedLine = line.trim();
-
-            if (trimmedLine.startsWith("#")
-                    || !trimmedLine.endsWith(":")
-                    || trimmedLine.contains(" ")) {
-                cleanedLines.add(line);
-                continue;
-            }
-
-            if (isKeyWithoutChildrenOrValue(i, lines)) {
-                continue;
-            }
-
-            cleanedLines.add(line);
-        }
-        return cleanedLines;
-    }
-
-    private static boolean isKeyWithoutChildrenOrValue(int currentIndex, List<String> lines) {
-        if (currentIndex + 1 < lines.size()) {
-            String currentLine = lines.get(currentIndex);
-            String nextLine = lines.get(currentIndex + 1);
-            int currentIndentation = getIndentationLevel(currentLine);
-            int nextIndentation = getIndentationLevel(nextLine);
-
-            // If the next line is less or equally indented, it's not a child or value
-            return nextIndentation <= currentIndentation;
-        }
-
-        // If it's the last line, then it definitely has no children or value
-        return true;
     }
 
     private static int getIndentationLevel(String line) {
-        int count = 0;
-        for (char ch : line.toCharArray()) {
-            if (ch == ' ') count++;
-            else break;
+        int indentationLevel = 0;
+        String trimmedLine = line.trim();
+        if (trimmedLine.startsWith("#")) {
+            line = trimmedLine.substring(1);
         }
-        return count;
+        for (char c : line.toCharArray()) {
+            if (c == ' ') {
+                indentationLevel++;
+            } else {
+                break;
+            }
+        }
+        return indentationLevel;
     }
 }

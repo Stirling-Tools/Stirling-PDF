@@ -14,6 +14,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fathzer.soft.javaluator.DoubleEvaluator;
@@ -22,6 +24,8 @@ import io.github.pixee.security.HostValidator;
 import io.github.pixee.security.Urls;
 
 public class GeneralUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(GeneralUtils.class);
 
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
         File tempFile = Files.createTempFile("temp", null).toFile();
@@ -38,14 +42,14 @@ public class GeneralUtils {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                             throws IOException {
-                        Files.delete(file);
+                        Files.deleteIfExists(file);
                         return FileVisitResult.CONTINUE;
                     }
 
                     @Override
                     public FileVisitResult postVisitDirectory(Path dir, IOException exc)
                             throws IOException {
-                        Files.delete(dir);
+                        Files.deleteIfExists(dir);
                         return FileVisitResult.CONTINUE;
                     }
                 });
@@ -234,7 +238,7 @@ public class GeneralUtils {
             try {
                 Files.createDirectories(folder);
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("exception", e);
                 return false;
             }
         }

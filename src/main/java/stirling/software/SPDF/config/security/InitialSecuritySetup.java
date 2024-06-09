@@ -7,6 +7,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -19,32 +21,16 @@ public class InitialSecuritySetup {
 
     @Autowired private UserService userService;
 
-    @Autowired ApplicationProperties applicationProperties;
+    @Autowired private ApplicationProperties applicationProperties;
+
+    private static final Logger logger = LoggerFactory.getLogger(InitialSecuritySetup.class);
 
     @PostConstruct
     public void init() {
         if (!userService.hasUsers()) {
-
-            String initialUsername =
-                    applicationProperties.getSecurity().getInitialLogin().getUsername();
-            String initialPassword =
-                    applicationProperties.getSecurity().getInitialLogin().getPassword();
-            if (initialUsername != null && initialPassword != null) {
-                userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
-            } else {
-                initialUsername = "admin";
-                initialPassword = "stirling";
-                userService.saveUser(
-                        initialUsername, initialPassword, Role.ADMIN.getRoleId(), true);
-            }
+            initializeAdminUser();
         }
-        if (!userService.usernameExistsIgnoreCase(Role.INTERNAL_API_USER.getRoleId())) {
-            userService.saveUser(
-                    Role.INTERNAL_API_USER.getRoleId(),
-                    UUID.randomUUID().toString(),
-                    Role.INTERNAL_API_USER.getRoleId());
-            userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
-        }
+        initializeInternalApiUser();
     }
 
     @PostConstruct
@@ -53,6 +39,49 @@ public class InitialSecuritySetup {
         if (!isValidUUID(secretKey)) {
             secretKey = UUID.randomUUID().toString(); // Generating a random UUID as the secret key
             saveKeyToConfig(secretKey);
+        }
+    }
+
+    private void initializeAdminUser() {
+        String initialUsername =
+                applicationProperties.getSecurity().getInitialLogin().getUsername();
+        String initialPassword =
+                applicationProperties.getSecurity().getInitialLogin().getPassword();
+
+        if (initialUsername != null
+                && !initialUsername.isEmpty()
+                && initialPassword != null
+                && !initialPassword.isEmpty()
+                && !userService.findByUsernameIgnoreCase(initialUsername).isPresent()) {
+            try {
+                userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
+                logger.info("Admin user created: " + initialUsername);
+            } catch (IllegalArgumentException e) {
+                logger.error("Failed to initialize security setup", e);
+                System.exit(1);
+            }
+        } else {
+            createDefaultAdminUser();
+        }
+    }
+
+    private void createDefaultAdminUser() {
+        String defaultUsername = "admin";
+        String defaultPassword = "stirling";
+        if (!userService.findByUsernameIgnoreCase(defaultUsername).isPresent()) {
+            userService.saveUser(defaultUsername, defaultPassword, Role.ADMIN.getRoleId(), true);
+            logger.info("Default admin user created: " + defaultUsername);
+        }
+    }
+
+    private void initializeInternalApiUser() {
+        if (!userService.usernameExistsIgnoreCase(Role.INTERNAL_API_USER.getRoleId())) {
+            userService.saveUser(
+                    Role.INTERNAL_API_USER.getRoleId(),
+                    UUID.randomUUID().toString(),
+                    Role.INTERNAL_API_USER.getRoleId());
+            userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
+            logger.info("Internal API user created: " + Role.INTERNAL_API_USER.getRoleId());
         }
     }
 

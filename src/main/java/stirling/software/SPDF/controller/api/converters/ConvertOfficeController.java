@@ -3,7 +3,6 @@ package stirling.software.SPDF.controller.api.converters;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,34 +40,35 @@ public class ConvertOfficeController {
         // Save the uploaded file to a temporary location
         Path tempInputFile =
                 Files.createTempFile("input_", "." + FilenameUtils.getExtension(originalFilename));
-        Files.copy(inputFile.getInputStream(), tempInputFile, StandardCopyOption.REPLACE_EXISTING);
+        inputFile.transferTo(tempInputFile);
 
         // Prepare the output file path
         Path tempOutputFile = Files.createTempFile("output_", ".pdf");
 
-        // Run the LibreOffice command
-        List<String> command =
-                new ArrayList<>(
-                        Arrays.asList(
-                                "unoconv",
-                                "-vvv",
-                                "-f",
-                                "pdf",
-                                "-o",
-                                tempOutputFile.toString(),
-                                tempInputFile.toString()));
-        ProcessExecutorResult returnCode =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                        .runCommandWithOutputHandling(command);
+        try {
+            // Run the LibreOffice command
+            List<String> command =
+                    new ArrayList<>(
+                            Arrays.asList(
+                                    "unoconv",
+                                    "-vvv",
+                                    "-f",
+                                    "pdf",
+                                    "-o",
+                                    tempOutputFile.toString(),
+                                    tempInputFile.toString()));
+            ProcessExecutorResult returnCode =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                            .runCommandWithOutputHandling(command);
 
-        // Read the converted PDF file
-        byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
-
-        // Clean up the temporary files
-        Files.delete(tempInputFile);
-        Files.delete(tempOutputFile);
-
-        return pdfBytes;
+            // Read the converted PDF file
+            byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
+            return pdfBytes;
+        } finally {
+            // Clean up the temporary files
+            if (tempInputFile != null) Files.deleteIfExists(tempInputFile);
+            Files.deleteIfExists(tempOutputFile);
+        }
     }
 
     private boolean isValidFileExtension(String fileExtension) {
