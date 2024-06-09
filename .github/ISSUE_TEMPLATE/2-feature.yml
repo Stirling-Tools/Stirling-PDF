@@ -1,0 +1,91 @@
+name: Feature Request
+description: Submit a new feature request.
+title: "[Feature Request]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature Request
+
+        Thank you for taking the time to suggest a new feature!
+
+        This form is for proposing features or enhancements. Please fill out the following sections to help us understand your idea or suggestion.
+
+  - type: textarea
+    id: feature-description
+    validations:
+      required: true
+    attributes:
+      label: Feature Description
+      description: |
+        Describe the feature you would like to see. Tell us what the feature should do and the problem it would solve.
+
+        Provide a clear and concise description of what you want to happen.
+      placeholder: Provide a detailed description of the desired feature.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Motivation
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Why is this feature valuable?
+      description: |
+        Explain why this feature is valuable to you or others. How would it improve the tool or process?
+
+        Describe any relevant scenarios that would benefit from this feature.
+      placeholder: Describe why this feature is important.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Possible Implementation
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Suggested Implementation
+      description: |
+        If you have ideas about how this feature could be implemented, describe them here.
+
+        This section is optional but can be helpful to guide initial discussions.
+      placeholder: Describe how this feature might be implemented.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Alternatives Considered
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: |
+        Have you considered any alternative solutions or features? If so, describe them here.
+
+        Explain why the proposed feature would be better than existing alternatives.
+      placeholder: Describe any alternative solutions or features considered.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Additional Information
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: |
+        If you have any additional information, comments, or resources you think would support or be relevant to your feature request, include them here.
+
+  - type: checkboxes
+    id: search-confirmation
+    attributes:
+      label: No Duplicate of the Feature
+      description: |
+        Please confirm that you have searched for similar features in our repository and found none that match your request.
+      options:
+        - label: I have verified that there are no existing features similar to my request.
+          required: true
