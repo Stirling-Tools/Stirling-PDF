@@ -88,7 +88,7 @@ dependencies {
     //security updates
     implementation 'ch.qos.logback:logback-classic:1.5.3'
     implementation 'ch.qos.logback:logback-core:1.5.3'
-    implementation 'org.springframework:spring-webmvc:6.1.5'
+    implementation 'org.springframework:spring-webmvc:6.1.8'
 
     implementation("io.github.pixee:java-security-toolkit:1.1.3")
 
