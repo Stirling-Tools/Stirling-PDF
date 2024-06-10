@@ -269,7 +269,8 @@
                 document.getElementById("download-pdf").addEventListener('click', async() => {
                   const pdfWidth = DraggableUtils.pdfCanvas.width;
                   const pdfHeight = DraggableUtils.pdfCanvas.height;
-                  const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument(scale, pdfWidth, pdfHeight);
+                  const pdfViewer = document.getElementById('pdf-viewer');
+                  const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument(scale, pdfViewer);
                   const modifiedPdfBytes = await modifiedPdf.save();
                   const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
                   const link = document.createElement('a');
