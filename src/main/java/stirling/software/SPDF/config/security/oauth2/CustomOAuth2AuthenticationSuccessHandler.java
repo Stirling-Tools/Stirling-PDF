@@ -48,13 +48,14 @@ public class CustomOAuth2AuthenticationSuccessHandler
 
         // Get the saved request
         HttpSession session = request.getSession(false);
+        String contextPath = request.getContextPath();
         SavedRequest savedRequest =
                 (session != null)
                         ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
                         : null;
 
         if (savedRequest != null
-                && !RequestUriUtils.isStaticResource(savedRequest.getRedirectUrl())) {
+                && !RequestUriUtils.isStaticResource(contextPath, savedRequest.getRedirectUrl())) {
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {
@@ -75,16 +76,15 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     && !userService.isAuthenticationTypeByUsername(
                             username, AuthenticationType.OAUTH2)
                     && oAuth.getAutoCreateUser()) {
-                response.sendRedirect(
-                        request.getContextPath() + "/logout?oauth2AuthenticationErrorWeb=true");
+                response.sendRedirect(contextPath + "/logout?oauth2AuthenticationErrorWeb=true");
                 return;
             } else {
                 try {
                     userService.processOAuth2PostLogin(username, oAuth.getAutoCreateUser());
-                    response.sendRedirect("/");
+                    response.sendRedirect(contextPath + "/");
                     return;
                 } catch (IllegalArgumentException e) {
-                    response.sendRedirect("/logout?invalidUsername=true");
+                    response.sendRedirect(contextPath + "/logout?invalidUsername=true");
                     return;
                 }
             }
