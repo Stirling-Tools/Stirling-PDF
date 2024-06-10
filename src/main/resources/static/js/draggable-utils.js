@@ -332,10 +332,15 @@ const DraggableUtils = {
         console.log("scale:", scale);
         console.log("viewportLeft:", viewportLeft);
         console.log("viewportTop:", viewportTop);
+        const firstPage = pdfDocModified.getPage(0);
+
+        // Calculate the difference in size between pdfDoc and pdfDocModified
+        const widthDiff = pdfDoc.offsetWidth / firstPage.getWidth();
+        const heightDiff = pdfDoc.offsetHeight / firstPage.getHeight();
 
         // Draw the image at the position relative to the PDF document
         page.drawImage(pdfImageObject, {
-          x: (dragLeft + viewportLeft / scale),
+          x: (dragLeft + viewportLeft / scale) / widthDiff ,
           y: pdfDoc.offsetHeight - (dragTop  + viewportTop / scale) - draggableData.offsetHeight / scale,
           width: draggableData.offsetWidth / scale,
           height: draggableData.offsetHeight / scale,
@@ -348,8 +353,14 @@ const DraggableUtils = {
     }
 
     this.loadPageContents();
-    console.log("new width", pdfDocModified.offsetWidth);
-    console.log("new height", pdfDocModified.offsetHeight);
+    const firstPage = pdfDocModified.getPage(0);
+
+// Get the width and height of the page
+    const width = firstPage.getWidth();
+    const height = firstPage.getHeight();
+
+    console.log("Width of the first page:", width);
+    console.log("Height of the first page:", height);
     return pdfDocModified;
 
 
