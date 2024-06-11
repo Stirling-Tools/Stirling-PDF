@@ -340,8 +340,8 @@ const DraggableUtils = {
 
         // Draw the image at the position relative to the PDF document
         page.drawImage(pdfImageObject, {
-          x: (dragLeft + viewportLeft / scale) / widthDiff ,
-          y: pdfDoc.offsetHeight - (dragTop  + viewportTop / scale) - draggableData.offsetHeight / scale,
+          x: ((dragLeft + viewportLeft / scale) / widthDiff),
+          y: (pdfDoc.offsetHeight - (dragTop  + viewportTop / scale) - draggableData.offsetHeight / scale) / heightDiff,
           width: draggableData.offsetWidth / scale,
           height: draggableData.offsetHeight / scale,
         });
