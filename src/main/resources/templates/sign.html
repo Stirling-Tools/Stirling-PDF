@@ -242,8 +242,19 @@
                     </button>
                   </div>
                   <div class="button-group">
-                    <button class="btn btn-outline-secondary zoomButton"  id="zoomIn">Zoom In</button>
-                    <button class="btn btn-outline-secondary zoomButton"  id="zoomOut">Zoom Out</button>
+                    <!-- Zoom In Button -->
+                    <button class="btn btn-outline-secondary zoomButton" id="zoomIn">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-zoom-in" viewBox="0 0 16 16">
+                        <path d="M15.5 14l-3.79-3.79a6 6 0 1 0-.7.7l3.79 3.79v.5l.7.71L16 14.5v-.5h-.5zM6 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm1-7a.5.5 0 0 1 .5.5v1.5h1.5a.5.5 0 0 1 0 1H7.5v1.5a.5.5 0 0 1-1 0V6H5a.5.5 0 0 1 0-1h1.5V3.5a.5.5 0 0 1 .5-.5z"/>
+                      </svg>
+                    </button>
+
+                    <!-- Zoom Out Button -->
+                    <button class="btn btn-outline-secondary zoomButton" id="zoomOut">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-zoom-out" viewBox="0 0 16 16">
+                        <path d="M15.5 14l-3.79-3.79a6 6 0 1 0-.7.7l3.79 3.79v.5l.7.71L16 14.5v-.5h-.5zM6 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm-2-5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.5-.5z"/>
+                      </svg>
+                    </button>
                   </div>
                   <div class="button-group">
                     <button class="btn btn-outline-secondary" onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.incrementPage() : DraggableUtils.decrementPage()" style="margin-left:auto">

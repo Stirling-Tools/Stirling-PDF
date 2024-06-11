@@ -37,6 +37,7 @@ select#font-select option {
 .button-group {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 10px;
   padding: 10px;
 }
@@ -44,6 +45,7 @@ select#font-select option {
 .button-group > button {
   background-color: rgba(13, 110, 253, 0.1);
   z-index: 10;
+  align-items: center;
 }
 #page-container {
   position: relative;
