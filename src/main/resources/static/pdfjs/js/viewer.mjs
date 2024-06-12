@@ -715,7 +715,7 @@ const defaultOptions = {
     kind: OptionKind.API
   },
   cMapUrl: {
-    value: "../web/cmaps/",
+    value: "./pdfjs/cmaps/",
     kind: OptionKind.API
   },
   disableAutoFetch: {
@@ -763,7 +763,7 @@ const defaultOptions = {
     kind: OptionKind.API
   },
   standardFontDataUrl: {
-    value: "../web/standard_fonts/",
+    value: "./pdfjs/standard_fonts/",
     kind: OptionKind.API
   },
   verbosity: {
@@ -785,7 +785,7 @@ const defaultOptions = {
     kind: OptionKind.VIEWER
   };
   defaultOptions.sandboxBundleSrc = {
-    value: "../build/pdf.sandbox.mjs",
+    value: "./pdfjs/pdf.sandbox.mjs",
     kind: OptionKind.VIEWER
   };
   defaultOptions.viewerCssTheme = {
