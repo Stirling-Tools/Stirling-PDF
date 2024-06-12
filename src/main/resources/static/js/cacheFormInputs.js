@@ -47,7 +47,9 @@ document.addEventListener("DOMContentLoaded", function() {
         formData[element.name] = element.value;
       }
     }
-    localStorage.setItem(formKey, JSON.stringify(formData));
+    if (Object.keys(formData).length > 0) {
+      localStorage.setItem(formKey, JSON.stringify(formData));
+    }
   }
 
   // Function to load form data from localStorage
