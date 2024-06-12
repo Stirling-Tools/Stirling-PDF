@@ -59,7 +59,7 @@ public class UserController {
     @PostMapping("/change-username")
     public RedirectView changeUsername(
             Principal principal,
-            @RequestParam(name = "currentPassword") String currentPassword,
+            @RequestParam(name = "currentPasswordChangeUsername") String currentPassword,
             @RequestParam(name = "newUsername") String newUsername,
             HttpServletRequest request,
             HttpServletResponse response,

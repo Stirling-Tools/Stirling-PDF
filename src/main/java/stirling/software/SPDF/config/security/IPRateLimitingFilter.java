@@ -33,7 +33,8 @@ public class IPRateLimitingFilter implements Filter {
             String method = httpRequest.getMethod();
             String requestURI = httpRequest.getRequestURI();
             // Check if the request is for static resources
-            boolean isStaticResource = RequestUriUtils.isStaticResource(requestURI);
+            boolean isStaticResource =
+                    RequestUriUtils.isStaticResource(httpRequest.getContextPath(), requestURI);
 
             // If it's a static resource, just continue the filter chain and skip the logic below
             if (isStaticResource) {
