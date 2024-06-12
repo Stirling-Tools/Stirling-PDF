@@ -28,8 +28,10 @@ public class FirstLoginFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String method = request.getMethod();
         String requestURI = request.getRequestURI();
+        String contextPath = request.getContextPath();
+
         // Check if the request is for static resources
-        boolean isStaticResource = RequestUriUtils.isStaticResource(requestURI);
+        boolean isStaticResource = RequestUriUtils.isStaticResource(contextPath, requestURI);
 
         // If it's a static resource, just continue the filter chain and skip the logic below
         if (isStaticResource) {
@@ -43,8 +45,8 @@ public class FirstLoginFilter extends OncePerRequestFilter {
             if ("GET".equalsIgnoreCase(method)
                     && user.isPresent()
                     && user.get().isFirstLogin()
-                    && !"/change-creds".equals(requestURI)) {
-                response.sendRedirect(request.getContextPath() + "/change-creds");
+                    && !(contextPath + "/change-creds").equals(requestURI)) {
+                response.sendRedirect(contextPath + "/change-creds");
                 return;
             }
         }
