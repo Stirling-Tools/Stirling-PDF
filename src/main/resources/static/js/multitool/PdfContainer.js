@@ -138,7 +138,7 @@ class PdfContainer {
   }
 
   async toRenderer(objectUrl) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "./pdfjs/pdf.worker.mjs";
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "./pdfjs-legacy/pdf.worker.mjs";
     const pdf = await pdfjsLib.getDocument(objectUrl).promise;
     return {
       document: pdf,
