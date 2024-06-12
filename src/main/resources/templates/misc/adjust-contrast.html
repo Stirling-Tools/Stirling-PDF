@@ -60,7 +60,7 @@
                   var fileReader = new FileReader();
                   fileReader.onload = async function() {
                     var data = new Uint8Array(this.result);
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.mjs'
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
                     pdf = await pdfjsLib.getDocument({data: data}).promise;
 
                     // Get the number of pages in the PDF
