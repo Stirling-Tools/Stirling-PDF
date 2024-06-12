@@ -145,6 +145,28 @@ public class RearrangePagesPDFController {
         return newPageOrder;
     }
 
+    /**
+     * Rearrange pages in a PDF file by merging odd and even pages. The first half of the pages will
+     * be the odd pages, and the second half will be the even pages as input. <br>
+     * This method is visible for testing purposes only.
+     *
+     * @param totalPages Total number of pages in the PDF file.
+     * @return List of page numbers in the new order. The first page is 0.
+     */
+    List<Integer> oddEvenMerge(int totalPages) {
+        List<Integer> newPageOrderZeroBased = new ArrayList<>();
+        int numberOfOddPages = (totalPages + 1) / 2;
+
+        for (int oneBasedIndex = 1; oneBasedIndex < (numberOfOddPages + 1); oneBasedIndex++) {
+            newPageOrderZeroBased.add((oneBasedIndex - 1));
+            if (numberOfOddPages + oneBasedIndex <= totalPages) {
+                newPageOrderZeroBased.add((numberOfOddPages + oneBasedIndex - 1));
+            }
+        }
+
+        return newPageOrderZeroBased;
+    }
+
     private List<Integer> processSortTypes(String sortTypes, int totalPages) {
         try {
             SortTypes mode = SortTypes.valueOf(sortTypes.toUpperCase());
@@ -159,6 +181,8 @@ public class RearrangePagesPDFController {
                     return sideStitchBooklet(totalPages);
                 case ODD_EVEN_SPLIT:
                     return oddEvenSplit(totalPages);
+                case ODD_EVEN_MERGE:
+                    return oddEvenMerge(totalPages);
                 case REMOVE_FIRST:
                     return removeFirst(totalPages);
                 case REMOVE_LAST:
