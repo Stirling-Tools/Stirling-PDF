@@ -167,33 +167,33 @@ Stirling PDF currently supports 32!
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
 | Arabic (العربية) (ar_AR)                    | ![46%](https://geps.dev/progress/46)   |
 | German (Deutsch) (de_DE)                    | ![99%](https://geps.dev/progress/99)   |
-| French (Français) (fr_FR)                   | ![94%](https://geps.dev/progress/94)   |
-| Spanish (Español) (es_ES)                   | ![94%](https://geps.dev/progress/94)   |
-| Simplified Chinese (简体中文) (zh_CN)       | ![95%](https://geps.dev/progress/95)   |
-| Traditional Chinese (繁體中文) (zh_TW)      | ![99%](https://geps.dev/progress/99)   |
+| French (Français) (fr_FR)                   | ![93%](https://geps.dev/progress/93)   |
+| Spanish (Español) (es_ES)                   | ![93%](https://geps.dev/progress/93)   |
+| Simplified Chinese (简体中文) (zh_CN)       | ![94%](https://geps.dev/progress/94)   |
+| Traditional Chinese (繁體中文) (zh_TW)      | ![98%](https://geps.dev/progress/98)   |
 | Catalan (Català) (ca_CA)                    | ![49%](https://geps.dev/progress/49)   |
-| Italian (Italiano) (it_IT)                  | ![99%](https://geps.dev/progress/99)   |
+| Italian (Italiano) (it_IT)                  | ![98%](https://geps.dev/progress/98)   |
 | Swedish (Svenska) (sv_SE)                   | ![40%](https://geps.dev/progress/40)   |
 | Polish (Polski) (pl_PL)                     | ![42%](https://geps.dev/progress/42)   |
 | Romanian (Română) (ro_RO)                   | ![39%](https://geps.dev/progress/39)   |
-| Korean (한국어) (ko_KR)                     | ![87%](https://geps.dev/progress/87)   |
+| Korean (한국어) (ko_KR)                     | ![86%](https://geps.dev/progress/86)   |
 | Portuguese Brazilian (Português) (pt_BR)    | ![61%](https://geps.dev/progress/61)   |
 | Russian (Русский) (ru_RU)                   | ![86%](https://geps.dev/progress/86)   |
 | Basque (Euskara) (eu_ES)                    | ![63%](https://geps.dev/progress/63)   |
-| Japanese (日本語) (ja_JP)                   | ![87%](https://geps.dev/progress/87)   |
-| Dutch (Nederlands) (nl_NL)                  | ![84%](https://geps.dev/progress/84)   |
-| Greek (Ελληνικά) (el_GR)                    | ![85%](https://geps.dev/progress/85)   |
-| Turkish (Türkçe) (tr_TR)                    | ![97%](https://geps.dev/progress/97)   |
+| Japanese (日本語) (ja_JP)                   | ![86%](https://geps.dev/progress/86)   |
+| Dutch (Nederlands) (nl_NL)                  | ![83%](https://geps.dev/progress/83)   |
+| Greek (Ελληνικά) (el_GR)                    | ![84%](https://geps.dev/progress/84)   |
+| Turkish (Türkçe) (tr_TR)                    | ![96%](https://geps.dev/progress/96)   |
 | Indonesia (Bahasa Indonesia) (id_ID)        | ![78%](https://geps.dev/progress/78)   |
 | Hindi (हिंदी) (hi_IN)                          | ![79%](https://geps.dev/progress/79)   |
 | Hungarian (Magyar) (hu_HU)                  | ![77%](https://geps.dev/progress/77)   |
-| Bulgarian (Български) (bg_BG)               | ![97%](https://geps.dev/progress/97)   |
+| Bulgarian (Български) (bg_BG)               | ![96%](https://geps.dev/progress/96)   |
 | Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![80%](https://geps.dev/progress/80)   |
-| Ukrainian (Українська) (uk_UA)              | ![86%](https://geps.dev/progress/86)   |
-| Slovakian (Slovensky) (sk_SK)               | ![94%](https://geps.dev/progress/94)   |
-| Czech (Česky) (cs_CZ)                       | ![93%](https://geps.dev/progress/93)   |
-| Croatian (Hrvatski) (hr_HR)                 | ![98%](https://geps.dev/progress/98)   |
-| Norwegian (Norsk) (no_NB)                   | ![98%](https://geps.dev/progress/98)   |
+| Ukrainian (Українська) (uk_UA)              | ![85%](https://geps.dev/progress/85)   |
+| Slovakian (Slovensky) (sk_SK)               | ![93%](https://geps.dev/progress/93)   |
+| Czech (Česky) (cs_CZ)                       | ![92%](https://geps.dev/progress/92)   |
+| Croatian (Hrvatski) (hr_HR)                 | ![97%](https://geps.dev/progress/97)   |
+| Norwegian (Norsk) (no_NB)                   | ![97%](https://geps.dev/progress/97)   |
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
