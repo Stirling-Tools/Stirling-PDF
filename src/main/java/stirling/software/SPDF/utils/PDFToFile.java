@@ -140,6 +140,8 @@ public class PDFToFile {
                     new ArrayList<>(
                             Arrays.asList(
                                     "soffice",
+                                    "--headless",
+                                    "--nologo",
                                     "--infilter=" + libreOfficeFilter,
                                     "--convert-to",
                                     outputFormat,
