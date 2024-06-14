@@ -282,7 +282,7 @@ public class PdfUtils {
 
                     // Create a new BufferedImage to store the combined images
                     BufferedImage combined =
-                            new BufferedImage(maxWidth, totalHeight, BufferedImage.TYPE_INT_RGB);
+                            prepareImageForPdfToImage(maxWidth, totalHeight, imageType);
                     Graphics g = combined.getGraphics();
 
                     int currentHeight = 0;
@@ -339,6 +339,23 @@ public class PdfUtils {
             logger.error("Error converting PDF to image", e);
             throw e;
         }
+    }
+
+    private static BufferedImage prepareImageForPdfToImage(
+            int maxWidth, int height, String imageType) {
+        BufferedImage combined;
+        if ("png".equalsIgnoreCase(imageType)) {
+            combined = new BufferedImage(maxWidth, height, BufferedImage.TYPE_INT_ARGB);
+        } else {
+            combined = new BufferedImage(maxWidth, height, BufferedImage.TYPE_INT_RGB);
+        }
+        if (!"png".equalsIgnoreCase(imageType)) {
+            Graphics g = combined.getGraphics();
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, combined.getWidth(), combined.getHeight());
+            g.dispose();
+        }
+        return combined;
     }
 
     public static byte[] imageToPdf(
