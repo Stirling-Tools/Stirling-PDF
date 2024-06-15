@@ -82,6 +82,20 @@
             "moduleLicenseUrl": "http://www.gnu.org/licenses/lgpl-3.0.html"
         },
         {
+            "moduleName": "com.github.Carleslc.Simple-YAML:Simple-Configuration",
+            "moduleUrl": "https://carleslc.me/Simple-YAML",
+            "moduleVersion": "1.8.4",
+            "moduleLicense": "GNU General Public License v3.0",
+            "moduleLicenseUrl": "https://api.github.com/licenses/gpl-3.0"
+        },
+        {
+            "moduleName": "com.github.Carleslc.Simple-YAML:Simple-Yaml",
+            "moduleUrl": "https://carleslc.me/Simple-YAML",
+            "moduleVersion": "1.8.4",
+            "moduleLicense": "GNU General Public License v3.0",
+            "moduleLicenseUrl": "https://api.github.com/licenses/gpl-3.0"
+        },
+        {
             "moduleName": "com.github.stephenc.jcip:jcip-annotations",
             "moduleUrl": "http://stephenc.github.com/jcip-annotations",
             "moduleVersion": "1.0-1",
