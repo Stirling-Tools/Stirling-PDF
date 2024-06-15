@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpSession;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.Provider;
+import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 import stirling.software.SPDF.utils.UrlUtils;
 
 public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
@@ -51,8 +52,8 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
                 Provider provider = oauth.getClient().get(registrationId);
                 issuer = provider.getIssuer();
                 clientId = provider.getClientId();
-            } catch (Exception e) {
-                logger.error("exception", e);
+            } catch (UnsupportedProviderException e) {
+                logger.error(e.getMessage());
             }
 
         } else {
