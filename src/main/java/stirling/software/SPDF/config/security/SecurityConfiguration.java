@@ -38,12 +38,12 @@ import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationS
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2LogoutSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.GithubProvider;
-import stirling.software.SPDF.model.ApplicationProperties.GoogleProvider;
-import stirling.software.SPDF.model.ApplicationProperties.KeycloakProvider;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.model.provider.GithubProvider;
+import stirling.software.SPDF.model.provider.GoogleProvider;
+import stirling.software.SPDF.model.provider.KeycloakProvider;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 
 @Configuration
