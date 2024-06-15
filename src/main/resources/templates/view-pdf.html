@@ -28,18 +28,18 @@ See https://github.com/adobe-type-tools/cmap-resources
     <title>PDF.js viewer</title>
 
     <!-- Bootstrap -->
-    <script src="js/thirdParty/popper.min.js"></script>
-    <script src="js/thirdParty/bootstrap.min.js"></script>
+    <script th:src="@{'/js/thirdParty/popper.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/bootstrap.min.js'}"></script>
 
-    <link rel="stylesheet" href="css/theme/componentes.css">
-    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" th:href="@{'/css/theme/componentes.css'}">
+    <link rel="stylesheet" th:href="@{'/css/navbar.css'}">
 
     <!-- This snippet is used in production (included from view-pdf.html) -->
-    <link rel="resource" type="application/l10n" href="./pdfjs-legacy/locale/locale.json">
-    <script src="./pdfjs-legacy/pdf.mjs" type="module"></script>
+    <link rel="resource" type="application/l10n" th:href="@{'/pdfjs-legacy/locale/locale.json'}">
+    <script th:src="@{'/pdfjs-legacy/pdf.mjs'}" type="module"></script>
 
-    <link rel="stylesheet" href="./pdfjs-legacy/css/viewer.css">
-    <script src="./pdfjs-legacy/js/viewer.mjs" type="module"></script>
+    <link rel="stylesheet" th:href="@{'/pdfjs-legacy/css/viewer.css'}">
+    <script th:src="@{'/pdfjs-legacy/js/viewer.mjs'}" type="module"></script>
   </head>
 
   <body tabindex="1">
@@ -298,8 +298,8 @@ See https://github.com/adobe-type-tools/cmap-resources
                   <input type="number" id="pageNumber" class="toolbarField" title="Page" value="1" min="1" tabindex="15" data-l10n-id="pdfjs-page-input" autocomplete="off">
                 </span>
                 <span id="numPages" class="toolbarLabel"></span>
-                <a class="navbar-brand hiddenMediumView" th:href="@{/}" tabindex="16" >
-                  <img class="main-icon" src="favicon.svg" alt="icon" style="max-height: 1.6rem; width: auto;">
+                <a class="navbar-brand hiddenMediumView" th:href="@{'/'}" tabindex="16" >
+                  <img class="main-icon" th:src="@{'/favicon.svg'}" alt="icon" style="max-height: 1.6rem; width: auto;">
                   <span class="icon-text" style="color: #ffffff;" th:text="${@appName}">Stirling PDF</span>
                 </a>
               </div>
@@ -308,7 +308,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                   <button id="editorHighlight" class="toolbarButton" hidden="true" disabled="disabled" title="Highlight" role="radio" aria-checked="false" aria-controls="editorHighlightParamsToolbar" tabindex="31" data-l10n-id="pdfjs-editor-highlight-button">
                     <span data-l10n-id="pdfjs-editor-highlight-button-label">Highlight</span>
                   </button>
-                  <a id="backToHome" class="toolbarButton hiddenMediumView" title="Back to Main Page" role="radio" aria-checked="false" tabindex="32" th:href="@{/}">
+                  <a id="backToHome" class="toolbarButton hiddenMediumView" title="Back to Main Page" role="radio" aria-checked="false" tabindex="32" th:href="@{'/'}">
                     <span data-l10n-id="pdfjs-open-file-button-label">Back to Main Page</span>
                   </a>
                   <button id="openFile" class="toolbarButton hiddenMediumView" title="Open File" role="radio" aria-checked="false" tabindex="33" data-l10n-id="pdfjs-open-file-button">

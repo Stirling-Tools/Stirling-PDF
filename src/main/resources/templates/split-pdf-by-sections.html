@@ -2,7 +2,7 @@
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{split-by-sections.title}, header=#{split-by-sections.header})}"></th:block>
-    <link rel="stylesheet" href="css/split-pdf-by-sections.css">
+    <link rel="stylesheet" th:href="@{'/css/split-pdf-by-sections.css'}">
   </head>
 
   <body>
@@ -18,7 +18,7 @@
                 <span class="material-symbols-rounded tool-header-icon advance">grid_on</span>
                 <span class="tool-header-text" th:text="#{split-by-sections.header}"></span>
               </div>
-              <form method="post" enctype="multipart/form-data" th:action="@{/api/v1/general/split-pdf-by-sections}">
+              <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/split-pdf-by-sections'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <label for="horizontalDivisions" th:text="#{split-by-sections.horizontal.label}">Horizontal Divisions</label>
                 <input type="number" id="horizontalDivisions" name="horizontalDivisions" class="form-control" min="0" max="300" value="0" required th:placeholder="#{split-by-sections.horizontal.placeholder}">

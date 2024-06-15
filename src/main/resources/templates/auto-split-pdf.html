@@ -21,7 +21,7 @@
               <span class="tool-header-text" th:text="#{autoSplitPDF.header}"></span>
             </div>
 
-            <form method="post" enctype="multipart/form-data" th:action="@{api/v1/misc/auto-split-pdf}">
+            <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/auto-split-pdf'}">
               <p th:text="#{autoSplitPDF.formPrompt}"></p>
               <div
                 th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}">
@@ -43,9 +43,9 @@
                   <li th:text="#{autoSplitPDF.selectText.3}"></li>
                   <li th:text="#{autoSplitPDF.selectText.4}"></li>
                 </ul>
-                <p><a th:href="@{files/Auto%20Splitter%20Divider%20(minimal).pdf}" download
+                <p><a th:href="@{'/files/Auto%20Splitter%20Divider%20(minimal).pdf'}" download
                     th:text="#{autoSplitPDF.dividerDownload1}"></a></p>
-                <p><a th:href="@{files/Auto%20Splitter%20Divider%20(with%20instructions).pdf}" download
+                <p><a th:href="@{'/files/Auto%20Splitter%20Divider%20(with%20instructions).pdf'}" download
                     th:text="#{autoSplitPDF.dividerDownload2}"></a></p>
               </div>
 

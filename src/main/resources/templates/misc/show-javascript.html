@@ -2,8 +2,8 @@
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{showJS.title}, header=#{showJS.header})}"></th:block>
-    <link href="css/prism.css" rel="stylesheet">
-    <script src="js/thirdParty/prism.js"></script>
+    <link th:href="@{'/css/prism.css'}" rel="stylesheet">
+    <script th:src="@{'/js/thirdParty/prism.js'}"></script>
     <style>
       /* Add a max-height and make it scrollable */
       #script-content {
@@ -25,7 +25,7 @@
                 <span class="material-symbols-rounded tool-header-icon advance">javascript</span>
                 <span class="tool-header-text" th:text="#{showJS.header}"></span>
               </div>
-              <form id="pdfInfoForm" method="post" enctype="multipart/form-data" th:action="@{show-javascript}">
+              <form id="pdfInfoForm" method="post" enctype="multipart/form-data" th:action="@{'/show-javascript'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false', accept='application/pdf')}"></div>
                 <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{showJS.submit}"></button>

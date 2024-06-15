@@ -1,15 +1,15 @@
 <div th:fragment="navbar" class="mx-auto">
-  <script src="js/languageSelection.js"></script>
+  <script th:src="@{'/js/languageSelection.js'}"></script>
   <script th:inline="javascript">
     const currentVersion = /*[[${@appVersion}]]*/ '';
     const noFavourites = /*[[#{noFavourites}]]*/ '';
     const updateAvailable =  /*[[#{settings.updateAvailable}]]*/ '';
   </script>
-  <script src="js/githubVersion.js"></script>
+  <script th:src="@{'/js/githubVersion.js'}"></script>
   <nav class="navbar navbar-expand-lg">
     <div class="container ">
-      <a class="navbar-brand" th:href="@{/}" style="display: flex;">
-        <img class="main-icon" src="favicon.svg" alt="icon">
+      <a class="navbar-brand" th:href="@{'/'}" style="display: flex;">
+        <img class="main-icon" th:src="@{'/favicon.svg'}" alt="icon">
         <span class="icon-text" th:text="${@navBarText}"></span>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -242,7 +242,7 @@
           </li>
 
           <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('multi-tool')}">
-            <a class="nav-link" href="#" th:href="@{multi-tool}"
+            <a class="nav-link" href="#" th:href="@{'/multi-tool'}"
               th:classappend="${currentPage}=='multi-tool' ? 'active' : ''" th:title="#{home.multiTool.desc}">
               <span class="material-symbols-rounded">
                 construction
@@ -252,7 +252,7 @@
           </li>
 
           <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('pipeline')}" >
-            <a class="nav-link" href="#" th:href="@{pipeline}"
+            <a class="nav-link" href="#" th:href="@{'/pipeline'}"
               th:classappend="${currentPage}=='pipeline' ? 'active' : ''" th:title="#{home.pipeline.desc}">
               <span class="material-symbols-rounded">
                 family_history
@@ -262,7 +262,7 @@
           </li>
 
           <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('compress-pdf')}" >
-            <a class="nav-link" href="#" title="#{home.compressPdfs.title}" th:href="@{compress-pdf}"
+            <a class="nav-link" href="#" title="#{home.compressPdfs.title}" th:href="@{'/compress-pdf'}"
               th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''" th:title="#{home.compressPdfs.desc}">
               <span class="material-symbols-rounded">
                 zoom_in_map
@@ -273,7 +273,7 @@
           </li>
 
           <li class="nav-item">
-            <a class="nav-link" href="#" th:href="@{split-pdfs}"
+            <a class="nav-link" href="#" th:href="@{'/split-pdfs'}"
               th:classappend="${currentPage}=='split-pdfs' ? 'active' : ''" th:title="#{home.split-pdfs.desc}">
               <span class="material-symbols-rounded">
                 cut
@@ -283,7 +283,7 @@
           </li>
 
           <!-- <li class="nav-item">
-            <a class="nav-link" href="#" th:href="@{merge-pdfs}"
+            <a class="nav-link" href="#" th:href="@{'/merge-pdfs'}"
               th:classappend="${currentPage}=='merge-pdfs' ? 'active' : ''" th:title="#{home.merge.desc}">
               <span class="material-symbols-rounded">
                 add_to_photos
@@ -363,8 +363,8 @@
         </ul>
       </div>
     </div>
-    <script src="js/favourites.js"></script>
-    <script src="js/search.js"></script>
+    <script th:src="@{'/js/favourites.js'}"></script>
+    <script th:src="@{'/js/search.js'}"></script>
   </nav>
 
   <th:block th:insert="~{fragments/errorBannerPerPage.html :: errorBannerPerPage}"></th:block>
@@ -386,13 +386,13 @@
             <div class="footer-center" style="flex-direction: row;">
               <a href="https://github.com/Stirling-Tools/Stirling-PDF" class="mx-1" role="button"
                 th:title="#{visitGithub}">
-                <img src="images/github.svg" alt="github">
+                <img th:src="@{'/images/github.svg'}" alt="github">
               </a>
               <a href="https://hub.docker.com/r/frooodle/s-pdf" class="mx-1" role="button" th:title="#{seeDockerHub}">
-                <img src="images/docker.svg" alt="docker">
+                <img th:src="@{'/images/docker.svg'}" alt="docker">
               </a>
               <a href="https://discord.gg/Cn8pWhQRxZ" class="mx-1" role="button" th:title="#{joinDiscord}">
-                <img src="images/discord.svg" alt="discord">
+                <img th:src="@{'/images/discord.svg'}" alt="discord">
               </a>
               <a href="https://github.com/sponsors/Frooodle" class="mx-1" role="button" th:title="#{donate}">
                 <span class="material-symbols-rounded fill footer-icon" style="font-size: 2.5rem;">
@@ -401,7 +401,7 @@
               </a>
             </div>
 
-            <a href="swagger-ui/index.html" class="btn btn-sm btn-outline-primary mx-1" role="button"
+            <a th:href="@{'/swagger-ui/index.html'}" class="btn btn-sm btn-outline-primary mx-1" role="button"
               target="_blank">API</a>
             <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases"
               class="btn btn-sm btn-outline-primary mx-1" id="update-btn" th:utext="#{settings.update}" role="button"
@@ -430,16 +430,16 @@
             <label for="cacheInputs" th:text="#{settings.cacheInputs.name}"></label>
           </div>
 
-          <a th:if="${@loginEnabled and @activSecurity}" href="account" class="btn btn-sm btn-outline-primary"
+          <a th:if="${@loginEnabled and @activSecurity}" th:href="@{'/account'}" class="btn btn-sm btn-outline-primary"
             role="button" th:text="#{settings.accountSettings}" target="_blank">Account Settings</a>
         </div>
         <div class="modal-footer">
           <a th:if="${@loginEnabled and @activSecurity}" class="btn btn-danger" role="button"
-            th:text="#{settings.signOut}" href="logout">Sign Out</a>
+            th:text="#{settings.signOut}" th:href="@{'/logout'}">Sign Out</a>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
         </div>
       </div>
     </div>
   </div>
-  <script src="js/settings.js"></script>
+  <script th:src="@{'/js/settings.js'}"></script>
 </div>

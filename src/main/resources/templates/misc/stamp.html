@@ -27,7 +27,7 @@
                 <span class="material-symbols-rounded tool-header-icon security">approval</span>
                 <span class="tool-header-text" th:text="#{AddStampRequest.header}"></span>
               </div>
-              <form method="post" enctype="multipart/form-data" th:action="@{api/v1/misc/add-stamp}">
+              <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/add-stamp'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <br>
                 <div class="mb-3">

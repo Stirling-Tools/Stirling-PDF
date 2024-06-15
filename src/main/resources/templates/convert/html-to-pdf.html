@@ -17,7 +17,7 @@
                 <span class="material-symbols-rounded tool-header-icon convert">html</span>
                 <span class="tool-header-text" th:text="#{HTMLToPDF.header}"></span>
               </div>
-              <form method="post" enctype="multipart/form-data" th:action="@{api/v1/convert/html/pdf}">
+              <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/html/pdf'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='text/html,application/zip' )}"></div>
                 <div class="mb-3">
                   <label for="zoom" th:text="#{HTMLToPDF.zoom}" class="form-label"></label>

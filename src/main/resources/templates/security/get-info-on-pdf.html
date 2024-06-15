@@ -16,7 +16,7 @@
                 <span class="material-symbols-rounded tool-header-icon other">info</span>
                 <span class="tool-header-text" th:text="#{getPdfInfo.header}"></span>
               </div>
-              <form id="pdfInfoForm" method="post" enctype="multipart/form-data" th:action="@{api/v1/security/get-info-on-pdf}">
+              <form id="pdfInfoForm" method="post" enctype="multipart/form-data" th:action="@{'/api/v1/security/get-info-on-pdf'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false', accept='application/pdf')}"></div>
                 <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{getPdfInfo.submit}"></button>
