@@ -146,7 +146,7 @@ dependencies {
     // implementation "com.twelvemonkeys.imageio:imageio-xwd:3.10.1"
 
     implementation "commons-io:commons-io:2.16.1"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0"
 
     //general PDF
 
