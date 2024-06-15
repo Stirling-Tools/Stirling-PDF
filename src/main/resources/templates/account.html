@@ -329,8 +329,8 @@
                 });
               </script>
               <div class="mb-3 mt-4 text-center">
-                <a href="logout" role="button" class="btn btn-danger" th:text="#{account.signOut}">Sign Out</a>
-                <a th:if="${role == 'ROLE_ADMIN'}" class="btn btn-info" href="addUsers" role="button" th:text="#{account.adminSettings}" target="_blank">Admin Settings</a>
+                <a th:href="@{'/logout'}" role="button" class="btn btn-danger" th:text="#{account.signOut}">Sign Out</a>
+                <a th:if="${role == 'ROLE_ADMIN'}" class="btn btn-info" th:href="@{'/addUsers'}" role="button" th:text="#{account.adminSettings}" target="_blank">Admin Settings</a>
               </div>
             </div>
           </div>
