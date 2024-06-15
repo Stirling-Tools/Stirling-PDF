@@ -19,6 +19,7 @@ sourceCompatibility = '17'
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 licenseReport {
@@ -74,7 +75,7 @@ spotless {
     java {
         target project.fileTree('src/main/java')
 
-        googleJavaFormat('1.19.1').aosp().reorderImports(false)
+        googleJavaFormat('1.22.0').aosp().reorderImports(false)
 
         importOrder('java', 'javax', 'org', 'com', 'net', 'io')
         toggleOffOn()
@@ -93,6 +94,7 @@ dependencies {
     implementation("io.github.pixee:java-security-toolkit:1.1.3")
 
     implementation 'org.yaml:snakeyaml:2.2'
+    implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
     
     // Exclude Tomcat and include Jetty
     implementation('org.springframework.boot:spring-boot-starter-web:3.2.4') {
