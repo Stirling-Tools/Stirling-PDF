@@ -24,14 +24,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.GithubProvider;
-import stirling.software.SPDF.model.ApplicationProperties.GoogleProvider;
-import stirling.software.SPDF.model.ApplicationProperties.KeycloakProvider;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.model.provider.GithubProvider;
+import stirling.software.SPDF.model.provider.GoogleProvider;
+import stirling.software.SPDF.model.provider.KeycloakProvider;
 import stirling.software.SPDF.repository.UserRepository;
 
 @Controller
@@ -52,28 +52,29 @@ public class AccountWebController {
         OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
         if (oauth != null) {
             if (oauth.isSettingsValid()) {
-                providerList.put("oidc", "OpenID Connect");
+                providerList.put("oidc", oauth.getProvider());
             }
             Client client = oauth.getClient();
             if (client != null) {
                 GoogleProvider google = client.getGoogle();
                 if (google.isSettingsValid()) {
-                    providerList.put("google", "Google");
+                    providerList.put(google.getName(), google.getClientName());
                 }
 
                 GithubProvider github = client.getGithub();
                 if (github.isSettingsValid()) {
-                    providerList.put("github", "Github");
+                    providerList.put(github.getName(), github.getClientName());
                 }
 
                 KeycloakProvider keycloak = client.getKeycloak();
                 if (keycloak.isSettingsValid()) {
-                    providerList.put("keycloak", "Keycloak");
+                    providerList.put(keycloak.getName(), keycloak.getClientName());
                 }
             }
         }
         model.addAttribute("providerlist", providerList);
 
+        model.addAttribute("loginMethod", applicationProperties.getSecurity().getLoginMethod());
         model.addAttribute(
                 "oAuth2Enabled", applicationProperties.getSecurity().getOAUTH2().getEnabled());
 

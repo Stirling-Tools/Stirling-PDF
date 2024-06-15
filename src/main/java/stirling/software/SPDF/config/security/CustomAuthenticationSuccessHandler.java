@@ -37,7 +37,8 @@ public class CustomAuthenticationSuccessHandler
                         : null;
 
         if (savedRequest != null
-                && !RequestUriUtils.isStaticResource(savedRequest.getRedirectUrl())) {
+                && !RequestUriUtils.isStaticResource(
+                        request.getContextPath(), savedRequest.getRedirectUrl())) {
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {

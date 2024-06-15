@@ -38,12 +38,12 @@ import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationS
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2LogoutSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
 import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.ApplicationProperties.GithubProvider;
-import stirling.software.SPDF.model.ApplicationProperties.GoogleProvider;
-import stirling.software.SPDF.model.ApplicationProperties.KeycloakProvider;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
 import stirling.software.SPDF.model.User;
+import stirling.software.SPDF.model.provider.GithubProvider;
+import stirling.software.SPDF.model.provider.GoogleProvider;
+import stirling.software.SPDF.model.provider.KeycloakProvider;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 
 @Configuration
@@ -238,7 +238,7 @@ public class SecurityConfiguration {
         GoogleProvider google = client.getGoogle();
         return google != null && google.isSettingsValid()
                 ? Optional.of(
-                        ClientRegistration.withRegistrationId("google")
+                        ClientRegistration.withRegistrationId(google.getName())
                                 .clientId(google.getClientId())
                                 .clientSecret(google.getClientSecret())
                                 .scope(google.getScopes())
@@ -246,8 +246,8 @@ public class SecurityConfiguration {
                                 .tokenUri(google.getTokenuri())
                                 .userInfoUri(google.getUserinfouri())
                                 .userNameAttributeName(google.getUseAsUsername())
-                                .clientName("Google")
-                                .redirectUri("{baseUrl}/login/oauth2/code/google")
+                                .clientName(google.getClientName())
+                                .redirectUri("{baseUrl}/login/oauth2/code/" + google.getName())
                                 .authorizationGrantType(
                                         org.springframework.security.oauth2.core
                                                 .AuthorizationGrantType.AUTHORIZATION_CODE)
@@ -269,12 +269,12 @@ public class SecurityConfiguration {
         return keycloak != null && keycloak.isSettingsValid()
                 ? Optional.of(
                         ClientRegistrations.fromIssuerLocation(keycloak.getIssuer())
-                                .registrationId("keycloak")
+                                .registrationId(keycloak.getName())
                                 .clientId(keycloak.getClientId())
                                 .clientSecret(keycloak.getClientSecret())
                                 .scope(keycloak.getScopes())
                                 .userNameAttributeName(keycloak.getUseAsUsername())
-                                .clientName("Keycloak")
+                                .clientName(keycloak.getClientName())
                                 .build())
                 : Optional.empty();
     }
@@ -291,7 +291,7 @@ public class SecurityConfiguration {
         GithubProvider github = client.getGithub();
         return github != null && github.isSettingsValid()
                 ? Optional.of(
-                        ClientRegistration.withRegistrationId("github")
+                        ClientRegistration.withRegistrationId(github.getName())
                                 .clientId(github.getClientId())
                                 .clientSecret(github.getClientSecret())
                                 .scope(github.getScopes())
@@ -299,8 +299,8 @@ public class SecurityConfiguration {
                                 .tokenUri(github.getTokenuri())
                                 .userInfoUri(github.getUserinfouri())
                                 .userNameAttributeName(github.getUseAsUsername())
-                                .clientName("GitHub")
-                                .redirectUri("{baseUrl}/login/oauth2/code/github")
+                                .clientName(github.getClientName())
+                                .redirectUri("{baseUrl}/login/oauth2/code/" + github.getName())
                                 .authorizationGrantType(
                                         org.springframework.security.oauth2.core
                                                 .AuthorizationGrantType.AUTHORIZATION_CODE)

@@ -16,7 +16,7 @@
                 <span class="material-symbols-rounded tool-header-icon organize">crop</span>
                 <span class="tool-header-text" th:text="#{crop.header}"></span>
               </div>
-              <form id="cropForm" action="/api/v1/general/crop" method="post" enctype="multipart/form-data">
+              <form id="cropForm" th:action="@{/api/v1/general/crop}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <input id="x" type="hidden" name="x">
                 <input id="y" type="hidden" name="y">
@@ -64,7 +64,7 @@
                 let reader = new FileReader();
                 reader.onload = function(ev) {
                   let typedArray = new Uint8Array(reader.result);
-                  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.mjs'
+                  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
                   pdfjsLib.getDocument(typedArray).promise.then(function(pdf) {
                     pdfDoc = pdf;
                     totalPages = pdf.numPages;

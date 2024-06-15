@@ -19,7 +19,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
-import io.github.bucket4j.Refill;
 import io.github.pixee.security.Newlines;
 
 import jakarta.servlet.FilterChain;
@@ -142,7 +141,10 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
 
     private Bucket createUserBucket(int limitPerDay) {
         Bandwidth limit =
-                Bandwidth.classic(limitPerDay, Refill.intervally(limitPerDay, Duration.ofDays(1)));
+                Bandwidth.builder()
+                        .capacity(limitPerDay)
+                        .refillIntervally(limitPerDay, Duration.ofDays(1))
+                        .build();
         return Bucket.builder().addLimit(limit).build();
     }
 }
