@@ -1,12 +1,11 @@
 package stirling.software.SPDF.config.security;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.UUID;
 
+import org.simpleyaml.configuration.file.YamlFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,32 +86,16 @@ public class InitialSecuritySetup {
 
     private void saveKeyToConfig(String key) throws IOException {
         Path path = Paths.get("configs", "settings.yml"); // Target the configs/settings.yml
-        List<String> lines = Files.readAllLines(path);
-        boolean keyFound = false;
 
-        // Search for the existing key to replace it or place to add it
-        for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(i).startsWith("AutomaticallyGenerated:")) {
-                keyFound = true;
-                if (i + 1 < lines.size() && lines.get(i + 1).trim().startsWith("key:")) {
-                    lines.set(i + 1, "  key: " + key);
-                    break;
-                } else {
-                    lines.add(i + 1, "  key: " + key);
-                    break;
-                }
-            }
-        }
+        final YamlFile settingsYml = new YamlFile(path.toFile());
 
-        // If the section doesn't exist, append it
-        if (!keyFound) {
-            lines.add("# Automatically Generated Settings (Do Not Edit Directly)");
-            lines.add("AutomaticallyGenerated:");
-            lines.add("  key: " + key);
-        }
+        settingsYml.loadWithComments();
 
-        // Write back to the file
-        Files.write(path, lines);
+        settingsYml
+                .path("AutomaticallyGenerated.key")
+                .set(key)
+                .comment("# Automatically Generated Settings (Do Not Edit Directly)");
+        settingsYml.save();
     }
 
     private boolean isValidUUID(String uuid) {
