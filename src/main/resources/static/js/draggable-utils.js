@@ -293,7 +293,69 @@ const DraggableUtils = {
   },
 
   parseTransform(element) {},
-  async getOverlayedPdfDocument(scale, pdfViewer) {
+  async getOverlayedPdfDocument() {
+    const pdfBytes = await this.pdfDoc.getData();
+    const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, {
+      ignoreEncryption: true,
+    });
+    this.storePageContents();
+
+    const pagesMap = this.documentsMap.get(this.pdfDoc);
+    for (let pageIdx in pagesMap) {
+      if (pageIdx.includes("offset")) {
+        continue;
+      }
+      console.log(typeof pageIdx);
+
+      const page = pdfDocModified.getPage(parseInt(pageIdx));
+      const draggablesData = pagesMap[pageIdx];
+      const offsetWidth = pagesMap[pageIdx + "-offsetWidth"];
+      const offsetHeight = pagesMap[pageIdx + "-offsetHeight"];
+
+      for (const draggableData of draggablesData) {
+        // embed the draggable canvas
+        const draggableElement = draggableData.element;
+        const response = await fetch(draggableElement.toDataURL());
+        const draggableImgBytes = await response.arrayBuffer();
+        const pdfImageObject = await pdfDocModified.embedPng(draggableImgBytes);
+
+        // calculate the position in the pdf document
+        const tansform = draggableElement.style.transform.replace(/[^.,-\d]/g, "");
+        const transformComponents = tansform.split(",");
+        const draggablePositionPixels = {
+          x: parseFloat(transformComponents[0]),
+          y: parseFloat(transformComponents[1]),
+          width: draggableData.offsetWidth,
+          height: draggableData.offsetHeight,
+        };
+        const draggablePositionRelative = {
+          x: draggablePositionPixels.x / offsetWidth,
+          y: draggablePositionPixels.y / offsetHeight,
+          width: draggablePositionPixels.width / offsetWidth,
+          height: draggablePositionPixels.height / offsetHeight,
+        };
+        const draggablePositionPdf = {
+          x: draggablePositionRelative.x * page.getWidth(),
+          y: draggablePositionRelative.y * page.getHeight(),
+          width: draggablePositionRelative.width * page.getWidth(),
+          height: draggablePositionRelative.height * page.getHeight(),
+        };
+
+        // draw the image
+        page.drawImage(pdfImageObject, {
+          x: draggablePositionPdf.x,
+          y: page.getHeight() - draggablePositionPdf.y - draggablePositionPdf.height,
+          width: draggablePositionPdf.width,
+          height: draggablePositionPdf.height,
+        });
+      }
+    }
+
+    this.loadPageContents();
+    return pdfDocModified;
+  },
+
+  async getOverlayedPdfDocumentZoomed(scale, pdfViewer) {
     const pdfBytes = await this.pdfDoc.getData();
     const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, {
       ignoreEncryption: true,
@@ -339,6 +401,8 @@ const DraggableUtils = {
         const heightDiff = pdfDoc.offsetHeight / firstPage.getHeight();
 
         // Draw the image at the position relative to the PDF document
+        //Distance from edge of viewport to the edge of the pdf + the distance from the edge of the signature to the edge
+        // of the viewport adjusted to scale.
         page.drawImage(pdfImageObject, {
           x: ((dragLeft + viewportLeft / scale) / widthDiff),
           y: (pdfDoc.offsetHeight - (dragTop  + viewportTop / scale) - draggableData.offsetHeight / scale) / heightDiff,
