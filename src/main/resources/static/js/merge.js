@@ -2,15 +2,27 @@ let currentSort = {
   field: null,
   descending: false,
 };
+//New Array to keep track of unique id
+let filesWithUniqueId = [];
+let processedFiles = [];
 
 document.getElementById("fileInput-input").addEventListener("change", function () {
-  var files = this.files;
+  var files = Array.from(this.files).map(file => {
+    return {
+      file: file,
+      uniqueId: file.name + Date.now()
+    };
+  });
+  filesWithUniqueId = files;
   displayFiles(files);
 });
+//Get Files Updated Event from FileInput
+document.addEventListener("filesUpdated", function (e) {
+  filesWithUniqueId = e.detail;
+  displayFiles(filesWithUniqueId);
+});
 
-/**
- * @param {FileList} files
- */
+
 function displayFiles(files) {
   const list = document.getElementById("selectedFiles");
 
@@ -18,12 +30,30 @@ function displayFiles(files) {
     list.removeChild(list.firstChild);
   }
 
+  // Clear the processedFiles array
+  processedFiles = [];
+
   for (let i = 0; i < files.length; i++) {
     const item = document.createElement("li");
     item.className = "list-group-item";
+    item.dataset.id = files[i].uniqueId; // Assign the uniqueId to the list item
+    const fileNameDiv = document.createElement("div");
+    fileNameDiv.className = "filename";
+    fileNameDiv.textContent = files[i].file.name;
+
+    // Check for duplicates and add a warning if necessary
+    const duplicateFiles = files.filter(file => file.file.name === files[i].file.name);
+    if (duplicateFiles.length > 1) {
+      const warning = document.createElement("span");
+      warning.className = "duplicate-warning";
+      warning.textContent = "(Duplicate)";
+      fileNameDiv.appendChild(warning);
+    }
+
+
     item.innerHTML = `
             <div class="d-flex justify-content-between align-items-center w-100">
-                <div class="filename">${files[i].name}</div>
+                ${fileNameDiv.outerHTML}
                 <div class="arrows d-flex">
                     <button class="btn btn-secondary move-up"><span>&uarr;</span></button>
                     <button class="btn btn-secondary move-down"><span>&darr;</span></button>
@@ -33,7 +63,6 @@ function displayFiles(files) {
         `;
     list.appendChild(item);
   }
-
   attachMoveButtons();
 }
 
@@ -50,7 +79,6 @@ function attachMoveButtons() {
       }
     });
   }
-
   var moveDownButtons = document.querySelectorAll(".move-down");
   for (var i = 0; i < moveDownButtons.length; i++) {
     moveDownButtons[i].addEventListener("click", function (event) {
@@ -66,20 +94,21 @@ function attachMoveButtons() {
 
   var removeButtons = document.querySelectorAll(".remove-file");
   for (var i = 0; i < removeButtons.length; i++) {
+    // When the delete button is clicked
     removeButtons[i].addEventListener("click", function (event) {
       event.preventDefault();
       var parent = this.closest(".list-group-item");
-      //Get name of removed file
-      var fileName = parent.querySelector(".filename").innerText;
+      var fileId = parent.dataset.id; // Get the unique identifier of the file to be deleted
       parent.remove();
+      // Remove the file from the filesWithUniqueId array
+      filesWithUniqueId = filesWithUniqueId.filter(fileObj => fileObj.uniqueId !== fileId);
       updateFiles();
-      //Dispatch a custom event with the name of the removed file
-      var event = new CustomEvent("fileRemoved", { detail: fileName });
-      document.dispatchEvent(event);
+      // Dispatch a custom event with the unique identifier of the file to be deleted
+      var fileRemoved = new CustomEvent("fileRemoved", { detail: fileId });
+      document.dispatchEvent(fileRemoved);
     });
   }
 }
-
 document.getElementById("sortByNameBtn").addEventListener("click", function () {
   if (currentSort.field === "name" && !currentSort.descending) {
     currentSort.descending = true;
@@ -90,7 +119,6 @@ document.getElementById("sortByNameBtn").addEventListener("click", function () {
     sortFiles((a, b) => a.name.localeCompare(b.name));
   }
 });
-
 document.getElementById("sortByDateBtn").addEventListener("click", function () {
   if (currentSort.field === "lastModified" && !currentSort.descending) {
     currentSort.descending = true;
@@ -103,30 +131,29 @@ document.getElementById("sortByDateBtn").addEventListener("click", function () {
 });
 
 function sortFiles(comparator) {
-  // Convert FileList to array and sort
-  const sortedFilesArray = Array.from(document.getElementById("fileInput-input").files).sort(comparator);
+  // Sort the filesWithUniqueId array
+  const sortedFilesArray = filesWithUniqueId.sort((a, b) => comparator(a.file, b.file));
 
   // Refresh displayed list
   displayFiles(sortedFilesArray);
 
   // Update the files property
   const dataTransfer = new DataTransfer();
-  sortedFilesArray.forEach((file) => dataTransfer.items.add(file));
+  sortedFilesArray.forEach((fileObj) => dataTransfer.items.add(fileObj.file));
   document.getElementById("fileInput-input").files = dataTransfer.files;
 }
+
 
 function updateFiles() {
   var dataTransfer = new DataTransfer();
   var liElements = document.querySelectorAll("#selectedFiles li");
-  const files = document.getElementById("fileInput-input").files;
 
   for (var i = 0; i < liElements.length; i++) {
-    var fileNameFromList = liElements[i].querySelector(".filename").innerText;
-    var fileFromFiles;
-    for (var j = 0; j < files.length; j++) {
-      var file = files[j];
-      if (file.name === fileNameFromList) {
-        dataTransfer.items.add(file);
+    var fileIdFromList = liElements[i].dataset.id; // Get the unique identifier from the list item
+    for (var j = 0; j < filesWithUniqueId.length; j++) {
+      var fileObj = filesWithUniqueId[j];
+      if (fileObj.uniqueId === fileIdFromList) {
+        dataTransfer.items.add(fileObj.file);
         break;
       }
     }
