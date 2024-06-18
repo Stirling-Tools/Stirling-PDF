@@ -1,4 +1,7 @@
-| Technology | Ultra-Lite | Full  |
+|All versions in a Docker envrionment can download Calibre as a optional extra at runtime to support `book-to-pdf` and `pdf-to-book` using parameter ``INSTALL_BOOK_AND_ADVANCED_HTML_OPS``.
+The 'Fat' container contains all those found in 'Full' with security jar along with this Calibre install. 
+
+Technology | Ultra-Lite | Full  |
 | ---------- | :--------: | :---: |
 | Java       |     ✔️      |   ✔️   |
 | JavaScript |     ✔️      |   ✔️   |

@@ -11,7 +11,7 @@
     ></th:block>
     <link
       rel="stylesheet"
-      href="css/pipeline.css"
+      th:href="@{'/css/pipeline.css'}"
       th:if="${currentPage == 'pipeline'}"
     />
     <script th:inline="javascript">
@@ -192,7 +192,7 @@
                     </div>
                   </div>
                 </div>
-                <script src="js/pipeline.js"></script>\
+                <script th:src="@{'/js/pipeline.js'}"></script>\
             </div>
           </div>
         </div>
