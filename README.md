@@ -219,11 +219,11 @@ Environment variables are also supported and would override the settings file
 For example in the settings.yml you have
 
 ```yaml
-system:
+security:
   enableLogin: 'true'
 ```
 
-To have this via an environment variable you would have ``SYSTEM_ENABLELOGIN``
+To have this via an environment variable you would have ``SECURITY_ENABLELOGIN``
 
 The Current list of settings is
 
