@@ -133,7 +133,7 @@ dependencies {
     // implementation "com.twelvemonkeys.imageio:imageio-hdr:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-icns:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-iff:3.10.1"
-    implementation "com.twelvemonkeys.imageio:imageio-jpeg:3.10.1"
+    implementation "com.twelvemonkeys.imageio:imageio-jpeg:3.11.0"
     // implementation "com.twelvemonkeys.imageio:imageio-pcx:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-pict:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-pnm:3.10.1"
