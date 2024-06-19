@@ -83,7 +83,8 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Get all information on a PDF to view or export as JSON.
 
 For a overview of the tasks and the technology each uses please view [Endpoint-groups.md](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
-Demo of the app is available [here](https://stirlingpdf.io). username: demo, password: demo
+
+Demo of the app is available [here](https://stirlingpdf.io).
 
 ## Technologies used
 
