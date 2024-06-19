@@ -9,6 +9,7 @@
 [![Github Sponsor](https://img.shields.io/badge/Github%20Sponsor-yellow?style=flat&logo=github)](https://github.com/sponsors/Frooodle)
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Stirling-Tools/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
+[<img src="https://www.ssdnodes.com/wp-content/uploads/2023/11/footer-logo.svg" alt="Name" height="40">](https://www.ssdnodes.com/manage/aff.php?aff=2216&register=true)
 
 This is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
 
@@ -105,33 +106,36 @@ Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LocalRunGui
 
 https://hub.docker.com/r/frooodle/s-pdf
 
-Stirling PDF has 2 different versions, a Full version and ultra-Lite version. Depending on the types of features you use you may want a smaller image to save on space.
+Stirling PDF has 3 different versions, a Full version and ultra-Lite version as well as a 'Fat' version. Depending on the types of features you use you may want a smaller image to save on space.
 To see what the different versions offer please look at our [version mapping](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Version-groups.md)
 For people that don't mind about space optimization just use the latest tag.
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest?label=Stirling-PDF%20Full)
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-fat?label=Stirling-PDF%20Fat)
 
-Docker Run
+Please note in below examples you may need to change the volume paths as needed, current examples install them to the current working directory
+eg ``./extraConfigs:/configs`` to ``/opt/stirlingpdf/extraConfigs:/configs``
+
+### Docker Run
 
 ```bash
 docker run -d \
   -p 8080:8080 \
-  -v /location/of/trainingData:/usr/share/tessdata \
-  -v /location/of/extraConfigs:/configs \
-  -v /location/of/logs:/logs \
+  -v ./trainingData:/usr/share/tessdata \
+  -v ./extraConfigs:/configs \
+  -v ./logs:/logs \
   -e DOCKER_ENABLE_SECURITY=false \
   -e INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
   -e LANGS=en_GB \
   --name stirling-pdf \
   frooodle/s-pdf:latest
 
-
   Can also add these for customisation but are not required
 
   -v /location/of/customFiles:/customFiles \
 ```
 
-Docker Compose
+### Docker Compose
 
 ```yaml
 version: '3.3'
@@ -141,10 +145,10 @@ services:
     ports:
       - '8080:8080'
     volumes:
-      - /location/of/trainingData:/usr/share/tessdata #Required for extra OCR languages
-      - /location/of/extraConfigs:/configs
-#      - /location/of/customFiles:/customFiles/
-#      - /location/of/logs:/logs/
+      - ./trainingData:/usr/share/tessdata #Required for extra OCR languages
+      - ./extraConfigs:/configs
+#      - ./customFiles:/customFiles/
+#      - ./logs:/logs/
     environment:
       - DOCKER_ENABLE_SECURITY=false
       - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
@@ -174,14 +178,15 @@ Stirling PDF currently supports 32!
 | Catalan (Català) (ca_CA)                    | ![49%](https://geps.dev/progress/49)   |
 | Italian (Italiano) (it_IT)                  | ![99%](https://geps.dev/progress/99)   |
 | Swedish (Svenska) (sv_SE)                   | ![40%](https://geps.dev/progress/40)   |
-| Polish (Polski) (pl_PL)                     | ![42%](https://geps.dev/progress/42)   |
+| Polish (Polski) (pl_PL)                     | ![92%](https://geps.dev/progress/92)   |
 | Romanian (Română) (ro_RO)                   | ![39%](https://geps.dev/progress/39)   |
 | Korean (한국어) (ko_KR)                     | ![86%](https://geps.dev/progress/86)   |
 | Portuguese Brazilian (Português) (pt_BR)    | ![61%](https://geps.dev/progress/61)   |
+| Portuguese (Português) (pt_PT)              | ![80%](https://geps.dev/progress/80)   |
 | Russian (Русский) (ru_RU)                   | ![86%](https://geps.dev/progress/86)   |
 | Basque (Euskara) (eu_ES)                    | ![63%](https://geps.dev/progress/63)   |
 | Japanese (日本語) (ja_JP)                   | ![92%](https://geps.dev/progress/92)   |
-| Dutch (Nederlands) (nl_NL)                  | ![83%](https://geps.dev/progress/83)   |
+| Dutch (Nederlands) (nl_NL)                  | ![96%](https://geps.dev/progress/96)   |
 | Greek (Ελληνικά) (el_GR)                    | ![84%](https://geps.dev/progress/84)   |
 | Turkish (Türkçe) (tr_TR)                    | ![96%](https://geps.dev/progress/96)   |
 | Indonesia (Bahasa Indonesia) (id_ID)        | ![78%](https://geps.dev/progress/78)   |
@@ -214,11 +219,11 @@ Environment variables are also supported and would override the settings file
 For example in the settings.yml you have
 
 ```yaml
-system:
+security:
   enableLogin: 'true'
 ```
 
-To have this via an environment variable you would have ``SYSTEM_ENABLELOGIN``
+To have this via an environment variable you would have ``SECURITY_ENABLELOGIN``
 
 The Current list of settings is
 
