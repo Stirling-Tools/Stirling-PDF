@@ -46,7 +46,8 @@ function displayFiles(files) {
     if (duplicateFiles.length > 1) {
       const warning = document.createElement("span");
       warning.className = "duplicate-warning";
-      warning.textContent = "(Duplicate)";
+      // Retrieve the translated message from the data attribute
+      warning.textContent =  " "+document.getElementById("duplicateWarningMessage").dataset.duplicateWarning;
       fileNameDiv.appendChild(warning);
     }
 

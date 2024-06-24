@@ -26,3 +26,7 @@
   font-weight: bold;
   font-size: 1.2em;
 }
+.duplicate-warning {
+  color: red;
+  font-weight: bold;
+}
