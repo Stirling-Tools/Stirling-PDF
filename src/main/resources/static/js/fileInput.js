@@ -72,30 +72,36 @@ function setupFileInput(chooser) {
 
     // When adding files
     $("#" + elementId).on("change", function (e) {
-      // Get newly Added Files
-      const newFiles = Array.from(e.target.files).map(file => {
-        return {
-          file: file,
-          uniqueId: file.name + Date.now()// Assign a unique identifier to each file
-        };
-      });
+      if (window.multiple){
+        // Get newly Added Files
+        const newFiles = Array.from(e.target.files).map(file => {
+          return {
+            file: file,
+            uniqueId: file.name + Date.now()// Assign a unique identifier to each file
+          };
+        });
 
-      // Add new files to existing files
-      allFiles = [...allFiles, ...newFiles];
+        // Add new files to existing files
+        allFiles = [...allFiles, ...newFiles];
 
-      // Update the file input's files property
-      const dataTransfer = new DataTransfer();
-      allFiles.forEach((fileObj) => dataTransfer.items.add(fileObj.file));
-      e.target.files = dataTransfer.files;
+        // Update the file input's files property
+        const dataTransfer = new DataTransfer();
+        allFiles.forEach((fileObj) => dataTransfer.items.add(fileObj.file));
+        e.target.files = dataTransfer.files;
 
-      handleFileInputChange(this);
+        handleFileInputChange(this);
 
-      // Call the displayFiles function with the allFiles array
-      displayFiles(allFiles)
-      // Dispatch a custom event with the allFiles array
-      var filesUpdated = new CustomEvent("filesUpdated", { detail: allFiles });
-      document.dispatchEvent(filesUpdated);
+        // Call the displayFiles function with the allFiles array
+        displayFiles(allFiles)
+        // Dispatch a custom event with the allFiles array
+        var filesUpdated = new CustomEvent("filesUpdated", {detail: allFiles});
+        document.dispatchEvent(filesUpdated);
+      }else {
+        allFiles = Array.from(e.target.files);
+        handleFileInputChange(this);
+      }
     });
+
 
 // Listen for event of file being removed and then filter it out of the allFiles array
     document.addEventListener("fileRemoved", function (e) {
