@@ -9,7 +9,6 @@ ignore = [
     "showJS.downloadJS",
     "getPdfInfo.downloadJson",
     "HTMLToPDF.print",
-    "HTMLToPDF.screen",
     "compare.document.1",
     "compare.document.2",
     "printFile.submit"
