@@ -1,0 +1,15 @@
+[nl_NL]
+ignore = [
+    "language.direction",
+    "error",
+    "help",
+    "sponsor",
+    "info",
+    "navbar.allTools",
+    "showJS.downloadJS",
+    "getPdfInfo.downloadJson",
+    "HTMLToPDF.print",
+    "compare.document.1",
+    "compare.document.2",
+    "printFile.submit"
+]
