@@ -16,6 +16,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -55,7 +56,8 @@ public class User {
 
     @ElementCollection
     @MapKeyColumn(name = "setting_key")
-    @Column(name = "setting_value")
+    @Lob
+    @Column(name = "setting_value", columnDefinition = "CLOB")
     @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "user_id"))
     private Map<String, String> settings = new HashMap<>(); // Key-value pairs of settings.
 
