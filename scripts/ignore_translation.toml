@@ -1,15 +1,194 @@
+[ar_AR]
+ignore = [
+    'language.direction',
+]
+
+[bg_BG]
+ignore = [
+    'language.direction',
+]
+
+[ca_CA]
+ignore = [
+    'language.direction',
+]
+
+[cs_CZ]
+ignore = [
+    'info',
+    'language.direction',
+    'pipeline.header',
+    'text',
+]
+
+[de_DE]
+ignore = [
+    'AddStampRequest.alphabet',
+    'AddStampRequest.position',
+    'PDFToBook.selectText.1',
+    'PDFToText.tags',
+    'addPageNumbers.selectText.3',
+    'alphabet',
+    'certSign.name',
+    'language.direction',
+    'licenses.version',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
+    'sponsor',
+    'text',
+    'watermark.type.1',
+]
+
+[el_GR]
+ignore = [
+    'language.direction',
+]
+
+[es_ES]
+ignore = [
+    'adminUserSettings.roles',
+    'color',
+    'language.direction',
+    'no',
+    'showJS.tags',
+]
+
+[eu_ES]
+ignore = [
+    'language.direction',
+]
+
+[fr_FR]
+ignore = [
+    'language.direction',
+    'sponsor',
+]
+
+[hi_IN]
+ignore = [
+    'language.direction',
+]
+
+[hr_HR]
+ignore = [
+    'font',
+    'home.pipeline.title',
+    'info',
+    'language.direction',
+    'pdfOrganiser.tags',
+    'showJS.tags',
+]
+
+[hu_HU]
+ignore = [
+    'language.direction',
+]
+
+[id_ID]
+ignore = [
+    'language.direction',
+]
+
+[it_IT]
+ignore = [
+    'font',
+    'language.direction',
+    'no',
+    'password',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
+    'removePassword.selectText.2',
+    'showJS.tags',
+    'sponsor',
+]
+
+[ja_JP]
+ignore = [
+    'language.direction',
+]
+
+[ko_KR]
+ignore = [
+    'language.direction',
+]
+
 [nl_NL]
 ignore = [
-    "language.direction",
-    "error",
-    "help",
-    "sponsor",
-    "info",
-    "navbar.allTools",
-    "showJS.downloadJS",
-    "getPdfInfo.downloadJson",
-    "HTMLToPDF.print",
-    "compare.document.1",
-    "compare.document.2",
-    "printFile.submit"
+    'HTMLToPDF.print',
+    'compare.document.1',
+    'compare.document.2',
+    'error',
+    'getPdfInfo.downloadJson',
+    'help',
+    'info',
+    'language.direction',
+    'navbar.allTools',
+    'printFile.submit',
+    'showJS.downloadJS',
+    'sponsor',
+]
+
+[no_NB]
+ignore = [
+    'language.direction',
+]
+
+[pl_PL]
+ignore = [
+    'language.direction',
+]
+
+[pt_BR]
+ignore = [
+    'language.direction',
+]
+
+[pt_PT]
+ignore = [
+    'language.direction',
+]
+
+[ro_RO]
+ignore = [
+    'language.direction',
+]
+
+[ru_RU]
+ignore = [
+    'language.direction',
+]
+
+[sk_SK]
+ignore = [
+    'language.direction',
+]
+
+[sr_LATN_RS]
+ignore = [
+    'language.direction',
+]
+
+[sv_SE]
+ignore = [
+    'language.direction',
+]
+
+[tr_TR]
+ignore = [
+    'language.direction',
+]
+
+[uk_UA]
+ignore = [
+    'language.direction',
+]
+
+[zh_CN]
+ignore = [
+    'language.direction',
+]
+
+[zh_TW]
+ignore = [
+    'language.direction',
 ]
