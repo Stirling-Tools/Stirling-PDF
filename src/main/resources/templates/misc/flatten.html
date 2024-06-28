@@ -17,9 +17,9 @@
                 <span class="material-symbols-rounded tool-header-icon other">layers_clear</span>
                 <span class="tool-header-text" th:text="#{flatten.header}"></span>
               </div>
-              <form method="post" enctype="multipart/form-data" th:action="@{api/v1/misc/flatten}" id="pdfForm" class="mb-3">
+              <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/flatten'}" id="pdfForm" class="mb-3">
                 <div class="custom-file">
-                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 </div>
                 <div class="form-check ms-3">
                   <input type="checkbox" id="flattenOnlyForms" name="flattenOnlyForms">

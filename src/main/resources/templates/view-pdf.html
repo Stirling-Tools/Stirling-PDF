@@ -20,7 +20,7 @@ Adobe CMap resources are covered by their own copyright but the same license:
 
 See https://github.com/adobe-type-tools/cmap-resources
 -->
-<html dir="ltr" mozdisallowselectionprint  th:lang="${#locale.language}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+<html dir="ltr" mozdisallowselectionprint th:lang="${#locale.language}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -28,18 +28,18 @@ See https://github.com/adobe-type-tools/cmap-resources
     <title>PDF.js viewer</title>
 
     <!-- Bootstrap -->
-    <script src="js/thirdParty/popper.min.js"></script>
-    <script src="js/thirdParty/bootstrap.min.js"></script>
+    <script th:src="@{'/js/thirdParty/popper.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/bootstrap.min.js'}"></script>
 
-    <link rel="stylesheet" href="css/theme/componentes.css">
-    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" th:href="@{'/css/theme/componentes.css'}">
+    <link rel="stylesheet" th:href="@{'/css/navbar.css'}">
 
     <!-- This snippet is used in production (included from view-pdf.html) -->
-    <link rel="resource" type="application/l10n" href="./pdfjs/locale/locale.json">
-    <script src="./pdfjs/pdf.mjs" type="module"></script>
+    <link rel="resource" type="application/l10n" th:href="@{'/pdfjs-legacy/locale/locale.json'}">
+    <script th:src="@{'/pdfjs-legacy/pdf.mjs'}" type="module"></script>
 
-    <link rel="stylesheet" href="./pdfjs/css/viewer.css">
-    <script src="./pdfjs/js/viewer.mjs" type="module"></script>
+    <link rel="stylesheet" th:href="@{'/pdfjs-legacy/css/viewer.css'}">
+    <script th:src="@{'/pdfjs-legacy/js/viewer.mjs'}" type="module"></script>
   </head>
 
   <body tabindex="1">
@@ -298,8 +298,8 @@ See https://github.com/adobe-type-tools/cmap-resources
                   <input type="number" id="pageNumber" class="toolbarField" title="Page" value="1" min="1" tabindex="15" data-l10n-id="pdfjs-page-input" autocomplete="off">
                 </span>
                 <span id="numPages" class="toolbarLabel"></span>
-                <a class="navbar-brand hiddenMediumView" href="/" tabindex="16" >
-                  <img class="main-icon" src="favicon.svg" alt="icon" style="max-height: 1.6rem; width: auto;">
+                <a class="navbar-brand hiddenMediumView" th:href="@{'/'}" tabindex="16" >
+                  <img class="main-icon" th:src="@{'/favicon.svg'}" alt="icon" style="max-height: 1.6rem; width: auto;">
                   <span class="icon-text" style="color: #ffffff;" th:text="${@appName}">Stirling PDF</span>
                 </a>
               </div>
@@ -308,7 +308,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                   <button id="editorHighlight" class="toolbarButton" hidden="true" disabled="disabled" title="Highlight" role="radio" aria-checked="false" aria-controls="editorHighlightParamsToolbar" tabindex="31" data-l10n-id="pdfjs-editor-highlight-button">
                     <span data-l10n-id="pdfjs-editor-highlight-button-label">Highlight</span>
                   </button>
-                  <a id="backToHome" class="toolbarButton hiddenMediumView" title="Back to Main Page" role="radio" aria-checked="false" tabindex="32" href="/">
+                  <a id="backToHome" class="toolbarButton hiddenMediumView" title="Back to Main Page" role="radio" aria-checked="false" tabindex="32" th:href="@{'/'}">
                     <span data-l10n-id="pdfjs-open-file-button-label">Back to Main Page</span>
                   </a>
                   <button id="openFile" class="toolbarButton hiddenMediumView" title="Open File" role="radio" aria-checked="false" tabindex="33" data-l10n-id="pdfjs-open-file-button">
@@ -461,8 +461,8 @@ See https://github.com/adobe-type-tools/cmap-resources
             <button id="documentPropertiesClose" class="dialogButton"><span data-l10n-id="pdfjs-document-properties-close-button">Close</span></button>
           </div>
         </dialog>
-        <dialog id="altTextDialog" aria-labelledby="dialogLabel" aria-describedby="dialogDescription">
-          <div id="altTextContainer">
+        <dialog class="dialog altText" id="altTextDialog" aria-labelledby="dialogLabel" aria-describedby="dialogDescription">
+          <div id="altTextContainer" class="mainContainer">
             <div id="overallDescription">
               <span id="dialogLabel" data-l10n-id="pdfjs-editor-alt-text-dialog-label" class="title">Choose an option</span>
               <span id="dialogDescription" data-l10n-id="pdfjs-editor-alt-text-dialog-description">
@@ -499,8 +499,8 @@ See https://github.com/adobe-type-tools/cmap-resources
               </div>
             </div>
             <div id="buttons">
-              <button id="altTextCancel" tabindex="0"><span data-l10n-id="pdfjs-editor-alt-text-cancel-button">Cancel</span></button>
-              <button id="altTextSave" tabindex="0"><span data-l10n-id="pdfjs-editor-alt-text-save-button">Save</span></button>
+              <button id="altTextCancel" class="secondaryButton" tabindex="0"><span data-l10n-id="pdfjs-editor-alt-text-cancel-button">Cancel</span></button>
+              <button id="altTextSave" class="primaryButton" tabindex="0"><span data-l10n-id="pdfjs-editor-alt-text-save-button">Save</span></button>
             </div>
           </div>
         </dialog>

@@ -10,67 +10,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="manifest" href="site.webmanifest">
-    <link rel="mask-icon" href="safari-pinned-tab.svg" color="#ca2b2a">
-    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" th:href="@{'/apple-touch-icon.png'}">
+    <link rel="icon" type="image/png" sizes="32x32" th:href="@{'/favicon-32x32.png'}">
+    <link rel="icon" type="image/png" sizes="16x16" th:href="@{'/favicon-16x16.png'}">
+    <link rel="manifest" th:href="@{'/site.webmanifest'}">
+    <link rel="mask-icon" th:href="@{'/safari-pinned-tab.svg'}" color="#ca2b2a">
+    <link rel="shortcut icon" th:href="@{'/favicon.ico'}">
     <meta name="apple-mobile-web-app-title" content="Stirling PDF">
     <meta name="application-name" content="Stirling PDF">
     <meta name="msapplication-TileColor" content="#00aba9">
     <meta name="theme-color" content="#ffffff">
 
     <!-- jQuery -->
-    <script src="js/thirdParty/jquery.min.js"></script>
-    <script src="js/thirdParty/jquery.validate.min.js"></script>
-    <script src="js/thirdParty/jszip.min.js"></script>
+    <script th:src="@{'/js/thirdParty/jquery.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/jquery.validate.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/jszip.min.js'}"></script>
 
     <!-- Bootstrap -->
-    <script src="js/thirdParty/popper.min.js"></script>
-    <script src="js/thirdParty/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <script th:src="@{'/js/thirdParty/popper.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/bootstrap.min.js'}"></script>
+    <link rel="stylesheet" th:href="@{'/css/bootstrap.min.css'}">
 
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="css/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{'/css/bootstrap-icons.min.css'}">
 
     <!-- PDF.js -->
-    <script type="module" src="./pdfjs/pdf.mjs"></script>
+    <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
 
     <!-- PDF-Lib -->
-    <script src="js/thirdParty/pdf-lib.min.js"></script>
+    <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
 
     <!-- Custom -->
-    <link rel="stylesheet" href="css/general.css">
-    <link rel="stylesheet" href="css/theme/theme.css">
-    <link rel="stylesheet" href="css/theme/componentes.css">
-    <link rel="stylesheet" href="css/theme/theme.light.css" id="light-mode-styles">
-    <link rel="stylesheet" href="css/theme/theme.dark.css" id="dark-mode-styles">
-    <link rel="stylesheet" href="css/rainbow-mode.css" id="rainbow-mode-styles" disabled>
-    <link rel="stylesheet" href="css/tab-container.css">
-    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" th:href="@{'/css/general.css'}">
+    <link rel="stylesheet" th:href="@{'/css/theme/theme.css'}">
+    <link rel="stylesheet" th:href="@{'/css/theme/componentes.css'}">
+    <link rel="stylesheet" th:href="@{'/css/theme/theme.light.css'}" id="light-mode-styles">
+    <link rel="stylesheet" th:href="@{'/css/theme/theme.dark.css'}" id="dark-mode-styles">
+    <link rel="stylesheet" th:href="@{'/css/rainbow-mode.css'}" id="rainbow-mode-styles" disabled>
+    <link rel="stylesheet" th:href="@{'/css/tab-container.css'}">
+    <link rel="stylesheet" th:href="@{'/css/navbar.css'}">
 
-    <link rel="stylesheet" href="css/error.css" th:if="${error}">
+    <link rel="stylesheet" th:href="@{'/css/error.css'}" th:if="${error}">
 
-    <link rel="stylesheet" href="css/home.css" th:if="${currentPage == 'home'}">
-    <link rel="stylesheet" href="css/account.css" th:if="${currentPage == 'account'}">
-    <link rel="stylesheet" href="css/licenses.css" th:if="${currentPage == 'licenses'}">
-    <link rel="stylesheet" href="css/multi-tool.css" th:if="${currentPage == 'multi-tool'}">
-    <link rel="stylesheet" href="css/rotate-pdf.css" th:if="${currentPage == 'rotate-pdf'}">
-    <link rel="stylesheet" href="css/stamp.css" th:if="${currentPage == 'stamp'}">
-    <link rel="stylesheet" href="css/fileSelect.css">
-    <link rel="stylesheet" href="css/footer.css">
-    <script src="js/thirdParty/fontfaceobserver.standalone.js"></script>
+    <link rel="stylesheet" th:href="@{'/css/home.css'}" th:if="${currentPage == 'home'}">
+    <link rel="stylesheet" th:href="@{'/css/account.css'}" th:if="${currentPage == 'account'}">
+    <link rel="stylesheet" th:href="@{'/css/licenses.css'}" th:if="${currentPage == 'licenses'}">
+    <link rel="stylesheet" th:href="@{'/css/multi-tool.css'}" th:if="${currentPage == 'multi-tool'}">
+    <link rel="stylesheet" th:href="@{'/css/rotate-pdf.css'}" th:if="${currentPage == 'rotate-pdf'}">
+    <link rel="stylesheet" th:href="@{'/css/stamp.css'}" th:if="${currentPage == 'stamp'}">
+    <link rel="stylesheet" th:href="@{'/css/fileSelect.css'}">
+    <link rel="stylesheet" th:href="@{'/css/footer.css'}">
+    <script th:src="@{'/js/thirdParty/fontfaceobserver.standalone.js'}"></script>
 
     <!-- Google MD Icons -->
-    <link rel="stylesheet" href="css/theme/font.css">
+    <link rel="stylesheet" th:href="@{'/css/theme/font.css'}">
 
     <!-- Help Modal -->
-    <link rel="stylesheet" href="css/errorBanner.css">
+    <link rel="stylesheet" th:href="@{'/css/errorBanner.css'}">
 
-    <script src="js/cacheFormInputs.js"></script>
-    <script src="js/tab-container.js"></script>
-    <script src="js/darkmode.js"></script>
+    <script th:src="@{'/js/cacheFormInputs.js'}"></script>
+    <script th:src="@{'/js/tab-container.js'}"></script>
+    <script th:src="@{'/js/darkmode.js'}"></script>
   </th:block>
 
 <th:block th:fragment="game">
@@ -138,9 +138,9 @@
         <div id="score">Score: 0</div>
         <div id="high-score">High Score: 0</div>
         <div id="level">Level: 1</div>
-        <img src="favicon.svg" class="player" id="player" alt="favicon">
+        <img th:src="@{'/favicon.svg'}" class="player" id="player" alt="favicon">
       </div>
-      <link rel="stylesheet" href="css/game.css">
+      <link rel="stylesheet" th:href="@{'/css/game.css'}">
     </dialog>
 </th:block>
 
@@ -150,7 +150,7 @@
                   const multiple = [[${multiple}]] || false;
                   const remoteCall = [[${remoteCall}]] || true;
                 </script>
-                <script src="js/downloader.js"></script>
+                <script th:src="@{'/js/downloader.js'}"></script>
 
                 <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
                   <div class="mb-3">
@@ -166,5 +166,5 @@
                     </div>
                   </div>
                 </div>
-                <script src="js/fileInput.js"></script>
+                <script th:src="@{'/js/fileInput.js'}"></script>
 </th:block>

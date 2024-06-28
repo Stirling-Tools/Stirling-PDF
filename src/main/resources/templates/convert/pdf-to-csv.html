@@ -16,7 +16,7 @@
                 <span class="material-symbols-rounded tool-header-icon convert">csv</span>
                 <span class="tool-header-text" th:text="#{PDFToCSV.header}"></span>
               </div>
-              <form id="PDFToCSVForm" th:action="@{api/v1/convert/pdf/csv}" method="post" enctype="multipart/form-data">
+              <form id="PDFToCSVForm" th:action="@{'/api/v1/convert/pdf/csv'}" method="post" enctype="multipart/form-data">
                 <input  id="pageId" type="hidden" name="pageId">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <button type="submit" class="btn btn-primary" th:text="#{PDFToCSV.submit}"></button>
@@ -68,7 +68,7 @@
                       let reader = new FileReader();
                       reader.onload = function (ev) {
                         let typedArray = new Uint8Array(reader.result);
-                        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.mjs'
+                        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
                         pdfjsLib.getDocument(typedArray).promise.then(function (pdf) {
                           pdfDoc = pdf;
                           totalPages = pdf.numPages;
@@ -89,7 +89,7 @@
                       let reader = new FileReader();
                       reader.onload = function(ev) {
                         let typedArray = new Uint8Array(reader.result);
-                        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.mjs'
+                        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
                         pdfjsLib.getDocument(typedArray).promise.then(function(pdf) {
                           pdfDoc = pdf;
                           totalPages = pdf.numPages;
@@ -107,7 +107,7 @@
                     let reader = new FileReader();
                     reader.onload = function(ev) {
                       let typedArray = new Uint8Array(reader.result);
-                      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.mjs';
+                      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
                       pdfjsLib.getDocument(typedArray).promise.then(function(pdf) {
                         pdfDoc = pdf;
                         totalPages = pdf.numPages;

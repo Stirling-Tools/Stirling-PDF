@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpSession;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.Provider;
+import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 import stirling.software.SPDF.utils.UrlUtils;
 
 public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
@@ -51,8 +52,8 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
                 Provider provider = oauth.getClient().get(registrationId);
                 issuer = provider.getIssuer();
                 clientId = provider.getClientId();
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (UnsupportedProviderException e) {
+                logger.error(e.getMessage());
             }
 
         } else {
@@ -60,13 +61,13 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
             issuer = oauth.getIssuer();
             clientId = oauth.getClientId();
         }
-
+        String errorMessage = "";
         if (request.getParameter("oauth2AuthenticationErrorWeb") != null) {
             param = "erroroauth=oauth2AuthenticationErrorWeb";
-        } else if (request.getParameter("error") != null) {
-            param = "error=" + request.getParameter("error");
-        } else if (request.getParameter("erroroauth") != null) {
-            param = "erroroauth=" + request.getParameter("erroroauth");
+        } else if ((errorMessage = request.getParameter("error")) != null) {
+            param = "error=" + sanitizeInput(errorMessage);
+        } else if ((errorMessage = request.getParameter("erroroauth")) != null) {
+            param = "erroroauth=" + sanitizeInput(errorMessage);
         } else if (request.getParameter("oauth2AutoCreateDisabled") != null) {
             param = "error=oauth2AutoCreateDisabled";
         }
@@ -81,7 +82,7 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
             logger.info("Session invalidated: " + sessionId);
         }
 
-        switch (registrationId) {
+        switch (registrationId.toLowerCase()) {
             case "keycloak":
                 // Add Keycloak specific logout URL if needed
                 String logoutUrl =
@@ -114,5 +115,9 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
                 response.sendRedirect(redirectUrl);
                 break;
         }
+    }
+
+    private String sanitizeInput(String input) {
+        return input.replaceAll("[^a-zA-Z0-9 ]", "");
     }
 }

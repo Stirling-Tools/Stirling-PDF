@@ -96,7 +96,6 @@ document.getElementById("submitConfigBtn").addEventListener("click", function ()
   for (let i = 0; i < pipelineList.length; i++) {
     let operationName = pipelineList[i].querySelector(".operationName").textContent;
     let parameters = operationSettings[operationName] || {};
-
     pipelineConfig.pipeline.push({
       operation: operationName,
       parameters: parameters,
@@ -104,7 +103,6 @@ document.getElementById("submitConfigBtn").addEventListener("click", function ()
   }
 
   let pipelineConfigJson = JSON.stringify(pipelineConfig, null, 2);
-
   let formData = new FormData();
 
   let fileInput = document.getElementById("fileInput-input");
@@ -217,6 +215,41 @@ fetch("v1/api-docs")
       }
     });
   });
+
+document.getElementById('deletePipelineBtn').addEventListener('click', function(event) {
+    event.preventDefault();
+    let pipelineName = document.getElementById('pipelineName').value; 
+	if (confirm(deletePipelineText + pipelineName)) {
+		removePipelineFromUI(pipelineName);
+	    let key = "#Pipeline-" + pipelineName;
+	    if (localStorage.getItem(key)) {
+	            localStorage.removeItem(key);
+	    } 
+	    let pipelineSelect = document.getElementById("pipelineSelect");
+	    let modal = document.getElementById('pipelineSettingsModal');
+	    if (modal.style.display !== 'none') {
+	        $('#pipelineSettingsModal').modal('hide');
+	    }
+
+	    if (pipelineSelect.options.length > 0) {
+	        pipelineSelect.selectedIndex = 0;
+	        pipelineSelect.dispatchEvent(new Event('change'));
+	    }
+    }
+});
+
+function removePipelineFromUI(pipelineName) {
+    let pipelineSelect = document.getElementById("pipelineSelect");
+    for (let i = 0; i < pipelineSelect.options.length; i++) {
+		console.log(pipelineSelect.options[i])
+		console.log("list " + pipelineSelect.options[i].innerText + " vs " + pipelineName)
+        if (pipelineSelect.options[i].innerText === pipelineName) {
+            pipelineSelect.remove(i);
+            break;
+        }
+    }
+}
+
 
 document.getElementById("addOperationBtn").addEventListener("click", function () {
   let selectedOperation = document.getElementById("operationsDropdown").value;
@@ -378,18 +411,22 @@ document.getElementById("addOperationBtn").addEventListener("click", function ()
             parameterInput.type = "checkbox";
             if (defaultValue === true) parameterInput.checked = true;
             break;
-          case "array":
-          case "object":
-            //TODO compare to doc and check if fileInput array? parameter.schema.format === 'binary'
-            parameterInput = document.createElement("textarea");
-            parameterInput.placeholder = `Enter a JSON formatted ${parameter.schema.type}, If this is a fileInput, it is not currently supported`;
-            parameterInput.className = "form-control";
-            break;
-          default:
-            parameterInput = document.createElement("input");
-            parameterInput.type = "text";
-            parameterInput.className = "form-control";
-            if (defaultValue !== undefined) parameterInput.value = defaultValue;
+           case "array":
+		     // If parameter.schema.format === 'binary' is to be checked, it should be checked here
+		     parameterInput = document.createElement("textarea");
+		     parameterInput.placeholder = 'Enter a JSON formatted array, e.g., ["item1", "item2", "item3"]';
+		     parameterInput.className = "form-control";
+		     break;
+		   case "object":
+		     parameterInput = document.createElement("textarea");
+		     parameterInput.placeholder = 'Enter a JSON formatted object, e.g., {"key": "value"}  If this is a fileInput, it is not currently supported';
+		     parameterInput.className = "form-control";
+		     break;
+		   default:
+             parameterInput = document.createElement("input");
+             parameterInput.type = "text";
+             parameterInput.className = "form-control";
+             if (defaultValue !== undefined) parameterInput.value = defaultValue;
         }
       }
       parameterInput.id = parameter.name;
@@ -441,16 +478,21 @@ document.getElementById("addOperationBtn").addEventListener("click", function ()
                 break;
               case "array":
               case "object":
-                if (value === null || value === "") {
-                  settings[parameter.name] = "";
-                } else {
-                  try {
-                    settings[parameter.name] = JSON.parse(value);
-                  } catch (err) {
-                    console.error(`Invalid JSON format for ${parameter.name}`);
-                  }
-                }
-                break;
+                 if (value === null || value === "") {
+				    settings[parameter.name] = "";
+				  } else {
+				    try {
+				      const parsedValue = JSON.parse(value);
+				      if (Array.isArray(parsedValue)) {
+				        settings[parameter.name] = parsedValue;
+				      } else {
+				        settings[parameter.name] = value; 
+				      }
+				    } catch (e) {
+				      settings[parameter.name] = value;
+				    }
+				 }
+				 break;
               default:
                 settings[parameter.name] = value;
             }
@@ -558,7 +600,6 @@ function configToJson() {
       parameters: parameters,
     });
   }
-
   return JSON.stringify(pipelineConfig, null, 2);
 }
 
@@ -642,7 +683,13 @@ async function processPipelineConfig(configString) {
           case "text":
           case "textarea":
           default:
-            input.value = JSON.stringify(operationConfig.parameters[parameterName]);
+			var value = operationConfig.parameters[parameterName]
+			if (typeof value !== 'string') {
+			    input.value = JSON.stringify(value) ;
+			} else {
+				input.value = value;
+			}
+            
         }
       }
     });

@@ -7,6 +7,8 @@ import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.function.Predicate;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,6 +25,8 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Configuration
 @Lazy
 public class AppConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
 
     @Autowired ApplicationProperties applicationProperties;
 
@@ -56,7 +60,7 @@ public class AppConfig {
             props.load(resource.getInputStream());
             return props.getProperty("version");
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("exception", e);
         }
         return "0.0.0";
     }
@@ -125,9 +129,7 @@ public class AppConfig {
     public Predicate<Path> processPDFOnlyFilter() {
         return path -> {
             if (Files.isDirectory(path)) {
-                return !path.toString()
-                        .contains(
-                                "processing");
+                return !path.toString().contains("processing");
             } else {
                 String fileName = path.getFileName().toString();
                 return fileName.endsWith(".pdf");

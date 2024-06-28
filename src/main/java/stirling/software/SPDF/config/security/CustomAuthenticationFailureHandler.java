@@ -42,36 +42,39 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         String ip = request.getRemoteAddr();
         logger.error("Failed login attempt from IP: {}", ip);
 
+        String contextPath = request.getContextPath();
+
         if (exception.getClass().isAssignableFrom(InternalAuthenticationServiceException.class)
                 || "Password must not be null".equalsIgnoreCase(exception.getMessage())) {
-            response.sendRedirect("/login?error=oauth2AuthenticationError");
+            response.sendRedirect(contextPath + "/login?error=oauth2AuthenticationError");
             return;
         }
 
         String username = request.getParameter("username");
-        if (username != null && !isDemoUser(username)) {
+        Optional<User> optUser = userService.findByUsernameIgnoreCase(username);
+
+        if (username != null && optUser.isPresent() && !isDemoUser(optUser)) {
             logger.info(
                     "Remaining attempts for user {}: {}",
-                    username,
+                    optUser.get().getUsername(),
                     loginAttemptService.getRemainingAttempts(username));
             loginAttemptService.loginFailed(username);
             if (loginAttemptService.isBlocked(username)
                     || exception.getClass().isAssignableFrom(LockedException.class)) {
-                response.sendRedirect("/login?error=locked");
+                response.sendRedirect(contextPath + "/login?error=locked");
                 return;
             }
         }
         if (exception.getClass().isAssignableFrom(BadCredentialsException.class)
                 || exception.getClass().isAssignableFrom(UsernameNotFoundException.class)) {
-            response.sendRedirect("/login?error=badcredentials");
+            response.sendRedirect(contextPath + "/login?error=badcredentials");
             return;
         }
 
         super.onAuthenticationFailure(request, response, exception);
     }
 
-    private boolean isDemoUser(String username) {
-        Optional<User> user = userService.findByUsernameIgnoreCase(username);
+    private boolean isDemoUser(Optional<User> user) {
         return user.isPresent()
                 && user.get().getAuthorities().stream()
                         .anyMatch(authority -> "ROLE_DEMO_USER".equals(authority.getAuthority()));
