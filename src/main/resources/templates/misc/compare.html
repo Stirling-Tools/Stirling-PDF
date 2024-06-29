@@ -23,7 +23,7 @@
         max-height: 100px;
         margin-bottom: 2rem;
       }
-      #colorBox1, #colorBox2 {
+      #color-box1, #color-box2 {
         -webkit-appearance: none;
         -moz-appearance: none;
         appearance: none;
@@ -58,11 +58,11 @@
                 <div class="flex-container">
                   <div class="color-selector spacer1">
                     <label>Highlight Color 1: </label>
-                    <input type="color" id="colorBox1" name="colorBox1" value="#ff0000">
+                    <label for="color-box1"></label><input type="color" id="color-box1" value="#ff0000">
                   </div>
                   <div class="color-selector spacer2">
                     <label>Highlight Color 2: </label>
-                    <input type="color" id="colorBox2" name="colorBox2" value="#008000">
+                    <label for="color-box2"></label><input type="color" id="color-box2" value="#008000">
                   </div>
                 </div>
               </div>
@@ -73,12 +73,10 @@
                 <div class="col-md-6">
                   <h3 th:text="#{compare.document.1}"></h3>
                   <div id="result1" class="result-column"></div>
-                  <button class="btn btn-primary" onclick="exportFile(1)">Export</button>
                 </div>
                 <div class="col-md-6">
                   <h3 th:text="#{compare.document.2}"></h3>
                   <div id="result2" class="result-column"></div>
-                  <button class="btn btn-primary" onclick="exportFile(2)">Export</button>
                 </div>
               </div>
               <script>
@@ -98,8 +96,8 @@
                 async function comparePDFs() {
                   const file1 = document.getElementById("fileInput-input").files[0];
                   const file2 = document.getElementById("fileInput2-input").files[0];
-                  var color1 = document.getElementById('colorBox1').value;
-                  var color2 = document.getElementById('colorBox2').value;
+                  var color1 = document.getElementById('color-box1').value;
+                  var color2 = document.getElementById('color-box2').value;
 
                   if (!file1 || !file2) {
                     console.error("Please select two PDF files to compare");
@@ -225,21 +223,6 @@
 
                   console.log('Differences:', differences);
                   displayDifferences(differences);
-                }
-                function exportFile(result) {
-                  var content1 = document.getElementById("result1").innerHTML;
-                  var content2 = document.getElementById("result2").innerHTML;
-                  var file = window.open('','','width=800','height=600');
-                  file.document.write('<html><head></head><body>');
-                  if (result == 1) {
-                    file.document.write(content1);
-                  }
-                  else if (result == 2) {
-                    file.document.write(content2);
-                  }
-                  file.document.write('</body></html>');
-                  file.document.close();
-                  file.print();
                 }
               </script>
             </div>
