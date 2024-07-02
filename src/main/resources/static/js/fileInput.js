@@ -93,6 +93,17 @@ function setupFileInput(chooser) {
     fileNames.forEach((fileName) => {
       selectedFilesContainer.append("<div>" + fileName + "</div>");
     });
+    var fileName = fileNames[0];
+    var spanElement = $('#file-name');
+    spanElement.text(fileName);
+    // Check if the span element contains any text
+    if (spanElement.text().trim() === '') {
+      // If it doesn't contain any text, hide it
+      spanElement.css('display', 'none');
+    } else {
+      // If it does contain text, show it
+      spanElement.css('display', 'block');
+    }
     if (fileNames.length === 1) {
       $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
     } else if (fileNames.length > 1) {

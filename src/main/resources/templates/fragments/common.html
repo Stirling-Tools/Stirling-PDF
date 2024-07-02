@@ -156,6 +156,7 @@
     <div class="mb-3">
       <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:required="${notRequired} ? null : 'required'" style="display: none;">
       <button type="button" class="btn btn-primary" th:text="#{openFileExplorer}" onclick="this.previousElementSibling.click();"></button>
+      <span id="file-name" class="filename" style="display: none;"></span><!-- This span will hold the name of the selected file -->
     </div>
     <div class="selected-files"></div>
   </div>

@@ -8,3 +8,22 @@
   overflow-y: auto;
   white-space: pre-wrap;
 }
+#input{
+  display: none;
+}
+
+#file-name {
+  display: block;
+  background-color: #f8f9fa;
+  color: #212529;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 5px;
+}
+.custom-file-chooser .mb-3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
