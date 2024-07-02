@@ -22,7 +22,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 ## Features
 
 - Dark mode support.
-- Custom download options (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/images/settings.png) for example)
+- Custom download options
 - Parallel file processing and downloads
 - API for integration with external scripts
 - Optional Login and Authentication support (see [here](https://github.com/Stirling-Tools/Stirling-PDF/tree/main#login-authentication) for documentation)
