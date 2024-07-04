@@ -13,9 +13,12 @@
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-9 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon organize">settings_account_box</span>
+                <span class="tool-header-text" th:text="#{account.accountSettings}">User Settings</span>
+              </div>
 
               <!-- User Settings Title -->
-              <h2 class="text-center" th:text="#{account.accountSettings}">User Settings</h2>
               <th:block th:if="${messageType}">
               <div class="alert alert-danger">
                 <span th:text="#{${messageType}}">Default message if not found</span>
@@ -247,9 +250,9 @@
                 <table id="settingsTable" class="table table-bordered table-sm table-striped">
                   <thead>
                     <tr>
-                      <th th:text="#{account.property}">Property</th>
-                      <th th:text="#{account.accountSettings}">Account Setting</th>
-                      <th th:text="#{account.webBrowserSettings}">Web Browser Setting</th>
+                      <th scope="col" th:text="#{account.property}">Property</th>
+                      <th scope="col" th:text="#{account.accountSettings}">Account Setting</th>
+                      <th scope="col" th:text="#{account.webBrowserSettings}">Web Browser Setting</th>
                     </tr>
                   </thead>
                   <tbody>
