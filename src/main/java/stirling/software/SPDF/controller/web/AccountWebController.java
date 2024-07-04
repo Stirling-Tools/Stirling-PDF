@@ -43,6 +43,7 @@ public class AccountWebController {
 
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Authentication authentication) {
+
         if (authentication != null && authentication.isAuthenticated()) {
             return "redirect:/";
         }
@@ -72,6 +73,10 @@ public class AccountWebController {
                 }
             }
         }
+        // Remove any null keys/values from the providerList
+        providerList
+                .entrySet()
+                .removeIf(entry -> entry.getKey() == null || entry.getValue() == null);
         model.addAttribute("providerlist", providerList);
 
         model.addAttribute("loginMethod", applicationProperties.getSecurity().getLoginMethod());
