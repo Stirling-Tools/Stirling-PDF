@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config.security;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import stirling.software.SPDF.config.DatabaseBackupInterface;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Authority;
@@ -38,8 +40,11 @@ public class UserService implements UserServiceInterface {
 
     @Autowired private MessageSource messageSource;
 
+    @Autowired DatabaseBackupInterface databaseBackupHelper;
+
     // Handle OAUTH2 login and user auto creation.
-    public boolean processOAuth2PostLogin(String username, boolean autoCreateUser) {
+    public boolean processOAuth2PostLogin(String username, boolean autoCreateUser)
+            throws IllegalArgumentException, IOException {
         if (!isUsernameValid(username)) {
             return false;
         }
@@ -131,7 +136,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public void saveUser(String username, AuthenticationType authenticationType)
-            throws IllegalArgumentException {
+            throws IllegalArgumentException, IOException {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
@@ -142,9 +147,11 @@ public class UserService implements UserServiceInterface {
         user.addAuthority(new Authority(Role.USER.getRoleId(), user));
         user.setAuthenticationType(authenticationType);
         userRepository.save(user);
+        databaseBackupHelper.exportDatabase();
     }
 
-    public void saveUser(String username, String password) throws IllegalArgumentException {
+    public void saveUser(String username, String password)
+            throws IllegalArgumentException, IOException {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
@@ -154,10 +161,11 @@ public class UserService implements UserServiceInterface {
         user.setEnabled(true);
         user.setAuthenticationType(AuthenticationType.WEB);
         userRepository.save(user);
+        databaseBackupHelper.exportDatabase();
     }
 
     public void saveUser(String username, String password, String role, boolean firstLogin)
-            throws IllegalArgumentException {
+            throws IllegalArgumentException, IOException {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
@@ -169,10 +177,11 @@ public class UserService implements UserServiceInterface {
         user.setAuthenticationType(AuthenticationType.WEB);
         user.setFirstLogin(firstLogin);
         userRepository.save(user);
+        databaseBackupHelper.exportDatabase();
     }
 
     public void saveUser(String username, String password, String role)
-            throws IllegalArgumentException {
+            throws IllegalArgumentException, IOException {
         saveUser(username, password, role, false);
     }
 
@@ -206,7 +215,8 @@ public class UserService implements UserServiceInterface {
         return userCount > 0;
     }
 
-    public void updateUserSettings(String username, Map<String, String> updates) {
+    public void updateUserSettings(String username, Map<String, String> updates)
+            throws IOException {
         Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
@@ -220,6 +230,7 @@ public class UserService implements UserServiceInterface {
             user.setSettings(settingsMap);
 
             userRepository.save(user);
+            databaseBackupHelper.exportDatabase();
         }
     }
 
@@ -235,22 +246,26 @@ public class UserService implements UserServiceInterface {
         return authorityRepository.findByUserId(user.getId());
     }
 
-    public void changeUsername(User user, String newUsername) throws IllegalArgumentException {
+    public void changeUsername(User user, String newUsername)
+            throws IllegalArgumentException, IOException {
         if (!isUsernameValid(newUsername)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
         user.setUsername(newUsername);
         userRepository.save(user);
+        databaseBackupHelper.exportDatabase();
     }
 
-    public void changePassword(User user, String newPassword) {
+    public void changePassword(User user, String newPassword) throws IOException {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+        databaseBackupHelper.exportDatabase();
     }
 
-    public void changeFirstUse(User user, boolean firstUse) {
+    public void changeFirstUse(User user, boolean firstUse) throws IOException {
         user.setFirstLogin(firstUse);
         userRepository.save(user);
+        databaseBackupHelper.exportDatabase();
     }
 
     public void changeRole(User user, String newRole) {
