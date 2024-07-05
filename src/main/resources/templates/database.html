@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{database.title}, header=#{database.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-9 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon organize">database</span>
+                <span class="tool-header-text" text="#{database.title}">Database Im-/Export</span>
+              </div>
+              <p th:if="${error}" th:text="#{'database.' + ${error}}" class="alert alert-danger text-center"></p>
+              <p th:if="${infoMessage}" th:text="#{'database.' + ${infoMessage}}" class="alert alert-success text-center"></p>
+              <div class="bg-card mt-3 mb-3">
+                <table class="table table-striped table-hover mb-0">
+                  <thead>
+                    <tr>
+                      <th scope="col" th:text="#{database.fileName}">File Name</th>
+                      <th scope="col" th:text="#{database.creationDate}">Creation Date</th>
+                      <th scope="col" th:text="#{database.fileSize}">File Size</th>
+                      <th scope="col"></th>
+                      <th scope="col"></th>
+                      <th scope="col"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="backup : ${systemUpdate}">
+                      <td th:text="${backup.fileName}"></td>
+                      <td th:text="${backup.formattedCreationDate}"></td>
+                      <td th:text="${backup.formattedFileSize}"></td>
+                      <td th:title="#{database.deleteBackupFile}"><a th:href="@{'/api/v1/database/delete/' + ${backup.fileName}}" style="color: red;"><span class="material-symbols-rounded">delete</span></a></td>
+                      <td th:title="#{database.importBackupFile}"><a th:href="@{'/api/v1/database/import-database-file/' + ${backup.fileName}}" style="color: var(--md-nav-section-color-organize);"><span class="material-symbols-rounded">backup</span></a></td>
+                      <td th:title="#{database.downloadBackupFile}"><a th:href="@{'/api/v1/database/download/' + ${backup.fileName}}"><span class="material-symbols-rounded">download</span></a></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <hr>
+              <form th:action="@{'/api/v1/database/import-database'}" method="post" enctype="multipart/form-data" class="bg-card mt-3 mb-3">
+                <div style="background: var(--md-sys-color-error-container);padding: .8rem;border-radius: 2rem;" class="mb-3">
+                  <p th:text="#{database.info_1}"></p>
+                  <p th:text="#{database.info_2}"></p>
+                </div>
+                <div class="custom-file-chooser">
+                  <div class="mb-3">
+                    <input type="file" class="form-control" th:name="fileInput" id="fileInput-input" accept=".sql" required>
+                  </div>
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{database.submit}">Import Backup</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script th:inline="javascript">
+        const pdfPasswordPrompt = /*[[#{error.pdfPassword}]]*/ '';
+        const multiple = /*[[${multiple}]]*/ false;
+        const remoteCall = /*[[${remoteCall}]]*/ true;
+      </script>
+      <script th:src="@{'/js/fileInput.js'}"></script>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

@@ -36,7 +36,9 @@ sourceSets {
             if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
                 exclude "stirling/software/SPDF/config/security/**"
                 exclude "stirling/software/SPDF/controller/api/UserController.java"
+                exclude "stirling/software/SPDF/controller/api/DatabaseController.java"
                 exclude "stirling/software/SPDF/controller/web/AccountWebController.java"
+                exclude "stirling/software/SPDF/controller/web/DatabaseWebController.java"
                 exclude "stirling/software/SPDF/model/ApiKeyAuthenticationToken.java"
                 exclude "stirling/software/SPDF/model/Authority.java"
                 exclude "stirling/software/SPDF/model/PersistentLogin.java"
@@ -120,6 +122,7 @@ dependencies {
 
         //2.2.x requires rebuild of DB file.. need migration path
         implementation "com.h2database:h2:2.1.214"
+        // implementation "com.h2database:h2:2.2.224"
     }
 
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
