@@ -12,7 +12,7 @@ plugins {
 import com.github.jk1.license.render.*
 
 ext {
-    springBootVersion = "3.3.0"
+    springBootVersion = "3.3.1"
 }
 
 group = "stirling.software"
