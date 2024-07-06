@@ -95,8 +95,7 @@ function setupFileInput(chooser) {
     });
     const button = document.querySelector('.file-chooser-button');
     if (files.length > 0) {
-      button.setAttribute('data-filename', fileNames);
-      button.textContent = `Open File Explorer | ${fileNames}`;
+      button.innerHTML = `<span class="button-label">Open File Explorer</span><span class="file-name-right">${fileNames}</span>`;
     } else {
       button.setAttribute('data-filename', '');
       button.textContent = 'Open File Explorer          No file selected';

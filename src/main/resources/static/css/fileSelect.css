@@ -31,20 +31,28 @@
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  padding-right: 75%; /* Adjust this value based on the width of the pseudo-element and desired buffer */
+  padding-right: 75%;
   position: relative;
   overflow: hidden;
   background: linear-gradient(to right, #E9ECEF 25%, #F1F3FD 25%);
-  color: black; /* Adjust text color as needed */
-  border: none; /* Remove border if not needed */
+  color: black;
+  border: none;
 }
 
 .file-chooser-button::after {
   content: '';
   position: absolute;
-  right: 75%; /* This positions the line at 20% from the left */
+  left: 25%; /* Adjust this value to where you want the line */
   top: 0;
   bottom: 0;
   width: 1px;
-  background-color: #000; /* Line color */
+  background-color: #000;
+}
+
+.file-name-right {
+  position: absolute;
+  left: 26%; /* Position it to the right of the line */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
