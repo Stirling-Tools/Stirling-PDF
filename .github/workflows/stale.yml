@@ -1,0 +1,31 @@
+name: Close stale issues
+
+on:
+  schedule:
+    - cron: "30 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: 30 days stale issues
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 30
+          days-before-close: 7
+          stale-issue-message: >
+            This issue has been automatically marked as stale because it has had no recent activity.
+            It will be closed if no further activity occurs. Thank you for your contributions.
+          close-issue-message: >
+            This issue has been automatically closed because it has had no recent activity after being marked as stale.
+            Please reopen if you need further assistance.
+          stale-issue-label: "Stale"
+          remove-stale-when-updated: true
+          only-issue-labels: "more-info-needed"
+          days-before-pr-stale: -1 # Prevents PRs from being marked as stale
+          days-before-pr-close: -1 # Prevents PRs from being closed
