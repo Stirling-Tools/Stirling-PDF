@@ -29,3 +29,4 @@ jobs:
           only-issue-labels: "more-info-needed"
           days-before-pr-stale: -1 # Prevents PRs from being marked as stale
           days-before-pr-close: -1 # Prevents PRs from being closed
+          start-date: '2024-07-06T00:00:00Z'  # ISO 8601 Format
