@@ -4,11 +4,11 @@ translation:
 
 Front End:
   - changed-files:
-    - any-glob-to-any-file: 'src/main/resources/templates/**/*.html'
+    - any-glob-to-any-file: 'src/main/resources/templates/**'
 
 java:
   - changed-files:
-    - any-glob-to-any-file: '**/*.java'
+    - any-glob-to-any-file: 'src/main/java/**/*.java'
 
 documentation:
   - changed-files:
