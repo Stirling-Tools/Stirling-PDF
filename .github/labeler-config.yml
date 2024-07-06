@@ -1,0 +1,20 @@
+translation:
+  - changed-files:
+    - any-glob-to-any-file: 'src/main/resources/messages_*_*.properties'
+
+Front End:
+  - changed-files:
+    - any-glob-to-any-file: 'src/main/resources/templates/**/*.html'
+
+java:
+  - changed-files:
+    - any-glob-to-any-file: '**/*.java'
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: '**/*.md'
+
+docker:
+  - changed-files:
+    - any-glob-to-any-file: 'Dockerfile'
+    - any-glob-to-any-file: 'Dockerfile-*'
