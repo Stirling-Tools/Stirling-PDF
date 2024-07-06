@@ -26,6 +26,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Parallel file processing and downloads
 - API for integration with external scripts
 - Optional Login and Authentication support (see [here](https://github.com/Stirling-Tools/Stirling-PDF/tree/main#login-authentication) for documentation)
+- Database Backup and Import (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/DATABASE.md) for documentation)
 
 ## **PDF Features**
 
@@ -234,35 +235,36 @@ security:
   csrfDisabled: true # Set to 'true' to disable CSRF protection (not recommended for production)
   loginAttemptCount: 5 # lock user account after 5 tries
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
-#  initialLogin:
-#    username: "admin" # Initial username for the first login
-#    password: "stirling" # Initial password for the first login
-#  oauth2:
-#    enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
-#    issuer: "" # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) end-point
-#    clientId: "" # Client ID from your provider
-#    clientSecret: "" # Client Secret from your provider
-#    autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
-#    useAsUsername: "email" # Default is 'email'; custom fields can be used as the username
-#    scopes: "openid, profile, email" # Specify the scopes for which the application will request permissions
-#    provider: "google" # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
-#    client:
-#      google:
-#        clientId: "" # Client ID for Google OAuth2
-#        clientSecret: "" # Client Secret for Google OAuth2
-#        scopes: "https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile" # Scopes for Google OAuth2
-#        useAsUsername: "email" # Field to use as the username for Google OAuth2
-#      github:
-#        clientId: "" # Client ID for GitHub OAuth2
-#        clientSecret: "" # Client Secret for GitHub OAuth2
-#        scopes: "read:user" # Scope for GitHub OAuth2
-#        useAsUsername: "login" # Field to use as the username for GitHub OAuth2
-#      keycloak:
-#        issuer: "http://192.168.0.123:8888/realms/stirling-pdf" # URL of the Keycloak realm's OpenID Connect Discovery endpoint
-#        clientId: "stirling-pdf" # Client ID for Keycloak OAuth2
-#        clientSecret: "" # Client Secret for Keycloak OAuth2
-#        scopes: "openid, profile, email" # Scopes for Keycloak OAuth2
-#        useAsUsername: "email" # Field to use as the username for Keycloak OAuth2
+  loginMethod: all # 'all' (Login Username/Password and OAuth2[must be enabled and configured]), 'normal'(only Login with Username/Password) or 'oauth2'(only Login with OAuth2)
+  initialLogin:
+    username: '' # Initial username for the first login
+    password: '' # Initial password for the first login
+  oauth2:
+    enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
+    client:
+      keycloak:
+        issuer: '' # URL of the Keycloak realm's OpenID Connect Discovery endpoint
+        clientId: '' # Client ID for Keycloak OAuth2
+        clientSecret: '' # Client Secret for Keycloak OAuth2
+        scopes: openid, profile, email # Scopes for Keycloak OAuth2
+        useAsUsername: preferred_username # Field to use as the username for Keycloak OAuth2
+      google:
+        clientId: '' # Client ID for Google OAuth2
+        clientSecret: '' # Client Secret for Google OAuth2
+        scopes: https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile # Scopes for Google OAuth2
+        useAsUsername: email # Field to use as the username for Google OAuth2
+      github:
+        clientId: '' # Client ID for GitHub OAuth2
+        clientSecret: '' # Client Secret for GitHub OAuth2
+        scopes: read:user # Scope for GitHub OAuth2
+        useAsUsername: login # Field to use as the username for GitHub OAuth2
+    issuer: '' # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) end-point
+    clientId: '' # Client ID from your provider
+    clientSecret: '' # Client Secret from your provider
+    autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
+    useAsUsername: email # Default is 'email'; custom fields can be used as the username
+    scopes: openid, profile, email # Specify the scopes for which the application will request permissions
+    provider: google # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
 
 system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
@@ -273,9 +275,9 @@ system:
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template html files
 
 ui:
-  appName: null # Application's visible name
-  homeDescription: null # Short description or tagline shown on homepage.
-  appNameNavbar: null # Name displayed on the navigation bar
+  appName: '' # Application's visible name
+  homeDescription: '' # Short description or tagline shown on homepage.
+  appNameNavbar: '' # Name displayed on the navigation bar
 
 endpoints:
   toRemove: [] # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
@@ -309,7 +311,7 @@ For those wanting to use Stirling-PDFs backend API to link with their own custom
 
 ![stirling-login](images/login-light.png)
 
-### Prerequisites:
+### Prerequisites
 
 - User must have the folder ./configs volumed within docker so that it is retained during updates.
 - Docker users must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables.
