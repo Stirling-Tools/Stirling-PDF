@@ -26,4 +26,25 @@
   gap: 10px;
 }
 
+.file-chooser-button {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-right: 75%; /* Adjust this value based on the width of the pseudo-element and desired buffer */
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(to right, #E9ECEF 25%, #F1F3FD 25%);
+  color: black; /* Adjust text color as needed */
+  border: none; /* Remove border if not needed */
+}
 
+.file-chooser-button::after {
+  content: '';
+  position: absolute;
+  right: 75%; /* This positions the line at 20% from the left */
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #000; /* Line color */
+}

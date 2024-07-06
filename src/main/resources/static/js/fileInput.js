@@ -93,16 +93,13 @@ function setupFileInput(chooser) {
     fileNames.forEach((fileName) => {
       selectedFilesContainer.append("<div>" + fileName + "</div>");
     });
-    var fileName = fileNames[0];
-    var spanElement = $('#file-name');
-    spanElement.text(fileName);
-    // Check if the span element contains any text
-    if (spanElement.text().trim() === '') {
-      // If it doesn't contain any text, hide it
-      spanElement.css('display', 'none');
+    const button = document.querySelector('.file-chooser-button');
+    if (files.length > 0) {
+      button.setAttribute('data-filename', fileNames);
+      button.textContent = `Open File Explorer | ${fileNames}`;
     } else {
-      // If it does contain text, show it
-      spanElement.css('display', 'block');
+      button.setAttribute('data-filename', '');
+      button.textContent = 'Open File Explorer          No file selected';
     }
     if (fileNames.length === 1) {
       $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
