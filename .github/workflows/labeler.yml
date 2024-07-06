@@ -1,6 +1,6 @@
 name: "Pull Request Labeler"
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize]
 
 jobs:
