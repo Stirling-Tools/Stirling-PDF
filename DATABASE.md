@@ -1,8 +1,8 @@
 # New Database Backup and Import Functionality
 
-**Full activation will take place on approximately July 5, 2025!**
+**Full activation will take place on approximately January 5th, 2025!**
 
-Why is a one-year wait?
+Why is the waiting time six months?
 
 There are users who only install updates sporadically; if they skip the preparation, it can/will lead to data loss in the database.
 
