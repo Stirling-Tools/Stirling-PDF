@@ -68,7 +68,6 @@ public class PasswordController {
         boolean canModifyAnnotations = request.isCanModifyAnnotations();
         boolean canPrint = request.isCanPrint();
         boolean canPrintFaithful = request.isCanPrintFaithful();
-        System.out.println(fileInput.getOriginalFilename());
         PDDocument document = Loader.loadPDF(fileInput.getBytes());
         AccessPermission ap = new AccessPermission();
         ap.setCanAssembleDocument(!canAssembleDocument);
