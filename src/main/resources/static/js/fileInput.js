@@ -6,10 +6,12 @@ function setupFileInput(chooser) {
   const elementId = chooser.getAttribute("data-bs-element-id");
   const filesSelected = chooser.getAttribute("data-bs-files-selected");
   const pdfPrompt = chooser.getAttribute("data-bs-pdf-prompt");
+  const button = document.querySelector('.file-chooser-button');
+  const addFilesText = button.getAttribute('data-add-files-text'); // Thymeleaf property for "Add Files" text
+  const noFileText = button.getAttribute('data-no-file-text'); // Thymeleaf property for "No File Selected" text
 
-  const button = chooser.querySelector('.file-chooser-button');
   if (button) {
-    button.innerHTML = `<span class="button-label">Open File Explorer</span><span class="file-name-right">No file selected</span>`;
+    button.innerHTML = `<span class="button-label">${addFilesText}</span><span class="file-name-right">${noFileText}</span>`;
   }
 
   let allFiles = [];
@@ -98,11 +100,16 @@ function setupFileInput(chooser) {
     fileNames.forEach((fileName) => {
       selectedFilesContainer.append("<div>" + fileName + "</div>");
     });
+    // Retrieve the button and its data attributes for dynamic texts
     const button = document.querySelector('.file-chooser-button');
+    const addFilesText = button.getAttribute('data-add-files-text'); // Thymeleaf property for "Add Files" text
+    const noFileText = button.getAttribute('data-no-file-text'); // Thymeleaf property for "No File Selected" text
+
+    // Update the button's inner HTML based on file selection
     if (files.length > 0) {
-      button.innerHTML = `<span class="button-label">Open File Explorer</span><span class="file-name-right">${fileNames}</span>`;
+      button.innerHTML = `<span class="button-label">${addFilesText}</span><span class="file-name-right">${fileNames.join(', ')}</span>`;
     } else {
-      button.innerHTML = `<span class="button-label">Open File Explorer</span><span class="file-name-right">No file selected</span>`;
+      button.innerHTML = `<span class="button-label" >${addFilesText}</span><span class="file-name-right">${noFileText}</span>`;
     }
     if (fileNames.length === 1) {
       $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);

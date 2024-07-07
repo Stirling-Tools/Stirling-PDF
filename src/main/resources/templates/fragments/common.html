@@ -155,7 +155,7 @@
   <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
     <div class="mb-3">
       <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:required="${notRequired} ? null : 'required'" style="display: none;">
-      <button type="button" class="btn btn-primary file-chooser-button" onclick="this.previousElementSibling.click();" data-filename="">Open File Explorer</button>
+      <button type="button" class="btn btn-primary file-chooser-button" onclick="this.previousElementSibling.click();" data-filename="" th:text="#{AddFiles}" th:data-add-files-text="#{AddFiles}" th:data-no-file-text="#{NoFile}">#{AddFiles}</button>
     </div>
     <div class="selected-files"></div>
   </div>
