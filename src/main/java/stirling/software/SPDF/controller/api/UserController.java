@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +43,8 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
-    public String register(@ModelAttribute UsernameAndPass requestModel, Model model) {
+    public String register(@ModelAttribute UsernameAndPass requestModel, Model model)
+            throws IOException {
         if (userService.usernameExistsIgnoreCase(requestModel.getUsername())) {
             model.addAttribute("error", "Username already exists");
             return "register";
@@ -63,7 +65,8 @@ public class UserController {
             @RequestParam(name = "newUsername") String newUsername,
             HttpServletRequest request,
             HttpServletResponse response,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes)
+            throws IOException {
 
         if (!userService.isUsernameValid(newUsername)) {
             return new RedirectView("/account?messageType=invalidUsername", true);
@@ -116,7 +119,8 @@ public class UserController {
             @RequestParam(name = "newPassword") String newPassword,
             HttpServletRequest request,
             HttpServletResponse response,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes)
+            throws IOException {
         if (principal == null) {
             return new RedirectView("/change-creds?messageType=notAuthenticated", true);
         }
@@ -149,7 +153,8 @@ public class UserController {
             @RequestParam(name = "newPassword") String newPassword,
             HttpServletRequest request,
             HttpServletResponse response,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes)
+            throws IOException {
         if (principal == null) {
             return new RedirectView("/account?messageType=notAuthenticated", true);
         }
@@ -176,7 +181,8 @@ public class UserController {
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/updateUserSettings")
-    public String updateUserSettings(HttpServletRequest request, Principal principal) {
+    public String updateUserSettings(HttpServletRequest request, Principal principal)
+            throws IOException {
         Map<String, String[]> paramMap = request.getParameterMap();
         Map<String, String> updates = new HashMap<>();
 
@@ -201,7 +207,8 @@ public class UserController {
             @RequestParam(name = "password") String password,
             @RequestParam(name = "role") String role,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
-                    boolean forceChange) {
+                    boolean forceChange)
+            throws IllegalArgumentException, IOException {
 
         if (!userService.isUsernameValid(username)) {
             return new RedirectView("/addUsers?messageType=invalidUsername", true);

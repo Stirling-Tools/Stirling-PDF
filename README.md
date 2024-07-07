@@ -9,6 +9,7 @@
 [![Github Sponsor](https://img.shields.io/badge/Github%20Sponsor-yellow?style=flat&logo=github)](https://github.com/sponsors/Frooodle)
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Stirling-Tools/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
+[<img src="https://www.ssdnodes.com/wp-content/uploads/2023/11/footer-logo.svg" alt="Name" height="40">](https://www.ssdnodes.com/manage/aff.php?aff=2216&register=true)
 
 This is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
 
@@ -21,10 +22,11 @@ All files and PDFs exist either exclusively on the client side, reside in server
 ## Features
 
 - Dark mode support.
-- Custom download options (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/images/settings.png) for example)
+- Custom download options
 - Parallel file processing and downloads
 - API for integration with external scripts
 - Optional Login and Authentication support (see [here](https://github.com/Stirling-Tools/Stirling-PDF/tree/main#login-authentication) for documentation)
+- Database Backup and Import (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/DATABASE.md) for documentation)
 
 ## **PDF Features**
 
@@ -82,7 +84,8 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Get all information on a PDF to view or export as JSON.
 
 For a overview of the tasks and the technology each uses please view [Endpoint-groups.md](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
-Demo of the app is available [here](https://stirlingpdf.io). username: demo, password: demo
+
+Demo of the app is available [here](https://stirlingpdf.io).
 
 ## Technologies used
 
@@ -168,36 +171,36 @@ Stirling PDF currently supports 32!
 | ------------------------------------------- | -------------------------------------- |
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
-| Arabic (العربية) (ar_AR)                    | ![46%](https://geps.dev/progress/46)   |
-| German (Deutsch) (de_DE)                    | ![99%](https://geps.dev/progress/99)   |
-| French (Français) (fr_FR)                   | ![93%](https://geps.dev/progress/93)   |
-| Spanish (Español) (es_ES)                   | ![93%](https://geps.dev/progress/93)   |
-| Simplified Chinese (简体中文) (zh_CN)       | ![94%](https://geps.dev/progress/94)   |
-| Traditional Chinese (繁體中文) (zh_TW)      | ![98%](https://geps.dev/progress/98)   |
-| Catalan (Català) (ca_CA)                    | ![49%](https://geps.dev/progress/49)   |
+| Arabic (العربية) (ar_AR)                    | ![45%](https://geps.dev/progress/45)   |
+| German (Deutsch) (de_DE)                    | ![100%](https://geps.dev/progress/100)   |
+| French (Français) (fr_FR)                   | ![94%](https://geps.dev/progress/94)   |
+| Spanish (Español) (es_ES)                   | ![92%](https://geps.dev/progress/92)   |
+| Simplified Chinese (简体中文) (zh_CN)       | ![98%](https://geps.dev/progress/98)   |
+| Traditional Chinese (繁體中文) (zh_TW)      | ![96%](https://geps.dev/progress/96)   |
+| Catalan (Català) (ca_CA)                    | ![48%](https://geps.dev/progress/48)   |
 | Italian (Italiano) (it_IT)                  | ![99%](https://geps.dev/progress/99)   |
-| Swedish (Svenska) (sv_SE)                   | ![40%](https://geps.dev/progress/40)   |
-| Polish (Polski) (pl_PL)                     | ![42%](https://geps.dev/progress/42)   |
+| Swedish (Svenska) (sv_SE)                   | ![39%](https://geps.dev/progress/39)   |
+| Polish (Polski) (pl_PL)                     | ![90%](https://geps.dev/progress/90)   |
 | Romanian (Română) (ro_RO)                   | ![39%](https://geps.dev/progress/39)   |
-| Korean (한국어) (ko_KR)                     | ![86%](https://geps.dev/progress/86)   |
-| Portuguese Brazilian (Português) (pt_BR)    | ![61%](https://geps.dev/progress/61)   |
-| Portuguese (Português) (pt_PT)              | ![80%](https://geps.dev/progress/80)   |
-| Russian (Русский) (ru_RU)                   | ![86%](https://geps.dev/progress/86)   |
-| Basque (Euskara) (eu_ES)                    | ![63%](https://geps.dev/progress/63)   |
-| Japanese (日本語) (ja_JP)                   | ![92%](https://geps.dev/progress/92)   |
-| Dutch (Nederlands) (nl_NL)                  | ![83%](https://geps.dev/progress/83)   |
-| Greek (Ελληνικά) (el_GR)                    | ![84%](https://geps.dev/progress/84)   |
-| Turkish (Türkçe) (tr_TR)                    | ![96%](https://geps.dev/progress/96)   |
-| Indonesia (Bahasa Indonesia) (id_ID)        | ![78%](https://geps.dev/progress/78)   |
-| Hindi (हिंदी) (hi_IN)                          | ![78%](https://geps.dev/progress/78)   |
-| Hungarian (Magyar) (hu_HU)                  | ![77%](https://geps.dev/progress/77)   |
-| Bulgarian (Български) (bg_BG)               | ![96%](https://geps.dev/progress/96)   |
-| Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![80%](https://geps.dev/progress/80)   |
-| Ukrainian (Українська) (uk_UA)              | ![92%](https://geps.dev/progress/92)   |
-| Slovakian (Slovensky) (sk_SK)               | ![93%](https://geps.dev/progress/93)   |
-| Czech (Česky) (cs_CZ)                       | ![92%](https://geps.dev/progress/92)   |
-| Croatian (Hrvatski) (hr_HR)                 | ![97%](https://geps.dev/progress/97)   |
-| Norwegian (Norsk) (no_NB)                   | ![97%](https://geps.dev/progress/97)   |
+| Korean (한국어) (ko_KR)                     | ![84%](https://geps.dev/progress/84)   |
+| Portuguese Brazilian (Português) (pt_BR)    | ![60%](https://geps.dev/progress/60)   |
+| Portuguese (Português) (pt_PT)              | ![78%](https://geps.dev/progress/78)   |
+| Russian (Русский) (ru_RU)                   | ![84%](https://geps.dev/progress/84)   |
+| Basque (Euskara) (eu_ES)                    | ![62%](https://geps.dev/progress/62)   |
+| Japanese (日本語) (ja_JP)                   | ![90%](https://geps.dev/progress/90)   |
+| Dutch (Nederlands) (nl_NL)                  | ![96%](https://geps.dev/progress/96)   |
+| Greek (Ελληνικά) (el_GR)                    | ![82%](https://geps.dev/progress/82)   |
+| Turkish (Türkçe) (tr_TR)                    | ![94%](https://geps.dev/progress/94)   |
+| Indonesia (Bahasa Indonesia) (id_ID)        | ![76%](https://geps.dev/progress/76)   |
+| Hindi (हिंदी) (hi_IN)                          | ![77%](https://geps.dev/progress/77)   |
+| Hungarian (Magyar) (hu_HU)                  | ![76%](https://geps.dev/progress/76)   |
+| Bulgarian (Български) (bg_BG)               | ![94%](https://geps.dev/progress/94)   |
+| Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![78%](https://geps.dev/progress/78)   |
+| Ukrainian (Українська) (uk_UA)              | ![90%](https://geps.dev/progress/90)   |
+| Slovakian (Slovensky) (sk_SK)               | ![92%](https://geps.dev/progress/92)   |
+| Czech (Česky) (cs_CZ)                       | ![90%](https://geps.dev/progress/90)   |
+| Croatian (Hrvatski) (hr_HR)                 | ![95%](https://geps.dev/progress/95)   |
+| Norwegian (Norsk) (no_NB)                   | ![96%](https://geps.dev/progress/96)   |
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
@@ -218,11 +221,11 @@ Environment variables are also supported and would override the settings file
 For example in the settings.yml you have
 
 ```yaml
-system:
+security:
   enableLogin: 'true'
 ```
 
-To have this via an environment variable you would have ``SYSTEM_ENABLELOGIN``
+To have this via an environment variable you would have ``SECURITY_ENABLELOGIN``
 
 The Current list of settings is
 
@@ -232,35 +235,36 @@ security:
   csrfDisabled: true # Set to 'true' to disable CSRF protection (not recommended for production)
   loginAttemptCount: 5 # lock user account after 5 tries
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
-#  initialLogin:
-#    username: "admin" # Initial username for the first login
-#    password: "stirling" # Initial password for the first login
-#  oauth2:
-#    enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
-#    issuer: "" # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) end-point
-#    clientId: "" # Client ID from your provider
-#    clientSecret: "" # Client Secret from your provider
-#    autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
-#    useAsUsername: "email" # Default is 'email'; custom fields can be used as the username
-#    scopes: "openid, profile, email" # Specify the scopes for which the application will request permissions
-#    provider: "google" # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
-#    client:
-#      google:
-#        clientId: "" # Client ID for Google OAuth2
-#        clientSecret: "" # Client Secret for Google OAuth2
-#        scopes: "https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile" # Scopes for Google OAuth2
-#        useAsUsername: "email" # Field to use as the username for Google OAuth2
-#      github:
-#        clientId: "" # Client ID for GitHub OAuth2
-#        clientSecret: "" # Client Secret for GitHub OAuth2
-#        scopes: "read:user" # Scope for GitHub OAuth2
-#        useAsUsername: "login" # Field to use as the username for GitHub OAuth2
-#      keycloak:
-#        issuer: "http://192.168.0.123:8888/realms/stirling-pdf" # URL of the Keycloak realm's OpenID Connect Discovery endpoint
-#        clientId: "stirling-pdf" # Client ID for Keycloak OAuth2
-#        clientSecret: "" # Client Secret for Keycloak OAuth2
-#        scopes: "openid, profile, email" # Scopes for Keycloak OAuth2
-#        useAsUsername: "email" # Field to use as the username for Keycloak OAuth2
+  loginMethod: all # 'all' (Login Username/Password and OAuth2[must be enabled and configured]), 'normal'(only Login with Username/Password) or 'oauth2'(only Login with OAuth2)
+  initialLogin:
+    username: '' # Initial username for the first login
+    password: '' # Initial password for the first login
+  oauth2:
+    enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
+    client:
+      keycloak:
+        issuer: '' # URL of the Keycloak realm's OpenID Connect Discovery endpoint
+        clientId: '' # Client ID for Keycloak OAuth2
+        clientSecret: '' # Client Secret for Keycloak OAuth2
+        scopes: openid, profile, email # Scopes for Keycloak OAuth2
+        useAsUsername: preferred_username # Field to use as the username for Keycloak OAuth2
+      google:
+        clientId: '' # Client ID for Google OAuth2
+        clientSecret: '' # Client Secret for Google OAuth2
+        scopes: https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile # Scopes for Google OAuth2
+        useAsUsername: email # Field to use as the username for Google OAuth2
+      github:
+        clientId: '' # Client ID for GitHub OAuth2
+        clientSecret: '' # Client Secret for GitHub OAuth2
+        scopes: read:user # Scope for GitHub OAuth2
+        useAsUsername: login # Field to use as the username for GitHub OAuth2
+    issuer: '' # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) end-point
+    clientId: '' # Client ID from your provider
+    clientSecret: '' # Client Secret from your provider
+    autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
+    useAsUsername: email # Default is 'email'; custom fields can be used as the username
+    scopes: openid, profile, email # Specify the scopes for which the application will request permissions
+    provider: google # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
 
 system:
   defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
@@ -271,9 +275,9 @@ system:
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template html files
 
 ui:
-  appName: null # Application's visible name
-  homeDescription: null # Short description or tagline shown on homepage.
-  appNameNavbar: null # Name displayed on the navigation bar
+  appName: '' # Application's visible name
+  homeDescription: '' # Short description or tagline shown on homepage.
+  appNameNavbar: '' # Name displayed on the navigation bar
 
 endpoints:
   toRemove: [] # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
@@ -307,7 +311,7 @@ For those wanting to use Stirling-PDFs backend API to link with their own custom
 
 ![stirling-login](images/login-light.png)
 
-### Prerequisites:
+### Prerequisites
 
 - User must have the folder ./configs volumed within docker so that it is retained during updates.
 - Docker users must download the security jar version by setting ``DOCKER_ENABLE_SECURITY`` to ``true`` in environment variables.

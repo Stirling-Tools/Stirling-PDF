@@ -6,9 +6,11 @@ repos:
         args:
           - --fix
           - --line-length=127
-        files: ^((.github/scripts)/.+)?[^/]+\.py$
+        files: ^((.github/scripts|scripts)/.+)?[^/]+\.py$
+        exclude: (split_photos.py)
       - id: ruff-format
-        files: ^((.github/scripts)/.+)?[^/]+\.py$
+        files: ^((.github/scripts|scripts)/.+)?[^/]+\.py$
+        exclude: (split_photos.py)
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.6
     hooks:
@@ -33,5 +35,5 @@ repos:
         # args: ["--replace_with=  "]
         entry: python .github/scripts/check_tabulator.py
         language: python
-        exclude: ^src/main/resources/static/pdfjs/
+        exclude: ^(src/main/resources/static/pdfjs|src/main/resources/static/pdfjs-legacy)
         files: ^.*(\.html|\.css|\.js)$
