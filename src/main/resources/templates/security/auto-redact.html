@@ -17,10 +17,8 @@
                 <span class="tool-header-text" th:text="#{autoRedact.header}"></span>
               </div>
               <form action="api/v1/security/auto-redact" method="post" enctype="multipart/form-data">
-                <div class="mb-3">
-                  <input type="file" class="form-control" id="fileInput" name="fileInput" required accept="application/pdf">
-                </div>
-
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                
                 <div class="mb-3">
                   <label for="listOfText" class="form-label" th:text="#{autoRedact.textsToRedactLabel}"></label>
                   <textarea class="form-control" id="listOfText" name="listOfText" rows="4" required th:placeholder="#{autoRedact.textsToRedactPlaceholder}"></textarea>
