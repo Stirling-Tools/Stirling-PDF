@@ -7,6 +7,11 @@ function setupFileInput(chooser) {
   const filesSelected = chooser.getAttribute("data-bs-files-selected");
   const pdfPrompt = chooser.getAttribute("data-bs-pdf-prompt");
 
+  const button = chooser.querySelector('.file-chooser-button');
+  if (button) {
+    button.innerHTML = `<span class="button-label">Open File Explorer</span><span class="file-name-right">No file selected</span>`;
+  }
+
   let allFiles = [];
   let overlay;
   let dragCounter = 0;
@@ -97,8 +102,7 @@ function setupFileInput(chooser) {
     if (files.length > 0) {
       button.innerHTML = `<span class="button-label">Open File Explorer</span><span class="file-name-right">${fileNames}</span>`;
     } else {
-      button.setAttribute('data-filename', '');
-      button.textContent = 'Open File Explorer          No file selected';
+      button.innerHTML = `<span class="button-label">Open File Explorer</span><span class="file-name-right">No file selected</span>`;
     }
     if (fileNames.length === 1) {
       $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
