@@ -6,9 +6,35 @@
       .result-column {
         border: 1px solid #ccc;
         padding: 15px;
+        margin-bottom: 15px;
         overflow-y: auto;
         height: calc(100vh - 400px);
         white-space: pre-wrap;
+      }
+      .flex-container {
+        display: flex;
+        flex-direction: row;
+      }
+      .color-selector {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 50%;
+        max-height: 100px;
+        margin-bottom: 2rem;
+      }
+      #color-box1, #color-box2 {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border: none;
+        background-color: transparent;
+      }
+      .spacer1 {
+        padding-right: calc(var(--bs-gutter-x) * .5);
+      }
+      .spacer2 {
+        padding-left: calc(var(--bs-gutter-x) * .5);
       }
     </style>
   </head>
@@ -27,7 +53,22 @@
               </div>
               <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
               <div th:replace="~{fragments/common :: fileSelector(name='fileInput2', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
+
+              <div class="row">
+                <div class="flex-container">
+                  <div class="color-selector spacer1">
+                    <label th:text="#{compare.highlightColor.1}"></label>
+                    <label for="color-box1"></label><input type="color" id="color-box1" value="#ff0000">
+                  </div>
+                  <div class="color-selector spacer2">
+                    <label th:text="#{compare.highlightColor.2}"></label>
+                    <label for="color-box2"></label><input type="color" id="color-box2" value="#008000">
+                  </div>
+                </div>
+              </div>
+
               <button class="btn btn-primary"  onclick="comparePDFs()" th:text="#{compare.submit}"></button>
+
               <div class="row">
                 <div class="col-md-6">
                   <h3 th:text="#{compare.document.1}"></h3>
@@ -55,6 +96,8 @@
                 async function comparePDFs() {
                   const file1 = document.getElementById("fileInput-input").files[0];
                   const file2 = document.getElementById("fileInput2-input").files[0];
+                  var color1 = document.getElementById('color-box1').value;
+                  var color2 = document.getElementById('color-box2').value;
 
                   if (!file1 || !file2) {
                     console.error("Please select two PDF files to compare");
@@ -115,13 +158,15 @@
                         i--;
                         j--;
                       } else if (j > 0 && (i === 0 || matrix[i][j - 1] >= matrix[i - 1][j])) {
-                        differences.unshift(['green', words2[j - 1]]);
+                        differences.unshift([color2, words2[j - 1]]);
                         j--;
                       } else if (i > 0 && (j === 0 || matrix[i][j - 1] < matrix[i - 1][j])) {
-                        differences.unshift(['red', words1[i - 1]]);
+                        differences.unshift([color1, words1[i - 1]]);
                         i--;
                       }
                     }
+                    console.log(differences);
+
 
                     return differences;
                   };
@@ -138,14 +183,14 @@
                       const span1 = document.createElement("span");
                       const span2 = document.createElement("span");
 
-                      // If it's an addition, show it in green in the second document and transparent in the first
-                      if (color === "green") {
+                      // If it's an addition, show it in color2 in the second document and transparent in the first
+                      if (color === color2) {
                         span1.style.color = "transparent";
                         span1.style.userSelect = "none";
                         span2.style.color = color;
                       }
-                      // If it's a deletion, show it in red in the first document and transparent in the second
-                      else if (color === "red") {
+                      // If it's a deletion, show it in color1 in the first document and transparent in the second
+                      else if (color === color1) {
                         span1.style.color = color;
                         span2.style.color = "transparent";
                         span2.style.userSelect = "none";

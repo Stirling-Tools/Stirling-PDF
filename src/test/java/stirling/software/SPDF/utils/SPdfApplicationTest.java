@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,18 +43,6 @@ public class SPdfApplicationTest {
 
     @Test
     public void testMainApplicationStartup() throws IOException, InterruptedException {
-        // Setup mock environment for the main method
-        Path settingsPath = Paths.get("configs/settings.yml");
-        Path customSettingsPath = Paths.get("configs/custom_settings.yml");
-
-        // Ensure the files do not exist for the test
-        if (Files.exists(settingsPath)) {
-            Files.delete(settingsPath);
-        }
-        if (Files.exists(customSettingsPath)) {
-            Files.delete(customSettingsPath);
-        }
-
         // Run the main method
         SPdfApplication.main(new String[]{});
 

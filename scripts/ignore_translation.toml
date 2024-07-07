@@ -10,7 +10,11 @@ ignore = [
 
 [ca_CA]
 ignore = [
+    'PDFToText.tags',
+    'adminUserSettings.admin',
     'language.direction',
+    'survey.button',
+    'watermark.type.1',
 ]
 
 [cs_CZ]
@@ -48,6 +52,7 @@ ignore = [
 ignore = [
     'adminUserSettings.roles',
     'color',
+    'error',
     'language.direction',
     'no',
     'showJS.tags',
@@ -60,8 +65,26 @@ ignore = [
 
 [fr_FR]
 ignore = [
+    'AddStampRequest.alphabet',
+    'AddStampRequest.position',
+    'AddStampRequest.rotation',
+    'PDFToBook.selectText.1',
+    'addPageNumbers.selectText.3',
+    'adminUserSettings.actions',
+    'alphabet',
+    'compare.document.1',
+    'compare.document.2',
+    'info',
     'language.direction',
+    'licenses.license',
+    'licenses.module',
+    'licenses.nav',
+    'licenses.version',
+    'pdfOrganiser.mode',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
     'sponsor',
+    'watermark.type.2',
 ]
 
 [hi_IN]
@@ -71,6 +94,7 @@ ignore = [
 
 [hr_HR]
 ignore = [
+    'PDFToBook.selectText.1',
     'font',
     'home.pipeline.title',
     'info',
@@ -114,16 +138,34 @@ ignore = [
 
 [nl_NL]
 ignore = [
+    'HTMLToPDF.print',
+    'adjustContrast.contrast',
+    'compare.document.1',
+    'compare.document.2',
+    'error',
+    'getPdfInfo.downloadJson',
+    'help',
+    'info',
     'language.direction',
+    'navbar.allTools',
+    'printFile.submit',
+    'showJS.downloadJS',
+    'sponsor',
 ]
 
 [no_NB]
 ignore = [
+    'PDFToBook.selectText.1',
+    'adminUserSettings.admin',
+    'info',
     'language.direction',
+    'oops',
+    'sponsor',
 ]
 
 [pl_PL]
 ignore = [
+    'PDFToBook.selectText.1',
     'language.direction',
 ]
 
@@ -149,12 +191,20 @@ ignore = [
 
 [sk_SK]
 ignore = [
+    'adminUserSettings.admin',
+    'home.multiTool.title',
+    'info',
     'language.direction',
+    'navbar.sections.security',
+    'text',
+    'watermark.type.1',
 ]
 
 [sr_LATN_RS]
 ignore = [
     'language.direction',
+    'licenses.version',
+    'poweredBy',
 ]
 
 [sv_SE]
