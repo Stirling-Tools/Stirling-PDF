@@ -6,7 +6,7 @@ function setupFileInput(chooser) {
   const elementId = chooser.getAttribute("data-bs-element-id");
   const filesSelected = chooser.getAttribute("data-bs-files-selected");
   const pdfPrompt = chooser.getAttribute("data-bs-pdf-prompt");
-  const button = document.querySelector('.file-chooser-button');
+  const button = chooser.querySelector('.file-chooser-button');
   const addFilesText = button.getAttribute('data-add-files-text'); // Thymeleaf property for "Add Files" text
   const noFileText = button.getAttribute('data-no-file-text'); // Thymeleaf property for "No File Selected" text
   button.innerHTML = `<span class="button-label">${addFilesText}</span><span class="file-name-right">${noFileText}</span>`;
@@ -86,10 +86,10 @@ function setupFileInput(chooser) {
 
   $("#" + elementId).on("change", function (e) {
     allFiles = Array.from(e.target.files);
-    handleFileInputChange(this);
+    handleFileInputChange(this, button);
   });
 
-  function handleFileInputChange(inputElement) {
+  function handleFileInputChange(inputElement, button) {
     const files = allFiles;
     const fileNames = files.map((f) => f.name);
     const selectedFilesContainer = $(inputElement).siblings(".selected-files");
@@ -99,7 +99,6 @@ function setupFileInput(chooser) {
     });
     console.log("test");
     // Retrieve the button and its data attributes for dynamic texts
-    const button = document.querySelector('.file-chooser-button');
     const addFilesText = button.getAttribute('data-add-files-text'); // Thymeleaf property for "Add Files" text
     const noFileText = button.getAttribute('data-no-file-text'); // Thymeleaf property for "No File Selected" text
     const selectedText = button.getAttribute('data-selected-text'); // Thymeleaf property for "Selected" text
@@ -124,6 +123,6 @@ function setupFileInput(chooser) {
   document.addEventListener("fileRemoved", function (e) {
     const fileName = e.detail;
     allFiles = allFiles.filter(file => file.name !== fileName);
-    handleFileInputChange();
+    handleFileInputChange(this, button);
   });
 }
