@@ -104,21 +104,19 @@ function setupFileInput(chooser) {
     const button = document.querySelector('.file-chooser-button');
     const addFilesText = button.getAttribute('data-add-files-text'); // Thymeleaf property for "Add Files" text
     const noFileText = button.getAttribute('data-no-file-text'); // Thymeleaf property for "No File Selected" text
+    const selectedText = button.getAttribute('data-selected-text'); // Thymeleaf property for "Selected" text
 
-    // Update the button's inner HTML based on file selection
-    if (files.length > 0) {
-      button.innerHTML = `<span class="button-label">${addFilesText}</span><span class="file-name-right">${fileNames.join(', ')}</span>`;
-    } else {
-      button.innerHTML = `<span class="button-label" >${addFilesText}</span><span class="file-name-right">${noFileText}</span>`;
-    }
     if (fileNames.length === 1) {
+      button.innerHTML = `<span class="button-label">${addFilesText}</span><span class="file-name-right">${fileNames.join(', ')}</span>`;
       $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
     } else if (fileNames.length > 1) {
+      button.innerHTML = `<span class="button-label" >${addFilesText}</span><span class="file-name-right">${fileNames.length + " " + selectedText}</span>`;
       $(inputElement)
         .siblings(".custom-file-label")
         .addClass("selected")
         .html(fileNames.length + " " + filesSelected);
     } else {
+      button.innerHTML = `<span class="button-label" >${addFilesText}</span><span class="file-name-right">${noFileText}</span>`;
       $(inputElement).siblings(".custom-file-label").addClass("selected").html(pdfPrompt);
     }
   }
