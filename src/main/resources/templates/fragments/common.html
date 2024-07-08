@@ -152,6 +152,7 @@
                 </script>
                 <script src="js/downloader.js"></script>
 
+  <!-- Laying a button over the original file input form, that looks exactly the same way to enable translatable messages -->
   <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
     <div class="mb-3">
       <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:required="${notRequired} ? null : 'required'" style="display: none;">
