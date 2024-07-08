@@ -124,5 +124,6 @@ function setupFileInput(chooser) {
   document.addEventListener("fileRemoved", function (e) {
     const fileName = e.detail;
     allFiles = allFiles.filter(file => file.name !== fileName);
+    handleFileInputChange();
   });
 }
