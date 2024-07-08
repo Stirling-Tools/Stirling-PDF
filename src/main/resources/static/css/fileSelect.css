@@ -37,6 +37,25 @@
   background: linear-gradient(to right, #E9ECEF 25%, #F1F3FD 25%);
   color: black;
   border: none;
+  box-shadow: none !important; /* Removes the box shadow */
+}
+
+/* State after a file is added */
+.file-chooser-button.file-added {
+  color: black; /* Ensures text color remains black after file is added */
+  box-shadow: none !important; /* Removes the box shadow */
+}
+
+
+.file-chooser-button:hover {
+  color: black; /* Ensures text color remains black on hover */
+  box-shadow: none !important; /* Removes the box shadow */
+}
+.file-chooser-button:not(.file-added):hover {
+  background-color: var(--md-sys-color-primary); /* Keeps the background color unchanged */
+  box-shadow: none !important; /* Removes the box shadow */
+  border-color: var(--md-sys-color-primary); /* Keeps the border color unchanged */
+  color: black; /* Ensures text color remains black on hover */
 }
 
 .file-chooser-button::after {
@@ -48,6 +67,7 @@
   width: 1px;
   background-color: #000;
 }
+
 
 .file-name-right {
   position: absolute;

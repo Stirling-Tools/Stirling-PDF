@@ -9,10 +9,7 @@ function setupFileInput(chooser) {
   const button = document.querySelector('.file-chooser-button');
   const addFilesText = button.getAttribute('data-add-files-text'); // Thymeleaf property for "Add Files" text
   const noFileText = button.getAttribute('data-no-file-text'); // Thymeleaf property for "No File Selected" text
-
-  if (button) {
-    button.innerHTML = `<span class="button-label">${addFilesText}</span><span class="file-name-right">${noFileText}</span>`;
-  }
+  button.innerHTML = `<span class="button-label">${addFilesText}</span><span class="file-name-right">${noFileText}</span>`;
 
   let allFiles = [];
   let overlay;
@@ -100,6 +97,7 @@ function setupFileInput(chooser) {
     fileNames.forEach((fileName) => {
       selectedFilesContainer.append("<div>" + fileName + "</div>");
     });
+    console.log("test");
     // Retrieve the button and its data attributes for dynamic texts
     const button = document.querySelector('.file-chooser-button');
     const addFilesText = button.getAttribute('data-add-files-text'); // Thymeleaf property for "Add Files" text
@@ -108,9 +106,11 @@ function setupFileInput(chooser) {
 
     if (fileNames.length === 1) {
       button.innerHTML = `<span class="button-label">${addFilesText}</span><span class="file-name-right">${fileNames.join(', ')}</span>`;
+      button.classList.add('file-added');
       $(inputElement).siblings(".custom-file-label").addClass("selected").html(fileNames[0]);
     } else if (fileNames.length > 1) {
       button.innerHTML = `<span class="button-label" >${addFilesText}</span><span class="file-name-right">${fileNames.length + " " + selectedText}</span>`;
+      button.classList.add('file-added');
       $(inputElement)
         .siblings(".custom-file-label")
         .addClass("selected")
