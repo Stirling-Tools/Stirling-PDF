@@ -72,7 +72,7 @@ function setupFileInput(chooser) {
 
     // When adding files
     $("#" + elementId).on("change", function (e) {
-      if (window.multiple){
+      if (window.multiple && !window.path.endsWith("/pipeline")){
         // Get newly Added Files
         const newFiles = Array.from(e.target.files).map(file => {
           return {
