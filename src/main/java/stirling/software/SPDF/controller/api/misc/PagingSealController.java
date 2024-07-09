@@ -38,9 +38,9 @@ public class PagingSealController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/paging-seal")
     @Operation(
-            summary = "Add stamp to a PDF file",
+            summary = "Add paging seal  to a PDF file",
             description =
-                    "This endpoint adds a stamp to a given PDF file. Users can specify the stamp type (text or image), rotation, opacity, width spacer, and height spacer. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint adds a paging seal to a given PDF file. Users can specify the seal type (image),  opacity, and height spacer. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> addPagingSeal(@ModelAttribute PagingSealRequest request)
             throws IOException {
         MultipartFile pdfFile = request.getFileInput();
