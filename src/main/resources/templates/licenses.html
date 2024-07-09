@@ -11,14 +11,17 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6 bg-card">
-              <h2 th:text="#{licenses.header}">3rd Party licenses</h2>
+            <div class="col-md-8 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon organize">license</span>
+                <span class="tool-header-text" th:text="#{licenses.header}">3rd Party licenses</span>
+              </div>
               <table class="table table-striped">
                 <thead>
                   <tr>
-                    <th th:text="#{licenses.module}">Module</th>
-                    <th th:text="#{licenses.version}">Version</th>
-                    <th th:text="#{licenses.license}">License</th>
+                    <th scope="col" th:text="#{licenses.module}">Module</th>
+                    <th scope="col" th:text="#{licenses.version}">Version</th>
+                    <th scope="col" th:text="#{licenses.license}">License</th>
                   </tr>
                 </thead>
                 <tbody>
