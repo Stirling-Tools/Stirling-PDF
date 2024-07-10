@@ -212,6 +212,11 @@ ignore = [
     'language.direction',
 ]
 
+[th_TH]
+ignore = [
+    'language.direction',
+]
+
 [tr_TR]
 ignore = [
     'language.direction',
