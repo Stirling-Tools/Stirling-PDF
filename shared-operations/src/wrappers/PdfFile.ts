@@ -5,6 +5,7 @@ if(isBrowser){
     PDFJS.GlobalWorkerOptions.workerSrc = pdfJSWorkerURL;
 }
 
+//TODO: dynamically import these libs.
 import type { PDFDocumentProxy as PDFJSDocument } from "pdfjs-dist/types/src/display/api";
 import { PDFDocument as PDFLibDocument } from "pdf-lib";
 

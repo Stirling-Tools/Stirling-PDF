@@ -15,20 +15,7 @@ export interface Progress {
 }
 
 export class Operator {
-    /** The internal name of the operator in camelCase (impose, merge, etc.) */
-    static type: string;
-
-    /** The Joi validators & decorators */
-    protected static inputSchema: Joi.Schema;
-    protected static valueSchema: Joi.Schema;
-    protected static outputSchema: Joi.Schema;
-    static schema: Joi.ObjectSchema<{
-        input: any;
-        values: any;
-        output: any;
-    }>;
-
-    actionValues: any;
+    actionValues: any = undefined;
 
     constructor (action: Action) {
         this.actionValues = action.values;
@@ -37,6 +24,19 @@ export class Operator {
     async run(input: PdfFile[] | any[], progressCallback: (progress: Progress) => void): Promise<PdfFile[] | any[]> {
         progressCallback({ curFileProgress: 1, operationProgress: 1 })
         return input;
+    }
+}
+
+
+export class OperatorSchema {
+    schema: Joi.ObjectSchema<any>;
+
+    constructor(label: string, description: string, inputSchema: Joi.Schema, valueSchema: Joi.Schema, outputSchema: Joi.Schema) {
+        this.schema = Joi.object({
+            input: inputSchema,
+            values: valueSchema.required(),
+            output: outputSchema
+        }).label(label).description(description);
     }
 }
 

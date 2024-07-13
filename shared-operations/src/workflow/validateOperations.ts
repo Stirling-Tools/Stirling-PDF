@@ -20,7 +20,7 @@ export async function validateOperations(actions: Action[]): Promise<{ valid: bo
         }
         const validationResult = operator.schema.validate({values: action.values});
 
-        // TODO: convert everything to joiresult format
+        // TODO: convert everything to joiresult format instead of returning a new format
         if(validationResult.error) {
             return { valid: false, reason: validationResult.error.message};
         }
