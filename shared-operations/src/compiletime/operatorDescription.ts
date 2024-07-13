@@ -18,11 +18,11 @@ import {
 
         if (isJsFile) {
             const baseName = path.basename(filePath, '.ts');
-            if(baseName != "index") {
+            if(baseName != "index" && !baseName.endsWith(".schema")) {
                 //TODO: Extract more info from operators. Currently not possible see: https://github.com/egoist/vite-plugin-compile-time/issues/25
                 
                 jsFiles.push({
-                    baseName: baseName
+                    basename: baseName
                 });
             }
         }

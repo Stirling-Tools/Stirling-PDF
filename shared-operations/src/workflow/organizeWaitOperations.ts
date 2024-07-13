@@ -44,7 +44,7 @@ export function organizeWaitOperations(actions: Action[]) {
 }
 
 export type ResultType = Record<string, {
-        waitCount: number,
-        doneOperation: Action,
-        input: PdfFile[]
-    }>;
+    waitCount: number,
+    doneOperation: Action,
+    input: PdfFile[]
+}>;

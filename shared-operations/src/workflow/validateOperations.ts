@@ -1,6 +1,6 @@
-import { Operator } from "../functions";
+import { OperatorSchema } from "../functions";
 import { Action } from "../../declarations/Action";
-import { getOperatorByName } from "./operatorAccessor";
+import { getOperatorByName, getSchemaByName } from "./operatorAccessor";
 
 /** This function validates the "workflow-json" from the API */
 export async function validateOperations(actions: Action[]): Promise<{ valid: boolean, reason?: string}> {
@@ -18,7 +18,11 @@ export async function validateOperations(actions: Action[]): Promise<{ valid: bo
         if(!operator) {
             return { valid: false, reason: `action.type ${action.type} does not exist` };
         }
-        const validationResult = operator.schema.validate({values: action.values});
+        const schema = await getSchemaByName(action.type);
+        if(!operator) {
+            return { valid: false, reason: `action.type ${action.type} does not exist` };
+        }
+        const validationResult = schema.schema.validate({values: action.values});
 
         // TODO: convert everything to joiresult format instead of returning a new format
         if(validationResult.error) {
@@ -35,10 +39,10 @@ export async function validateOperations(actions: Action[]): Promise<{ valid: bo
                     }
 
                     for (const afterDoneChild of done[childAction.values.id]?.actions || []) {
-                        const receivingOperator = await getOperatorByName(afterDoneChild.type);
-                        if (receivingOperator === undefined) {
+                        const receivingSchema = await getSchemaByName(afterDoneChild.type);
+                        if (receivingSchema === undefined) {
                             return { valid: false, reason: `action.type ${afterDoneChild.type} does not exist.` };
-                        } else if (!ioCompatible(operator, receivingOperator)) {
+                        } else if (!ioCompatible(schema, receivingSchema)) {
                             return { valid: false, reason: `Ouput of action ${action.type} is not compatible with input of action ${afterDoneChild.type}` };
                         }
                     }
@@ -47,10 +51,10 @@ export async function validateOperations(actions: Action[]): Promise<{ valid: bo
                     return { valid: false, reason: "There shouldn't be a done action here." };
                 }
                 else {
-                    const receivingOperator = await getOperatorByName(childAction.type);
-                    if (receivingOperator === undefined) {
+                    const receivingSchema = await getSchemaByName(childAction.type);
+                    if (receivingSchema === undefined) {
                         return { valid: false, reason: `action.type ${childAction.type} does not exist.` };
-                    } else if (!ioCompatible(operator, receivingOperator)) {
+                    } else if (!ioCompatible(schema, receivingSchema)) {
                         return { valid: false, reason: `Ouput of action ${action.type} is not compatible with input of action ${childAction.type}` };
                     }
                 }
@@ -66,8 +70,8 @@ export async function validateOperations(actions: Action[]): Promise<{ valid: bo
     return { valid: true };
 }
 
-function ioCompatible(outputingOperator: typeof Operator, receivingOperator: typeof Operator): boolean {
-    const outputType = outputingOperator.schema.describe().keys.output.label;
-    const inputType = receivingOperator.schema.describe().keys.input.label;
+function ioCompatible(outputingSchema: OperatorSchema, receivingSchema: OperatorSchema): boolean {
+    const outputType = outputingSchema.schema.describe().keys.output.label;
+    const inputType = receivingSchema.schema.describe().keys.input.label;
     return outputType == inputType;
 }

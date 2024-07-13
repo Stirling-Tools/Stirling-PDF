@@ -1,44 +1,9 @@
 import { Operator, Progress, oneToOne } from ".";
 
-import Joi from "@stirling-tools/joi";
-import { JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
-
-import i18next from "i18next";
-
-import CommaArrayJoiExt from "../wrappers/CommaArrayJoiExt";
-
 import { PDFPage } from "pdf-lib";
 import { PdfFile, RepresentationType } from "../wrappers/PdfFile";
 
 export class ScaleContent extends Operator {
-    static type = "scaleContent";
-
-    /**
-     * Validation & Localisation
-     */
-
-    protected static inputSchema = JoiPDFFileSchema.label(i18next.t("inputs.pdffile.name")).description(i18next.t("inputs.pdffile.description"));
-    protected static valueSchema = Joi.object({
-        scaleFactor: Joi.alternatives().try(
-                Joi.number().required(),
-                CommaArrayJoiExt.comma_array().items(Joi.number()).required()
-            )
-            .label(i18next.t("values.scaleFactor.friendlyName", { ns: "scaleContent" })).description(i18next.t("values.scaleFactor.description", { ns: "scaleContent" }))
-            .example("2").example("1.5").example("[1, 1.5, 0.9]"),
-    });
-    protected static outputSchema = JoiPDFFileSchema.label(i18next.t("outputs.pdffile.name")).description(i18next.t("outputs.pdffile.description"));
-
-    static schema = Joi.object({
-        input: ScaleContent.inputSchema,
-        values: ScaleContent.valueSchema.required(),
-        output: ScaleContent.outputSchema
-    }).label(i18next.t("friendlyName", { ns: "scaleContent" })).description(i18next.t("description", { ns: "scaleContent" }));
-
-
-    /**
-     * Logic
-     */
-
     /** Detect and remove white pages */
     async run(input: PdfFile[], progressCallback: (state: Progress) => void): Promise<PdfFile[]> {
         return oneToOne<PdfFile, PdfFile>(input, async (input, index, max) => {
