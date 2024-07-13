@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 const router = express.Router();
 import multer from "multer";
 const upload = multer();
-import { getOperatorByName } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
+import { getOperatorByName, getSchemaByName } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
 
 import { PdfFile } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
 import { respondWithPdfFiles } from "../../utils/response-utils";
@@ -30,19 +30,26 @@ async function handleEndpoint(req: Request, res: Response) {
     }
     const pdfFiles: PdfFile[] = validationResults.value;
 
-    const operator = await getOperatorByName(req.params.func);
+    const schema = await getSchemaByName(req.params.func);
 
-    if(operator) {
+    if(schema) {
         const action: Action = {type: req.params.func, values: req.body};
 
-        const validationResults = operator.schema.validate({input: pdfFiles, values: action.values});
+        const validationResults = schema.schema.validate({input: pdfFiles, values: action.values});
 
         if(validationResults.error) {
             res.status(400).json({error: "Value validation failed", details: validationResults.error.message});
         }
         else {
             action.values = validationResults.value.values;
-            const operation = new operator(action);
+            
+            const Operator = await getOperatorByName(req.params.func);
+            if(!Operator) {
+                res.status(400).json({error: `the operator of type ${req.params.func} does not exist`});
+                return
+            }
+
+            const operation = new Operator(action);
             operation.run(validationResults.value.input, (progress) => {}).then(pdfFiles => {
                 respondWithPdfFiles(res, pdfFiles, req.params.func + "_result");
             });

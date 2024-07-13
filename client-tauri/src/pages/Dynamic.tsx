@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
 
 import { BaseSyntheticEvent, useRef, useState } from "react";
-import { Operator } from "@stirling-pdf/shared-operations/src/functions";
-import i18next from "i18next";
+import { Operator, OperatorSchema } from "@stirling-pdf/shared-operations/src/functions";
 import Joi from "@stirling-tools/joi";
 import { BuildFields } from "../components/fields/BuildFields";
-import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
+import { getOperatorByName, getSchemaByName, listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
 import { PdfFile, RepresentationType } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
 import { Action } from "@stirling-pdf/shared-operations/declarations/Action";
 
@@ -13,7 +12,10 @@ function Dynamic() {
     const [schemaDescription, setSchemaDescription] = useState<Joi.Description>();
 
     const operators = listOperatorNames();
+
+    const activeOperatorName = useRef<string>();
     const activeOperator = useRef<typeof Operator>();
+    const activeSchema = useRef<OperatorSchema>();
 
     async function selectionChanged(s: BaseSyntheticEvent) {
         const selectedValue = s.target.value;
@@ -23,36 +25,28 @@ function Dynamic() {
             return;
         }
 
-        console.log("Loading namespaces for", selectedValue);
-        await i18next.loadNamespaces(selectedValue, (err, t) => {
-            if (err) throw err;
-            console.log(t);
-        });
-        console.log("Loading namespaces done");
+        getSchemaByName(selectedValue).then(async schema => {
+            if(schema) {
+                const description = schema.schema.describe();
+                activeOperatorName.current = selectedValue;
+                activeOperator.current = await getOperatorByName(selectedValue);
+                activeSchema.current = schema;
 
-        console.log("Loading modules for", selectedValue);
-        const LoadingModule = import(`@stirling-pdf/shared-operations/src/functions/${selectedValue}`) as Promise<{ [key: string]: typeof Operator }>;
-        LoadingModule.then((Module) => {
-            const Operator = Module[capitalizeFirstLetter(selectedValue)];
-            const description = Operator.schema.describe();
-            console.log(Operator.schema);
-            console.log(description);
-
-            activeOperator.current = Operator;
-            // This will update children
-            setSchemaDescription(description);
+                // This will update children
+                setSchemaDescription(description);
+            }
         });
     }
 
     async function handleSubmit(e: BaseSyntheticEvent) {
         console.clear();
-        if(!activeOperator.current) {
+        if(!activeOperatorName.current || !activeOperator.current || !activeSchema.current) {
             throw new Error("Please select an Operator in the Dropdown");
         }
 
         const formData = new FormData(e.target);
         const values = Object.fromEntries(formData.entries());
-        let action: Action = {type: activeOperator.current.type, values: values};
+        let action: Action = {type: activeOperatorName.current, values: values};
 
         // Validate PDF File
 
@@ -76,7 +70,7 @@ function Dynamic() {
             }
         }
 
-        const validationResults = activeOperator.current.schema.validate({input: inputs, values: action.values});
+        const validationResults = activeSchema.current.schema.validate({input: inputs, values: action.values});
 
         if(validationResults.error) {
             console.error({error: "Validation failed", details: validationResults.error.message}, validationResults.error.stack);
@@ -87,8 +81,7 @@ function Dynamic() {
             operation.run(validationResults.value.input, (progress) => {
                 console.log("OperationProgress: " + progress.operationProgress, "CurFileProgress: " + progress.curFileProgress);
             }).then(async pdfFiles => {
-                console.log("Done");
-                console.log(pdfFiles);
+                console.log("Result", pdfFiles);
 
                 for await (const pdfFile of (pdfFiles as PdfFile[])) {
                     var blob = new Blob([await pdfFile.uint8Array], {type: "application/pdf"});
@@ -98,10 +91,6 @@ function Dynamic() {
             });
         }
     };
-
-    function capitalizeFirstLetter(string: String) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
 
     return (
         <div>

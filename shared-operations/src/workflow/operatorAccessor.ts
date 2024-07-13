@@ -19,7 +19,7 @@ export async function getSchemaByName(name: string): Promise<OperatorSchema | un
     // Check if exists
     if(!compileTimeOperatorList.find(e => e.basename == name)) return;
 
-    i18next.loadNamespaces(name, (err, t) => { if (err) throw err; console.log(t) });
+    await i18next.loadNamespaces(name, (err) => { if (err) throw err; });
     const loadedModule = await import("../functions/" + name + ".schema.ts");
     const schema = loadedModule.default;
     if(!schema) {
