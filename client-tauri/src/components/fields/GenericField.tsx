@@ -111,7 +111,7 @@ export function GenericField({ fieldName, joiDefinition }: GenericFieldProps) {
                 return (<div>comma_array, joi items are empty or bigger than one, this is not implemented</div>);
             }
             break;
-        case "alternatives":
+        case "alternatives": // TODO: Better support this. It is currently used by ScaleContent (working) and SplitByPreset (incompatible, but with that operator it isn't even considered a field so we need a different schema for that)
             return (
                 <Fragment>
                     <label htmlFor={fieldName}>{flags.label}:</label>
@@ -138,5 +138,6 @@ export function GenericField({ fieldName, joiDefinition }: GenericFieldProps) {
         default:
             console.log(joiDefinition);
             return (<div>GenericField.tsx: <br/> "{fieldName}": requested type "{joiDefinition.type}" not found. Check console for further info.</div>)
+             
     }
 }

@@ -1,6 +1,6 @@
 {
     "friendlyName": "Remove Blank Pages",
-    "description": "Remove pages without .",
+    "description": "Remove pages without text and images.",
     "values": {
         "whiteThreashold": {
             "friendlyName": "Image White Threashold",

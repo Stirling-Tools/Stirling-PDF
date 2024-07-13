@@ -1,0 +1,10 @@
+{
+    "friendlyName": "Rotate Pagess",
+    "description": "Rotate selected pages by multiples of 90deg.",
+    "values": {
+        "rotation": {
+            "friendlyName": "Rotation",
+            "description": "Multiples of 90. Can be an array with the same size as the pdf pages or a single number."
+        }
+    }
+}

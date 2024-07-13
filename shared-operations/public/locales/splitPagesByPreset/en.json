@@ -1,0 +1,10 @@
+{
+    "friendlyName": "Split Pages By Preset",
+    "description": "Splits the Document when a specific split indicator is detected on a page.",
+    "values": {
+        "pageIndexes": {
+            "friendlyName": "Split Settings",
+            "description": "The type of page that should be used as a split indecator. whiteThreashold is only used when BLANK_PAGE is selected."
+        }
+    }
+}

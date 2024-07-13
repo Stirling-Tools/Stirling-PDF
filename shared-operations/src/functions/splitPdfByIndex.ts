@@ -1,8 +1,6 @@
 import { PdfFile } from "../wrappers/PdfFile";
 import { Operator, Progress, oneToN } from ".";
 
-import Joi from "@stirling-tools/joi";
-
 import { splitPagesByIndex } from "./common/splitPagesByIndex";
 
 export class SplitPdfByIndex extends Operator {

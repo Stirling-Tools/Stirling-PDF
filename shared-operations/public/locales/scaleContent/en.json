@@ -1,0 +1,10 @@
+{
+    "friendlyName": "Scale Content",
+    "description": "Scales the content of a page by a set factor.",
+    "values": {
+        "scaleFactor": {
+            "friendlyName": "Scale Factor",
+            "description": "Can be an array with the same size as the pdf pages or a single number."
+        }
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "friendlyName": "Scale Page",
+    "description": "Sets the size of all pdf pages of the given document in pixels.",
+    "values": {
+        "height": {
+            "friendlyName": "Height",
+            "description": "The height of the pdf document in pixels."
+        },
+        "width": {
+            "friendlyName": "Width",
+            "description": "The width of the pdf document in pixels."
+        }
+    }
+}

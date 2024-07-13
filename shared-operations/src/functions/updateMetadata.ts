@@ -1,12 +1,6 @@
 import { PdfFile } from "../wrappers/PdfFile";
 import { Operator, Progress, oneToOne } from ".";
 
-import Joi from "@stirling-tools/joi";
-
-import { JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
-
-import i18next from "i18next";
-
 export class UpdateMetadata extends Operator {
     /** PDF extraction, specify pages from one pdf and output them to a new pdf */
     async run(input: PdfFile[], progressCallback: (state: Progress) => void): Promise<PdfFile[]> {

@@ -1,0 +1,10 @@
+{
+    "friendlyName": "Arrange Pages",
+    "description": "Arrange Pages in a new order",
+    "values": {
+        "arrangementConfig": {
+            "friendlyName": "Arrangement Config",
+            "description": "How to order the pages. See documentation for more info on the possible values."
+        }
+    }
+}

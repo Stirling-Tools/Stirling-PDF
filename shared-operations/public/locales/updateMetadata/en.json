@@ -1,0 +1,10 @@
+{
+    "friendlyName": "Update Metadata",
+    "description": "Updates the metadata of a PDF.",
+    "values": {
+        "deleteAll": {
+            "friendlyName": "Delete All",
+            "description": "Delete all metadata instead of overwriting it?"
+        }
+    }
+}

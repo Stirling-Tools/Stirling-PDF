@@ -1,0 +1,10 @@
+{
+    "friendlyName": "Split PDF by Index",
+    "description": "Splits the document at specific pages.",
+    "values": {
+        "pageIndexes": {
+            "friendlyName": "Page Indexes",
+            "description": "An array of indexes of pages you want to split the document after."
+        }
+    }
+}

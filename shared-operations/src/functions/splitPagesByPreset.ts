@@ -1,16 +1,10 @@
 import { Operator, Progress, oneToN } from ".";
 
-import Joi from "@stirling-tools/joi";
-import { JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
-
-import i18next from "i18next";
-
 import { PdfFile } from "../wrappers/PdfFile";
 
 import { splitPagesByIndex } from "./common/splitPagesByIndex";
 import { detectEmptyPages } from "./common/detectEmptyPages";
 import { detectQRCodePages } from "./common/detectQRCodePages";
-
 
 export class SplitPagesByPreset extends Operator {
     /** Detect and remove white pages */
