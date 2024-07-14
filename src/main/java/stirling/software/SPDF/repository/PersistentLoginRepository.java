@@ -1,9 +1,9 @@
 package stirling.software.SPDF.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.stereotype.Repository;
 
 import stirling.software.SPDF.model.PersistentLogin;
 
-@ResponseBody
+@Repository
 public interface PersistentLoginRepository extends JpaRepository<PersistentLogin, String> {}
