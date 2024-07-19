@@ -212,6 +212,14 @@ ignore = [
     'language.direction',
 ]
 
+[th_TH]
+ignore = [
+    'language.direction',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
+    'showJS.tags',
+]
+
 [tr_TR]
 ignore = [
     'language.direction',
