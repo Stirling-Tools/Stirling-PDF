@@ -165,14 +165,14 @@ Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR
 
 ## Supported Languages
 
-Stirling PDF currently supports 32!
+Stirling PDF currently supports 33!
 
 | Language                                    | Progress                               |
 | ------------------------------------------- | -------------------------------------- |
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
 | Arabic (العربية) (ar_AR)                    | ![45%](https://geps.dev/progress/45)   |
-| German (Deutsch) (de_DE)                    | ![100%](https://geps.dev/progress/100)   |
+| German (Deutsch) (de_DE)                    | ![100%](https://geps.dev/progress/100) |
 | French (Français) (fr_FR)                   | ![94%](https://geps.dev/progress/94)   |
 | Spanish (Español) (es_ES)                   | ![92%](https://geps.dev/progress/92)   |
 | Simplified Chinese (简体中文) (zh_CN)       | ![98%](https://geps.dev/progress/98)   |
@@ -190,7 +190,7 @@ Stirling PDF currently supports 32!
 | Japanese (日本語) (ja_JP)                   | ![90%](https://geps.dev/progress/90)   |
 | Dutch (Nederlands) (nl_NL)                  | ![96%](https://geps.dev/progress/96)   |
 | Greek (Ελληνικά) (el_GR)                    | ![82%](https://geps.dev/progress/82)   |
-| Turkish (Türkçe) (tr_TR)                    | ![94%](https://geps.dev/progress/94)   |
+| Turkish (Türkçe) (tr_TR)                    | ![99%](https://geps.dev/progress/99)   |
 | Indonesia (Bahasa Indonesia) (id_ID)        | ![76%](https://geps.dev/progress/76)   |
 | Hindi (हिंदी) (hi_IN)                          | ![77%](https://geps.dev/progress/77)   |
 | Hungarian (Magyar) (hu_HU)                  | ![76%](https://geps.dev/progress/76)   |
@@ -201,6 +201,7 @@ Stirling PDF currently supports 32!
 | Czech (Česky) (cs_CZ)                       | ![90%](https://geps.dev/progress/90)   |
 | Croatian (Hrvatski) (hr_HR)                 | ![95%](https://geps.dev/progress/95)   |
 | Norwegian (Norsk) (no_NB)                   | ![96%](https://geps.dev/progress/96)   |
+| Thai (ไทย) (th_TH)                          | ![100%](https://geps.dev/progress/100) |
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
