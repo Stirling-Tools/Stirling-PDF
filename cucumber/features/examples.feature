@@ -1,4 +1,4 @@
-@example
+@example @general
 Feature: API Validation
 
   @positive @password

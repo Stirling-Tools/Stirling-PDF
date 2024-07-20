@@ -16,7 +16,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.26.1"
+version = "0.26.2"
 
 // 17 is lowest but we support and recommend 21
 sourceCompatibility = "17"

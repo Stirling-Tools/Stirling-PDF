@@ -99,7 +99,7 @@ public class CompressController {
                 List<String> command = new ArrayList<>();
                 command.add("gs");
                 command.add("-sDEVICE=pdfwrite");
-                command.add("-dCompatibilityLevel=1.4");
+                command.add("-dCompatibilityLevel=1.5");
 
                 switch (optimizeLevel) {
                     case 1:
