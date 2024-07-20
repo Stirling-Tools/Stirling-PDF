@@ -31,7 +31,7 @@ ENV DOCKER_ENABLE_SECURITY=false \
     PGID=1000 \
     UMASK=022 \
     FAT_DOCKER=true \
-    INSTALL_BOOK_AND_ADVANCED_HTML_OPS=true
+    INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
     
 
 # JDK for app
@@ -45,7 +45,6 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         tini \
         bash \
         curl \
-        calibre@testing \
         shadow \
         su-exec \
         openssl \
