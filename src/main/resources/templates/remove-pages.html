@@ -21,7 +21,7 @@
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label for="fileInput" th:text="#{pageRemover.pagesToDelete}"></label>
-                  <input type="text" class="form-control" id="fileInput" name="pageNumbers" th:placeholder="#{pageRemover.placeholder}" required>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 </div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pageRemover.submit}"></button>
               </form>

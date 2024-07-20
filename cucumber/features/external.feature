@@ -32,7 +32,7 @@ Feature: API Validation
   @ocr @positive
   Scenario: Extract Image Scans
     Given I generate a PDF file as "fileInput"
-	And the pdf contains 3 images on 2 pages
+	And the pdf contains 3 images of size 300x300 on 2 pages
     And the request data includes
       | parameter        | value       |
       | angleThreshold        | 5         |
@@ -125,8 +125,7 @@ Feature: API Validation
 
   @ocr
   Scenario: PDFA
-    Given I generate a PDF file as "fileInput"
-    And the pdf contains 3 pages with random text
+    Given I use an example file at "exampleFiles/pdfa2.pdf" as parameter "fileInput"
 	And the request data includes
       | parameter        | value     |
       | outputFormat     | pdfa       |
@@ -137,8 +136,7 @@ Feature: API Validation
 	
   @ocr
   Scenario: PDFA1
-    Given I generate a PDF file as "fileInput"
-    And the pdf contains 3 pages with random text
+    Given I use an example file at "exampleFiles/pdfa1.pdf" as parameter "fileInput"
 	And the request data includes
       | parameter        | value     |
       | outputFormat     | pdfa-1       |
@@ -149,8 +147,7 @@ Feature: API Validation
 	
   @compress @ghostscript @positive
   Scenario: Compress
-    Given I generate a PDF file as "fileInput"
-    And the pdf contains 3 pages with random text
+    Given I use an example file at "exampleFiles/ghost3.pdf" as parameter "fileInput"
 	And the request data includes
       | parameter        | value     |
       | optimizeLevel     | 4       |
@@ -161,8 +158,7 @@ Feature: API Validation
 	
   @compress @ghostscript @positive
   Scenario: Compress
-    Given I generate a PDF file as "fileInput"
-    And the pdf contains 3 pages with random text
+    Given I use an example file at "exampleFiles/ghost2.pdf" as parameter "fileInput"
 	And the request data includes
       | parameter        | value     |
       | optimizeLevel     | 1       |
@@ -175,8 +171,7 @@ Feature: API Validation
 	
   @compress @ghostscript @positive
   Scenario: Compress
-    Given I generate a PDF file as "fileInput"
-    And the pdf contains 3 pages with random text
+    Given I use an example file at "exampleFiles/ghost1.pdf" as parameter "fileInput"
 	And the request data includes
       | parameter        | value     |
       | optimizeLevel     | 1       |
