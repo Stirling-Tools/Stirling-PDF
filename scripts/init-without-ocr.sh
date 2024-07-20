@@ -12,7 +12,8 @@ fi
 umask "$UMASK" || true
 
 if [[ "$INSTALL_BOOK_AND_ADVANCED_HTML_OPS" == "true" && "$FAT_DOCKER" != "true" ]]; then
-  apk add --no-cache calibre@testing
+  echo "issue with calibre in current version, feature currently disabled on Stirling-PDF"
+  #apk add --no-cache calibre@testing
 fi
 
 if [[ "$FAT_DOCKER" != "true" ]]; then
