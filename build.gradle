@@ -40,6 +40,7 @@ sourceSets {
                 exclude "stirling/software/SPDF/controller/web/AccountWebController.java"
                 exclude "stirling/software/SPDF/controller/web/DatabaseWebController.java"
                 exclude "stirling/software/SPDF/model/ApiKeyAuthenticationToken.java"
+                exclude "stirling/software/SPDF/model/AttemptCounter.java"
                 exclude "stirling/software/SPDF/model/Authority.java"
                 exclude "stirling/software/SPDF/model/PersistentLogin.java"
                 exclude "stirling/software/SPDF/model/User.java"

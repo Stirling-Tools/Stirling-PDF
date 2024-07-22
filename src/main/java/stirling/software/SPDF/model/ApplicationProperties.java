@@ -360,6 +360,8 @@ public class ApplicationProperties {
                         + useAsUsername
                         + ", provider="
                         + provider
+                        + ", client="
+                        + client
                         + ", scopes="
                         + scopes
                         + "]";
