@@ -179,11 +179,12 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     }
 
     private boolean executeDatabaseScript(Path scriptPath) {
-        try (Connection conn = DriverManager.getConnection(url, "sa", "");
-                Statement stmt = conn.createStatement()) {
+        String query = "RUNSCRIPT from ?;";
 
-            String query = "RUNSCRIPT from '" + scriptPath.toString() + "';";
-            stmt.execute(query);
+        try (Connection conn = DriverManager.getConnection(url, "sa", "");
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, scriptPath.toString());
+            stmt.execute();
             log.info("Database import completed: {}", scriptPath);
             return true;
         } catch (SQLException e) {
