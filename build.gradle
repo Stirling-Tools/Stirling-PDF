@@ -145,7 +145,7 @@ dependencies {
     // implementation "com.twelvemonkeys.imageio:imageio-sgi:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-tga:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-thumbsdb:3.10.1"
-    implementation "com.twelvemonkeys.imageio:imageio-tiff:3.10.1"
+    implementation "com.twelvemonkeys.imageio:imageio-tiff:3.11.0"
     implementation "com.twelvemonkeys.imageio:imageio-webp:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-xwd:3.10.1"
 
