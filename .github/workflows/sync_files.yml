@@ -51,6 +51,7 @@ jobs:
             [1]: https://github.com/peter-evans/create-pull-request
           draft: false
           delete-branch: true
+          labels: github-actions
   sync-readme:
     runs-on: ubuntu-latest
     steps:
@@ -88,3 +89,4 @@ jobs:
             [1]: https://github.com/peter-evans/create-pull-request
           draft: false
           delete-branch: true
+          labels: Documentation,Translation,github-actions
