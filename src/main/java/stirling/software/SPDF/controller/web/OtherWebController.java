@@ -169,10 +169,4 @@ public class OtherWebController {
         return "misc/auto-rename";
     }
 
-    @GetMapping("/paging-seal")
-    @Hidden
-    public String pagingSealForm(Model model) {
-        model.addAttribute("currentPage", "paging-seal");
-        return "misc/paging-seal";
-    }
 }
