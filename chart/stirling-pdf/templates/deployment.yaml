@@ -62,8 +62,10 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         securityContext:
           {{- toYaml .Values.containerSecurityContext | nindent 10 }}
-{{- if .Values.envs }}
         env:
+        - name: SYSTEM_ROOTURIPATH
+          value: {{ .Values.rootPath}}
+{{- if .Values.envs }}
 {{ toYaml .Values.envs | indent 8 }}
 {{- end }}
 {{- if .Values.extraArgs }}
@@ -75,13 +77,13 @@ spec:
           containerPort: 8080
         livenessProbe:
           httpGet:
-            path: /
+            path: {{ .Values.rootPath}}
             port: http
 {{ toYaml .Values.probes.livenessHttpGetConfig | indent 12 }}
 {{ toYaml .Values.probes.liveness | indent 10 }}
         readinessProbe:
           httpGet:
-            path: /
+            path: {{ .Values.rootPath}}
             port: http
 {{ toYaml .Values.probes.readinessHttpGetConfig | indent 12 }}
 {{ toYaml .Values.probes.readiness | indent 10 }}

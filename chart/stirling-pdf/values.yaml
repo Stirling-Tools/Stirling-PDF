@@ -15,6 +15,9 @@ secret:
 commonLabels: {}
 # team_name: dev
 
+# rootpath for the application
+rootPath: /
+
 envs: []
 # - name: UI_APP_NAME
 #   value: "Stirling PDF"
@@ -24,8 +27,6 @@ envs: []
 #   value: "Stirling PDF"
 # - name: ALLOW_GOOGLE_VISIBILITY
 #   value: "true"
-# - name: APP_ROOT_PATH
-#   value: "/"
 # - name: APP_LOCALE
 #   value: "en_GB"
 
