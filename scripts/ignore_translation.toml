@@ -239,3 +239,8 @@ ignore = [
 ignore = [
     'language.direction',
 ]
+
+[vi_VN]
+ignore = [
+     'language.direction',
+]
