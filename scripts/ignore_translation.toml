@@ -230,6 +230,11 @@ ignore = [
     'language.direction',
 ]
 
+[vi_VN]
+ignore = [
+    'language.direction',
+]
+
 [zh_CN]
 ignore = [
     'language.direction',
@@ -238,9 +243,4 @@ ignore = [
 [zh_TW]
 ignore = [
     'language.direction',
-]
-
-[vi_VN]
-ignore = [
-     'language.direction',
 ]
