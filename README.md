@@ -165,7 +165,7 @@ Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR
 
 ## Supported Languages
 
-Stirling PDF currently supports 33!
+Stirling PDF currently supports 34!
 
 | Language                                    | Progress                               |
 | ------------------------------------------- | -------------------------------------- |
@@ -202,6 +202,7 @@ Stirling PDF currently supports 33!
 | Croatian (Hrvatski) (hr_HR)                 | ![95%](https://geps.dev/progress/95)   |
 | Norwegian (Norsk) (no_NB)                   | ![96%](https://geps.dev/progress/96)   |
 | Thai (ไทย) (th_TH)                          | ![100%](https://geps.dev/progress/100) |
+| Vietnamese (Tiếng Việt) (vi_VN)             | ![99%](https://geps.dev/progress/99)   |
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
@@ -213,7 +214,7 @@ Stirling PDF allows easy customization of the app.
 Includes things like
 
 - Custom application name
-- Custom slogans, icons, HTML, images CSS etc (via file overrides) 
+- Custom slogans, icons, HTML, images CSS etc (via file overrides)
 
 There are two options for this, either using the generated settings file ``settings.yml``
 This file is located in the ``/configs`` directory and follows standard YAML formatting
