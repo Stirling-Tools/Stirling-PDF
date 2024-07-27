@@ -230,6 +230,14 @@ ignore = [
     'language.direction',
 ]
 
+[vi_VN]
+ignore = [
+    'language.direction',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
+    'showJS.tags',
+]
+
 [zh_CN]
 ignore = [
     'language.direction',
