@@ -20,8 +20,29 @@
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/auto-rename'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
                 <br>
+                <div class="form-group">
+                  <label for="keyword">Keyword:</label>
+                  <input type="text" class="form-control" id="keyword" name="keyword" placeholder="e.g., Company, Name, Invoice" required>
+                </div>
+                <br>
+                <div class="form-group">
+                  <label for="useAfter">Text to use:</label>
+                  <select class="form-control" id="useAfter" name="useAfter">
+                    <option value="false">Entire line containing keyword</option>
+                    <option value="true">Text after keyword</option>
+                  </select>
+                </div>
+                <br>
+
+                <div class="form-group">
+                  <label for="linesToCheck">Number of Lines to Check:</label>
+                  <input type="number" class="form-control" id="linesToCheck" name="linesToCheck" value="10" min="1">
+                </div>
+                <br>
+
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{auto-rename.submit}"></button>
               </form>
+
             </div>
           </div>
         </div>
