@@ -1,0 +1,53 @@
+{
+  "java.compile.nullAnalysis.mode": "automatic",
+  "files.eol": "auto",
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "black-formatter.args": ["--line-length", "127"],
+  "flake8.args": ["--max-line-length", "127"],
+  "pylint.args": ["max-line-length", "127"],
+  "[java]": {
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false,
+    "editor.rulers": [127]
+  },
+  "[python]": {
+    "editor.tabSize": 2,
+    "editor.detectIndentation": false,
+    "editor.rulers": [127]
+  },
+  "[gradle-build]": {
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false,
+    "editor.rulers": [127]
+  },
+  "[gradle]": {
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false,
+    "editor.rulers": [127]
+  },
+  "[html]": {
+    "editor.tabSize": 2,
+    "editor.rulers": [127],
+    "files.trimFinalNewlines": false,
+    "files.insertFinalNewline": false
+  },
+  "[javascript]": {
+    "editor.tabSize": 2,
+    "editor.rulers": [127]
+  },
+  "[yaml]": {
+    "files.trimFinalNewlines": false,
+    "files.insertFinalNewline": false
+  },
+  "diffEditor.maxComputationTime": 0,
+  "editor.wordSegmenterLocales": null,
+  "editor.guides.bracketPairs": "active",
+  "editor.guides.bracketPairsHorizontal": "active",
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.indentSize": "tabSize",
+  "editor.stickyScroll.enabled": false,
+  "editor.minimap.enabled": false,
+  "editor.formatOnSave": true
+}
