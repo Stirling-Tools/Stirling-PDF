@@ -25,6 +25,11 @@ ignore = [
     'text',
 ]
 
+[da_DK]
+ignore = [
+    'language.direction',
+]
+
 [de_DE]
 ignore = [
     'AddStampRequest.alphabet',
