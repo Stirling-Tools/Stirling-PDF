@@ -43,6 +43,12 @@ ignore = [
     'watermark.type.1',
 ]
 
+
+[ga_IE]
+ignore = [
+    'language.direction',
+]
+
 [el_GR]
 ignore = [
     'language.direction',
