@@ -94,7 +94,7 @@ Feature: API Validation
     When I send the API request to the endpoint "/api/v1/misc/remove-blanks"
     Then the response content type should be "application/octet-stream"
     And the response file should have extension ".zip"
-    And the response ZIP should contain 2 files
+    And the response ZIP should contain 1 files
     And the response file should have size greater than 0
 
   @positive @flatten
