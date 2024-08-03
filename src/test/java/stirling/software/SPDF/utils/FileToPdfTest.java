@@ -13,7 +13,7 @@ public class FileToPdfTest {
     @Test
     public void testConvertHtmlToPdf() {
         HTMLToPdfRequest request = new HTMLToPdfRequest();
-        byte[] fileBytes = new byte[10]; // Sample file bytes
+        byte[] fileBytes = new byte[0]; // Sample file bytes
         String fileName = "test.html"; // Sample file name
         boolean htmlFormatsInstalled = true; // Sample boolean value
 
