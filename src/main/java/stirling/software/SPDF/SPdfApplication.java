@@ -45,7 +45,6 @@ public class SPdfApplication {
         // Check if the BROWSER_OPEN environment variable is set to true
         String browserOpenEnv = env.getProperty("BROWSER_OPEN");
         boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
-
         if (browserOpen) {
             try {
                 String url = "http://localhost:" + getNonStaticPort();
