@@ -46,4 +46,4 @@ Docker:
 Test:
   - changed-files:
     - any-glob-to-any-file: 'cucumber/**/*'
-    - any-glob-to-any-file: 'test*'
+    - any-glob-to-any-file: 'src/test**/*'
