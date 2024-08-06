@@ -44,4 +44,7 @@ public class AddWatermarkRequest extends PDFFile {
 
     @Schema(description = "The height spacer between watermark elements", example = "50")
     private int heightSpacer;
+
+    @Schema(description = "Convert the redacted PDF to an image", defaultValue = "false")
+    private boolean convertPDFToImage;
 }
