@@ -1,6 +1,8 @@
 name: Feature Request
 description: Submit a new feature request.
 title: "[Feature Request]: "
+labels:
+  - enhancement
 body:
   - type: markdown
     attributes:
