@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.Operation;
+
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.service.PdfImageRemovalService;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -25,7 +27,11 @@ public class PdfImageRemovalController {
         this.pdfImageRemovalService = pdfImageRemovalService;
     }
 
-    @PostMapping("/remove-images")
+    @PostMapping(consumes = "multipart/form-data", value = "/remove-image-pdf")
+    @Operation(
+            summary = "Remove images from file to reduce the file size.",
+            description =
+                    "This endpoint remove images from file to reduce the file size.Input:PDF Output:PDF Type:MISO")
     public ResponseEntity<byte[]> removeImages(@ModelAttribute PDFFile file) throws IOException {
 
         MultipartFile pdf = file.getFileInput();

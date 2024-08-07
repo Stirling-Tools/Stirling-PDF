@@ -229,6 +229,9 @@
           <div
             th:replace="~{fragments/card :: card(id='stamp', cardTitle=#{home.AddStampRequest.title}, cardText=#{home.AddStampRequest.desc}, cardLink='stamp', toolIcon='approval', tags=#{AddStampRequest.tags}, toolGroup='security')}">
           </div>
+          <div
+            th:replace="~{fragments/card :: card(id='remove-image-pdf', cardTitle=#{home.removeImagePdf.title}, cardText=#{home.removeImagePdf.desc}, cardLink='remove-image-pdf', toolIcon='approval', tags=#{removeImagePdf.tags}, toolGroup='other')}">
+          </div>
         </div>
       </div>
     </div>
