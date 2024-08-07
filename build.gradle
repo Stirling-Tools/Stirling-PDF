@@ -1,7 +1,7 @@
 plugins {
     id "java"
-    id "org.springframework.boot" version "3.3.0"
-    id "io.spring.dependency-management" version "1.1.5"
+    id "org.springframework.boot" version "3.3.2"
+    id "io.spring.dependency-management" version "1.1.6"
     id "org.springdoc.openapi-gradle-plugin" version "1.8.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "edu.sc.seis.launch4j" version "3.0.5"
@@ -12,14 +12,16 @@ plugins {
 import com.github.jk1.license.render.*
 
 ext {
-    springBootVersion = "3.3.0"
+    springBootVersion = "3.3.2"
 }
 
 group = "stirling.software"
-version = "0.26.1"
+version = "0.26.2"
 
-// 17 is lowest but we support and recommend 21
-sourceCompatibility = "17"
+java {
+    // 17 is lowest but we support and recommend 21
+    sourceCompatibility = JavaVersion.VERSION_17
+}
 
 repositories {
     mavenCentral()
@@ -36,8 +38,11 @@ sourceSets {
             if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
                 exclude "stirling/software/SPDF/config/security/**"
                 exclude "stirling/software/SPDF/controller/api/UserController.java"
+                exclude "stirling/software/SPDF/controller/api/DatabaseController.java"
                 exclude "stirling/software/SPDF/controller/web/AccountWebController.java"
+                exclude "stirling/software/SPDF/controller/web/DatabaseWebController.java"
                 exclude "stirling/software/SPDF/model/ApiKeyAuthenticationToken.java"
+                exclude "stirling/software/SPDF/model/AttemptCounter.java"
                 exclude "stirling/software/SPDF/model/Authority.java"
                 exclude "stirling/software/SPDF/model/PersistentLogin.java"
                 exclude "stirling/software/SPDF/model/User.java"
@@ -97,13 +102,13 @@ dependencies {
     //security updates
     implementation "ch.qos.logback:logback-classic:1.5.6"
     implementation "ch.qos.logback:logback-core:1.5.6"
-    implementation "org.springframework:spring-webmvc:6.1.8"
+    implementation "org.springframework:spring-webmvc:6.1.9"
 
     implementation("io.github.pixee:java-security-toolkit:1.1.3")
 
     // implementation "org.yaml:snakeyaml:2.2"
     implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
-    
+
     // Exclude Tomcat and include Jetty
     implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion") {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -120,6 +125,7 @@ dependencies {
 
         //2.2.x requires rebuild of DB file.. need migration path
         implementation "com.h2database:h2:2.1.214"
+        // implementation "com.h2database:h2:2.2.224"
     }
 
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
@@ -133,7 +139,7 @@ dependencies {
     // implementation "com.twelvemonkeys.imageio:imageio-hdr:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-icns:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-iff:3.10.1"
-    implementation "com.twelvemonkeys.imageio:imageio-jpeg:3.10.1"
+    implementation "com.twelvemonkeys.imageio:imageio-jpeg:3.11.0"
     // implementation "com.twelvemonkeys.imageio:imageio-pcx:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-pict:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-pnm:3.10.1"
@@ -181,7 +187,7 @@ dependencies {
     compileOnly "org.projectlombok:lombok:1.18.32"
     annotationProcessor "org.projectlombok:lombok:1.18.32"
 
-    testImplementation 'org.mockito:mockito-inline:3.12.4'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -192,7 +198,7 @@ compileJava {
     options.compilerArgs << "-parameters"
 }
 
-task writeVersion  {
+task writeVersion {
     def propsFile = file("src/main/resources/version.properties")
     def props = new Properties()
     props.setProperty("version", version)
@@ -222,6 +228,6 @@ tasks.named("test") {
     useJUnitPlatform()
 }
 
-task printVersion  {
+task printVersion {
     println project.version
 }

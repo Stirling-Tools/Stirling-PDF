@@ -1,4 +1,4 @@
-package stirling.software.SPDF.utils;
+package stirling.software.SPDF;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 
-import stirling.software.SPDF.SPdfApplication;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,8 +44,11 @@ public class SPdfApplicationTest {
     @Test
     public void testMainApplicationStartup() throws IOException, InterruptedException {
         // Setup mock environment for the main method
-        Path settingsPath = Paths.get("configs/settings.yml");
-        Path customSettingsPath = Paths.get("configs/custom_settings.yml");
+        Path configPath = Path.of("test/configs");
+        Path settingsPath = Paths.get("test/configs/settings.yml");
+        Path customSettingsPath = Paths.get("test/configs/custom_settings.yml");
+        Path staticPath = Path.of("test/customFiles/static/");
+        Path templatesPath = Path.of("test/customFiles/templates/");
 
         // Ensure the files do not exist for the test
         if (Files.exists(settingsPath)) {
@@ -55,13 +57,29 @@ public class SPdfApplicationTest {
         if (Files.exists(customSettingsPath)) {
             Files.delete(customSettingsPath);
         }
+        if (Files.exists(staticPath)) {
+            Files.delete(staticPath);
+        }
+        if (Files.exists(templatesPath)) {
+            Files.delete(templatesPath);
+        }
+
+        // Ensure the directories are created for testing
+        Files.createDirectories(configPath);
+        Files.createDirectories(staticPath);
+        Files.createDirectories(templatesPath);
+
+        Files.createFile(settingsPath);
+        Files.createFile(customSettingsPath);
 
         // Run the main method
         SPdfApplication.main(new String[]{});
 
         // Verify that the directories were created
-        assertTrue(Files.exists(Path.of("customFiles/static/")));
-        assertTrue(Files.exists(Path.of("customFiles/templates/")));
+        assertTrue(Files.exists(settingsPath));
+        assertTrue(Files.exists(customSettingsPath));
+        assertTrue(Files.exists(staticPath));
+        assertTrue(Files.exists(templatesPath));
     }
 
     @Test

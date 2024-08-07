@@ -12,10 +12,13 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-8 bg-card">
+            <div class="col-md-9 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon organize">manage_accounts</span>
+                <span class="tool-header-text" th:text="#{adminUserSettings.header}">Admin User Control Settings</span>
+              </div>
 
               <!-- User Settings Title -->
-              <h2 class="text-center" th:text="#{adminUserSettings.header}">Admin User Control Settings</h2>
               <div style="background: var(--md-sys-color-outline-variant);padding: .8rem; margin: 10px 0; border-radius: 2rem; text-align: center;">
                 <a href="#" data-bs-toggle="modal" data-bs-target="#addUserModal" class="btn btn-outline-info" th:title="#{adminUserSettings.addUser}">
                   <span class="material-symbols-rounded">person_add</span>
@@ -29,35 +32,39 @@
               <div th:if="${deleteMessage}" class="alert alert-danger">
                 <span th:text="#{${deleteMessage}}">Message</span>
               </div>
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th th:text="#{username}">Username</th>
-                    <th th:text="#{adminUserSettings.roles}">Roles</th>
-                    <th th:text="#{adminUserSettings.actions}">Actions</th>
-                    <th th:text="#{adminUserSettings.authenticated}">Authenticated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr th:each="user : ${users}">
-                    <td style="align-content: center;" th:text="${user.username}"></td>
-                    <td style="align-content: center;" th:text="#{${user.roleName}}"></td>
-                    <td style="align-content: center;">
-                      <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post" onsubmit="return confirmDelete()">
-                        <button type="submit" th:title="#{adminUserSettings.deleteUser}" class="btn btn-info"><span class="material-symbols-rounded">person_remove</span></button>
-                      </form>
-                      <script th:inline="javascript">
-                        const confirm_text = /*[[#{adminUserSettings.confirmDeleteUser}]]*/ 'Should the user be deleted?';
-                        function confirmDelete() {
-                          return confirm(confirm_text);
-                        }
-                      </script>
-                      <a th:if="${user.username == currentUsername}" th:href="@{'/account'}" class="btn btn-outline-info"><span class="material-symbols-rounded">edit</span></a>
-                    </td>
-                    <td style="align-content: center;" th:text="${user.authenticationType}"></td>
-                  </tr>
-                </tbody>
-              </table>
+              <div class="bg-card mt-3 mb-3">
+                <table class="table table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th scope="col">UID</th>
+                      <th scope="col" th:text="#{username}">Username</th>
+                      <th scope="col" th:text="#{adminUserSettings.roles}">Roles</th>
+                      <th scope="col" th:text="#{adminUserSettings.actions}">Actions</th>
+                      <th scope="col" th:text="#{adminUserSettings.authenticated}">Authenticated</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="user : ${users}">
+                      <th scope="row" style="align-content: center;" th:text="${user.id}"></th>
+                      <td style="align-content: center;" th:text="${user.username}"></td>
+                      <td style="align-content: center;" th:text="#{${user.roleName}}"></td>
+                      <td style="align-content: center;">
+                        <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post" onsubmit="return confirmDelete()">
+                          <button type="submit" th:title="#{adminUserSettings.deleteUser}" class="btn btn-info"><span class="material-symbols-rounded">person_remove</span></button>
+                        </form>
+                        <a th:if="${user.username == currentUsername}" th:href="@{'/account'}" class="btn btn-outline-info"><span class="material-symbols-rounded">edit</span></a>
+                      </td>
+                      <td style="align-content: center;" th:text="${user.authenticationType}"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <script th:inline="javascript">
+                const confirm_text = /*[[#{adminUserSettings.confirmDeleteUser}]]*/ 'Should the user be deleted?';
+                function confirmDelete() {
+                  return confirm(confirm_text);
+                }
+              </script>
             </div>
           </div>
         </div>

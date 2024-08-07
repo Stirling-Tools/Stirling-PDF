@@ -88,6 +88,9 @@ main() {
 			passed_tests+=("Stirling-PDF-Regression")
 		else
 			failed_tests+=("Stirling-PDF-Regression")
+			echo "Printing docker logs of failed regression"
+			docker logs "Stirling-PDF"
+			echo "Printed docker logs of failed regression"
 		fi
 		cd ..
 	fi
