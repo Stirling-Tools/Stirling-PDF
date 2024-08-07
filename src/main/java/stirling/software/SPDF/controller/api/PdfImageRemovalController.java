@@ -29,9 +29,7 @@ public class PdfImageRemovalController {
     public ResponseEntity<byte[]> removeImages(@ModelAttribute PDFFile file) throws IOException {
 
         MultipartFile pdf = file.getFileInput();
-
         byte[] pdfBytes = pdf.getBytes();
-
         PDDocument document = Loader.loadPDF(pdfBytes);
 
         PDDocument modifiedDocument = pdfImageRemovalService.removeImagesFromPdf(document);
@@ -41,8 +39,9 @@ public class PdfImageRemovalController {
         modifiedDocument.save(outputStream);
         modifiedDocument.close();
 
-        // Return the modified PDF as a response
-        String fileName = "removed-images.pdf";
-        return WebResponseUtils.bytesToWebResponse(outputStream.toByteArray(), fileName);
+        String mergedFileName =
+                pdf.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_removed_images.pdf";
+
+        return WebResponseUtils.bytesToWebResponse(outputStream.toByteArray(), mergedFileName);
     }
 }
