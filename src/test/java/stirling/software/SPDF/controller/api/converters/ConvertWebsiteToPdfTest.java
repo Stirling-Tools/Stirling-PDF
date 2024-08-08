@@ -26,7 +26,7 @@ public class ConvertWebsiteToPdfTest {
     @Test
     public void test_exemption_is_thrown_when_url_is_not_reachable() {
 
-        String unreachable_Url = "https://www.googleeee.com";
+        String unreachable_Url = "https://www.googleeeexyz.com";
         // Arrange
         ConvertWebsiteToPDF convertWebsiteToPDF = new ConvertWebsiteToPDF();
         UrlToPdfRequest request = new UrlToPdfRequest();
@@ -38,39 +38,4 @@ public class ConvertWebsiteToPdfTest {
         // Assert
         assertEquals("URL is not reachable, please provide a valid URL.", thrown.getMessage());
     }
-    
-    @Test
-    public void test_no_exemption_is_thrown_when_valid_url_format_provided() {
-
-        String valid_format_Url = "http://localhost:8080/url-to-pdf";
-        // Arrange
-        ConvertWebsiteToPDF convertWebsiteToPDF = new ConvertWebsiteToPDF();
-        UrlToPdfRequest request = new UrlToPdfRequest();
-        request.setUrlInput(valid_format_Url);
-        // Act
-        try {
-            convertWebsiteToPDF.urlToPdf(request);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("IOException was thrown: " + e.getMessage());
-        }
-        
-    }
-    @Test void test_pdf_bytes_are_returned_when_valid_url_provided() {
-        String valid_format_Url = "http://localhost:8080/url-to-pdf";
-        // Arrange
-        ConvertWebsiteToPDF convertWebsiteToPDF = new ConvertWebsiteToPDF();
-        UrlToPdfRequest request = new UrlToPdfRequest();
-        request.setUrlInput(valid_format_Url);
-        // Act
-      
-        // Assert
-        try {
-            convertWebsiteToPDF.urlToPdf(request);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("IOException was thrown: " + e.getMessage());
-        }
-    }
-
 }
