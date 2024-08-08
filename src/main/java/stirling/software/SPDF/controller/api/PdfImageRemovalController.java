@@ -16,10 +16,9 @@ import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.service.PdfImageRemovalService;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
-
 /**
- * Controller class for handling PDF image removal requests.
- * Provides an endpoint to remove images from a PDF file to reduce its size.
+ * Controller class for handling PDF image removal requests. Provides an endpoint to remove images
+ * from a PDF file to reduce its size.
  */
 @RestController
 @RequestMapping("/api/v1/general")
@@ -40,11 +39,12 @@ public class PdfImageRemovalController {
     /**
      * Endpoint to remove images from a PDF file.
      *
-     * This method processes the uploaded PDF file, removes all images, and returns
-     * the modified PDF file with a new name indicating that images were removed.
+     * <p>This method processes the uploaded PDF file, removes all images, and returns the modified
+     * PDF file with a new name indicating that images were removed.
      *
      * @param file The PDF file with images to be removed.
-     * @return ResponseEntity containing the modified PDF file as byte array with appropriate content type and filename.
+     * @return ResponseEntity containing the modified PDF file as byte array with appropriate
+     *     content type and filename.
      * @throws IOException If an error occurs while processing the PDF file.
      */
     @PostMapping(consumes = "multipart/form-data", value = "/remove-image-pdf")
