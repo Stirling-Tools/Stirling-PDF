@@ -137,6 +137,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "auto-rename");
         addEndpointToGroup("Other", "get-info-on-pdf");
         addEndpointToGroup("Other", "show-javascript");
+        addEndpointToGroup("Other", "remove-image-pdf");
 
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");
@@ -221,6 +222,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "split-pdf-by-sections");
         addEndpointToGroup("Java", REMOVE_BLANKS);
         addEndpointToGroup("Java", "pdf-to-text");
+        addEndpointToGroup("Java", "remove-image-pdf");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");
