@@ -1,4 +1,4 @@
-@example
+@example @general
 Feature: API Validation
 
   @positive @password
@@ -92,10 +92,10 @@ Feature: API Validation
       | threshold    | 90          |
       | whitePercent | 99.9        |
     When I send the API request to the endpoint "/api/v1/misc/remove-blanks"
-    Then the response content type should be "application/pdf"
+    Then the response content type should be "application/octet-stream"
+    And the response file should have extension ".zip"
+    And the response ZIP should contain 1 files
     And the response file should have size greater than 0
-    And the response PDF should contain 0 pages
-	And the response status code should be 200
 
   @positive @flatten
   Scenario: Flatten PDF
