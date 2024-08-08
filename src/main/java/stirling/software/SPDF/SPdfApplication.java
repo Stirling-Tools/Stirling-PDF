@@ -78,7 +78,8 @@ public class SPdfApplication {
 
         // custom javs settings file
         if (Files.exists(Paths.get("configs/custom_settings.yml"))) {
-            String existingLocation = propertyFiles.getOrDefault("spring.config.additional-location", "");
+            String existingLocation =
+                    propertyFiles.getOrDefault("spring.config.additional-location", "");
             if (!existingLocation.isEmpty()) {
                 existingLocation += ",";
             }
