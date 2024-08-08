@@ -39,6 +39,12 @@ public class ConvertWebsiteToPDF {
         if (!URL.matches("^https?://.*") || !GeneralUtils.isValidURL(URL)) {
             throw new IllegalArgumentException("Invalid URL format provided.");
         }
+
+        // validate the URL is reachable
+        if (!GeneralUtils.isURLReachable(URL)) {
+            throw new IllegalArgumentException("URL is not reachable, please provide a valid URL.");
+        }
+
         Path tempOutputFile = null;
         byte[] pdfBytes;
         try {
