@@ -42,7 +42,7 @@ public class ConvertWebsiteToPdfTest {
     @Test
     public void test_no_exemption_is_thrown_when_valid_url_format_provided() {
 
-        String valid_format_Url = "https://www.google.com";
+        String valid_format_Url = "http://localhost:8080/url-to-pdf";
         // Arrange
         ConvertWebsiteToPDF convertWebsiteToPDF = new ConvertWebsiteToPDF();
         UrlToPdfRequest request = new UrlToPdfRequest();
@@ -54,7 +54,7 @@ public class ConvertWebsiteToPdfTest {
     }
 
     @Test void test_pdf_bytes_are_returned_when_valid_url_provided() {
-        String valid_format_Url = "https://www.google.com";
+        String valid_format_Url = "http://localhost:8080/url-to-pdf";
         // Arrange
         ConvertWebsiteToPDF convertWebsiteToPDF = new ConvertWebsiteToPDF();
         UrlToPdfRequest request = new UrlToPdfRequest();
