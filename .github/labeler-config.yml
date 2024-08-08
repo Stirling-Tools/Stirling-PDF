@@ -1,6 +1,7 @@
 Translation:
   - changed-files:
     - any-glob-to-any-file: 'src/main/resources/messages_*_*.properties'
+    - any-glob-to-any-file: 'scripts/ignore_translation.toml'
 
 Front End:
   - changed-files:
@@ -45,4 +46,4 @@ Docker:
 Test:
   - changed-files:
     - any-glob-to-any-file: 'cucumber/**/*'
-    - any-glob-to-any-file: 'test*'
+    - any-glob-to-any-file: 'src/test**/*'
