@@ -89,3 +89,5 @@
 - name: "Test"
   color: "FF9E1F"
   description: "Testing-related issues or pull requests"
+- name: "Stale"
+  color: "000000"
