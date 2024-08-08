@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.Color;
+import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,6 +28,7 @@ import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -63,6 +65,8 @@ public class StampController {
         int position = request.getPosition(); // Updated to use 1-9 positioning logic
         float overrideX = request.getOverrideX(); // New field for X override
         float overrideY = request.getOverrideY(); // New field for Y override
+        int pagingPosition = request.getPagingPosition();
+        int firstPageRate = request.getFirstPageRate();
 
         String customColor = request.getCustomColor();
         float marginFactor;
@@ -88,54 +92,67 @@ public class StampController {
         // Load the input PDF
         PDDocument document = Loader.loadPDF(pdfFile.getBytes());
 
-        List<Integer> pageNumbers = request.getPageNumbersList(document, true);
+        if ("pagingSeal".equalsIgnoreCase(stampType)){
+            addPagingSeal(
+                    document,
+                    stampImage,
+                    rotation,
+                    pagingPosition,
+                    fontSize,
+                    overrideY,
+                    opacity,
+                    firstPageRate);
+        }else{
+            List<Integer> pageNumbers = request.getPageNumbersList(document, true);
+            for (int pageIndex : pageNumbers) {
+                int zeroBasedIndex = pageIndex - 1;
+                if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
+                    PDPage page = document.getPage(zeroBasedIndex);
+                    PDRectangle pageSize = page.getMediaBox();
+                    float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
 
-        for (int pageIndex : pageNumbers) {
-            int zeroBasedIndex = pageIndex - 1;
-            if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
-                PDPage page = document.getPage(zeroBasedIndex);
-                PDRectangle pageSize = page.getMediaBox();
-                float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
+                    PDPageContentStream contentStream =
+                            new PDPageContentStream(
+                                    document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
-                PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+                    PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+                    graphicsState.setNonStrokingAlphaConstant(opacity);
+                    contentStream.setGraphicsStateParameters(graphicsState);
 
-                PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
-                graphicsState.setNonStrokingAlphaConstant(opacity);
-                contentStream.setGraphicsStateParameters(graphicsState);
+                    if ("text".equalsIgnoreCase(stampType)) {
+                        addTextStamp(
+                                contentStream,
+                                stampText,
+                                document,
+                                page,
+                                rotation,
+                                position,
+                                fontSize,
+                                alphabet,
+                                overrideX,
+                                overrideY,
+                                margin,
+                                customColor);
+                    } else if ("image".equalsIgnoreCase(stampType)) {
+                        addImageStamp(
+                                contentStream,
+                                stampImage,
+                                document,
+                                page,
+                                rotation,
+                                position,
+                                fontSize,
+                                overrideX,
+                                overrideY,
+                                margin);
+                    }
 
-                if ("text".equalsIgnoreCase(stampType)) {
-                    addTextStamp(
-                            contentStream,
-                            stampText,
-                            document,
-                            page,
-                            rotation,
-                            position,
-                            fontSize,
-                            alphabet,
-                            overrideX,
-                            overrideY,
-                            margin,
-                            customColor);
-                } else if ("image".equalsIgnoreCase(stampType)) {
-                    addImageStamp(
-                            contentStream,
-                            stampImage,
-                            document,
-                            page,
-                            rotation,
-                            position,
-                            fontSize,
-                            overrideX,
-                            overrideY,
-                            margin);
+                    contentStream.close();
                 }
-
-                contentStream.close();
             }
         }
+
+
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
                 Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
@@ -275,6 +292,82 @@ public class StampController {
         contentStream.restoreGraphicsState();
     }
 
+    private void addPagingSeal(
+            PDDocument document,
+            MultipartFile stampImage,
+            float rotation,
+            int pagingPosition,
+            float size,
+            float overrideY,
+            float opacity,
+            int firstPageRate) throws IOException {
+        Assert.notNull(stampImage,"The Stamp Image must not be null.");
+
+        BufferedImage sourceImage = ImageIO.read(stampImage.getInputStream());
+        float firstPageSealRate = firstPageRate / 100.0f;
+        int numberOfPages = document.getNumberOfPages();
+        int remainPage = numberOfPages - 1;
+
+        // scaled and rotation image
+        BufferedImage image = scaledAndRotationImage(size,rotation, sourceImage);
+
+        int firstPageStampWidth = 0;
+        int otherPageStampWidth = 0;
+
+        // The proportion of the first page
+        if (firstPageSealRate > 0.0f) {
+            firstPageStampWidth = ((Float) (image.getWidth() * firstPageSealRate)).intValue();
+            otherPageStampWidth = (image.getWidth() - firstPageStampWidth) / remainPage;
+        } else {
+            // average every page
+            firstPageStampWidth = otherPageStampWidth = image.getWidth() / numberOfPages;
+        }
+
+        // Balance the width of the first page
+        int remainWidth = image.getWidth() - firstPageStampWidth;
+        if (remainWidth != otherPageStampWidth * remainPage) {
+            firstPageStampWidth += remainWidth - otherPageStampWidth * remainPage;
+        }
+
+        // set opacity
+        PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+        graphicsState.setNonStrokingAlphaConstant(opacity);
+
+        // foreach the pdf and sealed
+        BufferedImage croppedImg;
+        PDImageXObject sealImage;
+        for (int i = 0; i < numberOfPages; i++) {
+            PDPage page = document.getPage(i);
+            PDRectangle pageSize = page.getMediaBox();
+            int stampWidth = i == 0 ? firstPageStampWidth : otherPageStampWidth;
+            int stampX = i == 0 ? 0 : firstPageStampWidth + (i - 1) * stampWidth;
+            croppedImg = image.getSubimage(stampX, 0, stampWidth, image.getHeight());
+
+            // Create the PDImageXObject for the seal image
+            sealImage = LosslessFactory.createFromImage(document, croppedImg);
+            float y;
+            if (overrideY >= 0) {
+                // Use override values if provided
+                y = overrideY;
+            } else {
+                y =calculatePositionY(pageSize, pagingPosition,size, 0.0f);
+            }
+            // create PDPageContentStream
+            try (PDPageContentStream contentStream =
+                         new PDPageContentStream(
+                                 document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                float startX = pageSize.getUpperRightX() - sealImage.getWidth();
+                // transform and drawImage
+                contentStream.setGraphicsStateParameters(graphicsState);
+                contentStream.transform(Matrix.getTranslateInstance(startX, y));
+                contentStream.drawImage(sealImage, 0, 0);
+            }
+        }
+
+
+
+    }
+
     private float calculatePositionX(
             PDRectangle pageSize,
             int position,
@@ -318,5 +411,45 @@ public class StampController {
 
     private float calculateTextCapHeight(PDFont font, float fontSize) {
         return font.getFontDescriptor().getCapHeight() / 1000 * fontSize;
+    }
+
+
+    private BufferedImage scaledAndRotationImage(float sealSize, float rotation, BufferedImage sourceImage) {
+        if (sourceImage == null) {
+            throw new IllegalArgumentException("stamp image cannot be null.");
+        }
+
+        BufferedImage image = sourceImage;
+        boolean scale = sealSize > 0.0f;
+        boolean rotate = rotation > 0.0f;
+
+        if (scale || rotate) {
+            // Desired physical height (in PDF points)
+            Float desiredPhysicalHeight = sealSize;
+            // Compute width based on original aspect ratio
+            float aspectRatio = (float) sourceImage.getWidth() / (float) sourceImage.getHeight();
+            int newWidth = scale ? (int) (desiredPhysicalHeight  * aspectRatio) : sourceImage.getWidth();
+            int newHeight = scale ? desiredPhysicalHeight.intValue() : sourceImage.getHeight();
+
+            // create BufferedImage
+            image = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D graphics = image.createGraphics();
+
+            // set render
+            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            AffineTransform transform = new AffineTransform();
+            if (rotate) {
+                transform.rotate(Math.toRadians(rotation), newWidth / 2.0, newHeight / 2.0);
+            }
+            graphics.setTransform(transform);
+            graphics.drawImage(sourceImage, 0, 0,image.getWidth(),image.getHeight(), null);
+
+            graphics.dispose();
+        }
+
+        return image;
     }
 }

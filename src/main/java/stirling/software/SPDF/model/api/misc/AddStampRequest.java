@@ -65,4 +65,13 @@ public class AddStampRequest extends PDFWithPageNums {
 
     @Schema(description = "The color for stamp", defaultValue = "#d3d3d3")
     private String customColor = "#d3d3d3";
+
+    @Schema(description = "The percentage of the seal to the first page", example = "30")
+    private int firstPageRate;
+
+    @Schema(
+            description =
+                    "Position for stamp placement based on a 3,6,9 grid ",
+            example = "6")
+    private int pagingPosition;
 }
