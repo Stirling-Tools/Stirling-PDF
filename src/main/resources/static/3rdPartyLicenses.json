@@ -194,13 +194,13 @@
         },
         {
             "moduleName": "com.twelvemonkeys.imageio:imageio-batik",
-            "moduleVersion": "3.10.1",
+            "moduleVersion": "3.11.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
             "moduleName": "com.twelvemonkeys.imageio:imageio-bmp",
-            "moduleVersion": "3.10.1",
+            "moduleVersion": "3.11.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
@@ -224,13 +224,13 @@
         },
         {
             "moduleName": "com.twelvemonkeys.imageio:imageio-tiff",
-            "moduleVersion": "3.10.1",
+            "moduleVersion": "3.11.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
             "moduleName": "com.twelvemonkeys.imageio:imageio-webp",
-            "moduleVersion": "3.10.1",
+            "moduleVersion": "3.11.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
