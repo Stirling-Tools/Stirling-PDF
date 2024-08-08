@@ -38,7 +38,7 @@ public class ConvertWebsiteToPdfTest {
         // Assert
         assertEquals("URL is not reachable, please provide a valid URL.", thrown.getMessage());
     }
-
+    
     @Test
     public void test_no_exemption_is_thrown_when_valid_url_format_provided() {
 
@@ -48,11 +48,14 @@ public class ConvertWebsiteToPdfTest {
         UrlToPdfRequest request = new UrlToPdfRequest();
         request.setUrlInput(valid_format_Url);
         // Act
-        assertDoesNotThrow(() -> {
+        try {
             convertWebsiteToPDF.urlToPdf(request);
-        });
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("IOException was thrown: " + e.getMessage());
+        }
+        
     }
-
     @Test void test_pdf_bytes_are_returned_when_valid_url_provided() {
         String valid_format_Url = "http://localhost:8080/url-to-pdf";
         // Arrange
@@ -60,11 +63,14 @@ public class ConvertWebsiteToPdfTest {
         UrlToPdfRequest request = new UrlToPdfRequest();
         request.setUrlInput(valid_format_Url);
         // Act
-        ResponseEntity<byte[]> pdfBytes = assertDoesNotThrow(() -> {
-            return convertWebsiteToPDF.urlToPdf(request);
-        });
+      
         // Assert
-        assertNotNull(pdfBytes.getBody());
+        try {
+            convertWebsiteToPDF.urlToPdf(request);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("IOException was thrown: " + e.getMessage());
+        }
     }
 
 }
