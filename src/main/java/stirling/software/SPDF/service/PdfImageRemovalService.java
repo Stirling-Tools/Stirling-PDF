@@ -16,7 +16,7 @@ public class PdfImageRemovalService {
     /**
      * Removes all image objects from the provided PDF document.
      *
-     * This method iterates over each page in the document and removes any image XObjects found
+     * <p>This method iterates over each page in the document and removes any image XObjects found
      * in the page's resources.
      *
      * @param document The PDF document from which images will be removed.
