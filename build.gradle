@@ -134,8 +134,8 @@ dependencies {
     implementation "org.apache.xmlgraphics:batik-all:1.17"
 
     // TwelveMonkeys
-    implementation "com.twelvemonkeys.imageio:imageio-batik:3.10.1"
-    implementation "com.twelvemonkeys.imageio:imageio-bmp:3.10.1"
+    implementation "com.twelvemonkeys.imageio:imageio-batik:3.11.0"
+    implementation "com.twelvemonkeys.imageio:imageio-bmp:3.11.0"
     // implementation "com.twelvemonkeys.imageio:imageio-hdr:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-icns:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-iff:3.10.1"
@@ -147,8 +147,8 @@ dependencies {
     // implementation "com.twelvemonkeys.imageio:imageio-sgi:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-tga:3.10.1"
     // implementation "com.twelvemonkeys.imageio:imageio-thumbsdb:3.10.1"
-    implementation "com.twelvemonkeys.imageio:imageio-tiff:3.10.1"
-    implementation "com.twelvemonkeys.imageio:imageio-webp:3.10.1"
+    implementation "com.twelvemonkeys.imageio:imageio-tiff:3.11.0"
+    implementation "com.twelvemonkeys.imageio:imageio-webp:3.11.0"
     // implementation "com.twelvemonkeys.imageio:imageio-xwd:3.10.1"
 
     implementation "commons-io:commons-io:2.16.1"
