@@ -1,7 +1,7 @@
 plugins {
     id "java"
-    id "org.springframework.boot" version "3.3.0"
-    id "io.spring.dependency-management" version "1.1.5"
+    id "org.springframework.boot" version "3.3.2"
+    id "io.spring.dependency-management" version "1.1.6"
     id "org.springdoc.openapi-gradle-plugin" version "1.8.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "edu.sc.seis.launch4j" version "3.0.5"
@@ -16,10 +16,12 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.26.2"
+version = "0.27.0"
 
-// 17 is lowest but we support and recommend 21
-sourceCompatibility = "17"
+java {
+    // 17 is lowest but we support and recommend 21
+    sourceCompatibility = JavaVersion.VERSION_17
+}
 
 repositories {
     mavenCentral()
@@ -106,7 +108,7 @@ dependencies {
 
     // implementation "org.yaml:snakeyaml:2.2"
     implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
-    
+
     // Exclude Tomcat and include Jetty
     implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion") {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -185,7 +187,7 @@ dependencies {
     compileOnly "org.projectlombok:lombok:1.18.32"
     annotationProcessor "org.projectlombok:lombok:1.18.32"
 
-    testImplementation 'org.mockito:mockito-inline:3.12.4'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -196,7 +198,7 @@ compileJava {
     options.compilerArgs << "-parameters"
 }
 
-task writeVersion  {
+task writeVersion {
     def propsFile = file("src/main/resources/version.properties")
     def props = new Properties()
     props.setProperty("version", version)
@@ -226,6 +228,6 @@ tasks.named("test") {
     useJUnitPlatform()
 }
 
-task printVersion  {
+task printVersion {
     println project.version
 }
