@@ -1,5 +1,7 @@
 package stirling.software.SPDF.model.api.misc;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
@@ -16,4 +18,9 @@ public class ExtractHeaderRequest extends PDFFile {
             required = false,
             defaultValue = "false")
     private boolean useFirstTextAsFallback;
+
+    private MultipartFile fileInput;
+    private String keyword;
+    private Boolean useAfter;
+    private Integer linesToCheck;
 }
