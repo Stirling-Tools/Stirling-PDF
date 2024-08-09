@@ -2,11 +2,7 @@ import { Suspense } from "react";
 
 import { Routes, Route, Outlet } from "react-router-dom";
 import Home from "./pages/Home";
-import About from "./pages/About";
-import Dashboard from "./pages/Dashboard";
 import Dynamic from "./pages/Dynamic";
-// import ToPdf from "./pages/convert/ToPdf";
-// import Impose from "./pages/page-operations/Impose";
 import NoMatch from "./pages/NoMatch";
 import NavBar from "./components/NavBar";
 
@@ -31,7 +27,7 @@ i18next.use(LanguageDetector).use(initReactI18next).use(resourcesToBackend((lang
     initImmediate: false // Makes loading blocking but sync
 }); // TODO: use i18next.config.ts instead
 
-import "./general.css";
+import "./root.css";
 
 export default function App() {
 
@@ -43,8 +39,6 @@ export default function App() {
             <Routes>
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />
-                    <Route path="about" element={<About />} />
-                    <Route path="dashboard" element={<Dashboard />} />
                     <Route path="dynamic" element={<Dynamic />} />
 
                     {/* Using path="*"" means "match anything", so this route
@@ -76,11 +70,7 @@ function Layout() {
           so you can think about this <Outlet> as a placeholder for
           the child routes we defined above. */}
             <Container fluid="sm" className="">
-                <div className="row justify-content-center">
-                    <div className="col-md-6">
-                        <Outlet/>
-                    </div>
-                </div>
+                <Outlet/>
             </Container>
         </div>
     );

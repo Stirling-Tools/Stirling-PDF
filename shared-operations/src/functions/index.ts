@@ -22,7 +22,9 @@ export class Operator {
     }
 
     async run(input: PdfFile[] | any[], progressCallback: (progress: Progress) => void): Promise<PdfFile[] | any[]> {
-        progressCallback({ curFileProgress: 1, operationProgress: 1 })
+        throw new Error("Operator.run() was called directly. This is not the desired behavior; call the Subclass's run function instead.");
+        // For reference:
+        progressCallback({ curFileProgress: 1, operationProgress: 1 });
         return input;
     }
 }

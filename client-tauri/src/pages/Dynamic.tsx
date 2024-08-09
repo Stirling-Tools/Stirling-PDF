@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Fragment } from "react";
 
 import { BaseSyntheticEvent, useRef, useState } from "react";
 import { Operator, OperatorSchema } from "@stirling-pdf/shared-operations/src/functions";
@@ -93,7 +94,7 @@ function Dynamic() {
     };
 
     return (
-        <div>
+        <Fragment>
             <h2>Dynamic test page for operators</h2>
 
             <input type="file" id="pdfFile" accept=".pdf" multiple />
@@ -112,7 +113,7 @@ function Dynamic() {
             <p>
                 <Link to="/">Go back home...</Link>
             </p>
-        </div>
+        </Fragment>
     );
 }
 

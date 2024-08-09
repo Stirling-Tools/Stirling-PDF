@@ -1,0 +1,19 @@
+.navbar_brand {
+    color: var(--md-sys-color-on-surface) !important;
+}
+
+.main_icon {
+    width: 36px;
+    height: 42px;
+    vertical-align: middle;
+    transform: translateY(-2px);
+}
+
+.icon_text {
+    margin-left: 8px;
+    margin-right: 4px;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: space-between;
+    vertical-align: middle;
+}
