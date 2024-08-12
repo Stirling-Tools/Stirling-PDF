@@ -20,19 +20,51 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
+import stirling.software.SPDF.model.api.converters.ConvertToWebPRequest;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 
 @RestController
 @Slf4j
 @RequestMapping("/api/v1/convert")
+@Tag(name = "Convert", description = "Convert APIs")
 public class ConvertWebpPDFController {
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/webp")
-    public ResponseEntity<byte[]> convertToWebp(@ModelAttribute ConvertToImageRequest request)
+    @Operation(
+            summary = "Convert PDF to WebP",
+            description =
+                    "This endpoint converts a PDF file to WebP images. The output can be either a single WebP file or multiple WebP files zipped together.",
+            requestBody =
+                    @RequestBody(
+                            description = "The input PDF file and conversion parameters.",
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = "multipart/form-data",
+                                            schema =
+                                                    @Schema(
+                                                            implementation =
+                                                                    ConvertToWebPRequest.class))),
+            responses = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description =
+                                "Conversion successful, returns the WebP image or a ZIP file containing WebP images.",
+                        content =
+                                @Content(
+                                        mediaType = "application/zip",
+                                        schema = @Schema(type = "string", format = "binary")))
+            })
+    public ResponseEntity<byte[]> convertToWebp(@ModelAttribute ConvertToWebPRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
         String dpi = request.getDpi();
