@@ -1,5 +1,5 @@
 # Main stage
-FROM alpine:3.20.0
+FROM alpine:3.20.2
 
 # Copy necessary files
 COPY scripts /scripts
@@ -45,8 +45,8 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
 # CV
         py3-opencv \
 # python3/pip
-        python3 && \
-    wget https://bootstrap.pypa.io/get-pip.py -qO - | python3 - --break-system-packages --no-cache-dir --upgrade && \
+        python3 \
+    py3-pip && \
 # uno unoconv and HTML
     pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \

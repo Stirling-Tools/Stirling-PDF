@@ -13,6 +13,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.net.URL;
+import java.net.HttpURLConnection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +73,21 @@ public class GeneralUtils {
         } catch (MalformedURLException e) {
             return false;
         }
+       
+    }   
+
+    public static boolean isURLReachable(String urlStr) {
+        try {
+            URL url = new URL(urlStr);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("HEAD");
+            int responseCode = connection.getResponseCode();
+            return (200 <= responseCode && responseCode <= 399);
+        } catch (MalformedURLException e) {
+            return false;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public static File multipartToFile(MultipartFile multipart) throws IOException {
@@ -95,19 +112,16 @@ public class GeneralUtils {
         sizeStr = sizeStr.replace(",", ".").replace(" ", "");
         try {
             if (sizeStr.endsWith("KB")) {
-                return (long)
-                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024);
+                return (long) (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2)) * 1024);
             } else if (sizeStr.endsWith("MB")) {
-                return (long)
-                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
-                                * 1024
-                                * 1024);
+                return (long) (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
+                        * 1024
+                        * 1024);
             } else if (sizeStr.endsWith("GB")) {
-                return (long)
-                        (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
-                                * 1024
-                                * 1024
-                                * 1024);
+                return (long) (Double.parseDouble(sizeStr.substring(0, sizeStr.length() - 2))
+                        * 1024
+                        * 1024
+                        * 1024);
             } else if (sizeStr.endsWith("B")) {
                 return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 1));
             } else {
@@ -170,13 +184,15 @@ public class GeneralUtils {
 
         int n = 0;
         while (true) {
-            // Replace 'n' with the current value of n, correctly handling numbers before 'n'
+            // Replace 'n' with the current value of n, correctly handling numbers before
+            // 'n'
             String sanitizedExpression = insertMultiplicationBeforeN(expression, n);
             Double result = evaluator.evaluate(sanitizedExpression);
 
             // Check if the result is null or not within bounds
             if (result == null || result <= 0 || result.intValue() > maxValue) {
-                if (n != 0) break;
+                if (n != 0)
+                    break;
             } else {
                 results.add(result.intValue());
             }

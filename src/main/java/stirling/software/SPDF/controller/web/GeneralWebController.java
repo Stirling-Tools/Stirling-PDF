@@ -310,4 +310,11 @@ public class GeneralWebController {
         model.addAttribute("currentPage", "auto-split-pdf");
         return "auto-split-pdf";
     }
+
+    @GetMapping("/remove-image-pdf")
+    @Hidden
+    public String removeImagePdfForm(Model model) {
+        model.addAttribute("currentPage", "remove-image-pdf");
+        return "remove-image-pdf";
+    }
 }
