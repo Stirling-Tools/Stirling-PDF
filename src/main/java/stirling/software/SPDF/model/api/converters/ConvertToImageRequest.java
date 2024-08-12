@@ -28,9 +28,4 @@ public class ConvertToImageRequest extends PDFFile {
 
     @Schema(description = "The DPI (dots per inch) for the output image(s)")
     private String dpi;
-
-    @Schema(
-            description =
-                    "The quality of the output image(s), applicable for lossy formats like JPEG or WebP. Range: 0 (lowest) to 100 (highest)")
-    private String quality;
 }
