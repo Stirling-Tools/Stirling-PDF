@@ -62,8 +62,12 @@
                   <select class="form-select" id="stampType" name="stampType" onchange="toggleFileOption()">
                     <option value="text" th:text="#{watermark.type.1}">Text</option>
                     <option value="image" th:text="#{watermark.type.2}">Image</option>
-                    <option value="pagingSeal" th:text="#{watermark.type.3}">PagingSeal</option>
                   </select>
+                </div>
+
+                <div class="form-check ms-3" id="autoCropGroups">
+                  <input type="checkbox" id="autoCrop" name="autoCrop">
+                  <label for="autoCrop" th:text="#{AddStampRequest.autoCrop}"></label>
                 </div>
 
                 <div class="mb-3" id="pageOrderGroup">
@@ -164,7 +168,7 @@
 
                 <div class="mb-3" id="FirstPageRateGroup">
                   <label for="firstPageRate" class="form-label" th:text="#{AddStampRequest.firstPageRate}">First Page Rate</label>
-                  <input type="number" class="form-control" id="firstPageRate" name="firstPageRate" value="50" step="1" max="90" min="0">
+                  <input type="number" class="form-control" id="firstPageRate" name="firstPageRate" value="20" step="1" max="90" min="0">
                 </div>
 
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{AddStampRequest.submit}"></button>
@@ -176,13 +180,25 @@
         const stampFormElementIds = ['pageOrderGroup','customMarginGroup','positionGroup',
           'stampTextGroup', 'stampImageGroup', 'alphabetGroup', 'sizeGroup', 'rotationGroup',
           'opacityGroup', 'overrideXGroup', 'overrideYGroup', 'customColorGroup','pagingPositionGroup',
-          'FirstPageRateGroup'];
+          'FirstPageRateGroup','autoCropGroups'];
         const stampFormElements = stampFormElementIds.map(it=>document.getElementById(it));
-
+        const autoCropGroupsElement = document.getElementById("autoCropGroups")
+        const autoCropElement = document.getElementById("autoCrop")
         // init function
         toggleFileOption();
         bindSelectedPositionEvent(document.querySelectorAll('#positionGroup .pageNumber'), document.getElementById('numberInput'));
         bindSelectedPositionEvent(document.querySelectorAll('#pagingPositionGroup .pageNumber'),document.getElementById('pagingNumberInput'));
+        autoCropGroupsElement.addEventListener('click',function(){
+          const allIds = ['pageOrderGroup','customMarginGroup','positionGroup','overrideXGroup',
+            'pagingPositionGroup','FirstPageRateGroup']
+          const allElements = allIds.map(it=>document.getElementById(it));
+          if(autoCropElement.checked){
+            showElementByIds(allElements,['pagingPositionGroup','FirstPageRateGroup']);
+          }else{
+            showElementByIds(allElements,['pageOrderGroup','customMarginGroup','positionGroup','overrideXGroup'])
+          }
+        })
+
 
         function bindSelectedPositionEvent(cells,inputField){
           cells.forEach(cell => {
@@ -214,20 +230,23 @@
         function toggleFileOption() {
           const stampType = document.getElementById('stampType').value;
           if (stampType === 'text') {
-            showElementByIds('pageOrderGroup','customMarginGroup','positionGroup','stampTextGroup',
+            showElementByIds(stampFormElements,['pageOrderGroup','customMarginGroup','positionGroup','stampTextGroup',
                     'alphabetGroup','sizeGroup','rotationGroup','opacityGroup','overrideXGroup',
-                    'overrideYGroup','customColorGroup' )
+                    'overrideYGroup','customColorGroup'] )
           } else if (stampType === 'image') {
-            showElementByIds('pageOrderGroup','customMarginGroup','positionGroup','stampImageGroup',
-                    'sizeGroup','rotationGroup','opacityGroup','overrideXGroup','overrideYGroup')
-          } else if (stampType === 'pagingSeal'){
-            showElementByIds('stampImageGroup','pagingPositionGroup', 'sizeGroup','rotationGroup'
-                    ,'opacityGroup','overrideYGroup','FirstPageRateGroup')
+            showElementByIds(stampFormElements,['pageOrderGroup','customMarginGroup','positionGroup','stampImageGroup',
+                    'sizeGroup','rotationGroup','opacityGroup','overrideXGroup','overrideYGroup','autoCropGroups'])
+            autoCropElement.checked = false
           }
         }
 
-        function showElementByIds(...showIds) {
-          stampFormElements.forEach(it=>{
+        /**
+         *  control element show or hidden
+         * @param formElements all elements id
+         * @param showIds The IDs that needs to be displayed.
+         */
+        function showElementByIds(formElements,showIds) {
+          formElements.forEach(it=>{
             const  id = it.id;
             if(showIds && showIds.includes(id)){
               it.style.display = 'block';

@@ -67,6 +67,7 @@ public class StampController {
         float overrideY = request.getOverrideY(); // New field for Y override
         int pagingPosition = request.getPagingPosition();
         int firstPageRate = request.getFirstPageRate();
+        boolean autoCrop = request.isAutoCrop();
 
         String customColor = request.getCustomColor();
         float marginFactor;
@@ -92,7 +93,7 @@ public class StampController {
         // Load the input PDF
         PDDocument document = Loader.loadPDF(pdfFile.getBytes());
 
-        if ("pagingSeal".equalsIgnoreCase(stampType)){
+        if (autoCrop && "image".equalsIgnoreCase(stampType)){
             addPagingSeal(
                     document,
                     stampImage,
