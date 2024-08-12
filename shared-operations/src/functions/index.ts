@@ -1,6 +1,6 @@
 import { PdfFile } from "../wrappers/PdfFile";
 import { Action } from "../../declarations/Action";
-import Joi, { StringRegexOptions } from "@stirling-tools/joi";
+import Joi from "@stirling-tools/joi";
 import { MaterialSymbolProps } from "react-material-symbols";
 
 

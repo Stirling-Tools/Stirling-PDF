@@ -49,5 +49,5 @@ export default defineConfig(async () => ({
     // 3. to make use of `TAURI_DEBUG` and other env variables
     // https://tauri.app/v1/api/config#buildconfig.beforedevcommand
     envPrefix: ["VITE_"],
-    base: '',
+    base: '/', // relative paths sadly don't work with react router dom sub-dirs for some reason...
 }));

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview",
+    "preview (previously built files)": "vite preview",
     "tauri-dev (currently broken)": "tauri dev",
     "tauri-build-debug": "tauri build --debug",
     "tauri-build": "tauri build"

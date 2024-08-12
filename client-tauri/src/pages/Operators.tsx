@@ -26,7 +26,7 @@ function Dynamic() {
         });
     }, [location]);
     
-    const inputRef = useRef<HTMLInputElement>();
+    const inputRef = useRef<HTMLInputElement>(null);
 
     async function handleSubmit(e: BaseSyntheticEvent) {
         const formData = new FormData(e.target);

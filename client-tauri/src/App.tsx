@@ -41,21 +41,12 @@ export default function App() {
                 routes for. */}
                     <Route path="*" element={<NoMatch />} />
                 </Route>
-
+        
                 <Route path="/operators" element={<Layout />}>
                     <Route index element={<NoMatch />} />
                     {listOperatorNames().map((name) => {
                         return <Route key={name} path={name} element={<Operators/>} />;
                     })}
-                    <Route path="*" element={<NoMatch />} />
-                </Route>
-
-                <Route path="/convert" element={<Layout />}>
-                    {/* <Route path="file-to-pdf" element={<ToPdf />} /> */}
-                    <Route path="*" element={<NoMatch />} />
-                </Route>
-                <Route path="/page-operations" element={<Layout />}>
-                    {/* <Route path="impose" element={<Impose />} /> */}
                     <Route path="*" element={<NoMatch />} />
                 </Route>
             </Routes>

@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-
 import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
 import { OperatorCard } from "../components/OperatorCard";
 
