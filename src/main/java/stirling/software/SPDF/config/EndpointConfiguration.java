@@ -97,6 +97,7 @@ public class EndpointConfiguration {
         // Adding endpoints to "Convert" group
         addEndpointToGroup("Convert", "pdf-to-img");
         addEndpointToGroup("Convert", "img-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-webp");
         addEndpointToGroup("Convert", "pdf-to-pdfa");
         addEndpointToGroup("Convert", "file-to-pdf");
         addEndpointToGroup("Convert", "xlsx-to-pdf");
@@ -156,6 +157,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("CLI", "book-to-pdf");
         addEndpointToGroup("CLI", "pdf-to-book");
         addEndpointToGroup("CLI", "pdf-to-rtf");
+        addEndpointToGroup("CLI", "pdf-to-webp");
 
         // Calibre
         addEndpointToGroup("Calibre", "book-to-pdf");
@@ -166,10 +168,12 @@ public class EndpointConfiguration {
         addEndpointToGroup("Python", REMOVE_BLANKS);
         addEndpointToGroup("Python", "html-to-pdf");
         addEndpointToGroup("Python", "url-to-pdf");
+        addEndpointToGroup("Python", "pdf-to-webp");
 
         // openCV
         addEndpointToGroup("OpenCV", "extract-image-scans");
         addEndpointToGroup("OpenCV", REMOVE_BLANKS);
+        addEndpointToGroup("OpenCV", "pdf-to-webp");
 
         // LibreOffice
         addEndpointToGroup("LibreOffice", "repair");

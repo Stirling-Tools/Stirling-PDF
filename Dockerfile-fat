@@ -9,7 +9,7 @@ COPY . .
 
 # Build the application with DOCKER_ENABLE_SECURITY=false
 RUN DOCKER_ENABLE_SECURITY=true \
-./gradlew clean build 
+./gradlew clean build
 
 # Main stage
 FROM alpine:3.20.2
@@ -32,7 +32,7 @@ ENV DOCKER_ENABLE_SECURITY=false \
     UMASK=022 \
     FAT_DOCKER=true \
     INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
-    
+
 
 # JDK for app
 RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
@@ -60,6 +60,8 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra \
 # CV
         py3-opencv \
+# PyMuPDF for webp
+        PyMuPDF \
 # python3/pip
         python3 \
     py3-pip && \
