@@ -165,7 +165,7 @@ dependencies {
         exclude group: "commons-logging", module: "commons-logging"
     }
 
-    implementation ("org.apache.pdfbox:xmpbox:3.0.2") {
+    implementation ("org.apache.pdfbox:xmpbox:3.0.3") {
         exclude group: "commons-logging", module: "commons-logging"
     }
     implementation "com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4"
