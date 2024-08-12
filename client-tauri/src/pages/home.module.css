@@ -3,16 +3,3 @@
     grid-template-columns: repeat(auto-fill, minmax(15rem, 3fr));
     gap: 30px 30px;
 }
-
-.operator_card {
-    border: 1px solid var(--md-sys-color-surface-5);
-    border-radius: 1.75rem;
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    background: var(--md-sys-color-surface-5);
-    transition: transform 0.3s, border 0.3s;
-    transform-origin: center center;
-    outline: 0px solid transparent;
-}

@@ -1,53 +1,52 @@
 import { Link } from "react-router-dom";
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 
 import { BaseSyntheticEvent, useRef, useState } from "react";
 import { Operator, OperatorSchema } from "@stirling-pdf/shared-operations/src/functions";
 import Joi from "@stirling-tools/joi";
 import { BuildFields } from "../components/fields/BuildFields";
-import { getOperatorByName, getSchemaByName, listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
+import { getOperatorByName, getSchemaByName } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
 import { PdfFile, RepresentationType } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
 import { Action } from "@stirling-pdf/shared-operations/declarations/Action";
 
+import { useLocation } from 'react-router-dom'
+
+
 function Dynamic() {
-    const [schemaDescription, setSchemaDescription] = useState<Joi.Description>();
+    const [schema, setSchema] = useState<any>(undefined); // TODO: Type as joi type
 
-    const operators = listOperatorNames();
+    const location = useLocation();
 
-    const activeOperatorName = useRef<string>();
-    const activeOperator = useRef<typeof Operator>();
-    const activeSchema = useRef<OperatorSchema>();
+    const operatorInternalName = location.pathname.split("/")[2]; // /operators/<operatorInternalName>
 
-    async function selectionChanged(s: BaseSyntheticEvent) {
-        const selectedValue = s.target.value;
-        console.log("Selection changed to", selectedValue);
-        if(selectedValue == "none") {
-            setSchemaDescription(undefined);
-            return;
-        }
-
-        getSchemaByName(selectedValue).then(async schema => {
+    useEffect(() => {
+        getSchemaByName(operatorInternalName).then(schema => {
             if(schema) {
-                const description = schema.schema.describe();
-                activeOperatorName.current = selectedValue;
-                activeOperator.current = await getOperatorByName(selectedValue);
-                activeSchema.current = schema;
-
-                // This will update children
-                setSchemaDescription(description);
+                setSchema(schema.schema);
             }
         });
-    }
+    }, [location]);
+
+
+    return (
+        <Fragment>
+            <h3>{ schema?.describe().flags.label }</h3>
+            { schema?.describe().flags.description }
+
+            <br />
+            <input type="file" id="pdfFile" accept=".pdf" multiple />
+            <br />
+
+            <div id="values">
+                <BuildFields schemaDescription={schema?.describe()} onSubmit={handleSubmit}></BuildFields>
+            </div>
+        </Fragment>
+    );
 
     async function handleSubmit(e: BaseSyntheticEvent) {
-        console.clear();
-        if(!activeOperatorName.current || !activeOperator.current || !activeSchema.current) {
-            throw new Error("Please select an Operator in the Dropdown");
-        }
-
         const formData = new FormData(e.target);
         const values = Object.fromEntries(formData.entries());
-        let action: Action = {type: activeOperatorName.current, values: values};
+        let action: Action = {type: operatorInternalName, values: values};
 
         // Validate PDF File
 
@@ -71,14 +70,16 @@ function Dynamic() {
             }
         }
 
-        const validationResults = activeSchema.current.schema.validate({input: inputs, values: action.values});
+        const validationResults = schema.validate({input: inputs, values: action.values});
 
         if(validationResults.error) {
             console.error({error: "Validation failed", details: validationResults.error.message}, validationResults.error.stack);
         }
         else {
             action.values = validationResults.value.values;
-            const operation = new activeOperator.current(action);
+            const Operator = (await getOperatorByName(operatorInternalName))!;
+
+            const operation = new Operator(action);
             operation.run(validationResults.value.input, (progress) => {
                 console.log("OperationProgress: " + progress.operationProgress, "CurFileProgress: " + progress.curFileProgress);
             }).then(async pdfFiles => {
@@ -92,29 +93,6 @@ function Dynamic() {
             });
         }
     };
-
-    return (
-        <Fragment>
-            <h2>Dynamic test page for operators</h2>
-
-            <input type="file" id="pdfFile" accept=".pdf" multiple />
-            <br />
-            <select id="pdfOptions" onChange={selectionChanged}>
-                <option value="none">none</option>
-                { operators.map((operator) => {
-                    return (<option key={operator} value={operator}>{operator}</option>)
-                }) }
-            </select>
-
-            <div id="values">
-                <BuildFields schemaDescription={schemaDescription} onSubmit={handleSubmit}></BuildFields>
-            </div>
-
-            <p>
-                <Link to="/">Go back home...</Link>
-            </p>
-        </Fragment>
-    );
 }
 
 

@@ -2,18 +2,16 @@ import { Suspense } from "react";
 
 import { Routes, Route, Outlet } from "react-router-dom";
 import Home from "./pages/Home";
-import Dynamic from "./pages/Dynamic";
+import Operators from "./pages/Operators";
 import NoMatch from "./pages/NoMatch";
 import NavBar from "./components/NavBar";
-
-import "bootstrap/dist/css/bootstrap.min.css";
-import { Container } from "react-bootstrap";
 
 import { useTranslation, initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
 import i18next from "i18next";
 import resourcesToBackend from "i18next-resources-to-backend";
+import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
 
 i18next.use(LanguageDetector).use(initReactI18next).use(resourcesToBackend((language: string, namespace: string) => import(`../../shared-operations/public/locales/${namespace}/${language}.json`)))
 .init({
@@ -27,8 +25,6 @@ i18next.use(LanguageDetector).use(initReactI18next).use(resourcesToBackend((lang
     initImmediate: false // Makes loading blocking but sync
 }); // TODO: use i18next.config.ts instead
 
-import "./root.css";
-
 export default function App() {
 
     return (
@@ -39,13 +35,21 @@ export default function App() {
             <Routes>
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />
-                    <Route path="dynamic" element={<Dynamic />} />
 
                     {/* Using path="*"" means "match anything", so this route
                 acts like a catch-all for URLs that we don't have explicit
                 routes for. */}
                     <Route path="*" element={<NoMatch />} />
                 </Route>
+
+                <Route path="/operators" element={<Layout />}>
+                    <Route index element={<NoMatch />} />
+                    {listOperatorNames().map((name) => {
+                        return <Route key={name} path={name} element={<Operators/>} />;
+                    })}
+                    <Route path="*" element={<NoMatch />} />
+                </Route>
+
                 <Route path="/convert" element={<Layout />}>
                     {/* <Route path="file-to-pdf" element={<ToPdf />} /> */}
                     <Route path="*" element={<NoMatch />} />
@@ -69,9 +73,7 @@ function Layout() {
             {/* An <Outlet> renders whatever child route is currently active,
           so you can think about this <Outlet> as a placeholder for
           the child routes we defined above. */}
-            <Container fluid="sm" className="">
-                <Outlet/>
-            </Container>
+            <Outlet/>
         </div>
     );
 }

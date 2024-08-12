@@ -10,22 +10,15 @@ interface BuildFieldsProps {
 
 export function BuildFields({ schemaDescription, onSubmit }: BuildFieldsProps) {
     console.log("Render Build Fields", schemaDescription);
-    const label = (schemaDescription?.flags as any)?.label
-    const description = (schemaDescription?.flags as any)?.description;
     const values = (schemaDescription?.keys as any)?.values.keys as { [key: string]: Joi.Description};
     return (
-        <div>
-            <h3>{label}</h3>
-            {description}
-            <hr />
-            <form onSubmit={(e) => { onSubmit(e); e.preventDefault(); }}>
-            {
-                values ? Object.keys(values).map((key) => {  
-                    return (<GenericField key={key} fieldName={key} joiDefinition={values[key]} />) 
-                }) : undefined
-            }
-                <input type="submit" value="Submit" />
-            </form>
-        </div>
+        <form onSubmit={(e) => { onSubmit(e); e.preventDefault(); }}>
+        {
+            values ? Object.keys(values).map((key) => {  
+                return (<GenericField key={key} fieldName={key} joiDefinition={values[key]} />) 
+            }) : undefined
+        }
+            <input type="submit" value="Submit" />
+        </form>
     );
 }

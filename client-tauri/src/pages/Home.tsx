@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
-import { getOperatorByName, getSchemaByName, listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
 
-import styles from './home.module.css'; 
+import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
+import { OperatorCard } from "../components/OperatorCard";
+
+
+import styles from './Home.module.css'; 
 
 function Home() {
     const operators = listOperatorNames();
@@ -20,13 +23,10 @@ function Home() {
             <div className={styles.operator_container}>
                 {
                     operators.map((operator) => {
-                        return (<a key={operator} href={"/operators/" + operator}><div className={styles.operator_card}>{operator}</div></a>)
+                        return (<OperatorCard key={operator} operatorInternalName={operator}></OperatorCard>)
                     })
                 }
             </div>
-
-
-            <Link to="/dynamic">Dynamic</Link>
         </div>
     );
 }
