@@ -22,5 +22,6 @@ export default new OperatorSchema(
             .label(i18next.t("values.arrangementConfig.friendlyName", { ns: "arrangePages" })).description(i18next.t("values.arrangementConfig.description", { ns: "arrangePages" }))
             .example("REVERSE_ORDER").example("DUPLEX_SORT").example("BOOKLET_SORT").required()
     }),
-    JoiPDFFileSchema.label(i18next.t("outputs.pdffile.name")).description(i18next.t("outputs.pdffile.description"))
+    JoiPDFFileSchema.label(i18next.t("outputs.pdffile.name")).description(i18next.t("outputs.pdffile.description")),
+    "list"
 );

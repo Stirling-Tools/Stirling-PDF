@@ -16,7 +16,8 @@
     "memfs": "^4.9.2",
     "next-i18next": "^15.1.1",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^4.2.67"
+    "pdfjs-dist": "^4.2.67",
+    "react-material-symbols": "^4.4.0"
   },
   "devDependencies": {
     "@types/multer": "^1.4.11"

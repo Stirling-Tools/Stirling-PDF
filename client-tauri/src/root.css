@@ -145,3 +145,7 @@ a {
     text-decoration: inherit;
     color: inherit;
 }
+
+.material-symbols {
+    vertical-align: top;
+}

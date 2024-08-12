@@ -1,15 +1,14 @@
-import { Link } from "react-router-dom";
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useRef } from "react";
 
-import { BaseSyntheticEvent, useRef, useState } from "react";
-import { Operator, OperatorSchema } from "@stirling-pdf/shared-operations/src/functions";
-import Joi from "@stirling-tools/joi";
-import { BuildFields } from "../components/fields/BuildFields";
+import { BaseSyntheticEvent, useState } from "react";
+import { BuildForm } from "../components/BuildForm";
 import { getOperatorByName, getSchemaByName } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
 import { PdfFile, RepresentationType } from "@stirling-pdf/shared-operations/src/wrappers/PdfFile";
 import { Action } from "@stirling-pdf/shared-operations/declarations/Action";
 
 import { useLocation } from 'react-router-dom'
+
+import InputField from "../components/fields/InputField";
 
 
 function Dynamic() {
@@ -26,32 +25,19 @@ function Dynamic() {
             }
         });
     }, [location]);
-
-
-    return (
-        <Fragment>
-            <h3>{ schema?.describe().flags.label }</h3>
-            { schema?.describe().flags.description }
-
-            <br />
-            <input type="file" id="pdfFile" accept=".pdf" multiple />
-            <br />
-
-            <div id="values">
-                <BuildFields schemaDescription={schema?.describe()} onSubmit={handleSubmit}></BuildFields>
-            </div>
-        </Fragment>
-    );
+    
+    const inputRef = useRef<HTMLInputElement>();
 
     async function handleSubmit(e: BaseSyntheticEvent) {
         const formData = new FormData(e.target);
         const values = Object.fromEntries(formData.entries());
         let action: Action = {type: operatorInternalName, values: values};
 
+
         // Validate PDF File
 
         // Createing the pdffile before validation because joi cant handle it for some reason and I can't fix the underlying issue / I want to make progress, wasted like 3 hours on this already. TODO: The casting should be done in JoiPDFFileSchema.ts if done correctly...
-        const files = (document.getElementById("pdfFile") as HTMLInputElement).files;
+        const files = inputRef.current?.files;
         const inputs: PdfFile[] = [];
 
         if(files) {
@@ -93,6 +79,19 @@ function Dynamic() {
             });
         }
     };
+
+    return (
+        <Fragment>
+            <h1>{ schema?.describe().flags.label }</h1>
+            <h2>{ schema?.describe().flags.description }</h2>
+
+            <InputField ref={inputRef} />
+
+            <div id="values">
+                <BuildForm schemaDescription={schema?.describe()} onSubmit={handleSubmit}></BuildForm>
+            </div>
+        </Fragment>
+    );
 }
 
 

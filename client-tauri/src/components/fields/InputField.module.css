@@ -1,0 +1,10 @@
+.custom_file_upload input[type="file"] {
+    display: none;
+}
+
+.custom_file_upload {
+    border: 1px solid #ccc;
+    display: inline-block;
+    padding: 6px 12px;
+    cursor: pointer;
+}

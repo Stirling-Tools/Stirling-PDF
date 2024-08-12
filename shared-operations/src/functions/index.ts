@@ -1,6 +1,8 @@
 import { PdfFile } from "../wrappers/PdfFile";
 import { Action } from "../../declarations/Action";
-import Joi from "@stirling-tools/joi";
+import Joi, { StringRegexOptions } from "@stirling-tools/joi";
+import { MaterialSymbolProps } from "react-material-symbols";
+
 
 export interface ValidationResult { 
     valid: boolean, 
@@ -32,13 +34,15 @@ export class Operator {
 
 export class OperatorSchema {
     schema: Joi.ObjectSchema<any>;
+    materialSymbolName: MaterialSymbolProps["icon"] | undefined;
 
-    constructor(label: string, description: string, inputSchema: Joi.Schema, valueSchema: Joi.Schema, outputSchema: Joi.Schema) {
+    constructor(label: string, description: string, inputSchema: Joi.Schema, valueSchema: Joi.Schema, outputSchema: Joi.Schema, materialSymbolName?: MaterialSymbolProps["icon"] | undefined) {
         this.schema = Joi.object({
             input: inputSchema,
             values: valueSchema.required(),
             output: outputSchema
         }).label(label).description(description);
+        this.materialSymbolName = materialSymbolName;
     }
 }
 
