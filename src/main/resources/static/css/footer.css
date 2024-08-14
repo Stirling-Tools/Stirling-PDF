@@ -22,3 +22,7 @@
 .footer-icon {
   font-size: 2rem;
 }
+
+.footer-link {
+  text-decoration: none;
+}
