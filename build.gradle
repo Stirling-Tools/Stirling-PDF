@@ -104,7 +104,7 @@ dependencies {
     implementation "ch.qos.logback:logback-core:1.5.6"
     implementation "org.springframework:spring-webmvc:6.1.9"
 
-    implementation("io.github.pixee:java-security-toolkit:1.1.3")
+    implementation("io.github.pixee:java-security-toolkit:1.2.0")
 
     // implementation "org.yaml:snakeyaml:2.2"
     implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
