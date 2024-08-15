@@ -184,8 +184,8 @@ dependencies {
 	implementation "com.fathzer:javaluator:3.0.4"
 
     developmentOnly("org.springframework.boot:spring-boot-devtools:$springBootVersion")
-    compileOnly "org.projectlombok:lombok:1.18.32"
-    annotationProcessor "org.projectlombok:lombok:1.18.32"
+    compileOnly "org.projectlombok:lombok:1.18.34"
+    annotationProcessor "org.projectlombok:lombok:1.18.34"
 
     testImplementation 'org.mockito:mockito-inline:5.2.0'
 }
