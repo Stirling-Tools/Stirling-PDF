@@ -124,7 +124,7 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
         //2.2.x requires rebuild of DB file.. need migration path
-        implementation "com.h2database:h2:2.1.214"
+        implementation "com.h2database:h2:2.3.232"
         // implementation "com.h2database:h2:2.2.224"
     }
 
