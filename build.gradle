@@ -161,7 +161,7 @@ dependencies {
         exclude group: "commons-logging", module: "commons-logging"
     }
 
-    implementation ("org.apache.pdfbox:pdfbox:3.0.2") {
+    implementation ("org.apache.pdfbox:pdfbox:3.0.3") {
         exclude group: "commons-logging", module: "commons-logging"
     }
 
