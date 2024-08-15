@@ -9,6 +9,7 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 10
   - package-ecosystem: "docker"
     directory: "/" # Location of Dockerfile
     schedule:
