@@ -13,8 +13,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -27,6 +26,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
@@ -37,10 +37,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class OCRController {
 
-    private static final Logger logger = LoggerFactory.getLogger(OCRController.class);
+    @Autowired ApplicationProperties applicationProperties;
 
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = "/usr/share/tessdata";
+        String tessdataDir = applicationProperties.getSystem().getTessdataDir();
         File[] files = new File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();
