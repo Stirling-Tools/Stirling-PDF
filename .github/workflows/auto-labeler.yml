@@ -21,7 +21,6 @@ jobs:
           sync-labels: true
 
       - name: Trigger Build Workflow
-        if: github.event.pull_request.labels | length > 0
         run: |
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
