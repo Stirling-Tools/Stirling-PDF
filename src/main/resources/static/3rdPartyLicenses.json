@@ -286,7 +286,7 @@
         {
             "moduleName": "io.micrometer:micrometer-core",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.13.0",
+            "moduleVersion": "1.13.3",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -790,7 +790,7 @@
         {
             "moduleName": "org.hdrhistogram:HdrHistogram",
             "moduleUrl": "http://hdrhistogram.github.io/HdrHistogram/",
-            "moduleVersion": "2.2.1",
+            "moduleVersion": "2.2.2",
             "moduleLicense": "Public Domain, per Creative Commons CC0",
             "moduleLicenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/"
         },
