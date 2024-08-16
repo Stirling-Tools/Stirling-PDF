@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main"]
   workflow_run:
-    workflows: ["Pull Request Labeler"]
+    workflows: ["labeler"]
     types:
       - completed
 
