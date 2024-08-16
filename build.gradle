@@ -100,7 +100,7 @@ tasks.wrapper {
 
 dependencies {
     //security updates
-    implementation "ch.qos.logback:logback-classic:1.5.6"
+    implementation "ch.qos.logback:logback-classic:1.5.7"
     implementation "ch.qos.logback:logback-core:1.5.6"
     implementation "org.springframework:spring-webmvc:6.1.12"
 
