@@ -45,6 +45,7 @@ jobs:
           git diff --staged --quiet || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
 
       - name: Create Pull Request
+        id: cpr
         if: env.CHANGES_DETECTED == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
@@ -62,10 +63,16 @@ jobs:
           draft: false
           delete-branch: true
 
-
+      - name: Auto approve
+        if: steps.cpr.outputs.pull-request-operation == 'created'
+        run: gh pr review --approve "${{ steps.cpr.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
       - name: Enable auto-merge
-        uses: peter-evans/enable-pull-request-automerge@v2
+        if: steps.cpr.outputs.pull-request-operation == 'created'
+        uses: peter-evans/enable-pull-request-automerge@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          pull-request-number: ${{ steps.create-pull-request.outputs.pull-request-number }}
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
           merge-method: squash  # Choose the merge method: merge, squash, or rebase
