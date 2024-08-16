@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -12,8 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,6 +31,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
+import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.model.api.user.UsernameAndPass;
@@ -40,6 +43,8 @@ import stirling.software.SPDF.model.api.user.UsernameAndPass;
 public class UserController {
 
     @Autowired private UserService userService;
+
+    @Autowired SessionPersistentRegistry sessionRegistry;
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
@@ -203,9 +208,10 @@ public class UserController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/saveUser")
     public RedirectView saveUser(
-            @RequestParam(name = "username") String username,
-            @RequestParam(name = "password") String password,
+            @RequestParam String username,
+            @RequestParam(name = "password", required = false) String password,
             @RequestParam(name = "role") String role,
+            @RequestParam(name = "authType") String authType,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
                     boolean forceChange)
             throws IllegalArgumentException, IOException {
@@ -237,7 +243,15 @@ public class UserController {
             return new RedirectView("/addUsers?messageType=invalidRole", true);
         }
 
-        userService.saveUser(username, password, role, forceChange);
+        if (authType.equalsIgnoreCase(AuthenticationType.OAUTH2.toString())) {
+            userService.saveUser(username, AuthenticationType.OAUTH2, role);
+        } else {
+            if (password.isBlank()) {
+                return new RedirectView("/addUsers?messageType=invalidPassword", true);
+            }
+            userService.saveUser(username, password, role, forceChange);
+        }
+
         return new RedirectView(
                 "/addUsers", true); // Redirect to account page after adding the user
     }
@@ -247,7 +261,8 @@ public class UserController {
     public RedirectView changeRole(
             @RequestParam(name = "username") String username,
             @RequestParam(name = "role") String role,
-            Authentication authentication) {
+            Authentication authentication)
+            throws IOException {
 
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
 
@@ -278,6 +293,60 @@ public class UserController {
         User user = userOpt.get();
 
         userService.changeRole(user, role);
+
+        return new RedirectView(
+                "/addUsers", true); // Redirect to account page after adding the user
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/admin/changeUserEnabled/{username}")
+    public RedirectView changeUserEnabled(
+            @PathVariable("username") String username,
+            @RequestParam("enabled") boolean enabled,
+            Authentication authentication)
+            throws IOException {
+
+        Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
+
+        if (!userOpt.isPresent()) {
+            return new RedirectView("/addUsers?messageType=userNotFound", true);
+        }
+        if (!userService.usernameExistsIgnoreCase(username)) {
+            return new RedirectView("/addUsers?messageType=userNotFound", true);
+        }
+        // Get the currently authenticated username
+        String currentUsername = authentication.getName();
+
+        // Check if the provided username matches the current session's username
+        if (currentUsername.equalsIgnoreCase(username)) {
+            return new RedirectView("/addUsers?messageType=disabledCurrentUser", true);
+        }
+        User user = userOpt.get();
+
+        userService.changeUserEnabled(user, enabled);
+
+        if (!enabled) {
+            // Invalidate all sessions if the user is being disabled
+            List<Object> principals = sessionRegistry.getAllPrincipals();
+            String userNameP = "";
+            for (Object principal : principals) {
+                List<SessionInformation> sessionsInformations =
+                        sessionRegistry.getAllSessions(principal, false);
+                if (principal instanceof UserDetails) {
+                    userNameP = ((UserDetails) principal).getUsername();
+                } else if (principal instanceof OAuth2User) {
+                    userNameP = ((OAuth2User) principal).getName();
+                } else if (principal instanceof String) {
+                    userNameP = (String) principal;
+                }
+                if (userNameP.equalsIgnoreCase(username)) {
+                    for (SessionInformation sessionsInformation : sessionsInformations) {
+                        sessionRegistry.expireSession(sessionsInformation.getSessionId());
+                    }
+                }
+            }
+        }
+
         return new RedirectView(
                 "/addUsers", true); // Redirect to account page after adding the user
     }
@@ -285,7 +354,7 @@ public class UserController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/deleteUser/{username}")
     public RedirectView deleteUser(
-            @PathVariable(name = "username") String username, Authentication authentication) {
+            @PathVariable("username") String username, Authentication authentication) {
 
         if (!userService.usernameExistsIgnoreCase(username)) {
             return new RedirectView("/addUsers?messageType=deleteUsernameExists", true);
@@ -298,25 +367,16 @@ public class UserController {
         if (currentUsername.equalsIgnoreCase(username)) {
             return new RedirectView("/addUsers?messageType=deleteCurrentUser", true);
         }
-        invalidateUserSessions(username);
+
+        // Invalidate all sessions before deleting the user
+        List<SessionInformation> sessionsInformations =
+                sessionRegistry.getAllSessions(authentication.getPrincipal(), false);
+        for (SessionInformation sessionsInformation : sessionsInformations) {
+            sessionRegistry.expireSession(sessionsInformation.getSessionId());
+            sessionRegistry.removeSessionInformation(sessionsInformation.getSessionId());
+        }
         userService.deleteUser(username);
         return new RedirectView("/addUsers", true);
-    }
-
-    @Autowired private SessionRegistry sessionRegistry;
-
-    private void invalidateUserSessions(String username) {
-        for (Object principal : sessionRegistry.getAllPrincipals()) {
-            if (principal instanceof UserDetails) {
-                UserDetails userDetails = (UserDetails) principal;
-                if (userDetails.getUsername().equals(username)) {
-                    for (SessionInformation session :
-                            sessionRegistry.getAllSessions(principal, false)) {
-                        session.expireNow();
-                    }
-                }
-            }
-        }
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")

@@ -32,6 +32,14 @@ public class GoogleProvider extends Provider {
     private String useAsUsername = "email";
 
     @Override
+    public String getIssuer() {
+        return new String();
+    }
+
+    @Override
+    public void setIssuer(String issuer) {}
+
+    @Override
     public String getClientId() {
         return this.clientId;
     }
