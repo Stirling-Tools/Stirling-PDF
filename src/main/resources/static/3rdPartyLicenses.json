@@ -490,6 +490,12 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "org.apache.pdfbox:jbig2-imageio",
+            "moduleVersion": "3.0.4",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.apache.pdfbox:pdfbox",
             "moduleUrl": "https://pdfbox.apache.org",
             "moduleVersion": "3.0.3",
