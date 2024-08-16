@@ -45,6 +45,7 @@ sourceSets {
                 exclude "stirling/software/SPDF/model/AttemptCounter.java"
                 exclude "stirling/software/SPDF/model/Authority.java"
                 exclude "stirling/software/SPDF/model/PersistentLogin.java"
+                exclude "stirling/software/SPDF/model/SessionEntity.java"
                 exclude "stirling/software/SPDF/model/User.java"
                 exclude "stirling/software/SPDF/repository/**"
             }
