@@ -1,36 +1,88 @@
-name: "Build repo"
+name: Build repo
 
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+  repository_dispatch:
+    types: [trigger-build]
 
 jobs:
   build:
+    if: |
+      github.event.client_payload.pr_number &&
+      contains(github.event.client_payload.labels, 'licenses') == false &&
+      (
+        contains(github.event.client_payload.labels, 'Front End') ||
+        contains(github.event.client_payload.labels, 'Java') ||
+        contains(github.event.client_payload.labels, 'Back End') ||
+        contains(github.event.client_payload.labels, 'Security') ||
+        contains(github.event.client_payload.labels, 'API') ||
+        contains(github.event.client_payload.labels, 'Docker') ||
+        contains(github.event.client_payload.labels, 'Test')
+      )
+
     runs-on: ubuntu-latest
-
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
-    strategy:
-      fail-fast: false
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ matrix.jdk-version }}
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
+          java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@v3
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.7
 
       - name: Build with Gradle
         run: ./gradlew build --no-build-cache
+
+  docker-compose-tests:
+    if: |
+      github.event.client_payload.pr_number &&
+      contains(github.event.client_payload.labels, 'licenses') == false &&
+      (
+        contains(github.event.client_payload.labels, 'Front End') ||
+        contains(github.event.client_payload.labels, 'Java') ||
+        contains(github.event.client_payload.labels, 'Back End') ||
+        contains(github.event.client_payload.labels, 'Security') ||
+        contains(github.event.client_payload.labels, 'API') ||
+        contains(github.event.client_payload.labels, 'Docker') ||
+        contains(github.event.client_payload.labels, 'Test')
+      )
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "adopt"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -SL "https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.7"
+          
+      - name: Pip requirements
+        run: |
+           pip install -r ./cucumber/requirements.txt
+              
+      - name: Run Docker Compose Tests
+        run: |
+          chmod +x ./test.sh
+          ./test.sh
