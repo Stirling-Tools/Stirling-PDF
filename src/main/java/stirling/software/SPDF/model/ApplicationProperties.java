@@ -442,6 +442,15 @@ public class ApplicationProperties {
         private boolean showUpdate;
         private Boolean showUpdateOnlyAdmin;
         private boolean customHTMLFiles;
+        private String tessdataDir;
+
+        public String getTessdataDir() {
+            return tessdataDir;
+        }
+
+        public void setTessdataDir(String tessdataDir) {
+            this.tessdataDir = tessdataDir;
+        }
 
         public boolean isCustomHTMLFiles() {
             return customHTMLFiles;
