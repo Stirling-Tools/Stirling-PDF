@@ -194,7 +194,7 @@ dependencies {
 
     developmentOnly("org.springframework.boot:spring-boot-devtools:$springBootVersion")
     compileOnly "org.projectlombok:lombok:$lombokVersion"
-    annotationProcessor "org.projectlombok:$lombokVersion"
+    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
     testImplementation 'org.mockito:mockito-inline:5.2.0'
 }
