@@ -241,6 +241,7 @@ public class ApplicationProperties {
             private String clientId;
             private String clientSecret;
             private Boolean autoCreateUser = false;
+            private Boolean blockRegistration = false;
             private String useAsUsername;
             private Collection<String> scopes = new ArrayList<>();
             private String provider;
@@ -284,6 +285,14 @@ public class ApplicationProperties {
 
             public void setAutoCreateUser(Boolean autoCreateUser) {
                 this.autoCreateUser = autoCreateUser;
+            }
+
+            public Boolean getBlockRegistration() {
+                return blockRegistration;
+            }
+
+            public void setBlockRegistration(Boolean blockRegistration) {
+                this.blockRegistration = blockRegistration;
             }
 
             public String getUseAsUsername() {
@@ -356,6 +365,8 @@ public class ApplicationProperties {
                         + (clientSecret != null && !clientSecret.isEmpty() ? "MASKED" : "NULL")
                         + ", autoCreateUser="
                         + autoCreateUser
+                        + ", blockRegistration="
+                        + blockRegistration
                         + ", useAsUsername="
                         + useAsUsername
                         + ", provider="
@@ -431,6 +442,15 @@ public class ApplicationProperties {
         private boolean showUpdate;
         private Boolean showUpdateOnlyAdmin;
         private boolean customHTMLFiles;
+        private String tessdataDir;
+
+        public String getTessdataDir() {
+            return tessdataDir;
+        }
+
+        public void setTessdataDir(String tessdataDir) {
+            this.tessdataDir = tessdataDir;
+        }
 
         public boolean isCustomHTMLFiles() {
             return customHTMLFiles;

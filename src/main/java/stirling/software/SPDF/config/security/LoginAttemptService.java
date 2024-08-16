@@ -3,8 +3,6 @@ package stirling.software.SPDF.config.security;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +14,6 @@ import stirling.software.SPDF.model.AttemptCounter;
 public class LoginAttemptService {
 
     @Autowired ApplicationProperties applicationProperties;
-
-    private static final Logger logger = LoggerFactory.getLogger(LoginAttemptService.class);
 
     private int MAX_ATTEMPT;
     private long ATTEMPT_INCREMENT_TIME;
