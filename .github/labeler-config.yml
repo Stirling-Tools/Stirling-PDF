@@ -47,3 +47,7 @@ Test:
   - changed-files:
     - any-glob-to-any-file: 'cucumber/**/*'
     - any-glob-to-any-file: 'src/test**/*'
+
+Github:
+  - changed-files:
+    - any-glob-to-any-file: '.github/**/*'
