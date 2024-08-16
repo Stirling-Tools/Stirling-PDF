@@ -1,17 +1,74 @@
-name: Docker Compose Tests
+name: Build repo
 
 on:
-  pull_request:
-    paths:
-      - "src/**"
-      - "**.gradle"
-      - "!src/main/java/resources/messages*"
-      - "exampleYmlFiles/**"
-      - "Dockerfile"
-      - "Dockerfile**"
+  push:
+    branches: ["main"]
+  workflow_run:
+    workflows: ["Pull Request Labeler"]
+    types:
+      - completed
 
 jobs:
-  test:
+  build:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || 
+        (github.event_name == 'workflow_run' &&
+        contains(github.event.workflow_run.pull_request.labels.*.name, 'licenses') == false &&
+        (
+          contains(github.event.workflow_run.pull_request.labels.*.name, 'Front End') ||
+          contains(github.event.workflow_run.pull_request.labels.*.name, 'Java') ||
+          contains(github.event.workflow_run.pull_request.labels.*.name, 'Back End') ||
+          contains(github.event.workflow_run.pull_request.labels.*.name, 'Security') ||
+          contains(github.event.workflow_run.pull_request.labels.*.name, 'API') ||
+          contains(github.event.workflow_run.pull_request.labels.*.name, 'Docker') ||
+          contains(github.event.workflow_run.pull_request.labels.*.name, 'Test')
+        )
+        )
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk-version: [17, 21]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.jdk-version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.jdk-version }}
+          distribution: "temurin"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.7
+
+      - name: Build with Gradle
+        run: ./gradlew build --no-build-cache
+
+  docker-compose-tests:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || 
+        (github.event_name == 'pull_request' &&
+        contains(github.event.pull_request.labels.*.name, 'licenses') == false &&
+        (
+          contains(github.event.pull_request.labels.*.name, 'Front End') ||
+          contains(github.event.pull_request.labels.*.name, 'Java') ||
+          contains(github.event.pull_request.labels.*.name, 'Back End') ||
+          contains(github.event.pull_request.labels.*.name, 'Security') ||
+          contains(github.event.pull_request.labels.*.name, 'API') ||
+          contains(github.event.pull_request.labels.*.name, 'Docker') ||
+          contains(github.event.pull_request.labels.*.name, 'Test')
+        )
+        )
+
     runs-on: ubuntu-latest
 
     steps:
