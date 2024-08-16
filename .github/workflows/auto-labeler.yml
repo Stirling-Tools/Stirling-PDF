@@ -8,11 +8,23 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      workflows: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/labeler@v5
+      
+      - name: Apply Labels
+        uses: actions/labeler@v5
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler-config.yml
           sync-labels: true
+
+      - name: Trigger Build Workflow
+        if: github.event.pull_request.labels | length > 0
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -d '{"event_type": "trigger-build", "client_payload": {"pr_number": "${{ github.event.pull_request.number }}"}}'
