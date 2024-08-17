@@ -170,41 +170,41 @@ Stirling PDF currently supports 38!
 | Language                                    | Progress                               |
 | ------------------------------------------- | -------------------------------------- |
 | Arabic (العربية) (ar_AR)                    | ![45%](https://geps.dev/progress/45)   |
-| Basque (Euskara) (eu_ES)                    | ![62%](https://geps.dev/progress/62)   |
+| Basque (Euskara) (eu_ES)                    | ![61%](https://geps.dev/progress/61)   |
 | Bulgarian (Български) (bg_BG)               | ![94%](https://geps.dev/progress/94)   |
 | Catalan (Català) (ca_CA)                    | ![48%](https://geps.dev/progress/48)   |
-| Croatian (Hrvatski) (hr_HR)                 | ![95%](https://geps.dev/progress/95)   |
-| Czech (Česky) (cs_CZ)                       | ![90%](https://geps.dev/progress/90)   |
-| Danish (Dansk) (da_DK)                      | ![10%](https://geps.dev/progress/10)   |
-| Dutch (Nederlands) (nl_NL)                  | ![96%](https://geps.dev/progress/96)   |
+| Croatian (Hrvatski) (hr_HR)                 | ![94%](https://geps.dev/progress/94)   |
+| Czech (Česky) (cs_CZ)                       | ![89%](https://geps.dev/progress/89)   |
+| Danish (Dansk) (da_DK)                      | ![9%](https://geps.dev/progress/9)   |
+| Dutch (Nederlands) (nl_NL)                  | ![95%](https://geps.dev/progress/95)   |
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
-| French (Français) (fr_FR)                   | ![94%](https://geps.dev/progress/94)   |
-| German (Deutsch) (de_DE)                    | ![100%](https://geps.dev/progress/100) |
-| Greek (Ελληνικά) (el_GR)                    | ![82%](https://geps.dev/progress/82)   |
-| Hindi (हिंदी) (hi_IN)                          | ![77%](https://geps.dev/progress/77)   |
-| Hungarian (Magyar) (hu_HU)                  | ![76%](https://geps.dev/progress/76)   |
+| French (Français) (fr_FR)                   | ![93%](https://geps.dev/progress/93)   |
+| German (Deutsch) (de_DE)                    | ![99%](https://geps.dev/progress/99) |
+| Greek (Ελληνικά) (el_GR)                    | ![81%](https://geps.dev/progress/81)   |
+| Hindi (हिंदी) (hi_IN)                          | ![76%](https://geps.dev/progress/76)   |
+| Hungarian (Magyar) (hu_HU)                  | ![75%](https://geps.dev/progress/75)   |
 | Indonesia (Bahasa Indonesia) (id_ID)        | ![76%](https://geps.dev/progress/76)   |
-| Irish (Gaeilge) (ga_IE)                     | ![99%](https://geps.dev/progress/99)   |
+| Irish (Gaeilge) (ga_IE)                     | ![98%](https://geps.dev/progress/98)   |
 | Italian (Italiano) (it_IT)                  | ![99%](https://geps.dev/progress/99)   |
-| Japanese (日本語) (ja_JP)                   | ![90%](https://geps.dev/progress/90)   |
+| Japanese (日本語) (ja_JP)                   | ![92%](https://geps.dev/progress/92)   |
 | Korean (한국어) (ko_KR)                     | ![84%](https://geps.dev/progress/84)   |
-| Norwegian (Norsk) (no_NB)                   | ![96%](https://geps.dev/progress/96)   |
-| Polish (Polski) (pl_PL)                     | ![90%](https://geps.dev/progress/90)   |
+| Norwegian (Norsk) (no_NB)                   | ![97%](https://geps.dev/progress/97)   |
+| Polish (Polski) (pl_PL)                     | ![92%](https://geps.dev/progress/92)   |
 | Portuguese (Português) (pt_PT)              | ![78%](https://geps.dev/progress/78)   |
-| Portuguese Brazilian (Português) (pt_BR)    | ![60%](https://geps.dev/progress/60)   |
-| Romanian (Română) (ro_RO)                   | ![39%](https://geps.dev/progress/39)   |
-| Russian (Русский) (ru_RU)                   | ![84%](https://geps.dev/progress/84)   |
+| Portuguese Brazilian (Português) (pt_BR)    | ![85%](https://geps.dev/progress/85)   |
+| Romanian (Română) (ro_RO)                   | ![38%](https://geps.dev/progress/38)   |
+| Russian (Русский) (ru_RU)                   | ![83%](https://geps.dev/progress/83)   |
 | Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![78%](https://geps.dev/progress/78)   |
-| Simplified Chinese (简体中文) (zh_CN)       | ![99%](https://geps.dev/progress/99)   |
-| Slovakian (Slovensky) (sk_SK)               | ![92%](https://geps.dev/progress/92)   |
-| Spanish (Español) (es_ES)                   | ![98%](https://geps.dev/progress/98)   |
+| Simplified Chinese (简体中文) (zh_CN)       | ![98%](https://geps.dev/progress/98)   |
+| Slovakian (Slovensky) (sk_SK)               | ![91%](https://geps.dev/progress/91)   |
+| Spanish (Español) (es_ES)                   | ![97%](https://geps.dev/progress/97)   |
 | Swedish (Svenska) (sv_SE)                   | ![39%](https://geps.dev/progress/39)   |
-| Thai (ไทย) (th_TH)                          | ![100%](https://geps.dev/progress/100) |
-| Traditional Chinese (繁體中文) (zh_TW)      | ![98%](https://geps.dev/progress/98)   |
-| Turkish (Türkçe) (tr_TR)                    | ![99%](https://geps.dev/progress/99)   |
-| Ukrainian (Українська) (uk_UA)              | ![90%](https://geps.dev/progress/90)   |
-| Vietnamese (Tiếng Việt) (vi_VN)             | ![99%](https://geps.dev/progress/99)   |
+| Thai (ไทย) (th_TH)                          | ![99%](https://geps.dev/progress/99) |
+| Traditional Chinese (繁體中文) (zh_TW)      | ![97%](https://geps.dev/progress/97)   |
+| Turkish (Türkçe) (tr_TR)                    | ![98%](https://geps.dev/progress/98)   |
+| Ukrainian (Українська) (uk_UA)              | ![89%](https://geps.dev/progress/89)   |
+| Vietnamese (Tiếng Việt) (vi_VN)             | ![98%](https://geps.dev/progress/98)   |
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
@@ -266,6 +266,7 @@ security:
     clientId: '' # Client ID from your provider
     clientSecret: '' # Client Secret from your provider
     autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
+    blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     useAsUsername: email # Default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # Specify the scopes for which the application will request permissions
     provider: google # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
