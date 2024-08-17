@@ -213,11 +213,7 @@
                     /*<![CDATA[*/
                     const urlUpdateApiKey = /*[[@{/api/v1/user/update-api-key}]]*/ "/api/v1/user/update-api-key";
                     /*]]>*/
-                    console.log("click");
-                    console.log(urlUpdateApiKey);
                     let response = await fetch(urlUpdateApiKey, { method: 'POST' });
-                    console.log(response.status);
-                    console.log(response.statusText);
                     if (response.status === 200) {
                       let apiKey = await response.text();
                       manageUIState(apiKey);
