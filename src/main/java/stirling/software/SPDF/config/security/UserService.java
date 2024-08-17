@@ -15,12 +15,15 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import stirling.software.SPDF.config.DatabaseBackupInterface;
+import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Authority;
@@ -40,6 +43,8 @@ public class UserService implements UserServiceInterface {
 
     @Autowired private MessageSource messageSource;
 
+    @Autowired private SessionPersistentRegistry sessionRegistry;
+
     @Autowired DatabaseBackupInterface databaseBackupHelper;
 
     // Handle OAUTH2 login and user auto creation.
@@ -48,7 +53,7 @@ public class UserService implements UserServiceInterface {
         if (!isUsernameValid(username)) {
             return false;
         }
-        Optional<User> existingUser = userRepository.findByUsernameIgnoreCase(username);
+        Optional<User> existingUser = findByUsernameIgnoreCase(username);
         if (existingUser.isPresent()) {
             return true;
         }
@@ -90,8 +95,7 @@ public class UserService implements UserServiceInterface {
 
     public User addApiKeyToUser(String username) {
         User user =
-                userRepository
-                        .findByUsernameIgnoreCase(username)
+                findByUsernameIgnoreCase(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         user.setApiKey(generateApiKey());
@@ -104,8 +108,7 @@ public class UserService implements UserServiceInterface {
 
     public String getApiKeyForUser(String username) {
         User user =
-                userRepository
-                        .findByUsernameIgnoreCase(username)
+                findByUsernameIgnoreCase(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return user.getApiKey();
     }
@@ -131,11 +134,16 @@ public class UserService implements UserServiceInterface {
     }
 
     public boolean validateApiKeyForUser(String username, String apiKey) {
-        Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
+        Optional<User> userOpt = findByUsernameIgnoreCase(username);
         return userOpt.isPresent() && apiKey.equals(userOpt.get().getApiKey());
     }
 
     public void saveUser(String username, AuthenticationType authenticationType)
+            throws IllegalArgumentException, IOException {
+        saveUser(username, authenticationType, Role.USER.getRoleId());
+    }
+
+    public void saveUser(String username, AuthenticationType authenticationType, String role)
             throws IllegalArgumentException, IOException {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
@@ -144,7 +152,7 @@ public class UserService implements UserServiceInterface {
         user.setUsername(username);
         user.setEnabled(true);
         user.setFirstLogin(false);
-        user.addAuthority(new Authority(Role.USER.getRoleId(), user));
+        user.addAuthority(new Authority(role, user));
         user.setAuthenticationType(authenticationType);
         userRepository.save(user);
         databaseBackupHelper.exportDatabase();
@@ -186,7 +194,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public void deleteUser(String username) {
-        Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
+        Optional<User> userOpt = findByUsernameIgnoreCase(username);
         if (userOpt.isPresent()) {
             for (Authority authority : userOpt.get().getAuthorities()) {
                 if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
@@ -195,21 +203,20 @@ public class UserService implements UserServiceInterface {
             }
             userRepository.delete(userOpt.get());
         }
+        invalidateUserSessions(username);
     }
 
     public boolean usernameExists(String username) {
-        return userRepository.findByUsername(username).isPresent();
+        return findByUsername(username).isPresent();
     }
 
     public boolean usernameExistsIgnoreCase(String username) {
-        return userRepository.findByUsernameIgnoreCase(username).isPresent();
+        return findByUsernameIgnoreCase(username).isPresent();
     }
 
     public boolean hasUsers() {
         long userCount = userRepository.count();
-        if (userRepository
-                .findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId())
-                .isPresent()) {
+        if (findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId()).isPresent()) {
             userCount -= 1;
         }
         return userCount > 0;
@@ -217,7 +224,7 @@ public class UserService implements UserServiceInterface {
 
     public void updateUserSettings(String username, Map<String, String> updates)
             throws IOException {
-        Optional<User> userOpt = userRepository.findByUsernameIgnoreCase(username);
+        Optional<User> userOpt = findByUsernameIgnoreCase(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             Map<String, String> settingsMap = user.getSettings();
@@ -268,10 +275,17 @@ public class UserService implements UserServiceInterface {
         databaseBackupHelper.exportDatabase();
     }
 
-    public void changeRole(User user, String newRole) {
+    public void changeRole(User user, String newRole) throws IOException {
         Authority userAuthority = this.findRole(user);
         userAuthority.setAuthority(newRole);
         authorityRepository.save(userAuthority);
+        databaseBackupHelper.exportDatabase();
+    }
+
+    public void changeUserEnabled(User user, Boolean enbeled) throws IOException {
+        user.setEnabled(enbeled);
+        userRepository.save(user);
+        databaseBackupHelper.exportDatabase();
     }
 
     public boolean isPasswordCorrect(User user, String currentPassword) {
@@ -295,14 +309,40 @@ public class UserService implements UserServiceInterface {
     }
 
     public boolean hasPassword(String username) {
-        Optional<User> user = userRepository.findByUsernameIgnoreCase(username);
+        Optional<User> user = findByUsernameIgnoreCase(username);
         return user.isPresent() && user.get().hasPassword();
     }
 
     public boolean isAuthenticationTypeByUsername(
             String username, AuthenticationType authenticationType) {
-        Optional<User> user = userRepository.findByUsernameIgnoreCase(username);
+        Optional<User> user = findByUsernameIgnoreCase(username);
         return user.isPresent()
                 && authenticationType.name().equalsIgnoreCase(user.get().getAuthenticationType());
+    }
+
+    public boolean isUserDisabled(String username) {
+        Optional<User> userOpt = findByUsernameIgnoreCase(username);
+        return userOpt.map(user -> !user.isEnabled()).orElse(false);
+    }
+
+    public void invalidateUserSessions(String username) {
+        String usernameP = "";
+        for (Object principal : sessionRegistry.getAllPrincipals()) {
+            for (SessionInformation sessionsInformation :
+                    sessionRegistry.getAllSessions(principal, false)) {
+                if (principal instanceof UserDetails) {
+                    UserDetails userDetails = (UserDetails) principal;
+                    usernameP = userDetails.getUsername();
+                } else if (principal instanceof OAuth2User) {
+                    OAuth2User oAuth2User = (OAuth2User) principal;
+                    usernameP = oAuth2User.getName();
+                } else if (principal instanceof String) {
+                    usernameP = (String) principal;
+                }
+                if (usernameP.equalsIgnoreCase(username)) {
+                    sessionRegistry.expireSession(sessionsInformation.getSessionId());
+                }
+            }
+        }
     }
 }

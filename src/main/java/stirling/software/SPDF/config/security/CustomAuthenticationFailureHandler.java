@@ -3,9 +3,8 @@ package stirling.software.SPDF.config.security;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
@@ -15,16 +14,15 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.User;
 
+@Slf4j
 public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
     private LoginAttemptService loginAttemptService;
 
     private UserService userService;
-
-    private static final Logger logger =
-            LoggerFactory.getLogger(CustomAuthenticationFailureHandler.class);
 
     public CustomAuthenticationFailureHandler(
             final LoginAttemptService loginAttemptService, UserService userService) {
@@ -39,14 +37,17 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
             AuthenticationException exception)
             throws IOException, ServletException {
 
+        if (exception instanceof DisabledException) {
+            log.error("User is deactivated: ", exception);
+            getRedirectStrategy().sendRedirect(request, response, "/logout?userIsDisabled=true");
+            return;
+        }
+
         String ip = request.getRemoteAddr();
-        logger.error("Failed login attempt from IP: {}", ip);
+        log.error("Failed login attempt from IP: {}", ip);
 
-        String contextPath = request.getContextPath();
-
-        if (exception.getClass().isAssignableFrom(InternalAuthenticationServiceException.class)
-                || "Password must not be null".equalsIgnoreCase(exception.getMessage())) {
-            response.sendRedirect(contextPath + "/login?error=oauth2AuthenticationError");
+        if (exception instanceof LockedException) {
+            getRedirectStrategy().sendRedirect(request, response, "/login?error=locked");
             return;
         }
 
@@ -54,20 +55,25 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
         Optional<User> optUser = userService.findByUsernameIgnoreCase(username);
 
         if (username != null && optUser.isPresent() && !isDemoUser(optUser)) {
-            logger.info(
+            log.info(
                     "Remaining attempts for user {}: {}",
-                    optUser.get().getUsername(),
+                    username,
                     loginAttemptService.getRemainingAttempts(username));
             loginAttemptService.loginFailed(username);
-            if (loginAttemptService.isBlocked(username)
-                    || exception.getClass().isAssignableFrom(LockedException.class)) {
-                response.sendRedirect(contextPath + "/login?error=locked");
+            if (loginAttemptService.isBlocked(username) || exception instanceof LockedException) {
+                getRedirectStrategy().sendRedirect(request, response, "/login?error=locked");
                 return;
             }
         }
-        if (exception.getClass().isAssignableFrom(BadCredentialsException.class)
-                || exception.getClass().isAssignableFrom(UsernameNotFoundException.class)) {
-            response.sendRedirect(contextPath + "/login?error=badcredentials");
+        if (exception instanceof BadCredentialsException
+                || exception instanceof UsernameNotFoundException) {
+            getRedirectStrategy().sendRedirect(request, response, "/login?error=badcredentials");
+            return;
+        }
+        if (exception instanceof InternalAuthenticationServiceException
+                || "Password must not be null".equalsIgnoreCase(exception.getMessage())) {
+            getRedirectStrategy()
+                    .sendRedirect(request, response, "/login?error=oauth2AuthenticationError");
             return;
         }
 
