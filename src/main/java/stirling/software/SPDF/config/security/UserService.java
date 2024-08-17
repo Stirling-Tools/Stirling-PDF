@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.DatabaseBackupInterface;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
@@ -65,8 +66,8 @@ public class UserService implements UserServiceInterface {
     }
 
     public Authentication getAuthentication(String apiKey) {
-        User user = getUserByApiKey(apiKey);
-        if (user == null) {
+        Optional<User> user = getUserByApiKey(apiKey);
+        if (!user.isPresent()) {
             throw new UsernameNotFoundException("API key is not valid");
         }
 
@@ -74,7 +75,7 @@ public class UserService implements UserServiceInterface {
         return new UsernamePasswordAuthenticationToken(
                 user, // principal (typically the user)
                 null, // credentials (we don't expose the password or API key here)
-                getAuthorities(user) // user's authorities (roles/permissions)
+                getAuthorities(user.get()) // user's authorities (roles/permissions)
                 );
     }
 
@@ -89,17 +90,17 @@ public class UserService implements UserServiceInterface {
         String apiKey;
         do {
             apiKey = UUID.randomUUID().toString();
-        } while (userRepository.findByApiKey(apiKey) != null); // Ensure uniqueness
+        } while (userRepository.findByApiKey(apiKey).isPresent()); // Ensure uniqueness
         return apiKey;
     }
 
     public User addApiKeyToUser(String username) {
-        User user =
-                findByUsernameIgnoreCase(username)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        user.setApiKey(generateApiKey());
-        return userRepository.save(user);
+        Optional<User> user = findByUsernameIgnoreCase(username);
+        if (user.isPresent()) {
+            user.get().setApiKey(generateApiKey());
+            return userRepository.save(user.get());
+        }
+        throw new UsernameNotFoundException("User not found");
     }
 
     public User refreshApiKeyForUser(String username) {
@@ -114,21 +115,18 @@ public class UserService implements UserServiceInterface {
     }
 
     public boolean isValidApiKey(String apiKey) {
-        return userRepository.findByApiKey(apiKey) != null;
+        return userRepository.findByApiKey(apiKey).isPresent();
     }
 
-    public User getUserByApiKey(String apiKey) {
+    public Optional<User> getUserByApiKey(String apiKey) {
         return userRepository.findByApiKey(apiKey);
     }
 
-    public UserDetails loadUserByApiKey(String apiKey) {
-        User user = userRepository.findByApiKey(apiKey);
-        if (user != null) {
-            // Convert your User entity to a UserDetails object with authorities
-            return new org.springframework.security.core.userdetails.User(
-                    user.getUsername(),
-                    user.getPassword(), // you might not need this for API key auth
-                    getAuthorities(user));
+    public Optional<User> loadUserByApiKey(String apiKey) {
+        Optional<User> user = userRepository.findByApiKey(apiKey);
+
+        if (user.isPresent()) {
+            return user;
         }
         return null; // or throw an exception
     }
