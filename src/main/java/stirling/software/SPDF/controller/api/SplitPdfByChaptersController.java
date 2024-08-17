@@ -52,10 +52,14 @@ public class SplitPdfByChaptersController {
             throws Exception {
         MultipartFile file = request.getFileInput();
         boolean includeMetadata = request.getIncludeMetadata();
-        Integer bookmarkLevel = request.getBookmarkLevel();
+        Integer bookmarkLevel =
+                request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
+        if (bookmarkLevel < 0) {
+            return ResponseEntity.badRequest().body("Invalid bookmark level".getBytes());
+        }
         PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
 
-        // check whether the document is encrypted by an empty user password
+        // checks if the document is encrypted by an empty user password
         if (sourceDocument.isEncrypted()) {
             try {
                 sourceDocument.setAllSecurityToBeRemoved(true);
@@ -80,6 +84,7 @@ public class SplitPdfByChaptersController {
                             outline.getFirstChild().getNextSibling(),
                             0,
                             bookmarkLevel);
+            // to handle last page edge case
             bookmarks.get(bookmarks.size() - 1).setEndPage(sourceDocument.getNumberOfPages());
             Bookmark lastBookmark = bookmarks.get(bookmarks.size() - 1);
             logger.info(
@@ -89,12 +94,18 @@ public class SplitPdfByChaptersController {
                     lastBookmark.getEndPage());
 
         } catch (Exception e) {
-            logger.error("Unable to extract outline items");
+            logger.error("Unable to extract outline items", e);
             return ResponseEntity.internalServerError()
                     .body("Unable to extract outline items".getBytes());
         }
+
         boolean allowDuplicates = request.getAllowDuplicates();
         if (!allowDuplicates) {
+            /*
+            duplicates are generated when multiple bookmarks correspond to the same page,
+            if the user doesn't want duplicates mergeBookmarksThat method will merge the titles of all
+            the bookmarks that correspond to the same page, and treat them as a single bookmark
+            */
             bookmarks = mergeBookmarksThatCorrespondToSamePage(bookmarks);
         }
         List<ByteArrayOutputStream> splitDocumentsBoas =
@@ -148,16 +159,14 @@ public class SplitPdfByChaptersController {
             throws Exception {
 
         while (current != null) {
-            if (level > maxLevel) {
-                break;
-            }
+
             String currentTitle = current.getTitle().replace("/", "");
             int firstPage =
                     sourceDocument.getPages().indexOf(current.findDestinationPage(sourceDocument));
             PDOutlineItem child = current.getFirstChild();
             PDOutlineItem nextSibling = current.getNextSibling();
             int endPage;
-            if (child != null) {
+            if (child != null && level < maxLevel) {
                 endPage =
                         sourceDocument
                                 .getPages()
@@ -175,8 +184,20 @@ public class SplitPdfByChaptersController {
                                 .indexOf(nextParent.findDestinationPage(sourceDocument));
             } else {
                 endPage = -2;
+                /*
+                happens when we have something like this:
+                Outline Item 2
+                    Outline Item 2.1
+                        Outline Item 2.1.1
+                    Outline Item 2.2
+                        Outline 2.2.1
+                        Outline 2.2.2 <--- this item neither has an immediate next parent nor an immediate sibling
+                Outline Item 3
+                 */
             }
-            if (!bookmarks.isEmpty() && bookmarks.get(bookmarks.size() - 1).getEndPage() == -2) {
+            if (!bookmarks.isEmpty()
+                    && bookmarks.get(bookmarks.size() - 1).getEndPage()
+                            == -2) { // for handling the above mentioned case
                 Bookmark previousBookmark = bookmarks.get(bookmarks.size() - 1);
                 previousBookmark.setEndPage(firstPage);
                 logger.info(
@@ -191,7 +212,7 @@ public class SplitPdfByChaptersController {
             }
 
             // Recursively process children
-            if (child != null) {
+            if (child != null && level < maxLevel) {
                 extractOutlineItems(
                         sourceDocument, child, bookmarks, nextSibling, level + 1, maxLevel);
             }
@@ -208,6 +229,9 @@ public class SplitPdfByChaptersController {
         String fileNumberFormatter = "%0" + (Integer.toString(bookmarks.size()).length()) + "d ";
         try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
             for (int i = 0; i < splitDocumentsBoas.size(); i++) {
+
+                // split files will be named as "[FILE_NUMBER] [BOOKMARK_TITLE].pdf"
+
                 String fileName =
                         String.format(fileNumberFormatter, i)
                                 + bookmarks.get(i).getTitle()
@@ -220,7 +244,7 @@ public class SplitPdfByChaptersController {
                 zipOut.write(pdf);
                 zipOut.closeEntry();
 
-                logger.info("Wrote split document {} to zip file", fileName);
+                                logger.info("Wrote split document {} to zip file", fileName);
             }
         } catch (Exception e) {
             logger.error("Failed writing to zip", e);
@@ -248,7 +272,7 @@ public class SplitPdfByChaptersController {
                         i++) {
                     PDPage page = sourceDocument.getPage(i);
                     splitDocument.addPage(page);
-                    logger.info("Adding page {} to split document", i);
+                       logger.info("Adding page {} to split document", i);
                 }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 if (includeMetadata) {
