@@ -1,5 +1,5 @@
 # Main stage
-FROM alpine:3.20.2
+FROM frooodle/pymupdf:1.24.9
 
 # Copy necessary files
 COPY scripts /scripts
@@ -39,7 +39,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         libreoffice \
 # pdftohtml
         poppler-utils \
-# OCR MY PDF (unpaper for descew and other advanced featues)
+# OCR MY PDF (unpaper for descew and other advanced features)
         ocrmypdf \
         tesseract-ocr-data-eng \
 # CV
@@ -48,7 +48,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         PyMuPDF \
 # python3/pip
         python3 \
-    py3-pip && \
+        py3-pip && \
 # uno unoconv and HTML
     pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
