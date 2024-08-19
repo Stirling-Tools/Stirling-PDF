@@ -18,8 +18,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -37,6 +35,7 @@ import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationF
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2LogoutSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
+import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
@@ -47,7 +46,7 @@ import stirling.software.SPDF.model.provider.KeycloakProvider;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 
 @Configuration
-@EnableWebSecurity()
+@EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
@@ -73,11 +72,7 @@ public class SecurityConfiguration {
     @Autowired private LoginAttemptService loginAttemptService;
 
     @Autowired private FirstLoginFilter firstLoginFilter;
-
-    @Bean
-    public SessionRegistry sessionRegistry() {
-        return new SessionRegistryImpl();
-    }
+    @Autowired private SessionPersistentRegistry sessionRegistry;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -94,7 +89,7 @@ public class SecurityConfiguration {
                                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                                     .maximumSessions(10)
                                     .maxSessionsPreventsLogin(false)
-                                    .sessionRegistry(sessionRegistry())
+                                    .sessionRegistry(sessionRegistry)
                                     .expiredUrl("/login?logout=true"));
 
             http.formLogin(
@@ -103,7 +98,7 @@ public class SecurityConfiguration {
                                             .loginPage("/login")
                                             .successHandler(
                                                     new CustomAuthenticationSuccessHandler(
-                                                            loginAttemptService))
+                                                            loginAttemptService, userService))
                                             .defaultSuccessUrl("/")
                                             .failureHandler(
                                                     new CustomAuthenticationFailureHandler(
@@ -160,7 +155,11 @@ public class SecurityConfiguration {
 
             // Handle OAUTH2 Logins
             if (applicationProperties.getSecurity().getOAUTH2() != null
-                    && applicationProperties.getSecurity().getOAUTH2().getEnabled()) {
+                    && applicationProperties.getSecurity().getOAUTH2().getEnabled()
+                    && !applicationProperties
+                            .getSecurity()
+                            .getLoginMethod()
+                            .equalsIgnoreCase("normal")) {
 
                 http.oauth2Login(
                                 oauth2 ->
@@ -191,10 +190,8 @@ public class SecurityConfiguration {
                         .logout(
                                 logout ->
                                         logout.logoutSuccessHandler(
-                                                        new CustomOAuth2LogoutSuccessHandler(
-                                                                this.applicationProperties,
-                                                                sessionRegistry()))
-                                                .invalidateHttpSession(true));
+                                                new CustomOAuth2LogoutSuccessHandler(
+                                                        applicationProperties)));
             }
         } else {
             http.csrf(csrf -> csrf.disable())

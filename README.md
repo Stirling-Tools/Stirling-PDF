@@ -192,7 +192,7 @@ Stirling PDF currently supports 38!
 | Norwegian (Norsk) (no_NB)                   | ![97%](https://geps.dev/progress/97)   |
 | Polish (Polski) (pl_PL)                     | ![92%](https://geps.dev/progress/92)   |
 | Portuguese (Português) (pt_PT)              | ![78%](https://geps.dev/progress/78)   |
-| Portuguese Brazilian (Português) (pt_BR)    | ![59%](https://geps.dev/progress/59)   |
+| Portuguese Brazilian (Português) (pt_BR)    | ![85%](https://geps.dev/progress/85)   |
 | Romanian (Română) (ro_RO)                   | ![38%](https://geps.dev/progress/38)   |
 | Russian (Русский) (ru_RU)                   | ![83%](https://geps.dev/progress/83)   |
 | Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![78%](https://geps.dev/progress/78)   |
@@ -266,6 +266,7 @@ security:
     clientId: '' # Client ID from your provider
     clientSecret: '' # Client Secret from your provider
     autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
+    blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     useAsUsername: email # Default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # Specify the scopes for which the application will request permissions
     provider: google # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
