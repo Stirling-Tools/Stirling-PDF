@@ -19,6 +19,8 @@ body:
         Indicate whether you are using Docker or a local installation.
       options:
         - Docker
+        - Docker ultra lite
+        - Docker fat
         - Local Installation
       validations:
         required: true
