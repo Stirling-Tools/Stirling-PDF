@@ -6,6 +6,8 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 import org.simpleyaml.configuration.file.YamlFile;
+import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
+import org.simpleyaml.configuration.implementation.snakeyaml.lib.DumperOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -92,6 +94,9 @@ public class InitialSecuritySetup {
         Path path = Paths.get("configs", "settings.yml"); // Target the configs/settings.yml
 
         final YamlFile settingsYml = new YamlFile(path.toFile());
+        DumperOptions yamlOptionssettingsYml =
+                ((SimpleYamlImplementation) settingsYml.getImplementation()).getDumperOptions();
+        yamlOptionssettingsYml.setSplitLines(false);
 
         settingsYml.loadWithComments();
 
