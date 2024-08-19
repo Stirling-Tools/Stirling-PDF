@@ -1,51 +1,33 @@
 import argparse
-import cv2
 import os
-import fitz  # PyMuPDF
+from pdf2image import convert_from_path
+from PIL import Image
 
 
-def convert_png_to_webp(input_file, output_file, quality=100):
-    # Read the PNG image
-    image = cv2.imread(input_file, cv2.IMREAD_UNCHANGED)
+def convert_image_to_webp(input_image, output_file, quality=100):
+    # Open the image using Pillow
+    image = Image.open(input_image)
 
-    # Check if the image was successfully read
-    if image is None:
-        print(f"Error: The image {input_file} could not be read.")
-        return
+    # Convert the image to WebP format and save it with the specified quality
+    image.save(output_file, format="WEBP", quality=quality)
 
-    # Check if the output directory exists
-    output_dir = os.path.dirname(output_file)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    print(f"Image {input_file} successfully loaded with dimensions: {image.shape}")
-
-    # Save the image as a WebP with the specified quality
-    success = cv2.imwrite(output_file, image, [cv2.IMWRITE_WEBP_QUALITY, quality])
-
-    if success:
-        print(f"The image was successfully saved as WebP: {output_file}")
-    else:
-        print("Error: The image could not be saved as WebP.")
+    print(f"The image was successfully saved as WebP: {output_file}")
 
 
 def pdf_to_webp(pdf_path, output_dir, quality=100, dpi=300):
-    # Open the PDF document
-    pdf_document = fitz.open(pdf_path)
+    # Convert PDF to a list of images
+    images = convert_from_path(pdf_path, dpi=dpi)
 
-    for page_number in range(len(pdf_document)):
-        # Extract the page as an image
-        page = pdf_document.load_page(page_number)
-        pix = page.get_pixmap(dpi=dpi)
-
-        # Save the image as a temporary PNG file
+    for page_number, image in enumerate(images):
+        # Define temporary PNG path
         temp_png_path = os.path.join(output_dir, f"temp_page_{page_number + 1}.png")
-        with open(temp_png_path, "wb") as f:
-            f.write(pix.tobytes("png"))
+        image.save(temp_png_path, format="PNG")
 
-        # Convert the PNG file to WebP
+        # Define output WebP path
         output_path = os.path.join(output_dir, f"page_{page_number + 1}.webp")
-        convert_png_to_webp(temp_png_path, output_path, quality=quality)
+
+        # Convert PNG to WebP
+        convert_image_to_webp(temp_png_path, output_path, quality=quality)
 
         # Delete the temporary PNG file
         os.remove(temp_png_path)
