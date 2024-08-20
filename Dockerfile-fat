@@ -60,8 +60,6 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra \
 # CV
         py3-opencv \
-# PyMuPDF for webp
-        PyMuPDF \
 # python3/pip
         python3 \
     py3-pip && \

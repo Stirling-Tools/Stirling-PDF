@@ -44,8 +44,6 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         tesseract-ocr-data-eng \
 # CV
         py3-opencv \
-# PyMuPDF for webp
-        PyMuPDF \
 # python3/pip
         python3 \
         py3-pip && \
