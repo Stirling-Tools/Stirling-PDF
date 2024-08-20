@@ -1,14 +1,15 @@
-import { OperatorSchema } from ".";
+import { OperatorAvailability, OperatorSchema } from ".";
 import Joi from "@stirling-tools/joi";
 import { JoiPDFFileSchema } from "../wrappers/PdfFileJoi";
 
 import i18next from "i18next";
 
-export default new OperatorSchema(
-    i18next.t("friendlyName", { ns: "impose" }),
-    i18next.t("description", { ns: "impose" }),
-    JoiPDFFileSchema.label(i18next.t("inputs.pdffile.name")).description(i18next.t("inputs.pdffile.description")),
-    Joi.object({
+export default new OperatorSchema({
+    joi: {
+        label: i18next.t("friendlyName", { ns: "impose" }),
+        description: i18next.t("description", { ns: "impose" }),
+        inputSchema: JoiPDFFileSchema.label(i18next.t("inputs.pdffile.name")).description(i18next.t("inputs.pdffile.description")),
+        valueSchema: Joi.object({
             nup: Joi.number().integer().valid(2, 3, 4, 8, 9, 12, 16).required()
                 .label(i18next.t("values.nup.friendlyName", { ns: "impose" })).description(i18next.t("values.nup.description", { ns: "impose" }))
                 .example("3").example("4"),
@@ -55,5 +56,9 @@ export default new OperatorSchema(
                 .label(i18next.t("values.format.friendlyName", { ns: "impose" })).description(i18next.t("values.format.description", { ns: "impose" }))
                 .example("A4").example("A3L")
         }),
-    JoiPDFFileSchema.label(i18next.t("outputs.pdffile.name")).description(i18next.t("outputs.pdffile.description"))
+        outputSchema: JoiPDFFileSchema.label(i18next.t("outputs.pdffile.name")).description(i18next.t("outputs.pdffile.description")),
+    },
+    materialSymbolName: "grid_view",
+    availability: OperatorAvailability.Both
+}
 )

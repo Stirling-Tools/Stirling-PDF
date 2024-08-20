@@ -31,18 +31,31 @@ export class Operator {
     }
 }
 
+export enum OperatorAvailability {Serverside, Clientside, Both}
 
 export class OperatorSchema {
     schema: Joi.ObjectSchema<any>;
     materialSymbolName: MaterialSymbolProps["icon"] | undefined;
+    availability: OperatorAvailability;
 
-    constructor(label: string, description: string, inputSchema: Joi.Schema, valueSchema: Joi.Schema, outputSchema: Joi.Schema, materialSymbolName?: MaterialSymbolProps["icon"] | undefined) {
+    constructor(params: {
+        joi: {
+            label: string;
+            description: string;
+            inputSchema: Joi.Schema;
+            valueSchema: Joi.Schema;
+            outputSchema: Joi.Schema;
+        }, 
+        materialSymbolName?: MaterialSymbolProps["icon"],
+        availability: OperatorAvailability
+    }) {
         this.schema = Joi.object({
-            input: inputSchema,
-            values: valueSchema.required(),
-            output: outputSchema
-        }).label(label).description(description);
-        this.materialSymbolName = materialSymbolName;
+            input: params.joi.inputSchema,
+            values: params.joi.valueSchema.required(),
+            output: params.joi.outputSchema
+        }).label(params.joi.label).description(params.joi.description);
+        this.materialSymbolName = params.materialSymbolName;
+        this.availability = params.availability;
     }
 }
 
