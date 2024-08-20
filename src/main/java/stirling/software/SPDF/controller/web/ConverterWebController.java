@@ -127,11 +127,4 @@ public class ConverterWebController {
         model.addAttribute("currentPage", "pdf-to-pdfa");
         return "convert/pdf-to-pdfa";
     }
-
-    @GetMapping("/pdf-to-webp")
-    @Hidden
-    public String convertPdfToWebpForm(Model model) {
-        model.addAttribute("currentPage", "pdf-to-webp");
-        return "convert/pdf-to-webp";
-    }
 }
