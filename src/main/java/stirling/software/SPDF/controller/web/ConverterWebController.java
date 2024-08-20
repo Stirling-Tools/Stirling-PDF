@@ -21,14 +21,6 @@ public class ConverterWebController {
         return "convert/book-to-pdf";
     }
 
-    @ConditionalOnExpression("#{bookAndHtmlFormatsInstalled}")
-    @GetMapping("/pdf-to-book")
-    @Hidden
-    public String convertPdfToBookForm(Model model) {
-        model.addAttribute("currentPage", "pdf-to-book");
-        return "convert/pdf-to-book";
-    }
-
     @GetMapping("/img-to-pdf")
     @Hidden
     public String convertImgToPdfForm(Model model) {
@@ -57,13 +49,6 @@ public class ConverterWebController {
         return "convert/url-to-pdf";
     }
 
-    @GetMapping("/pdf-to-img")
-    @Hidden
-    public String pdfToimgForm(Model model) {
-        model.addAttribute("currentPage", "pdf-to-img");
-        return "convert/pdf-to-img";
-    }
-
     @GetMapping("/file-to-pdf")
     @Hidden
     public String convertToPdfForm(Model model) {
@@ -72,6 +57,21 @@ public class ConverterWebController {
     }
 
     // PDF TO......
+
+    @ConditionalOnExpression("#{bookAndHtmlFormatsInstalled}")
+    @GetMapping("/pdf-to-book")
+    @Hidden
+    public String convertPdfToBookForm(Model model) {
+        model.addAttribute("currentPage", "pdf-to-book");
+        return "convert/pdf-to-book";
+    }
+
+    @GetMapping("/pdf-to-img")
+    @Hidden
+    public String pdfToimgForm(Model model) {
+        model.addAttribute("currentPage", "pdf-to-img");
+        return "convert/pdf-to-img";
+    }
 
     @GetMapping("/pdf-to-html")
     @Hidden

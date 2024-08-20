@@ -12,7 +12,7 @@ public class ConvertToImageRequest extends PDFFile {
 
     @Schema(
             description = "The output image format",
-            allowableValues = {"png", "jpeg", "jpg", "gif"})
+            allowableValues = {"png", "jpeg", "jpg", "gif", "webp"})
     private String imageFormat;
 
     @Schema(

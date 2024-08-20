@@ -2,6 +2,7 @@ Translation:
   - changed-files:
     - any-glob-to-any-file: 'src/main/resources/messages_*_*.properties'
     - any-glob-to-any-file: 'scripts/ignore_translation.toml'
+    - any-glob-to-any-file: 'src/main/resources/templates/fragments/languages.html'
 
 Front End:
   - changed-files:
