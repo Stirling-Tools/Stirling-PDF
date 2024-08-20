@@ -22,7 +22,7 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
 
@@ -72,7 +72,7 @@ jobs:
             type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push main Dockerfile
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -98,7 +98,7 @@ jobs:
             type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
 
       - name: Build and push Dockerfile-ultra-lite
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: github.ref != 'refs/heads/main'
         with:
           context: .
@@ -110,7 +110,6 @@ jobs:
           labels: ${{ steps.meta2.outputs.labels }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8
-
 
       - name: Generate tags fat
         id: meta3
@@ -125,7 +124,7 @@ jobs:
             type=raw,value=latest-fat,enable=${{ github.ref == 'refs/heads/master' }}
 
       - name: Build and push main Dockerfile fat
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: github.ref != 'refs/heads/main'
         with:
           builder: ${{ steps.buildx.outputs.name }}

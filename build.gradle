@@ -21,7 +21,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.28.0"
+version = "0.28.2"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -108,7 +108,7 @@ dependencies {
     //security updates
     implementation "ch.qos.logback:logback-classic:$logbackVersion"
     implementation "ch.qos.logback:logback-core:$logbackVersion"
-    implementation "org.springframework:spring-webmvc:6.1.12"
+    implementation "org.springframework:spring-webmvc:6.1.9"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.0")
 
@@ -189,7 +189,7 @@ dependencies {
     implementation "org.commonmark:commonmark:0.22.0"
     implementation "org.commonmark:commonmark-ext-gfm-tables:0.22.0"
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
-    implementation "com.bucket4j:bucket4j_jdk17-core:8.13.1"
+    implementation "com.bucket4j:bucket4j_jdk17-core:8.14.0"
     implementation "com.fathzer:javaluator:3.0.4"
 
     developmentOnly("org.springframework.boot:spring-boot-devtools:$springBootVersion")
