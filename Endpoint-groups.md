@@ -15,7 +15,7 @@
 | file-to-pdf         |         | ✔️       |          |       | ✔️   |        |        | ✔️           |          |      |            |
 | img-to-pdf          |         | ✔️       |          |       |     |        |        |             |          | ✔️    |            |
 | pdf-to-html         |         | ✔️       |          |       | ✔️   |        |        | ✔️           |          |      |            |
-| pdf-to-img          |         | ✔️       |          |       |     |        |        |             |          | ✔️    |            |
+| pdf-to-img          |         | ✔️       |          |       |     | ✔️      |        |             |          | ✔️    |            |
 | pdf-to-pdfa         |         | ✔️       |          |       | ✔️   |        |        |             | ✔️        |      |            |
 | pdf-to-markdown     |         | ✔️       |          |       |     |        |        |             |          | ✔️    |            |
 | pdf-to-presentation |         | ✔️       |          |       | ✔️   |        |        | ✔️           |          |      |            |

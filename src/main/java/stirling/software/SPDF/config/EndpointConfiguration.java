@@ -166,6 +166,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Python", REMOVE_BLANKS);
         addEndpointToGroup("Python", "html-to-pdf");
         addEndpointToGroup("Python", "url-to-pdf");
+        addEndpointToGroup("Python", "pdf-to-img");
 
         // openCV
         addEndpointToGroup("OpenCV", "extract-image-scans");
