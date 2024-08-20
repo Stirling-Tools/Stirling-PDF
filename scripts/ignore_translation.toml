@@ -181,7 +181,9 @@ ignore = [
 
 [pt_BR]
 ignore = [
+    'changeMetadata.trapped',
     'language.direction',
+    'pipelineOptions.pipelineHeader',
 ]
 
 [pt_PT]

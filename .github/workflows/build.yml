@@ -31,7 +31,7 @@ jobs:
           distribution: "temurin"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
 
@@ -39,7 +39,7 @@ jobs:
         run: ./gradlew build --no-build-cache
 
   docker-compose-tests:
-    # if: github.event_name == 'push' && github.ref == 'refs/heads/main' || 
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
     #     (github.event_name == 'pull_request' &&
     #     contains(github.event.pull_request.labels.*.name, 'licenses') == false &&
     #     (
@@ -74,14 +74,14 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.7"
-          
+
       - name: Pip requirements
         run: |
            pip install -r ./cucumber/requirements.txt
-              
+
       - name: Run Docker Compose Tests
         run: |
           chmod +x ./test.sh
