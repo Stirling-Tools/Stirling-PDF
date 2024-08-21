@@ -9,6 +9,8 @@ import org.springframework.web.servlet.ModelAndView;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.utils.CheckProgramInstall;
+
 @Controller
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConverterWebController {
@@ -69,6 +71,8 @@ public class ConverterWebController {
     @GetMapping("/pdf-to-img")
     @Hidden
     public String pdfToimgForm(Model model) {
+        boolean isPython = CheckProgramInstall.isPythonAvailable();
+        model.addAttribute("isPython", isPython);
         model.addAttribute("currentPage", "pdf-to-img");
         return "convert/pdf-to-img";
     }

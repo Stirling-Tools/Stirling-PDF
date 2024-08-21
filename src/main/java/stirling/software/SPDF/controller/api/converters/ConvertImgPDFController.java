@@ -7,7 +7,6 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -17,7 +16,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.rendering.ImageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -32,6 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
+import stirling.software.SPDF.utils.CheckProgramInstall;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
@@ -82,7 +81,10 @@ public class ConvertImgPDFController {
         if (result == null || result.length == 0) {
             logger.error("resultant bytes for {} is null, error converting ", filename);
         }
-        if (imageFormat.equalsIgnoreCase("webp")) {
+        if (imageFormat.equalsIgnoreCase("webp") && !CheckProgramInstall.isPythonAvailable()) {
+            throw new IOException("Python is not installed. Required for WebP conversion.");
+        } else if (imageFormat.equalsIgnoreCase("webp")
+                && CheckProgramInstall.isPythonAvailable()) {
             // Write the output stream to a temp file
             Path tempFile = Files.createTempFile("temp_png", ".png");
             try (FileOutputStream fos = new FileOutputStream(tempFile.toFile())) {
@@ -90,21 +92,13 @@ public class ConvertImgPDFController {
                 fos.flush();
             }
 
-            String pythonVersion = "python3";
-            try {
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                        .runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
-            } catch (IOException e) {
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                        .runCommandWithOutputHandling(Arrays.asList("python", "--version"));
-                pythonVersion = "python";
-            }
+            String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
 
             List<String> command = new ArrayList<>();
             command.add(pythonVersion);
             command.add("./scripts/png_to_webp.py"); // Python script to handle the conversion
 
-                // Create a temporary directory for the output WebP files
+            // Create a temporary directory for the output WebP files
             Path tempOutputDir = Files.createTempDirectory("webp_output");
             if (singleImage) {
                 // Run the Python script to convert PNG to WebP
