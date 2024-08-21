@@ -80,6 +80,8 @@ public class ExtractImageScansController {
         if (!CheckProgramInstall.isPythonAvailable()) {
             throw new IOException("Python is not installed.");
         }
+
+        String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
         try {
             // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
@@ -115,7 +117,6 @@ public class ExtractImageScansController {
 
             // Process each image
             for (int i = 0; i < images.size(); i++) {
-                String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
 
                 Path tempDir = Files.createTempDirectory("openCV_output");
                 tempDirs.add(tempDir);
