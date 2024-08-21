@@ -1,8 +1,8 @@
 [package]
-name = "stirling_pdf"
-version = "0.0.0"
-description = "A Tauri App"
-authors = ["you"]
+name = "StirlingPDF"
+version = "0.0.1"
+description = "Selfhosted PDF processing"
+authors = ["LaserKaspar, SaudF"]
 license = ""
 repository = ""
 edition = "2021"
