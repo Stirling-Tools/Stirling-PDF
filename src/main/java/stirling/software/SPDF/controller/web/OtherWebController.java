@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.utils.CheckProgramInstall;
 
 @Controller
 @Tag(name = "Misc", description = "Miscellaneous APIs")
@@ -34,6 +35,8 @@ public class OtherWebController {
     @Hidden
     public ModelAndView extractImageScansForm() {
         ModelAndView modelAndView = new ModelAndView("misc/extract-image-scans");
+        boolean isPython = CheckProgramInstall.isPythonAvailable();
+        modelAndView.addObject("isPython", isPython);
         modelAndView.addObject("currentPage", "extract-image-scans");
         return modelAndView;
     }

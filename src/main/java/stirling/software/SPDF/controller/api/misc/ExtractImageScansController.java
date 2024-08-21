@@ -32,6 +32,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
+import stirling.software.SPDF.utils.CheckProgramInstall;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -76,6 +77,11 @@ public class ExtractImageScansController {
         Path tempZipFile = null;
         List<Path> tempDirs = new ArrayList<>();
 
+        if (!CheckProgramInstall.isPythonAvailable()) {
+            throw new IOException("Python is not installed.");
+        }
+
+        String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
         try {
             // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
@@ -117,7 +123,7 @@ public class ExtractImageScansController {
                 List<String> command =
                         new ArrayList<>(
                                 Arrays.asList(
-                                        "python3",
+                                        pythonVersion,
                                         "./scripts/split_photos.py",
                                         images.get(i),
                                         tempDir.toString(),
