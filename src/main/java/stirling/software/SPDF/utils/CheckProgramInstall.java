@@ -9,6 +9,8 @@ import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 public class CheckProgramInstall {
 
     private static final List<String> PYTHON_COMMANDS = Arrays.asList("python3", "python");
+    private static boolean pythonAvailableChecked = false;
+    private static String availablePythonCommand = null;
 
     /**
      * Checks which Python command is available and returns it.
@@ -17,12 +19,15 @@ public class CheckProgramInstall {
      *     available.
      */
     public static String getAvailablePythonCommand() {
-        for (String command : PYTHON_COMMANDS) {
-            if (checkPythonVersion(command)) {
-                return command;
-            }
+        if (!pythonAvailableChecked) {
+            availablePythonCommand =
+                    PYTHON_COMMANDS.stream()
+                            .filter(CheckProgramInstall::checkPythonVersion)
+                            .findFirst()
+                            .orElse(null);
+            pythonAvailableChecked = true;
         }
-        return null; // Neither command is available
+        return availablePythonCommand;
     }
 
     /**
