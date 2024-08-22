@@ -140,9 +140,9 @@ public class ExtractImagesController {
             Set<Integer> processedImages,
             ZipOutputStream zos)
             throws IOException {
-        if(page.getResources() == null || page.getResources().getXObjectNames() == null) {
-    		return;
-    	}
+        if (page.getResources() == null || page.getResources().getXObjectNames() == null) {
+            return;
+        }
         for (COSName name : page.getResources().getXObjectNames()) {
             if (page.getResources().isImageXObject(name)) {
                 PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
