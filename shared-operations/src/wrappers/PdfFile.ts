@@ -20,6 +20,7 @@ export class PdfFile {
     private representationType: RepresentationType;
     originalFilename: string;
     filename: string;
+    // TODO: Option to disable Compression when converting from PDFLibDoc to uin8Array. (https://github.com/Hopding/pdf-lib/issues/1183#issuecomment-1685078941)
 
     get uint8Array() : Promise<Uint8Array> {
         switch (this.representationType) {

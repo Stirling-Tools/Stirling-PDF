@@ -4,12 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview (previously built files)": "vite preview",
-    "tauri-dev (currently broken)": "tauri dev",
-    "tauri-build-debug": "tauri build --debug",
-    "tauri-build": "tauri build"
+    "vite:dev": "vite",
+    "vite:build": "tsc && vite build",
+    "vite:preview-build": "vite preview",
+    "vite:dockerize-build": "docker build . -t stirling-pdf:latest",
+    "tauri:dev (currently broken)": "tauri dev",
+    "tauri:build-debug": "tauri build --debug",
+    "tauri:build": "tauri build"
   },
   "dependencies": {
     "@stirling-pdf/shared-operations": "^0.0.0",
