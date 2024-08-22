@@ -1,13 +1,16 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.Graphics2D;
-import java.awt.Image;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -47,15 +50,18 @@ public class ExtractImagesController {
     @Operation(
             summary = "Extract images from a PDF file",
             description =
-                    "This endpoint extracts images from a given PDF file and returns them in a zip file. Users can specify the output image format. Input:PDF Output:IMAGE/ZIP Type:SIMO")
+                    "This endpoint extracts images from a given PDF file and returns them in a zip file. Users can specify the output image format. Input: PDF Output: IMAGE/ZIP Type: SIMO")
     public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request)
-            throws IOException {
+            throws IOException, InterruptedException, ExecutionException {
         MultipartFile file = request.getFileInput();
         String format = request.getFormat();
 
         System.out.println(
-                System.currentTimeMillis() + "file=" + file.getName() + ", format=" + format);
+                System.currentTimeMillis() + " file=" + file.getName() + ", format=" + format);
         PDDocument document = Loader.loadPDF(file.getBytes());
+
+        // Determine if multithreading should be used based on PDF size or number of pages
+        boolean useMultithreading = shouldUseMultithreading(file, document);
 
         // Create ByteArrayOutputStream to write zip file to byte array
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -66,76 +72,124 @@ public class ExtractImagesController {
         // Set compression level
         zos.setLevel(Deflater.BEST_COMPRESSION);
 
-        int imageIndex = 1;
         String filename =
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
-        int pageNum = 0;
         Set<Integer> processedImages = new HashSet<>();
-        // Iterate over each page
-        for (PDPage page : document.getPages()) {
-            ++pageNum;
-            // Extract images from page
-            for (COSName name : page.getResources().getXObjectNames()) {
-                if (page.getResources().isImageXObject(name)) {
-                    PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
-                    int imageHash = image.hashCode();
-                    if (processedImages.contains(imageHash)) {
-                        continue; // Skip already processed images
-                    }
-                    processedImages.add(imageHash);
 
-                    // Convert image to desired format
-                    RenderedImage renderedImage = image.getImage();
-                    BufferedImage bufferedImage = null;
-                    if ("png".equalsIgnoreCase(format)) {
-                        bufferedImage =
-                                new BufferedImage(
-                                        renderedImage.getWidth(),
-                                        renderedImage.getHeight(),
-                                        BufferedImage.TYPE_INT_ARGB);
-                    } else if ("jpeg".equalsIgnoreCase(format) || "jpg".equalsIgnoreCase(format)) {
-                        bufferedImage =
-                                new BufferedImage(
-                                        renderedImage.getWidth(),
-                                        renderedImage.getHeight(),
-                                        BufferedImage.TYPE_INT_RGB);
-                    } else if ("gif".equalsIgnoreCase(format)) {
-                        bufferedImage =
-                                new BufferedImage(
-                                        renderedImage.getWidth(),
-                                        renderedImage.getHeight(),
-                                        BufferedImage.TYPE_BYTE_INDEXED);
-                    }
+        if (useMultithreading) {
+            // Executor service to handle multithreading
+            ExecutorService executor =
+                    Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+            Set<Future<Void>> futures = new HashSet<>();
 
-                    // Write image to zip file
-                    String imageName =
-                            filename + "_" + imageIndex + " (Page " + pageNum + ")." + format;
-                    ZipEntry zipEntry = new ZipEntry(imageName);
-                    zos.putNextEntry(zipEntry);
+            // Iterate over each page
+            for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
+                PDPage page = document.getPage(pgNum);
+                int pageNum = document.getPages().indexOf(page) + 1;
+                // Submit a task for processing each page
+                Future<Void> future =
+                        executor.submit(
+                                () -> {
+                                    extractImagesFromPage(
+                                            page, format, filename, pageNum, processedImages, zos);
+                                    return null;
+                                });
 
-                    Graphics2D g = bufferedImage.createGraphics();
-                    g.drawImage((Image) renderedImage, 0, 0, null);
-                    g.dispose();
-                    // Write image bytes to zip file
-                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
-                    ImageIO.write(bufferedImage, format, imageBaos);
-                    zos.write(imageBaos.toByteArray());
+                futures.add(future);
+            }
 
-                    zos.closeEntry();
-                    imageIndex++;
-                }
+            // Wait for all tasks to complete
+            for (Future<Void> future : futures) {
+                future.get();
+            }
+
+            // Close executor service
+            executor.shutdown();
+        } else {
+            // Single-threaded extraction
+            for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
+                PDPage page = document.getPage(pgNum);
+                extractImagesFromPage(page, format, filename, pgNum + 1, processedImages, zos);
             }
         }
 
-        // Close ZipOutputStream and PDDocument
-        zos.close();
+        // Close PDDocument and ZipOutputStream
         document.close();
+        zos.close();
 
         // Create ByteArrayResource from byte array
         byte[] zipContents = baos.toByteArray();
 
         return WebResponseUtils.boasToWebResponse(
                 baos, filename + "_extracted-images.zip", MediaType.APPLICATION_OCTET_STREAM);
+    }
+
+    private boolean shouldUseMultithreading(MultipartFile file, PDDocument document) {
+        // Criteria: Use multithreading if file size > 10MB or number of pages > 20
+        long fileSizeInMB = file.getSize() / (1024 * 1024);
+        int numberOfPages = document.getPages().getCount();
+        return fileSizeInMB > 10 || numberOfPages > 20;
+    }
+
+    private void extractImagesFromPage(
+            PDPage page,
+            String format,
+            String filename,
+            int pageNum,
+            Set<Integer> processedImages,
+            ZipOutputStream zos)
+            throws IOException {
+        if (page.getResources() == null || page.getResources().getXObjectNames() == null) {
+            return;
+        }
+        for (COSName name : page.getResources().getXObjectNames()) {
+            if (page.getResources().isImageXObject(name)) {
+                PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
+                int imageHash = image.hashCode();
+                synchronized (processedImages) {
+                    if (processedImages.contains(imageHash)) {
+                        continue; // Skip already processed images
+                    }
+                    processedImages.add(imageHash);
+                }
+
+                RenderedImage renderedImage = image.getImage();
+
+                // Convert to standard RGB colorspace if needed
+                BufferedImage bufferedImage = convertToRGB(renderedImage, format);
+
+                // Write image to zip file
+                String imageName = filename + "_" + imageHash + " (Page " + pageNum + ")." + format;
+                synchronized (zos) {
+                    zos.putNextEntry(new ZipEntry(imageName));
+                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
+                    ImageIO.write(bufferedImage, format, imageBaos);
+                    zos.write(imageBaos.toByteArray());
+                    zos.closeEntry();
+                }
+            }
+        }
+    }
+
+    private BufferedImage convertToRGB(RenderedImage renderedImage, String format) {
+        int width = renderedImage.getWidth();
+        int height = renderedImage.getHeight();
+        BufferedImage rgbImage;
+
+        if ("png".equalsIgnoreCase(format)) {
+            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        } else if ("jpeg".equalsIgnoreCase(format) || "jpg".equalsIgnoreCase(format)) {
+            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        } else if ("gif".equalsIgnoreCase(format)) {
+            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED);
+        } else {
+            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        }
+
+        Graphics2D g = rgbImage.createGraphics();
+        g.drawImage((Image) renderedImage, 0, 0, null);
+        g.dispose();
+        return rgbImage;
     }
 }

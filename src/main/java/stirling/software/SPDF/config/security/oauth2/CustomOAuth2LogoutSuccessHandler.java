@@ -2,34 +2,26 @@ package stirling.software.SPDF.config.security.oauth2;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.Provider;
 import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 import stirling.software.SPDF.utils.UrlUtils;
 
+@Slf4j
 public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(CustomOAuth2LogoutSuccessHandler.class);
-
-    private final SessionRegistry sessionRegistry;
     private final ApplicationProperties applicationProperties;
 
-    public CustomOAuth2LogoutSuccessHandler(
-            ApplicationProperties applicationProperties, SessionRegistry sessionRegistry) {
-        this.sessionRegistry = sessionRegistry;
+    public CustomOAuth2LogoutSuccessHandler(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
     }
 
@@ -42,6 +34,15 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
         String issuer = null;
         String clientId = null;
 
+        if (authentication == null) {
+            if (request.getParameter("userIsDisabled") != null) {
+                response.sendRedirect(
+                        request.getContextPath() + "/login?erroroauth=userIsDisabled");
+            } else {
+                super.onLogoutSuccess(request, response, authentication);
+            }
+            return;
+        }
         OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
 
         if (authentication instanceof OAuth2AuthenticationToken) {
@@ -53,9 +54,8 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
                 issuer = provider.getIssuer();
                 clientId = provider.getClientId();
             } catch (UnsupportedProviderException e) {
-                logger.error(e.getMessage());
+                log.error(e.getMessage());
             }
-
         } else {
             registrationId = oauth.getProvider() != null ? oauth.getProvider() : "";
             issuer = oauth.getIssuer();
@@ -70,17 +70,15 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
             param = "erroroauth=" + sanitizeInput(errorMessage);
         } else if (request.getParameter("oauth2AutoCreateDisabled") != null) {
             param = "error=oauth2AutoCreateDisabled";
+        } else if (request.getParameter("oauth2_admin_blocked_user") != null) {
+            param = "erroroauth=oauth2_admin_blocked_user";
+        } else if (request.getParameter("userIsDisabled") != null) {
+            param = "erroroauth=userIsDisabled";
+        } else if (request.getParameter("badcredentials") != null) {
+            param = "error=badcredentials";
         }
 
         String redirect_url = UrlUtils.getOrigin(request) + "/login?" + param;
-
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            String sessionId = session.getId();
-            sessionRegistry.removeSessionInformation(sessionId);
-            session.invalidate();
-            logger.info("Session invalidated: " + sessionId);
-        }
 
         switch (registrationId.toLowerCase()) {
             case "keycloak":
@@ -92,13 +90,13 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
                                 + clientId
                                 + "&post_logout_redirect_uri="
                                 + response.encodeRedirectURL(redirect_url);
-                logger.info("Redirecting to Keycloak logout URL: " + logoutUrl);
+                log.info("Redirecting to Keycloak logout URL: " + logoutUrl);
                 response.sendRedirect(logoutUrl);
                 break;
             case "github":
                 // Add GitHub specific logout URL if needed
                 String githubLogoutUrl = "https://github.com/logout";
-                logger.info("Redirecting to GitHub logout URL: " + githubLogoutUrl);
+                log.info("Redirecting to GitHub logout URL: " + githubLogoutUrl);
                 response.sendRedirect(githubLogoutUrl);
                 break;
             case "google":
@@ -106,13 +104,14 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
                 // String googleLogoutUrl =
                 // "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?continue="
                 //                 + response.encodeRedirectURL(redirect_url);
-                // logger.info("Redirecting to Google logout URL: " + googleLogoutUrl);
+                log.info("Google does not have a specific logout URL");
+                // log.info("Redirecting to Google logout URL: " + googleLogoutUrl);
                 // response.sendRedirect(googleLogoutUrl);
                 // break;
             default:
-                String redirectUrl = request.getContextPath() + "/login?" + param;
-                logger.info("Redirecting to default logout URL: " + redirectUrl);
-                response.sendRedirect(redirectUrl);
+                String defaultRedirectUrl = request.getContextPath() + "/login?" + param;
+                log.info("Redirecting to default logout URL: " + defaultRedirectUrl);
+                response.sendRedirect(defaultRedirectUrl);
                 break;
         }
     }

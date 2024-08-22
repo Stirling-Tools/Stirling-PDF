@@ -1,0 +1,32 @@
+changelog:
+  exclude:
+    labels:
+      - Documentation
+      - Test
+      - Github
+
+  categories:
+    - title: Bug Fixes
+      labels:
+        - Bug
+    
+    - title: Enhancements
+      labels:
+        - enhancement
+
+    - title: Minor Enhancements
+      labels:
+        - Java
+        - Front End
+
+    - title: Docker Updates
+      labels:
+        - Docker
+
+    - title: Translation Changes
+      labels:
+        - Translation
+    
+    - title: Other Changes
+      labels:
+        - "*"
