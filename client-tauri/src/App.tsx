@@ -13,7 +13,7 @@ import i18next from "i18next";
 import resourcesToBackend from "i18next-resources-to-backend";
 import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
 
-i18next.use(LanguageDetector).use(initReactI18next).use(resourcesToBackend((language: string, namespace: string) => import(`../../shared-operations/public/locales/${namespace}/${language}.json`)))
+i18next.use(LanguageDetector).use(initReactI18next).use(resourcesToBackend((language: string, namespace: string) => import(`@stirling-pdf/shared-operations/public/locales/${namespace}/${language}.json`).catch((e) => console.warn("some component tried to render with an unsupported language, falling back to en", e))))
 .init({
     debug: false,
     ns: ["common"], // Preload this namespace, no need to add the others, they will load once their module is loaded
