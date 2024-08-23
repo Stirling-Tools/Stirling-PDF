@@ -21,7 +21,7 @@
               <p th:if="${!isPython}" th:text="#{ScannerImageSplit.info}" class="alert alert-success text-center">Python is not installed. It is required to run.</p>
 
               <form th:if="${isPython}" id="multiPdfForm" th:action="@{'/api/v1/misc/extract-image-scans'}" method="post" enctype="multipart/form-data">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*, application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='image/*, application/pdf')}"></div>
                 <div class="mb-3">
                   <label for="angleThreshold" th:text="#{ScannerImageSplit.selectText.1}"></label>
                   <input type="number" class="form-control" id="angleThreshold" name="angle_threshold" value="10">

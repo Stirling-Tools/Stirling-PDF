@@ -40,7 +40,7 @@
                 <span class="tool-header-text" th:text="#{ocr.header}"></span>
               </div>
               <form th:if="${#lists.size(languages) > 0}" action="#" th:action="@{'/api/v1/misc/ocr-pdf'}" method="post" enctype="multipart/form-data" class="mb-3">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label for="languages" class="form-label" th:text="#{ocr.selectText.1}"></label>
                   <hr>

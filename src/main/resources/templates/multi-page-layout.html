@@ -17,7 +17,7 @@
                 <span class="tool-header-text" th:text="#{pageLayout.header}"></span>
               </div>
               <form id="multiPdfForm" th:action="@{'/api/v1/general/multi-page-layout'}" method="post" enctype="multipart/form-data">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label for="pagesPerSheet" th:text="#{pageLayout.pagesPerSheet}"></label>
                   <select class="form-control" id="pagesPerSheet" name="pagesPerSheet">
