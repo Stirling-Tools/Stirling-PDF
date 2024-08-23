@@ -28,7 +28,7 @@
                 <span class="tool-header-text" th:text="#{AddStampRequest.header}"></span>
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/add-stamp'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <br>
                 <div class="mb-3">
                   <label for="pageOrder" th:text="#{pageSelectionPrompt}"></label>

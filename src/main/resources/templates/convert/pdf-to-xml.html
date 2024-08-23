@@ -18,7 +18,7 @@
                 <span class="tool-header-text" th:text="#{PDFToXML.header}"></span>
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/xml'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{PDFToXML.submit}"></button>
               </form>

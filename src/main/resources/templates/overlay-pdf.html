@@ -18,8 +18,8 @@
                 <span class="tool-header-text" th:text="#{overlay-pdfs.header}"></span>
               </div>
               <form id="overlayForm" method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/overlay-pdfs'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-                <div th:replace="~{fragments/common :: fileSelector(name='overlayFiles', multiple=true, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='overlayFiles', multipleInputsForSingleRequest=true, accept='application/pdf')}"></div>
 
                 <label for="overlayMode" th:text="#{overlay-pdfs.mode.label}">Overlay Mode</label>
                 <select id="overlayMode" name="overlayMode" class="form-control">

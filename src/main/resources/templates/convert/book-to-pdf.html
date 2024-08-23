@@ -15,7 +15,7 @@
             <div class="col-md-6">
               <h2 th:text="#{BookToPDF.header}"></h2>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/book/pdf'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false)}"></div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{BookToPDF.submit}"></button>
               </form>
               <p class="mt-3" th:text="#{BookToPDF.credit}"></p>

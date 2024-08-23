@@ -21,7 +21,7 @@
                         <span class="tool-header-text" th:text="#{removeImage.header}"></span>
                     </div>
                         <form action="api/v1/general/remove-image-pdf" method="post" enctype="multipart/form-data">
-                        <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                        <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
 
                         <br>
                         <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{removeImage.submit}"></button>

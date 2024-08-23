@@ -37,7 +37,7 @@ $(document).ready(function () {
 
     try {
       if (remoteCall === true) {
-        if (override === "multi" || (!multiple && files.length > 1 && override !== "single")) {
+        if (override === "multi" || (!multipleInputsForSingleRequest && files.length > 1 && override !== "single")) {
           await submitMultiPdfForm(url, files);
         } else {
           await handleSingleDownload(url, formData);

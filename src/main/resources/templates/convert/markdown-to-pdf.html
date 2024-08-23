@@ -18,7 +18,7 @@
                 <span class="tool-header-text" th:text="#{MarkdownToPDF.header}"></span>
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/markdown/pdf'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='text/markdown')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='text/markdown')}"></div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{MarkdownToPDF.submit}"></button>
               </form>
               <p class="mt-3" th:text="#{MarkdownToPDF.help}"></p>

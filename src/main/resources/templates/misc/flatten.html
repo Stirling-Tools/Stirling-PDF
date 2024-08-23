@@ -19,7 +19,7 @@
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/flatten'}" id="pdfForm" class="mb-3">
                 <div class="custom-file">
-                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 </div>
                 <div class="form-check ms-3">
                   <input type="checkbox" id="flattenOnlyForms" name="flattenOnlyForms">

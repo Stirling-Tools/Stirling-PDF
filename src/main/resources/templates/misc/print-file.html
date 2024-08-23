@@ -15,7 +15,7 @@
             <div class="col-md-6">
               <h2 th:text="#{printFile.header}"></h2>
               <form action="#" th:action="@{'/api/v1/misc/print-file'}" method="post" enctype="multipart/form-data">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf,image/*')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf,image/*')}"></div>
                 <div class="card mb-3">
                   <div class="card-body">
                     <h4 th:text="#{printFile.selectText.1}">Select Printer</h4> <!-- Assuming the message code printFile.selectText.3 corresponds to "Select Printer" -->

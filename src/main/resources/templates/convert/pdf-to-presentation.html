@@ -18,7 +18,7 @@
                 <span class="tool-header-text" th:text="#{PDFToPresentation.header}"></span>
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/presentation'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label th:text="#{PDFToPresentation.selectText.1}"></label>
                   <select class="form-control" name="outputFormat">

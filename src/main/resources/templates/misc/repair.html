@@ -17,7 +17,7 @@
                 <span class="tool-header-text" th:text="#{repair.header}"></span>
               </div>
               <form id="multiPdfForm" th:action="@{'/api/v1/misc/repair'}" method="post" enctype="multipart/form-data">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{repair.submit}"></button>
               </form>
             </div>

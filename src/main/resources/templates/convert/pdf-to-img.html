@@ -19,7 +19,7 @@
               </div>
               <p th:text="#{processTimeWarning}"></p>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/img'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label th:text="#{pdfToImage.selectText}"></label>
                   <select class="form-control" name="imageFormat">

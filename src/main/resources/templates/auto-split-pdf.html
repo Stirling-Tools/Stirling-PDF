@@ -24,7 +24,7 @@
             <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/auto-split-pdf'}">
               <p th:text="#{autoSplitPDF.formPrompt}"></p>
               <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}">
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
               </div>
               <div class="form-check ms-3">
                 <input type="checkbox" name="duplexMode" id="duplexMode">

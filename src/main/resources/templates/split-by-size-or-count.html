@@ -18,7 +18,7 @@
                 <span class="tool-header-text" th:text="#{split-by-size-or-count.header}"></span>
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/split-by-size-or-count'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <label for="splitType" th:text="#{split-by-size-or-count.type.label}">Split Type</label>
                 <select id="splitType" name="splitType" class="form-control">
                   <option value="0" th:text="#{split-by-size-or-count.type.size}">Size</option>

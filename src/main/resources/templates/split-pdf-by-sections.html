@@ -19,7 +19,7 @@
                 <span class="tool-header-text" th:text="#{split-by-sections.header}"></span>
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/split-pdf-by-sections'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <label for="horizontalDivisions" th:text="#{split-by-sections.horizontal.label}">Horizontal Divisions</label>
                 <input type="number" id="horizontalDivisions" name="horizontalDivisions" class="form-control" min="0" max="300" value="0" required th:placeholder="#{split-by-sections.horizontal.placeholder}">
                 <br>
