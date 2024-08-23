@@ -17,7 +17,7 @@
                 <span class="tool-header-text" th:text="#{removeBlanks.header}"></span>
               </div>
               <form id="multiPdfForm" th:action="@{'/api/v1/misc/remove-blanks'}" method="post" enctype="multipart/form-data">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label for="threshold" th:text="#{removeBlanks.threshold}"></label>
                   <input type="number" class="form-control" id="threshold" name="threshold" value="10">
