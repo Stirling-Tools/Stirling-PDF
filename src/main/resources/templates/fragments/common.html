@@ -148,7 +148,7 @@
                 <script th:inline="javascript">
                   const pdfPasswordPrompt = /*[[#{error.pdfPassword}]]*/ '';
                   const multipleInputsForSingleRequest = /*[[${multipleInputsForSingleRequest}]]*/ false;
-                  const disableMultipleFiles = /*[[${forceOverrideMultipleFile}]]*/ false;
+                  const disableMultipleFiles = /*[[${disableMultipleFiles}]]*/ false;
                   const remoteCall = /*[[${remoteCall}]]*/ true;
                 </script>
                 <script th:src="@{'/js/downloader.js'}"></script>
