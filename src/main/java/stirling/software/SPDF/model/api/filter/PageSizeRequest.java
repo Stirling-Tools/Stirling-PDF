@@ -10,6 +10,6 @@ import stirling.software.SPDF.model.api.PDFComparison;
 @EqualsAndHashCode(callSuper = true)
 public class PageSizeRequest extends PDFComparison {
 
-    @Schema(description = "Standard Page Size", required = true)
+    @Schema(description = "Standard Page Size", requiredMode = Schema.RequiredMode.REQUIRED)
     private String standardPageSize;
 }

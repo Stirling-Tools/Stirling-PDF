@@ -10,6 +10,6 @@ import stirling.software.SPDF.model.api.PDFComparison;
 @EqualsAndHashCode(callSuper = true)
 public class FileSizeRequest extends PDFComparison {
 
-    @Schema(description = "File Size", required = true)
+    @Schema(description = "File Size", requiredMode = Schema.RequiredMode.REQUIRED)
     private String fileSize;
 }

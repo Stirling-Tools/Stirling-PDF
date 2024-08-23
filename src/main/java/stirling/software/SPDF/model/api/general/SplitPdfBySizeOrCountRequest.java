@@ -13,14 +13,14 @@ public class SplitPdfBySizeOrCountRequest extends PDFFile {
     @Schema(
             description =
                     "Determines the type of split: 0 for size, 1 for page count, 2 for document count",
-            required = false,
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "0")
     private int splitType;
 
     @Schema(
             description =
                     "Value for split: size in MB (e.g., '10MB') or number of pages (e.g., '5')",
-            required = false,
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "10MB")
     private String splitValue;
 }

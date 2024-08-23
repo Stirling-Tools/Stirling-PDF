@@ -43,7 +43,7 @@ public class ApiDocService {
 
     Map<String, List<String>> outputToFileTypes = new HashMap<>();
 
-    public List getExtensionTypes(boolean output, String operationName) {
+    public List<String> getExtensionTypes(boolean output, String operationName) {
         if (outputToFileTypes.size() == 0) {
             outputToFileTypes.put("PDF", Arrays.asList("pdf"));
             outputToFileTypes.put(

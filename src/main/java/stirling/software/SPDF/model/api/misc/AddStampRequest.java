@@ -15,7 +15,7 @@ public class AddStampRequest extends PDFWithPageNums {
     @Schema(
             description = "The stamp type (text or image)",
             allowableValues = {"text", "image"},
-            required = true)
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String stampType;
 
     @Schema(description = "The stamp text")

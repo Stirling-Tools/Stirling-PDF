@@ -20,13 +20,13 @@ public class OverlayPdfsRequest extends PDFFile {
     @Schema(
             description =
                     "The mode of overlaying: 'SequentialOverlay' for sequential application, 'InterleavedOverlay' for round-robin application, 'FixedRepeatOverlay' for fixed repetition based on provided counts",
-            required = true)
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String overlayMode;
 
     @Schema(
             description =
                     "An array of integers specifying the number of times each corresponding overlay file should be applied in the 'FixedRepeatOverlay' mode. This should match the length of the overlayFiles array.",
-            required = false)
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private int[] counts;
 
     @Schema(description = "Overlay position 0 is Foregound, 1 is Background")

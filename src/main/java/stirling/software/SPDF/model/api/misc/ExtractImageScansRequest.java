@@ -10,7 +10,9 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode
 public class ExtractImageScansRequest {
-    @Schema(description = "The input file containing image scans", required = true)
+    @Schema(
+            description = "The input file containing image scans",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile fileInput;
 
     @Schema(

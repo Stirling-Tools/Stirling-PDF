@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -77,7 +78,7 @@ public class GeneralUtils {
 
     public static boolean isURLReachable(String urlStr) {
         try {
-            URL url = new URL(urlStr);
+            URL url = URI.create(urlStr).toURL();
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("HEAD");
             int responseCode = connection.getResponseCode();
