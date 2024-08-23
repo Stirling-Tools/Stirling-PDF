@@ -15,7 +15,7 @@
             <div class="col-md-6">
               <h2 th:text="#{fakeScan.header}"></h2>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/fake-scan'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{fakeScan.submit}"></button>
               </form>
