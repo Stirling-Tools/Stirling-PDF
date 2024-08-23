@@ -65,6 +65,7 @@ public class SPdfApplication {
     public static void main(String[] args) throws IOException, InterruptedException {
 
         SpringApplication app = new SpringApplication(SPdfApplication.class);
+        app.setAdditionalProfiles("default");
         app.addInitializers(new ConfigInitializer());
         Map<String, String> propertyFiles = new HashMap<>();
 
