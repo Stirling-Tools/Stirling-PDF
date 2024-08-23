@@ -144,7 +144,7 @@ dependencies {
     // Batik
 
     // TwelveMonkeys
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
+    implementation "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
     runtimeOnly "com.twelvemonkeys.imageio:imageio-bmp:$imageioVersion"
     // implementation "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
     // implementation "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
