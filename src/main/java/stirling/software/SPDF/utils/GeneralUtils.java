@@ -77,7 +77,7 @@ public class GeneralUtils {
 
     public static boolean isURLReachable(String urlStr) {
         try {
-            URL url = new URL(urlStr);
+            URL url = Urls.create(urlStr, Urls.HTTP_PROTOCOLS, HostValidator.DENY_COMMON_INFRASTRUCTURE_TARGETS);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("HEAD");
             int responseCode = connection.getResponseCode();
