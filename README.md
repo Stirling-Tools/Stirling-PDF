@@ -237,7 +237,7 @@ The Current list of settings is
 security:
   enableLogin: false # set to 'true' to enable login
   csrfDisabled: true # Set to 'true' to disable CSRF protection (not recommended for production)
-  loginAttemptCount: 5 # lock user account after 5 tries
+  loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
   loginMethod: all # 'all' (Login Username/Password and OAuth2[must be enabled and configured]), 'normal'(only Login with Username/Password) or 'oauth2'(only Login with OAuth2)
   initialLogin:
