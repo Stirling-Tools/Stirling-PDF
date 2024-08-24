@@ -27,6 +27,10 @@
                     <option value="gif">GIF</option>
                   </select>
                 </div>
+                <div class="mb-3">
+                  <input type="checkbox" name="allowDuplicates" id="allowDuplicates">
+                  <label for="allowDuplicates" th:text="#{extractImages.allowDuplicates}"></label>
+                </div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{extractImages.submit}"></button>
               </form>
             </div>
