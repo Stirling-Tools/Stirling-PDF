@@ -142,9 +142,10 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 
     // Batik
+    implementation "org.apache.xmlgraphics:batik-all:1.17"
 
     // TwelveMonkeys
-    implementation "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
     runtimeOnly "com.twelvemonkeys.imageio:imageio-bmp:$imageioVersion"
     // implementation "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
     // implementation "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
