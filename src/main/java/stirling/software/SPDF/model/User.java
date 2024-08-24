@@ -44,7 +44,7 @@ public class User implements Serializable {
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> authorities = new HashSet<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection
     @MapKeyColumn(name = "setting_key")
     @Lob
     @Column(name = "setting_value", columnDefinition = "CLOB")
