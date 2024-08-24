@@ -263,6 +263,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "commons-logging:commons-logging",
+            "moduleUrl": "http://jakarta.apache.org/commons/logging/",
+            "moduleVersion": "1.0.4",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "/LICENSE.txt"
+        },
+        {
             "moduleName": "io.github.pixee:java-security-toolkit",
             "moduleUrl": "https://github.com/pixee/java-security-toolkit",
             "moduleVersion": "1.2.0",
@@ -514,6 +521,19 @@
             "moduleUrl": "https://tomcat.apache.org/",
             "moduleVersion": "10.1.26",
             "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.apache.xmlgraphics:batik-all",
+            "moduleVersion": "1.17",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.apache.xmlgraphics:xmlgraphics-commons",
+            "moduleUrl": "http://xmlgraphics.apache.org/commons/",
+            "moduleVersion": "2.9",
+            "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
@@ -1170,6 +1190,20 @@
             "moduleUrl": "https://bitbucket.org/snakeyaml/snakeyaml",
             "moduleVersion": "2.2",
             "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "xml-apis:xml-apis",
+            "moduleUrl": "http://xml.apache.org/commons/components/external/",
+            "moduleVersion": "1.4.01",
+            "moduleLicense": "The W3C License",
+            "moduleLicenseUrl": "http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/java-binding.zip"
+        },
+        {
+            "moduleName": "xml-apis:xml-apis-ext",
+            "moduleUrl": "http://xml.apache.org/commons/components/external/",
+            "moduleVersion": "1.3.04",
+            "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         }
     ]
