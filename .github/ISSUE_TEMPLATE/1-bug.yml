@@ -22,8 +22,6 @@ body:
         - Docker ultra lite
         - Docker fat
         - Local Installation
-      validations:
-        required: true
 
   - type: textarea
     id: problem

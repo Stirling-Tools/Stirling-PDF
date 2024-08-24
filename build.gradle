@@ -143,24 +143,24 @@ dependencies {
 
     // Batik
     implementation "org.apache.xmlgraphics:batik-all:1.17"
-
+    
     // TwelveMonkeys
     runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
     runtimeOnly "com.twelvemonkeys.imageio:imageio-bmp:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
     runtimeOnly "com.twelvemonkeys.imageio:imageio-jpeg:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
-    // implementation "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-psd:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-psd:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
     runtimeOnly "com.twelvemonkeys.imageio:imageio-tiff:$imageioVersion"
     runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
 
     implementation "commons-io:commons-io:2.16.1"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0"
