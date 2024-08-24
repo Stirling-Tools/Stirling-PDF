@@ -20,7 +20,7 @@
               <form method="post" enctype="multipart/form-data" action="api/v1/security/add-watermark">
                 <div class="mb-3">
                   <label th:text="#{watermark.selectText.1}"></label>
-                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 </div>
 
                 <div class="mb-3">

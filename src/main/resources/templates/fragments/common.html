@@ -144,17 +144,18 @@
     </dialog>
 </th:block>
 
-<th:block th:fragment="fileSelector(name, multiple)" th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, notRequired=${notRequired} ?: false">
+<th:block th:fragment="fileSelector(name, multipleInputsForSingleRequest)" th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, disableMultipleFiles=${disableMultipleFiles} ?: false, notRequired=${notRequired} ?: false">
                 <script th:inline="javascript">
                   const pdfPasswordPrompt = /*[[#{error.pdfPassword}]]*/ '';
-                  const multiple = /*[[${multiple}]]*/ false;
+                  const multipleInputsForSingleRequest = /*[[${multipleInputsForSingleRequest}]]*/ false;
+                  const disableMultipleFiles = /*[[${disableMultipleFiles}]]*/ false;
                   const remoteCall = /*[[${remoteCall}]]*/ true;
                 </script>
                 <script th:src="@{'/js/downloader.js'}"></script>
 
                 <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
                   <div class="mb-3">
-                    <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" th:attr="multiple=${multiple}" th:required="${notRequired} ? null : 'required'">
+                    <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" th:attr="multiple=${!disableMultipleFiles}" th:required="${notRequired} ? null : 'required'">
                   </div>
                   <div class="selected-files"></div>
                 </div>

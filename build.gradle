@@ -7,6 +7,7 @@ plugins {
     id "edu.sc.seis.launch4j" version "3.0.6"
     id "com.diffplug.spotless" version "6.25.0"
     id "com.github.jk1.dependency-license-report" version "2.9"
+	//id "nebula.lint" version "19.0.3"
 }
 
 import com.github.jk1.license.render.*
@@ -21,7 +22,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.28.2"
+version = "0.28.3"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -100,14 +101,20 @@ spotless {
     }
 }
 
+//gradleLint {
+//        rules=['unused-dependency']
+//    }
 tasks.wrapper {
     gradleVersion = "8.7"
 }
-
+//tasks.withType(JavaCompile) {
+//    options.compilerArgs << "-Xlint:deprecation"
+//}
+configurations.all {
+    exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
+}
 dependencies {
     //security updates
-    implementation "ch.qos.logback:logback-classic:$logbackVersion"
-    implementation "ch.qos.logback:logback-core:$logbackVersion"
     implementation "org.springframework:spring-webmvc:6.1.9"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.0")
@@ -116,21 +123,19 @@ dependencies {
     implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
 
     // Exclude Tomcat and include Jetty
-    implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion") {
-        exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
-    }
+    implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
     implementation "org.springframework.boot:spring-boot-starter-jetty:$springBootVersion"
 
     implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
 
     if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
         implementation "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
-        implementation "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE"
+        runtimeOnly "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE"
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
         //2.2.x requires rebuild of DB file.. need migration path
-        implementation "com.h2database:h2:2.1.214"
+        runtimeOnly "com.h2database:h2:2.1.214"
         // implementation "com.h2database:h2:2.2.224"
     }
 
@@ -138,28 +143,27 @@ dependencies {
 
     // Batik
     implementation "org.apache.xmlgraphics:batik-all:1.17"
-
+    
     // TwelveMonkeys
-    implementation "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
-    implementation "com.twelvemonkeys.imageio:imageio-bmp:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
-    implementation "com.twelvemonkeys.imageio:imageio-jpeg:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
-    // implementation "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-psd:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
-    implementation "com.twelvemonkeys.imageio:imageio-tiff:$imageioVersion"
-    implementation "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
-    // implementation "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-bmp:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-jpeg:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-psd:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-tiff:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
 
     implementation "commons-io:commons-io:2.16.1"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0"
-
     //general PDF
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
@@ -196,7 +200,7 @@ dependencies {
     compileOnly "org.projectlombok:lombok:$lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-    testImplementation 'org.mockito:mockito-inline:5.2.0'
+    testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
 }
 
 tasks.withType(JavaCompile).configureEach {

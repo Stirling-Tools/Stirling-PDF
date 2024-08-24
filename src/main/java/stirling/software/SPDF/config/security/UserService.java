@@ -1,13 +1,5 @@
 package stirling.software.SPDF.config.security;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -21,8 +13,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-
-import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.DatabaseBackupInterface;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
@@ -32,6 +22,10 @@ import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.repository.AuthorityRepository;
 import stirling.software.SPDF.repository.UserRepository;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService implements UserServiceInterface {
@@ -222,7 +216,7 @@ public class UserService implements UserServiceInterface {
 
     public void updateUserSettings(String username, Map<String, String> updates)
             throws IOException {
-        Optional<User> userOpt = findByUsernameIgnoreCase(username);
+        Optional<User> userOpt = findByUsernameIgnoreCaseWithSettings(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             Map<String, String> settingsMap = user.getSettings();
@@ -245,6 +239,10 @@ public class UserService implements UserServiceInterface {
 
     public Optional<User> findByUsernameIgnoreCase(String username) {
         return userRepository.findByUsernameIgnoreCase(username);
+    }
+
+    public Optional<User> findByUsernameIgnoreCaseWithSettings(String username) {
+        return userRepository.findByUsernameIgnoreCaseWithSettings(username);
     }
 
     public Authority findRole(User user) {
