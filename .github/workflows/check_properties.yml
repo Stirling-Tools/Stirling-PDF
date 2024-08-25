@@ -1,7 +1,6 @@
 name: Check Properties Files in PR
 
 on:
-  workflow_dispatch:
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
