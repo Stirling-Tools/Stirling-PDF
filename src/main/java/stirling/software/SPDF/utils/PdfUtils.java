@@ -348,6 +348,30 @@ public class PdfUtils {
         }
     }
 
+    /**
+     * Converts a given Pdf file to PDF-Image.
+     *
+     * @param document to be converted. Note: the caller is responsible for closing the document
+     * @return converted document to PDF-Image
+     * @throws IOException if conversion fails
+     */
+    public static PDDocument convertPdfToPdfImage(PDDocument document) throws IOException {
+        PDDocument imageDocument = new PDDocument();
+        PDFRenderer pdfRenderer = new PDFRenderer(document);
+        pdfRenderer.setSubsamplingAllowed(true);
+        for (int page = 0; page < document.getNumberOfPages(); ++page) {
+            BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
+            PDPage newPage = new PDPage(new PDRectangle(bim.getWidth(), bim.getHeight()));
+            imageDocument.addPage(newPage);
+            PDImageXObject pdImage = LosslessFactory.createFromImage(imageDocument, bim);
+            PDPageContentStream contentStream =
+                    new PDPageContentStream(imageDocument, newPage, AppendMode.APPEND, true, true);
+            contentStream.drawImage(pdImage, 0, 0);
+            contentStream.close();
+        }
+        return imageDocument;
+    }
+
     private static BufferedImage prepareImageForPdfToImage(
             int maxWidth, int height, String imageType) {
         BufferedImage combined;

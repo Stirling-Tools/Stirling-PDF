@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,6 +72,20 @@ public class GeneralUtils {
                     urlStr, Urls.HTTP_PROTOCOLS, HostValidator.DENY_COMMON_INFRASTRUCTURE_TARGETS);
             return true;
         } catch (MalformedURLException e) {
+            return false;
+        }
+    }
+
+    public static boolean isURLReachable(String urlStr) {
+        try {
+            URL url = URI.create(urlStr).toURL();
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("HEAD");
+            int responseCode = connection.getResponseCode();
+            return (200 <= responseCode && responseCode <= 399);
+        } catch (MalformedURLException e) {
+            return false;
+        } catch (IOException e) {
             return false;
         }
     }
@@ -170,7 +187,8 @@ public class GeneralUtils {
 
         int n = 0;
         while (true) {
-            // Replace 'n' with the current value of n, correctly handling numbers before 'n'
+            // Replace 'n' with the current value of n, correctly handling numbers before
+            // 'n'
             String sanitizedExpression = insertMultiplicationBeforeN(expression, n);
             Double result = evaluator.evaluate(sanitizedExpression);
 

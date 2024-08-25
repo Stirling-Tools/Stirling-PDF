@@ -9,6 +9,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class UrlToPdfRequest {
 
-    @Schema(description = "The input URL to be converted to a PDF file", required = true)
+    @Schema(
+            description = "The input URL to be converted to a PDF file",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String urlInput;
 }

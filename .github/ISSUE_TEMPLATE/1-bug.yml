@@ -10,7 +10,19 @@ body:
         Thanks for taking the time to fill out this bug report!
 
         This issue form is for reporting bugs only. Please fill out the following sections to help us understand the issue you are facing.
-  
+
+  - type: dropdown
+    id: installation-method
+    attributes:
+      label: Installation Method
+      description: |
+        Indicate whether you are using Docker or a local installation.
+      options:
+        - Docker
+        - Docker ultra lite
+        - Docker fat
+        - Local Installation
+
   - type: textarea
     id: problem
     validations:

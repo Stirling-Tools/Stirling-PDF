@@ -165,43 +165,46 @@ Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR
 
 ## Supported Languages
 
-Stirling PDF currently supports 33!
+Stirling PDF currently supports 38!
 
 | Language                                    | Progress                               |
 | ------------------------------------------- | -------------------------------------- |
+| Arabic (العربية) (ar_AR)                    | ![44%](https://geps.dev/progress/44)   |
+| Basque (Euskara) (eu_ES)                    | ![60%](https://geps.dev/progress/60)   |
+| Bulgarian (Български) (bg_BG)               | ![92%](https://geps.dev/progress/92)   |
+| Catalan (Català) (ca_CA)                    | ![47%](https://geps.dev/progress/47)   |
+| Croatian (Hrvatski) (hr_HR)                 | ![92%](https://geps.dev/progress/92)   |
+| Czech (Česky) (cs_CZ)                       | ![88%](https://geps.dev/progress/88)   |
+| Danish (Dansk) (da_DK)                      | ![9%](https://geps.dev/progress/9)   |
+| Dutch (Nederlands) (nl_NL)                  | ![94%](https://geps.dev/progress/94)   |
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
-| Arabic (العربية) (ar_AR)                    | ![45%](https://geps.dev/progress/45)   |
-| German (Deutsch) (de_DE)                    | ![100%](https://geps.dev/progress/100) |
-| French (Français) (fr_FR)                   | ![94%](https://geps.dev/progress/94)   |
-| Spanish (Español) (es_ES)                   | ![92%](https://geps.dev/progress/92)   |
-| Simplified Chinese (简体中文) (zh_CN)       | ![98%](https://geps.dev/progress/98)   |
-| Traditional Chinese (繁體中文) (zh_TW)      | ![96%](https://geps.dev/progress/96)   |
-| Catalan (Català) (ca_CA)                    | ![48%](https://geps.dev/progress/48)   |
+| French (Français) (fr_FR)                   | ![91%](https://geps.dev/progress/91)   |
+| German (Deutsch) (de_DE)                    | ![98%](https://geps.dev/progress/98) |
+| Greek (Ελληνικά) (el_GR)                    | ![80%](https://geps.dev/progress/80)   |
+| Hindi (हिंदी) (hi_IN)                          | ![75%](https://geps.dev/progress/75)   |
+| Hungarian (Magyar) (hu_HU)                  | ![74%](https://geps.dev/progress/74)   |
+| Indonesia (Bahasa Indonesia) (id_ID)        | ![74%](https://geps.dev/progress/74)   |
+| Irish (Gaeilge) (ga_IE)                     | ![96%](https://geps.dev/progress/96)   |
 | Italian (Italiano) (it_IT)                  | ![99%](https://geps.dev/progress/99)   |
-| Swedish (Svenska) (sv_SE)                   | ![39%](https://geps.dev/progress/39)   |
-| Polish (Polski) (pl_PL)                     | ![90%](https://geps.dev/progress/90)   |
-| Romanian (Română) (ro_RO)                   | ![39%](https://geps.dev/progress/39)   |
-| Korean (한국어) (ko_KR)                     | ![84%](https://geps.dev/progress/84)   |
-| Portuguese Brazilian (Português) (pt_BR)    | ![60%](https://geps.dev/progress/60)   |
-| Portuguese (Português) (pt_PT)              | ![78%](https://geps.dev/progress/78)   |
-| Russian (Русский) (ru_RU)                   | ![84%](https://geps.dev/progress/84)   |
-| Basque (Euskara) (eu_ES)                    | ![62%](https://geps.dev/progress/62)   |
 | Japanese (日本語) (ja_JP)                   | ![90%](https://geps.dev/progress/90)   |
-| Dutch (Nederlands) (nl_NL)                  | ![96%](https://geps.dev/progress/96)   |
-| Greek (Ελληνικά) (el_GR)                    | ![82%](https://geps.dev/progress/82)   |
-| Turkish (Türkçe) (tr_TR)                    | ![99%](https://geps.dev/progress/99)   |
-| Indonesia (Bahasa Indonesia) (id_ID)        | ![76%](https://geps.dev/progress/76)   |
-| Hindi (हिंदी) (hi_IN)                          | ![77%](https://geps.dev/progress/77)   |
-| Hungarian (Magyar) (hu_HU)                  | ![76%](https://geps.dev/progress/76)   |
-| Bulgarian (Български) (bg_BG)               | ![94%](https://geps.dev/progress/94)   |
-| Sebian Latin alphabet (Srpski) (sr_LATN_RS) | ![78%](https://geps.dev/progress/78)   |
-| Ukrainian (Українська) (uk_UA)              | ![90%](https://geps.dev/progress/90)   |
-| Slovakian (Slovensky) (sk_SK)               | ![92%](https://geps.dev/progress/92)   |
-| Czech (Česky) (cs_CZ)                       | ![90%](https://geps.dev/progress/90)   |
-| Croatian (Hrvatski) (hr_HR)                 | ![95%](https://geps.dev/progress/95)   |
+| Korean (한국어) (ko_KR)                     | ![82%](https://geps.dev/progress/82)   |
 | Norwegian (Norsk) (no_NB)                   | ![96%](https://geps.dev/progress/96)   |
-| Thai (ไทย) (th_TH)                          | ![100%](https://geps.dev/progress/100) |
+| Polish (Polski) (pl_PL)                     | ![90%](https://geps.dev/progress/90)   |
+| Portuguese (Português) (pt_PT)              | ![76%](https://geps.dev/progress/76)   |
+| Portuguese Brazilian (Português) (pt_BR)    | ![99%](https://geps.dev/progress/99)   |
+| Romanian (Română) (ro_RO)                   | ![38%](https://geps.dev/progress/38)   |
+| Russian (Русский) (ru_RU)                   | ![82%](https://geps.dev/progress/82)   |
+| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![76%](https://geps.dev/progress/76)   |
+| Simplified Chinese (简体中文) (zh_CN)       | ![97%](https://geps.dev/progress/97)   |
+| Slovakian (Slovensky) (sk_SK)               | ![90%](https://geps.dev/progress/90)   |
+| Spanish (Español) (es_ES)                   | ![96%](https://geps.dev/progress/96)   |
+| Swedish (Svenska) (sv_SE)                   | ![38%](https://geps.dev/progress/38)   |
+| Thai (ไทย) (th_TH)                          | ![97%](https://geps.dev/progress/97) |
+| Traditional Chinese (繁體中文) (zh_TW)      | ![96%](https://geps.dev/progress/96)   |
+| Turkish (Türkçe) (tr_TR)                    | ![97%](https://geps.dev/progress/97)   |
+| Ukrainian (Українська) (uk_UA)              | ![88%](https://geps.dev/progress/88)   |
+| Vietnamese (Tiếng Việt) (vi_VN)             | ![97%](https://geps.dev/progress/97)   |
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
@@ -213,7 +216,7 @@ Stirling PDF allows easy customization of the app.
 Includes things like
 
 - Custom application name
-- Custom slogans, icons, HTML, images CSS etc (via file overrides) 
+- Custom slogans, icons, HTML, images CSS etc (via file overrides)
 
 There are two options for this, either using the generated settings file ``settings.yml``
 This file is located in the ``/configs`` directory and follows standard YAML formatting
@@ -234,7 +237,7 @@ The Current list of settings is
 security:
   enableLogin: false # set to 'true' to enable login
   csrfDisabled: true # Set to 'true' to disable CSRF protection (not recommended for production)
-  loginAttemptCount: 5 # lock user account after 5 tries
+  loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
   loginMethod: all # 'all' (Login Username/Password and OAuth2[must be enabled and configured]), 'normal'(only Login with Username/Password) or 'oauth2'(only Login with OAuth2)
   initialLogin:
@@ -263,6 +266,7 @@ security:
     clientId: '' # Client ID from your provider
     clientSecret: '' # Client Secret from your provider
     autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
+    blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     useAsUsername: email # Default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # Specify the scopes for which the application will request permissions
     provider: google # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'

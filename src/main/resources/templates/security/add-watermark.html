@@ -20,7 +20,7 @@
               <form method="post" enctype="multipart/form-data" action="api/v1/security/add-watermark">
                 <div class="mb-3">
                   <label th:text="#{watermark.selectText.1}"></label>
-                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 </div>
 
                 <div class="mb-3">
@@ -103,6 +103,10 @@
                 <div class="mb-3">
                   <label for="heightSpacer" th:text="#{watermark.selectText.6}"></label>
                   <input type="text" id="heightSpacer" name="heightSpacer" class="form-control" value="50">
+                </div>
+                <div class="mb-3 form-check">
+                  <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage">
+                  <label for="convertPDFToImage" th:text="#{watermark.selectText.10}"></label>
                 </div>
                 <div class="mb-3 text-center">
                   <input type="submit" id="submitBtn" th:value="#{watermark.submit}" class="btn btn-primary">

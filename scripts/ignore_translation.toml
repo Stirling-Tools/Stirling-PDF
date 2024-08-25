@@ -25,6 +25,11 @@ ignore = [
     'text',
 ]
 
+[da_DK]
+ignore = [
+    'language.direction',
+]
+
 [de_DE]
 ignore = [
     'AddStampRequest.alphabet',
@@ -85,6 +90,11 @@ ignore = [
     'pipelineOptions.pipelineHeader',
     'sponsor',
     'watermark.type.2',
+]
+
+[ga_IE]
+ignore = [
+    'language.direction',
 ]
 
 [hi_IN]
@@ -171,7 +181,9 @@ ignore = [
 
 [pt_BR]
 ignore = [
+    'changeMetadata.trapped',
     'language.direction',
+    'pipelineOptions.pipelineHeader',
 ]
 
 [pt_PT]
@@ -228,6 +240,14 @@ ignore = [
 [uk_UA]
 ignore = [
     'language.direction',
+]
+
+[vi_VN]
+ignore = [
+    'language.direction',
+    'pipeline.title',
+    'pipelineOptions.pipelineHeader',
+    'showJS.tags',
 ]
 
 [zh_CN]
