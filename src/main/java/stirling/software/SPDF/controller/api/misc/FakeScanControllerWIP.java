@@ -43,6 +43,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.utils.PdfUtils;
+import stirling.software.SPDF.utils.PdfUtils.TemplateOpcions;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -80,7 +81,13 @@ public class FakeScanControllerWIP {
             // PDPageContentStream contentStream = new PDPageContentStream(newDocument, new
             // PDPage());
             PDImageXObject pdImage = JPEGFactory.createFromImage(newDocument, img);
-            PdfUtils.addImageToDocument(newDocument, pdImage, "maintainAspectRatio", false);
+            PdfUtils.addImageToDocument(
+                    newDocument,
+                    pdImage,
+                    "maintainAspectRatio",
+                    false,
+                    1,
+                    TemplateOpcions.TWO_IMAGES);
         }
 
         newDocument.save(baos);

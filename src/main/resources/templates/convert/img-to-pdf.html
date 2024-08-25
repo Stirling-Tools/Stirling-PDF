@@ -25,6 +25,16 @@
                     <option value="fillPage" th:text="#{imageToPDF.fillPage}">Fill Page</option>
                     <option value="fitDocumentToImage" th:text="#{imageToPDF.fitDocumentToImage}">Fit Document to Image</option>
                     <option value="maintainAspectRatio" th:text="#{imageToPDF.maintainAspectRatio}">Maintain Aspect Ratio</option>
+                    <option value="templates" th:text="#{imageToPDF.templates}">templates</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="templateOption" th:text="#{imageToPDF.selectLabel.templates}">Templates option</label>
+                  <select class="form-control" id="templateOption" name="templateOption">
+                    <option value="1x2" th:text="#{imageToPDF.selectText.templates.1}">1x2</option>
+                    <option value="2x2" th:text="#{imageToPDF.selectText.templates.2}">2x2</option>
+                    <option value="2x3" th:text="#{imageToPDF.selectText.templates.3}">2x3</option>
                   </select>
                 </div>
 
@@ -55,9 +65,13 @@
                   $('#fileInput-input').on('change', function() {
                     var files = document.getElementById("fileInput-input").files;
                     var conversionType = document.getElementById("conversionType");
+                    var fitOption = document.getElementById("fitOption");
                     console.log("files.length=" + files.length)
                     if (files.length > 1) {
                       conversionType.disabled = false;
+                      if (fitOption.value === 'templates') { // if templates is selected and files are more than 1 then enable templateOption
+                        document.getElementById("templateOption").disabled = false;
+                      }
                     } else {
                       conversionType.disabled = true;
                     }
@@ -73,6 +87,18 @@
                       override.value = "multi";
                     }
                   });
+
+                  $('#fitOption').change(function() {
+                    var selectedValue = $(this).val();
+                    var files = document.getElementById("fileInput-input").files;
+                    var templateOption = document.getElementById("templateOption");
+                    if (selectedValue === 'templates' && files.length > 1) {
+                      templateOption.disabled = false;
+                    } else {
+                      templateOption.disabled = true;
+                    }
+                  });
+
                 </script>
               </form>
             </div>

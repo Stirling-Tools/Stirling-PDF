@@ -16,13 +16,23 @@ public class ConvertToPdfRequest {
 
     @Schema(
             description = "Option to determine how the image will fit onto the page",
-            allowableValues = {"fillPage", "fitDocumentToImage", "maintainAspectRatio"})
+            allowableValues = {
+                "fillPage",
+                "fitDocumentToImage",
+                "maintainAspectRatio",
+                "Templates"
+            })
     private String fitOption;
 
     @Schema(
             description = "The color type of the output image(s)",
             allowableValues = {"color", "greyscale", "blackwhite"})
     private String colorType;
+
+    @Schema(
+            description = "Option to determine how the image will fit onto the page",
+            allowableValues = {"1x2", "2x2", "2x3"})
+    private String templateOption;
 
     @Schema(
             description = "Whether to automatically rotate the images to better fit the PDF page",

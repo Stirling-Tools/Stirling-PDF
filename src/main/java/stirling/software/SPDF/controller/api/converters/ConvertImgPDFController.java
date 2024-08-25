@@ -90,10 +90,11 @@ public class ConvertImgPDFController {
         MultipartFile[] file = request.getFileInput();
         String fitOption = request.getFitOption();
         String colorType = request.getColorType();
+        String templateOptions = request.getTemplateOption();
         boolean autoRotate = request.isAutoRotate();
 
         // Convert the file to PDF and get the resulting bytes
-        byte[] bytes = PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType);
+        byte[] bytes = PdfUtils.imageToPdf(file, fitOption, templateOptions, autoRotate, colorType);
         return WebResponseUtils.bytesToWebResponse(
                 bytes,
                 file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_converted.pdf");

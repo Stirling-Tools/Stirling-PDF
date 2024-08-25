@@ -43,6 +43,12 @@ public class PdfUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
 
+    public static enum TemplateOpcions { // enum for the template options
+        TWO_IMAGES,
+        FOUR_IMAGES,
+        SIX_IMAGES
+    }
+
     public static PDRectangle textToPageSize(String size) {
         switch (size.toUpperCase()) {
             case "A0":
@@ -195,7 +201,8 @@ public class PdfUtils {
 
         pdfDocument.close();
 
-        // Assumes the expectedPageSize is in the format "widthxheight", e.g. "595x842" for A4
+        // Assumes the expectedPageSize is in the format "widthxheight", e.g. "595x842"
+        // for A4
         String[] dimensions = expectedPageSize.split("x");
         float expectedPageWidth = Float.parseFloat(dimensions[0]);
         float expectedPageHeight = Float.parseFloat(dimensions[1]);
@@ -358,13 +365,54 @@ public class PdfUtils {
         return combined;
     }
 
+    public static int mapTemplateToImageCountPerPage(TemplateOpcions template) {
+        switch (template) {
+            case TWO_IMAGES:
+                return 2;
+            case FOUR_IMAGES:
+                return 4;
+            case SIX_IMAGES:
+                return 6;
+            default:
+                throw new IllegalArgumentException("Invalid template");
+        }
+    }
+
+    public static TemplateOpcions mapTemplateStringToEnumTemplate(String templateString) {
+        switch (templateString) {
+            case "1x2":
+                return TemplateOpcions.TWO_IMAGES;
+            case "2x2":
+                return TemplateOpcions.FOUR_IMAGES;
+            case "2x3":
+                return TemplateOpcions.SIX_IMAGES;
+            default:
+                throw new IllegalArgumentException("Invalid template");
+        }
+    }
+
     public static byte[] imageToPdf(
-            MultipartFile[] files, String fitOption, boolean autoRotate, String colorType)
+            MultipartFile[] files,
+            String fitOption,
+            String templateOptions,
+            boolean autoRotate,
+            String colorType)
             throws IOException {
+        TemplateOpcions template = null;
+
+        int imageCountPerPage = 1; // default value
+
+        if (fitOption.equals("templates")) {
+            template = mapTemplateStringToEnumTemplate(templateOptions);
+            imageCountPerPage = mapTemplateToImageCountPerPage(template);
+        }
+
         try (PDDocument doc = new PDDocument()) {
+            int currentImageCountPage = 1;
             for (MultipartFile file : files) {
                 String contentType = file.getContentType();
                 String originalFilename = Filenames.toSimpleFileName(file.getOriginalFilename());
+
                 if (originalFilename != null
                         && (originalFilename.toLowerCase().endsWith(".tiff")
                                 || originalFilename.toLowerCase().endsWith(".tif"))) {
@@ -377,9 +425,16 @@ public class PdfUtils {
                                 ImageProcessingUtils.convertColorType(pageImage, colorType);
                         PDImageXObject pdImage =
                                 LosslessFactory.createFromImage(doc, convertedImage);
-                        addImageToDocument(doc, pdImage, fitOption, autoRotate);
+                        addImageToDocument(
+                                doc,
+                                pdImage,
+                                fitOption,
+                                autoRotate,
+                                currentImageCountPage,
+                                template);
                     }
                 } else {
+
                     BufferedImage image = ImageIO.read(file.getInputStream());
                     BufferedImage convertedImage =
                             ImageProcessingUtils.convertColorType(image, colorType);
@@ -388,7 +443,17 @@ public class PdfUtils {
                             (contentType != null && "image/jpeg".equals(contentType))
                                     ? JPEGFactory.createFromImage(doc, convertedImage)
                                     : LosslessFactory.createFromImage(doc, convertedImage);
-                    addImageToDocument(doc, pdImage, fitOption, autoRotate);
+
+                    addImageToDocument(
+                            doc, pdImage, fitOption, autoRotate, currentImageCountPage, template);
+
+                    if (currentImageCountPage % imageCountPerPage
+                            == 0) { // if the page is full (according to the template), reset the
+                        // current image count for the next page
+                        currentImageCountPage = 1; // reset the current image count page
+                    } else {
+                        currentImageCountPage++;
+                    }
                 }
             }
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -398,13 +463,155 @@ public class PdfUtils {
         }
     }
 
+    public static int get_slot_width(int pageWidth, int pageHeight, TemplateOpcions template) {
+        int offset = 5;
+        switch (template) {
+            case TWO_IMAGES:
+            case FOUR_IMAGES:
+                return (pageWidth / 2) - offset;
+            case SIX_IMAGES:
+                return (pageWidth / 3) - offset;
+            default:
+                throw new IllegalArgumentException("Invalid template");
+        }
+    }
+
+    public static int get_slot_height(
+            int pageWidth,
+            int pageHeight,
+            int imageWidth,
+            int imageHeight,
+            TemplateOpcions template) {
+
+        float slotWidth = get_slot_width(pageWidth, pageHeight, template);
+        float aspectRatio = (float) imageWidth / (float) imageHeight;
+
+        System.out.println(
+                "get_slot_height()=> "
+                        + " AND HEIGHT: ("
+                        + imageWidth
+                        + " "
+                        + imageHeight
+                        + ") ASPECT RATIO: "
+                        + aspectRatio);
+
+        return (int) (slotWidth / aspectRatio);
+    }
+
+    public static ArrayList<Integer> getImagePosition(
+            int imageNumber,
+            TemplateOpcions template,
+            int pageWidth,
+            int pageHeight,
+            int slotwidth,
+            int slotHeight) {
+        ArrayList<Integer> position = new ArrayList<>(2); // Initialize with capacity 2 for x and y
+        int offset = 5;
+        switch (template) {
+            case TWO_IMAGES:
+                {
+                    System.out.println("TWO_IMAGES MATCHED!!!!!: IMAGE NUMBER: " + imageNumber);
+                    // the (0,0) point is the bottom left corner of the page, so we need to
+                    // calculate the top left corner of the image
+                    switch (imageNumber) {
+                        case 1:
+                            position.add(0 + offset);
+                            position.add(pageHeight - slotHeight - offset); // top left
+                            break;
+                        case 2:
+                            position.add((pageWidth / 2) + offset);
+                            position.add(pageHeight - slotHeight - offset); // top right
+                            break;
+
+                        default:
+                            throw new IllegalArgumentException(
+                                    "Invalid image number for template 1x2");
+                    }
+                    break;
+                }
+            case FOUR_IMAGES:
+                {
+                    // the (0,0) point is the bottom left corner of the page, so we need to
+                    // calculate the top left corner of the image
+                    switch (imageNumber) {
+                        case 1:
+                            position.add(0 + offset);
+                            position.add(pageHeight - slotHeight - offset); // top left
+                            break;
+                        case 2:
+                            position.add((pageWidth / 2) + offset);
+                            position.add(pageHeight - slotHeight - offset); // top right
+                            break;
+                        case 3:
+                            position.add(0 + offset);
+                            position.add((pageHeight - 2 * slotHeight) - offset); // bottom left
+                            break;
+                        case 4:
+                            position.add((pageWidth / 2) + offset);
+                            position.add((pageHeight - 2 * slotHeight) - offset); // bottom right
+                            break;
+                        default:
+                            throw new IllegalArgumentException(
+                                    "Invalid image number for template 2x2");
+                    }
+                    break;
+                }
+            case SIX_IMAGES:
+                {
+                    // the (0,0) point is the bottom left corner of the page, so we need to
+                    // calculate the top left corner of the image
+                    switch (imageNumber) {
+                        case 1:
+                            position.add(0 + offset);
+                            position.add(pageHeight - slotHeight - offset); // top left
+                            break;
+                        case 2:
+                            position.add((pageWidth / 3) + offset);
+                            position.add(pageHeight - slotHeight - offset); // top middle
+                            break;
+                        case 3:
+                            position.add((2 * pageWidth / 3) + offset);
+                            position.add(pageHeight - slotHeight - offset); // top right
+                            break;
+                        case 4:
+                            position.add(0 + offset);
+                            position.add((pageHeight - 2 * slotHeight) - offset); // bottom left
+                            break;
+                        case 5:
+                            position.add((pageWidth / 3) + offset);
+                            position.add((pageHeight - 2 * slotHeight) - offset); // bottom middle
+                            break;
+                        case 6:
+                            position.add((2 * pageWidth / 3) + offset);
+                            position.add((pageHeight - 2 * slotHeight) - offset); // bottom right
+                            break;
+                        default:
+                            throw new IllegalArgumentException(
+                                    "Invalid image number for template 2x2");
+                    }
+                    break;
+                }
+        }
+        return position;
+    }
+
     public static void addImageToDocument(
-            PDDocument doc, PDImageXObject image, String fitOption, boolean autoRotate)
+            PDDocument doc,
+            PDImageXObject image,
+            String fitOption,
+            boolean autoRotate,
+            int currentImageCountPage,
+            TemplateOpcions template)
             throws IOException {
+
         boolean imageIsLandscape = image.getWidth() > image.getHeight();
+
+        int numberOfImagesPerPage =
+                fitOption.equals("templates") ? mapTemplateToImageCountPerPage(template) : 1;
+
         PDRectangle pageSize = PDRectangle.A4;
 
-        if (autoRotate && imageIsLandscape) {
+        if (autoRotate && imageIsLandscape && !"templates".equals(fitOption)) {
             pageSize = new PDRectangle(pageSize.getHeight(), pageSize.getWidth());
         }
 
@@ -412,8 +619,20 @@ public class PdfUtils {
             pageSize = new PDRectangle(image.getWidth(), image.getHeight());
         }
 
-        PDPage page = new PDPage(pageSize);
-        doc.addPage(page);
+        PDPage page = null;
+
+        if (doc.getNumberOfPages() == 0) { // if the document is empty, add a new page
+            page = new PDPage(pageSize);
+            System.out.println("ADDING NEW PAGE ->" + page.getBBox().getHeight());
+            System.out.println(
+                    "NUMBER OF PAGES BEFORE ADDING A NEW PAGE->" + doc.getNumberOfPages());
+            doc.addPage(page);
+            System.out.println(
+                    "NUMBER OF PAGES AFTER ADDING A NEW PAGE->" + doc.getNumberOfPages());
+        }
+
+        System.out.println("NUMBER OF PAGES " + doc.getNumberOfPages());
+        page = doc.getPage(doc.getNumberOfPages() - 1); // get the last page
 
         float pageWidth = page.getMediaBox().getWidth();
         float pageHeight = page.getMediaBox().getHeight();
@@ -441,7 +660,38 @@ public class PdfUtils {
                         yPos,
                         image.getWidth() * scaleFactor,
                         image.getHeight() * scaleFactor);
+            } else if ("templates".equals(fitOption)) {
+
+                int slotWidth =
+                        get_slot_width(
+                                (int) pageSize.getWidth(), (int) pageSize.getHeight(), template);
+                int slotHeight =
+                        get_slot_height(
+                                (int) pageSize.getWidth(),
+                                (int) pageSize.getHeight(),
+                                image.getWidth(),
+                                image.getHeight(),
+                                template);
+                ArrayList<Integer> position =
+                        getImagePosition(
+                                currentImageCountPage,
+                                template,
+                                (int) pageSize.getWidth(),
+                                (int) pageSize.getHeight(),
+                                slotWidth,
+                                slotHeight);
+
+                contentStream.drawImage(
+                        image, position.get(0), position.get(1), slotWidth, slotHeight);
             }
+
+            if (currentImageCountPage % numberOfImagesPerPage
+                    == 0) { // if the page is full (according to the template) add a new page
+                // todo: check also if there are more images to add to the document before adding a
+                // new page, if not, don't add a new page
+                doc.addPage(new PDPage(pageSize));
+            }
+
         } catch (IOException e) {
             logger.error("Error adding image to PDF", e);
             throw e;
