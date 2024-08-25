@@ -156,7 +156,8 @@ public class ExtractImagesController {
         try {
             md = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            logger.error("MD5 algorithm not available for extractImages hash.", e);
+            return;
         }
         if (page.getResources() == null || page.getResources().getXObjectNames() == null) {
             return;
