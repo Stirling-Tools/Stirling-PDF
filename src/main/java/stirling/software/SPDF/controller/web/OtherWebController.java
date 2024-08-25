@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,9 +15,14 @@ import org.springframework.web.servlet.ModelAndView;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.utils.CheckProgramInstall;
+
 @Controller
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class OtherWebController {
+
+    @Autowired ApplicationProperties applicationProperties;
 
     @GetMapping("/compress-pdf")
     @Hidden
@@ -29,6 +35,8 @@ public class OtherWebController {
     @Hidden
     public ModelAndView extractImageScansForm() {
         ModelAndView modelAndView = new ModelAndView("misc/extract-image-scans");
+        boolean isPython = CheckProgramInstall.isPythonAvailable();
+        modelAndView.addObject("isPython", isPython);
         modelAndView.addObject("currentPage", "extract-image-scans");
         return modelAndView;
     }
@@ -97,7 +105,7 @@ public class OtherWebController {
     }
 
     public List<String> getAvailableTesseractLanguages() {
-        String tessdataDir = "/usr/share/tessdata";
+        String tessdataDir = applicationProperties.getSystem().getTessdataDir();
         File[] files = new File(tessdataDir).listFiles();
         if (files == null) {
             return Collections.emptyList();

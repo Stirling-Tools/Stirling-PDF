@@ -36,6 +36,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
+import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -60,6 +61,7 @@ public class WatermarkController {
         float opacity = request.getOpacity();
         int widthSpacer = request.getWidthSpacer();
         int heightSpacer = request.getHeightSpacer();
+        boolean convertPdfToImage = request.isConvertPDFToImage();
 
         // Load the input PDF
         PDDocument document = Loader.loadPDF(pdfFile.getBytes());
@@ -102,6 +104,12 @@ public class WatermarkController {
 
             // Close the content stream
             contentStream.close();
+        }
+
+        if (convertPdfToImage) {
+            PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document);
+            document.close();
+            document = convertedPdf;
         }
 
         return WebResponseUtils.pdfDocToWebResponse(
