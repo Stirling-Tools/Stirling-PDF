@@ -5,6 +5,9 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -36,7 +39,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import stirling.software.SPDF.model.api.PDFWithImageFormatRequest;
+import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
+import stirling.software.SPDF.utils.ImageProcessingUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -51,11 +55,11 @@ public class ExtractImagesController {
             summary = "Extract images from a PDF file",
             description =
                     "This endpoint extracts images from a given PDF file and returns them in a zip file. Users can specify the output image format. Input: PDF Output: IMAGE/ZIP Type: SIMO")
-    public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request)
+    public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFExtractImagesRequest request)
             throws IOException, InterruptedException, ExecutionException {
         MultipartFile file = request.getFileInput();
         String format = request.getFormat();
-
+        boolean allowDuplicates = request.isAllowDuplicates();
         System.out.println(
                 System.currentTimeMillis() + " file=" + file.getName() + ", format=" + format);
         PDDocument document = Loader.loadPDF(file.getBytes());
@@ -75,7 +79,7 @@ public class ExtractImagesController {
         String filename =
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
-        Set<Integer> processedImages = new HashSet<>();
+        Set<byte[]> processedImages = new HashSet<>();
 
         if (useMultithreading) {
             // Executor service to handle multithreading
@@ -92,7 +96,13 @@ public class ExtractImagesController {
                         executor.submit(
                                 () -> {
                                     extractImagesFromPage(
-                                            page, format, filename, pageNum, processedImages, zos);
+                                            page,
+                                            format,
+                                            filename,
+                                            pageNum,
+                                            processedImages,
+                                            zos,
+                                            allowDuplicates);
                                     return null;
                                 });
 
@@ -110,7 +120,8 @@ public class ExtractImagesController {
             // Single-threaded extraction
             for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
                 PDPage page = document.getPage(pgNum);
-                extractImagesFromPage(page, format, filename, pgNum + 1, processedImages, zos);
+                extractImagesFromPage(
+                        page, format, filename, pgNum + 1, processedImages, zos, allowDuplicates);
             }
         }
 
@@ -137,21 +148,34 @@ public class ExtractImagesController {
             String format,
             String filename,
             int pageNum,
-            Set<Integer> processedImages,
-            ZipOutputStream zos)
+            Set<byte[]> processedImages,
+            ZipOutputStream zos,
+            boolean allowDuplicates)
             throws IOException {
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            logger.error("MD5 algorithm not available for extractImages hash.", e);
+            return;
+        }
         if (page.getResources() == null || page.getResources().getXObjectNames() == null) {
             return;
         }
+        int count = 1;
         for (COSName name : page.getResources().getXObjectNames()) {
             if (page.getResources().isImageXObject(name)) {
                 PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
-                int imageHash = image.hashCode();
-                synchronized (processedImages) {
-                    if (processedImages.contains(imageHash)) {
-                        continue; // Skip already processed images
+                if (!allowDuplicates) {
+                    byte[] data = ImageProcessingUtils.getImageData(image.getImage());
+                    byte[] imageHash = md.digest(data);
+                    synchronized (processedImages) {
+                        if (processedImages.stream()
+                                .anyMatch(hash -> Arrays.equals(hash, imageHash))) {
+                            continue; // Skip already processed images
+                        }
+                        processedImages.add(imageHash);
                     }
-                    processedImages.add(imageHash);
                 }
 
                 RenderedImage renderedImage = image.getImage();
@@ -160,7 +184,7 @@ public class ExtractImagesController {
                 BufferedImage bufferedImage = convertToRGB(renderedImage, format);
 
                 // Write image to zip file
-                String imageName = filename + "_" + imageHash + " (Page " + pageNum + ")." + format;
+                String imageName = filename + "_page_" + pageNum + "_" + count++ + "." + format;
                 synchronized (zos) {
                     zos.putNextEntry(new ZipEntry(imageName));
                     ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
