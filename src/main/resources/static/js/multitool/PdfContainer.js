@@ -18,6 +18,7 @@ class PdfContainer {
     this.updateFilename = this.updateFilename.bind(this);
     this.setDownloadAttribute = this.setDownloadAttribute.bind(this);
     this.preventIllegalChars = this.preventIllegalChars.bind(this);
+    this.addImageFile = this.addImageFile.bind(this);
 
     this.pdfAdapters = pdfAdapters;
 
@@ -69,7 +70,7 @@ class PdfContainer {
     var input = document.createElement("input");
     input.type = "file";
     input.multiple = true;
-    input.setAttribute("accept", "application/pdf");
+    input.setAttribute("accept", "application/pdf,image/*");
     input.onchange = async (e) => {
       const files = e.target.files;
 
@@ -83,7 +84,12 @@ class PdfContainer {
   async addPdfsFromFiles(files, nextSiblingElement) {
     this.fileName = files[0].name;
     for (var i = 0; i < files.length; i++) {
-      await this.addPdfFile(files[i], nextSiblingElement);
+      const file = files[i];
+      if (file.type === "application/pdf") {
+        await this.addPdfFile(file, nextSiblingElement);
+      } else if (file.type.startsWith("image/")) {
+        await this.addImageFile(file, nextSiblingElement);
+      }
     }
 
     document.querySelectorAll(".enable-on-file").forEach((element) => {
@@ -127,6 +133,25 @@ class PdfContainer {
       } else {
         this.pagesContainer.appendChild(div);
       }
+    }
+  }
+
+  async addImageFile(file, nextSiblingElement) {
+    const div = document.createElement("div");
+    div.classList.add("page-container");
+
+    var img = document.createElement("img");
+    img.classList.add("page-image");
+    img.src = URL.createObjectURL(file);
+    div.appendChild(img);
+
+    this.pdfAdapters.forEach((adapter) => {
+      adapter.adapt?.(div);
+    });
+    if (nextSiblingElement) {
+      this.pagesContainer.insertBefore(div, nextSiblingElement);
+    } else {
+      this.pagesContainer.appendChild(div);
     }
   }
 
@@ -193,16 +218,29 @@ class PdfContainer {
     for (var i = 0; i < pageContainers.length; i++) {
       const img = pageContainers[i].querySelector("img"); // Find the img element within each .page-container
       if (!img) continue;
-      const pages = await pdfDoc.copyPages(img.doc, [img.pageIdx]);
-      const page = pages[0];
 
-      const rotation = img.style.rotate;
-      if (rotation) {
-        const rotationAngle = parseInt(rotation.replace(/[^\d-]/g, ""));
-        page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle));
+      if (img.doc) {
+        const pages = await pdfDoc.copyPages(img.doc, [img.pageIdx]);
+        const page = pages[0];
+
+        const rotation = img.style.rotate;
+        if (rotation) {
+          const rotationAngle = parseInt(rotation.replace(/[^\d-]/g, ""));
+          page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle));
+        }
+
+        pdfDoc.addPage(page);
+      } else {
+        const page = pdfDoc.addPage([img.naturalWidth, img.naturalHeight]);
+        const imageBytes = await fetch(img.src).then((res) => res.arrayBuffer());
+        const image = await pdfDoc.embedPng(imageBytes);
+        page.drawImage(image, {
+          x: 0,
+          y: 0,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+        });
       }
-
-      pdfDoc.addPage(page);
     }
     const pdfBytes = await pdfDoc.save();
     const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
