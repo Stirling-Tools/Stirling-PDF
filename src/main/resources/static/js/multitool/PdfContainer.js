@@ -233,7 +233,12 @@ class PdfContainer {
       } else {
         const page = pdfDoc.addPage([img.naturalWidth, img.naturalHeight]);
         const imageBytes = await fetch(img.src).then((res) => res.arrayBuffer());
-        const image = await pdfDoc.embedPng(imageBytes);
+        let image;
+        if (img.src.endsWith(".jpeg") || img.src.endsWith(".jpg")) {
+          image = await pdfDoc.embedJpg(imageBytes);
+        } else {
+          image = await pdfDoc.embedPng(imageBytes);
+        }
         page.drawImage(image, {
           x: 0,
           y: 0,
