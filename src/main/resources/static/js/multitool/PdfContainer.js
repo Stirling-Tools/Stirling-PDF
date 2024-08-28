@@ -10,8 +10,8 @@ class PdfContainer {
     this.pagesContainerWrapper = document.getElementById(wrapperId);
     this.downloadLink = null;
     this.movePageTo = this.movePageTo.bind(this);
-    this.addPdfs = this.addPdfs.bind(this);
-    this.addPdfsFromFiles = this.addPdfsFromFiles.bind(this);
+    this.addFiles = this.addFiles.bind(this);
+    this.addFilesFromFiles = this.addFilesFromFiles.bind(this);
     this.rotateElement = this.rotateElement.bind(this);
     this.rotateAll = this.rotateAll.bind(this);
     this.exportPdf = this.exportPdf.bind(this);
@@ -25,13 +25,13 @@ class PdfContainer {
     this.pdfAdapters.forEach((adapter) => {
       adapter.setActions({
         movePageTo: this.movePageTo,
-        addPdfs: this.addPdfs,
+        addFiles: this.addFiles,
         rotateElement: this.rotateElement,
         updateFilename: this.updateFilename,
       });
     });
 
-    window.addPdfs = this.addPdfs;
+    window.addFiles = this.addFiles;
     window.exportPdf = this.exportPdf;
     window.rotateAll = this.rotateAll;
 
@@ -66,7 +66,7 @@ class PdfContainer {
     }
   }
 
-  addPdfs(nextSiblingElement) {
+  addFiles(nextSiblingElement) {
     var input = document.createElement("input");
     input.type = "file";
     input.multiple = true;
@@ -74,14 +74,14 @@ class PdfContainer {
     input.onchange = async (e) => {
       const files = e.target.files;
 
-      this.addPdfsFromFiles(files, nextSiblingElement);
+      this.addFilesFromFiles(files, nextSiblingElement);
       this.updateFilename(files ? files[0].name : "");
     };
 
     input.click();
   }
 
-  async addPdfsFromFiles(files, nextSiblingElement) {
+  async addFilesFromFiles(files, nextSiblingElement) {
     this.fileName = files[0].name;
     for (var i = 0; i < files.length; i++) {
       const file = files[i];
