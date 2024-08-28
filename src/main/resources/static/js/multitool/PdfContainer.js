@@ -233,11 +233,27 @@ class PdfContainer {
       } else {
         const page = pdfDoc.addPage([img.naturalWidth, img.naturalHeight]);
         const imageBytes = await fetch(img.src).then((res) => res.arrayBuffer());
+        const uint8Array = new Uint8Array(imageBytes);
+        const imageType = detectImageType(uint8Array);
+
         let image;
-        if (img.src.endsWith(".jpeg") || img.src.endsWith(".jpg")) {
-          image = await pdfDoc.embedJpg(imageBytes);
-        } else {
-          image = await pdfDoc.embedPng(imageBytes);
+        switch (imageType) {
+          case 'PNG':
+            image = await pdfDoc.embedPng(imageBytes);
+            break;
+          case 'JPEG':
+            image = await pdfDoc.embedJpg(imageBytes);
+            break;
+          case 'TIFF':
+            image = await pdfDoc.embedTiff(imageBytes);
+            break;
+          case 'GIF':
+            // For GIF, we only embed the first frame
+            image = await pdfDoc.embedPng(imageBytes);
+            break;
+          default:
+            console.warn(`Unsupported image type: ${imageType}`);
+            continue; // Skip this image
         }
         page.drawImage(image, {
           x: 0,
@@ -292,6 +308,7 @@ class PdfContainer {
     }
   }
 
+
   setDownloadAttribute() {
     this.downloadLink.setAttribute("download", this.fileName ? this.fileName : "managed.pdf");
   }
@@ -323,5 +340,28 @@ class PdfContainer {
     // }
   }
 }
+function detectImageType(uint8Array) {
+  // Check for PNG signature
+  if (uint8Array[0] === 137 && uint8Array[1] === 80 && uint8Array[2] === 78 && uint8Array[3] === 71) {
+    return 'PNG';
+  }
 
+  // Check for JPEG signature
+  if (uint8Array[0] === 255 && uint8Array[1] === 216 && uint8Array[2] === 255) {
+    return 'JPEG';
+  }
+
+  // Check for TIFF signature (little-endian and big-endian)
+  if ((uint8Array[0] === 73 && uint8Array[1] === 73 && uint8Array[2] === 42 && uint8Array[3] === 0) ||
+      (uint8Array[0] === 77 && uint8Array[1] === 77 && uint8Array[2] === 0 && uint8Array[3] === 42)) {
+    return 'TIFF';
+  }
+
+  // Check for GIF signature
+  if (uint8Array[0] === 71 && uint8Array[1] === 73 && uint8Array[2] === 70) {
+    return 'GIF';
+  }
+
+  return 'UNKNOWN';
+}
 export default PdfContainer;
