@@ -27,7 +27,7 @@
                     th:placeholder="#{multiTool.uploadPrompts}">
                 </div>
                 <div class="mt-action-btn">
-                  <button class="btn btn-primary" onclick="addPdfs()">
+                  <button class="btn btn-primary" onclick="addFiles()">
                     <span class="material-symbols-rounded">
                       add
                     </span>
@@ -52,12 +52,12 @@
               <div class="multi-tool-container">
                 <div class="d-flex flex-wrap" id="pages-container-wrapper">
                   <div id="pages-container">
-                    <div class="page-container" th:each="pdf, status: ${pdfList}"
+                    <div class="page-container" th:each="file, status: ${fileList}"
                       th:id="'page-container-' + ${status.index}">
                       <div class="page-number-container">
                         <span th:text="${status.index + 1}"></span>
                       </div>
-                      <img th:src="${pdf.imageUrl}" alt="PDF Page">
+                      <img th:src="${file.imageUrl}" alt="File Page">
                     </div>
                   </div>
                 </div>
@@ -82,14 +82,14 @@
     const dragDropManager = new DragDropManager('drag-container', 'pages-container');
     // enables image highlight on click
     const imageHighlighter = new ImageHighlighter('image-highlighter');
-    // enables the default action buttons on each pdf
+    // enables the default action buttons on each file
     const pdfActionsManager = new PdfActionsManager('pages-container');
     const fileDragManager = new FileDragManager();
 
     // Scroll the wrapper horizontally
     scrollDivHorizontally('pages-container-wrapper');
 
-    // Automatically exposes rotateAll, addPdfs and exportPdf to the window for the global buttons.
+    // Automatically exposes rotateAll, addFiles and exportPdf to the window for the global buttons.
     const pdfContainer = new PdfContainer(
       'pages-container',
       'pages-container-wrapper',
@@ -101,7 +101,7 @@
       ]
     )
 
-    fileDragManager.setCallback(async (files) => pdfContainer.addPdfsFromFiles(files));
+    fileDragManager.setCallback(async (files) => pdfContainer.addFilesFromFiles(files));
   </script>
 </body>
 
