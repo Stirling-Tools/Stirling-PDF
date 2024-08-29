@@ -90,6 +90,25 @@ class FileDragManager {
         this.updateFilename(files ? files[0].name : "");
       });
   }
+
+  async addImageFile(file, nextSiblingElement) {
+    const div = document.createElement("div");
+    div.classList.add("page-container");
+
+    var img = document.createElement("img");
+    img.classList.add("page-image");
+    img.src = URL.createObjectURL(file);
+    div.appendChild(img);
+
+    this.pdfAdapters.forEach((adapter) => {
+      adapter.adapt?.(div);
+    });
+    if (nextSiblingElement) {
+      this.pagesContainer.insertBefore(div, nextSiblingElement);
+    } else {
+      this.pagesContainer.appendChild(div);
+    }
+  }
 }
 
 export default FileDragManager;
