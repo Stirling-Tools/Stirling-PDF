@@ -218,20 +218,13 @@ class PdfContainer {
     for (var i = 0; i < pageContainers.length; i++) {
       const img = pageContainers[i].querySelector("img"); // Find the img element within each .page-container
       if (!img) continue;
-
+      let page;
       if (img.doc) {
         const pages = await pdfDoc.copyPages(img.doc, [img.pageIdx]);
-        const page = pages[0];
-
-        const rotation = img.style.rotate;
-        if (rotation) {
-          const rotationAngle = parseInt(rotation.replace(/[^\d-]/g, ""));
-          page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle));
-        }
-
+        page = pages[0];
         pdfDoc.addPage(page);
       } else {
-        const page = pdfDoc.addPage([img.naturalWidth, img.naturalHeight]);
+        page = pdfDoc.addPage([img.naturalWidth, img.naturalHeight]);
         const imageBytes = await fetch(img.src).then((res) => res.arrayBuffer());
         const uint8Array = new Uint8Array(imageBytes);
         const imageType = detectImageType(uint8Array);
@@ -248,9 +241,8 @@ class PdfContainer {
             image = await pdfDoc.embedTiff(imageBytes);
             break;
           case 'GIF':
-            // For GIF, we only embed the first frame
-            image = await pdfDoc.embedPng(imageBytes);
-            break;
+            console.warn(`Unsupported image type: ${imageType}`);
+            continue; // Skip this image
           default:
             console.warn(`Unsupported image type: ${imageType}`);
             continue; // Skip this image
@@ -261,6 +253,11 @@ class PdfContainer {
           width: img.naturalWidth,
           height: img.naturalHeight,
         });
+      }
+      const rotation = img.style.rotate;
+      if (rotation) {
+        const rotationAngle = parseInt(rotation.replace(/[^\d-]/g, ""));
+        page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle));
       }
     }
     const pdfBytes = await pdfDoc.save();
