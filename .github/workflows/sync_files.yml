@@ -7,6 +7,7 @@ on:
     paths:
       - "build.gradle"
       - "src/main/resources/messages_*.properties"
+      - "scripts/ignore_translation.toml"
 
 permissions:
   contents: write
@@ -16,9 +17,9 @@ jobs:
   sync-versions:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - name: Install dependencies
@@ -35,7 +36,7 @@ jobs:
           git diff --staged --quiet || git commit -m ":floppy_disk: Sync Versions
           > Made via sync_files.yml" || echo "no changes"
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6.0.1
+        uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Update files
@@ -50,14 +51,17 @@ jobs:
             [1]: https://github.com/peter-evans/create-pull-request
           draft: false
           delete-branch: true
+          labels: github-actions
   sync-readme:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+      - name: Install dependencies
+        run: pip install tomlkit
       - name: Sync README
         run: python scripts/counter_translation.py
       - name: Set up git config
@@ -70,7 +74,7 @@ jobs:
           git diff --staged --quiet || git commit -m ":memo: Sync README
           > Made via sync_files.yml" || echo "no changes"
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6.0.1
+        uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Update files
@@ -85,3 +89,4 @@ jobs:
             [1]: https://github.com/peter-evans/create-pull-request
           draft: false
           delete-branch: true
+          labels: Documentation,Translation,github-actions

@@ -1,104 +1,108 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
-  <head>
-  <th:block th:insert="~{fragments/common :: head(title=#{multiTool.title}, header=#{multiTool.header})}"></th:block>
-  </head>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
 
-  <body>
-    <div id="image-highlighter"></div>
-    <div id="page-container">
-      <div id="content-wrap">
-        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br><br>
-        <div class="multi-tool-container">
-          <div class="row justify-content-center">
-            <h2 th:text="#{multiTool.header}"></h2>
-            <div class="col-md-12" id="pages-container-wrapper">
-              <div id="pages-container">
-                <div class="page-container" th:each="pdf, status: ${pdfList}" th:id="'page-container-' + ${status.index}">
-                  <div class="page-number-container">
-                    <span th:text="${status.index + 1}"></span>
-                  </div>
-                  <img th:src="${pdf.imageUrl}" alt="PDF Page">
-                </div>
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{multiTool.title}, header=#{multiTool.header})}"></th:block>
+</head>
+
+<body>
+  <div id="image-highlighter"></div>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-12">
+            <div class="bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon advance">construction</span>
+                <span class="tool-header-text" th:text="#{multiTool.header}"></span>
               </div>
-            </div>
-          </div>
-        </div>
-        <div class="container">
-          <div class="row justify-content-center">
-            <div class="col-md-6" style="text-align: center">
-              <div class="global-buttons-container d-flex align-content-center justify-content-center">
-                <div class="form-group">
+              <div class="mt-action-bar d-flex flex-wrap">
+                <div class="mt-filename">
                   <label for="filename-input" th:text="#{multiTool.uploadPrompts}">Filename</label>
-                  <input type="text" class="form-control" id="filename-input" th:placeholder="#{multiTool.uploadPrompts}">
+                  <input type="text" class="form-control" id="filename-input"
+                    th:placeholder="#{multiTool.uploadPrompts}">
+                </div>
+                <div class="mt-action-btn">
+                  <button class="btn btn-primary" onclick="addFiles()">
+                    <span class="material-symbols-rounded">
+                      add
+                    </span>
+                  </button>
+                  <button class="btn btn-secondary enable-on-file" onclick="rotateAll(-90)" disabled>
+                    <span class="material-symbols-rounded">
+                      rotate_left
+                    </span>
+                  </button>
+                  <button class="btn btn-secondary enable-on-file" onclick="rotateAll(90)" disabled>
+                    <span class="material-symbols-rounded">
+                      rotate_right
+                    </span>
+                  </button>
+                  <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
+                    <span class="material-symbols-rounded">
+                      download
+                    </span>
+                  </button>
                 </div>
               </div>
-              <div class="global-buttons-container">
-                <button class="btn btn-primary" onclick="addPdfs()">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
-                    <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
-                    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-                  </svg>
-                </button>
-                <button class="btn btn-secondary enable-on-file" onclick="rotateAll(-90)" disabled>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z" />
-                    <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z" />
-                  </svg>
-                </button>
-                <button class="btn btn-secondary enable-on-file" onclick="rotateAll(90)" disabled>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
-                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
-                  </svg>
-                </button>
-                <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
-                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-                  </svg>
-                </button>
+              <div class="multi-tool-container">
+                <div class="d-flex flex-wrap" id="pages-container-wrapper">
+                  <div id="pages-container">
+                    <div class="page-container" th:each="file, status: ${fileList}"
+                      th:id="'page-container-' + ${status.index}">
+                      <div class="page-number-container">
+                        <span th:text="${status.index + 1}"></span>
+                      </div>
+                      <img th:src="${file.imageUrl}" alt="File Page">
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div id="drag-container"></div>
-      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
+    <div id="drag-container"></div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
 
-    <script type="module">
-      import PdfContainer from './js/multitool/PdfContainer.js';
-      import DragDropManager from "./js/multitool/DragDropManager.js";
-      import scrollDivHorizontally from "./js/multitool/horizontalScroll.js";
-      import ImageHighlighter from "./js/multitool/ImageHighlighter.js";
-      import PdfActionsManager from './js/multitool/PdfActionsManager.js';
-      import FileDragManager from './js/multitool/fileInput.js';
-      // enables drag and drop
-      const dragDropManager = new DragDropManager('drag-container', 'pages-container');
-      // enables image highlight on click
-      const imageHighlighter = new ImageHighlighter('image-highlighter');
-      // enables the default action buttons on each pdf
-      const pdfActionsManager = new PdfActionsManager('pages-container');
-      const fileDragManager = new FileDragManager();
+  <script type="module">
+    import PdfContainer from './js/multitool/PdfContainer.js';
+    import DragDropManager from "./js/multitool/DragDropManager.js";
+    import scrollDivHorizontally from "./js/multitool/horizontalScroll.js";
+    import ImageHighlighter from "./js/multitool/ImageHighlighter.js";
+    import PdfActionsManager from './js/multitool/PdfActionsManager.js';
+    import FileDragManager from './js/multitool/fileInput.js';
+    // enables drag and drop
+    const dragDropManager = new DragDropManager('drag-container', 'pages-container');
+    // enables image highlight on click
+    const imageHighlighter = new ImageHighlighter('image-highlighter');
+    // enables the default action buttons on each file
+    const pdfActionsManager = new PdfActionsManager('pages-container');
+    const fileDragManager = new FileDragManager();
 
-      // Scroll the wrapper horizontally
-      scrollDivHorizontally('pages-container-wrapper');
+    // Scroll the wrapper horizontally
+    scrollDivHorizontally('pages-container-wrapper');
 
-      // Automatically exposes rotateAll, addPdfs and exportPdf to the window for the global buttons.
-      const pdfContainer = new PdfContainer(
-        'pages-container',
-        'pages-container-wrapper',
-        [
-          dragDropManager,
-          imageHighlighter,
-          pdfActionsManager,
-          fileDragManager
-        ]
-      )
+    // Automatically exposes rotateAll, addFiles and exportPdf to the window for the global buttons.
+    const pdfContainer = new PdfContainer(
+      'pages-container',
+      'pages-container-wrapper',
+      [
+        dragDropManager,
+        imageHighlighter,
+        pdfActionsManager,
+        fileDragManager
+      ]
+    )
 
-      fileDragManager.setCallback(async (files) => pdfContainer.addPdfsFromFiles(files));
-    </script>
-  </body>
+    fileDragManager.setCallback(async (files) => pdfContainer.addFilesFromFiles(files));
+  </script>
+</body>
+
 </html>

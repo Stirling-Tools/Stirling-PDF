@@ -1,4 +1,5 @@
 """check_tabulator.py"""
+
 import argparse
 import sys
 

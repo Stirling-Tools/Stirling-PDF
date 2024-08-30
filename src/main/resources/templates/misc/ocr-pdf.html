@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{ocr.title}, header=#{ocr.header})}"></th:block>
     <script>
@@ -34,17 +34,20 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{ocr.header}"></h2>
-              <form th:if="${#lists.size(languages) > 0}" action="#" th:action="@{api/v1/misc/ocr-pdf}" method="post" enctype="multipart/form-data" class="mb-3">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">quick_reference_all</span>
+                <span class="tool-header-text" th:text="#{ocr.header}"></span>
+              </div>
+              <form th:if="${#lists.size(languages) > 0}" action="#" th:action="@{'/api/v1/misc/ocr-pdf'}" method="post" enctype="multipart/form-data" class="mb-3">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label for="languages" class="form-label" th:text="#{ocr.selectText.1}"></label>
                   <hr>
                   <div id="languages">
-                    <div th:each="language, iterStat : ${languages}">
+                    <div class="form-check" th:each="language, iterStat : ${languages}">
                       <input type="checkbox" th:name="languages" th:value="${language}" required th:id="${'language-' + language}" onchange="handleLangSelection()" />
-                      <label class="form-check-label" th:for="${'language-' + language}" th:text="${language}"></label>
+                      <label th:for="${'language-' + language}" th:text="${language}"></label>
                     </div>
                   </div>
                   <hr>
@@ -59,25 +62,25 @@
                 </div>
                 <br>
                 <label for="languages" class="form-label" th:text="#{ocr.selectText.9}"></label>
-                <div class="form-check">
-                  <input type="checkbox" class="form-check-input" name="sidecar" id="sidecar" />
-                  <label class="form-check-label" for="sidecar" th:text="#{ocr.selectText.2}"></label>
+                <div class="form-check ms-3">
+                  <input type="checkbox" name="sidecar" id="sidecar" />
+                  <label for="sidecar" th:text="#{ocr.selectText.2}"></label>
                 </div>
-                <div class="form-check">
-                  <input type="checkbox" class="form-check-input" name="deskew" id="deskew" />
-                  <label class="form-check-label" for="deskew" th:text="#{ocr.selectText.3}"></label>
+                <div class="form-check ms-3">
+                  <input type="checkbox" name="deskew" id="deskew" />
+                  <label for="deskew" th:text="#{ocr.selectText.3}"></label>
                 </div>
-                <div class="form-check">
-                  <input type="checkbox" class="form-check-input" name="clean" id="clean" />
-                  <label class="form-check-label" for="clean" th:text="#{ocr.selectText.4}"></label>
+                <div class="form-check ms-3">
+                  <input type="checkbox" name="clean" id="clean" />
+                  <label for="clean" th:text="#{ocr.selectText.4}"></label>
                 </div>
-                <div class="form-check">
-                  <input type="checkbox" class="form-check-input" name="clean-final" id="clean-final" />
-                  <label class="form-check-label" for="clean-final" th:text="#{ocr.selectText.5}"></label>
+                <div class="form-check ms-3">
+                  <input type="checkbox" name="clean-final" id="clean-final" />
+                  <label for="clean-final" th:text="#{ocr.selectText.5}"></label>
                 </div>
-                <div class="form-check">
-                  <input type="checkbox" class="form-check-input" name="removeImagesAfter" id="removeImagesAfter" />
-                  <label class="form-check-label" for="removeImagesAfter" th:text="#{ocr.selectText.11}"></label>
+                <div class="form-check ms-3">
+                  <input type="checkbox" name="removeImagesAfter" id="removeImagesAfter" />
+                  <label for="removeImagesAfter" th:text="#{ocr.selectText.11}"></label>
                 </div>
                 <div class="mb-3">
                   <label th:text="#{ocr.selectText.12}"></label>
@@ -229,7 +232,7 @@
 
                 // Step 3: Apply the function to your labels
                 document.addEventListener('DOMContentLoaded', () => {
-                  const labels = document.querySelectorAll('#languages .form-check-label');
+                  const labels = document.querySelectorAll('#languages label');
                   labels.forEach(label => {
                     const languageCode = label.getAttribute('for').split('-')[1];
                     label.textContent = getFullLanguageName(languageCode);

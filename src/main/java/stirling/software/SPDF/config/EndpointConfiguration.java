@@ -116,6 +116,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "change-permissions");
         addEndpointToGroup("Security", "add-watermark");
         addEndpointToGroup("Security", "cert-sign");
+        addEndpointToGroup("Security", "remove-cert-sign");
         addEndpointToGroup("Security", "sanitize-pdf");
         addEndpointToGroup("Security", "auto-redact");
 
@@ -136,6 +137,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "auto-rename");
         addEndpointToGroup("Other", "get-info-on-pdf");
         addEndpointToGroup("Other", "show-javascript");
+        addEndpointToGroup("Other", "remove-image-pdf");
 
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");
@@ -164,6 +166,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Python", REMOVE_BLANKS);
         addEndpointToGroup("Python", "html-to-pdf");
         addEndpointToGroup("Python", "url-to-pdf");
+        addEndpointToGroup("Python", "pdf-to-img");
 
         // openCV
         addEndpointToGroup("OpenCV", "extract-image-scans");
@@ -200,6 +203,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "extract-images");
         addEndpointToGroup("Java", "change-metadata");
         addEndpointToGroup("Java", "cert-sign");
+        addEndpointToGroup("Java", "remove-cert-sign");
         addEndpointToGroup("Java", "multi-page-layout");
         addEndpointToGroup("Java", "scale-pages");
         addEndpointToGroup("Java", "add-page-numbers");
@@ -219,6 +223,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "split-pdf-by-sections");
         addEndpointToGroup("Java", REMOVE_BLANKS);
         addEndpointToGroup("Java", "pdf-to-text");
+        addEndpointToGroup("Java", "remove-image-pdf");
 
         // Javascript
         addEndpointToGroup("Javascript", "pdf-organizer");

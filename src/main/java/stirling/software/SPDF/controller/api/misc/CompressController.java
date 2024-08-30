@@ -99,7 +99,7 @@ public class CompressController {
                 List<String> command = new ArrayList<>();
                 command.add("gs");
                 command.add("-sDEVICE=pdfwrite");
-                command.add("-dCompatibilityLevel=1.4");
+                command.add("-dCompatibilityLevel=1.5");
 
                 switch (optimizeLevel) {
                     case 1:
@@ -136,10 +136,10 @@ public class CompressController {
                     // Increase optimization level for next iteration
                     optimizeLevel++;
                     if (autoMode && optimizeLevel > 4) {
-                        System.out.println("Skipping level 5 due to bad results in auto mode");
+                        logger.info("Skipping level 5 due to bad results in auto mode");
                         sizeMet = true;
                     } else {
-                        System.out.println(
+                        logger.info(
                                 "Increasing ghostscript optimisation level to " + optimizeLevel);
                     }
                 }
@@ -230,10 +230,10 @@ public class CompressController {
                             if (currentSize > expectedOutputSize) {
                                 // Log the current file size and scaleFactor
 
-                                System.out.println(
+                                logger.info(
                                         "Current file size: "
                                                 + FileUtils.byteCountToDisplaySize(currentSize));
-                                System.out.println("Current scale factor: " + scaleFactor);
+                                logger.info("Current scale factor: " + scaleFactor);
 
                                 // The file is still too large, reduce scaleFactor and try again
                                 scaleFactor *= 0.9f; // reduce scaleFactor by 10%
@@ -256,7 +256,6 @@ public class CompressController {
                     }
                 }
             }
-
             // Read the optimized PDF file
             pdfBytes = Files.readAllBytes(tempOutputFile);
 
@@ -269,17 +268,18 @@ public class CompressController {
                 // Read the original file again
                 pdfBytes = Files.readAllBytes(tempInputFile);
             }
+            // Return the optimized PDF as a response
+            String outputFilename =
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
+                            + "_Optimized.pdf";
+            return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+
         } finally {
             // Clean up the temporary files
-            Files.delete(tempInputFile);
-            Files.delete(tempOutputFile);
+            // deleted by multipart file handler deu to transferTo?
+            // Files.deleteIfExists(tempInputFile);
+            Files.deleteIfExists(tempOutputFile);
         }
-
-        // Return the optimized PDF as a response
-        String outputFilename =
-                Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_Optimized.pdf";
-        return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
     }
 }

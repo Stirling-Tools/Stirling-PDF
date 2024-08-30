@@ -1,12 +1,12 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -17,6 +17,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,31 +51,31 @@ public class BlankPageController {
         int threshold = request.getThreshold();
         float whitePercent = request.getWhitePercent();
 
-        PDDocument document = null;
-        try {
-            document = Loader.loadPDF(inputFile.getBytes());
+        try (PDDocument document = Loader.loadPDF(inputFile.getBytes())) {
             PDPageTree pages = document.getDocumentCatalog().getPages();
             PDFTextStripper textStripper = new PDFTextStripper();
 
-            List<Integer> pagesToKeepIndex = new ArrayList<>();
+            List<PDPage> nonBlankPages = new ArrayList<>();
+            List<PDPage> blankPages = new ArrayList<>();
             int pageIndex = 0;
+
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
             for (PDPage page : pages) {
-                logger.info("checking page " + pageIndex);
+                logger.info("checking page {}", pageIndex);
                 textStripper.setStartPage(pageIndex + 1);
                 textStripper.setEndPage(pageIndex + 1);
                 String pageText = textStripper.getText(document);
                 boolean hasText = !pageText.trim().isEmpty();
 
-                Boolean blank = false;
+                boolean blank = true;
                 if (hasText) {
-                    logger.info("page " + pageIndex + " has text, not blank");
+                    logger.info("page {} has text, not blank", pageIndex);
                     blank = false;
                 } else {
                     boolean hasImages = PdfUtils.hasImagesOnPage(page);
                     if (hasImages) {
-                        logger.info("page " + pageIndex + " has image, running blank detection");
+                        logger.info("page {} has image, running blank detection", pageIndex);
                         // Render image and save as temp file
                         BufferedImage image = pdfRenderer.renderImageWithDPI(pageIndex, 30);
                         blank = isBlankImage(image, threshold, whitePercent, threshold);
@@ -82,34 +83,57 @@ public class BlankPageController {
                 }
 
                 if (blank) {
-                    logger.info("Skipping, Image was  blank for page #" + pageIndex);
+                    logger.info("Skipping, Image was  blank for page #{}", pageIndex);
+                    blankPages.add(page);
                 } else {
-                    logger.info("page " + pageIndex + " has image which is not blank");
-                    pagesToKeepIndex.add(pageIndex);
+                    logger.info("page {} has image which is not blank", pageIndex);
+                    nonBlankPages.add(page);
                 }
 
                 pageIndex++;
             }
-            // Remove pages not present in pagesToKeepIndex
-            List<Integer> pageIndices =
-                    IntStream.range(0, pages.getCount()).boxed().collect(Collectors.toList());
-            Collections.reverse(pageIndices); // Reverse to prevent index shifting during removal
-            for (Integer i : pageIndices) {
-                if (!pagesToKeepIndex.contains(i)) {
-                    pages.remove(i);
-                }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ZipOutputStream zos = new ZipOutputStream(baos);
+
+            String filename =
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                            .replaceFirst("[.][^.]+$", "");
+
+            if (!nonBlankPages.isEmpty()) {
+                createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");
+            } else {
+                createZipEntry(zos, blankPages, filename + "_allBlankPages.pdf");
             }
 
-            return WebResponseUtils.pdfDocToWebResponse(
-                    document,
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
-                            + "_blanksRemoved.pdf");
+            if (!nonBlankPages.isEmpty() && !blankPages.isEmpty()) {
+                createZipEntry(zos, blankPages, filename + "_blankPages.pdf");
+            }
+
+            zos.close();
+
+            logger.info("Returning ZIP file: {}", filename + "_processed.zip");
+            return WebResponseUtils.boasToWebResponse(
+                    baos, filename + "_processed.zip", MediaType.APPLICATION_OCTET_STREAM);
+
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("exception", e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        } finally {
-            if (document != null) document.close();
+        }
+    }
+
+    public void createZipEntry(ZipOutputStream zos, List<PDPage> pages, String entryName)
+            throws IOException {
+        try (PDDocument document = new PDDocument()) {
+
+            for (PDPage page : pages) {
+                document.addPage(page);
+            }
+
+            ZipEntry zipEntry = new ZipEntry(entryName);
+            zos.putNextEntry(zipEntry);
+            document.save(zos);
+            zos.closeEntry();
         }
     }
 

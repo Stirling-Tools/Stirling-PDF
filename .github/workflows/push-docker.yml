@@ -22,9 +22,9 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: 7.6
+          gradle-version: 8.7
 
       - name: Run Gradle Command
         run: ./gradlew clean build
@@ -72,7 +72,7 @@ jobs:
             type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push main Dockerfile
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -98,7 +98,7 @@ jobs:
             type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
 
       - name: Build and push Dockerfile-ultra-lite
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: github.ref != 'refs/heads/main'
         with:
           context: .
@@ -108,5 +108,32 @@ jobs:
           cache-to: type=gha,mode=max
           tags: ${{ steps.meta2.outputs.tags }}
           labels: ${{ steps.meta2.outputs.labels }}
+          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          platforms: linux/amd64,linux/arm64/v8
+
+      - name: Generate tags fat
+        id: meta3
+        uses: docker/metadata-action@v5
+        if: github.ref != 'refs/heads/main'
+        with:
+          images: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
+          tags: |
+            type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-fat,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=latest-fat,enable=${{ github.ref == 'refs/heads/master' }}
+
+      - name: Build and push main Dockerfile fat
+        uses: docker/build-push-action@v6
+        if: github.ref != 'refs/heads/main'
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./Dockerfile-fat
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta3.outputs.tags }}
+          labels: ${{ steps.meta3.outputs.labels }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8

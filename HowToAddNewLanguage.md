@@ -34,5 +34,18 @@ Then simply translate all property entries within that file and make a PR into m
 
 If you do not have a java IDE i am happy to verify the changes worked once you raise PR (but won't be able to verify the translations themselves)
 
+## Handling Untranslatable Strings
 
+Sometimes, certain strings in the properties file may not require translation because they are the same in the target language or are universal (like names of protocols, certain terminologies, etc.). To ensure accurate statistics for language progress, these strings should be added to the `ignore_translation.toml` file located in the `scripts` directory. This will exclude them from the translation progress calculations.
 
+For example, if the English string error=Error does not need translation in Polish, add it to the ignore_translation.toml under the Polish section:
+
+```toml
+[pl_PL]
+ignore = [
+    "language.direction",  # Existing entries
+    "error"                # Add new entries here
+]
+```
+
+Make sure to place the entry under the correct language section. This helps maintain the accuracy of translation progress statistics and ensures that the translation tool or scripts do not misinterpret the completion rate.

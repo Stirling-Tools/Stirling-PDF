@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{removeBlanks.title}, header=#{removeBlanks.header})}"></th:block>
   </head>
@@ -11,10 +11,13 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{removeBlanks.header}"></h2>
-              <form id="multiPdfForm" th:action="@{api/v1/misc/remove-blanks}" method="post" enctype="multipart/form-data">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">scan_delete</span>
+                <span class="tool-header-text" th:text="#{removeBlanks.header}"></span>
+              </div>
+              <form id="multiPdfForm" th:action="@{'/api/v1/misc/remove-blanks'}" method="post" enctype="multipart/form-data">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label for="threshold" th:text="#{removeBlanks.threshold}"></label>
                   <input type="number" class="form-control" id="threshold" name="threshold" value="10">

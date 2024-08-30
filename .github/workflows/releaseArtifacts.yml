@@ -27,9 +27,9 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: 7.6
+          gradle-version: 8.7
 
       - name: Generate jar (With Security=${{ matrix.enable_security }})
         run: ./gradlew clean createExe

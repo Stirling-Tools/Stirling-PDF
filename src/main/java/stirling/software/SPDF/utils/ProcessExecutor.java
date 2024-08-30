@@ -58,10 +58,10 @@ public class ProcessExecutor {
                     long timeoutMinutes =
                             switch (key) {
                                 case LIBRE_OFFICE -> 30;
-                                case PDFTOHTML -> 5;
+                                case PDFTOHTML -> 20;
                                 case OCR_MY_PDF -> 30;
                                 case PYTHON_OPENCV -> 30;
-                                case GHOSTSCRIPT -> 5;
+                                case GHOSTSCRIPT -> 30;
                                 case WEASYPRINT -> 30;
                                 case INSTALL_APP -> 60;
                                 case CALIBRE -> 30;
@@ -125,7 +125,7 @@ public class ProcessExecutor {
                                     logger.warn(
                                             "Error reader thread was interrupted due to timeout.");
                                 } catch (IOException e) {
-                                    e.printStackTrace();
+                                    logger.error("exception", e);
                                 }
                             });
 
@@ -149,7 +149,7 @@ public class ProcessExecutor {
                                     logger.warn(
                                             "Error reader thread was interrupted due to timeout.");
                                 } catch (IOException e) {
-                                    e.printStackTrace();
+                                    logger.error("exception", e);
                                 }
                             });
 

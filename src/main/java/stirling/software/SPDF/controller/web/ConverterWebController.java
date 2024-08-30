@@ -9,6 +9,8 @@ import org.springframework.web.servlet.ModelAndView;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.utils.CheckProgramInstall;
+
 @Controller
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConverterWebController {
@@ -19,14 +21,6 @@ public class ConverterWebController {
     public String convertBookToPdfForm(Model model) {
         model.addAttribute("currentPage", "book-to-pdf");
         return "convert/book-to-pdf";
-    }
-
-    @ConditionalOnExpression("#{bookAndHtmlFormatsInstalled}")
-    @GetMapping("/pdf-to-book")
-    @Hidden
-    public String convertPdfToBookForm(Model model) {
-        model.addAttribute("currentPage", "pdf-to-book");
-        return "convert/pdf-to-book";
     }
 
     @GetMapping("/img-to-pdf")
@@ -57,13 +51,6 @@ public class ConverterWebController {
         return "convert/url-to-pdf";
     }
 
-    @GetMapping("/pdf-to-img")
-    @Hidden
-    public String pdfToimgForm(Model model) {
-        model.addAttribute("currentPage", "pdf-to-img");
-        return "convert/pdf-to-img";
-    }
-
     @GetMapping("/file-to-pdf")
     @Hidden
     public String convertToPdfForm(Model model) {
@@ -72,6 +59,23 @@ public class ConverterWebController {
     }
 
     // PDF TO......
+
+    @ConditionalOnExpression("#{bookAndHtmlFormatsInstalled}")
+    @GetMapping("/pdf-to-book")
+    @Hidden
+    public String convertPdfToBookForm(Model model) {
+        model.addAttribute("currentPage", "pdf-to-book");
+        return "convert/pdf-to-book";
+    }
+
+    @GetMapping("/pdf-to-img")
+    @Hidden
+    public String pdfToimgForm(Model model) {
+        boolean isPython = CheckProgramInstall.isPythonAvailable();
+        model.addAttribute("isPython", isPython);
+        model.addAttribute("currentPage", "pdf-to-img");
+        return "convert/pdf-to-img";
+    }
 
     @GetMapping("/pdf-to-html")
     @Hidden

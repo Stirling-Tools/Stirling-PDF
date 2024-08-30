@@ -1,24 +1,38 @@
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.2.4'
-    id 'io.spring.dependency-management' version '1.1.3'
-    id 'org.springdoc.openapi-gradle-plugin' version '1.8.0'
+    id "java"
+    id "org.springframework.boot" version "3.3.3"
+    id "io.spring.dependency-management" version "1.1.6"
+    id "org.springdoc.openapi-gradle-plugin" version "1.8.0"
     id "io.swagger.swaggerhub" version "1.3.2"
-    id 'edu.sc.seis.launch4j' version '3.0.5'
-    id 'com.diffplug.spotless' version '6.25.0'
-    id 'com.github.jk1.dependency-license-report' version '2.6'
+    id "edu.sc.seis.launch4j" version "3.0.6"
+    id "com.diffplug.spotless" version "6.25.0"
+    id "com.github.jk1.dependency-license-report" version "2.9"
+	//id "nebula.lint" version "19.0.3"
 }
 
 import com.github.jk1.license.render.*
 
-group = 'stirling.software'
-version = '0.23.0'
-sourceCompatibility = '17'
+ext {
+    springBootVersion = "3.3.3"
+    pdfboxVersion = "3.0.3"
+    logbackVersion = "1.5.7"
+    imageioVersion = "3.11.0"
+    lombokVersion = "1.18.34"
+    bouncycastleVersion = "1.78.1"	
+}
+
+group = "stirling.software"
+version = "0.28.3"
+
+java {
+    // 17 is lowest but we support and recommend 21
+    sourceCompatibility = JavaVersion.VERSION_17
+}
 
 repositories {
     mavenCentral()
+    maven { url "https://jitpack.io" }
 }
-
 
 licenseReport {
     renderers = [new JsonReportRenderer()]
@@ -27,15 +41,19 @@ licenseReport {
 sourceSets {
     main {
         java {
-            if (System.getenv('DOCKER_ENABLE_SECURITY') == 'false') {
-                exclude 'stirling/software/SPDF/config/security/**'
-                exclude 'stirling/software/SPDF/controller/api/UserController.java'
-                exclude 'stirling/software/SPDF/controller/web/AccountWebController.java'
-                exclude 'stirling/software/SPDF/model/ApiKeyAuthenticationToken.java'
-                exclude 'stirling/software/SPDF/model/Authority.java'
-                exclude 'stirling/software/SPDF/model/PersistentLogin.java'
-                exclude 'stirling/software/SPDF/model/User.java'
-                exclude 'stirling/software/SPDF/repository/**'
+            if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
+                exclude "stirling/software/SPDF/config/security/**"
+                exclude "stirling/software/SPDF/controller/api/UserController.java"
+                exclude "stirling/software/SPDF/controller/api/DatabaseController.java"
+                exclude "stirling/software/SPDF/controller/web/AccountWebController.java"
+                exclude "stirling/software/SPDF/controller/web/DatabaseWebController.java"
+                exclude "stirling/software/SPDF/model/ApiKeyAuthenticationToken.java"
+                exclude "stirling/software/SPDF/model/AttemptCounter.java"
+                exclude "stirling/software/SPDF/model/Authority.java"
+                exclude "stirling/software/SPDF/model/PersistentLogin.java"
+                exclude "stirling/software/SPDF/model/SessionEntity.java"
+                exclude "stirling/software/SPDF/model/User.java"
+                exclude "stirling/software/SPDF/repository/**"
             }
         }
     }
@@ -48,34 +66,34 @@ openApi {
 }
 
 launch4j {
-  icon = "${projectDir}/src/main/resources/static/favicon.ico"
+    icon = "${projectDir}/src/main/resources/static/favicon.ico"
 
-  outfile="Stirling-PDF.exe"
-  headerType="console"
-  jarTask = tasks.bootJar
+    outfile="Stirling-PDF.exe"
+    headerType="console"
+    jarTask = tasks.bootJar
 
-  errTitle="Encountered error, Do you have Java 17?"
-  downloadUrl="https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.exe"
-  variables=["BROWSER_OPEN=true", "ENDPOINTS_GROUPS_TO_REMOVE=CLI"]
-  jreMinVersion="17"
+    errTitle="Encountered error, Do you have Java 21?"
+    downloadUrl="https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
+    variables=["BROWSER_OPEN=true", "ENDPOINTS_GROUPS_TO_REMOVE=CLI"]
+    jreMinVersion="17"
 
-  mutexName="Stirling-PDF"
-  windowTitle="Stirling-PDF"
+    mutexName="Stirling-PDF"
+    windowTitle="Stirling-PDF"
 
-  messagesStartupError="An error occurred while starting Stirling-PDF"
-  //messagesJreNotFoundError="This application requires a Java Runtime Environment, Please download Java 17."
-  messagesJreVersionError="You are running the wrong version of Java, Please download Java 17."
-  messagesLauncherError="Java is corrupted. Please uninstall and then install  Java 17."
-  messagesInstanceAlreadyExists="Stirling-PDF is already running."
+    messagesStartupError="An error occurred while starting Stirling-PDF"
+    // messagesJreNotFoundError="This application requires a Java Runtime Environment, Please download Java 17."
+    messagesJreVersionError="You are running the wrong version of Java, Please download Java 21."
+    messagesLauncherError="Java is corrupted. Please uninstall and then install  Java 21."
+    messagesInstanceAlreadyExists="Stirling-PDF is already running."
 }
 
 spotless {
     java {
         target project.fileTree('src/main/java')
 
-        googleJavaFormat('1.19.1').aosp().reorderImports(false)
+        googleJavaFormat("1.22.0").aosp().reorderImports(false)
 
-        importOrder('java', 'javax', 'org', 'com', 'net', 'io')
+        importOrder("java", "javax", "org", "com", "net", "io")
         toggleOffOn()
         trimTrailingWhitespace()
         indentWithSpaces()
@@ -83,125 +101,146 @@ spotless {
     }
 }
 
+//gradleLint {
+//        rules=['unused-dependency']
+//    }
+tasks.wrapper {
+    gradleVersion = "8.7"
+}
+//tasks.withType(JavaCompile) {
+//    options.compilerArgs << "-Xlint:deprecation"
+//}
+configurations.all {
+    exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
+}
 dependencies {
     //security updates
-    implementation 'ch.qos.logback:logback-classic:1.5.3'
-    implementation 'ch.qos.logback:logback-core:1.5.3'
-    implementation 'org.springframework:spring-webmvc:6.1.5'
+    implementation "org.springframework:spring-webmvc:6.1.9"
 
-    implementation("io.github.pixee:java-security-toolkit:1.1.3")
+    implementation("io.github.pixee:java-security-toolkit:1.2.0")
 
-    implementation 'org.yaml:snakeyaml:2.2'
-    implementation 'org.springframework.boot:spring-boot-starter-web:3.2.4'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.2.4'
+    // implementation "org.yaml:snakeyaml:2.2"
+    implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
 
-    if (System.getenv('DOCKER_ENABLE_SECURITY') != 'false') {
-        implementation 'org.springframework.boot:spring-boot-starter-security:3.2.4'
-        implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE'
-        implementation "org.springframework.boot:spring-boot-starter-data-jpa:3.2.4"
+    // Exclude Tomcat and include Jetty
+    implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+    implementation "org.springframework.boot:spring-boot-starter-jetty:$springBootVersion"
+
+    implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
+
+    if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
+        implementation "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
+        runtimeOnly "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE"
+        implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
+        implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
         //2.2.x requires rebuild of DB file.. need migration path
-        implementation "com.h2database:h2:2.1.214"
+        runtimeOnly "com.h2database:h2:2.1.214"
+        // implementation "com.h2database:h2:2.2.224"
     }
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.4'
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 
     // Batik
-    implementation 'org.apache.xmlgraphics:batik-all:1.17'
-
+    implementation "org.apache.xmlgraphics:batik-all:1.17"
+    
     // TwelveMonkeys
-    implementation 'com.twelvemonkeys.imageio:imageio-batik:3.10.1'
-    implementation 'com.twelvemonkeys.imageio:imageio-bmp:3.10.1'
-    // implementation 'com.twelvemonkeys.imageio:imageio-hdr:3.10.1'
-    // implementation 'com.twelvemonkeys.imageio:imageio-icns:3.10.1'
-    // implementation 'com.twelvemonkeys.imageio:imageio-iff:3.10.1'
-    implementation 'com.twelvemonkeys.imageio:imageio-jpeg:3.10.1'
-    // implementation 'com.twelvemonkeys.imageio:imageio-pcx:3.10.1'
-    // implementation 'com.twelvemonkeys.imageio:imageio-pict:3.10.1'
-    // implementation 'com.twelvemonkeys.imageio:imageio-pnm:3.10.1'
-    // implementation 'com.twelvemonkeys.imageio:imageio-psd:3.10.1'
-    // implementation 'com.twelvemonkeys.imageio:imageio-sgi:3.10.1'
-    // implementation 'com.twelvemonkeys.imageio:imageio-tga:3.10.1'
-    // implementation 'com.twelvemonkeys.imageio:imageio-thumbsdb:3.10.1'
-    implementation 'com.twelvemonkeys.imageio:imageio-tiff:3.10.1'
-    implementation 'com.twelvemonkeys.imageio:imageio-webp:3.10.1'
-    // implementation 'com.twelvemonkeys.imageio:imageio-xwd:3.10.1'
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-bmp:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-jpeg:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-psd:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-tiff:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
+    // runtimeOnly "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
 
-    implementation 'commons-io:commons-io:2.15.1'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
-
+    implementation "commons-io:commons-io:2.16.1"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0"
     //general PDF
 
     // https://mvnrepository.com/artifact/com.opencsv/opencsv
-    implementation ('com.opencsv:opencsv:5.9') {
-        exclude group: 'commons-logging', module: 'commons-logging'
+    implementation ("com.opencsv:opencsv:5.9") {
+        exclude group: "commons-logging", module: "commons-logging"
     }
 
-    implementation ('org.apache.pdfbox:pdfbox:3.0.2'){
-        exclude group: 'commons-logging', module: 'commons-logging'
+    implementation ("org.apache.pdfbox:pdfbox:$pdfboxVersion") {
+        exclude group: "commons-logging", module: "commons-logging"
     }
 
-    implementation ('org.apache.pdfbox:xmpbox:3.0.2'){
-        exclude group: 'commons-logging', module: 'commons-logging'
+    implementation ("org.apache.pdfbox:xmpbox:$pdfboxVersion") {
+        exclude group: "commons-logging", module: "commons-logging"
     }
 
-    implementation 'org.bouncycastle:bcprov-jdk18on:1.77'
-    implementation 'org.bouncycastle:bcpkix-jdk18on:1.77'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator:3.2.4'
-    implementation 'io.micrometer:micrometer-core:1.12.4'
-    implementation group: 'com.google.zxing', name: 'core', version: '3.5.3'
+    implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
+
+	
+    implementation "com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4"
+
+    implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
+    implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
+    implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
+    implementation "io.micrometer:micrometer-core:1.13.3"
+    implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
-    implementation 'org.commonmark:commonmark:0.22.0'
-    implementation 'org.commonmark:commonmark-ext-gfm-tables:0.22.0'
-    // https://mvnrepository.com/artifact/com.github.vladimir-bukhtoyarov/bucket4j-core
-    implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
+    implementation "org.commonmark:commonmark:0.22.0"
+    implementation "org.commonmark:commonmark-ext-gfm-tables:0.22.0"
+    // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
+    implementation "com.bucket4j:bucket4j_jdk17-core:8.14.0"
+    implementation "com.fathzer:javaluator:3.0.4"
 
-	implementation 'com.fathzer:javaluator:3.0.3'
+    developmentOnly("org.springframework.boot:spring-boot-devtools:$springBootVersion")
+    compileOnly "org.projectlombok:lombok:$lombokVersion"
+    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-    developmentOnly("org.springframework.boot:spring-boot-devtools:3.2.4")
-    compileOnly 'org.projectlombok:lombok:1.18.32'
-    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+    testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
 }
 
-tasks.withType(JavaCompile) {
-    dependsOn 'spotlessApply'
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    dependsOn "spotlessApply"
 }
 compileJava {
-    options.compilerArgs << '-parameters'
+    options.compilerArgs << "-parameters"
 }
 
 task writeVersion {
-    def propsFile = file('src/main/resources/version.properties')
+    def propsFile = file("src/main/resources/version.properties")
     def props = new Properties()
-    props.setProperty('version', version)
+    props.setProperty("version", version)
     props.store(propsFile.newWriter(), null)
 }
 
 swaggerhubUpload {
     //dependsOn generateOpenApiDocs  // Depends on your task generating Swagger docs
-    api 'Stirling-PDF'  // The name of your API on SwaggerHub
-    owner 'Frooodle'  // Your SwaggerHub username (or organization name)
+    api "Stirling-PDF"  // The name of your API on SwaggerHub
+    owner "Frooodle"  // Your SwaggerHub username (or organization name)
     version project.version  // The version of your API
-    inputFile './SwaggerDoc.json'  // The path to your Swagger docs
-    token  "${System.getenv('SWAGGERHUB_API_KEY')}"  // Your SwaggerHub API key, passed as an environment variable
-    oas '3.0.0'  // The version of the OpenAPI Specification you're using
+    inputFile "./SwaggerDoc.json"  // The path to your Swagger docs
+    token  "${System.getenv("SWAGGERHUB_API_KEY")}"  // Your SwaggerHub API key, passed as an environment variable
+    oas "3.0.0"  // The version of the OpenAPI Specification you"re using
 }
-
-
 
 jar {
     enabled = false
     manifest {
-        attributes 'Implementation-Title': 'Stirling-PDF',
-                   'Implementation-Version': project.version
+        attributes "Implementation-Title": "Stirling-PDF",
+                   "Implementation-Version": project.version
     }
 
 }
 
-tasks.named('test') {
+tasks.named("test") {
     useJUnitPlatform()
 }
 
 task printVersion {
-  println project.version
+    println project.version
 }

@@ -1,37 +1,41 @@
 package stirling.software.SPDF.config;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
+import org.simpleyaml.configuration.comments.CommentType;
+import org.simpleyaml.configuration.file.YamlFile;
+import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
+import org.simpleyaml.configuration.implementation.snakeyaml.lib.DumperOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 
 public class ConfigInitializer
         implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
+    private static final Logger logger = LoggerFactory.getLogger(ConfigInitializer.class);
+
     @Override
     public void initialize(ConfigurableApplicationContext applicationContext) {
         try {
             ensureConfigExists();
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Failed to initialize application configuration", e);
         }
     }
 
-    public void ensureConfigExists() throws IOException {
+    public void ensureConfigExists() throws IOException, URISyntaxException {
         // Define the path to the external config directory
         Path destPath = Paths.get("configs", "settings.yml");
 
@@ -51,170 +55,101 @@ public class ConfigInitializer
                 }
             }
         } else {
-            // If user file exists, we need to merge it with the template from the classpath
-            List<String> templateLines;
-            try (InputStream in =
-                    getClass().getClassLoader().getResourceAsStream("settings.yml.template")) {
-                templateLines =
-                        new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
-                                .lines()
-                                .collect(Collectors.toList());
+
+            // Define the path to the config settings file
+            Path settingsPath = Paths.get("configs", "settings.yml");
+            // Load the template resource
+            URL settingsTemplateResource =
+                    getClass().getClassLoader().getResource("settings.yml.template");
+            if (settingsTemplateResource == null) {
+                throw new IOException("Resource not found: settings.yml.template");
             }
 
-            mergeYamlFiles(templateLines, destPath, destPath);
+            // Create a temporary file to copy the resource content
+            Path tempTemplatePath = Files.createTempFile("settings.yml", ".template");
+
+            try (InputStream in = settingsTemplateResource.openStream()) {
+                Files.copy(in, tempTemplatePath, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            final YamlFile settingsTemplateFile = new YamlFile(tempTemplatePath.toFile());
+            DumperOptions yamlOptionsSettingsTemplateFile =
+                    ((SimpleYamlImplementation) settingsTemplateFile.getImplementation())
+                            .getDumperOptions();
+            yamlOptionsSettingsTemplateFile.setSplitLines(false);
+            settingsTemplateFile.loadWithComments();
+
+            final YamlFile settingsFile = new YamlFile(settingsPath.toFile());
+            DumperOptions yamlOptionsSettingsFile =
+                    ((SimpleYamlImplementation) settingsFile.getImplementation())
+                            .getDumperOptions();
+            yamlOptionsSettingsFile.setSplitLines(false);
+            settingsFile.loadWithComments();
+
+            // Load headers and comments
+            String header = settingsTemplateFile.getHeader();
+
+            // Create a new file for temporary settings
+            final YamlFile tempSettingFile = new YamlFile(settingsPath.toFile());
+            DumperOptions yamlOptionsTempSettingFile =
+                    ((SimpleYamlImplementation) tempSettingFile.getImplementation())
+                            .getDumperOptions();
+            yamlOptionsTempSettingFile.setSplitLines(false);
+            tempSettingFile.createNewFile(true);
+            tempSettingFile.setHeader(header);
+
+            // Get all keys from the template
+            List<String> keys =
+                    Arrays.asList(settingsTemplateFile.getKeys(true).toArray(new String[0]));
+
+            for (String key : keys) {
+                if (!key.contains(".")) {
+                    // Add blank lines and comments to specific sections
+                    tempSettingFile
+                            .path(key)
+                            .comment(settingsTemplateFile.getComment(key))
+                            .blankLine();
+                    continue;
+                }
+                // Copy settings from the template to the settings.yml file
+                changeConfigItemFromCommentToKeyValue(
+                        settingsTemplateFile, settingsFile, tempSettingFile, key);
+            }
+
+            // Save the settings.yml file
+            tempSettingFile.save();
+        }
+
+        // Create custom settings file if it doesn't exist
+        Path customSettingsPath = Paths.get("configs", "custom_settings.yml");
+        if (!Files.exists(customSettingsPath)) {
+            Files.createFile(customSettingsPath);
         }
     }
 
-    public void mergeYamlFiles(List<String> templateLines, Path userFilePath, Path outputPath)
-            throws IOException {
-        List<String> userLines = Files.readAllLines(userFilePath);
-        List<String> mergedLines = new ArrayList<>();
-        boolean insideAutoGenerated = false;
-        boolean beforeFirstKey = true;
-
-        Function<String, Boolean> isCommented = line -> line.trim().startsWith("#");
-        Function<String, String> extractKey =
-                line -> {
-                    String[] parts = line.split(":");
-                    return parts.length > 0 ? parts[0].trim().replace("#", "").trim() : "";
-                };
-
-        Function<String, Integer> getIndentationLevel =
-                line -> {
-                    int count = 0;
-                    for (char ch : line.toCharArray()) {
-                        if (ch == ' ') count++;
-                        else break;
-                    }
-                    return count;
-                };
-
-        Set<String> userKeys = userLines.stream().map(extractKey).collect(Collectors.toSet());
-
-        for (String line : templateLines) {
-            String key = extractKey.apply(line);
-
-            if ("AutomaticallyGenerated:".equalsIgnoreCase(line.trim())) {
-                insideAutoGenerated = true;
-                mergedLines.add(line);
-                continue;
-            } else if (insideAutoGenerated && line.trim().isEmpty()) {
-                insideAutoGenerated = false;
-                mergedLines.add(line);
-                continue;
-            }
-
-            if (beforeFirstKey && (isCommented.apply(line) || line.trim().isEmpty())) {
-                // Handle top comments and empty lines before the first key.
-                mergedLines.add(line);
-                continue;
-            }
-
-            if (!key.isEmpty()) beforeFirstKey = false;
-
-            if (userKeys.contains(key)) {
-                // If user has any version (commented or uncommented) of this key, skip the
-                // template line
-                Optional<String> userValue =
-                        userLines.stream()
-                                .filter(
-                                        l ->
-                                                extractKey.apply(l).equalsIgnoreCase(key)
-                                                        && !isCommented.apply(l))
-                                .findFirst();
-                if (userValue.isPresent()) mergedLines.add(userValue.get());
-                continue;
-            }
-
-            if (isCommented.apply(line) || line.trim().isEmpty() || !userKeys.contains(key)) {
-                mergedLines.add(
-                        line); // If line is commented, empty or key not present in user's file,
-                // retain the
-                // template line
-                continue;
-            }
+    private void changeConfigItemFromCommentToKeyValue(
+            final YamlFile settingsTemplateFile,
+            final YamlFile settingsFile,
+            final YamlFile tempSettingFile,
+            String path) {
+        if (settingsFile.get(path) == null && settingsTemplateFile.get(path) != null) {
+            // If the key is only in the template, add it to the temporary settings with comments
+            tempSettingFile
+                    .path(path)
+                    .set(settingsTemplateFile.get(path))
+                    .comment(settingsTemplateFile.getComment(path, CommentType.BLOCK))
+                    .commentSide(settingsTemplateFile.getComment(path, CommentType.SIDE));
+        } else if (settingsFile.get(path) != null && settingsTemplateFile.get(path) != null) {
+            // If the key is in both, update the temporary settings with the main settings' value
+            // and comments
+            tempSettingFile
+                    .path(path)
+                    .set(settingsFile.get(path))
+                    .comment(settingsTemplateFile.getComment(path, CommentType.BLOCK))
+                    .commentSide(settingsTemplateFile.getComment(path, CommentType.SIDE));
+        } else {
+            // Log if the key is not found in both YAML files
+            logger.info("Key not found in both YAML files: " + path);
         }
-
-        // Add any additional uncommented user lines that are not present in the
-        // template
-        for (String userLine : userLines) {
-            String userKey = extractKey.apply(userLine);
-            boolean isPresentInTemplate =
-                    templateLines.stream()
-                            .map(extractKey)
-                            .anyMatch(templateKey -> templateKey.equalsIgnoreCase(userKey));
-            if (!isPresentInTemplate && !isCommented.apply(userLine)) {
-                if (!childOfTemplateEntry(
-                        isCommented,
-                        extractKey,
-                        getIndentationLevel,
-                        userLines,
-                        userLine,
-                        templateLines)) {
-                    // check if userLine is a child of a entry within templateLines or not, if child
-                    // of parent in templateLines then dont add to mergedLines, if anything else
-                    // then add
-                    mergedLines.add(userLine);
-                }
-            }
-        }
-
-        Files.write(outputPath, mergedLines, StandardCharsets.UTF_8);
-    }
-
-    // New method to check if a userLine is a child of an entry in templateLines
-    boolean childOfTemplateEntry(
-            Function<String, Boolean> isCommented,
-            Function<String, String> extractKey,
-            Function<String, Integer> getIndentationLevel,
-            List<String> userLines,
-            String userLine,
-            List<String> templateLines) {
-        String userKey = extractKey.apply(userLine).trim();
-        int userIndentation = getIndentationLevel.apply(userLine);
-
-        // Start by assuming the line is not a child of an entry in templateLines
-        boolean isChild = false;
-
-        // Iterate backwards through userLines from the current line to find any parent
-        for (int i = userLines.indexOf(userLine) - 1; i >= 0; i--) {
-            String potentialParentLine = userLines.get(i);
-            int parentIndentation = getIndentationLevel.apply(potentialParentLine);
-
-            // Check if we've reached a potential parent based on indentation
-            if (parentIndentation < userIndentation) {
-                String parentKey = extractKey.apply(potentialParentLine).trim();
-
-                // Now, check if this potential parent or any of its parents exist in templateLines
-                boolean parentExistsInTemplate =
-                        templateLines.stream()
-                                .filter(line -> !isCommented.apply(line)) // Skip commented lines
-                                .anyMatch(
-                                        templateLine -> {
-                                            String templateKey =
-                                                    extractKey.apply(templateLine).trim();
-                                            return parentKey.equalsIgnoreCase(templateKey);
-                                        });
-
-                if (!parentExistsInTemplate) {
-                    // If the parent does not exist in template, check the next level parent
-                    userIndentation =
-                            parentIndentation; // Update userIndentation to the parent's indentation
-                    // for next iteration
-                    if (parentIndentation == 0) {
-                        // If we've reached the top-level parent and it's not in template, the
-                        // original line is considered not a child
-                        isChild = false;
-                        break;
-                    }
-                } else {
-                    // If any parent exists in template, the original line is considered a child
-                    isChild = true;
-                    break;
-                }
-            }
-        }
-
-        return isChild; // Return true if the line is not a child of any entry in templateLines
     }
 }

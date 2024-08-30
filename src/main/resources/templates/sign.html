@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{sign.title}, header=#{sign.header})}"></th:block>
-    <link rel="stylesheet" href="css/sign.css">
+    <link rel="stylesheet" th:href="@{'/css/sign.css'}">
   <th:block th:each="font : ${fonts}">
     <style th:inline="text">
       @font-face {
@@ -18,8 +18,8 @@
       }
     </style>
   </th:block>
-    <script src="js/thirdParty/signature_pad.umd.min.js"></script>
-    <script src="js/thirdParty/interact.min.js"></script>
+    <script th:src="@{'/js/thirdParty/signature_pad.umd.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/interact.min.js'}"></script>
   </head>
 
   <body>
@@ -29,11 +29,14 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{sign.header}"></h2>
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon sign">signature</span>
+                <span class="tool-header-text" th:text="#{sign.header}"></span>
+              </div>
 
               <!-- pdf selector -->
-              <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multiple=false, accept='application/pdf')}"></div>
+              <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multipleInputsForSingleRequest=false, disableMultipleFiles=true,  accept='application/pdf')}"></div>
               <script>
                 let originalFileName = '';
                 document.querySelector('input[name=pdf-upload]').addEventListener('change', async (event) => {
@@ -41,7 +44,7 @@
                   if (file) {
                     originalFileName = file.name.replace(/\.[^/.]+$/, "");
                     const pdfData = await file.arrayBuffer();
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js'
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
                     const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
                     await DraggableUtils.renderPage(pdfDoc, 0);
 
@@ -58,7 +61,7 @@
               </script>
               <div class="tab-group show-on-file-selected">
                 <div class="tab-container" th:title="#{sign.upload}">
-                  <div th:replace="~{fragments/common :: fileSelector(name='image-upload', multiple=true, accept='image/*', inputText=#{imgPrompt})}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='image-upload', multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}"></div>
                     <script>
                       const imageUpload = document.querySelector('input[name=image-upload]');
                       imageUpload.addEventListener('change', e => {
@@ -226,7 +229,7 @@
               <!-- draggables box -->
               <div id="box-drag-container" class="show-on-file-selected">
                 <canvas id="pdf-canvas"></canvas>
-                <script src="js/draggable-utils.js"></script>
+                <script th:src="@{'/js/draggable-utils.js'}"></script>
                 <div class="draggable-buttons-box ignore-rtl">
                   <button class="btn btn-outline-secondary" onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">

@@ -15,6 +15,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -32,6 +34,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Controller
 @Tag(name = "General", description = "General APIs")
 public class GeneralWebController {
+
+    private static final Logger logger = LoggerFactory.getLogger(GeneralWebController.class);
 
     @GetMapping("/pipeline")
     @Hidden
@@ -74,7 +78,7 @@ public class GeneralWebController {
                 }
 
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("exception", e);
             }
         }
         if (pipelineConfigsWithNames.size() == 0) {
@@ -305,5 +309,12 @@ public class GeneralWebController {
     public String autoSPlitPDFForm(Model model) {
         model.addAttribute("currentPage", "auto-split-pdf");
         return "auto-split-pdf";
+    }
+
+    @GetMapping("/remove-image-pdf")
+    @Hidden
+    public String removeImagePdfForm(Model model) {
+        model.addAttribute("currentPage", "remove-image-pdf");
+        return "remove-image-pdf";
     }
 }

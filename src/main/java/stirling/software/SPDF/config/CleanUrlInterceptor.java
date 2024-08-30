@@ -15,7 +15,15 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
 
     private static final List<String> ALLOWED_PARAMS =
             Arrays.asList(
-                    "lang", "endpoint", "endpoints", "logout", "error", "file", "messageType");
+                    "lang",
+                    "endpoint",
+                    "endpoints",
+                    "logout",
+                    "error",
+                    "erroroauth",
+                    "file",
+                    "messageType",
+                    "infoMessage");
 
     @Override
     public boolean preHandle(
@@ -24,25 +32,25 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
         String queryString = request.getQueryString();
         if (queryString != null && !queryString.isEmpty()) {
             String requestURI = request.getRequestURI();
-            Map<String, String> parameters = new HashMap<>();
+            Map<String, String> allowedParameters = new HashMap<>();
 
             // Keep only the allowed parameters
             String[] queryParameters = queryString.split("&");
             for (String param : queryParameters) {
-                String[] keyValue = param.split("=");
-                if (keyValue.length != 2) {
+                String[] keyValuePair = param.split("=");
+                if (keyValuePair.length != 2) {
                     continue;
                 }
-                if (ALLOWED_PARAMS.contains(keyValue[0])) {
-                    parameters.put(keyValue[0], keyValue[1]);
+                if (ALLOWED_PARAMS.contains(keyValuePair[0])) {
+                    allowedParameters.put(keyValuePair[0], keyValuePair[1]);
                 }
             }
 
             // If there are any parameters that are not allowed
-            if (parameters.size() != queryParameters.length) {
+            if (allowedParameters.size() != queryParameters.length) {
                 // Construct new query string
                 StringBuilder newQueryString = new StringBuilder();
-                for (Map.Entry<String, String> entry : parameters.entrySet()) {
+                for (Map.Entry<String, String> entry : allowedParameters.entrySet()) {
                     if (newQueryString.length() > 0) {
                         newQueryString.append("&");
                     }
@@ -51,7 +59,8 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
 
                 // Redirect to the URL with only allowed query parameters
                 String redirectUrl = requestURI + "?" + newQueryString;
-                response.sendRedirect(redirectUrl);
+
+                response.sendRedirect(request.getContextPath() + redirectUrl);
                 return false;
             }
         }

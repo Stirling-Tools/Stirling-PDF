@@ -1,0 +1,96 @@
+name: Check Properties Files in PR
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "src/main/resources/messages_*.properties"
+
+jobs:
+  check-files:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          path: pr-branch
+          fetch-depth: 0
+
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-branch
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install GitHub CLI
+        run: sudo apt-get update && sudo apt-get install -y gh
+
+      - name: Fetch PR changed files
+        id: fetch-pr-changes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching PR changed files..."
+          cd pr-branch
+          gh pr view ${{ github.event.pull_request.number }} --json files -q ".files[].path" > ../changed_files.txt
+          cd ..
+          echo $(cat changed_files.txt)
+          BRANCH_PATH="pr-branch"
+          echo "BRANCH_PATH=${BRANCH_PATH}" >> $GITHUB_ENV
+          CHANGED_FILES=$(cat changed_files.txt | tr '\n' ' ')
+          echo "CHANGED_FILES=${CHANGED_FILES}" >> $GITHUB_ENV
+          echo "Changed files: ${CHANGED_FILES}"
+          echo "Branch: ${BRANCH_PATH}"
+
+      - name: Determine reference file
+        id: determine-file
+        run: |
+          echo "Determining reference file..."
+          if echo "${{ env.CHANGED_FILES }}"| grep -q 'src/main/resources/messages_en_GB.properties'; then
+              echo "REFERENCE_FILE=pr-branch/src/main/resources/messages_en_GB.properties" >> $GITHUB_ENV
+          else
+              echo "REFERENCE_FILE=main-branch/src/main/resources/messages_en_GB.properties" >> $GITHUB_ENV
+          fi
+
+      - name: Show REFERENCE_FILE
+        run: echo "Reference file is set to ${{ env.REFERENCE_FILE }}"
+
+      - name: Run Python script to check files
+        id: run-check
+        run: |
+          python main-branch/.github/scripts/check_language_properties.py --reference-file ${{ env.REFERENCE_FILE }} --branch ${{ env.BRANCH_PATH }} --files ${{ env.CHANGED_FILES }} > failure.txt || true
+
+      - name: Capture output
+        id: capture-output
+        run: |
+          if [ -f failure.txt ]; then
+            echo "Test failed, capturing output..."
+            # Use the cat command to avoid issues with special characters in environment variables
+            ERROR_OUTPUT=$(cat failure.txt)
+            echo "ERROR_OUTPUT<<EOF" >> $GITHUB_ENV
+            echo "$ERROR_OUTPUT" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+            echo $ERROR_OUTPUT
+          fi
+
+      - name: Post comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { GITHUB_REPOSITORY, ERROR_OUTPUT } = process.env;
+            const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
+            const prNumber = context.issue.number; // Pull request number from context
+            await github.rest.issues.createComment({
+              owner: repoOwner,
+              repo: repoName,
+              issue_number: prNumber,
+              body: `## Translation Verification Summary\n\n\n${ERROR_OUTPUT}\n`
+            });

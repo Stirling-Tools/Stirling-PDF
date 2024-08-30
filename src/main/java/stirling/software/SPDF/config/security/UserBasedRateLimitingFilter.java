@@ -19,7 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
-import io.github.bucket4j.Refill;
+import io.github.pixee.security.Newlines;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -125,19 +125,26 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
         ConsumptionProbe probe = userBucket.tryConsumeAndReturnRemaining(1);
 
         if (probe.isConsumed()) {
-            response.setHeader("X-Rate-Limit-Remaining", Long.toString(probe.getRemainingTokens()));
+            response.setHeader(
+                    "X-Rate-Limit-Remaining",
+                    Newlines.stripAll(Long.toString(probe.getRemainingTokens())));
             filterChain.doFilter(request, response);
         } else {
             long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.setHeader("X-Rate-Limit-Retry-After-Seconds", String.valueOf(waitForRefill));
+            response.setHeader(
+                    "X-Rate-Limit-Retry-After-Seconds",
+                    Newlines.stripAll(String.valueOf(waitForRefill)));
             response.getWriter().write("Rate limit exceeded for POST requests.");
         }
     }
 
     private Bucket createUserBucket(int limitPerDay) {
         Bandwidth limit =
-                Bandwidth.classic(limitPerDay, Refill.intervally(limitPerDay, Duration.ofDays(1)));
+                Bandwidth.builder()
+                        .capacity(limitPerDay)
+                        .refillIntervally(limitPerDay, Duration.ofDays(1))
+                        .build();
         return Bucket.builder().addLimit(limit).build();
     }
 }

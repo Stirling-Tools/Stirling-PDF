@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +32,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
+import stirling.software.SPDF.utils.CheckProgramInstall;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -77,6 +77,11 @@ public class ExtractImageScansController {
         Path tempZipFile = null;
         List<Path> tempDirs = new ArrayList<>();
 
+        if (!CheckProgramInstall.isPythonAvailable()) {
+            throw new IOException("Python is not installed.");
+        }
+
+        String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
         try {
             // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
@@ -103,10 +108,7 @@ public class ExtractImageScansController {
                 }
             } else {
                 tempInputFile = Files.createTempFile("input_", "." + extension);
-                Files.copy(
-                        form.getFileInput().getInputStream(),
-                        tempInputFile,
-                        StandardCopyOption.REPLACE_EXISTING);
+                form.getFileInput().transferTo(tempInputFile);
                 // Add input file path to images list
                 images.add(tempInputFile.toString());
             }
@@ -121,7 +123,7 @@ public class ExtractImageScansController {
                 List<String> command =
                         new ArrayList<>(
                                 Arrays.asList(
-                                        "python3",
+                                        pythonVersion,
                                         "./scripts/split_photos.py",
                                         images.get(i),
                                         tempDir.toString(),
@@ -176,11 +178,15 @@ public class ExtractImageScansController {
                 byte[] zipBytes = Files.readAllBytes(tempZipFile);
 
                 // Clean up the temporary zip file
-                Files.delete(tempZipFile);
+                Files.deleteIfExists(tempZipFile);
 
                 return WebResponseUtils.bytesToWebResponse(
                         zipBytes, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
+            }
+            if (processedImageBytes.size() == 0) {
+                throw new IllegalArgumentException("No images detected");
             } else {
+
                 // Return the processed image as a response
                 byte[] imageBytes = processedImageBytes.get(0);
                 return WebResponseUtils.bytesToWebResponse(
@@ -201,7 +207,7 @@ public class ExtractImageScansController {
 
             if (tempZipFile != null && Files.exists(tempZipFile)) {
                 try {
-                    Files.delete(tempZipFile);
+                    Files.deleteIfExists(tempZipFile);
                 } catch (IOException e) {
                     logger.error("Failed to delete temporary zip file: " + tempZipFile, e);
                 }

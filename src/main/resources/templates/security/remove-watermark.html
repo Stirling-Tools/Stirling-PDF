@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{remove-watermark.title}, header=#{remove-watermark.header})}"></th:block>
   </head>
@@ -11,12 +11,15 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{remove-watermark.header}"></h2>
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon security">water_drop</span>
+                <span class="tool-header-text" th:text="#{remove-watermark.header}"></span>
+              </div>
               <form method="post" enctype="multipart/form-data" action="api/v1/security/remove-watermark">
                 <div class="mb-3">
                   <label th:text="#{remove-watermark.selectText.1}"></label>
-                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 </div>
                 <div class="mb-3">
                   <label for="watermarkText" th:text="#{remove-watermark.selectText.2}"></label>

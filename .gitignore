@@ -1,5 +1,3 @@
-
-
 ### Eclipse ###
 .metadata
 bin/
@@ -21,7 +19,6 @@ pipeline/finishedFolders/
 customFiles/
 configs/
 watchedFolders/
-
 
 # Gradle
 .gradle
@@ -119,9 +116,48 @@ watchedFolders/
 *.db
 /build
 
-/.vscode
-/.idea
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.env*
+.venv*
+env*/
+venv*/
+ENV/
+env.bak/
+venv.bak/
+
+# VS Code
+/.vscode/**/*
+!/.vscode/settings.json
+
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
 
 # Ignore Mac DS_Store files
 .DS_Store
 **/.DS_Store
+
+# cucumber
+/cucumber/reports/**
+
+# Certs
+*.p12
+*.pem
+*.crt
+*.cer
+*.der
+*.key
+*.csr
+
+# cache
+.ruff_cache
+.mypy_cache
+.pytest_cache
+.ipynb_checkpoints
+
