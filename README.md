@@ -198,7 +198,7 @@ Stirling PDF currently supports 38!
 | Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![76%](https://geps.dev/progress/76)   |
 | Simplified Chinese (简体中文) (zh_CN)       | ![96%](https://geps.dev/progress/96)   |
 | Slovakian (Slovensky) (sk_SK)               | ![90%](https://geps.dev/progress/90)   |
-| Spanish (Español) (es_ES)                   | ![95%](https://geps.dev/progress/95)   |
+| Spanish (Español) (es_ES)                   | ![99%](https://geps.dev/progress/99)   |
 | Swedish (Svenska) (sv_SE)                   | ![38%](https://geps.dev/progress/38)   |
 | Thai (ไทย) (th_TH)                          | ![97%](https://geps.dev/progress/97) |
 | Traditional Chinese (繁體中文) (zh_TW)      | ![96%](https://geps.dev/progress/96)   |
