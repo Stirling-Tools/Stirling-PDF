@@ -28,8 +28,8 @@ jobs:
         run: python .github/scripts/gradle_to_chart.py
       - name: Set up git config
         run: |
-          git config --global user.email "GitHub Action <action@github.com>"
-          git config --global user.name "GitHub Action <action@github.com>"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
       - name: Run git add
         run: |
           git add .
@@ -66,8 +66,8 @@ jobs:
         run: python scripts/counter_translation.py
       - name: Set up git config
         run: |
-          git config --global user.email "GitHub Action <action@github.com>"
-          git config --global user.name "GitHub Action <action@github.com>"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
       - name: Run git add
         run: |
           git add .
