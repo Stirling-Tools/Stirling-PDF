@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ .Values.persistence.pv.pvname | default (include "stirlingpdf.fullname" .) }}
+  name: {{ .Values.persistence.pv.pvname | default (include "dockitpdf.fullname" .) }}
   labels:
-    {{- include "stirlingpdf.labels" . | nindent 4 }}
+    {{- include "dockitpdf.labels" . | nindent 4 }}
 spec:
   capacity:
     storage: {{ .Values.persistence.pv.capacity.storage }}
