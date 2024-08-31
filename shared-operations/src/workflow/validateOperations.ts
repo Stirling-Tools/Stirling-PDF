@@ -19,8 +19,8 @@ export async function validateOperations(actions: Action[]): Promise<{ valid: bo
             return { valid: false, reason: `action.type ${action.type} does not exist` };
         }
         const schema = await getSchemaByName(action.type);
-        if(!operator) {
-            return { valid: false, reason: `action.type ${action.type} does not exist` };
+        if(!schema) {
+            return { valid: false, reason: `schema for action.type ${action.type} does not exist` };
         }
         const validationResult = schema.schema.validate({values: action.values});
 

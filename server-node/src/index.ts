@@ -66,7 +66,7 @@ else {
 }
 
 // viteNode
-if (import.meta.env.VITE_PROD) {
+if (import.meta.env.PROD) {
     app.listen(PORT, () => {
         console.log(`http://localhost:${PORT}`);
     });

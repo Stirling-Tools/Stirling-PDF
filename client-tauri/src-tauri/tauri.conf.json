@@ -1,7 +1,7 @@
 {
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run vite:dev",
+    "beforeBuildCommand": "make vite-build",
     "devPath": "http://localhost:1420",
     "distDir": "../dist",
     "withGlobalTauri": false

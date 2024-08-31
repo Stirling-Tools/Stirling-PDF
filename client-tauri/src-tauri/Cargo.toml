@@ -1,6 +1,6 @@
 [package]
 name = "StirlingPDF"
-# version = "2.0.0"
+version = "2.0.0" # needed for dev build?
 description = "Selfhosted PDF processing"
 authors = ["LaserKaspar, SaudF"]
 license = ""

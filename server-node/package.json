@@ -11,19 +11,17 @@
         "canvas": "^2.11.2"
     },
     "scripts": {
-        "dev": "vite",
-        "build": "tsc && vite build",
-        "start": "node ./dist/index.js"
+        "vite:dev": "vite",
+        "vite:preview-prod": "make vite-build && node ./dist/index.js"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@esbuild/win32-x64": "^0.19.10",
         "@rollup/plugin-alias": "^5.1.0",
         "@rollup/plugin-commonjs": "^25.0.7",
         "@rollup/plugin-json": "^6.1.0",
-        "@types/archiver": "^6.0.1",
+        "@stirling-tools/joi": "github:stirling-tools/joi",
         "@types/express": "^4.17.21",
         "@types/multer": "^1.4.10",
         "@wasmer/wasmfs": "^0.12.0",
@@ -32,6 +30,8 @@
         "express": "^4.18.2",
         "express-fileupload": "^1.4.2",
         "express-session": "^1.18.0",
+        "i18next": "^23.14.0",
+        "i18next-resources-to-backend": "^1.2.1",
         "joi": "^17.11.0",
         "jsqr": "^1.4.0",
         "multer": "^1.4.5-lts.1",
@@ -39,30 +39,32 @@
         "passport-headerapikey": "^1.2.2",
         "passport-local": "^1.0.0",
         "pdf-lib": "^1.17.1",
+        "pdfjs-dist": "^4.5.136",
+        "react-material-symbols": "^4.4.0",
         "rollup-plugin-copy": "^3.5.0",
         "rollup-plugin-dynamic-import-variables": "^1.1.0",
         "sequelize": "^6.37.3",
         "sqlite3": "^5.1.7",
         "toml": "^3.0.0",
         "tsconfig-paths": "^4.2.0",
+        "vite": "^5.4.2",
         "vite-plugin-compile-time": "^0.2.1",
         "vite-plugin-dynamic-import": "^1.5.0",
-        "vite-plugin-node-polyfills": "^0.19.0",
+        "vite-plugin-node-polyfills": "^0.22.0",
         "vite-plugin-top-level-await": "^1.4.1"
     },
     "devDependencies": {
         "@rollup/plugin-dynamic-import-vars": "^2.1.2",
         "@rollup/plugin-run": "^3.0.2",
         "@rollup/plugin-typescript": "^11.1.6",
+        "@types/archiver": "^6.0.2",
         "@types/express-session": "^1.18.0",
         "@types/passport-local": "^1.0.38",
         "copyfiles": "^2.4.1",
         "pkgroll": "^2.0.1",
         "rimraf": "^5.0.5",
-        "rollup": "^4.9.6",
         "ts-node-dev": "^2.0.0",
-        "typescript": "^5.2.2",
-        "vite": "^5.2.11",
+        "typescript": "^5.5.4",
         "vite-plugin-node": "^3.1.0"
     }
 }

@@ -5,16 +5,14 @@
   "type": "module",
   "scripts": {
     "vite:dev": "vite",
-    "vite:build": "tsc && vite build",
-    "vite:preview-build": "vite preview",
-    "vite:dockerize-build": "docker build . -t stirling-pdf:latest",
-    "tauri:dev (currently broken)": "tauri dev",
-    "tauri:build-debug": "tauri build --debug",
-    "tauri:build": "tauri build"
+    "vite:preview-prod": "make vite-build && vite preview",
+    "tauri:build-debug": "npx tauri build --debug",
+    "tauri:dev": "tauri dev"
   },
   "dependencies": {
     "@stirling-pdf/shared-operations": "^0.0.0",
     "@tauri-apps/api": "^1.5.1",
+    "@types/semver": "^7.5.8",
     "archiver": "^6.0.1",
     "i18next": "^23.6.0",
     "i18next-browser-languagedetector": "^7.1.0",
@@ -22,23 +20,23 @@
     "pdfjs-dist": "^4.0.189",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-i18next": "^13.3.1",
+    "react-i18next": "^15.0.1",
     "react-icons": "^4.11.0",
     "react-material-symbols": "^4.4.0",
     "react-router-bootstrap": "^0.26.2",
     "react-router-dom": "^6.18.0",
-    "vite-plugin-node-polyfills": "^0.21.0",
+    "vite": "^5.4.2",
+    "vite-plugin-node-polyfills": "^0.22.0",
     "vite-plugin-top-level-await": "^1.3.1"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.5.0",
-    "@types/archiver": "^5.3.4",
+    "@types/archiver": "^6.0.2",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@types/react-router-bootstrap": "^0.26.5",
-    "@vitejs/plugin-react": "^4.0.3",
+    "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^5.0.2",
-    "vite": "^4.4.4",
     "vite-plugin-compile-time": "^0.2.1",
     "vite-plugin-dynamic-import": "^1.5.0"
   }
