@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "stirlingpdf.fullname" . }}
+  name: {{ include "dockitpdf.fullname" . }}
   {{- with .Values.deployment.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   labels:
-    {{- include "stirlingpdf.labels" . | nindent 4 }}
+    {{- include "dockitpdf.labels" . | nindent 4 }}
     {{- if .Values.deployment.labels }}
     {{- toYaml .Values.deployment.labels | nindent 4 }}
     {{- end }}
 spec:
   selector:
     matchLabels:
-      {{- include "stirlingpdf.selectorLabels" . | nindent 6 }}
+      {{- include "dockitpdf.selectorLabels" . | nindent 6 }}
   replicas: {{ .Values.replicaCount }}
   strategy:
 {{ toYaml .Values.strategy | indent 4 }}
@@ -26,7 +26,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "stirlingpdf.selectorLabels" . | nindent 8 }}
+        {{- include "dockitpdf.selectorLabels" . | nindent 8 }}
         {{- if .Values.podLabels }}
         {{- toYaml .Values.podLabels | nindent 8 }}
         {{- end }}
@@ -46,7 +46,7 @@ spec:
       {{- else if .Values.persistence.enabled }}
       initContainers:
       - name: volume-permissions
-        image: {{ template "stirlingpdf.volumePermissions.image" . }}
+        image: {{ template "dockitpdf.volumePermissions.image" . }}
         imagePullPolicy: "{{ .Values.volumePermissions.image.pullPolicy }}"
         securityContext:
           {{- toYaml .Values.containerSecurityContext | nindent 10 }}
@@ -55,7 +55,7 @@ spec:
         - mountPath: {{ .Values.persistence.path }}
           name: storage-volume
       {{- end }}
-{{- include "stirlingpdf.imagePullSecrets" . | indent 6 }}
+{{- include "dockitpdf.imagePullSecrets" . | indent 6 }}
       containers:
       - name: {{ .Chart.Name }}
         image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
@@ -116,7 +116,7 @@ spec:
     {{- if .Values.schedulerName }}
       schedulerName: {{ .Values.schedulerName }}
     {{- end }}
-      serviceAccountName: {{ include "stirlingpdf.serviceAccountName" . }}
+      serviceAccountName: {{ include "dockitpdf.serviceAccountName" . }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
       volumes:
       {{- if .Values.deployment.extraVolumes }}
@@ -125,7 +125,7 @@ spec:
       - name: storage-volume
       {{- if .Values.persistence.enabled }}
         persistentVolumeClaim:
-          claimName: {{ .Values.persistence.existingClaim | default (include "stirlingpdf.fullname" .) }}
+          claimName: {{ .Values.persistence.existingClaim | default (include "dockitpdf.fullname" .) }}
       {{- else }}
         emptyDir: {}
       {{- end }}
