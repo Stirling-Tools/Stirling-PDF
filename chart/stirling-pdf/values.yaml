@@ -20,11 +20,11 @@ rootPath: /
 
 envs: []
 # - name: UI_APP_NAME
-#   value: "Stirling PDF"
+#   value: "Dockit PDF"
 # - name: UI_HOME_DESCRIPTION
 #   value: "Your locally hosted one-stop-shop for all your PDF needs."
 # - name: UI_APP_NAVBAR_NAME
-#   value: "Stirling PDF"
+#   value: "Dockit PDF"
 # - name: ALLOW_GOOGLE_VISIBILITY
 #   value: "true"
 # - name: APP_LOCALE
