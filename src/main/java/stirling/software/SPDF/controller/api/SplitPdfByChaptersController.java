@@ -87,11 +87,11 @@ public class SplitPdfByChaptersController {
             // to handle last page edge case
             bookmarks.get(bookmarks.size() - 1).setEndPage(sourceDocument.getNumberOfPages());
             Bookmark lastBookmark = bookmarks.get(bookmarks.size() - 1);
-            logger.info(
-                    "{}::::{} to {}",
-                    lastBookmark.getTitle(),
-                    lastBookmark.getStartPage(),
-                    lastBookmark.getEndPage());
+            //            logger.info(
+            //                    "{}::::{} to {}",
+            //                    lastBookmark.getTitle(),
+            //                    lastBookmark.getStartPage(),
+            //                    lastBookmark.getEndPage());
 
         } catch (Exception e) {
             logger.error("Unable to extract outline items", e);
@@ -103,10 +103,17 @@ public class SplitPdfByChaptersController {
         if (!allowDuplicates) {
             /*
             duplicates are generated when multiple bookmarks correspond to the same page,
-            if the user doesn't want duplicates mergeBookmarksThat method will merge the titles of all
+            if the user doesn't want duplicates mergeBookmarksThatCorrespondToSamePage() method will merge the titles of all
             the bookmarks that correspond to the same page, and treat them as a single bookmark
             */
             bookmarks = mergeBookmarksThatCorrespondToSamePage(bookmarks);
+        }
+        for (Bookmark bookmark : bookmarks) {
+            logger.info(
+                    "{}::::{} to {}",
+                    bookmark.getTitle(),
+                    bookmark.getStartPage(),
+                    bookmark.getEndPage());
         }
         List<ByteArrayOutputStream> splitDocumentsBoas =
                 getSplitDocumentsBoas(sourceDocument, bookmarks, includeMetadata);
@@ -196,20 +203,23 @@ public class SplitPdfByChaptersController {
                  */
             }
             if (!bookmarks.isEmpty()
-                    && bookmarks.get(bookmarks.size() - 1).getEndPage()
-                            == -2) { // for handling the above mentioned case
+                    && bookmarks.get(bookmarks.size() - 1).getEndPage() == -2
+                    && firstPage
+                            > bookmarks
+                                    .get(bookmarks.size() - 1)
+                                    .getStartPage()) { // for handling the above mentioned case
                 Bookmark previousBookmark = bookmarks.get(bookmarks.size() - 1);
                 previousBookmark.setEndPage(firstPage);
-                logger.info(
-                        "{}::::{} to {}",
-                        previousBookmark.getTitle(),
-                        previousBookmark.getStartPage(),
-                        previousBookmark.getEndPage());
+                //                logger.info(
+                //                        "{}::::{} to {}",
+                //                        previousBookmark.getTitle(),
+                //                        previousBookmark.getStartPage(),
+                //                        previousBookmark.getEndPage());
             }
             bookmarks.add(new Bookmark(currentTitle, firstPage, endPage));
-            if (endPage != -2) {
-                logger.info("{}::::{} to {}", currentTitle, firstPage, endPage);
-            }
+            //            if (endPage != -2 && endPage >= firstPage) {
+            //                logger.info("{}::::{} to {}", currentTitle, firstPage, endPage);
+            //            }
 
             // Recursively process children
             if (child != null && level < maxLevel) {
@@ -244,7 +254,7 @@ public class SplitPdfByChaptersController {
                 zipOut.write(pdf);
                 zipOut.closeEntry();
 
-                                logger.info("Wrote split document {} to zip file", fileName);
+                logger.info("Wrote split document {} to zip file", fileName);
             }
         } catch (Exception e) {
             logger.error("Failed writing to zip", e);
@@ -272,7 +282,7 @@ public class SplitPdfByChaptersController {
                         i++) {
                     PDPage page = sourceDocument.getPage(i);
                     splitDocument.addPage(page);
-                       logger.info("Adding page {} to split document", i);
+                    logger.info("Adding page {} to split document", i);
                 }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 if (includeMetadata) {
