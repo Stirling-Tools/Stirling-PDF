@@ -1,7 +1,7 @@
 version: '3.3'
 services:
-  stirling-pdf:
-    container_name: Stirling-PDF-Security-Fat
+  Dockit-PDF:
+    container_name: Dockit-PDF-Security-Fat
     image: frooodle/s-pdf:latest-fat
     deploy:
       resources:
@@ -25,9 +25,9 @@ services:
       PGID: 1002
       UMASK: "022"
       SYSTEM_DEFAULTLOCALE: en-US
-      UI_APPNAME: Stirling-PDF
-      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest-fat with Security
-      UI_APPNAMENAVBAR: Stirling-PDF Latest-fat
+      UI_APPNAME: Dockit-PDF
+      UI_HOMEDESCRIPTION: Demo site for Dockit-PDF Latest-fat with Security
+      UI_APPNAMENAVBAR: Dockit-PDF Latest-fat
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
