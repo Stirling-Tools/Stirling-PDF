@@ -87,11 +87,6 @@ public class SplitPdfByChaptersController {
             // to handle last page edge case
             bookmarks.get(bookmarks.size() - 1).setEndPage(sourceDocument.getNumberOfPages());
             Bookmark lastBookmark = bookmarks.get(bookmarks.size() - 1);
-            //            logger.info(
-            //                    "{}::::{} to {}",
-            //                    lastBookmark.getTitle(),
-            //                    lastBookmark.getStartPage(),
-            //                    lastBookmark.getEndPage());
 
         } catch (Exception e) {
             logger.error("Unable to extract outline items", e);
@@ -198,28 +193,20 @@ public class SplitPdfByChaptersController {
                         Outline Item 2.1.1
                     Outline Item 2.2
                         Outline 2.2.1
-                        Outline 2.2.2 <--- this item neither has an immediate next parent nor an immediate sibling
+                        Outline 2.2.2 <--- this item neither has an immediate next parent nor an immediate next sibling
                 Outline Item 3
                  */
             }
             if (!bookmarks.isEmpty()
                     && bookmarks.get(bookmarks.size() - 1).getEndPage() == -2
                     && firstPage
-                            > bookmarks
+                            >= bookmarks
                                     .get(bookmarks.size() - 1)
-                                    .getStartPage()) { // for handling the above mentioned case
+                                    .getStartPage()) { // for handling the above-mentioned case
                 Bookmark previousBookmark = bookmarks.get(bookmarks.size() - 1);
                 previousBookmark.setEndPage(firstPage);
-                //                logger.info(
-                //                        "{}::::{} to {}",
-                //                        previousBookmark.getTitle(),
-                //                        previousBookmark.getStartPage(),
-                //                        previousBookmark.getEndPage());
             }
             bookmarks.add(new Bookmark(currentTitle, firstPage, endPage));
-            //            if (endPage != -2 && endPage >= firstPage) {
-            //                logger.info("{}::::{} to {}", currentTitle, firstPage, endPage);
-            //            }
 
             // Recursively process children
             if (child != null && level < maxLevel) {
