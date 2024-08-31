@@ -24,6 +24,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Dark mode support.
 - Custom download options
 - Parallel file processing and downloads
+- Custom 'Pipelines' to run multiple features in a queue
 - API for integration with external scripts
 - Optional Login and Authentication support (see [here](https://github.com/Stirling-Tools/Stirling-PDF/tree/main#login-authentication) for documentation)
 - Database Backup and Import (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/DATABASE.md) for documentation)
@@ -46,6 +47,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Auto Split PDF (With physically scanned page dividers).
 - Extract page(s).
 - Convert PDF to a single page.
+- Overlay PDFs ontop of each other
 
 ### **Conversion Operations**
 
@@ -82,6 +84,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Edit metadata.
 - Flatten PDFs.
 - Get all information on a PDF to view or export as JSON.
+- Show/Detect embedded Javascript
 
 For a overview of the tasks and the technology each uses please view [Endpoint-groups.md](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
 
