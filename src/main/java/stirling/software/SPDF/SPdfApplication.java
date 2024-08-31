@@ -30,6 +30,7 @@ public class SPdfApplication {
     private static final Logger logger = LoggerFactory.getLogger(SPdfApplication.class);
 
     @Autowired private Environment env;
+    public int git=1;
 
     @Autowired ApplicationProperties applicationProperties;
 
