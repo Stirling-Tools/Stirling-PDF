@@ -8,7 +8,7 @@ Front End:
   - changed-files:
     - any-glob-to-any-file: 'src/main/resources/templates/**/*'
     - any-glob-to-any-file: 'src/main/resources/static/**/*'
-    - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/controller/web/**'
+    - any-glob-to-any-file: 'src/main/java/Dockit/software/SPDF/controller/web/**'
 
 Java:
   - changed-files:
@@ -16,21 +16,21 @@ Java:
 
 Back End:
   - changed-files:
-    - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/config/security/**/*'
-    - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/config/model/provider/**/*'
+    - any-glob-to-any-file: 'src/main/java/Dockit/software/SPDF/config/security/**/*'
+    - any-glob-to-any-file: 'src/main/java/Dockit/software/SPDF/config/model/provider/**/*'
     - any-glob-to-any-file: 'src/main/resources/settings.yml.template'
     - any-glob-to-any-file: 'src/main/resources/banner.txt'
 
 Security:
   - changed-files:
-    - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/config/security/**/*'
-    - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/config/model/provider/**/*'
-    - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/config/model/AuthenticationType.java'
+    - any-glob-to-any-file: 'src/main/java/Dockit/software/SPDF/config/security/**/*'
+    - any-glob-to-any-file: 'src/main/java/Dockit/software/SPDF/config/model/provider/**/*'
+    - any-glob-to-any-file: 'src/main/java/Dockit/software/SPDF/config/model/AuthenticationType.java'
 
 API:
   - changed-files:
-    - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/controller/web/MetricsController.java'
-    - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/controller/api/**/*'
+    - any-glob-to-any-file: 'src/main/java/Dockit/software/SPDF/controller/web/MetricsController.java'
+    - any-glob-to-any-file: 'src/main/java/Dockit/software/SPDF/controller/api/**/*'
 
 Documentation:
   - changed-files:
