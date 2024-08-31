@@ -1,6 +1,6 @@
 {{- if .Values.ingress.enabled }}
 {{- $servicePort := .Values.service.externalPort -}}
-{{- $serviceName := include "stirlingpdf.fullname" . -}}
+{{- $serviceName := include "dockitpdf.fullname" . -}}
 {{- $ingressExtraPaths := .Values.ingress.extraPaths -}}
 ---
 {{- if semverCompare "<1.14-0" .Capabilities.KubeVersion.GitVersion }}
@@ -12,13 +12,13 @@ apiVersion: networking.k8s.io/v1
 {{- end }}
 kind: Ingress
 metadata:
-  name: {{ include "stirlingpdf.fullname" . }}
+  name: {{ include "dockitpdf.fullname" . }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   labels:
-    {{- include "stirlingpdf.labels" . | nindent 4 }}
+    {{- include "dockitpdf.labels" . | nindent 4 }}
     {{- with .Values.ingress.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
