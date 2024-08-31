@@ -42,29 +42,29 @@ jobs:
 
       - name: Rename binarie
         if: matrix.file_suffix != ''
-        run: cp ./build/launch4j/Stirling-PDF.exe ./build/launch4j/Stirling-PDF${{ matrix.file_suffix }}.exe
+        run: cp ./build/launch4j/Dockit-PDF.exe ./build/launch4j/Dockit-PDF${{ matrix.file_suffix }}.exe
 
       - name: Upload Assets binarie
         uses: actions/upload-artifact@v4
         with:
-          path: ./build/launch4j/Stirling-PDF${{ matrix.file_suffix }}.exe
-          name: Stirling-PDF${{ matrix.file_suffix }}.exe
+          path: ./build/launch4j/Dockit-PDF${{ matrix.file_suffix }}.exe
+          name: Dockit-PDF${{ matrix.file_suffix }}.exe
           overwrite: true
           retention-days: 1
           if-no-files-found: error
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./build/launch4j/Stirling-PDF${{ matrix.file_suffix }}.exe
+          files: ./build/launch4j/Dockit-PDF${{ matrix.file_suffix }}.exe
 
       - name: Rename jar binaries
-        run: cp ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+        run: cp ./build/libs/Dockit-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Dockit-PDF${{ matrix.file_suffix }}.jar
 
       - name: Upload Assets jar binaries
         uses: actions/upload-artifact@v4
         with:
-          path: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
-          name: Stirling-PDF${{ matrix.file_suffix }}.jar
+          path: ./build/libs/Dockit-PDF${{ matrix.file_suffix }}.jar
+          name: Dockit-PDF${{ matrix.file_suffix }}.jar
           overwrite: true
           retention-days: 1
           if-no-files-found: error
@@ -72,4 +72,4 @@ jobs:
       - name: Upload jar binaries to release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+          files: ./build/libs/Dockit-PDF${{ matrix.file_suffix }}.jar
