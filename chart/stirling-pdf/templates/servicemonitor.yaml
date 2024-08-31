@@ -2,10 +2,10 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "stirlingpdf.fullname" . }}
+  name: {{ include "dockitpdf.fullname" . }}
   namespace: {{ .Values.serviceMonitor.namespace | default .Release.Namespace }}
   labels:
-    {{- include "stirlingpdf.labels" . | nindent 4 }}
+    {{- include "dockitpdf.labels" . | nindent 4 }}
     {{- with .Values.serviceMonitor.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -21,11 +21,11 @@ spec:
 {{- if .Values.serviceMonitor.timeout }}
     scrapeTimeout: {{ .Values.serviceMonitor.timeout }}
 {{- end }}
-  jobLabel: {{ include "stirlingpdf.fullname" . }}
+  jobLabel: {{ include "dockitpdf.fullname" . }}
   namespaceSelector:
     matchNames:
     - {{ .Release.Namespace }}
   selector:
     matchLabels:
-      {{- include "stirlingpdf.selectorLabels" . | nindent 6 }}
+      {{- include "dockitpdf.selectorLabels" . | nindent 6 }}
 {{- end }}
