@@ -36,8 +36,8 @@ jobs:
 
       - name: Set up git config
         run: |
-          git config --global user.email "GitHub Action <action@github.com>"
-          git config --global user.name "GitHub Action <action@github.com>"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Run git add
         run: |
@@ -76,4 +76,4 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
-          merge-method: squash  # Choose the merge method: merge, squash, or rebase
+          merge-method: squash # Choose the merge method: merge, squash, or rebase
