@@ -39,16 +39,16 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         libreoffice \
 # pdftohtml
         poppler-utils \
-# OCR MY PDF (unpaper for descew and other advanced featues)
+# OCR MY PDF (unpaper for descew and other advanced features)
         ocrmypdf \
         tesseract-ocr-data-eng \
 # CV
         py3-opencv \
 # python3/pip
         python3 \
-    py3-pip && \
+        py3-pip && \
 # uno unoconv and HTML
-    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint && \
+    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint pdf2image pillow && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
     fc-cache -f -v && \

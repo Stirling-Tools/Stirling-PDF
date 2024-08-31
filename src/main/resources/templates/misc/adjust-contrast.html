@@ -40,7 +40,7 @@
                     <span class="tool-header-text" th:text="#{adjustContrast.header}"></span>
                   </div>
                   <div class="col-md-8">
-                    <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
+                    <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}"></div>
                   </div>
                   <br>
                   <canvas id="contrast-pdf-canvas"></canvas>

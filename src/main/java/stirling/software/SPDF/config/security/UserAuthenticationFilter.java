@@ -2,6 +2,8 @@ package stirling.software.SPDF.config.security;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -9,6 +11,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,6 +25,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApiKeyAuthenticationToken;
+import stirling.software.SPDF.model.User;
 
 @Component
 public class UserAuthenticationFilter extends OncePerRequestFilter {
@@ -54,15 +58,20 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 try {
                     // Use API key to authenticate. This requires you to have an authentication
                     // provider for API keys.
-                    UserDetails userDetails = userService.loadUserByApiKey(apiKey);
-                    if (userDetails == null) {
+                    Optional<User> user = userService.getUserByApiKey(apiKey);
+                    if (!user.isPresent()) {
                         response.setStatus(HttpStatus.UNAUTHORIZED.value());
                         response.getWriter().write("Invalid API Key.");
                         return;
                     }
-                    authentication =
-                            new ApiKeyAuthenticationToken(
-                                    userDetails, apiKey, userDetails.getAuthorities());
+                    List<SimpleGrantedAuthority> authorities =
+                            user.get().getAuthorities().stream()
+                                    .map(
+                                            authority ->
+                                                    new SimpleGrantedAuthority(
+                                                            authority.getAuthority()))
+                                    .collect(Collectors.toList());
+                    authentication = new ApiKeyAuthenticationToken(user.get(), apiKey, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } catch (AuthenticationException e) {
                     // If API key authentication fails, deny the request
