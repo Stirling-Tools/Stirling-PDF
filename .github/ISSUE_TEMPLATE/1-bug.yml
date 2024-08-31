@@ -45,14 +45,14 @@ body:
     validations:
       required: true
     attributes:
-      label: Version of Stirling-PDF
+      label: Version of Dockit-PDF
       placeholder: e.g., 0.0.2
-      description: What version of Stirling-PDF has the issue?
+      description: What version of Dockit-PDF has the issue?
 
   - type: input
     id: last-working-version
     attributes:
-      label: Last Working Version of Stirling-PDF
+      label: Last Working Version of Dockit-PDF
       placeholder: e.g., 0.0.1
       description: |
         If known, please provide the last version where the issue did not occur. Otherwise, leave blank.
