@@ -2,9 +2,9 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: {{ include "stirlingpdf.fullname" . }}
+  name: {{ include "dockitpdf.fullname" . }}
   labels:
-    {{- include "stirlingpdf.labels" . | nindent 4 }}
+    {{- include "dockitpdf.labels" . | nindent 4 }}
     {{- with .Values.persistence.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
