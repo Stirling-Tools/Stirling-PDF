@@ -45,7 +45,8 @@ public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
 
-    @Autowired private memoryConfig memoryconfig; // Inject MemoryConfig
+    @Autowired
+    private memoryConfig memoryconfig; // Inject MemoryConfig
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
     public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request)
@@ -55,7 +56,25 @@ public class ExtractImagesController {
 
         System.out.println(
                 System.currentTimeMillis() + " file=" + file.getName() + ", format=" + format);
-        PDDocument document = Loader.loadPDF(file.getBytes());
+
+        // Determine if we should use file-based storage based on available RAM
+        boolean useFile = memoryUtils.shouldUseFileBasedStorage(memoryconfig);
+
+        PDDocument document;
+
+        // If useFile is true, save the PDF to disk first
+        File tempFile = null;
+        if (useFile) {
+            tempFile = File.createTempFile("uploaded_", ".pdf");
+            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                fos.write(file.getBytes());
+            }
+            // Load PDF from the temporary file
+            document = Loader.loadPDF(tempFile);
+        } else {
+            // Load PDF directly from the byte array (RAM)
+            document = Loader.loadPDF(file.getBytes());
+        }
 
         // Determine if multithreading should be used based on PDF size or number of pages
         boolean useMultithreading = shouldUseMultithreading(file, document);
@@ -71,18 +90,6 @@ public class ExtractImagesController {
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
         Set<Integer> processedImages = new HashSet<>();
-
-        // Create a temporary file to save PDF if required
-        File tempFile = null;
-        boolean useFile = memoryUtils.shouldUseFileBasedStorage(memoryconfig);
-
-        if (useFile) {
-            tempFile = File.createTempFile("pdf-temp-", ".pdf");
-            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-                fos.write(file.getBytes());
-            }
-            document = Loader.loadPDF(tempFile);
-        }
 
         if (useMultithreading) {
             // Executor service to handle multithreading
