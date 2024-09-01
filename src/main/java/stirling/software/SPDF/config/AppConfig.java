@@ -1,6 +1,12 @@
 package stirling.software.SPDF.config;
 
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Properties;
+import java.util.function.Predicate;
+
 import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,14 +20,10 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.spring6.SpringTemplateEngine;
-import stirling.software.SPDF.model.ApplicationProperties;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Properties;
-import java.util.function.Predicate;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+
+import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
 @Lazy

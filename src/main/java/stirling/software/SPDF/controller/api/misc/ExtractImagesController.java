@@ -1,26 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.zip.Deflater;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
-import javax.imageio.ImageIO;
-
+import io.github.pixee.security.Filenames;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -36,12 +16,28 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import io.github.pixee.security.Filenames;
-
 import stirling.software.SPDF.config.memoryConfig;
 import stirling.software.SPDF.model.api.PDFWithImageFormatRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.SPDF.utils.memoryUtils;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.zip.Deflater;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -78,7 +74,7 @@ public class ExtractImagesController {
 
         // Create a temporary file to save PDF if required
         File tempFile = null;
-        boolean useFile = shouldUseFileBasedStorage();
+        boolean useFile = memoryUtils.shouldUseFileBasedStorage(memoryconfig);
 
         if (useFile) {
             tempFile = File.createTempFile("pdf-temp-", ".pdf");
@@ -155,27 +151,6 @@ public class ExtractImagesController {
         long fileSizeInMB = file.getSize() / (1024 * 1024);
         int numberOfPages = document.getPages().getCount();
         return fileSizeInMB > 10 || numberOfPages > 20;
-    }
-
-    private boolean shouldUseFileBasedStorage() {
-        Runtime runtime = Runtime.getRuntime();
-        long usedMemory = runtime.totalMemory() - runtime.freeMemory();
-        long maxMemory = runtime.maxMemory();
-
-        boolean useFileBasedOnMemory =
-                usedMemory > (memoryconfig.getMemory().getRamThresholdGB() * 1024L * 1024L * 1024L);
-
-        // Check free space on the default temporary directory
-        Path tempDir = FileSystems.getDefault().getPath(System.getProperty("java.io.tmpdir"));
-        File tempDirFile = tempDir.toFile();
-        long freeSpace = tempDirFile.getUsableSpace(); // in bytes
-        long totalSpace = tempDirFile.getTotalSpace(); // in bytes
-        int freeSpacePercentage = (int) ((freeSpace * 100) / totalSpace);
-
-        boolean useFileBasedOnSpace =
-                freeSpacePercentage < memoryconfig.getMemory().getMinFreeSpacePercentage();
-
-        return useFileBasedOnMemory || useFileBasedOnSpace;
     }
 
     private void extractImagesFromPage(
