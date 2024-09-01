@@ -145,7 +145,7 @@ public class AppConfig {
     public memoryConfig mConfig() {
         YAMLMapper yamlMapper = new YAMLMapper();
         memoryConfig memoryconfig = new memoryConfig();
-        try (var input = Files.newInputStream(Paths.get("custom_settings.yml"))) {
+        try (var input = Files.newInputStream(Paths.get("./configs/custom_settings.yml"))) {
             SimpleYamlImplementation yaml = new SimpleYamlImplementation();
             // Load YAML content into MemoryConfig
             memoryconfig = yamlMapper.readValue(input, memoryConfig.class);
