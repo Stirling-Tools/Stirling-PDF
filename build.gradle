@@ -8,6 +8,7 @@ plugins {
     id "com.diffplug.spotless" version "6.25.0"
     id "com.github.jk1.dependency-license-report" version "2.9"
 	//id "nebula.lint" version "19.0.3"
+    id 'jacoco' 
 }
 
 import com.github.jk1.license.render.*
@@ -237,8 +238,29 @@ jar {
 
 }
 
+jacoco {
+    toolVersion = "0.8.8" // Specify the JaCoCo tool version; adjust if necessary
+}
+
 tasks.named("test") {
     useJUnitPlatform()
+    finalizedBy(jacocoTestReport)
+}
+
+tasks.register('jacocoReport', JacocoReport) {
+    dependsOn 'test' // Ensure tests are run before generating the report
+
+    reports {
+        xml.required.set(true)
+        csv.required.set(false)
+        html.outputLocation.set(file("${buildDir}/reports/jacoco"))
+    }
+
+    def fileTreeConfig = fileTree(dir: "$buildDir/classes/java/main", includes: ['**/*.class'])
+
+    classDirectories.setFrom(fileTreeConfig)
+    sourceDirectories.setFrom(files('src/main/java'))
+    executionData.setFrom(fileTree("$buildDir/jacoco/test.exec"))
 }
 
 task printVersion {

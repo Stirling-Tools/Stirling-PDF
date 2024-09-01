@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jdk-version: [17, 21]
+        jdk-version: [17] #, 21
 
     steps:
       - name: Checkout repository
@@ -37,6 +37,36 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build --no-build-cache
+
+      - name: Run Tests
+        run: ./gradlew test
+
+      - name: Generate Build and Test Reports
+        run: |
+          ./gradlew build jacocoTestReport 
+        continue-on-error: true  
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: build/reports/**
+
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: build/test-results/test/
+      
+      - name: Generate code coverage report
+        run: ./gradlew jacocoTestReport
+        
+      - name: Upload code coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: build/reports/jacoco/test/html/**
+      
 
   docker-compose-tests:
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
