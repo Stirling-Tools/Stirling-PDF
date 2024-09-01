@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import io.github.pixee.security.Filenames;
+import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -29,6 +30,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -45,8 +48,7 @@ public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
 
-    @Autowired
-    private memoryConfig memoryconfig; // Inject MemoryConfig
+    @Autowired private memoryConfig memoryconfig; // Inject MemoryConfig
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
     public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request)
@@ -61,6 +63,8 @@ public class ExtractImagesController {
         boolean useFile = memoryUtils.shouldUseFileBasedStorage(memoryconfig);
 
         PDDocument document;
+        // Create a temporary directory for processing
+        Path tempDir = Files.createTempDirectory("image-processing-");
 
         // If useFile is true, save the PDF to disk first
         File tempFile = null;
@@ -106,13 +110,8 @@ public class ExtractImagesController {
                         executor.submit(
                                 () -> {
                                     try {
-                                        extractImagesFromPage(
-                                                page,
-                                                format,
-                                                filename,
-                                                pageNum,
-                                                processedImages,
-                                                zos);
+                                        extractImagesFromPage(page, format, tempDir, pageNum);
+
                                     } catch (IOException e) {
                                         logger.error("Error extracting images from page", e);
                                     }
@@ -133,24 +132,44 @@ public class ExtractImagesController {
             // Single-threaded extraction
             for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
                 PDPage page = document.getPage(pgNum);
-                extractImagesFromPage(page, format, filename, pgNum + 1, processedImages, zos);
+                extractImagesFromPage(page, format, tempDir, pgNum + 1);
             }
         }
 
-        // Close PDDocument and ZipOutputStream
-        document.close();
-        zos.close();
+        // Create a ZIP file from the temporary directory
+        Path tempZipFile = Files.createTempFile("output_", ".zip");
 
-        // Clean up temporary file if used
+        try (ZipOutputStream zipOut =
+                new ZipOutputStream(new FileOutputStream(tempZipFile.toFile()))) {
+            // Add processed images to the zip
+            Files.list(tempDir)
+                    .sorted()
+                    .forEach(
+                            tempOutputFile -> {
+                                try {
+                                    String imageName = tempOutputFile.getFileName().toString();
+                                    zipOut.putNextEntry(new ZipEntry(imageName));
+                                    Files.copy(tempOutputFile, zipOut);
+                                    zipOut.closeEntry();
+                                } catch (IOException e) {
+                                    logger.error("Error adding file to zip", e);
+                                }
+                            });
+        }
+
+        byte[] zipBytes = Files.readAllBytes(tempZipFile);
+
+        // Clean up the temporary files
+        Files.deleteIfExists(tempZipFile);
+        FileUtils.deleteDirectory(tempDir.toFile());
         if (useFile && tempFile != null) {
             tempFile.delete();
         }
 
-        // Create ByteArrayResource from byte array
-        byte[] zipContents = baos.toByteArray();
-
-        return WebResponseUtils.boasToWebResponse(
-                baos, filename + "_extracted-images.zip", MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.bytesToWebResponse(
+                zipBytes,
+                file.getOriginalFilename() + "_extracted-images.zip",
+                MediaType.APPLICATION_OCTET_STREAM);
     }
 
     private boolean shouldUseMultithreading(MultipartFile file, PDDocument document) {
@@ -160,36 +179,20 @@ public class ExtractImagesController {
         return fileSizeInMB > 10 || numberOfPages > 20;
     }
 
-    private void extractImagesFromPage(
-            PDPage page,
-            String format,
-            String filename,
-            int pageNum,
-            Set<Integer> processedImages,
-            ZipOutputStream zos)
+    private void extractImagesFromPage(PDPage page, String format, Path tempDir, int pageNum)
             throws IOException {
-        for (COSName name : page.getResources().getXObjectNames()) {
-            if (page.getResources().isImageXObject(name)) {
-                PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
-                int imageHash = image.hashCode();
-                synchronized (processedImages) {
-                    if (processedImages.contains(imageHash)) {
-                        continue; // Skip already processed images
-                    }
-                    processedImages.add(imageHash);
-                }
 
-                RenderedImage renderedImage = image.getImage();
-                BufferedImage bufferedImage = convertToRGB(renderedImage, format);
+        synchronized (this) {
+            for (COSName name : page.getResources().getXObjectNames()) {
+                if (page.getResources().isImageXObject(name)) {
+                    PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
+                    BufferedImage bufferedImage = convertToRGB(image.getImage(), format);
 
-                // Write image to zip file
-                String imageName = filename + "_" + imageHash + " (Page " + pageNum + ")." + format;
-                synchronized (zos) {
-                    zos.putNextEntry(new ZipEntry(imageName));
-                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
-                    ImageIO.write(bufferedImage, format, imageBaos);
-                    zos.write(imageBaos.toByteArray());
-                    zos.closeEntry();
+                    // Save the image to the temporary directory
+                    Path imagePath =
+                            tempDir.resolve(
+                                    "image_" + pageNum + "_" + name.getName() + "." + format);
+                    ImageIO.write(bufferedImage, format, imagePath.toFile());
                 }
             }
         }
@@ -199,20 +202,43 @@ public class ExtractImagesController {
         int width = renderedImage.getWidth();
         int height = renderedImage.getHeight();
         BufferedImage rgbImage;
+        try {
+            if ("png".equalsIgnoreCase(format)) {
+                rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            } else if ("jpeg".equalsIgnoreCase(format) || "jpg".equalsIgnoreCase(format)) {
+                rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            } else if ("gif".equalsIgnoreCase(format)) {
+                rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED);
+            } else {
+                rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            }
 
-        if ("png".equalsIgnoreCase(format)) {
-            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        } else if ("jpeg".equalsIgnoreCase(format) || "jpg".equalsIgnoreCase(format)) {
+            Graphics2D g = rgbImage.createGraphics();
+            g.drawImage((Image) renderedImage, 0, 0, null);
+            g.dispose();
+        } catch (java.lang.NullPointerException e) {
+            logger.error("NullPointerException while converting image to RGB format", e);
             rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        } else if ("gif".equalsIgnoreCase(format)) {
-            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED);
-        } else {
+            Graphics2D g = rgbImage.createGraphics();
+            // g.setBackground(Color.WHITE);
+            g.clearRect(0, 0, width, height);
+            g.dispose();
+        } catch (java.lang.IllegalArgumentException e) {
+            logger.error("IllegalArgumentException while converting image to RGB format", e);
             rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = rgbImage.createGraphics();
+            // g.setBackground(Color.WHITE);
+            g.clearRect(0, 0, width, height);
+            g.dispose();
+        } catch (Exception e) {
+            logger.error("Unexpected error while converting image to RGB format", e);
+            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = rgbImage.createGraphics();
+            // g.setBackground(Color.WHITE);
+            g.clearRect(0, 0, width, height);
+            g.dispose();
         }
 
-        Graphics2D g = rgbImage.createGraphics();
-        g.drawImage((Image) renderedImage, 0, 0, null);
-        g.dispose();
         return rgbImage;
     }
 }
