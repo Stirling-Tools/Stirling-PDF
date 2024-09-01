@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.function.Predicate;
 
+import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
@@ -29,6 +32,7 @@ public class AppConfig {
     private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
 
     @Autowired ApplicationProperties applicationProperties;
+    private long ramThresholdGB;
 
     @Bean
     @ConditionalOnProperty(
@@ -135,5 +139,21 @@ public class AppConfig {
                 return fileName.endsWith(".pdf");
             }
         };
+    }
+
+    @Bean
+    public memoryConfig mConfig() {
+        YAMLMapper yamlMapper = new YAMLMapper();
+        memoryConfig memoryconfig = new memoryConfig();
+        try (var input = Files.newInputStream(Paths.get("custom_settings.yml"))) {
+            SimpleYamlImplementation yaml = new SimpleYamlImplementation();
+            // Load YAML content into MemoryConfig
+            memoryconfig = yamlMapper.readValue(input, memoryConfig.class);
+        } catch (IOException e) {
+            // Handle the error and potentially set default values
+            logger.error("Error loading memory settings from YAML file", e);
+            // Optionally initialize default values here if necessary
+        }
+        return memoryconfig;
     }
 }

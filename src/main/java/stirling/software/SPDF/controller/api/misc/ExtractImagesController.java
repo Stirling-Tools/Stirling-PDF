@@ -1,31 +1,14 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import io.github.pixee.security.Filenames;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import stirling.software.SPDF.model.api.PDFWithImageFormatRequest;
-import stirling.software.SPDF.utils.WebResponseUtils;
-
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -36,18 +19,39 @@ import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.imageio.ImageIO;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+
+import stirling.software.SPDF.config.memoryConfig;
+import stirling.software.SPDF.model.api.PDFWithImageFormatRequest;
+import stirling.software.SPDF.utils.WebResponseUtils;
+
 @RestController
 @RequestMapping("/api/v1/misc")
-@Tag(name = "Misc", description = "Miscellaneous APIs")
 public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
 
+    @Autowired private memoryConfig memoryconfig; // Inject MemoryConfig
+
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
-    @Operation(
-            summary = "Extract images from a PDF file",
-            description =
-                    "This endpoint extracts images from a given PDF file and returns them in a zip file. Users can specify the output image format. Input: PDF Output: IMAGE/ZIP Type: SIMO")
     public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request)
             throws IOException, InterruptedException, ExecutionException {
         MultipartFile file = request.getFileInput();
@@ -65,14 +69,24 @@ public class ExtractImagesController {
 
         // Create ZipOutputStream to create zip file
         ZipOutputStream zos = new ZipOutputStream(baos);
-
-        // Set compression level
         zos.setLevel(Deflater.BEST_COMPRESSION);
 
         String filename =
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
         Set<Integer> processedImages = new HashSet<>();
+
+        // Create a temporary file to save PDF if required
+        File tempFile = null;
+        boolean useFile = shouldUseFileBasedStorage();
+
+        if (useFile) {
+            tempFile = File.createTempFile("pdf-temp-", ".pdf");
+            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                fos.write(file.getBytes());
+            }
+            document = Loader.loadPDF(tempFile);
+        }
 
         if (useMultithreading) {
             // Executor service to handle multithreading
@@ -88,8 +102,17 @@ public class ExtractImagesController {
                 Future<Void> future =
                         executor.submit(
                                 () -> {
-                                    extractImagesFromPage(
-                                            page, format, filename, pageNum, processedImages, zos);
+                                    try {
+                                        extractImagesFromPage(
+                                                page,
+                                                format,
+                                                filename,
+                                                pageNum,
+                                                processedImages,
+                                                zos);
+                                    } catch (IOException e) {
+                                        logger.error("Error extracting images from page", e);
+                                    }
                                     return null;
                                 });
 
@@ -115,6 +138,11 @@ public class ExtractImagesController {
         document.close();
         zos.close();
 
+        // Clean up temporary file if used
+        if (useFile && tempFile != null) {
+            tempFile.delete();
+        }
+
         // Create ByteArrayResource from byte array
         byte[] zipContents = baos.toByteArray();
 
@@ -127,6 +155,27 @@ public class ExtractImagesController {
         long fileSizeInMB = file.getSize() / (1024 * 1024);
         int numberOfPages = document.getPages().getCount();
         return fileSizeInMB > 10 || numberOfPages > 20;
+    }
+
+    private boolean shouldUseFileBasedStorage() {
+        Runtime runtime = Runtime.getRuntime();
+        long usedMemory = runtime.totalMemory() - runtime.freeMemory();
+        long maxMemory = runtime.maxMemory();
+
+        boolean useFileBasedOnMemory =
+                usedMemory > (memoryconfig.getMemory().getRamThresholdGB() * 1024L * 1024L * 1024L);
+
+        // Check free space on the default temporary directory
+        Path tempDir = FileSystems.getDefault().getPath(System.getProperty("java.io.tmpdir"));
+        File tempDirFile = tempDir.toFile();
+        long freeSpace = tempDirFile.getUsableSpace(); // in bytes
+        long totalSpace = tempDirFile.getTotalSpace(); // in bytes
+        int freeSpacePercentage = (int) ((freeSpace * 100) / totalSpace);
+
+        boolean useFileBasedOnSpace =
+                freeSpacePercentage < memoryconfig.getMemory().getMinFreeSpacePercentage();
+
+        return useFileBasedOnMemory || useFileBasedOnSpace;
     }
 
     private void extractImagesFromPage(
@@ -149,8 +198,6 @@ public class ExtractImagesController {
                 }
 
                 RenderedImage renderedImage = image.getImage();
-
-                // Convert to standard RGB colorspace if needed
                 BufferedImage bufferedImage = convertToRGB(renderedImage, format);
 
                 // Write image to zip file
