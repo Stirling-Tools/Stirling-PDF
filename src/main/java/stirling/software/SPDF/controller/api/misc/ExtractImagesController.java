@@ -26,7 +26,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -38,7 +37,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -82,14 +80,6 @@ public class ExtractImagesController {
 
         // Determine if multithreading should be used based on PDF size or number of pages
         boolean useMultithreading = shouldUseMultithreading(file, document);
-
-        // Create ByteArrayOutputStream to write zip file to byte array
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        // Create ZipOutputStream to create zip file
-        ZipOutputStream zos = new ZipOutputStream(baos);
-        zos.setLevel(Deflater.BEST_COMPRESSION);
-
         String filename =
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
