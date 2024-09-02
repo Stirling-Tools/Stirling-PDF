@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{scalePages.title}, header=#{scalePages.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon organize">fullscreen</span>
+                <span class="tool-header-text" th:text="#{scalePages.header}"></span>
+              </div>
+              <form id="scalePagesFrom" th:action="@{'/api/v1/general/scale-pages'}" method="post" enctype="multipart/form-data">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <div class="mb-3">
+                  <label for="pageSize" th:text="#{scalePages.pageSize}"></label>
+                  <select class="form-control" id="pageSize" name="pageSize">
+                    <option value="A0">A0</option>
+                    <option value="A1">A1</option>
+                    <option value="A2">A2</option>
+                    <option value="A3">A3</option>
+                    <option value="A4" selected>A4</option>
+                    <option value="A5">A5</option>
+                    <option value="A6">A6</option>
+                    <option value="LETTER">Letter</option>
+                    <option value="LEGAL">Legal</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="scaleFactor" th:text="#{scalePages.scaleFactor}"></label>
+                  <input class="form-control" type="number" id="scaleFactor" name="scaleFactor" step="any" min="0" value="1">
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{scalePages.submit}"></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

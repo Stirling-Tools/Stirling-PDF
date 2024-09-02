@@ -1,0 +1,202 @@
+name: Check Properties Files
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "src/main/resources/messages_*.properties"
+  push:
+    paths:
+      - "src/main/resources/messages_en_GB.properties"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-files:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          path: pr-branch
+          fetch-depth: 0
+
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-branch
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install GitHub CLI
+        run: sudo apt-get update && sudo apt-get install -y gh
+
+      - name: Fetch PR changed files
+        id: fetch-pr-changes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching PR changed files..."
+          cd pr-branch
+          gh repo set-default ${{ github.repository }}
+          gh pr view ${{ github.event.pull_request.number }} --json files -q ".files[].path" > ../changed_files.txt
+          cd ..
+          echo $(cat changed_files.txt)
+          BRANCH_PATH="pr-branch"
+          echo "BRANCH_PATH=${BRANCH_PATH}" >> $GITHUB_ENV
+          CHANGED_FILES=$(cat changed_files.txt | tr '\n' ' ')
+          echo "CHANGED_FILES=${CHANGED_FILES}" >> $GITHUB_ENV
+          echo "Changed files: ${CHANGED_FILES}"
+          echo "Branch: ${BRANCH_PATH}"
+
+      - name: Determine reference file
+        id: determine-file
+        run: |
+          echo "Determining reference file..."
+          if echo "${{ env.CHANGED_FILES }}" | grep -q 'src/main/resources/messages_en_GB.properties'; then
+              echo "REFERENCE_FILE=pr-branch/src/main/resources/messages_en_GB.properties" >> $GITHUB_ENV
+          else
+              echo "REFERENCE_FILE=main-branch/src/main/resources/messages_en_GB.properties" >> $GITHUB_ENV
+          fi
+          echo "REFERENCE_FILE=${{ env.REFERENCE_FILE }}"
+
+      - name: Show REFERENCE_FILE
+        run: echo "Reference file is set to ${{ env.REFERENCE_FILE }}"
+
+      - name: Run Python script to check files
+        id: run-check
+        run: |
+          python main-branch/.github/scripts/check_language_properties.py --reference-file ${{ env.REFERENCE_FILE }} --branch ${{ env.BRANCH_PATH }} --files ${{ env.CHANGED_FILES }} > failure.txt || true
+
+      - name: Capture output
+        id: capture-output
+        run: |
+          if [ -f failure.txt ] && [ -s failure.txt ]; then
+            echo "Test failed, capturing output..."
+            ERROR_OUTPUT=$(cat failure.txt)
+            echo "ERROR_OUTPUT<<EOF" >> $GITHUB_ENV
+            echo "$ERROR_OUTPUT" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+            echo $ERROR_OUTPUT
+          else
+            echo "No errors found."
+            echo "ERROR_OUTPUT=" >> $GITHUB_ENV
+          fi
+
+      - name: Post comment on PR
+        if: env.ERROR_OUTPUT != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { GITHUB_REPOSITORY, ERROR_OUTPUT } = process.env;
+            const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
+            const prNumber = context.issue.number;
+
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: repoOwner,
+              repo: repoName,
+              issue_number: prNumber
+            });
+
+            const comment = comments.data.find(c => c.body.includes("## 🚀 Translation Verification Summary"));
+
+            // Only allow the action user to update comments
+            const expectedActor = "github-actions[bot]";
+
+            if (comment && comment.user.login === expectedActor) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: repoOwner,
+                repo: repoName,
+                comment_id: comment.id,
+                body: `## 🚀 Translation Verification Summary\n\n\n${ERROR_OUTPUT}\n`
+              });
+              console.log("Updated existing comment.");
+            } else if (!comment) {
+              // Create new comment if no existing comment is found
+              await github.rest.issues.createComment({
+                owner: repoOwner,
+                repo: repoName,
+                issue_number: prNumber,
+                body: `## 🚀 Translation Verification Summary\n\n\n${ERROR_OUTPUT}\n`
+              });
+              console.log("Created new comment.");
+            } else {
+              console.log("Comment update attempt denied. Actor does not match.");
+            }
+
+      # - name: Set up git config
+      #   run: |
+      #     git config --global user.name "github-actions[bot]"
+      #     git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      # - name: Add translation keys
+      #   run: |
+      #     cd ${{ env.BRANCH_PATH }}
+      #     git add src/main/resources/messages_*.properties
+      #     git diff --staged --quiet || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
+      #     git commit -m "Update translation files" || echo "No changes to commit"
+      # - name: Push
+      #   if: env.CHANGES_DETECTED == 'true'
+      #   run: |
+      #     cd pr-branch
+      #     git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.event.pull_request.head.repo.full_name }}.git
+      #     git push origin ${{ github.head_ref }} || echo "Push failed: possibly no changes to push"
+
+  update-translations-main:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Run Python script to check files
+        id: run-check
+        run: |
+          python .github/scripts/check_language_properties.py --reference-file src/main/resources/messages_en_GB.properties --branch main
+
+      - name: Set up git config
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add translation keys
+        run: |
+          git add src/main/resources/messages_*.properties
+          git diff --staged --quiet || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
+
+      - name: Create Pull Request
+        id: cpr
+        if: env.CHANGES_DETECTED == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update translation files"
+          committer: GitHub Action <action@github.com>
+          author: GitHub Action <action@github.com>
+          signoff: true
+          branch: update_translation_files
+          title: "Update translation files"
+          body: |
+            Auto-generated by [create-pull-request][1]
+
+            [1]: https://github.com/peter-evans/create-pull-request
+          labels: Translation
+          draft: false
+          delete-branch: true

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{getPdfInfo.title}, header=#{getPdfInfo.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">info</span>
+                <span class="tool-header-text" th:text="#{getPdfInfo.header}"></span>
+              </div>
+              <form id="pdfInfoForm" method="post" enctype="multipart/form-data" th:action="@{'/api/v1/security/get-info-on-pdf'}">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, remoteCall='false', accept='application/pdf')}"></div>
+                <br>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{getPdfInfo.submit}"></button>
+              </form>
+              <div class="container mt-5">
+                <!-- Iterate over each main section in the JSON -->
+                <div id="json-content">
+                  <!-- JavaScript will populate this section -->
+                </div>
+
+                <!-- Button to download the JSON -->
+                <a href="#" id="downloadJson" class="btn btn-primary mt-3" style="display: none;" th:text="#{getPdfInfo.downloadJson}">Download JSON</a>
+              </div>
+              <script>
+                document.getElementById("pdfInfoForm").addEventListener("submit", function(event) {
+                  event.preventDefault();
+
+                  const formData = new FormData(event.target);
+
+                  fetch('api/v1/security/get-info-on-pdf', {
+                    method: 'POST',
+                    body: formData
+                  }).then(response => response.json()).then(data => {
+                    displayJsonData(data);
+                    setDownloadLink(data);
+                    document.getElementById("downloadJson").style.display = "block";
+                  }).catch(error => console.error('Error:', error));
+                });
+
+                function displayJsonData(jsonData) {
+                  const jsonContent = document.getElementById('json-content');
+
+                  while (jsonContent.firstChild) {
+                    jsonContent.removeChild(jsonContent.firstChild);
+                  }
+
+                  for (const key in jsonData) {
+                    const sectionElem = createJsonSection(key, jsonData[key]);
+                    jsonContent.appendChild(sectionElem);
+                  }
+                }
+
+                function setDownloadLink(jsonData) {
+                  const downloadLink = document.getElementById('downloadJson');
+                  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(jsonData, null, 4));
+                  downloadLink.setAttribute("href", dataStr);
+                  downloadLink.setAttribute("download", "data.json");
+                }
+
+                function createJsonSection(key, value, depth = 0) {
+                  let safeKey = (typeof key === "string") ? key.replace(/[^a-zA-Z0-9]/g, '_') : key;
+                  const card = document.createElement('div');
+                  card.className = 'card mb-3';
+
+                  const header = document.createElement('div');
+                  header.className = 'card-header';
+                  header.id = `${safeKey}-heading-${depth}`;
+                  const h5Elem = document.createElement('h5');
+                  h5Elem.className = 'mb-0';
+
+                  if (key === 'XMPMetadata' && typeof value === "string") {
+                    const buttonElem = createButtonElement(key, safeKey, depth);
+                    h5Elem.appendChild(buttonElem);
+                  } else if (value && typeof value === 'object') {
+                    if (Array.isArray(value) && value.length === 0) {
+                      h5Elem.textContent = `${key}: Empty array`;
+                    } else if (!Array.isArray(value) && Object.keys(value).length === 0) {
+                      h5Elem.textContent = `${key}: Empty object`;
+                    } else {
+                      const buttonElem = createButtonElement(key, safeKey, depth);
+                      h5Elem.appendChild(buttonElem);
+                    }
+                  } else {
+                    h5Elem.textContent = `${key}: ${String(value)}`;
+                  }
+
+                  header.appendChild(h5Elem);
+                  card.appendChild(header);
+
+                  const content = document.createElement('div');
+                  content.id = `${safeKey}-content-${depth}`;
+                  content.className = 'collapse';
+                  content.setAttribute('aria-labelledby', `${safeKey}-heading-${depth}`);
+
+                  if (key === 'XMPMetadata' && typeof value === "string") {
+                    const body = document.createElement('div');
+                    body.className = 'card-body';
+                    const preElem = document.createElement('pre');
+                    preElem.textContent = value;  // Not escaping since we're using textContent
+                    body.appendChild(preElem);
+                    content.appendChild(body);
+                  } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+                    const body = document.createElement('div');
+                    body.className = 'card-body';
+                    for (const subKey in value) {
+                      const subElem = createJsonSection(subKey, value[subKey], depth + 1);
+                      body.appendChild(subElem);
+                    }
+                    content.appendChild(body);
+                  } else if (value && typeof value === 'object' && Array.isArray(value)) {
+                    const body = document.createElement('div');
+                    body.className = 'card-body';
+                    value.forEach((val, index) => {
+                      const subElem = createJsonSection(`${key}[${index}]`, val, depth + 1);
+                      body.appendChild(subElem);
+                    });
+                    content.appendChild(body);
+                  }
+
+                  card.appendChild(content);
+                  return card;
+                }
+                function createButtonElement(key, safeKey, depth) {
+                  const buttonElem = document.createElement('button');
+                  buttonElem.className = 'btn btn-link';
+                  buttonElem.type = 'button';
+                  buttonElem.dataset.bsToggle = "collapse";
+                  buttonElem.dataset.bsTarget = `#${safeKey}-content-${depth}`;
+                  buttonElem.setAttribute('aria-expanded', 'true');
+                  buttonElem.setAttribute('aria-controls', `${safeKey}-content-${depth}`);
+                  buttonElem.textContent = key;
+                  return buttonElem;
+                }
+                const collapsibleElems = document.querySelectorAll('[data-bs-toggle="collapse"]');
+                collapsibleElems.forEach(elem => {
+                  new bootstrap.Collapse(elem);
+                });
+              </script>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,155 @@
+#searchBar {
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-container-low);
+  width: 100%;
+  font-size: 16px;
+  margin-bottom: 2rem;
+  padding: 0.75rem 3.5rem;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 3rem;
+  outline-color: var(--md-sys-color-outline-variant);
+}
+
+.search-icon {
+  position: absolute;
+  margin: 0.75rem 1rem;
+  border: 0.1rem solid transparent;
+}
+
+.features-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 3fr));
+  gap: 30px 30px;
+}
+
+.feature-card {
+  border: 1px solid var(--md-sys-color-surface-5);
+  border-radius: 1.75rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: var(--md-sys-color-surface-5);
+  transition:
+    transform 0.3s,
+    border 0.3s;
+  transform-origin: center center;
+  outline: 0px solid transparent;
+}
+
+.feature-card a {
+  text-decoration: none;
+  color: var(--md-sys-color-on-surface);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.feature-card .card-text {
+  font-size: .875rem;
+}
+
+.feature-card:hover {
+  cursor: pointer;
+  transform: scale(1.08);
+  box-shadow: var(--md-sys-elevation-2);
+}
+
+.card-title.text-primary {
+  color: #000;
+}
+
+.home-card-icon {
+  width: 3rem;
+  height: 3rem;
+  transform: translateY(-5px);
+}
+
+.favorite-icon {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: var(--md-sys-color-secondary);
+}
+
+#tool-icon {
+  height: 100%;
+}
+
+#tool-text {
+  margin: 0.0rem 0 0 1.25rem;
+}
+
+.card-title {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+/* Only show the favorite icons when the parent card is being hovered over */
+.feature-card:hover .favorite-icon {
+  display: block;
+}
+
+.favorite-icon img {
+  filter: brightness(0) invert(var(--md-theme-filter-color));
+}
+
+.jumbotron {
+  padding: 3rem 3rem;
+  /* Reduce vertical padding */
+}
+
+.lookatme {
+  opacity: 1;
+  position: relative;
+  display: inline-block;
+}
+
+.lookatme::after {
+  color: #e33100;
+  text-shadow: 0 0 5px #e33100;
+  /* in the html, the data-lookatme-text attribute must */
+  /* contain the same text as the .lookatme element */
+  content: attr(data-lookatme-text);
+  padding: inherit;
+  position: absolute;
+  inset: 0 0 0 0;
+  z-index: 1;
+  /* 20 steps / 2 seconds = 10fps */
+  -webkit-animation: 2s infinite Pulse steps(20);
+  animation: 2s infinite Pulse steps(20);
+}
+
+@keyframes Pulse {
+  from {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.update-notice {
+  animation: scale 1s infinite alternate;
+}
+
+@keyframes scale {
+  0% {
+    transform: scale(0.96);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.hidden {
+    visibility: hidden;
+}

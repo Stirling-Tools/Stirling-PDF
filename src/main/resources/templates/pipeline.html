@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html
+  th:lang="${#locale.language}"
+  th:dir="#{language.direction}"
+  th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org"
+>
+  <head>
+    <th:block
+      th:insert="~{fragments/common :: head(title=#{pipeline.title}, header=#{pipeline.header})}"
+    ></th:block>
+    <link
+      rel="stylesheet"
+      th:href="@{'/css/pipeline.css'}"
+      th:if="${currentPage == 'pipeline'}"
+    />
+    <script th:inline="javascript">
+      const saveSettings = /*[[#{pipelineOptions.saveSettings}]]*/ "";
+      const deletePipelineText = /*[[#{pipeline.deletePrompt}]]*/ "Are you sure you want to delete pipeline";
+    </script>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br /><br />
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+                <div class="tool-header">
+                  <span class="material-symbols-rounded tool-header-icon advance">family_history</span>
+                  <span class="tool-header-text" th:text="#{pipeline.header}"></span>
+                </div>
+                <div class="text-end text-top">
+                  <button
+                    id="uploadPipelineBtn"
+                    class="btn btn-primary"
+                    th:text="#{pipeline.uploadButton}"
+                  ></button>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#pipelineSettingsModal"
+                    th:text="#{pipeline.configureButton}"
+                  ></button>
+                </div>
+
+                <div class="center-element">
+                  <div class="element-margin">
+                    <select id="pipelineSelect" class="custom-select form-control">
+                      <option
+                        value='{"name":"Custom","pipeline":[],"_examples":{"outputDir":"{outputFolder}/{folderName}","outputFileName":"{filename}-{pipelineName}-{date}-{time}"},"outputDir":"{outputFolder}","outputFileName":"{filename}"}'
+                        th:text="#{pipeline.defaultOption}"
+                      ></option>
+                      <th:block th:each="config : ${pipelineConfigsWithNames}">
+                        <option
+                          th:value="${config.json}"
+                          th:text="${config.name}"
+                        ></option>
+                      </th:block>
+                    </select>
+                  </div>
+                  <div class="element-margin">
+                    <div
+                      th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=true)}"
+                    ></div>
+                  </div>
+                  <div class="element-margin">
+                    <button
+                      class="btn btn-primary"
+                      id="submitConfigBtn"
+                      th:text="#{pipeline.submitButton}"
+                    ></button>
+                  </div>
+                  <br/>
+                  <a
+                    href="https://github.com/Stirling-Tools/Stirling-PDF/blob/main/PipelineFeature.md"
+                    target="_blank"
+                    th:text="#{pipeline.help}"
+                    >Pipeline Help</a
+                  >
+                  <br/>
+                  <a
+                    href="https://github.com/Stirling-Tools/Stirling-PDF/blob/main/FolderScanning.md"
+                    target="_blank"
+                    th:text="#{pipeline.scanHelp}"
+                    >Folder Scanning Help</a
+                  >
+                </div>
+              </div>
+
+              <!-- The Modal -->
+              <div class="modal" id="pipelineSettingsModal">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content dark-card">
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                      <h2
+                        class="modal-title"
+                        th:text="#{pipelineOptions.header}"
+                      ></h2>
+                      <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                        <span class="material-symbols-rounded">
+                          close
+                        </span>
+                      </button>
+                    </div>
+
+                    <!-- Modal body -->
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label
+                          for="pipelineName"
+                          class="form-label"
+                          th:text="#{pipelineOptions.pipelineNameLabel}"
+                        ></label>
+                        <input
+                          type="text"
+                          id="pipelineName"
+                          class="form-control"
+                          th:placeholder="#{pipelineOptions.pipelineNamePrompt}"
+                        />
+                      </div>
+                      <div class="mb-3">
+                        <label
+                          for="operationsDropdown"
+                          th:text="#{pipelineOptions.selectOperation}"
+                        ></label>
+                        <select id="operationsDropdown" class="form-select">
+                          <!-- Options will be dynamically populated here -->
+                        </select>
+                      </div>
+                      <div class="mb-3">
+                        <button
+                          id="addOperationBtn"
+                          class="btn btn-primary"
+                          th:text="#{pipelineOptions.addOperationButton}"
+                        ></button>
+                      </div>
+                      <h3
+                        id="pipelineHeader"
+                        style="display: none"
+                        th:text="#{pipelineOptions.pipelineHeader}"
+                      ></h3>
+
+                      <ol id="pipelineList" class="list-group">
+                        <!-- Pipeline operations will be dynamically populated here -->
+                      </ol>
+                      <div id="pipelineSettingsContent">
+                        <!-- pipelineSettings will be dynamically populated here -->
+                      </div>
+                    </div>
+
+                    <!-- Modal footer -->
+                    <div class="modal-footer">
+                      <button
+                        id="deletePipelineBtn"
+                        class="btn btn-danger"
+                        th:text="#{delete}"
+                      ></button>
+                      
+                      <button
+                        id="saveBrowserPipelineBtn"
+                        class="btn btn-success"
+                        th:text="#{saveToBrowser}"
+                      ></button>
+                      <button
+                        id="savePipelineBtn"
+                        class="btn btn-success"
+                        th:text="#{pipelineOptions.saveButton}"
+                      ></button>
+                      <button
+                        id="validateButton"
+                        class="btn btn-success"
+                        th:text="#{pipelineOptions.validateButton}"
+                      ></button>
+
+                      <div class="btn-group">
+                        <input
+                          type="file"
+                          id="uploadPipelineInput"
+                          accept=".json"
+                          style="display: none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <script th:src="@{'/js/pipeline.js'}"></script>\
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

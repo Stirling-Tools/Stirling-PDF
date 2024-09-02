@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{AddStampRequest.title}, header=#{AddStampRequest.header})}"></th:block>
+    <style>
+      .a4container {
+        position: relative;
+        width: 50%;
+        aspect-ratio: 0.707/1;
+        border: 1px solid #ddd;
+        box-sizing: border-box;
+        background-color: white;
+      }
+    </style>
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon security">approval</span>
+                <span class="tool-header-text" th:text="#{AddStampRequest.header}"></span>
+              </div>
+              <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/add-stamp'}">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <br>
+                <div class="mb-3">
+                  <label for="pageOrder" th:text="#{pageSelectionPrompt}"></label>
+                  <input type="text" class="form-control" id="pageOrder" name="pageNumbers" value="1" placeholder="(e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="customMargin" class="form-label" th:text="#{AddStampRequest.customMargin}">Custom Margin</label>
+                  <select class="form-select" id="customMargin" name="customMargin">
+                    <option value="small" th:text="#{sizes.small}"></option>
+                    <option value="medium" selected th:text="#{sizes.medium}"></option>
+                    <option value="large" th:text="#{sizes.large}"></option>
+                    <option value="x-large" th:text="#{sizes.x-large}"></option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label th:text="#{AddStampRequest.position}"></label>
+                  <div class="a4container">
+                    <div class="pageNumber" id="1" style="top: 10%; left: 10%;">1</div>
+                    <div class="pageNumber" id="2" style="top: 10%; left: 50%;">2</div>
+                    <div class="pageNumber" id="3" style="top: 10%; left: 90%;">3</div>
+                    <div class="pageNumber" id="4" style="top: 50%; left: 10%;">4</div>
+                    <div class="pageNumber" id="5" style="top: 50%; left: 50%;">5</div>
+                    <div class="pageNumber" id="6" style="top: 50%; left: 90%;">6</div>
+                    <div class="pageNumber" id="7" style="top: 90%; left: 10%;">7</div>
+                    <div class="pageNumber selectedPosition" id="8" style="top: 90%; left: 50%;">8</div>
+                    <div class="pageNumber" id="9" style="top: 90%; left: 90%;">9</div>
+                  </div>
+                </div>
+
+                <input type="hidden" id="numberInput" name="position" value="8">
+
+                <div class="mb-3">
+                  <label for="stampType" class="form-label" th:text="#{AddStampRequest.stampType}">Stamp Type</label>
+                  <select class="form-select" id="stampType" name="stampType" onchange="toggleFileOption()">
+                    <option value="text" th:text="#{watermark.type.1}">Text</option>
+                    <option value="image" th:text="#{watermark.type.2}">Image</option>
+                  </select>
+                </div>
+
+                <div  id="stampTextGroup" class="mb-3">
+                  <label for="stampText" class="form-label" th:text="#{AddStampRequest.stampText}">Stamp Text</label>
+                  <input type="text" class="form-control" id="stampText" name="stampText">
+                </div>
+
+                <div id="stampImageGroup" class="mb-3"  style="display: none;">
+                  <label for="stampImage" class="form-label" th:text="#{AddStampRequest.stampImage}">Stamp Image</label>
+                  <input type="file" class="form-control" id="stampImage" name="stampImage" accept="image/*" >
+                </div>
+
+                <div id="alphabetGroup" class="mb-3">
+                  <label for="alphabet" class="form-label" th:text="#{AddStampRequest.alphabet}">Alphabet</label>
+                  <select class="form-select" id="alphabet" name="alphabet">
+                    <option value="roman">Roman</option>
+                    <option value="arabic">العربية</option>
+                    <option value="japanese">日本語</option>
+                    <option value="korean">한국어</option>
+                    <option value="chinese">简体中文</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="fontSize" class="form-label" th:text="#{AddStampRequest.fontSize}">Font Size</label>
+                  <input type="number" class="form-control" id="fontSize" name="fontSize" value="30">
+                </div>
+
+                <div class="mb-3">
+                  <label for="rotation" class="form-label" th:text="#{AddStampRequest.rotation}">Rotation</label>
+                  <input type="number" class="form-control" id="rotation" name="rotation" value="0">
+                </div>
+
+                <div class="mb-3">
+                  <label for="opacity" class="form-label" th:text="#{AddStampRequest.opacity}">Opacity</label>
+                  <input type="number" class="form-control" id="opacity" name="opacity" step="0.1" value="0.5">
+                </div>
+
+
+                <div class="mb-3">
+                  <label for="overrideX" class="form-label" th:text="#{AddStampRequest.overrideX}">Override X</label>
+                  <input type="number" class="form-control" id="overrideX" name="overrideX" value="-1">
+                </div>
+
+                <div class="mb-3">
+                  <label for="overrideY" class="form-label" th:text="#{AddStampRequest.overrideY}">Override Y</label>
+                  <input type="number" class="form-control" id="overrideY" name="overrideY" value="-1">
+                </div>
+
+                <div class="mb-3">
+                  <label for="customColor" class="form-label" th:text="#{AddStampRequest.customColor}">Custom Color</label>
+                  <input type="color" class="form-control form-control-color" id="customColor" name="customColor" value="#d3d3d3">
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{AddStampRequest.submit}"></button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <script>
+        let cells = document.querySelectorAll('.pageNumber');
+        let inputField = document.getElementById('numberInput');
+
+        cells.forEach(cell => {
+          cell.addEventListener('click', function(e) {
+            cells.forEach(cell => {
+              cell.classList.remove('selectedPosition'); // Remove selected class from all cells
+              cell.classList.remove('selectedHovered'); // Also remove selectedHovered class
+            });
+            let selectedLocation = e.target.id;
+            inputField.value = selectedLocation;
+            e.target.classList.add('selectedPosition'); // Add selected class to clicked cell
+            e.target.classList.add('selectedHovered'); // Add selectedHovered class
+          });
+
+          cell.addEventListener('mouseenter', function(e) {
+            if(e.target.classList.contains('selectedPosition')) {
+              e.target.classList.add('selectedHovered');
+            }
+          });
+
+          cell.addEventListener('mouseleave', function(e) {
+            if(e.target.classList.contains('selectedPosition')) {
+              e.target.classList.remove('selectedHovered');
+            }
+          });
+        });
+
+        function toggleFileOption() {
+          const stampType = document.getElementById('stampType').value;
+          const stampTextGroup = document.getElementById('stampTextGroup');
+          const stampImageGroup = document.getElementById('stampImageGroup');
+          const alphabetGroup = document.getElementById('alphabetGroup');
+
+          if (stampType === 'text') {
+            stampTextGroup.style.display = 'block';
+            stampImageGroup.style.display = 'none';
+            alphabetGroup.style.display = 'block';
+          } else if (stampType === 'image') {
+            stampTextGroup.style.display = 'none';
+            stampImageGroup.style.display = 'block';
+            alphabetGroup.style.display = 'none';
+          }
+        }
+        </script>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

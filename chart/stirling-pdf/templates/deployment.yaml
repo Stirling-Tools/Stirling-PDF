@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "stirlingpdf.fullname" . }}
+  {{- with .Values.deployment.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "stirlingpdf.labels" . | nindent 4 }}
+    {{- if .Values.deployment.labels }}
+    {{- toYaml .Values.deployment.labels | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "stirlingpdf.selectorLabels" . | nindent 6 }}
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+{{ toYaml .Values.strategy | indent 4 }}
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "stirlingpdf.selectorLabels" . | nindent 8 }}
+        {{- if .Values.podLabels }}
+        {{- toYaml .Values.podLabels | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.priorityClassName }}
+      priorityClassName: "{{ .Values.priorityClassName }}"
+      {{- end }}
+      {{- if .Values.securityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+        {{- if .Values.securityContext.runAsNonRoot }}
+        runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+        {{- end }}
+        {{- if .Values.securityContext.supplementalGroups }}
+        supplementalGroups: {{ .Values.securityContext.supplementalGroups }}
+        {{- end }}
+      {{- else if .Values.persistence.enabled }}
+      initContainers:
+      - name: volume-permissions
+        image: {{ template "stirlingpdf.volumePermissions.image" . }}
+        imagePullPolicy: "{{ .Values.volumePermissions.image.pullPolicy }}"
+        securityContext:
+          {{- toYaml .Values.containerSecurityContext | nindent 10 }}
+        command: ['sh', '-c', 'chown -R {{ .Values.securityContext.fsGroup }}:{{ .Values.securityContext.fsGroup }} {{ .Values.persistence.path }}']
+        volumeMounts:
+        - mountPath: {{ .Values.persistence.path }}
+          name: storage-volume
+      {{- end }}
+{{- include "stirlingpdf.imagePullSecrets" . | indent 6 }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          {{- toYaml .Values.containerSecurityContext | nindent 10 }}
+        env:
+        - name: SYSTEM_ROOTURIPATH
+          value: {{ .Values.rootPath}}
+{{- if .Values.envs }}
+{{ toYaml .Values.envs | indent 8 }}
+{{- end }}
+{{- if .Values.extraArgs }}
+        args:
+{{ toYaml .Values.extraArgs | indent 8 }}
+{{- end }}
+        ports:
+        - name: http
+          containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.rootPath}}
+            port: http
+{{ toYaml .Values.probes.livenessHttpGetConfig | indent 12 }}
+{{ toYaml .Values.probes.liveness | indent 10 }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.rootPath}}
+            port: http
+{{ toYaml .Values.probes.readinessHttpGetConfig | indent 12 }}
+{{ toYaml .Values.probes.readiness | indent 10 }}
+        volumeMounts:
+{{- if .Values.deployment.extraVolumeMounts }}
+        {{- toYaml .Values.deployment.extraVolumeMounts | nindent 8 }}
+{{- end }}
+{{- if .Values.deployment.sidecarContainers }}
+{{- range $name, $spec :=  .Values.deployment.sidecarContainers }}
+      - name: {{ $name }}
+{{- toYaml $spec | nindent 8 }}
+{{- end }}
+{{- end }}
+      {{- with .Values.resources }}
+        resources:
+{{ toYaml . | indent 10 }}
+      {{- end }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName }}
+    {{- end }}
+      serviceAccountName: {{ include "stirlingpdf.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      volumes:
+      {{- if .Values.deployment.extraVolumes }}
+      {{- toYaml .Values.deployment.extraVolumes | nindent 6 }}
+      {{- end }}
+      - name: storage-volume
+      {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (include "stirlingpdf.fullname" .) }}
+      {{- else }}
+        emptyDir: {}
+      {{- end }}

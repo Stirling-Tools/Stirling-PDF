@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{error.404.head})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <div class="container">
+          <div th:insert="~{fragments/errorBanner.html :: errorBanner}"></div>
+          <div class="bg-card text-center">
+            <h1 class="display-2" th:text="#{oops}"></h1>
+            <p class="lead" th:if="${param.status == '404'}" th:text="#{error.404.1}"></p>
+            <p class="lead" th:unless="${param.status == '404'}" th:text="#{error.404.2}"></p>
+            <br>
+            <h2 th:text="#{error.needHelp}"></h2>
+            <p th:text="#{error.contactTip}"></p>
+            <div id="button-group">
+              <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" class="btn btn-primary" target="_blank" th:text="#{error.github}"></a>
+              <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" class="btn btn-primary" target="_blank" th:text="#{joinDiscord}"></a>
+            </div>
+            <a th:href="@{'/'}" id="home-button" class="home-button btn btn-primary"  th:text="#{goHomepage}"></a>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

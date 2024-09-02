@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{sign.title}, header=#{sign.header})}"></th:block>
+    <link rel="stylesheet" th:href="@{'/css/sign.css'}">
+  <th:block th:each="font : ${fonts}">
+    <style th:inline="text">
+      @font-face {
+        font-family: "[[${font.name}]]";
+        src: url('fonts/[[${font.name}]].[[${font.extension}]]') format('[[${font.type}]]');
+      }
+
+      #font-select option[value="[[${font.name}]]"] {
+        font-family: "[[${font.name}]]", cursive;
+      }
+      #font-select option[value='/*[[${font.name}]]*/'] {
+        font-family: '/*[[${font.name}]]*/', cursive;
+      }
+    </style>
+  </th:block>
+    <script th:src="@{'/js/thirdParty/signature_pad.umd.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/interact.min.js'}"></script>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon sign">signature</span>
+                <span class="tool-header-text" th:text="#{sign.header}"></span>
+              </div>
+
+              <!-- pdf selector -->
+              <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multipleInputsForSingleRequest=false, disableMultipleFiles=true,  accept='application/pdf')}"></div>
+              <script>
+                let originalFileName = '';
+                document.querySelector('input[name=pdf-upload]').addEventListener('change', async (event) => {
+                  const file = event.target.files[0];
+                  if (file) {
+                    originalFileName = file.name.replace(/\.[^/.]+$/, "");
+                    const pdfData = await file.arrayBuffer();
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
+                    const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
+                    await DraggableUtils.renderPage(pdfDoc, 0);
+
+                    document.querySelectorAll(".show-on-file-selected").forEach(el => {
+                      el.style.cssText = '';
+                    })
+                  }
+                });
+                document.addEventListener("DOMContentLoaded", () => {
+                  document.querySelectorAll(".show-on-file-selected").forEach(el => {
+                    el.style.cssText = "display:none !important";
+                  })
+                });
+              </script>
+              <div class="tab-group show-on-file-selected">
+                <div class="tab-container" th:title="#{sign.upload}">
+                  <div th:replace="~{fragments/common :: fileSelector(name='image-upload', multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}"></div>
+                    <script>
+                      const imageUpload = document.querySelector('input[name=image-upload]');
+                      imageUpload.addEventListener('change', e => {
+                        if(!e.target.files) {
+                          return;
+                        }
+                        for (const imageFile of e.target.files) {
+                          var reader = new FileReader();
+                          reader.readAsDataURL(imageFile);
+                          reader.onloadend = function (e) {
+                            DraggableUtils.createDraggableCanvasFromUrl(e.target.result);
+                          };
+                        }
+                      });
+                    </script>
+                  </div>
+                  <div class="tab-container drawing-pad-container" th:title="#{sign.draw}">
+                    <canvas id="drawing-pad-canvas"></canvas>
+                    <br>
+                    <button id="clear-signature" class="btn btn-outline-danger mt-2" onclick="signaturePad.clear()" th:text="#{sign.clear}"></button>
+                    <button id="save-signature" class="btn btn-outline-success mt-2" onclick="addDraggableFromPad()" th:text="#{sign.add}"></button>
+                    <script>
+                      const signaturePadCanvas = document.getElementById('drawing-pad-canvas');
+                      const signaturePad = new SignaturePad(signaturePadCanvas, {
+                        minWidth: 1,
+                        maxWidth: 2,
+                        penColor: 'black',
+                      });
+                      function addDraggableFromPad() {
+                        if (signaturePad.isEmpty()) return;
+                        const startTime = Date.now();
+                        const croppedDataUrl = getCroppedCanvasDataUrl(signaturePadCanvas)
+                        console.log(Date.now() - startTime);
+                        DraggableUtils.createDraggableCanvasFromUrl(croppedDataUrl);
+                      }
+                      function getCroppedCanvasDataUrl(canvas) {
+                        // code is from: https://github.com/szimek/signature_pad/issues/49#issuecomment-1104035775
+                        let originalCtx = canvas.getContext('2d');
+
+                        let originalWidth = canvas.width;
+                        let originalHeight = canvas.height;
+                        let imageData = originalCtx.getImageData(0,0, originalWidth, originalHeight);
+
+                        let minX = originalWidth + 1, maxX = -1, minY = originalHeight + 1, maxY = -1, x = 0, y = 0, currentPixelColorValueIndex;
+
+                        for (y = 0; y < originalHeight; y++) {
+                          for (x = 0; x < originalWidth; x++) {
+                            currentPixelColorValueIndex = (y * originalWidth + x) * 4;
+                            let currentPixelAlphaValue = imageData.data[currentPixelColorValueIndex + 3];
+                            if (currentPixelAlphaValue > 0) {
+                              if (minX > x) minX = x;
+                              if (maxX < x) maxX = x;
+                              if (minY > y) minY = y;
+                              if (maxY < y) maxY = y;
+                            }
+                          }
+                        }
+
+                        let croppedWidth = maxX - minX;
+                        let croppedHeight = maxY - minY;
+                        if (croppedWidth < 0 || croppedHeight < 0) return null;
+                        let cuttedImageData = originalCtx.getImageData(minX, minY, croppedWidth, croppedHeight);
+
+                        let croppedCanvas = document.createElement('canvas'),
+                            croppedCtx    = croppedCanvas.getContext('2d');
+
+                        croppedCanvas.width = croppedWidth;
+                        croppedCanvas.height = croppedHeight;
+                        croppedCtx.putImageData(cuttedImageData, 0, 0);
+
+                        return croppedCanvas.toDataURL();
+                      }
+                      function resizeCanvas() {
+                        // When zoomed out to less than 100%, for some very strange reason,
+                        // some browsers report devicePixelRatio as less than 1
+                        // and only part of the canvas is cleared then.
+                        var ratio = Math.max(window.devicePixelRatio || 1, 1);
+                        var additionalFactor = 10;
+
+                        signaturePadCanvas.width = signaturePadCanvas.offsetWidth * ratio * additionalFactor;
+                        signaturePadCanvas.height = signaturePadCanvas.offsetHeight * ratio * additionalFactor;
+                        signaturePadCanvas.getContext("2d").scale(ratio * additionalFactor, ratio * additionalFactor);
+
+                        // This library does not listen for canvas changes, so after the canvas is automatically
+                        // cleared by the browser, SignaturePad#isEmpty might still return false, even though the
+                        // canvas looks empty, because the internal data of this library wasn't cleared. To make sure
+                        // that the state of this library is consistent with visual state of the canvas, you
+                        // have to clear it manually.
+                        signaturePad.clear();
+                      }
+                      new IntersectionObserver((entries, observer) => {
+                        if (entries.some(entry => entry.intersectionRatio > 0)) {
+                          resizeCanvas();
+                        }
+                      }).observe(signaturePadCanvas);
+                      new ResizeObserver(resizeCanvas).observe(signaturePadCanvas);
+                    </script>
+                  </div>
+                  <div class="tab-container" th:title="#{sign.text}">
+                    <label class="form-check-label" for="sigText" th:text="#{text}"></label>
+                    <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
+                    <label th:text="#{font}"></label>
+                    <select class="form-control" name="font" id="font-select">
+                      <option th:each="font : ${fonts}" th:value="${font.name}" th:text="${font.name}" th:class="${font.name.toLowerCase()+'-font'}">
+                      </option>
+                    </select>
+                    <div class="margin-auto-parent">
+                      <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center" onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
+                    </div>
+                    <script>
+                      function addDraggableFromText() {
+                        const sigText = document.getElementById('sigText').value;
+                        const font = document.querySelector('select[name=font]').value;
+                        const fontSize = 100;
+
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        ctx.font = `${fontSize}px ${font}`;
+                        const textWidth = ctx.measureText(sigText).width;
+                        const textHeight = fontSize;
+
+                        let paragraphs = sigText.split(/\r?\n/);
+
+                        canvas.width = textWidth;
+                        canvas.height = paragraphs.length * textHeight*1.35; //for tails
+                        ctx.font = `${fontSize}px ${font}`;
+
+                        ctx.textBaseline = 'top';
+
+                        let y = 0;
+
+                        paragraphs.forEach(paragraph => {
+                          ctx.fillText(paragraph, 0, y);
+                          y += fontSize;
+                        });
+
+                        const dataURL = canvas.toDataURL();
+                        DraggableUtils.createDraggableCanvasFromUrl(dataURL);
+                      }
+                    </script>
+                    <script>
+                      const sigTextInput = document.getElementById('sigText');
+                      const fontSelect = document.getElementById('font-select');
+
+                      const updateOptionTexts = () => {
+                        Array.from(fontSelect.options).forEach(option => {
+                          const fontName = option.value.replace(/-regular$/i, '');
+                          option.text = sigTextInput.value || fontName;
+                        });
+                      }
+
+                      sigTextInput.addEventListener('input', updateOptionTexts);
+
+                      fontSelect.addEventListener('change', (e) => {
+                        e.target.style.fontFamily = e.target.value;
+                        updateOptionTexts();
+                      });
+
+                      // Manually trigger the change event
+                      fontSelect.dispatchEvent(new Event('change'));
+                  </script>
+                </div>
+              </div>
+
+              <!-- draggables box -->
+              <div id="box-drag-container" class="show-on-file-selected">
+                <canvas id="pdf-canvas"></canvas>
+                <script th:src="@{'/js/draggable-utils.js'}"></script>
+                <div class="draggable-buttons-box ignore-rtl">
+                  <button class="btn btn-outline-secondary" onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                    </svg>
+                  </button>
+                  <button class="btn btn-outline-secondary" onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.incrementPage() : DraggableUtils.decrementPage()" style="margin-left:auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-left" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                  </button>
+                  <button class="btn btn-outline-secondary" onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.decrementPage() : DraggableUtils.incrementPage()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-right" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- download button -->
+              <div class="margin-auto-parent">
+                <button id="download-pdf" class="btn btn-primary mb-2 show-on-file-selected margin-center" th:text="#{downloadPdf}"></button>
+              </div>
+
+              <script>
+                document.getElementById("download-pdf").addEventListener('click', async() => {
+                  const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
+                  const modifiedPdfBytes = await modifiedPdf.save();
+                  const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
+                  const link = document.createElement('a');
+                  link.href = URL.createObjectURL(blob);
+                  link.download = originalFileName + '_signed.pdf';
+                  link.click();
+                });
+              </script>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

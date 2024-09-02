@@ -1,0 +1,28 @@
+#footer {
+  display: flex;
+  flex-direction: column; /* Stack children vertically */
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.footer-center {
+  display: flex;
+  align-items: center; /* Center children horizontally */
+  flex-grow: 1;
+  flex-direction: column;
+}
+
+.footer-powered-by {
+  margin-top: auto; /* Pushes the text to the bottom */
+  text-align: center; /* Centers the text inside the div */
+  width: 100%; /* Full width to center the text properly */
+}
+
+.footer-icon {
+  font-size: 2rem;
+}
+
+.footer-link {
+  text-decoration: none;
+}

@@ -1,0 +1,92 @@
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+.form-signin {
+  width: 100%;
+  max-width: 330px;
+  padding: 15px;
+  margin: auto;
+}
+
+.form-signin .checkbox {
+  font-weight: 400;
+}
+
+.form-signin .form-floating:focus-within {
+  z-index: 2;
+}
+
+.form-signin input[type="text"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.container-flex {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%; /* Set width to 100% */
+  align-items: center; /* Center its children horizontally */
+}
+
+.footer-bottom {
+  margin-top: auto;
+}
+
+.form-control {
+  border-radius: 1.25rem !important;
+}
+
+.form-signin .form-floating {
+  margin: 1rem 0px;
+}
+
+input[type="checkbox" i] {
+  margin: 0px 5px;
+  vertical-align: middle;
+}
+
+/* Removing default styles for ul and li */
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  list-style: none;
+}
+
+/* Positioning the container of these elements to the top right */
+.your-container-class {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+}
+
+/* Styling for the dropdown */
+.dropdown-menu {
+  min-width: 200px; /* or whatever width you prefer */
+}
+
+.navbar-icon {
+  width: 40px;
+  height: 40px;
+}

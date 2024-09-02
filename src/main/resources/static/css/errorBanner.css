@@ -1,0 +1,61 @@
+#errorContainer {
+  margin: 1rem 0rem 2rem;
+  border-radius: 3rem;
+}
+
+#helpModalDialog {
+  width: 90%;
+  max-width: 800px;
+}
+
+#helpModal h1 {
+  text-align: center;
+  margin-top: 10%;
+}
+
+#helpModal p {
+  text-align: center;
+  margin-top: 2em;
+}
+
+#helpModal .button:hover {
+  background-color: var(--md-sys-color-primary);
+}
+
+#helpModal .features-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(21rem, 3fr));
+  gap: 25px 30px;
+}
+
+#helpModal .feature-card {
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 0.25rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+#helpModal .feature-card .card-text {
+  flex: 1;
+}
+
+#button-group {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#home-button,
+#github-button,
+#discord-button {
+  display: inline-block;
+  padding: 1rem 2rem;
+  margin: 1rem;
+  font-size: 1.2rem;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 3rem;
+  transition: all 0.3s ease-in-out;
+}

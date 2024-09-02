@@ -1,0 +1,102 @@
+#page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#content-wrap {
+  flex: 1;
+}
+
+#footer {
+  bottom: 0;
+  width: 100%;
+}
+.navbar {
+  height: auto; /* Adjusts height automatically based on content */
+  white-space: nowrap; /* Prevents wrapping of navbar contents */
+}
+/* TODO enable later
+.navbar .container {
+
+
+    max-width: 100%;  //Allows the container to expand up to full width
+    margin-left: auto;
+    margin-right: auto;
+}*/
+
+html[dir="ltr"] * {
+  direction: ltr;
+}
+html[dir="rtl"] * {
+  direction: rtl;
+  text-align: right;
+}
+.ignore-rtl {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+.align-top {
+  position: absolute;
+  top: 0;
+}
+.align-center-right {
+  position: absolute;
+  right: 0;
+  top: 50%;
+}
+
+.align-center-left {
+  position: absolute;
+  left: 0;
+  top: 50%;
+}
+
+.align-bottom {
+  position: absolute;
+  bottom: 0;
+}
+
+.btn-group > label:first-of-type {
+  border-top-left-radius: 0.25rem !important;
+  border-bottom-left-radius: 0.25rem !important;
+}
+
+html[dir="rtl"] input.form-check-input {
+  position: relative;
+  margin-left: 0px;
+}
+html[dir="rtl"] label.form-check-label {
+  display: inline;
+}
+
+.margin-auto-parent {
+  width: 100%;
+  display: flex;
+}
+.margin-center {
+  margin: 0 auto;
+}
+#pdf-canvas {
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+  width: 100%;
+}
+.fixed-shadow-canvas {
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+  width: 100%;
+}
+.shadow-canvas {
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+}
+.hidden {
+  display: none;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+    transition: background-color 600000s 0s, color 600000s 0s;
+}
+input[data-autocompleted] {
+    background-color: transparent !important;
+}

@@ -1,0 +1,78 @@
+#drag-container {
+  position: fixed;
+  display: flex;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10000;
+  visibility: hidden;
+}
+
+#drag-container:not(:empty) {
+  visibility: visible;
+}
+
+#drag-container .dragged-img {
+  position: fixed;
+  max-width: 200px;
+  max-height: 200px;
+  box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.58);
+  transform-origin: top left;
+}
+
+.drag-manager_dragging {
+  width: 0px;
+  visibility: hidden;
+}
+
+.drag-manager_draghover {
+  width: 375px !important;
+}
+
+.drag-manager_draghover .insert-file-button-container {
+  display: none !important;
+}
+
+.drag-manager_draghover .button-container {
+  visibility: hidden !important;
+}
+
+html[dir="ltr"] .drag-manager_draghover img {
+  left: calc(50% + 62.5px) !important;
+}
+
+html[dir="rtl"] .drag-manager_draghover img {
+  left: 125px;
+}
+
+.drag-manager_dragging-container .hide-on-drag {
+  display: none !important;
+}
+
+.drag-manager_endpoint {
+  width: 80px;
+  height: 100%;
+  background-color: #ffffff10;
+  transition: width 0.1s;
+  animation: end-drop-expand 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drag-manager_endpoint svg {
+  width: 50px;
+  height: 50px;
+}
+
+.drag-manager_endpoint.drag-manager_draghover {
+  width: 150px !important;
+}
+
+@keyframes end-drop-expand {
+  from {
+    width: 0;
+  }
+  to {
+    width: 80px;
+  }
+}

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{autoSplitPDF.title}, header=#{autoSplitPDF.header})}">
+  </th:block>
+</head>
+
+<body>
+  <th:block th:insert="~{fragments/common :: game}"></th:block>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon advance">cut</span>
+              <span class="tool-header-text" th:text="#{autoSplitPDF.header}"></span>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/auto-split-pdf'}">
+              <p th:text="#{autoSplitPDF.formPrompt}"></p>
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+              </div>
+              <div class="form-check ms-3">
+                <input type="checkbox" name="duplexMode" id="duplexMode">
+                <label for="duplexMode" th:text=#{autoSplitPDF.duplexMode}></label>
+              </div>
+              <p>
+                <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#info" role="button"
+                  aria-expanded="false" aria-controls="info" th:text="#{info}"></a>
+              </p>
+              <div class="collapse" id="info">
+                <!-- Added a brief description -->
+                <p th:text="#{autoSplitPDF.description}"></p>
+                <ul>
+                  <li th:text="#{autoSplitPDF.selectText.1}"></li>
+                  <li th:text="#{autoSplitPDF.selectText.2}"></li>
+                  <li th:text="#{autoSplitPDF.selectText.3}"></li>
+                  <li th:text="#{autoSplitPDF.selectText.4}"></li>
+                </ul>
+                <p><a th:href="@{'/files/Auto%20Splitter%20Divider%20(minimal).pdf'}" download
+                    th:text="#{autoSplitPDF.dividerDownload1}"></a></p>
+                <p><a th:href="@{'/files/Auto%20Splitter%20Divider%20(with%20instructions).pdf'}" download
+                    th:text="#{autoSplitPDF.dividerDownload2}"></a></p>
+              </div>
+
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{autoSplitPDF.submit}"></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
+</html>

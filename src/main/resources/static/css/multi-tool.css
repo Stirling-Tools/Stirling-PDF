@@ -1,0 +1,212 @@
+.multi-tool-container {
+  max-width: 95vw;
+  margin: 0 auto;
+}
+
+label {
+  text-align: left;
+  display: block;
+  padding: 0rem 0.25rem;
+  font-size: 1.25rem;
+}
+
+.form-control {
+  border-radius: 16px !important;
+  padding: 0.75rem;
+  border: 1px solid var(--theme-color-outline-variant);
+}
+
+.mt-action-bar {
+  display: flex;
+  gap: 10px;
+  align-items: start;
+  background-color: var(--md-sys-color-surface-5); 
+  border: none;
+  backdrop-filter: blur(2px);
+  top: 10px;
+  z-index: 10;
+  padding: 1.25rem;
+  border-radius: 2rem;
+  margin: 0px 25px;
+}
+
+.mt-action-bar>* {
+  padding-bottom: 0.5rem;
+}
+
+.mt-action-bar svg,
+.mt-action-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mt-action-bar .mt-filename {
+  width: 100%;
+}
+
+.mt-action-btn {
+  display: flex;
+  gap: 10px;
+  align-items: start;
+  top: 10px;
+  z-index: 10;
+  padding: 12px 0px 0px;
+  width: 100%;
+}
+
+.mt-action-btn .btn {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 20px;
+  padding: 0;
+}
+
+#export-button {
+  margin-left: auto;
+}
+
+.bg-card {
+  background-color: var(--md-sys-color-surface-5);
+  border-radius: 3rem;
+  padding: 25px 0 0;
+}
+
+#pages-container-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border-radius: 25px;
+  overflow-y: hidden;
+  overflow-x: auto;
+  min-height: 275px;
+  margin: 0 0 30px 0;
+}
+
+#pages-container {
+  gap: 0px;
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -15px;
+  margin-right: -15px;
+}
+
+/* width */
+#pages-container-wrapper::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+/* Track */
+#pages-container-wrapper::-webkit-scrollbar-track {
+  background: var(--scroll-bar-color);
+}
+
+/* Handle */
+#pages-container-wrapper::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: var(--scroll-bar-thumb);
+}
+
+/* Handle on hover */
+#pages-container-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-bar-thumb-hover);
+}
+
+.page-container {
+  height: 250px;
+  display: flex;
+  align-items: center;
+  flex-direction: column-reverse;
+  aspect-ratio: 1;
+  text-align: center;
+  position: relative;
+  user-select: none;
+  transition: width 1s linear;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+/* Pushes the last item to the left */
+.page-container:last-child {
+  margin-right: auto;
+}
+
+.page-container:last-child:lang(ar),
+/* Arabic */
+.page-container:last-child:lang(he),
+/* Hebrew */
+.page-container:last-child:lang(fa),
+/* Persian */
+.page-container:last-child:lang(ur),
+/* Urdu */
+.page-container:last-child:lang(ckb),
+/* Sorani Kurdish */
+.page-container:last-child:lang(ks),
+/* Kashmiri */
+.page-container:last-child:lang(kk),
+/* Kazakh */
+.page-container:last-child:lang(uz),
+/* Uzbek */
+.page-container:last-child:lang(ky),
+/* Kyrgyz */
+.page-container:last-child:lang(bal),
+/* Baluchi */
+.page-container:last-child:lang(dv),
+/* Divehi */
+.page-container:last-child:lang(ps),
+/* Pashto */
+.page-container:last-child:lang(sdg),
+/* Southern Kurdish */
+.page-container:last-child:lang(syr),
+/* Syriac */
+.page-container:last-child:lang(mzn),
+/* Mazanderani */
+.page-container:last-child:lang(tgl),
+/* Tagalog */
+.page-container:last-child:lang(pnb),
+/* Western Punjabi */
+.page-container:last-child:lang(ug),
+/* Uyghur */
+.page-container:last-child:lang(nqo),
+/* N'Ko */
+.page-container:last-child:lang(bqi)
+/* Bakhtiari */
+{
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}
+
+.page-container img {
+  /* max-width: calc(100% - 15px); */
+  max-height: calc(100% - 15px);
+  max-width: 237px;
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
+  border-radius: 4px;
+  transition: rotate 0.3s;
+}
+
+#add-pdf-button {
+  margin: 0 auto;
+}
+
+.page-number {
+  position: absolute;
+  top: 5px;
+  right: 0px;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-5);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 16px;
+  z-index: 2;
+}
+
+.tool-header {
+  margin: 0.5rem 1rem 2rem;
+}

@@ -1,0 +1,51 @@
+<configuration>
+
+    <!-- Console Appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Rolling File Appender -->
+    <appender name="AUTHLOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/invalid-auths.log</file>
+        <encoder>
+		    <pattern>%d %p %c{1} [%thread] %m%n</pattern>
+		</encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover and keep 7 days' worth of history -->
+            <fileNamePattern>logs/auth-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>1</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+	<!-- Rolling File Appender -->
+    <appender name="GENERAL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/info.log</file>
+        <encoder>
+		    <pattern>%d %p %c{1} [%thread] %m%n</pattern>
+		</encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover and keep 7 days' worth of history -->
+            <fileNamePattern>logs/info-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>1</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+
+    <!-- Root Logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="GENERAL"/>
+    </root>
+
+    <!-- Specific Logger -->
+    <logger name="stirling.software.SPDF.config.security.CustomAuthenticationFailureHandler" level="ERROR" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="AUTHLOG"/>
+    </logger>
+
+</configuration>

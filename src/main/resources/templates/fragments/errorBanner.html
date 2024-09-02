@@ -1,0 +1,75 @@
+<th:block th:fragment="errorBanner">
+
+  <br th:if="${message}">
+  <div id="errorContainer" th:if="${message}" class="alert alert-danger alert-dismissible alert-container fade show" role="alert">
+    <div class="alert-header d-flex">
+      <span class="alert-heading" th:text="'Error:  ' + ${status} + '  ' + ${error}"></span>
+      <button type="button" class="btn btn-danger" th:if="${trace}" onclick="toggletrace()" th:text="#{error.showStack}"></button>
+      <button type="button" class="btn btn-secondary" th:if="${trace}" onclick="copytrace()" th:text="#{error.copyStack}"></button>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
+        <span class="material-symbols-rounded">
+          close
+        </span>
+      </button>
+    </div>
+    <p th:text="${message} + ' for path: ' + ${path}"></p>
+    <!-- Stack trace section -->
+    <div id="trace" th:if="${trace}" style="max-height: 0; overflow: hidden;">
+      <div>
+        <pre id="traceContent" th:text="${trace}"></pre>
+      </div>
+      <!-- Buttons to submit a ticket on GitHub and join Discord server -->
+      <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" target="_blank" th:text="#{error.github}"></a>
+      <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" target="_blank" th:text="#{joinDiscord}"></a>
+    </div>
+  </div>
+  <script>
+    var traceVisible = false;
+
+    function toggletrace() {
+      var traceDiv = document.getElementById("trace");
+      if (!traceVisible) {
+        traceDiv.style.maxHeight = "500px";
+        traceVisible = true;
+      } else {
+        traceDiv.style.maxHeight = "0px";
+        traceVisible = false;
+      }
+      adjustContainerHeight();
+    }
+
+    function copytrace() {
+      var flip = false
+      if (!traceVisible) {
+        toggletrace()
+        flip = true
+      }
+      var traceContent = document.getElementById("traceContent");
+      var range = document.createRange();
+      range.selectNode(traceContent);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      document.execCommand("copy");
+      window.getSelection().removeAllRanges();
+      if (flip) {
+        toggletrace()
+      }
+    }
+
+    function dismissError() {
+      var errorContainer = document.getElementById("errorContainer");
+      errorContainer.style.display = "none";
+      errorContainer.style.height = "0";
+    }
+
+    function adjustContainerHeight() {
+      var errorContainer = document.getElementById("errorContainer");
+      var traceDiv = document.getElementById("trace");
+      if (traceVisible) {
+        errorContainer.style.height = errorContainer.scrollHeight - traceDiv.scrollHeight + traceDiv.offsetHeight + "px";
+      } else {
+        errorContainer.style.height = "auto";
+      }
+    }
+  </script>
+</th:block>

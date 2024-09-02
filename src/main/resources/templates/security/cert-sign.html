@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{certSign.title}, header=#{certSign.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon security">workspace_premium</span>
+                <span class="tool-header-text" th:text="#{certSign.header}"></span>
+              </div>
+              <form action="api/v1/security/cert-sign" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <label th:text="#{certSign.selectPDF}"></label>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                </div>
+                <!-- Tell users to use keytool to generate JKS for other formats -->
+                <div class="mb-3">
+                  <label th:text="#{certSign.jksNote}"></label>
+                </div>
+                <div class="mb-3">
+                  <label for="certType" th:text="#{certSign.certType}"></label>
+                  <select class="form-control" id="certType" name="certType">
+                    <option value="" th:text="#{selectFillter}"></option>
+                    <option value="PEM">PEM</option>
+                    <option value="PKCS12">PKCS12</option>
+                    <option value="JKS">JKS</option>
+                  </select>
+                </div>
+                <div id="pemGroup" style="display: none;">
+                  <div class="mb-3">
+                    <label th:text="#{certSign.selectKey}"></label>
+                    <div th:replace="~{fragments/common :: fileSelector(name='privateKeyFile', multipleInputsForSingleRequest=false, notRequired=true, accept='.pem,.der')}"></div>
+                  </div>
+                  <div class="mb-3">
+                    <label th:text="#{certSign.selectCert}"></label>
+                    <div th:replace="~{fragments/common :: fileSelector(name='certFile', multipleInputsForSingleRequest=false, notRequired=true, accept='.pem,.der')}"></div>
+                  </div>
+                </div>
+                <div class="mb-3" id="p12Group" style="display: none;">
+                  <label th:text="#{certSign.selectP12}"></label>
+                  <div th:replace="~{fragments/common :: fileSelector(name='p12File', notRequired=true, multipleInputsForSingleRequest=false, accept='.p12,.pfx')}"></div>
+                </div>
+                <div class="mb-3" id="jksGroup" style="display: none;">
+                  <label th:text="#{certSign.selectJKS}"></label>
+                  <div th:replace="~{fragments/common :: fileSelector(name='jksFile', notRequired=true, multipleInputsForSingleRequest=false, accept='.jks,.keystore')}"></div>
+                </div>
+                <div class="mb-3">
+                  <label th:text="#{certSign.password}" for="password"></label>
+                  <input type="password" class="form-control" id="password" name="password">
+                </div>
+                <div class="form-check mb-3">
+                  <input type="checkbox" id="showSignature" name="showSignature">
+                  <label th:text="#{certSign.showSig}" for="showSignature"></label>
+                </div>
+                <div id="signatureDetails" style="display: none;">
+                  <div class="mb-3">
+                    <label for="reason" th:text="#{certSign.reason}"></label> <input type="text" class="form-control" id="reason" name="reason">
+                  </div>
+                  <div class="mb-3">
+                    <label for="location" th:text="#{certSign.location}"></label> <input type="text" class="form-control" id="location" name="location">
+                  </div>
+                  <div class="mb-3">
+                    <label for="name" th:text="#{certSign.name}"></label> <input type="text" class="form-control" id="name" name="name">
+                  </div>
+                  <div class="mb-3">
+                    <label for="pageNumber" th:text="#{pageNum}"></label> <input type="number" class="form-control" id="pageNumber" name="pageNumber" min="1" disabled>
+                  </div>
+                </div>
+                <div class="mb-3 text-center">
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{certSign.submit}"></button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+    <script>
+      document.getElementById('certType').addEventListener('change', function() {
+        var pemGroup = document.getElementById('pemGroup');
+        var p12Group = document.getElementById('p12Group');
+        var jksGroup = document.getElementById('jksGroup');
+        var valueToGroupMap = {
+          'PEM': pemGroup,
+          'PKCS12': p12Group,
+          'JKS': jksGroup
+        };
+        for (var key in valueToGroupMap) {
+          valueToGroupMap[key].style.display = (this.value === key) ? 'block' : 'none';
+        }
+      });
+
+      document.getElementById('showSignature').addEventListener('change', function() {
+        var signatureDetails = document.getElementById('signatureDetails');
+        if (this.checked) {
+          signatureDetails.style.display = 'block';
+        } else {
+          signatureDetails.style.display = 'none';
+        }
+      });
+    </script>
+  </body>
+</html>

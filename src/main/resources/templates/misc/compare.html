@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{compare.title}, header=#{compare.header})}"></th:block>
+    <style>
+      .result-column {
+        border: 1px solid #ccc;
+        padding: 15px;
+        margin-bottom: 15px;
+        overflow-y: auto;
+        height: calc(100vh - 400px);
+        white-space: pre-wrap;
+      }
+      .flex-container {
+        display: flex;
+        flex-direction: row;
+      }
+      .color-selector {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 50%;
+        max-height: 100px;
+        margin-bottom: 2rem;
+      }
+      #color-box1, #color-box2 {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border: none;
+        background-color: transparent;
+      }
+      .spacer1 {
+        padding-right: calc(var(--bs-gutter-x) * .5);
+      }
+      .spacer2 {
+        padding-left: calc(var(--bs-gutter-x) * .5);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-9 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">compare</span>
+                <span class="tool-header-text" th:text="#{compare.header}"></span>
+              </div>
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}"></div>
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput2', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}"></div>
+
+              <div class="row">
+                <div class="flex-container">
+                  <div class="color-selector spacer1">
+                    <label th:text="#{compare.highlightColor.1}"></label>
+                    <label for="color-box1"></label><input type="color" id="color-box1" value="#ff0000">
+                  </div>
+                  <div class="color-selector spacer2">
+                    <label th:text="#{compare.highlightColor.2}"></label>
+                    <label for="color-box2"></label><input type="color" id="color-box2" value="#008000">
+                  </div>
+                </div>
+              </div>
+
+              <button class="btn btn-primary"  onclick="comparePDFs()" th:text="#{compare.submit}"></button>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <h3 th:text="#{compare.document.1}"></h3>
+                  <div id="result1" class="result-column"></div>
+                </div>
+                <div class="col-md-6">
+                  <h3 th:text="#{compare.document.2}"></h3>
+                  <div id="result2" class="result-column"></div>
+                </div>
+              </div>
+              <script>
+                // get the elements
+                var result1 = document.getElementById('result1');
+                var result2 = document.getElementById('result2');
+
+                // add event listeners
+                result1.addEventListener('scroll', function() {
+                  result2.scrollTop = result1.scrollTop;
+                });
+
+                result2.addEventListener('scroll', function() {
+                  result1.scrollTop = result2.scrollTop;
+                });
+
+                async function comparePDFs() {
+                  const file1 = document.getElementById("fileInput-input").files[0];
+                  const file2 = document.getElementById("fileInput2-input").files[0];
+                  var color1 = document.getElementById('color-box1').value;
+                  var color2 = document.getElementById('color-box2').value;
+
+                  if (!file1 || !file2) {
+                    console.error("Please select two PDF files to compare");
+                    return;
+                  }
+                  pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
+                  const [pdf1, pdf2] = await Promise.all([
+                    pdfjsLib.getDocument(URL.createObjectURL(file1)).promise,
+                    pdfjsLib.getDocument(URL.createObjectURL(file2)).promise
+                  ]);
+
+                  const extractText = async (pdf) => {
+                    const pages = [];
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                      const page = await pdf.getPage(i);
+                      const content = await page.getTextContent();
+                      const strings = content.items.map(item => item.str);
+                      pages.push(strings.join(" "));
+                    }
+                    return pages.join(" ");
+                  };
+
+                  const [text1, text2] = await Promise.all([
+                    extractText(pdf1),
+                    extractText(pdf2)
+                  ]);
+
+                  if (text1.trim() === "" || text2.trim() === "") {
+                    alert("One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison.");
+                    return;
+                  }
+                  const diff = (text1, text2) => {
+                    const words1 = text1.split(' ');
+                    const words2 = text2.split(' ');
+
+                    // Create a 2D array to hold our "matrix"
+                    const matrix = Array(words1.length + 1).fill(null).map(() => Array(words2.length + 1).fill(0));
+
+                    // Perform standard LCS algorithm
+                    for (let i = 1; i <= words1.length; i++) {
+                      for (let j = 1; j <= words2.length; j++) {
+                        if (words1[i - 1] === words2[j - 1]) {
+                          matrix[i][j] = matrix[i - 1][j - 1] + 1;
+                        } else {
+                          matrix[i][j] = Math.max(matrix[i][j - 1], matrix[i - 1][j]);
+                        }
+                      }
+                    }
+
+                    let i = words1.length;
+                    let j = words2.length;
+                    const differences = [];
+
+                    // Backtrack through the matrix to create the diff
+                    while (i > 0 || j > 0) {
+                      if (i > 0 && j > 0 && words1[i - 1] === words2[j - 1]) {
+                        differences.unshift(['black', words1[i - 1]]);
+                        i--;
+                        j--;
+                      } else if (j > 0 && (i === 0 || matrix[i][j - 1] >= matrix[i - 1][j])) {
+                        differences.unshift([color2, words2[j - 1]]);
+                        j--;
+                      } else if (i > 0 && (j === 0 || matrix[i][j - 1] < matrix[i - 1][j])) {
+                        differences.unshift([color1, words1[i - 1]]);
+                        i--;
+                      }
+                    }
+                    console.log(differences);
+
+
+                    return differences;
+                  };
+
+                  const differences = diff(text1, text2);
+
+                  const displayDifferences = (differences) => {
+                    const resultDiv1 = document.getElementById("result1");
+                    const resultDiv2 = document.getElementById("result2");
+                    resultDiv1.innerHTML = "";
+                    resultDiv2.innerHTML = "";
+
+                    differences.forEach(([color, word]) => {
+                      const span1 = document.createElement("span");
+                      const span2 = document.createElement("span");
+
+                      // If it's an addition, show it in color2 in the second document and transparent in the first
+                      if (color === color2) {
+                        span1.style.color = "transparent";
+                        span1.style.userSelect = "none";
+                        span2.style.color = color;
+                      }
+                      // If it's a deletion, show it in color1 in the first document and transparent in the second
+                      else if (color === color1) {
+                        span1.style.color = color;
+                        span2.style.color = "transparent";
+                        span2.style.userSelect = "none";
+                      }
+                      // If it's unchanged, show it in black in both
+                      else {
+                        span1.style.color = color;
+                        span2.style.color = color;
+                      }
+
+                      span1.textContent = word;
+                      span2.textContent = word;
+                      resultDiv1.appendChild(span1);
+                      resultDiv2.appendChild(span2);
+
+                      // Add space after each word, or a new line if the word ends with a full stop
+                      const spaceOrNewline1 = document.createElement("span");
+                      const spaceOrNewline2 = document.createElement("span");
+                      if (word.endsWith(".")) {
+                        spaceOrNewline1.innerHTML = "<br>";
+                        spaceOrNewline2.innerHTML = "<br>";
+                      } else {
+                        spaceOrNewline1.textContent = " ";
+                        spaceOrNewline2.textContent = " ";
+                      }
+                      resultDiv1.appendChild(spaceOrNewline1);
+                      resultDiv2.appendChild(spaceOrNewline2);
+                    });
+                  };
+
+                  console.log('Differences:', differences);
+                  displayDifferences(differences);
+                }
+              </script>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

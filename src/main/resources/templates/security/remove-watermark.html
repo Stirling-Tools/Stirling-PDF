@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{remove-watermark.title}, header=#{remove-watermark.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon security">water_drop</span>
+                <span class="tool-header-text" th:text="#{remove-watermark.header}"></span>
+              </div>
+              <form method="post" enctype="multipart/form-data" action="api/v1/security/remove-watermark">
+                <div class="mb-3">
+                  <label th:text="#{remove-watermark.selectText.1}"></label>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                </div>
+                <div class="mb-3">
+                  <label for="watermarkText" th:text="#{remove-watermark.selectText.2}"></label>
+                  <input type="text" id="watermarkText" name="watermarkText" class="form-control" placeholder="Stirling-PDF" required />
+                </div>
+                <div class="mb-3 text-center">
+                  <input type="submit" id="submitBtn" th:value="#{remove-watermark.submit}" class="btn btn-primary" />
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

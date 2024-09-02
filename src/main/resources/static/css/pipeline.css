@@ -1,0 +1,26 @@
+.btn-margin {
+  margin-right: 2px;
+}
+
+.bordered-box {
+  border: 1px solid #ddd;
+  padding: 2rem;
+  margin: 2rem;
+  width: 70%;
+}
+
+.center-element {
+  width: 100%;
+  text-align: center;
+  margin: auto;
+  margin-top: 2rem;
+}
+
+.element-margin {
+  margin: 1rem 0;
+  /* Adjust this value to increase/decrease the margin as needed */
+}
+
+#pipelineList {
+  margin-bottom: 2rem;
+}

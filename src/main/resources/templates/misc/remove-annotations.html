@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{removeAnnotations.title}, header=#{removeAnnotations.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">thread_unread</span>
+                <span class="tool-header-text" th:text="#{removeAnnotations.header}"></span>
+              </div>
+              <form id="pdfForm" class="mb-3">
+                <div class="custom-file">
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}"></div>
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{removeAnnotations.submit}"></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+    <script th:src="@{'/js/local-pdf-input-download.js'}"></script>
+    <script>
+      document.getElementById('pdfForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const { PDFDocument } = PDFLib;
+
+        const processFile = async (file) => {
+          const origFileUrl = URL.createObjectURL(file);
+          const formPdfBytes = await fetch(origFileUrl).then(res => res.arrayBuffer());
+          const pdfDoc = await PDFDocument.load(formPdfBytes, { ignoreEncryption: true });
+
+          const pages = pdfDoc.getPages();
+
+          for (let i = 0; i < pages.length; ++i) {
+            const page = pages[i];
+            const annotations = page.node.Annots();
+            if (!annotations) continue;
+            const ctx = annotations.context;
+
+            for (let j = 0; j < annotations.size(); ++j) {
+              const annotation = annotations.get(j);
+              ctx.delete(annotation);
+            }
+          }
+
+          const pdfBytes = await pdfDoc.save();
+          const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+          const fileName = (file.name ? file.name.replace('.pdf', '') : 'pdf') + '_removed_annotations.pdf';
+
+          return { processedData: pdfBlob, fileName };
+        };
+
+        await downloadFilesWithCallback(processFile);
+      });
+    </script>
+  </body>
+</html>

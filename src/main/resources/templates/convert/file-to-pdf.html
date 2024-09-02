@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{fileToPDF.title}, header=#{fileToPDF.header})}"></th:block>
+</head>
+
+<body>
+  <th:block th:insert="~{fragments/common :: game}"></th:block>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon convert">draft</span>
+              <span class="tool-header-text" th:text="#{fileToPDF.header}"></span>
+            </div>
+            <p th:text="#{processTimeWarning}"></p>
+            <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/file/pdf'}">
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false)}"></div>
+              <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#info" role="button"
+                aria-expanded="false" aria-controls="info" th:text="#{fileToPDF.supportedFileTypesInfo}"></a>
+              <div class="collapse" id="info">
+                <p class="mt-3" th:text="#{fileToPDF.credit}"></p>
+                <p class="mt-3" th:text="#{fileToPDF.supportedFileTypes}"></p>
+                <p>Microsoft Word: (DOC, DOCX, DOT, DOTX)</p>
+                <p>Microsoft Excel: (CSV, XLS, XLSX, XLT, XLTX, SLK, DIF)</p>
+                <p>Microsoft PowerPoint: (PPT, PPTX)</p>
+                <p>OpenDocument Formats: (ODT, OTT, ODS, OTS, ODP, OTP, ODG, OTG)</p>
+                <p>Plain Text: (TXT, TEXT, XML)</p>
+                <p>Rich Text Format: (RTF)</p>
+                <p>Images: (BMP, GIF, JPEG, PNG, TIF, PBM, PGM, PPM, RAS, XBM, XPM, SVG, SVM, WMF)</p>
+                <p>HTML: (HTML)</p>
+                <p>Lotus Word Pro: (LWP)</p>
+                <p>StarOffice: (SDA, SDC, SDD, SDW, STC, STD, STI, STW, SXD, SXG, SXI, SXW)</p>
+                <p>Other: (DBF, FODS, VSD, VOR, VOR3, VOR4, UOP, PCT, PS, PDF)</p>
+                <a
+                  href="https://help.libreoffice.org/latest/en-US/text/shared/guide/supported_formats.html">https://help.libreoffice.org/latest/en-US/text/shared/guide/supported_formats.html</a>
+              </div>
+              <br>
+              
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{fileToPDF.submit}"></button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{extractImages.title}, header=#{extractImages.header})}"></th:block>
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">photo_library</span>
+                <span class="tool-header-text" th:text="#{extractImages.header}"></span>
+              </div>
+              <form id="multiPdfForm" th:action="@{'/api/v1/misc/extract-images'}" method="post" enctype="multipart/form-data">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <div class="mb-3">
+                  <label th:text="#{extractImages.selectText}"></label>
+                  <select class="form-control" name="format">
+                    <option value="png">PNG</option>
+                    <option value="jpg">JPG</option>
+                    <option value="gif">GIF</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <input type="checkbox" name="allowDuplicates" id="allowDuplicates">
+                  <label for="allowDuplicates" th:text="#{extractImages.allowDuplicates}"></label>
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{extractImages.submit}"></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

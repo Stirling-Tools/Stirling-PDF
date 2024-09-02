@@ -1,0 +1,16 @@
+{{- if .Values.persistence.pv.enabled -}}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Values.persistence.pv.pvname | default (include "stirlingpdf.fullname" .) }}
+  labels:
+    {{- include "stirlingpdf.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.persistence.pv.capacity.storage }}
+  accessModes:
+    - {{ .Values.persistence.pv.accessMode | quote }}
+  nfs:
+    server: {{ .Values.persistence.pv.nfs.server }}
+    path: {{ .Values.persistence.pv.nfs.path | quote }}
+{{- end }}

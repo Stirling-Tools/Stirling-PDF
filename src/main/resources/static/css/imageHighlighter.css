@@ -1,0 +1,43 @@
+#image-highlighter {
+  position: fixed;
+  display: flex;
+  inset: 0;
+  z-index: 10000;
+  background-color: rgba(0, 0, 0, 0);
+  visibility: hidden;
+  align-items: center;
+  justify-content: center;
+  transition:
+    visbility 0.1s linear,
+    background-color 0.1s linear;
+}
+
+#image-highlighter > * {
+  max-width: 80vw;
+  max-height: 80vh;
+  animation: image-highlight 0.1s linear;
+  transition:
+    transform 0.1s linear,
+    opacity 0.1s linear;
+}
+
+#image-highlighter > *.remove {
+  transform: scale(0.8) !important;
+  opacity: 0 !important;
+}
+
+#image-highlighter:not(:empty) {
+  background-color: rgba(0, 0, 0, 0.37);
+  visibility: visible;
+}
+
+@keyframes image-highlight {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

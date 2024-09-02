@@ -1,0 +1,39 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.2.1
+    hooks:
+      - id: ruff
+        args:
+          - --fix
+          - --line-length=127
+        files: ^((.github/scripts|scripts)/.+)?[^/]+\.py$
+        exclude: (split_photos.py)
+      - id: ruff-format
+        files: ^((.github/scripts|scripts)/.+)?[^/]+\.py$
+        exclude: (split_photos.py)
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.6
+    hooks:
+      - id: codespell
+        args:
+          - --ignore-words-list=
+          - --skip="./.*,*.csv,*.json,*.ambr"
+          - --quiet-level=2
+        files: \.(properties|html|css|js|py|md)$
+        exclude: (.vscode|.devcontainer|src/main/resources|Dockerfile)
+  - repo: local
+    hooks:
+      - id: check-duplicate-properties-keys
+        name: Check Duplicate Properties Keys
+        entry: python .github/scripts/check_duplicates.py
+        language: python
+        files: ^(src)/.+\.properties$
+  - repo: local
+    hooks:
+      - id: check-html-tabs
+        name: Check HTML for tabs
+        # args: ["--replace_with=  "]
+        entry: python .github/scripts/check_tabulator.py
+        language: python
+        exclude: ^(src/main/resources/static/pdfjs|src/main/resources/static/pdfjs-legacy)
+        files: ^.*(\.html|\.css|\.js)$

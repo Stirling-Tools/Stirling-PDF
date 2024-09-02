@@ -1,0 +1,10 @@
+* text=auto eol=lf
+
+# Ignore all JavaScript files in a directory
+src/main/resources/static/pdfjs/* linguist-vendored
+src/main/resources/static/pdfjs/** linguist-vendored
+src/main/resources/static/pdfjs-legacy/* linguist-vendored
+src/main/resources/static/pdfjs-legacy/** linguist-vendored
+src/main/resources/static/css/bootstrap-icons.css linguist-vendored
+src/main/resources/static/css/bootstrap.min.css linguist-vendored
+src/main/resources/static/css/fonts/* linguist-vendored

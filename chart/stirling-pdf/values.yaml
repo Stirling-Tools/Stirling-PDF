@@ -1,0 +1,240 @@
+extraArgs: []
+  # - --storage-timestamp-tolerance 1s
+replicaCount: 1
+strategy:
+  type: RollingUpdate
+image:
+  repository: frooodle/s-pdf
+  # took Chart appVersion by default
+  tag: ~
+  pullPolicy: IfNotPresent
+secret:
+  labels: {}
+## Labels to apply to all resources
+##
+commonLabels: {}
+# team_name: dev
+
+# rootpath for the application
+rootPath: /
+
+envs: []
+# - name: UI_APP_NAME
+#   value: "Stirling PDF"
+# - name: UI_HOME_DESCRIPTION
+#   value: "Your locally hosted one-stop-shop for all your PDF needs."
+# - name: UI_APP_NAVBAR_NAME
+#   value: "Stirling PDF"
+# - name: ALLOW_GOOGLE_VISIBILITY
+#   value: "true"
+# - name: APP_LOCALE
+#   value: "en_GB"
+
+deployment:
+  ## stirling-pdf Deployment annotations
+  annotations: {}
+  #   name: value
+  labels: {}
+  #   name: value
+  # additional volumes
+  extraVolumes: []
+  #  - name: nginx-config
+  #    secret:
+  #      secretName: nginx-config
+  # additional volumes to mount
+  extraVolumeMounts: []
+  ## sidecarContainers for the stirling-pdf
+  # Can be used to add a proxy to the pod that does
+  # scanning for secrets, signing, authentication, validation
+  # of the chart's content, send notifications...
+  sidecarContainers: {}
+  ## Example sidecarContainer which uses an extraVolume from above and
+  ## a named port that can be referenced in the service as targetPort.
+  #  proxy:
+  #    image: nginx:latest
+  #    ports:
+  #      - name: proxy
+  #        containerPort: 8081
+  #    volumeMounts:
+  #      - name: nginx-config
+  #        readOnly: true
+  #        mountPath: /etc/nginx
+
+## Pod annotations
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+## Read more about kube2iam to provide access to s3 https://github.com/jtblin/kube2iam
+##
+podAnnotations: {}
+  # iam.amazonaws.com/role: role-arn
+
+## Pod labels
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+  # name: value
+
+service:
+  servicename:
+  type: ClusterIP
+  externalTrafficPolicy: Local
+  ## Uses pre-assigned IP address from cloud provider
+  ## Only valid if service.type: LoadBalancer
+  loadBalancerIP:
+  ## Limits which cidr blocks can connect to service's load balancer
+  ## Only valid if service.type: LoadBalancer
+  loadBalancerSourceRanges: []
+  # clusterIP: None
+  externalPort: 8080
+  ## targetPort of the container to use. If a sidecar should handle the
+  ## requests first, use the named port from the sidecar. See sidecar example
+  ## from deployment above. Leave empty to use stirling-pdf directly.
+  targetPort:
+  nodePort:
+  annotations: {}
+  labels: {}
+
+serviceMonitor:
+  enabled: false
+  # namespace: prometheus
+  labels: {}
+  metricsPath: "/metrics"
+  # timeout: 60
+  # interval: 60
+
+resources: {}
+#  limits:
+#    cpu: 100m
+#    memory: 128Mi
+#  requests:
+#    cpu: 80m
+#    memory: 64Mi
+
+probes:
+  liveness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+  livenessHttpGetConfig:
+    scheme: HTTP
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+  readinessHttpGetConfig:
+    scheme: HTTP
+
+serviceAccount:
+  create: true
+  name: ""
+  automountServiceAccountToken: false
+  ## Annotations for the Service Account
+  annotations: {}
+
+# UID/GID 1000 is the default user "stirling-pdf" used in
+# the container image starting in v0.8.0 and above. This
+# is required for local persistent storage. If your cluster
+# does not allow this, try setting securityContext: {}
+securityContext:
+  enabled: true
+  fsGroup: 1000
+  ## Optionally, specify supplementalGroups and/or
+  ## runAsNonRoot for security purposes
+  # runAsNonRoot: true
+  # supplementalGroups: [1000]
+
+containerSecurityContext: {}
+
+priorityClassName: ""
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+persistence:
+  enabled: false
+  accessMode: ReadWriteOnce
+  size: 8Gi
+  labels: {}
+    # name: value
+  path: /tmp
+  ## A manually managed Persistent Volume and Claim
+  ## Requires persistence.enabled: true
+  ## If defined, PVC must be created manually before volume will be bound
+  # existingClaim:
+
+  ## stirling-pdf data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  # storageClass: "-"
+  # volumeName:
+  pv:
+    enabled: false
+    pvname:
+    capacity:
+      storage: 8Gi
+    accessMode: ReadWriteOnce
+    nfs:
+      server:
+      path:
+
+## Init containers parameters:
+## volumePermissions: Change the owner of the persistent volume mountpoint to RunAsUser:fsGroup
+##
+volumePermissions:
+  image:
+    registry: docker.io
+    repository: bitnami/minideb
+    tag: buster
+    pullPolicy: Always
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ##
+    # pullSecrets:
+    #   - myRegistryKeySecretName
+
+## Ingress for load balancer
+ingress:
+  enabled: false
+  pathType: "ImplementationSpecific"
+  ## stirling-pdf Ingress labels
+  ##
+  labels: {}
+    # dns: "route53"
+
+  ## stirling-pdf Ingress annotations
+  ##
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+
+  ## stirling-pdf Ingress hostnames
+  ## Must be provided if Ingress is enabled
+  ##
+  hosts: []
+    # - name: stirling-pdf.domain1.com
+    #   path: /
+    #   tls: false
+    # - name: stirling-pdf.domain2.com
+    #   path: /
+    #
+    #   ## Set this to true in order to enable TLS on the ingress record
+    #   tls: true
+    #
+    #   ## If TLS is set to true, you must declare what secret will store the key/certificate for TLS
+    #   ## Secrets must be added manually to the namespace
+    #   tlsSecret: stirling-pdf.domain2-tls
+
+  # For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
+  # See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
+  ingressClassName:
+

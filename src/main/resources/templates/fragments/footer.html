@@ -1,0 +1,16 @@
+<footer th:fragment="footer" id="footer" class="text-center pt-5">
+  <div class="footer-center pb-4">
+    <!-- Links section -->
+    <div class="d-flex justify-content-center">
+      <ul class="list-unstyled d-flex">
+        <li><a class="footer-link px-2" id="licenses" target="_blank" th:href="@{'/licenses'}" th:text="#{licenses.nav}">Licenses</a></li>
+        <li><a class="footer-link px-2" id="survey" target="_blank" href="https://stirlingpdf.info/s/clwzgtfw7000gltkmwz1n212m" th:text="#{survey.nav}">Survey</a></li>
+      </ul>
+    </div>
+
+    <!-- powered by section -->
+    <div class="footer-powered-by">
+      <span th:text="#{poweredBy} + ' Stirling PDF'"></span>
+    </div>
+  </div>
+</footer>

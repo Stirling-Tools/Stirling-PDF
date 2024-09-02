@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.servicename | default (include "stirlingpdf.fullname" .) }}
+  {{- with .Values.service.annotations }}
+  annotations:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "stirlingpdf.labels" . | nindent 4 }}
+    {{- with .Values.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  {{- if (or (eq .Values.service.type "LoadBalancer") (and (eq .Values.service.type "NodePort") (not (empty .Values.service.nodePort)))) }}
+  externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
+  {{- end }}
+  {{- if (and (eq .Values.service.type "LoadBalancer") .Values.service.loadBalancerIP) }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
+  {{- end }}
+  {{- if (and (eq .Values.service.type "LoadBalancer") .Values.service.loadBalancerSourceRanges) }}
+  loadBalancerSourceRanges:
+  {{- with .Values.service.loadBalancerSourceRanges }}
+{{ toYaml . | indent 2 }}
+  {{- end }}
+  {{- end }}
+  {{- if eq .Values.service.type "ClusterIP" }}
+  {{- if .Values.service.clusterIP }}
+  clusterIP: {{ .Values.service.clusterIP }}
+  {{- end }}
+  {{- end }}
+  ports:
+  - port: {{ .Values.service.externalPort }}
+{{- if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.nodePort))) }}
+    nodePort: {{.Values.service.nodePort}}
+{{- end }}
+{{- if .Values.service.targetPort }}
+    targetPort: {{ .Values.service.targetPort }}
+    name: {{ .Values.service.targetPort }}
+{{- else }}
+    targetPort: http
+    name: http
+{{- end }}
+    protocol: TCP
+
+  selector:
+    {{- include "stirlingpdf.selectorLabels" . | nindent 4 }}

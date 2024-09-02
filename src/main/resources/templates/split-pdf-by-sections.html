@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{split-by-sections.title}, header=#{split-by-sections.header})}"></th:block>
+    <link rel="stylesheet" th:href="@{'/css/split-pdf-by-sections.css'}">
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon advance">grid_on</span>
+                <span class="tool-header-text" th:text="#{split-by-sections.header}"></span>
+              </div>
+              <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/split-pdf-by-sections'}">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <label for="horizontalDivisions" th:text="#{split-by-sections.horizontal.label}">Horizontal Divisions</label>
+                <input type="number" id="horizontalDivisions" name="horizontalDivisions" class="form-control" min="0" max="300" value="0" required th:placeholder="#{split-by-sections.horizontal.placeholder}">
+                <br>
+                <label for="verticalDivisions" th:text="#{split-by-sections.vertical.label}">Vertical Divisions</label>
+                <input type="number" id="verticalDivisions" name="verticalDivisions" class="form-control" min="0" max="300" required value="1" th:placeholder="#{split-by-sections.vertical.placeholder}">
+                <br>
+                <div class="mb-3 form-check">
+                  <input type="checkbox" id="merge" name="merge">
+                  <label for="merge" th:text="#{split-by-sections.merge}">merge PDFs into one</label>
+                </div>
+                <br>
+                <div id="pdfVisualAid" class="pdf-visual-aid"></div>
+                <script>
+                  function updateVisualAid() {
+                    const horizontalDivisions = document.getElementById('horizontalDivisions').value;
+                    const verticalDivisions = document.getElementById('verticalDivisions').value;
+                    const aid = document.getElementById('pdfVisualAid');
+
+                    if(horizontalDivisions > 300) {
+                      horizontalDivisions = 300
+                    }
+                    if(verticalDivisions > 300) {
+                      verticalDivisions = 300
+                    }
+                    // Clear existing lines
+                    aid.innerHTML = '';
+
+                    // Add horizontal lines
+                    for (let i = 0; i < horizontalDivisions; i++) {
+                      const line = document.createElement('div');
+                      line.classList.add('line');
+                      line.style.width = '100%';
+                      line.style.height = '1px';
+                      line.style.top = `${((i + 1) / (parseInt(horizontalDivisions) + 1)) * 100}%`;
+                      aid.appendChild(line);
+                    }
+
+                    // Add vertical lines
+                    for (let i = 0; i < verticalDivisions; i++) {
+                      const line = document.createElement('div');
+                      line.classList.add('line');
+                      line.style.height = '100%';
+                      line.style.width = '1px';
+                      line.style.left = `${((i + 1) / (parseInt(verticalDivisions) + 1)) * 100}%`;
+                      aid.appendChild(line);
+                    }
+                  }
+
+                  // Event listeners
+                  document.getElementById('horizontalDivisions').addEventListener('input', updateVisualAid);
+                  document.getElementById('verticalDivisions').addEventListener('input', updateVisualAid);
+
+                  // Initial draw
+                  updateVisualAid();
+                </script>
+                <br>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{split-by-sections.submit}">Submit</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

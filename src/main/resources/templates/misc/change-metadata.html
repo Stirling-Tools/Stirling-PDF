@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{changeMetadata.title}, header=#{changeMetadata.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">assignment</span>
+                <span class="tool-header-text" th:text="#{changeMetadata.header}"></span>
+              </div>
+              <form method="post" id="form1" enctype="multipart/form-data" th:action="@{'/api/v1/misc/update-metadata'}">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <p class="text-muted" th:text="#{changeMetadata.selectText.1}"></p>
+                <div class="form-check mb-3-inline ms-3">
+                  <input type="checkbox" id="deleteAll" name="deleteAll">
+                  <label for="deleteAll" th:text="#{changeMetadata.selectText.2}" ></label>
+                </div>
+                <div class="form-check mb-3-inline ms-3">
+                  <input type="checkbox" id="customModeCheckbox">
+                  <label for="customModeCheckbox" th:text="#{changeMetadata.selectText.3}"></label>
+                </div>
+                <div class="mb-3">
+                  <label class="form-check-label" for="author" th:text="#{changeMetadata.author}"></label>
+                  <input type="text" class="form-control" id="author" name="author">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-check-label" for="creationDate" th:text="#{changeMetadata.creationDate}"></label>
+                  <input type="text" class="form-control" id="creationDate" name="creationDate" placeholder="2020/12/25 18:30:59">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-check-label" for="creator" th:text="#{changeMetadata.creator}"></label>
+                  <input type="text" class="form-control" id="creator" name="creator">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-check-label" for="keywords" th:text="#{changeMetadata.keywords}"></label>
+                  <input type="text" class="form-control" id="keywords" name="keywords">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-check-label" for="modificationDate" th:text="#{changeMetadata.modDate}"></label>
+                  <input type="text" class="form-control" id="modificationDate" name="modificationDate" placeholder="2020/12/25 18:30:59">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-check-label" for="producer" th:text="#{changeMetadata.producer}"></label>
+                  <input type="text" class="form-control" id="producer" name="producer">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-check-label" for="subject" th:text="#{changeMetadata.subject}"></label>
+                  <input type="text" class="form-control" id="subject" name="subject">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-check-label" for="title" th:text="#{changeMetadata.title}"></label>
+                  <input type="text" class="form-control" id="title" name="title">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-check-label" for="trapped" th:text="#{changeMetadata.trapped}"></label>
+                  <select class="form-control" id="trapped" name="trapped">
+                    <option value="True" th:text="#{true}"></option>
+                    <option value="False" th:text="#{false}" selected></option>
+                    <option value="Unknown" th:text="#{unknown}"></option>
+                  </select>
+                </div>
+                <div id="customMetadata" style="display: none;">
+                  <h3 th:text="#{changeMetadata.selectText.4}"></h3>
+                  <div class="mb-3" id="otherMetadataEntries"></div>
+                </div>
+                <div id="customMetadataEntries"></div>
+                <button type="button" class="btn btn-secondary" id="addMetadataBtn" th:text="#{changeMetadata.selectText.5}"></button>
+                <br>
+                <br>
+                <button class="btn btn-primary" type="submit" id="submitBtn" th:text="#{changeMetadata.submit}"></button>
+                <script>
+                  const deleteAllCheckbox = document.querySelector("#deleteAll");
+                  let inputs = document.querySelectorAll("input");
+                  const customMetadataDiv = document.getElementById('customMetadata');
+                  const otherMetadataEntriesDiv = document.getElementById('otherMetadataEntries');
+
+                  deleteAllCheckbox.addEventListener("change", function(event) {
+                    inputs.forEach(input => {
+                      // If it's the deleteAllCheckbox or any file input, skip
+                      if (input === deleteAllCheckbox || input.type === "file") {
+                        return;
+                      }
+                      // Disable or enable based on the checkbox state
+                      input.disabled = deleteAllCheckbox.checked;
+                    });
+                  });
+
+                  const customModeCheckbox = document.getElementById('customModeCheckbox');
+                  const addMetadataBtn = document.getElementById("addMetadataBtn");
+                  const customMetadataFormContainer = document.getElementById("customMetadataEntries");
+                  var count = 1;
+                  const fileInput = document.querySelector("#fileInput-input");
+                  const authorInput = document.querySelector("#author");
+                  const creationDateInput = document.querySelector("#creationDate");
+                  const creatorInput = document.querySelector("#creator");
+                  const keywordsInput = document.querySelector("#keywords");
+                  const modificationDateInput = document.querySelector("#modificationDate");
+                  const producerInput = document.querySelector("#producer");
+                  const subjectInput = document.querySelector("#subject");
+                  const titleInput = document.querySelector("#title");
+                  const trappedInput = document.querySelector("#trapped");
+                  var lastPDFFileMeta = null;
+                  fileInput.addEventListener("change", async function() {
+                    while (otherMetadataEntriesDiv.firstChild) {
+                      otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
+                    }
+                    while (customMetadataFormContainer.firstChild) {
+                      customMetadataFormContainer.removeChild(customMetadataFormContainer.firstChild);
+                    }
+                    const file = this.files[0];
+                    var url = URL.createObjectURL(file)
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
+                    const pdf = await pdfjsLib.getDocument(url).promise;
+                    const pdfMetadata = await pdf.getMetadata();
+                    lastPDFFile = pdfMetadata?.info
+                    console.log(pdfMetadata);
+                    if(!pdfMetadata?.info?.Custom || pdfMetadata?.info?.Custom.size == 0) {
+                      customModeCheckbox.disabled = true;
+                      customModeCheckbox.checked = false;
+                    } else {
+                      customModeCheckbox.disabled = false;
+                    }
+                    authorInput.value = pdfMetadata?.info?.Author;
+                    creationDateInput.value = convertDateFormat(pdfMetadata?.info?.CreationDate);
+                    creatorInput.value = pdfMetadata?.info?.Creator;
+                    keywordsInput.value = pdfMetadata?.info?.Keywords;
+                    modificationDateInput.value = convertDateFormat(pdfMetadata?.info?.ModDate);
+                    producerInput.value = pdfMetadata?.info?.Producer;
+                    subjectInput.value = pdfMetadata?.info?.Subject;
+                    titleInput.value = pdfMetadata?.info?.Title;
+                    console.log(pdfMetadata?.info);
+                    const trappedValue = pdfMetadata?.info?.Trapped;
+                    // Get all options in the select element
+                    const options = trappedInput.options;
+                    // Loop through all options to find the one with a matching value
+                    for (let i = 0; i < options.length; i++) {
+                      if (options[i].value === trappedValue) {
+                        options[i].selected = true;
+                        break;
+                      }
+                    }
+                    addExtra();
+                  });
+
+                  addMetadataBtn.addEventListener("click", () => {
+                    const keyInput = document.createElement("input");
+                    keyInput.type = "text";
+                    keyInput.placeholder = 'Key';
+                    keyInput.className = "form-control";
+                    keyInput.name = "customKey" + count;
+
+                    const valueInput = document.createElement("input");
+                    valueInput.type = "text";
+                    valueInput.placeholder = 'Value';
+                    valueInput.className = "form-control";
+                    valueInput.name = "customValue" + count;
+                    count = count + 1;
+
+                    const formGroup = document.createElement("div");
+                    formGroup.className = "mb-3";
+                    formGroup.appendChild(keyInput);
+                    formGroup.appendChild(valueInput);
+
+                    customMetadataFormContainer.appendChild(formGroup);
+                  });
+                  function convertDateFormat(dateTimeString) {
+                    if (!dateTimeString || dateTimeString.length < 17) {
+                      return dateTimeString;
+                    }
+
+                    const year = dateTimeString.substring(2, 6);
+                    const month = dateTimeString.substring(6, 8);
+                    const day = dateTimeString.substring(8, 10);
+                    const hour = dateTimeString.substring(10, 12);
+                    const minute = dateTimeString.substring(12, 14);
+                    const second = dateTimeString.substring(14, 16);
+
+                    return year + "/" + month + "/" + day + " " + hour + ":" + minute + ":" + second;
+                  }
+
+                  function addExtra() {
+                    const event = document.getElementById("customModeCheckbox");
+                    if (event.checked && lastPDFFile.Custom != null) {
+                      customMetadataDiv.style.display = 'block';
+                      for (const [key, value] of Object.entries(lastPDFFile.Custom)) {
+                        if (key === 'Author' || key === 'CreationDate' || key === 'Creator' || key === 'Keywords' || key === 'ModDate' || key === 'Producer' || key === 'Subject' || key === 'Title' || key === 'Trapped') {
+                          continue;
+                        }
+                        const entryDiv = document.createElement('div');
+                        entryDiv.className = 'mb-3';
+                        entryDiv.innerHTML = `<div class="mb-3"><label class="form-check-label" for="${key}">${key}:</label><input name="${key}" value="${value}" type="text" class="form-control" id="${key}"></div>`;
+                        otherMetadataEntriesDiv.appendChild(entryDiv);
+                      }
+                    } else {
+                      customMetadataDiv.style.display = 'none';
+                      while (otherMetadataEntriesDiv.firstChild) {
+                        otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
+                      }
+                    }
+                  }
+
+                  customModeCheckbox.addEventListener('change', (event) => {
+                    addExtra();
+                  });
+                </script>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

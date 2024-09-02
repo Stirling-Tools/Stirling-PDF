@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{removeBlanks.title}, header=#{removeBlanks.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">scan_delete</span>
+                <span class="tool-header-text" th:text="#{removeBlanks.header}"></span>
+              </div>
+              <form id="multiPdfForm" th:action="@{'/api/v1/misc/remove-blanks'}" method="post" enctype="multipart/form-data">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <div class="mb-3">
+                  <label for="threshold" th:text="#{removeBlanks.threshold}"></label>
+                  <input type="number" class="form-control" id="threshold" name="threshold" value="10">
+                  <small id="thresholdHelp" class="form-text text-muted" th:text="#{removeBlanks.thresholdDesc}"></small>
+                </div>
+                <div class="mb-3">
+                  <label for="whitePercent" th:text="#{removeBlanks.whitePercent}"></label>
+                  <input type="number" class="form-control" id="whitePercent" name="whitePercent" value="99.9" step="0.1">
+                  <small id="whitePercentHelp" class="form-text text-muted" th:text="#{removeBlanks.whitePercentDesc}"></small>
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{removeBlanks.submit}"></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

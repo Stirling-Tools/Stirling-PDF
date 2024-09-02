@@ -1,0 +1,39 @@
+select#font-select,
+select#font-select option {
+  height: 60px; /* Adjust as needed */
+  font-size: 30px; /* Adjust as needed */
+}
+
+.drawing-pad-container {
+  text-align: center;
+}
+
+#drawing-pad-canvas {
+  background: rgba(125, 125, 125, 0.2);
+  width: 100%;
+  height: 300px;
+}
+#box-drag-container {
+  position: relative;
+  margin: 20px 0;
+}
+.draggable-buttons-box {
+  position: absolute;
+  top: 0;
+  padding: 10px;
+  width: 100%;
+  display: flex;
+  gap: 5px;
+}
+.draggable-buttons-box > button {
+  z-index: 10;
+  background-color: rgba(13, 110, 253, 0.1);
+}
+.draggable-canvas {
+  border: 1px solid red;
+  position: absolute;
+  touch-action: none;
+  user-select: none;
+  top: 0px;
+  left: 0;
+}
