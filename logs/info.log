@@ -1,0 +1,20 @@
+2024-09-01 07:31:58,242 WARN s.s.S.SPdfApplication [main] External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.
+2024-09-01 07:31:58,242 WARN s.s.S.SPdfApplication [main] Custom configuration file 'configs/custom_settings.yml' does not exist.
+2024-09-01 07:31:58,490 WARN s.s.S.SPdfApplication [restartedMain] External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.
+2024-09-01 07:31:58,491 WARN s.s.S.SPdfApplication [restartedMain] Custom configuration file 'configs/custom_settings.yml' does not exist.
+2024-09-01 07:31:59,260 INFO s.s.S.SPdfApplication [restartedMain] Starting SPdfApplication using Java 21.0.1 with PID 8712 (H:\OpenSource\PDF\Stirling-PDF\build\classes\java\main started by AnAnd in H:\OpenSource\PDF)
+2024-09-01 07:31:59,262 INFO s.s.S.SPdfApplication [restartedMain] The following 1 profile is active: "default"
+2024-09-01 07:32:11,751 INFO s.s.S.SPdfApplication [restartedMain] Running configs ApplicationProperties [security=Security [enableLogin=false, oauth2=OAUTH2 [enabled=false, issuer=, clientId=, clientSecret=NULL, autoCreateUser=false, blockRegistration=false, useAsUsername=email, provider=google, client=Client [google=Google [clientId=, clientSecret=NULL, scopes=[https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile], useAsUsername=email], github=GitHub [clientId=, clientSecret=NULL, scopes=[read:user], useAsUsername=login], keycloak=Keycloak [issuer=, clientId=, clientSecret=NULL, scopes=[openid, profile, email], useAsUsername=preferred_username]], scopes=[openid, profile, email]], initialLogin=InitialLogin [username=, password=NULL], csrfDisabled=true, loginMethod=all], system=System [defaultLocale=en-US, googlevisibility=false, enableAlphaFunctionality=false, showUpdate=false, showUpdateOnlyAdmin=false], ui=UserInterface [appName=, homeDescription=, appNameNavbar=], endpoints=Endpoints [toRemove=[], groupsToRemove=[]], metrics=Metrics [enabled=true], automaticallyGenerated=AutomaticallyGenerated [key=MASKED], autoPipeline=null]
+2024-09-01 07:32:11,779 INFO s.s.S.c.EndpointConfiguration [restartedMain] Disabling pdf-to-book
+2024-09-01 07:32:11,779 INFO s.s.S.c.EndpointConfiguration [restartedMain] Disabling book-to-pdf
+2024-09-01 07:32:12,764 INFO s.s.S.c.s.d.DatabaseBackupHelper [restartedMain] Database export completed: configs\db\backup\backup_202409010732.sql
+2024-09-01 07:32:12,765 INFO s.s.S.c.s.InitialSecuritySetup [restartedMain] Default admin user created: admin
+2024-09-01 07:32:12,933 INFO s.s.S.c.s.d.DatabaseBackupHelper [restartedMain] Database export completed: configs\db\backup\backup_202409010732.sql
+2024-09-01 07:32:13,010 INFO s.s.S.c.s.InitialSecuritySetup [restartedMain] Internal API user created: STIRLING-PDF-BACKEND-API-USER
+2024-09-01 07:32:17,997 INFO s.s.S.SPdfApplication [restartedMain] Started SPdfApplication in 19.504 seconds (process running for 23.663)
+2024-09-01 07:32:18,006 WARN s.s.S.u.FileMonitor [scheduling-1] not monitoring any directory, even the root directory itself: .\pipeline\watchedFolders
+2024-09-01 07:32:18,015 INFO s.s.S.c.a.p.PipelineDirectoryProcessor [scheduling-1] Created directory: .\pipeline\watchedFolders
+2024-09-01 07:32:19,025 INFO s.s.S.SPdfApplication [restartedMain] Stirling-PDF Started.
+2024-09-01 07:32:19,026 INFO s.s.S.SPdfApplication [restartedMain] Navigate to http://localhost:8080
+2024-09-01 07:32:23,004 WARN s.s.S.u.FileMonitor [scheduling-1] not monitoring any directory, even the root directory itself: .\pipeline\watchedFolders
+2024-09-01 07:32:23,009 INFO s.s.S.u.FileMonitor [scheduling-1] Registered directory: .\pipeline\watchedFolders
