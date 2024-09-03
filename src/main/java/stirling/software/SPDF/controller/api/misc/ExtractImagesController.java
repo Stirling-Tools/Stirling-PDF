@@ -1,4 +1,5 @@
 package stirling.software.SPDF.controller.api.misc;
+
 import io.github.pixee.security.Filenames;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
@@ -40,8 +41,11 @@ import java.util.zip.ZipOutputStream;
 @RestController
 @RequestMapping("/api/v1/misc")
 public class ExtractImagesController {
+
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
+
     @Autowired private memoryConfig memoryconfig; // Inject MemoryConfig
+
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
     public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request)
             throws IOException, InterruptedException, ExecutionException {
@@ -50,11 +54,14 @@ public class ExtractImagesController {
 
         System.out.println(
                 System.currentTimeMillis() + " file=" + file.getName() + ", format=" + format);
+
         // Determine if we should use file-based storage based on available RAM
         boolean useFile = memoryUtils.shouldUseFileBasedStorage(memoryconfig);
+
         PDDocument document;
         // Create a temporary directory for processing
         Path tempDir = Files.createTempDirectory("image-processing-");
+
         // If useFile is true, save the PDF to disk first
         File tempFile = null;
         if (useFile) {
@@ -68,17 +75,20 @@ public class ExtractImagesController {
             // Load PDF directly from the byte array (RAM)
             document = Loader.loadPDF(file.getBytes());
         }
+
         // Determine if multithreading should be used based on PDF size or number of pages
         boolean useMultithreading = shouldUseMultithreading(file, document);
         String filename =
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
         Set<Integer> processedImages = new HashSet<>();
+
         if (useMultithreading) {
             // Executor service to handle multithreading
             ExecutorService executor =
                     Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             Set<Future<Void>> futures = new HashSet<>();
+
             // Iterate over each page
             for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
                 PDPage page = document.getPage(pgNum);
@@ -185,6 +195,7 @@ public class ExtractImagesController {
             } else {
                 rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             }
+
             Graphics2D g = rgbImage.createGraphics();
             g.drawImage((Image) renderedImage, 0, 0, null);
             g.dispose();
