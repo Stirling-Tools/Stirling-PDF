@@ -145,12 +145,14 @@ public class ExtractImagesController {
                 file.getOriginalFilename() + "_extracted-images.zip",
                 MediaType.APPLICATION_OCTET_STREAM);
     }
+
     private boolean shouldUseMultithreading(MultipartFile file, PDDocument document) {
         // Criteria: Use multithreading if file size > 10MB or number of pages > 20
         long fileSizeInMB = file.getSize() / (1024 * 1024);
         int numberOfPages = document.getPages().getCount();
         return fileSizeInMB > 10 || numberOfPages > 20;
     }
+
     private void extractImagesFromPage(PDPage page, String format, Path tempDir, int pageNum)
             throws IOException {
         synchronized (page) {
@@ -168,6 +170,7 @@ public class ExtractImagesController {
             }
         }
     }
+
     private BufferedImage convertToRGB(RenderedImage renderedImage, String format) {
         int width = renderedImage.getWidth();
         int height = renderedImage.getHeight();
