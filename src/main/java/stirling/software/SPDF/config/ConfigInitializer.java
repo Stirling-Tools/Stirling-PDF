@@ -14,6 +14,8 @@ import java.util.List;
 
 import org.simpleyaml.configuration.comments.CommentType;
 import org.simpleyaml.configuration.file.YamlFile;
+import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
+import org.simpleyaml.configuration.implementation.snakeyaml.lib.DumperOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContextInitializer;
@@ -71,9 +73,17 @@ public class ConfigInitializer
             }
 
             final YamlFile settingsTemplateFile = new YamlFile(tempTemplatePath.toFile());
+            DumperOptions yamlOptionsSettingsTemplateFile =
+                    ((SimpleYamlImplementation) settingsTemplateFile.getImplementation())
+                            .getDumperOptions();
+            yamlOptionsSettingsTemplateFile.setSplitLines(false);
             settingsTemplateFile.loadWithComments();
 
             final YamlFile settingsFile = new YamlFile(settingsPath.toFile());
+            DumperOptions yamlOptionsSettingsFile =
+                    ((SimpleYamlImplementation) settingsFile.getImplementation())
+                            .getDumperOptions();
+            yamlOptionsSettingsFile.setSplitLines(false);
             settingsFile.loadWithComments();
 
             // Load headers and comments
@@ -81,6 +91,10 @@ public class ConfigInitializer
 
             // Create a new file for temporary settings
             final YamlFile tempSettingFile = new YamlFile(settingsPath.toFile());
+            DumperOptions yamlOptionsTempSettingFile =
+                    ((SimpleYamlImplementation) tempSettingFile.getImplementation())
+                            .getDumperOptions();
+            yamlOptionsTempSettingFile.setSplitLines(false);
             tempSettingFile.createNewFile(true);
             tempSettingFile.setHeader(header);
 

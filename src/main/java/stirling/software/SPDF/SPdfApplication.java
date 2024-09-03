@@ -45,7 +45,6 @@ public class SPdfApplication {
         // Check if the BROWSER_OPEN environment variable is set to true
         String browserOpenEnv = env.getProperty("BROWSER_OPEN");
         boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
-
         if (browserOpen) {
             try {
                 String url = "http://localhost:" + getNonStaticPort();
@@ -66,6 +65,7 @@ public class SPdfApplication {
     public static void main(String[] args) throws IOException, InterruptedException {
 
         SpringApplication app = new SpringApplication(SPdfApplication.class);
+        app.setAdditionalProfiles("default");
         app.addInitializers(new ConfigInitializer());
         Map<String, String> propertyFiles = new HashMap<>();
 
@@ -79,13 +79,14 @@ public class SPdfApplication {
 
         // custom javs settings file
         if (Files.exists(Paths.get("configs/custom_settings.yml"))) {
-            String existing = propertyFiles.getOrDefault("spring.config.additional-location", "");
-            if (!existing.isEmpty()) {
-                existing += ",";
+            String existingLocation =
+                    propertyFiles.getOrDefault("spring.config.additional-location", "");
+            if (!existingLocation.isEmpty()) {
+                existingLocation += ",";
             }
             propertyFiles.put(
                     "spring.config.additional-location",
-                    existing + "file:configs/custom_settings.yml");
+                    existingLocation + "file:configs/custom_settings.yml");
         } else {
             logger.warn("Custom configuration file 'configs/custom_settings.yml' does not exist.");
         }

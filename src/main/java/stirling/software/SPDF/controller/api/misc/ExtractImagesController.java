@@ -1,5 +1,4 @@
 package stirling.software.SPDF.controller.api.misc;
-
 import io.github.pixee.security.Filenames;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
@@ -21,7 +20,6 @@ import stirling.software.SPDF.config.memoryConfig;
 import stirling.software.SPDF.model.api.PDFWithImageFormatRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 import stirling.software.SPDF.utils.memoryUtils;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -39,31 +37,28 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
 @RestController
 @RequestMapping("/api/v1/misc")
 public class ExtractImagesController {
-
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
-
     @Autowired private memoryConfig memoryconfig; // Inject MemoryConfig
-
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
-    public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request)
+    @Operation(
+            summary = "Extract images from a PDF file",
+            description =
+                    "This endpoint extracts images from a given PDF file and returns them in a zip file. Users can specify the output image format. Input: PDF Output: IMAGE/ZIP Type: SIMO")
+    public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFExtractImagesRequest request)
             throws IOException, InterruptedException, ExecutionException {
         MultipartFile file = request.getFileInput();
         String format = request.getFormat();
-
+        boolean allowDuplicates = request.isAllowDuplicates();
         System.out.println(
                 System.currentTimeMillis() + " file=" + file.getName() + ", format=" + format);
-
         // Determine if we should use file-based storage based on available RAM
         boolean useFile = memoryUtils.shouldUseFileBasedStorage(memoryconfig);
-
         PDDocument document;
         // Create a temporary directory for processing
         Path tempDir = Files.createTempDirectory("image-processing-");
-
         // If useFile is true, save the PDF to disk first
         File tempFile = null;
         if (useFile) {
@@ -77,20 +72,17 @@ public class ExtractImagesController {
             // Load PDF directly from the byte array (RAM)
             document = Loader.loadPDF(file.getBytes());
         }
-
         // Determine if multithreading should be used based on PDF size or number of pages
         boolean useMultithreading = shouldUseMultithreading(file, document);
         String filename =
                 Filenames.toSimpleFileName(file.getOriginalFilename())
                         .replaceFirst("[.][^.]+$", "");
         Set<Integer> processedImages = new HashSet<>();
-
         if (useMultithreading) {
             // Executor service to handle multithreading
             ExecutorService executor =
                     Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             Set<Future<Void>> futures = new HashSet<>();
-
             // Iterate over each page
             for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
                 PDPage page = document.getPage(pgNum);
@@ -105,30 +97,28 @@ public class ExtractImagesController {
                                     } catch (IOException e) {
                                         logger.error("Error extracting images from page", e);
                                     }
+
                                     return null;
                                 });
 
                 futures.add(future);
             }
-
             // Wait for all tasks to complete
             for (Future<Void> future : futures) {
                 future.get();
             }
-
             // Close executor service
             executor.shutdown();
         } else {
             // Single-threaded extraction
             for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
                 PDPage page = document.getPage(pgNum);
+
                 extractImagesFromPage(page, format, tempDir, pgNum + 1);
             }
         }
-
         // Create a ZIP file from the temporary directory
         Path tempZipFile = Files.createTempFile("output_", ".zip");
-
         try (ZipOutputStream zipOut =
                 new ZipOutputStream(new FileOutputStream(tempZipFile.toFile()))) {
             // Add processed images to the zip
@@ -155,7 +145,6 @@ public class ExtractImagesController {
         if (useFile && tempFile != null) {
             tempFile.delete();
         }
-
         return WebResponseUtils.bytesToWebResponse(
                 zipBytes,
                 file.getOriginalFilename() + "_extracted-images.zip",
@@ -172,7 +161,7 @@ public class ExtractImagesController {
     private void extractImagesFromPage(PDPage page, String format, Path tempDir, int pageNum)
             throws IOException {
 
-        synchronized (this) {
+        synchronized (page) {
             for (COSName name : page.getResources().getXObjectNames()) {
                 if (page.getResources().isImageXObject(name)) {
                     PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
@@ -184,10 +173,10 @@ public class ExtractImagesController {
                                     "image_" + pageNum + "_" + name.getName() + "." + format);
                     ImageIO.write(bufferedImage, format, imagePath.toFile());
                 }
+
             }
         }
     }
-
     private BufferedImage convertToRGB(RenderedImage renderedImage, String format) {
         int width = renderedImage.getWidth();
         int height = renderedImage.getHeight();
@@ -202,7 +191,6 @@ public class ExtractImagesController {
             } else {
                 rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             }
-
             Graphics2D g = rgbImage.createGraphics();
             g.drawImage((Image) renderedImage, 0, 0, null);
             g.dispose();
@@ -228,7 +216,8 @@ public class ExtractImagesController {
             g.clearRect(0, 0, width, height);
             g.dispose();
         }
-
         return rgbImage;
-    }
+    }   
+
+    
 }

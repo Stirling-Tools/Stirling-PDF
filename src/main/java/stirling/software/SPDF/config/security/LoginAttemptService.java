@@ -3,29 +3,32 @@ package stirling.software.SPDF.config.security;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.AttemptCounter;
 
 @Service
+@Slf4j
 public class LoginAttemptService {
 
-    @Autowired ApplicationProperties applicationProperties;
-
-    private static final Logger logger = LoggerFactory.getLogger(LoginAttemptService.class);
+    @Autowired private ApplicationProperties applicationProperties;
 
     private int MAX_ATTEMPT;
     private long ATTEMPT_INCREMENT_TIME;
     private ConcurrentHashMap<String, AttemptCounter> attemptsCache;
+    private boolean isBlockedEnabled = true;
 
     @PostConstruct
     public void init() {
         MAX_ATTEMPT = applicationProperties.getSecurity().getLoginAttemptCount();
+        if (MAX_ATTEMPT == -1) {
+            isBlockedEnabled = false;
+            log.info("Login attempt tracking is disabled.");
+        }
         ATTEMPT_INCREMENT_TIME =
                 TimeUnit.MINUTES.toMillis(
                         applicationProperties.getSecurity().getLoginResetTimeMinutes());
@@ -33,14 +36,16 @@ public class LoginAttemptService {
     }
 
     public void loginSucceeded(String key) {
-        if (key == null || key.trim().isEmpty()) {
+        if (!isBlockedEnabled || key == null || key.trim().isEmpty()) {
             return;
         }
         attemptsCache.remove(key.toLowerCase());
     }
 
     public void loginFailed(String key) {
-        if (key == null || key.trim().isEmpty()) return;
+        if (!isBlockedEnabled || key == null || key.trim().isEmpty()) {
+            return;
+        }
 
         AttemptCounter attemptCounter = attemptsCache.get(key.toLowerCase());
         if (attemptCounter == null) {
@@ -55,7 +60,9 @@ public class LoginAttemptService {
     }
 
     public boolean isBlocked(String key) {
-        if (key == null || key.trim().isEmpty()) return false;
+        if (!isBlockedEnabled || key == null || key.trim().isEmpty()) {
+            return false;
+        }
         AttemptCounter attemptCounter = attemptsCache.get(key.toLowerCase());
         if (attemptCounter == null) {
             return false;
@@ -65,7 +72,9 @@ public class LoginAttemptService {
     }
 
     public int getRemainingAttempts(String key) {
-        if (key == null || key.trim().isEmpty()) return MAX_ATTEMPT;
+        if (!isBlockedEnabled || key == null || key.trim().isEmpty()) {
+            return Integer.MAX_VALUE; // Arbitrarily high number if tracking is disabled
+        }
 
         AttemptCounter attemptCounter = attemptsCache.get(key.toLowerCase());
         if (attemptCounter == null) {

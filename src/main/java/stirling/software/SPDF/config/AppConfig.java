@@ -130,13 +130,12 @@ public class AppConfig {
     }
 
     @Bean(name = "directoryFilter")
-    public Predicate<Path> processPDFOnlyFilter() {
+    public Predicate<Path> processOnlyFiles() {
         return path -> {
             if (Files.isDirectory(path)) {
                 return !path.toString().contains("processing");
             } else {
-                String fileName = path.getFileName().toString();
-                return fileName.endsWith(".pdf");
+                return true;
             }
         };
     }

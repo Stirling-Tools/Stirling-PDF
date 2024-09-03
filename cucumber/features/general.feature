@@ -95,7 +95,7 @@ Feature: API Validation
 
 
   @extract-images
-  Scenario Outline: Extract Image Scans
+  Scenario Outline: Extract Image Scans duplicates
     Given I use an example file at "exampleFiles/images.pdf" as parameter "fileInput"
     And the request data includes
       | parameter        | value       |
@@ -103,7 +103,7 @@ Feature: API Validation
     When I send the API request to the endpoint "/api/v1/misc/extract-images"
     Then the response content type should be "application/octet-stream"
 	And the response file should have extension ".zip"
-	And the response ZIP should contain 20 files
+	And the response ZIP should contain 2 files
     And the response file should have size greater than 0
 	And the response status code should be 200
 	
@@ -112,5 +112,3 @@ Feature: API Validation
     | png        | 
     | gif         |
     | jpeg        | 
-
-	

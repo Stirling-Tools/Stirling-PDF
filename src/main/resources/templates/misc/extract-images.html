@@ -18,7 +18,7 @@
                 <span class="tool-header-text" th:text="#{extractImages.header}"></span>
               </div>
               <form id="multiPdfForm" th:action="@{'/api/v1/misc/extract-images'}" method="post" enctype="multipart/form-data">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label th:text="#{extractImages.selectText}"></label>
                   <select class="form-control" name="format">
@@ -26,6 +26,10 @@
                     <option value="jpg">JPG</option>
                     <option value="gif">GIF</option>
                   </select>
+                </div>
+                <div class="mb-3">
+                  <input type="checkbox" name="allowDuplicates" id="allowDuplicates">
+                  <label for="allowDuplicates" th:text="#{extractImages.allowDuplicates}"></label>
                 </div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{extractImages.submit}"></button>
               </form>
