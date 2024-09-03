@@ -43,15 +43,11 @@ public class ExtractImagesController {
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
     @Autowired private memoryConfig memoryconfig; // Inject MemoryConfig
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
-    @Operation(
-            summary = "Extract images from a PDF file",
-            description =
-                    "This endpoint extracts images from a given PDF file and returns them in a zip file. Users can specify the output image format. Input: PDF Output: IMAGE/ZIP Type: SIMO")
-    public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFExtractImagesRequest request)
+    public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request)
             throws IOException, InterruptedException, ExecutionException {
         MultipartFile file = request.getFileInput();
         String format = request.getFormat();
-        boolean allowDuplicates = request.isAllowDuplicates();
+
         System.out.println(
                 System.currentTimeMillis() + " file=" + file.getName() + ", format=" + format);
         // Determine if we should use file-based storage based on available RAM
@@ -97,16 +93,17 @@ public class ExtractImagesController {
                                     } catch (IOException e) {
                                         logger.error("Error extracting images from page", e);
                                     }
-
                                     return null;
                                 });
 
                 futures.add(future);
             }
+
             // Wait for all tasks to complete
             for (Future<Void> future : futures) {
                 future.get();
             }
+
             // Close executor service
             executor.shutdown();
         } else {
@@ -136,9 +133,7 @@ public class ExtractImagesController {
                                 }
                             });
         }
-
         byte[] zipBytes = Files.readAllBytes(tempZipFile);
-
         // Clean up the temporary files
         Files.deleteIfExists(tempZipFile);
         FileUtils.deleteDirectory(tempDir.toFile());
@@ -150,17 +145,14 @@ public class ExtractImagesController {
                 file.getOriginalFilename() + "_extracted-images.zip",
                 MediaType.APPLICATION_OCTET_STREAM);
     }
-
     private boolean shouldUseMultithreading(MultipartFile file, PDDocument document) {
         // Criteria: Use multithreading if file size > 10MB or number of pages > 20
         long fileSizeInMB = file.getSize() / (1024 * 1024);
         int numberOfPages = document.getPages().getCount();
         return fileSizeInMB > 10 || numberOfPages > 20;
     }
-
     private void extractImagesFromPage(PDPage page, String format, Path tempDir, int pageNum)
             throws IOException {
-
         synchronized (page) {
             for (COSName name : page.getResources().getXObjectNames()) {
                 if (page.getResources().isImageXObject(name)) {
@@ -173,7 +165,6 @@ public class ExtractImagesController {
                                     "image_" + pageNum + "_" + name.getName() + "." + format);
                     ImageIO.write(bufferedImage, format, imagePath.toFile());
                 }
-
             }
         }
     }
@@ -217,7 +208,5 @@ public class ExtractImagesController {
             g.dispose();
         }
         return rgbImage;
-    }   
-
-    
+    }
 }
