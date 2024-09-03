@@ -21,6 +21,7 @@ import stirling.software.SPDF.config.memoryConfig;
 import stirling.software.SPDF.model.api.PDFWithImageFormatRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 import stirling.software.SPDF.utils.memoryUtils;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
