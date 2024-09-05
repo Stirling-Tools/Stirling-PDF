@@ -89,6 +89,7 @@ class PdfActionsManager {
     this.rotateCWButtonCallback = this.rotateCWButtonCallback.bind(this);
     this.deletePageButtonCallback = this.deletePageButtonCallback.bind(this);
     this.insertFileButtonCallback = this.insertFileButtonCallback.bind(this);
+    this.splitFileButtonCallback = this.splitFileButtonCallback.bind(this);
   }
 
   adapt(div) {
