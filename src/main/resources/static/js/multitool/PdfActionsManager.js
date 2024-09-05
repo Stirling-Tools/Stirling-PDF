@@ -75,7 +75,7 @@ class PdfActionsManager {
 
   splitFileButtonCallback(e) {
     var imgContainer = this.getPageContainer(e.target);
-    imgContainer.classList.toggle("cutBefore");
+    imgContainer.classList.toggle("split-before");
   }
 
   setActions({ movePageTo, addPdfs, rotateElement }) {

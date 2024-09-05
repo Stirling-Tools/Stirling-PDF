@@ -278,7 +278,7 @@ class PdfContainer {
       this.fileName = filenameInput.value;
     }
 
-    const separators = this.pagesContainer.querySelectorAll(".cutBefore");
+    const separators = this.pagesContainer.querySelectorAll(".split-before");
     if (separators.length !== 0) { // Send the created blob to the split-pages API endpoint if there are separators.
       const formData = new FormData();
 

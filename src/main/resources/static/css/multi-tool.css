@@ -127,12 +127,12 @@ label {
   margin-bottom: 16px;
 }
 
-.page-container.cutBefore {
+.page-container.split-before {
   border-left: 1px dashed var(--md-sys-color-on-surface);
   padding-left: -1px;
 }
 
-.page-container.cutBefore:first-child {
+.page-container.split-before:first-child {
   border-left: none;
 }
 
