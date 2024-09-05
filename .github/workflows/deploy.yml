@@ -1,0 +1,38 @@
+# Name of GitHub Actions workflow
+name: Deploy to Staging
+
+# Trigger the workflow when code is pushed to the staging branch
+on:
+  push:
+    branches:
+      - main # Can change to branch used for staging
+
+# Jobs that will run in the workflow
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # GitHub runner operating system
+    
+    steps:
+      # Step 1: Checkout the code from GitHub repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Docker Buildx for building Docker images
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # Step 3: Log in to Docker Hub (uses secrets for security)
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # Step 4: Build the Docker image using docker-compose and deploy it
+      - name: Build and deploy with Docker Compose
+        run: |
+          docker-compose -f docker-compose-staging.yml build
+          docker-compose -f docker-compose-staging.yml up -d
+
+      # Step 5: Verify deployment by checking if the service is running
+      - name: Check service
+        run: curl http://localhost:8081  # Device's service URL
+
+        
