@@ -43,6 +43,7 @@ public class PageNumbersController {
                     "This operation takes an input PDF file and adds page numbers to it. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> addPageNumbers(@ModelAttribute AddPageNumbersRequest request)
             throws IOException {
+
         MultipartFile file = request.getFileInput();
         String customMargin = request.getCustomMargin();
         int position = request.getPosition();
@@ -52,7 +53,8 @@ public class PageNumbersController {
         int pageNumber = startingNumber;
         byte[] fileBytes = file.getBytes();
         PDDocument document = Loader.loadPDF(fileBytes);
-
+        float font_size = request.getFontSize();
+        String font_type = request.getFontType();
         float marginFactor;
         switch (customMargin.toLowerCase()) {
             case "small":
@@ -73,7 +75,7 @@ public class PageNumbersController {
                 break;
         }
 
-        float fontSize = 12.0f;
+        float fontSize = font_size;
         if (pagesToNumber == null || pagesToNumber.length() == 0) {
             pagesToNumber = "all";
         }
@@ -131,7 +133,20 @@ public class PageNumbersController {
                     new PDPageContentStream(
                             document, page, PDPageContentStream.AppendMode.APPEND, true, true);
             contentStream.beginText();
-            contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), fontSize);
+            switch (font_type.toLowerCase()) {
+                case "helvetica":
+                    contentStream.setFont(
+                            new PDType1Font(Standard14Fonts.FontName.HELVETICA), fontSize);
+                    break;
+                case "courier":
+                    contentStream.setFont(
+                            new PDType1Font(Standard14Fonts.FontName.COURIER), fontSize);
+                    break;
+                case "times":
+                    contentStream.setFont(
+                            new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN), fontSize);
+                    break;
+            }
             contentStream.newLineAtOffset(x, y);
             contentStream.showText(text);
             contentStream.endText();

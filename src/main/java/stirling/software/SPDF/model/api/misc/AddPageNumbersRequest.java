@@ -15,6 +15,9 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
             allowableValues = {"small", "medium", "large"})
     private String customMargin;
 
+    private float fontSize;
+    private String fontType;
+
     @Schema(description = "Position: 1 of 9 positions", minimum = "1", maximum = "9")
     private int position;
 
