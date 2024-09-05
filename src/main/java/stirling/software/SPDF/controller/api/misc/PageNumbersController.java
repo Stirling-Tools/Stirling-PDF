@@ -55,7 +55,6 @@ public class PageNumbersController {
         PDDocument document = Loader.loadPDF(fileBytes);
         float font_size = request.getFontSize();
         String font_type = request.getFontType();
-        System.out.println(request.toString());
         float marginFactor;
         switch (customMargin.toLowerCase()) {
             case "small":
