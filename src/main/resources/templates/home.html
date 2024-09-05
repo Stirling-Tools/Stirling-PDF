@@ -30,7 +30,8 @@
         <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
         <div class="features-container">
 
-          <div th:if="${@shouldShow}" class="feature-card favorite update-notice" id="update-link" style="display: none;">
+          <div th:if="${@shouldShow}" class="feature-card favorite update-notice" id="update-link"
+            style="display: none;">
             <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases" target="_blank" rel="noopener">
               <div class="d-flex align-items-center">
                 <div id="tool-icon" class="advance" alt="icon">
@@ -237,10 +238,11 @@
     </div>
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
-  
-  
+
+
   <!-- Survey Modal -->
-  <div class="modal fade" id="surveyModal" tabindex="-1" role="dialog" aria-labelledby="surveyModalLabel" aria-hidden="true">
+  <div class="modal fade" id="surveyModal" tabindex="-1" role="dialog" aria-labelledby="surveyModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -248,37 +250,40 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <p th:text="#{survey.description}">Stirling-PDF has no tracking so we want to hear from our users to improve Stirling-PDF!</h5>
+          <p th:text="#{survey.description}">Stirling-PDF has no tracking so we want to hear from our users to improve
+            Stirling-PDF!</h5>
           <p th:text="#{survey.please}">Please consider taking our survey!</p>
-          <p th:text="#{survey.disabled}">Survey popup will be disabled in following updates but available at foot of page)</p>
-          <a href="https://stirlingpdf.info/s/clwzgtfw7000gltkmwz1n212m" target="_blank" class="btn btn-primary" id="takeSurvey"th:text="#{survey.button}" >Take Survey</a>
+          <p th:text="#{survey.disabled}">Survey popup will be disabled in following updates but available at foot of
+            page)</p>
+          <a href="https://stirlingpdf.info/s/clwzgtfw7000gltkmwz1n212m" target="_blank" class="btn btn-primary"
+            id="takeSurvey" th:text="#{survey.button}">Take Survey</a>
         </div>
         <div class="modal-footer">
           <div class="form-check mb-3">
             <input type="checkbox" id="dontShowAgain">
             <label for="dontShowAgain" th:text="#{survey.dontShowAgain}">Don't show again</label>
           </div>
-          
+
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}">Close</button>
-         
+
         </div>
       </div>
     </div>
   </div>
 
   <script>
-  	/*
+    /*
     document.addEventListener("DOMContentLoaded", function() {
       const surveyVersion = "1.1";
       const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
       const dontShowAgain = document.getElementById('dontShowAgain');
       const takeSurveyButton = document.getElementById('takeSurvey');
-    
+
       if (localStorage.getItem('surveyVersion') !== surveyVersion || !localStorage.getItem('dontShowSurvey')) {
         modal.show();
       }
 
-    
+
       dontShowAgain.addEventListener('change', function() {
         if (this.checked) {
           localStorage.setItem('dontShowSurvey', 'true');
@@ -288,13 +293,13 @@
           localStorage.removeItem('surveyVersion');
         }
       });
-    
+
       takeSurveyButton.addEventListener('click', function() {
         localStorage.setItem('dontShowSurvey', 'true');
         localStorage.setItem('surveyVersion', surveyVersion);
         modal.hide();
       });
-    
+
       if (localStorage.getItem('dontShowSurvey')) {
         modal.hide();
       }
