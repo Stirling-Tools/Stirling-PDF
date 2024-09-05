@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -47,6 +48,7 @@ import stirling.software.SPDF.utils.memoryUtils;
 public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
+    private final Object lock = new Object();
 
     @Qualifier("memory")
     @Autowired
@@ -131,19 +133,20 @@ public class ExtractImagesController {
         try (ZipOutputStream zipOut =
                 new ZipOutputStream(new FileOutputStream(tempZipFile.toFile()))) {
             // Add processed images to the zip
-            Files.list(tempDir)
-                    .sorted()
-                    .forEach(
-                            tempOutputFile -> {
-                                try {
-                                    String imageName = tempOutputFile.getFileName().toString();
-                                    zipOut.putNextEntry(new ZipEntry(imageName));
-                                    Files.copy(tempOutputFile, zipOut);
-                                    zipOut.closeEntry();
-                                } catch (IOException e) {
-                                    logger.error("Error adding file to zip", e);
-                                }
-                            });
+            try (Stream<Path> paths = Files.list(tempDir)) {
+                paths.sorted()
+                        .forEach(
+                                tempOutputFile -> {
+                                    try {
+                                        String imageName = tempOutputFile.getFileName().toString();
+                                        zipOut.putNextEntry(new ZipEntry(imageName));
+                                        Files.copy(tempOutputFile, zipOut);
+                                        zipOut.closeEntry();
+                                    } catch (IOException e) {
+                                        logger.error("Error adding file to zip", e);
+                                    }
+                                });
+            }
         }
         byte[] zipBytes = Files.readAllBytes(tempZipFile);
         // Clean up the temporary files
@@ -171,7 +174,7 @@ public class ExtractImagesController {
 
     private void extractImagesFromPage(PDPage page, String format, Path tempDir, int pageNum)
             throws IOException {
-        synchronized (page) {
+        synchronized (lock) {
             for (COSName name : page.getResources().getXObjectNames()) {
                 if (page.getResources().isImageXObject(name)) {
                     PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
