@@ -134,6 +134,4 @@ public class AppConfig {
             }
         };
     }
-
-    
 }
