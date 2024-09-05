@@ -262,8 +262,6 @@ class PdfContainer {
     }
     const pdfBytes = await pdfDoc.save();
     const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
-    const url = URL.createObjectURL(pdfBlob);
-    const downloadOption = localStorage.getItem("downloadOption");
 
     const filenameInput = document.getElementById("filename-input");
 
@@ -280,28 +278,69 @@ class PdfContainer {
       this.fileName = filenameInput.value;
     }
 
-    if (!filenameInput.value.includes(".pdf")) {
-      filenameInput.value = filenameInput.value + ".pdf";
-      this.fileName = filenameInput.value;
-    }
+    const separators = this.pagesContainer.querySelectorAll(".cutBefore");
+    if (separators.length !== 0) { // Send the created blob to the split-pages API endpoint if there are separators.
+      const formData = new FormData();
 
-    if (downloadOption === "sameWindow") {
-      // Open the file in the same window
-      window.location.href = url;
-    } else if (downloadOption === "newWindow") {
-      // Open the file in a new window
-      window.open(url, "_blank");
-    } else {
-      // Download the file
-      this.downloadLink = document.createElement("a");
-      this.downloadLink.id = "download-link";
-      this.downloadLink.href = url;
-      // downloadLink.download = this.fileName ? this.fileName : 'managed.pdf';
-      // downloadLink.download = this.fileName;
-      this.downloadLink.setAttribute("download", this.fileName ? this.fileName : "managed.pdf");
-      this.downloadLink.setAttribute("target", "_blank");
-      this.downloadLink.onclick = this.setDownloadAttribute;
-      this.downloadLink.click();
+      const pagesArray = Array.from(this.pagesContainer.children);
+
+      let splitters = "";
+      separators.forEach(page => {
+        const pageIndex = pagesArray.indexOf(page);
+        splitters += pageIndex + ",";
+      });
+
+      formData.append("pageNumbers", splitters);
+      formData.append("fileInput", pdfBlob, this.fileName ? this.fileName : "managed.pdf");
+
+      const response = await fetch("/api/v1/general/split-pages", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          return response.blob();
+        })
+        .then((response) => {
+          this.downloadLink = document.createElement("a");
+          this.downloadLink.id = "download-link";
+          this.downloadLink.href = URL.createObjectURL(response);
+          this.downloadLink.setAttribute("download", this.fileName ? this.fileName + ".zip" : "managed.zip");
+          this.downloadLink.setAttribute("target", "_blank");
+          this.downloadLink.click();
+        });
+
+    } else { // continue normally if there are no separators
+
+      const url = URL.createObjectURL(pdfBlob);
+      const downloadOption = localStorage.getItem("downloadOption");
+
+      if (!filenameInput.value.includes(".pdf")) {
+        filenameInput.value = filenameInput.value + ".pdf";
+        this.fileName = filenameInput.value;
+      }
+
+      if (downloadOption === "sameWindow") {
+        // Open the file in the same window
+        window.location.href = url;
+      } else if (downloadOption === "newWindow") {
+        // Open the file in a new window
+        window.open(url, "_blank");
+      } else {
+        // Download the file
+        this.downloadLink = document.createElement("a");
+        this.downloadLink.id = "download-link";
+        this.downloadLink.href = url;
+        // downloadLink.download = this.fileName ? this.fileName : 'managed.pdf';
+        // downloadLink.download = this.fileName;
+        this.downloadLink.setAttribute("download", this.fileName ? this.fileName : "managed.pdf");
+        this.downloadLink.setAttribute("target", "_blank");
+        this.downloadLink.onclick = this.setDownloadAttribute;
+        this.downloadLink.click();
+      }
     }
   }
 
@@ -350,7 +389,7 @@ function detectImageType(uint8Array) {
 
   // Check for TIFF signature (little-endian and big-endian)
   if ((uint8Array[0] === 73 && uint8Array[1] === 73 && uint8Array[2] === 42 && uint8Array[3] === 0) ||
-      (uint8Array[0] === 77 && uint8Array[1] === 77 && uint8Array[2] === 0 && uint8Array[3] === 42)) {
+    (uint8Array[0] === 77 && uint8Array[1] === 77 && uint8Array[2] === 0 && uint8Array[3] === 42)) {
     return 'TIFF';
   }
 
