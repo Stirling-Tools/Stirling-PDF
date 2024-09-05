@@ -47,26 +47,7 @@ public class ScalePagesController {
         String targetPDRectangle = request.getPageSize();
         float scaleFactor = request.getScaleFactor();
 
-        Map<String, PDRectangle> sizeMap = new HashMap<>();
-        // Add A0 - A10
-        sizeMap.put("A0", PDRectangle.A0);
-        sizeMap.put("A1", PDRectangle.A1);
-        sizeMap.put("A2", PDRectangle.A2);
-        sizeMap.put("A3", PDRectangle.A3);
-        sizeMap.put("A4", PDRectangle.A4);
-        sizeMap.put("A5", PDRectangle.A5);
-        sizeMap.put("A6", PDRectangle.A6);
-
-        // Add other sizes
-        sizeMap.put("LETTER", PDRectangle.LETTER);
-        sizeMap.put("LEGAL", PDRectangle.LEGAL);
-
-        if (!sizeMap.containsKey(targetPDRectangle)) {
-            throw new IllegalArgumentException(
-                    "Invalid PDRectangle. It must be one of the following: A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10");
-        }
-
-        PDRectangle targetSize = sizeMap.get(targetPDRectangle);
+        PDRectangle targetSize = getTargetSize(targetPDRectangle);
 
         PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
         PDDocument outputDocument = new PDDocument();
@@ -115,5 +96,36 @@ public class ScalePagesController {
                 baos.toByteArray(),
                 Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
                         + "_scaled.pdf");
+    }
+
+    private PDRectangle getTargetSize(String targetPDRectangle) {
+        Map<String, PDRectangle> sizeMap = getSizeMap();
+
+        if (!sizeMap.containsKey(targetPDRectangle)) {
+            throw new IllegalArgumentException(
+                    "Invalid PDRectangle. It must be one of the following: A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10");
+        }
+
+        PDRectangle targetSize = sizeMap.get(targetPDRectangle);
+
+        return targetSize;
+    }
+
+    private Map<String, PDRectangle> getSizeMap() {
+        Map<String, PDRectangle> sizeMap = new HashMap<>();
+        // Add A0 - A10
+        sizeMap.put("A0", PDRectangle.A0);
+        sizeMap.put("A1", PDRectangle.A1);
+        sizeMap.put("A2", PDRectangle.A2);
+        sizeMap.put("A3", PDRectangle.A3);
+        sizeMap.put("A4", PDRectangle.A4);
+        sizeMap.put("A5", PDRectangle.A5);
+        sizeMap.put("A6", PDRectangle.A6);
+
+        // Add other sizes
+        sizeMap.put("LETTER", PDRectangle.LETTER);
+        sizeMap.put("LEGAL", PDRectangle.LEGAL);
+
+        return sizeMap;
     }
 }
