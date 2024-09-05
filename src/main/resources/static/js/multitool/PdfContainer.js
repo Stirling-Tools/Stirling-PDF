@@ -212,8 +212,35 @@ class PdfContainer {
     }
   }
 
-  async splitPDF() {
+  async splitPDF(baseDocBytes, splitters) {
+    const baseDocument = await PDFLib.PDFDocument.load(baseDocBytes);
+    const pageNum = baseDocument.getPages().length;
 
+    splitters.sort(); // We'll sort the separator indexes just in case querySelectorAll does something funny.
+    splitters.push(pageNum); // We'll also add a faux separator at the end in order to get the pages after the last separator.
+
+    const splitDocuments = [];
+    for (const splitterPosition of splitters) {
+      const subDocument = await PDFLib.PDFDocument.create();
+
+      const splitterIndex = splitters.indexOf(splitterPosition);
+
+      let firstPage = splitterIndex === 0 ? 0 : splitters[splitterIndex - 1];
+
+      const pageIndices = Array.from({ length: splitterPosition - firstPage }, (value, key) => firstPage + key);
+
+      const copiedPages = await subDocument.copyPages(baseDocument, pageIndices);
+
+      copiedPages.forEach(copiedPage => {
+        subDocument.addPage(copiedPage);
+      });
+
+      const subDocumentBytes = await subDocument.save();
+
+      splitDocuments.push(subDocumentBytes);
+    };
+
+    return splitDocuments;
   }
 
   async compressFiles() {
@@ -287,9 +314,7 @@ class PdfContainer {
     }
 
     const separators = this.pagesContainer.querySelectorAll(".split-before");
-    if (separators.length !== 0) { // Send the created blob to the split-pages API endpoint if there are separators.
-
-      const fileNameBase = this.fileName ? this.fileName : "managed.pdf";
+    if (separators.length !== 0) { // Split the pdf if there are separators.
 
       const pagesArray = Array.from(this.pagesContainer.children);
       const splitters = [];
@@ -298,6 +323,16 @@ class PdfContainer {
         if (pageIndex !== 0) {
           splitters.push(pageIndex);
         }
+      });
+
+      const splitDocuments = await this.splitPDF(pdfBytes, splitters);
+
+      splitDocuments.forEach(doc => {
+        this.downloadLink = document.createElement("a");
+        this.downloadLink.href = URL.createObjectURL(new Blob([doc], { type: "application/pdf" }));
+        this.downloadLink.setAttribute("download", this.fileName ? this.fileName : "managed.pdf");
+        this.downloadLink.setAttribute("target", "_blank");
+        this.downloadLink.click();
       });
 
     } else { // continue normally if there are no separators
