@@ -145,24 +145,13 @@ class PdfActionsManager {
     insertFileButton.onclick = this.insertFileButtonCallback;
     insertFileButtonContainer.appendChild(insertFileButton);
 
-    div.appendChild(insertFileButtonContainer);
-
-    const splitFileButtonContainer = document.createElement("div");
-
-    insertFileButtonContainer.classList.add(
-      "pdf-actions_split-file-button-container",
-      leftDirection,
-      `align-top-${leftDirection}`,
-    );
-
     const splitFileButton = document.createElement("button");
     splitFileButton.classList.add("btn", "btn-primary", "pdf-actions_split-file-button");
     splitFileButton.innerHTML = `<span class="material-symbols-rounded">cut</span>`;
     splitFileButton.onclick = this.splitFileButtonCallback;
     insertFileButtonContainer.appendChild(splitFileButton);
 
-    div.appendChild(splitFileButtonContainer);
-
+    div.appendChild(insertFileButtonContainer);
 
     // add this button to every element, but only show it on the last one :D
     const insertFileButtonRightContainer = document.createElement("div");
