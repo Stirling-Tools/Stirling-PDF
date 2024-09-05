@@ -73,6 +73,11 @@ class PdfActionsManager {
     this.addPdfs(imgContainer);
   }
 
+  splitFileButtonCallback(e) {
+    var imgContainer = this.getPageContainer(e.target);
+    // this.addPdfs(imgContainer);
+  }
+
   setActions({ movePageTo, addPdfs, rotateElement }) {
     this.movePageTo = movePageTo;
     this.addPdfs = addPdfs;
@@ -153,7 +158,7 @@ class PdfActionsManager {
     const splitFileButton = document.createElement("button");
     splitFileButton.classList.add("btn", "btn-primary", "pdf-actions_split-file-button");
     splitFileButton.innerHTML = `<span class="material-symbols-rounded">cut</span>`;
-    //splitFileButton.onclick = this.splitFileButtonCallback;
+    splitFileButton.onclick = this.splitFileButtonCallback;
     insertFileButtonContainer.appendChild(splitFileButton);
 
     div.appendChild(splitFileButtonContainer);
