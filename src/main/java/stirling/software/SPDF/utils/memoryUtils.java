@@ -4,17 +4,19 @@ import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 
-import stirling.software.SPDF.config.memoryConfig;
+import stirling.software.SPDF.config.MemoryConfig;
 
 public class memoryUtils {
 
-    public static boolean shouldUseFileBasedStorage(memoryConfig memoryConfig) {
+    public static boolean shouldUseFileBasedStorage(MemoryConfig memoryconfig) {
         Runtime runtime = Runtime.getRuntime();
-        long usedMemory = runtime.totalMemory() - runtime.freeMemory();
         long maxMemory = runtime.maxMemory();
 
-        boolean useFileBasedOnMemory =
-                usedMemory > (memoryConfig.getMemory().getRamThresholdGB() * 1024L * 1024L * 1024L);
+        // Convert RAM threshold from GB to bytes
+        long ramThresholdBytes = memoryconfig.getRamThresholdGB() * 1024L * 1024L * 1024L;
+
+        // Check if the used memory exceeds the RAM threshold
+        boolean useFileBasedOnMemory = maxMemory <= ramThresholdBytes;
 
         // Check free space on the default temporary directory
         Path tempDir = FileSystems.getDefault().getPath(System.getProperty("java.io.tmpdir"));
@@ -23,8 +25,9 @@ public class memoryUtils {
         long totalSpace = tempDirFile.getTotalSpace(); // in bytes
         int freeSpacePercentage = (int) ((freeSpace * 100) / totalSpace);
 
+        // Check if the free space percentage is less than the configured minimum
         boolean useFileBasedOnSpace =
-                freeSpacePercentage < memoryConfig.getMemory().getMinFreeSpacePercentage();
+                freeSpacePercentage < memoryconfig.getMinFreeSpacePercentage();
 
         return useFileBasedOnMemory || useFileBasedOnSpace;
     }

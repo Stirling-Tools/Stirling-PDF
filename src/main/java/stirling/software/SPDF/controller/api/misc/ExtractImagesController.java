@@ -28,6 +28,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -49,7 +50,9 @@ public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
 
-    @Autowired private MemoryConfig memoryconfig; // Inject MemoryConfig
+    @Qualifier("memory")
+    @Autowired
+    private MemoryConfig memoryconfig; // Inject MemoryConfig
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
     public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request)
@@ -204,14 +207,14 @@ public class ExtractImagesController {
             Graphics2D g = rgbImage.createGraphics();
             g.drawImage((Image) renderedImage, 0, 0, null);
             g.dispose();
-        } catch (java.lang.NullPointerException e) {
+        } catch (NullPointerException e) {
             logger.error("NullPointerException while converting image to RGB format", e);
             rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = rgbImage.createGraphics();
             // g.setBackground(Color.WHITE);
             g.clearRect(0, 0, width, height);
             g.dispose();
-        } catch (java.lang.IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             logger.error("IllegalArgumentException while converting image to RGB format", e);
             rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = rgbImage.createGraphics();

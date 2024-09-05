@@ -1,13 +1,13 @@
 package stirling.software.SPDF.config;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.function.Predicate;
 
-import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -139,48 +139,37 @@ public class AppConfig {
         };
     }
 
-    @Bean
-    public MemoryConfig mConfig() {
-        YAMLMapper yamlMapper = new YAMLMapper();
-        MemoryConfig memoryconfig = new MemoryConfig();
-        try (var input = Files.newInputStream(Paths.get("settings.yml"))) {
-            SimpleYamlImplementation yaml = new SimpleYamlImplementation();
-            // Load YAML content into MemoryConfig
-            memoryconfig = yamlMapper.readValue(input, MemoryConfig.class);
-        } catch (IOException e) {
-            // Handle the error and potentially set default values
-            logger.error("Error loading memory settings from YAML file", e);
-            // Optionally initialize default values here if necessary
-        }
-        return memoryconfig;
-    }
-
     //    @Bean
-    //    public memoryConfig memorySettings() {
+    //    public MemoryConfig mConfig() {
     //        YAMLMapper yamlMapper = new YAMLMapper();
-    //        memoryConfig memorySettings = new memoryConfig();
-    //        ClassLoader classLoader = getClass().getClassLoader();
-    //        URL resource = classLoader.getResource("settings.yml");
-    //
-    //        if (resource == null) {
-    //            logger.error("YAML file 'settings.yml' not found in resources.");
-    //            throw new RuntimeException("Configuration file not found");
-    //        }
-    //
-    //        if (resource == null) {
-    //            logger.error("YAML file 'settings.yml' not found in resources.");
-    //            throw new RuntimeException("Configuration file not found");
-    //        }
-    //
-    //        try (InputStream input = resource.openStream()) {
-    //            memorySettings = yamlMapper.readValue(input, memoryConfig.class);
+    //        MemoryConfig memoryconfig = new MemoryConfig();
+    //        try (var input = Files.newInputStream(Paths.get("settings.yml"))) {
+    //            SimpleYamlImplementation yaml = new SimpleYamlImplementation();
+    //            // Load YAML content into MemoryConfig
+    //            memoryconfig = yamlMapper.readValue(input, MemoryConfig.class);
     //        } catch (IOException e) {
+    //            // Handle the error and potentially set default values
     //            logger.error("Error loading memory settings from YAML file", e);
-    //            // Initialize with default values if necessary
-    //            memorySettings.setMinFreeSpacePercentage(20);
-    //            memorySettings.setRamThresholdGB(4);
+    //            // Optionally initialize default values here if necessary
     //        }
-    //
-    //        return memorySettings;
+    //        return memoryconfig;
     //    }
+
+    @Bean(name = "memory")
+    public MemoryConfig memorySettings() {
+        YAMLMapper yamlMapper = new YAMLMapper();
+        MemoryConfig memoryConfig = new MemoryConfig();
+        try {
+            Resource resource = new ClassPathResource("settings.yml");
+            try (InputStream input = resource.getInputStream()) {
+                memoryConfig = yamlMapper.readValue(input, MemoryConfig.class);
+            }
+        } catch (IOException e) {
+            logger.error("Error loading memory settings from YAML file", e);
+            // Initialize with default values if necessary
+            memoryConfig.setMinFreeSpacePercentage(20);
+            memoryConfig.setRamThresholdGB(4);
+        }
+        return memoryConfig;
+    }
 }
