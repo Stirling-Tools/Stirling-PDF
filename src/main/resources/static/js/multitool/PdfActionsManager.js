@@ -75,7 +75,7 @@ class PdfActionsManager {
 
   splitFileButtonCallback(e) {
     var imgContainer = this.getPageContainer(e.target);
-    console.log("Added separator before page " + (Array.from(imgContainer.parentNode.children).indexOf(imgContainer) + 1))
+    console.log("Added separator before page " + (Array.from(imgContainer.parentNode.children).indexOf(imgContainer) + 1));
   }
 
   setActions({ movePageTo, addPdfs, rotateElement }) {
