@@ -9,6 +9,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -48,6 +49,7 @@ public class ExtractImagesController {
 
     private final memoryUtils memoryutils; // Inject MemoryUtils
 
+    @Autowired
     public ExtractImagesController(memoryUtils memoryutils) {
         this.memoryutils = memoryutils;
     }
@@ -66,7 +68,7 @@ public class ExtractImagesController {
                 System.currentTimeMillis() + " file=" + file.getName() + ", format=" + format);
 
         // Determine if we should use file-based storage based on available RAM
-        boolean useFile = memoryUtils.shouldUseFileBasedStorage();
+        boolean useFile = memoryutils.shouldUseFileBasedStorage();
 
         PDDocument document;
         // Create a temporary directory for processing
