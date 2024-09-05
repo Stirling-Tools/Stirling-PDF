@@ -37,8 +37,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.pixee.security.Filenames;
-
 import stirling.software.SPDF.config.MemoryConfig;
 import stirling.software.SPDF.model.api.PDFWithImageFormatRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -86,10 +84,6 @@ public class ExtractImagesController {
 
         // Determine if multithreading should be used based on PDF size or number of pages
         boolean useMultithreading = shouldUseMultithreading(file, document);
-        String filename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
-        Set<Integer> processedImages = new HashSet<>();
 
         if (useMultithreading) {
             // Executor service to handle multithreading
@@ -155,9 +149,13 @@ public class ExtractImagesController {
         // Clean up the temporary files
         Files.deleteIfExists(tempZipFile);
         FileUtils.deleteDirectory(tempDir.toFile());
-        if (useFile && tempFile != null) {
+        if (useFile) {
             tempFile.delete();
         }
+        if (useFile && !tempFile.delete()) {
+            logger.warn("Failed to delete temporary file: " + tempFile.getAbsolutePath());
+        }
+
         return WebResponseUtils.bytesToWebResponse(
                 zipBytes,
                 file.getOriginalFilename() + "_extracted-images.zip",
