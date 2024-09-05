@@ -43,7 +43,7 @@ jobs:
       # Step 6: Deploy with Docker Compose
       - name: Build and deploy with Docker Compose
         run: |
-           docker-compose -f exampleYmlFiles/docker-compose-staging.yml up -d  
+           docker-compose -f ./exampleYmlFiles/docker-compose-staging.yml up -d  
         # Deploys the application using Docker Compose
 
       # Step 7: Check service
