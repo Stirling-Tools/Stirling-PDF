@@ -288,40 +288,17 @@ class PdfContainer {
 
     const separators = this.pagesContainer.querySelectorAll(".split-before");
     if (separators.length !== 0) { // Send the created blob to the split-pages API endpoint if there are separators.
-      const formData = new FormData();
+
+      const fileNameBase = this.fileName ? this.fileName : "managed.pdf";
 
       const pagesArray = Array.from(this.pagesContainer.children);
-
-      let splitters = "";
+      const splitters = [];
       separators.forEach(page => {
         const pageIndex = pagesArray.indexOf(page);
         if (pageIndex !== 0) {
-          splitters += pageIndex + ",";
+          splitters.push(pageIndex);
         }
       });
-
-      formData.append("pageNumbers", splitters);
-      formData.append("fileInput", pdfBlob, this.fileName ? this.fileName : "managed.pdf");
-
-      const response = await fetch("/api/v1/general/split-pages", {
-        method: "POST",
-        body: formData,
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-
-          return response.blob();
-        })
-        .then((response) => {
-          this.downloadLink = document.createElement("a");
-          this.downloadLink.id = "download-link";
-          this.downloadLink.href = URL.createObjectURL(response);
-          this.downloadLink.setAttribute("download", this.fileName ? this.fileName + ".zip" : "managed.zip");
-          this.downloadLink.setAttribute("target", "_blank");
-          this.downloadLink.click();
-        });
 
     } else { // continue normally if there are no separators
 
