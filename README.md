@@ -176,7 +176,7 @@ Stirling PDF currently supports 38!
 | Catalan (Català) (ca_CA)                    | ![47%](https://geps.dev/progress/47)   |
 | Croatian (Hrvatski) (hr_HR)                 | ![92%](https://geps.dev/progress/92)   |
 | Czech (Česky) (cs_CZ)                       | ![88%](https://geps.dev/progress/88)   |
-| Danish (Dansk) (da_DK)                      | ![9%](https://geps.dev/progress/9)   |
+| Danish (Dansk) (da_DK)                      | ![97%](https://geps.dev/progress/97)   |
 | Dutch (Nederlands) (nl_NL)                  | ![93%](https://geps.dev/progress/93)   |
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
