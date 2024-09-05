@@ -1,38 +1,51 @@
-# Name of GitHub Actions workflow
 name: Deploy to Staging
 
-# Trigger the workflow when code is pushed to the staging branch
+# This workflow is triggered on push events to the main branch
 on:
   push:
     branches:
-      - main # Can change to branch used for staging
+      - main
 
-# Jobs that will run in the workflow
 jobs:
   deploy:
-    runs-on: ubuntu-latest  # GitHub runner operating system
-    
+    runs-on: ubuntu-latest  # Specifies the type of runner to use for this job
+
     steps:
       # Step 1: Checkout the code from GitHub repository
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3  # Checks out the code from the repository so it can be used in the workflow
 
       # Step 2: Set up Docker Buildx for building Docker images
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2  # Sets up Docker Buildx for building multi-platform Docker images
 
-      # Step 3: Log in to Docker Hub (uses secrets for security)
+      # Step 3: Install Docker Compose
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.17.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+        # Downloads and installs Docker Compose, ensuring it's available for use in the workflow
+
+      # Step 4: Check Docker and Docker Compose versions
+      - name: Check Docker and Docker Compose versions
+        run: |
+          docker --version  # Displays the installed Docker version
+          docker-compose --version  # Displays the installed Docker Compose version
+        # Useful for verifying that Docker and Docker Compose are correctly installed
+
+      # Step 5: Log in to Docker Hub
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        # Logs in to Docker Hub using credentials stored in GitHub Secrets for secure access
 
-      # Step 4: Build the Docker image using docker-compose and deploy it
+      # Step 6: Build and deploy with Docker Compose
       - name: Build and deploy with Docker Compose
         run: |
-          docker-compose -f docker-compose-staging.yml build
-          docker-compose -f docker-compose-staging.yml up -d
+          docker-compose -f docker-compose-staging.yml build  # Builds Docker images as specified in docker-compose-staging.yml
+          docker-compose -f docker-compose-staging.yml up -d  # Starts Docker containers as specified in docker-compose-staging.yml, running them in detached mode
+        # Deploys the application using Docker Compose
 
-      # Step 5: Verify deployment by checking if the service is running
+      # Step 7: Check service
       - name: Check service
-        run: curl http://localhost:8081  # Device's service URL
-
-        
+        run: curl http://localhost:8081
+        # Sends a request to the service to verify that it is running correctly
