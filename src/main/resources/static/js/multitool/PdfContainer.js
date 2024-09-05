@@ -218,7 +218,7 @@ class PdfContainer {
     const baseDocument = await PDFLib.PDFDocument.load(baseDocBytes);
     const pageNum = baseDocument.getPages().length;
 
-    splitters.sort(); // We'll sort the separator indexes just in case querySelectorAll does something funny.
+    splitters.sort((a, b) => a - b);; // We'll sort the separator indexes just in case querySelectorAll does something funny.
     splitters.push(pageNum); // We'll also add a faux separator at the end in order to get the pages after the last separator.
 
     const splitDocuments = [];
