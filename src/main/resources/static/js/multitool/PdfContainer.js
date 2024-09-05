@@ -19,6 +19,8 @@ class PdfContainer {
     this.setDownloadAttribute = this.setDownloadAttribute.bind(this);
     this.preventIllegalChars = this.preventIllegalChars.bind(this);
     this.addImageFile = this.addImageFile.bind(this);
+    this.nameAndArchiveFiles = this.nameAndArchiveFiles.bind(this);
+    this.splitPDF = this.splitPDF.bind(this);
 
     this.pdfAdapters = pdfAdapters;
 
@@ -243,8 +245,15 @@ class PdfContainer {
     return splitDocuments;
   }
 
-  async compressFiles() {
+  async nameAndArchiveFiles(pdfBytesArray, baseNameString) {
+    const zip = new JSZip();
 
+    for (let i = 0; i < pdfBytesArray.length; i++) {
+      const documentBlob = new Blob([pdfBytesArray[i]], { type: "application/pdf" });
+      zip.file(baseNameString + "-" + (i + 1) + ".pdf", documentBlob);
+    }
+
+    return zip;
   }
 
   async exportPdf() {
@@ -315,6 +324,7 @@ class PdfContainer {
 
     const separators = this.pagesContainer.querySelectorAll(".split-before");
     if (separators.length !== 0) { // Split the pdf if there are separators.
+      const baseName = this.fileName ? this.fileName : "managed";
 
       const pagesArray = Array.from(this.pagesContainer.children);
       const splitters = [];
@@ -326,16 +336,19 @@ class PdfContainer {
       });
 
       const splitDocuments = await this.splitPDF(pdfBytes, splitters);
+      const archivedDocuments = await this.nameAndArchiveFiles(splitDocuments, baseName);
 
-      splitDocuments.forEach(doc => {
-        this.downloadLink = document.createElement("a");
-        this.downloadLink.href = URL.createObjectURL(new Blob([doc], { type: "application/pdf" }));
-        this.downloadLink.setAttribute("download", this.fileName ? this.fileName : "managed.pdf");
-        this.downloadLink.setAttribute("target", "_blank");
-        this.downloadLink.click();
+      const self = this;
+      archivedDocuments.generateAsync({ type: "base64" }).then(function (base64) {
+        const url = "data:application/zip;base64," + base64;
+        self.downloadLink = document.createElement("a");
+        self.downloadLink.href = url;
+        self.downloadLink.setAttribute("download", baseName + ".zip");
+        self.downloadLink.setAttribute("target", "_blank");
+        self.downloadLink.click();
       });
 
-    } else { // continue normally if there are no separators
+    } else { // Continue normally if there are no separators
 
       const url = URL.createObjectURL(pdfBlob);
       const downloadOption = localStorage.getItem("downloadOption");
