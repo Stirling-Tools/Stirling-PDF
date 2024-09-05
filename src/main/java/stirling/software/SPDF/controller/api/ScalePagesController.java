@@ -47,10 +47,10 @@ public class ScalePagesController {
         String targetPDRectangle = request.getPageSize();
         float scaleFactor = request.getScaleFactor();
 
-        PDRectangle targetSize = getTargetSize(targetPDRectangle);
-
         PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
         PDDocument outputDocument = new PDDocument();
+
+        PDRectangle targetSize = getTargetSize(targetPDRectangle, sourceDocument);
 
         int totalPages = sourceDocument.getNumberOfPages();
         for (int i = 0; i < totalPages; i++) {
@@ -98,22 +98,32 @@ public class ScalePagesController {
                         + "_scaled.pdf");
     }
 
-    private PDRectangle getTargetSize(String targetPDRectangle) {
-        Map<String, PDRectangle> sizeMap = getSizeMap();
+    private PDRectangle getTargetSize(String targetPDRectangle, PDDocument sourceDocument) {
+        if (targetPDRectangle.equals("KEEP")) {
+            if (sourceDocument.getNumberOfPages() == 0) {
+                return null;
+            }
 
-        if (!sizeMap.containsKey(targetPDRectangle)) {
-            throw new IllegalArgumentException(
-                    "Invalid PDRectangle. It must be one of the following: A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10");
+            // use the first page to determine the target page size
+            PDPage sourcePage = sourceDocument.getPage(0);
+            PDRectangle sourceSize = sourcePage.getMediaBox();
+
+            return sourceSize;
         }
 
-        PDRectangle targetSize = sizeMap.get(targetPDRectangle);
+        Map<String, PDRectangle> sizeMap = getSizeMap();
 
-        return targetSize;
+        if (sizeMap.containsKey(targetPDRectangle)) {
+            return sizeMap.get(targetPDRectangle);
+        }
+
+        throw new IllegalArgumentException(
+                "Invalid PDRectangle. It must be one of the following: A0, A1, A2, A3, A4, A5, A6, LETTER, LEGAL, KEEP");
     }
 
     private Map<String, PDRectangle> getSizeMap() {
         Map<String, PDRectangle> sizeMap = new HashMap<>();
-        // Add A0 - A10
+        // Add A0 - A6
         sizeMap.put("A0", PDRectangle.A0);
         sizeMap.put("A1", PDRectangle.A1);
         sizeMap.put("A2", PDRectangle.A2);
