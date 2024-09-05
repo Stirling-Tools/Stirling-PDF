@@ -212,6 +212,14 @@ class PdfContainer {
     }
   }
 
+  async splitPDF() {
+
+  }
+
+  async compressFiles() {
+
+  }
+
   async exportPdf() {
     const pdfDoc = await PDFLib.PDFDocument.create();
     const pageContainers = this.pagesContainer.querySelectorAll(".page-container"); // Select all .page-container elements
