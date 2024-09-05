@@ -129,6 +129,15 @@ label {
 
 .page-container.cutBefore {
   border-left: 1px dashed var(--md-sys-color-on-surface);
+  padding-left: -1px;
+}
+
+.page-container.cutBefore:first-child {
+  border-left: none;
+}
+
+.page-container:first-child .pdf-actions_split-file-button {
+  display: none;
 }
 
 /* Pushes the last item to the left */
