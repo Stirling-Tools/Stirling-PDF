@@ -38,11 +38,10 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
         # Logs in to Docker Hub using credentials stored in GitHub Secrets for secure access
 
-      # Step 6: Build and deploy with Docker Compose
+      # Step 6: Deploy with Docker Compose
       - name: Build and deploy with Docker Compose
         run: |
-          docker-compose -f docker-compose-staging.yml build  # Builds Docker images as specified in docker-compose-staging.yml
-          docker-compose -f docker-compose-staging.yml up -d  # Starts Docker containers as specified in docker-compose-staging.yml, running them in detached mode
+          docker-compose -f docker-compose-staging.yml up -d  # Starts Docker containers as specified in docker-compose-staging.yml
         # Deploys the application using Docker Compose
 
       # Step 7: Check service
