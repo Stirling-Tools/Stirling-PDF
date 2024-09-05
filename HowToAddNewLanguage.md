@@ -1,7 +1,6 @@
 <p align="center"><img src="https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png" width="80" ><br><h1 align="center">Stirling-PDF</h1>
 </p>
 
-
 # How to add new languages to Stirling-PDF
 
 Fork Stirling-PDF and make a new branch out of Main
@@ -14,13 +13,14 @@ https://github.com/Stirling-Tools/Stirling-PDF/tree/main/src/main/resources/stat
 Any SVG flags are fine, i got most of mine from [here](https://flagicons.lipis.dev/)
 If your language isn't represented by a flag just find whichever closely matches it, such as for Arabic i chose Saudi Arabia
 
-
 For example to add Polish you would add
+
 ```html
 <a class="dropdown-item lang_dropdown-item" href="" data-language-code="pl_PL">
     <img src="images/flags/pl.svg" alt="icon" width="20" height="15"> Polski
 </a>
 ```
+
 The data-language-code is the code used to reference the file in the next step.
 
 Start by copying the existing english property file
@@ -28,7 +28,6 @@ Start by copying the existing english property file
 [https://github.com/Stirling-Tools/Stirling-PDF/blob/main/src/main/resources/messages_en_GB.properties](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/src/main/resources/messages_en_GB.properties)
 
 Copy and rename it to messages_{your data-language-code here}.properties, in the polish example you would set the name to messages_pl_PL.properties
-
 
 Then simply translate all property entries within that file and make a PR into main for others to use!
 
@@ -47,5 +46,11 @@ ignore = [
     "error"                # Add new entries here
 ]
 ```
+
+## Add New Translation Tags
+
+- **Important**: If you add any new translation tags, they must first be added to the `messages_en_GB.properties` file. This ensures consistency across all language files.
+- New translation tags **must be added** to the `messages_en_GB.properties` file to maintain a reference for other languages.
+- After adding the new tags to `messages_en_GB.properties`, add and translate them in the respective language file (e.g., `messages_pl_PL.properties`).
 
 Make sure to place the entry under the correct language section. This helps maintain the accuracy of translation progress statistics and ensures that the translation tool or scripts do not misinterpret the completion rate.
