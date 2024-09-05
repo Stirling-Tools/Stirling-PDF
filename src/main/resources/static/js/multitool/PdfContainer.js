@@ -21,6 +21,7 @@ class PdfContainer {
     this.addImageFile = this.addImageFile.bind(this);
     this.nameAndArchiveFiles = this.nameAndArchiveFiles.bind(this);
     this.splitPDF = this.splitPDF.bind(this);
+    this.splitAll = this.splitAll.bind(this);
 
     this.pdfAdapters = pdfAdapters;
 
@@ -36,6 +37,7 @@ class PdfContainer {
     window.addFiles = this.addFiles;
     window.exportPdf = this.exportPdf;
     window.rotateAll = this.rotateAll;
+    window.splitAll = this.splitAll;
 
     const filenameInput = document.getElementById("filename-input");
     const downloadBtn = document.getElementById("export-button");
@@ -211,6 +213,19 @@ class PdfContainer {
       const img = child.querySelector("img");
       if (!img) continue;
       this.rotateElement(img, deg);
+    }
+  }
+
+  splitAll() {
+    const allPages = this.pagesContainer.querySelectorAll(".page-container");
+    if (this.pagesContainer.querySelectorAll(".split-before").length > 0) {
+      allPages.forEach(page => {
+        page.classList.remove("split-before");
+      });
+    } else {
+      allPages.forEach(page => {
+        page.classList.add("split-before");
+      });
     }
   }
 
