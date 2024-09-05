@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
+import stirling.software.SPDF.config.MemoryConfig;
 import stirling.software.SPDF.config.YamlPropertySourceFactory;
 import stirling.software.SPDF.model.provider.GithubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
@@ -29,6 +30,7 @@ public class ApplicationProperties {
     private Metrics metrics;
     private AutomaticallyGenerated automaticallyGenerated;
     private AutoPipeline autoPipeline;
+
     private static final Logger logger = LoggerFactory.getLogger(ApplicationProperties.class);
 
     public AutoPipeline getAutoPipeline() {
@@ -620,6 +622,28 @@ public class ApplicationProperties {
         public String toString() {
             return "AutomaticallyGenerated [key="
                     + (key != null && !key.isEmpty() ? "MASKED" : "NULL")
+                    + "]";
+        }
+    }
+
+    public static class memorySettings {
+        private static MemoryConfig memoryConfig;
+
+        public static MemoryConfig getMemorySettings() {
+            return memoryConfig != null ? memoryConfig : new MemoryConfig();
+        }
+
+        public void setMemorySettings(MemoryConfig memoryConfig) {
+            memorySettings.memoryConfig = memoryConfig;
+        }
+
+        @Override
+        public String toString() {
+            return "ApplicationProperties [memorySettings="
+                    + "getRAM = "
+                    + memoryConfig.getRamThresholdGB()
+                    + " getSpace = "
+                    + memoryConfig.getMinFreeSpacePercentage()
                     + "]";
         }
     }

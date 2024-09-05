@@ -1,27 +1,5 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import stirling.software.SPDF.config.MemoryConfig;
-import stirling.software.SPDF.model.api.PDFWithImageFormatRequest;
-import stirling.software.SPDF.utils.WebResponseUtils;
-import stirling.software.SPDF.utils.memoryUtils;
-
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
@@ -40,6 +18,28 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.imageio.ImageIO;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import stirling.software.SPDF.model.api.PDFWithImageFormatRequest;
+import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.SPDF.utils.memoryUtils;
+
 @RestController
 @RequestMapping("/api/v1/misc")
 public class ExtractImagesController {
@@ -47,7 +47,11 @@ public class ExtractImagesController {
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
     private final Object lock = new Object();
 
-    @Autowired private MemoryConfig memoryconfig; // Inject MemoryConfig
+    private final memoryUtils memoryutils; // Inject MemoryUtils
+
+    public ExtractImagesController(memoryUtils memoryutils) {
+        this.memoryutils = memoryutils;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
     public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request)
@@ -59,7 +63,7 @@ public class ExtractImagesController {
                 System.currentTimeMillis() + " file=" + file.getName() + ", format=" + format);
 
         // Determine if we should use file-based storage based on available RAM
-        boolean useFile = memoryUtils.shouldUseFileBasedStorage(memoryconfig);
+        boolean useFile = memoryUtils.shouldUseFileBasedStorage();
 
         PDDocument document;
         // Create a temporary directory for processing

@@ -1,13 +1,5 @@
 package stirling.software.SPDF.config;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Properties;
-import java.util.function.Predicate;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +12,14 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.spring6.SpringTemplateEngine;
-
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-
 import stirling.software.SPDF.model.ApplicationProperties;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Properties;
+import java.util.function.Predicate;
 
 @Configuration
 @Lazy
@@ -139,39 +135,5 @@ public class AppConfig {
         };
     }
 
-    //    @Bean
-    //    public MemoryConfig mConfig() {
-    //        YAMLMapper yamlMapper = new YAMLMapper();
-    //        MemoryConfig memoryconfig = new MemoryConfig();
-    //        try (var input = Files.newInputStream(Paths.get("settings.yml"))) {
-    //            SimpleYamlImplementation yaml = new SimpleYamlImplementation();
-    //            // Load YAML content into MemoryConfig
-    //            memoryconfig = yamlMapper.readValue(input, MemoryConfig.class);
-    //        } catch (IOException e) {
-    //            // Handle the error and potentially set default values
-    //            logger.error("Error loading memory settings from YAML file", e);
-    //            // Optionally initialize default values here if necessary
-    //        }
-    //        return memoryconfig;
-    //    }
-
-    @Bean(name = "memoryConfig")
-    public MemoryConfig memorySettings() {
-        YAMLMapper yamlMapper = new YAMLMapper();
-        MemoryConfig memoryConfig = new MemoryConfig();
-        Resource resource = new ClassPathResource("settings.yml"); // Moved outside of try block
-
-        try (InputStream input = resource.getInputStream()) {
-            memoryConfig = yamlMapper.readValue(input, MemoryConfig.class);
-        } catch (IOException e) {
-            logger.error(
-                    "Error loading memory settings from YAML file at: " + resource.getDescription(),
-                    e);
-            // Initialize with default values if necessary
-            memoryConfig.setMinFreeSpacePercentage(20);
-            memoryConfig.setRamThresholdGB(4);
-        }
-
-        return memoryConfig;
-    }
+    
 }
