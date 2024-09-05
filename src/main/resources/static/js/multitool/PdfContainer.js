@@ -287,7 +287,9 @@ class PdfContainer {
       let splitters = "";
       separators.forEach(page => {
         const pageIndex = pagesArray.indexOf(page);
-        splitters += pageIndex + ",";
+        if (pageIndex !== 0) {
+          splitters += pageIndex + ",";
+        }
       });
 
       formData.append("pageNumbers", splitters);
