@@ -155,21 +155,23 @@ public class AppConfig {
     //        return memoryconfig;
     //    }
 
-    @Bean(name = "memory")
+    @Bean(name = "memoryConfig")
     public MemoryConfig memorySettings() {
         YAMLMapper yamlMapper = new YAMLMapper();
         MemoryConfig memoryConfig = new MemoryConfig();
-        try {
-            Resource resource = new ClassPathResource("settings.yml");
-            try (InputStream input = resource.getInputStream()) {
-                memoryConfig = yamlMapper.readValue(input, MemoryConfig.class);
-            }
+        Resource resource = new ClassPathResource("settings.yml"); // Moved outside of try block
+
+        try (InputStream input = resource.getInputStream()) {
+            memoryConfig = yamlMapper.readValue(input, MemoryConfig.class);
         } catch (IOException e) {
-            logger.error("Error loading memory settings from YAML file", e);
+            logger.error(
+                    "Error loading memory settings from YAML file at: " + resource.getDescription(),
+                    e);
             // Initialize with default values if necessary
             memoryConfig.setMinFreeSpacePercentage(20);
             memoryConfig.setRamThresholdGB(4);
         }
+
         return memoryConfig;
     }
 }

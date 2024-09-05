@@ -9,7 +9,6 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -48,9 +47,7 @@ public class ExtractImagesController {
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
     private final Object lock = new Object();
 
-    @Qualifier("memory")
-    @Autowired
-    private MemoryConfig memoryconfig; // Inject MemoryConfig
+    @Autowired private MemoryConfig memoryconfig; // Inject MemoryConfig
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
     public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request)
