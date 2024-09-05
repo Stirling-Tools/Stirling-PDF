@@ -32,7 +32,6 @@ public class AppConfig {
     private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
 
     @Autowired ApplicationProperties applicationProperties;
-    private long ramThresholdGB;
 
     @Bean
     @ConditionalOnProperty(
@@ -141,13 +140,13 @@ public class AppConfig {
     }
 
     @Bean
-    public memoryConfig mConfig() {
+    public MemoryConfig mConfig() {
         YAMLMapper yamlMapper = new YAMLMapper();
-        memoryConfig memoryconfig = new memoryConfig();
-        try (var input = Files.newInputStream(Paths.get("./configs/custom_settings.yml"))) {
+        MemoryConfig memoryconfig = new MemoryConfig();
+        try (var input = Files.newInputStream(Paths.get("settings.yml"))) {
             SimpleYamlImplementation yaml = new SimpleYamlImplementation();
             // Load YAML content into MemoryConfig
-            memoryconfig = yamlMapper.readValue(input, memoryConfig.class);
+            memoryconfig = yamlMapper.readValue(input, MemoryConfig.class);
         } catch (IOException e) {
             // Handle the error and potentially set default values
             logger.error("Error loading memory settings from YAML file", e);
@@ -155,4 +154,33 @@ public class AppConfig {
         }
         return memoryconfig;
     }
+
+    //    @Bean
+    //    public memoryConfig memorySettings() {
+    //        YAMLMapper yamlMapper = new YAMLMapper();
+    //        memoryConfig memorySettings = new memoryConfig();
+    //        ClassLoader classLoader = getClass().getClassLoader();
+    //        URL resource = classLoader.getResource("settings.yml");
+    //
+    //        if (resource == null) {
+    //            logger.error("YAML file 'settings.yml' not found in resources.");
+    //            throw new RuntimeException("Configuration file not found");
+    //        }
+    //
+    //        if (resource == null) {
+    //            logger.error("YAML file 'settings.yml' not found in resources.");
+    //            throw new RuntimeException("Configuration file not found");
+    //        }
+    //
+    //        try (InputStream input = resource.openStream()) {
+    //            memorySettings = yamlMapper.readValue(input, memoryConfig.class);
+    //        } catch (IOException e) {
+    //            logger.error("Error loading memory settings from YAML file", e);
+    //            // Initialize with default values if necessary
+    //            memorySettings.setMinFreeSpacePercentage(20);
+    //            memorySettings.setRamThresholdGB(4);
+    //        }
+    //
+    //        return memorySettings;
+    //    }
 }

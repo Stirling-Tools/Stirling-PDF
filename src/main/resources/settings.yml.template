@@ -72,3 +72,8 @@ metrics:
 # Automatically Generated Settings (Do Not Edit Directly)
 AutomaticallyGenerated:
   key: example
+# Percentage of RAM to determine when to switch to file-based storage
+# RAM size threshold for always using file-based storage
+memory:
+  minFreeSpacePercentage: 20
+  ramThresholdGB: 4

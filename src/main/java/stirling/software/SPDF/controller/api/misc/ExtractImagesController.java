@@ -38,7 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 
-import stirling.software.SPDF.config.memoryConfig;
+import stirling.software.SPDF.config.MemoryConfig;
 import stirling.software.SPDF.model.api.PDFWithImageFormatRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 import stirling.software.SPDF.utils.memoryUtils;
@@ -49,7 +49,7 @@ public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
 
-    @Autowired private memoryConfig memoryconfig; // Inject MemoryConfig
+    @Autowired private MemoryConfig memoryconfig; // Inject MemoryConfig
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
     public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFWithImageFormatRequest request)
