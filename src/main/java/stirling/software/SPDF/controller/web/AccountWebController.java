@@ -1,10 +1,10 @@
 package stirling.software.SPDF.controller.web;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -13,6 +13,14 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.*;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
@@ -21,11 +29,6 @@ import stirling.software.SPDF.model.provider.GithubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
 import stirling.software.SPDF.model.provider.KeycloakProvider;
 import stirling.software.SPDF.repository.UserRepository;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Controller
 @Slf4j

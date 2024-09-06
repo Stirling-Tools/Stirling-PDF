@@ -5,8 +5,6 @@
 [![Discord](https://img.shields.io/discord/1068636748814483718?label=Discord)](https://discord.gg/Cn8pWhQRxZ)
 [![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest)](https://github.com/Stirling-Tools/Stirling-PDF/)
 [![GitHub Repo stars](https://img.shields.io/github/stars/stirling-tools/stirling-pdf?style=social)](https://github.com/Stirling-Tools/stirling-pdf)
-[![Paypal Donate](https://img.shields.io/badge/Paypal%20Donate-yellow?style=flat&logo=paypal)](https://www.paypal.com/donate/?hosted_button_id=MN7JPG5G6G3JL)
-[![Github Sponsor](https://img.shields.io/badge/Github%20Sponsor-yellow?style=flat&logo=github)](https://github.com/sponsors/Frooodle)
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Stirling-Tools/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
 [<img src="https://www.ssdnodes.com/wp-content/uploads/2023/11/footer-logo.svg" alt="Name" height="40">](https://www.ssdnodes.com/manage/aff.php?aff=2216&register=true)
@@ -24,6 +22,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Dark mode support.
 - Custom download options
 - Parallel file processing and downloads
+- Custom 'Pipelines' to run multiple features in a queue
 - API for integration with external scripts
 - Optional Login and Authentication support (see [here](https://github.com/Stirling-Tools/Stirling-PDF/tree/main#login-authentication) for documentation)
 - Database Backup and Import (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/DATABASE.md) for documentation)
@@ -46,6 +45,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Auto Split PDF (With physically scanned page dividers).
 - Extract page(s).
 - Convert PDF to a single page.
+- Overlay PDFs ontop of each other
 
 ### **Conversion Operations**
 
@@ -82,6 +82,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Edit metadata.
 - Flatten PDFs.
 - Get all information on a PDF to view or export as JSON.
+- Show/Detect embedded Javascript
 
 For a overview of the tasks and the technology each uses please view [Endpoint-groups.md](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md)
 
@@ -169,42 +170,42 @@ Stirling PDF currently supports 38!
 
 | Language                                    | Progress                               |
 | ------------------------------------------- | -------------------------------------- |
-| Arabic (العربية) (ar_AR)                    | ![44%](https://geps.dev/progress/44)   |
+| Arabic (العربية) (ar_AR)                    | ![100%](https://geps.dev/progress/100)   |
 | Basque (Euskara) (eu_ES)                    | ![60%](https://geps.dev/progress/60)   |
 | Bulgarian (Български) (bg_BG)               | ![92%](https://geps.dev/progress/92)   |
 | Catalan (Català) (ca_CA)                    | ![47%](https://geps.dev/progress/47)   |
 | Croatian (Hrvatski) (hr_HR)                 | ![92%](https://geps.dev/progress/92)   |
 | Czech (Česky) (cs_CZ)                       | ![88%](https://geps.dev/progress/88)   |
-| Danish (Dansk) (da_DK)                      | ![9%](https://geps.dev/progress/9)   |
-| Dutch (Nederlands) (nl_NL)                  | ![94%](https://geps.dev/progress/94)   |
+| Danish (Dansk) (da_DK)                      | ![97%](https://geps.dev/progress/97)   |
+| Dutch (Nederlands) (nl_NL)                  | ![93%](https://geps.dev/progress/93)   |
 | English (English) (en_GB)                   | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                        | ![100%](https://geps.dev/progress/100) |
 | French (Français) (fr_FR)                   | ![91%](https://geps.dev/progress/91)   |
-| German (Deutsch) (de_DE)                    | ![98%](https://geps.dev/progress/98) |
+| German (Deutsch) (de_DE)                    | ![99%](https://geps.dev/progress/99) |
 | Greek (Ελληνικά) (el_GR)                    | ![80%](https://geps.dev/progress/80)   |
-| Hindi (हिंदी) (hi_IN)                          | ![75%](https://geps.dev/progress/75)   |
-| Hungarian (Magyar) (hu_HU)                  | ![74%](https://geps.dev/progress/74)   |
+| Hindi (हिंदी) (hi_IN)                          | ![76%](https://geps.dev/progress/76)   |
+| Hungarian (Magyar) (hu_HU)                  | ![73%](https://geps.dev/progress/73)   |
 | Indonesia (Bahasa Indonesia) (id_ID)        | ![74%](https://geps.dev/progress/74)   |
 | Irish (Gaeilge) (ga_IE)                     | ![96%](https://geps.dev/progress/96)   |
 | Italian (Italiano) (it_IT)                  | ![99%](https://geps.dev/progress/99)   |
 | Japanese (日本語) (ja_JP)                   | ![90%](https://geps.dev/progress/90)   |
 | Korean (한국어) (ko_KR)                     | ![82%](https://geps.dev/progress/82)   |
-| Norwegian (Norsk) (no_NB)                   | ![96%](https://geps.dev/progress/96)   |
+| Norwegian (Norsk) (no_NB)                   | ![95%](https://geps.dev/progress/95)   |
 | Polish (Polski) (pl_PL)                     | ![90%](https://geps.dev/progress/90)   |
 | Portuguese (Português) (pt_PT)              | ![76%](https://geps.dev/progress/76)   |
 | Portuguese Brazilian (Português) (pt_BR)    | ![99%](https://geps.dev/progress/99)   |
-| Romanian (Română) (ro_RO)                   | ![38%](https://geps.dev/progress/38)   |
+| Romanian (Română) (ro_RO)                   | ![98%](https://geps.dev/progress/98)   |
 | Russian (Русский) (ru_RU)                   | ![82%](https://geps.dev/progress/82)   |
 | Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![76%](https://geps.dev/progress/76)   |
 | Simplified Chinese (简体中文) (zh_CN)       | ![96%](https://geps.dev/progress/96)   |
 | Slovakian (Slovensky) (sk_SK)               | ![90%](https://geps.dev/progress/90)   |
-| Spanish (Español) (es_ES)                   | ![95%](https://geps.dev/progress/95)   |
-| Swedish (Svenska) (sv_SE)                   | ![38%](https://geps.dev/progress/38)   |
+| Spanish (Español) (es_ES)                   | ![99%](https://geps.dev/progress/99)   |
+| Swedish (Svenska) (sv_SE)                   | ![98%](https://geps.dev/progress/98)   |
 | Thai (ไทย) (th_TH)                          | ![97%](https://geps.dev/progress/97) |
 | Traditional Chinese (繁體中文) (zh_TW)      | ![96%](https://geps.dev/progress/96)   |
-| Turkish (Türkçe) (tr_TR)                    | ![97%](https://geps.dev/progress/97)   |
+| Turkish (Türkçe) (tr_TR)                    | ![96%](https://geps.dev/progress/96)   |
 | Ukrainian (Українська) (uk_UA)              | ![87%](https://geps.dev/progress/87)   |
-| Vietnamese (Tiếng Việt) (vi_VN)             | ![97%](https://geps.dev/progress/97)   |
+| Vietnamese (Tiếng Việt) (vi_VN)             | ![96%](https://geps.dev/progress/96)   |
 
 ## Contributing (creating issues, translations, fixing bugs, etc.)
 
