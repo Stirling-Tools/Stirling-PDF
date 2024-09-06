@@ -3,8 +3,9 @@ body,
 select,
 textarea {
   background-color: var(--md-sys-color-surface);
-  color: var(--md-sys-color-on-surface);
+  color: lightblue; /* Modified */
 }
+
 
 .transition-theme {
   transition: background 0.5s ease, color 0.5s ease, border 0.5s ease;

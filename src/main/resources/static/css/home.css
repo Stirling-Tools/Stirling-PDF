@@ -80,6 +80,7 @@
 
 #tool-text {
   margin: 0.0rem 0 0 1.25rem;
+  color: aquamarine; /* Modified */
 }
 
 .card-title {
