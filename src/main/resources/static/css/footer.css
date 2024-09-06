@@ -18,7 +18,17 @@
   text-align: center; /* Centers the text inside the div */
   width: 100%; /* Full width to center the text properly */
 }
+.stirling-link {
+  text-decoration: none; /* Remove the underline */
+  color: inherit; /* Keep the text color the same as the surrounding text */
+  cursor: pointer; /* Change the cursor to indicate it's clickable */
+  font-weight: bold; /* Make it bold to subtly hint that it's clickable */
+  transition: color 0.3s ease; /* Add a smooth transition effect for color change on hover */
+}
 
+.stirling-link:hover {
+  color: #007BFF; /* Change the color on hover to a noticeable link color */
+}
 .footer-icon {
   font-size: 2rem;
 }
