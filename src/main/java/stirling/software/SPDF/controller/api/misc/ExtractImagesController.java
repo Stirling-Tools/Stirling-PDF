@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
+import stirling.software.SPDF.utils.ImageProcessingUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 import stirling.software.SPDF.utils.memoryUtils;
 
@@ -48,7 +49,6 @@ public class ExtractImagesController {
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
     private final memoryUtils memoryutils; // Inject MemoryUtils
     private static final Object lock = new Object();
-    private static final Object ziplock = new Object();
 
     @Autowired
     public ExtractImagesController(memoryUtils memoryutils) {
@@ -222,33 +222,38 @@ public class ExtractImagesController {
         for (COSName name : page.getResources().getXObjectNames()) {
             if (page.getResources().isImageXObject(name)) {
                 PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
-                RenderedImage renderedImage = image.getImage();
-                ByteArrayOutputStream imageStream = new ByteArrayOutputStream();
-                ImageIO.write(renderedImage, format, imageStream);
-                byte[] imageBytes = imageStream.toByteArray();
-                byte[] imageHash = md.digest(imageBytes);
-                synchronized (lock) {
-                    try {
-                        if (!allowDuplicates || !processedImages.containsKey(imageHash)) {
-                            processedImages.put(imageHash, true);
-                            String entryName =
-                                    String.format(
-                                            "%s_page%d_image%d.%s",
-                                            filename, pageNum, count++, format);
-                            synchronized (ziplock) {
-                                ZipEntry entry = new ZipEntry(entryName);
-                                zos.putNextEntry(entry);
-                                zos.write(imageBytes);
-                                zos.closeEntry();
-                                logger.info(
-                                        "Added image {} to zip for page {}", entryName, pageNum);
+                try {
+                    if (!allowDuplicates) {
+                        byte[] data = ImageProcessingUtils.getImageData(image.getImage());
+                        byte[] imageHash = md.digest(data);
+                        synchronized (processedImages) {
+                            if (processedImages.contains(imageHash)) {
+                                continue; // Skip already processed images
                             }
-                        } else {
-                            logger.info("Duplicate image detected and skipped.");
+                            processedImages.put(imageHash, Boolean.TRUE);
                         }
-                    } catch (IOException e) {
-                        logger.error("Error processing image from page " + pageNum, e);
                     }
+
+                    RenderedImage renderedImage = image.getImage(); // Get the image from the PDF
+                    BufferedImage bufferedImage =
+                            convertToRGB(
+                                    renderedImage,
+                                    format); // Convert the image to the desired format
+
+                    // Create a unique image name based on the page number and image count
+                    String imageName = filename + "_page_" + pageNum + "_" + count++ + "." + format;
+
+                    synchronized (lock) { // Synchronize access to the ZIP output stream
+                        zos.putNextEntry(new ZipEntry(imageName));
+
+                        try (ByteArrayOutputStream imageBaos = new ByteArrayOutputStream()) {
+                            ImageIO.write(bufferedImage, format, imageBaos);
+                            zos.write(imageBaos.toByteArray());
+                        }
+                        zos.closeEntry(); // Close the current ZIP entry
+                    }
+                } catch (IOException e) {
+                    logger.error("Error processing image from page " + pageNum, e);
                 }
             }
         }
