@@ -17,8 +17,9 @@ version.properties
 pipeline/watchedFolders/
 pipeline/finishedFolders/
 #### Stirling-PDF Files ###
-customFiles/
-configs/
+# We want to track our custom configs and customFiles
+# customFiles/
+# configs/
 watchedFolders/
 
 # Gradle
