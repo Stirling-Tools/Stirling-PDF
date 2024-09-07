@@ -1,22 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.*;
-import java.util.zip.Deflater;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
-import javax.imageio.ImageIO;
-
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
@@ -33,13 +18,26 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import io.github.pixee.security.Filenames;
-import io.swagger.v3.oas.annotations.Operation;
-
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 import stirling.software.SPDF.utils.memoryUtils;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.*;
+import java.util.zip.Deflater;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -214,17 +212,20 @@ public class ExtractImagesController {
                 }
 
                 RenderedImage renderedImage = image.getImage();
-                ByteArrayOutputStream imageStream = new ByteArrayOutputStream();
-                ImageIO.write(renderedImage, format, imageStream);
-                byte[] imageBytes = imageStream.toByteArray();
+                BufferedImage bufferedImage = convertToRGB(renderedImage, format);
+                String imageName = filename + "_" + imageIndex + " (Page " + pageNum + ")." + format;
 
-                // Creating the image name and writing to ZipOutputStream
-                String imageName =
-                        filename + "_" + imageIndex + " (Page " + pageNum + ")." + format;
                 synchronized (zos) { // Synchronize writing to the ZipOutputStream
                     ZipEntry zipEntry = new ZipEntry(imageName);
                     zos.putNextEntry(zipEntry);
-                    zos.write(imageBytes);
+
+                    Graphics2D g = bufferedImage.createGraphics();
+                    g.drawImage((Image) renderedImage, 0, 0, null);
+                    g.dispose();
+
+                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
+                    ImageIO.write(bufferedImage, format, imageBaos);
+                    zos.write(imageBaos.toByteArray());
                     zos.closeEntry();
                 }
 
