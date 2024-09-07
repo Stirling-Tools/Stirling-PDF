@@ -47,7 +47,6 @@ public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
     private final memoryUtils memoryutils; // Inject MemoryUtils
-    private static final Object lock = new Object();
 
     @Autowired
     public ExtractImagesController(memoryUtils memoryutils) {
@@ -64,6 +63,7 @@ public class ExtractImagesController {
         MultipartFile file = request.getFileInput();
         String format = request.getFormat();
         boolean allowDuplicates = request.isAllowDuplicates();
+        int imageIndex = 1;
         logger.info(
                 "Starting image extraction for file: {} with format: {}",
                 file.getOriginalFilename(),
@@ -125,10 +125,11 @@ public class ExtractImagesController {
                                                             page,
                                                             format,
                                                             filename,
-                                                            pageNum,
+                                                            imageIndex,
                                                             processedImages,
                                                             zos,
-                                                            allowDuplicates);
+                                                            allowDuplicates,
+                                                            document);
                                                 } catch (IOException e) {
                                                     logger.error(
                                                             "Error extracting images from page", e);
@@ -162,10 +163,11 @@ public class ExtractImagesController {
                                 page,
                                 format,
                                 filename,
-                                pgNum + 1,
+                                imageIndex,
                                 processedImages,
                                 zos,
-                                allowDuplicates);
+                                allowDuplicates,
+                                document);
                     }
                 }
 
@@ -199,10 +201,11 @@ public class ExtractImagesController {
             PDPage page,
             String format,
             String filename,
-            int pageNum,
+            int imageIndex,
             ConcurrentHashMap<byte[], Boolean> processedImages,
             ZipOutputStream zos,
-            boolean allowDuplicates)
+            boolean allowDuplicates,
+            PDDocument document)
             throws IOException {
 
         MessageDigest md;
@@ -217,35 +220,41 @@ public class ExtractImagesController {
             return;
         }
 
-        int count = 1;
+        int pageNum = document.getPages().indexOf(page) + 1;
+
         for (COSName name : page.getResources().getXObjectNames()) {
             if (page.getResources().isImageXObject(name)) {
                 PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
                 RenderedImage renderedImage = image.getImage();
+
                 ByteArrayOutputStream imageStream = new ByteArrayOutputStream();
                 ImageIO.write(renderedImage, format, imageStream);
                 byte[] imageBytes = imageStream.toByteArray();
                 byte[] imageHash = md.digest(imageBytes);
 
-                try {
-                    if (!allowDuplicates || !processedImages.containsKey(imageHash)) {
+                synchronized (processedImages) {
+                    if (allowDuplicates || !processedImages.containsKey(imageHash)) {
                         processedImages.put(imageHash, true);
+
                         String entryName =
                                 String.format(
-                                        "%s_page%d_image%d.%s", filename, pageNum, count++, format);
-                        ZipEntry entry = new ZipEntry(entryName);
-                        synchronized (lock) {
-                            zos.putNextEntry(entry);
+                                        "%s_page%d_image%d.%s",
+                                        filename, pageNum, imageIndex, format);
+
+                        synchronized (zos) { // Synchronize writing to the ZipOutputStream
+                            ZipEntry zipEntry = new ZipEntry(entryName);
+                            zos.putNextEntry(zipEntry);
                             zos.write(imageBytes);
                             zos.closeEntry();
                         }
+
                         logger.info("Added image {} to zip for page {}", entryName, pageNum);
                     } else {
                         logger.info("Duplicate image detected and skipped.");
                     }
-                } catch (IOException e) {
-                    logger.error("Error processing image from page " + pageNum, e);
                 }
+
+                imageIndex++;
             }
         }
     }
