@@ -20,7 +20,7 @@ label {
   display: flex;
   gap: 10px;
   align-items: start;
-  background-color: var(--md-sys-color-surface-5); 
+  background-color: var(--md-sys-color-surface-5);
   border: none;
   backdrop-filter: blur(2px);
   top: 10px;
@@ -127,6 +127,19 @@ label {
   margin-bottom: 16px;
 }
 
+.page-container.split-before {
+  border-left: 1px dashed var(--md-sys-color-on-surface);
+  padding-left: -1px;
+}
+
+.page-container.split-before:first-child {
+  border-left: none;
+}
+
+.page-container:first-child .pdf-actions_split-file-button {
+  display: none;
+}
+
 /* Pushes the last item to the left */
 .page-container:last-child {
   margin-right: auto;
@@ -171,8 +184,9 @@ label {
 .page-container:last-child:lang(nqo),
 /* N'Ko */
 .page-container:last-child:lang(bqi)
+
 /* Bakhtiari */
-{
+  {
   margin-left: auto !important;
   margin-right: 0 !important;
 }
