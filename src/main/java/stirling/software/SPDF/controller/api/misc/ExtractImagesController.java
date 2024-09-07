@@ -212,8 +212,9 @@ public class ExtractImagesController {
                 }
 
                 RenderedImage renderedImage = image.getImage();
-                BufferedImage bufferedImage = convertToRGB(renderedImage, format);
-                String imageName = filename + "_" + imageIndex + " (Page " + pageNum + ")." + format;
+                BufferedImage bufferedImage = createBufferedImage(renderedImage, format);
+                String imageName =
+                        filename + "_" + imageIndex + " (Page " + pageNum + ")." + format;
 
                 synchronized (zos) { // Synchronize writing to the ZipOutputStream
                     ZipEntry zipEntry = new ZipEntry(imageName);
@@ -241,7 +242,7 @@ public class ExtractImagesController {
      * @param format The desired output image format.
      * @return A BufferedImage in RGB color model.
      */
-    private BufferedImage convertToRGB(RenderedImage renderedImage, String format) {
+    private BufferedImage createBufferedImage(RenderedImage renderedImage, String format) {
         int width = renderedImage.getWidth();
         int height = renderedImage.getHeight();
         BufferedImage rgbImage = null;
