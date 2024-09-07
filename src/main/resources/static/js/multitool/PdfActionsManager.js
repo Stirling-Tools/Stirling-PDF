@@ -78,7 +78,7 @@ class PdfActionsManager {
     imgContainer.classList.toggle("split-before");
   }
 
-  setActions({ movePageTo, addPdfs, rotateElement }) {
+  setActions({ movePageTo, addFiles, rotateElement }) {
     this.movePageTo = movePageTo;
     this.addFiles = addFiles;
     this.rotateElement = rotateElement;

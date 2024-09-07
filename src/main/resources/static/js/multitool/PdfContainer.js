@@ -53,6 +53,13 @@ class PdfContainer {
     const childArray = Array.from(this.pagesContainer.childNodes);
     const startIndex = childArray.indexOf(startElement);
     const endIndex = childArray.indexOf(endElement);
+
+    // Check & remove page number elements here too if they exist because Firefox doesn't fire the relevant event on page move.
+    const pageNumberElement = startElement.querySelector(".page-number");
+    if (pageNumberElement) {
+      startElement.removeChild(pageNumberElement);
+    }
+
     this.pagesContainer.removeChild(startElement);
     if (!endElement) {
       this.pagesContainer.append(startElement);
