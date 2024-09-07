@@ -117,3 +117,12 @@ html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-butto
   aspect-ratio: 1;
   border-radius: 100px;
 }
+
+.pdf-actions_split-file-button {
+  position: absolute;
+  top: 25%;
+  right: 50%;
+  translate: 0 -50%;
+  aspect-ratio: 1;
+  border-radius: 100px;
+}
