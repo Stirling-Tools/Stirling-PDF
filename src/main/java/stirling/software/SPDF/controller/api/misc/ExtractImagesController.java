@@ -1,7 +1,22 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import io.github.pixee.security.Filenames;
-import io.swagger.v3.oas.annotations.Operation;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.*;
+import java.util.zip.Deflater;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import javax.imageio.ImageIO;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
@@ -18,28 +33,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 import stirling.software.SPDF.utils.memoryUtils;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.*;
-import java.util.zip.Deflater;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -62,7 +62,6 @@ public class ExtractImagesController {
             throws IOException, InterruptedException, ExecutionException {
         MultipartFile file = request.getFileInput();
         String format = request.getFormat();
-        boolean allowDuplicates = request.isAllowDuplicates();
         int imageIndex = 1;
         logger.info(
                 "Starting image extraction for file: {} with format: {}",
@@ -99,7 +98,7 @@ public class ExtractImagesController {
                 String filename =
                         Filenames.toSimpleFileName(file.getOriginalFilename())
                                 .replaceFirst("[.][^.]+$", "");
-                ConcurrentHashMap<byte[], Boolean> processedImages = new ConcurrentHashMap<>();
+                Set<Integer> processedImages = new HashSet<>();
 
                 // Determine if multithreading should be used based on PDF size or number of pages
                 boolean useMultithreading = shouldUseMultithreading(file, document);
@@ -115,7 +114,6 @@ public class ExtractImagesController {
                         // Iterate over each page
                         for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
                             PDPage page = document.getPage(pgNum);
-                            int pageNum = document.getPages().indexOf(page) + 1;
                             // Submit a task for processing each page
                             Future<Void> future =
                                     executor.submit(
@@ -128,7 +126,6 @@ public class ExtractImagesController {
                                                             imageIndex,
                                                             processedImages,
                                                             zos,
-                                                            allowDuplicates,
                                                             document);
                                                 } catch (IOException e) {
                                                     logger.error(
@@ -160,14 +157,7 @@ public class ExtractImagesController {
                     for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
                         PDPage page = document.getPage(pgNum);
                         extractImagesFromPage(
-                                page,
-                                format,
-                                filename,
-                                imageIndex,
-                                processedImages,
-                                zos,
-                                allowDuplicates,
-                                document);
+                                page, format, filename, imageIndex, processedImages, zos, document);
                     }
                 }
 
@@ -202,56 +192,40 @@ public class ExtractImagesController {
             String format,
             String filename,
             int imageIndex,
-            ConcurrentHashMap<byte[], Boolean> processedImages,
+            Set<Integer> processedImages,
             ZipOutputStream zos,
-            boolean allowDuplicates,
             PDDocument document)
             throws IOException {
-
-        MessageDigest md;
-        try {
-            md = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e) {
-            logger.error("MD5 algorithm not available for image hashing.", e);
-            return;
-        }
-
-        if (page.getResources() == null || page.getResources().getXObjectNames() == null) {
-            return;
-        }
 
         int pageNum = document.getPages().indexOf(page) + 1;
 
         for (COSName name : page.getResources().getXObjectNames()) {
             if (page.getResources().isImageXObject(name)) {
                 PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
-                RenderedImage renderedImage = image.getImage();
 
+                // Using hashCode for simplicity here, not as robust as MD5 hashing
+                int imageHash = image.hashCode();
+
+                synchronized (processedImages) {
+                    if (processedImages.contains(imageHash)) {
+                        continue;
+                    }
+                    processedImages.add(imageHash);
+                }
+
+                RenderedImage renderedImage = image.getImage();
                 ByteArrayOutputStream imageStream = new ByteArrayOutputStream();
                 ImageIO.write(renderedImage, format, imageStream);
                 byte[] imageBytes = imageStream.toByteArray();
-                byte[] imageHash = md.digest(imageBytes);
 
-                synchronized (processedImages) {
-                    if (allowDuplicates || !processedImages.containsKey(imageHash)) {
-                        processedImages.put(imageHash, true);
-
-                        String entryName =
-                                String.format(
-                                        "%s_page%d_image%d.%s",
-                                        filename, pageNum, imageIndex, format);
-
-                        synchronized (zos) { // Synchronize writing to the ZipOutputStream
-                            ZipEntry zipEntry = new ZipEntry(entryName);
-                            zos.putNextEntry(zipEntry);
-                            zos.write(imageBytes);
-                            zos.closeEntry();
-                        }
-
-                        logger.info("Added image {} to zip for page {}", entryName, pageNum);
-                    } else {
-                        logger.info("Duplicate image detected and skipped.");
-                    }
+                // Creating the image name and writing to ZipOutputStream
+                String imageName =
+                        filename + "_" + imageIndex + " (Page " + pageNum + ")." + format;
+                synchronized (zos) { // Synchronize writing to the ZipOutputStream
+                    ZipEntry zipEntry = new ZipEntry(imageName);
+                    zos.putNextEntry(zipEntry);
+                    zos.write(imageBytes);
+                    zos.closeEntry();
                 }
 
                 imageIndex++;
@@ -266,33 +240,19 @@ public class ExtractImagesController {
      * @param format The desired output image format.
      * @return A BufferedImage in RGB color model.
      */
-    private BufferedImage convertToRGB(RenderedImage renderedImage, String format)
-            throws IOException {
+    private BufferedImage convertToRGB(RenderedImage renderedImage, String format) {
         int width = renderedImage.getWidth();
         int height = renderedImage.getHeight();
-        BufferedImage rgbImage;
-        try {
-            if ("png".equalsIgnoreCase(format)) {
-                rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            } else if ("jpeg".equalsIgnoreCase(format) || "jpg".equalsIgnoreCase(format)) {
-                rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            } else if ("gif".equalsIgnoreCase(format)) {
-                rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED);
-            } else {
-                rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            }
+        BufferedImage rgbImage = null;
 
-            Graphics2D g = rgbImage.createGraphics();
-            g.drawImage((Image) renderedImage, 0, 0, null);
-            g.dispose();
-        } catch (Exception e) {
-            logger.error("Unexpected error while converting image to RGB format", e);
+        if ("png".equalsIgnoreCase(format)) {
+            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        } else if ("jpeg".equalsIgnoreCase(format) || "jpg".equalsIgnoreCase(format)) {
             rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            Graphics2D g = rgbImage.createGraphics();
-            // g.setBackground(Color.WHITE);
-            g.clearRect(0, 0, width, height);
-            g.dispose();
+        } else if ("gif".equalsIgnoreCase(format)) {
+            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED);
         }
+
         return rgbImage;
     }
 }
