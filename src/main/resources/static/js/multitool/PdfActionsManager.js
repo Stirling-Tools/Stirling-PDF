@@ -70,7 +70,7 @@ class PdfActionsManager {
 
   insertFileButtonCallback(e) {
     var imgContainer = this.getPageContainer(e.target);
-    this.addPdfs(imgContainer);
+    this.addFiles(imgContainer);
   }
 
   splitFileButtonCallback(e) {
@@ -80,7 +80,7 @@ class PdfActionsManager {
 
   setActions({ movePageTo, addPdfs, rotateElement }) {
     this.movePageTo = movePageTo;
-    this.addPdfs = addPdfs;
+    this.addFiles = addFiles;
     this.rotateElement = rotateElement;
 
     this.moveUpButtonCallback = this.moveUpButtonCallback.bind(this);
@@ -165,7 +165,7 @@ class PdfActionsManager {
     const insertFileButtonRight = document.createElement("button");
     insertFileButtonRight.classList.add("btn", "btn-primary", "pdf-actions_insert-file-button");
     insertFileButtonRight.innerHTML = `<span class="material-symbols-rounded">add</span>`;
-    insertFileButtonRight.onclick = () => addPdfs();
+    insertFileButtonRight.onclick = () => addFiles();
     insertFileButtonRightContainer.appendChild(insertFileButtonRight);
 
     div.appendChild(insertFileButtonRightContainer);
