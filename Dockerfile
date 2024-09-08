@@ -1,5 +1,5 @@
 # Main stage
-FROM alpine:3.20.2
+FROM alpine:3.20.3
 
 # Copy necessary files
 COPY scripts /scripts
