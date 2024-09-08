@@ -104,7 +104,7 @@ public class ExtractImagesController {
                 String filename =
                         Filenames.toSimpleFileName(file.getOriginalFilename())
                                 .replaceFirst("[.][^.]+$", "");
-                ConcurrentHashMap<byte[], Boolean> processedImages = new ConcurrentHashMap<>();
+                Set<byte[]> processedImages = ConcurrentHashMap.newKeySet();
                 AtomicInteger imageIndex = new AtomicInteger(1);
 
                 // Determine if multithreading should be used based on PDF size or number of pages
@@ -233,7 +233,7 @@ public class ExtractImagesController {
             String format,
             String filename,
             AtomicInteger imageIndex,
-            ConcurrentHashMap<byte[], Boolean> processedImages,
+            Set<byte[]> processedImages,
             ZipOutputStream zos,
             boolean allowDuplicates)
             throws IOException {
@@ -258,11 +258,9 @@ public class ExtractImagesController {
                     if (!allowDuplicates) {
                         byte[] data = ImageProcessingUtils.getImageData(image.getImage());
                         byte[] imageHash = md.digest(data);
-                        synchronized (processedImages) {
-                            if (processedImages.contains(imageHash)) {
-                                continue; // Skip already processed images
-                            }
-                            processedImages.put(imageHash, Boolean.TRUE);
+
+                        if (processedImages.contains(imageHash)) {
+                            continue; // Skip already processed images
                         }
                     }
 
