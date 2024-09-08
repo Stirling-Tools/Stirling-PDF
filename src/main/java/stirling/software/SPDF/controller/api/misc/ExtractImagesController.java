@@ -38,6 +38,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -78,11 +79,14 @@ public class ExtractImagesController {
             zos.setLevel(Deflater.BEST_COMPRESSION);
 
             // Create a temporary directory for processing
-            Path tempDir = Files.createTempDirectory("image-processing-");
+            Path tempDir = null;
             File tempFile = null;
-            PDDocument document;
+            PDDocument document = null;
 
             try {
+                // Create temp directory
+                tempDir = Files.createTempDirectory("image-processing-");
+
                 // Determine if we should use file-based storage based on available RAM
                 boolean useFile = memoryutils.shouldUseFileBasedStorage();
                 if (useFile) {
@@ -101,12 +105,12 @@ public class ExtractImagesController {
                         Filenames.toSimpleFileName(file.getOriginalFilename())
                                 .replaceFirst("[.][^.]+$", "");
                 ConcurrentHashMap<byte[], Boolean> processedImages = new ConcurrentHashMap<>();
+                AtomicInteger imageIndex = new AtomicInteger(1);
 
                 // Determine if multithreading should be used based on PDF size or number of pages
                 boolean useMultithreading = shouldUseMultithreading(file, document);
 
                 if (useMultithreading) {
-                    // Executor service to handle multithreading
                     ExecutorService executor =
                             Executors.newFixedThreadPool(
                                     Runtime.getRuntime().availableProcessors());
@@ -116,7 +120,7 @@ public class ExtractImagesController {
                         // Iterate over each page
                         for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
                             PDPage page = document.getPage(pgNum);
-                            int pageNum = document.getPages().indexOf(page) + 1;
+                            int pageNum = pgNum + 1; // Page numbers start from 1
                             // Submit a task for processing each page
                             Future<Void> future =
                                     executor.submit(
@@ -124,15 +128,18 @@ public class ExtractImagesController {
                                                 try {
                                                     extractImagesFromPage(
                                                             page,
+                                                            pageNum,
                                                             format,
                                                             filename,
-                                                            pageNum,
+                                                            imageIndex,
                                                             processedImages,
                                                             zos,
                                                             allowDuplicates);
                                                 } catch (IOException e) {
                                                     logger.error(
-                                                            "Error extracting images from page", e);
+                                                            "Error extracting images from page: {}",
+                                                            pageNum,
+                                                            e);
                                                 }
                                                 return null;
                                             });
@@ -141,36 +148,46 @@ public class ExtractImagesController {
 
                         // Wait for all tasks to complete
                         for (Future<Void> future : futures) {
-                            future.get();
-                        }
-
-                    } finally {
-                        executor.shutdown();
-                        try {
-                            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
-                                executor.shutdownNow();
+                            try {
+                                future.get();
+                            } catch (ExecutionException e) {
+                                logger.error("Task execution failed", e);
+                                throw e;
+                            } catch (InterruptedException e) {
+                                logger.error("Task interrupted", e);
+                                Thread.currentThread().interrupt();
+                                throw e;
                             }
-                        } catch (InterruptedException ex) {
+                        }
+                    } finally {
+                        // Ensure the executor shuts down properly
+                        executor.shutdown();
+                        if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
                             executor.shutdownNow();
-                            Thread.currentThread().interrupt();
                         }
                     }
                 } else {
                     // Single-threaded extraction
                     for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
                         PDPage page = document.getPage(pgNum);
-                        extractImagesFromPage(
-                                page,
-                                format,
-                                filename,
-                                pgNum + 1,
-                                processedImages,
-                                zos,
-                                allowDuplicates);
+                        int pageNum = pgNum + 1; // Page numbers start from 1
+                        try {
+                            extractImagesFromPage(
+                                    page,
+                                    pageNum,
+                                    format,
+                                    filename,
+                                    imageIndex,
+                                    processedImages,
+                                    zos,
+                                    allowDuplicates);
+                        } catch (IOException e) {
+                            logger.error("Error extracting images from page: {}", pageNum, e);
+                        }
                     }
                 }
 
-                // Close the ZipOutputStream
+                // Finish writing to the ZipOutputStream
                 zos.finish();
 
                 byte[] zipBytes = baos.toByteArray(); // Convert ByteArrayOutputStream to byte array
@@ -179,13 +196,27 @@ public class ExtractImagesController {
                         zipBytes,
                         file.getOriginalFilename() + "_extracted-images.zip",
                         MediaType.APPLICATION_OCTET_STREAM);
+            } catch (IOException e) {
+                logger.error("File handling or PDF processing error", e);
+                throw e;
+            } catch (InterruptedException | ExecutionException e) {
+                logger.error("Error in multithreading execution", e);
+                throw e;
             } finally {
                 // Clean up the temporary files and directories
+                if (document != null) {
+                    document.close();
+                }
                 if (tempFile != null) {
                     Files.deleteIfExists(tempFile.toPath());
                 }
-                FileUtils.deleteDirectory(tempDir.toFile());
+                if (tempDir != null) {
+                    FileUtils.deleteDirectory(tempDir.toFile());
+                }
             }
+        } catch (IOException e) {
+            logger.error("Error writing to ZipOutputStream or closing resources", e);
+            throw e;
         }
     }
 
@@ -198,9 +229,10 @@ public class ExtractImagesController {
 
     private void extractImagesFromPage(
             PDPage page,
+            int pageNum, // Add pageNum parameter
             String format,
             String filename,
-            int pageNum,
+            AtomicInteger imageIndex,
             ConcurrentHashMap<byte[], Boolean> processedImages,
             ZipOutputStream zos,
             boolean allowDuplicates)
@@ -239,9 +271,11 @@ public class ExtractImagesController {
                             convertToRGB(
                                     renderedImage,
                                     format); // Convert the image to the desired format
-
+                    // Increment the image index atomically
+                    int currentImageIndex = imageIndex.getAndIncrement();
                     // Create a unique image name based on the page number and image count
-                    String imageName = filename + "_page_" + pageNum + "_" + count++ + "." + format;
+                    String imageName =
+                            filename + "_page_" + pageNum + "_image_" + count++ + "." + format;
 
                     synchronized (lock) { // Synchronize access to the ZIP output stream
                         zos.putNextEntry(new ZipEntry(imageName));
@@ -284,6 +318,20 @@ public class ExtractImagesController {
 
             Graphics2D g = rgbImage.createGraphics();
             g.drawImage((Image) renderedImage, 0, 0, null);
+            g.dispose();
+        } catch (NullPointerException e) {
+            logger.error("NullPointerException while converting image to RGB format", e);
+            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = rgbImage.createGraphics();
+            // g.setBackground(Color.WHITE);
+            g.clearRect(0, 0, width, height);
+            g.dispose();
+        } catch (IllegalArgumentException e) {
+            logger.error("IllegalArgumentException while converting image to RGB format", e);
+            rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = rgbImage.createGraphics();
+            // g.setBackground(Color.WHITE);
+            g.clearRect(0, 0, width, height);
             g.dispose();
         } catch (Exception e) {
             logger.error("Unexpected error while converting image to RGB format", e);
