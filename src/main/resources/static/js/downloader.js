@@ -32,6 +32,7 @@ $(document).ready(function () {
       const showGameBtn = document.getElementById("show-game-btn");
       if (boredWaiting === "enabled" && showGameBtn) {
         showGameBtn.style.display = "block";
+        showGameBtn.parentNode.insertBefore(document.createElement('br'), showGameBtn.nextSibling);
       }
     }, 5000);
 
@@ -176,7 +177,8 @@ async function submitMultiPdfForm(url, files) {
   const zipThreshold = parseInt(localStorage.getItem("zipThreshold"), 10) || 4;
   const zipFiles = files.length > zipThreshold;
   let jszip = null;
-  // Show the progress bar
+  // Add Space below Progress Bar before Showing
+  $('.progressBarContainer').after($('<br>'));
   $(".progressBarContainer").show();
   // Initialize the progress bar
 
