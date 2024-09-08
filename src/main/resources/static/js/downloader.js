@@ -32,6 +32,7 @@ $(document).ready(function () {
       const showGameBtn = document.getElementById("show-game-btn");
       if (boredWaiting === "enabled" && showGameBtn) {
         showGameBtn.style.display = "block";
+        showGameBtn.parentNode.insertBefore(document.createElement('br'), showGameBtn.nextSibling);
       }
     }, 5000);
 
