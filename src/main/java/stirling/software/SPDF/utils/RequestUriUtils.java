@@ -4,7 +4,7 @@ public class RequestUriUtils {
 
     public static boolean isStaticResource(String requestURI) {
 
-        return isStaticResource(requestURI, "");
+        return isStaticResource("", requestURI);
     }
 
     public static boolean isStaticResource(String contextPath, String requestURI) {
