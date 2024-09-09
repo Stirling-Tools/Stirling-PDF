@@ -70,12 +70,17 @@ class PdfActionsManager {
 
   insertFileButtonCallback(e) {
     var imgContainer = this.getPageContainer(e.target);
-    this.addPdfs(imgContainer);
+    this.addFiles(imgContainer);
   }
 
-  setActions({ movePageTo, addPdfs, rotateElement }) {
+  splitFileButtonCallback(e) {
+    var imgContainer = this.getPageContainer(e.target);
+    imgContainer.classList.toggle("split-before");
+  }
+
+  setActions({ movePageTo, addFiles, rotateElement }) {
     this.movePageTo = movePageTo;
-    this.addPdfs = addPdfs;
+    this.addFiles = addFiles;
     this.rotateElement = rotateElement;
 
     this.moveUpButtonCallback = this.moveUpButtonCallback.bind(this);
@@ -84,6 +89,7 @@ class PdfActionsManager {
     this.rotateCWButtonCallback = this.rotateCWButtonCallback.bind(this);
     this.deletePageButtonCallback = this.deletePageButtonCallback.bind(this);
     this.insertFileButtonCallback = this.insertFileButtonCallback.bind(this);
+    this.splitFileButtonCallback = this.splitFileButtonCallback.bind(this);
   }
 
   adapt(div) {
@@ -140,6 +146,12 @@ class PdfActionsManager {
     insertFileButton.onclick = this.insertFileButtonCallback;
     insertFileButtonContainer.appendChild(insertFileButton);
 
+    const splitFileButton = document.createElement("button");
+    splitFileButton.classList.add("btn", "btn-primary", "pdf-actions_split-file-button");
+    splitFileButton.innerHTML = `<span class="material-symbols-rounded">cut</span>`;
+    splitFileButton.onclick = this.splitFileButtonCallback;
+    insertFileButtonContainer.appendChild(splitFileButton);
+
     div.appendChild(insertFileButtonContainer);
 
     // add this button to every element, but only show it on the last one :D
@@ -153,7 +165,7 @@ class PdfActionsManager {
     const insertFileButtonRight = document.createElement("button");
     insertFileButtonRight.classList.add("btn", "btn-primary", "pdf-actions_insert-file-button");
     insertFileButtonRight.innerHTML = `<span class="material-symbols-rounded">add</span>`;
-    insertFileButtonRight.onclick = () => addPdfs();
+    insertFileButtonRight.onclick = () => addFiles();
     insertFileButtonRightContainer.appendChild(insertFileButtonRight);
 
     div.appendChild(insertFileButtonRightContainer);
