@@ -119,7 +119,22 @@
 
                 <div class="mb-3">
                   <label for="customColor" class="form-label" th:text="#{AddStampRequest.customColor}">Custom Color</label>
-                  <input type="color" class="form-control form-control-color" id="customColor" name="customColor" value="#d3d3d3">
+                  <div class="form-control form-control-color" style="background-color: #d3d3d3;">
+                    <input type="color" id="customColor" name="customColor" value="#d3d3d3">
+                  </div>
+                  <script>
+                    let colorInput = document.getElementById("customColor");
+                    if (colorInput) {
+                      let colorInputContainer = colorInput.parentElement;
+                      if (colorInputContainer) {
+                        colorInput.onchange = function() {
+                          colorInputContainer.style.backgroundColor = colorInput.value;
+                        }
+                        colorInputContainer.style.backgroundColor = colorInput.value;
+                      }
+                    }
+
+                  </script>
                 </div>
 
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{AddStampRequest.submit}"></button>
