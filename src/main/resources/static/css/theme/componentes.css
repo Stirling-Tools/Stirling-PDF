@@ -792,6 +792,23 @@ textarea.form-control {
   box-shadow: 0 0 0 0.25rem var(--md-sys-color-outline-variant);
 }
 
+.form-control-color {
+  padding: 0;
+  height: 2.4rem;
+  width: 2.4rem;
+}
+
+.form-control input[type="color"] {
+  opacity: 0;
+  height: 2.4rem;
+  width: 2.4rem;
+  box-sizing: border-box;
+ }
+
+ .form-control input[type="color"]:hover{
+   cursor: pointer;
+ }
+
 /* Navbar Components */
 .navbar-brand {
   color: var(--md-sys-color-on-surface) !important;
