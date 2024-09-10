@@ -77,7 +77,7 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
           tags: >
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber
-            }}-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
+            }}-ultra-lite,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/main' }}
       - name: Build and push Dockerfile-ultra-lite
         uses: docker/build-push-action@v6
