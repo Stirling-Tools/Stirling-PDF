@@ -1,5 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png" width="80" ></p>
-<h1 align="center">Stirling-PDF</h1>
+<h1 align="center">Konfuzio PDF Tools</h1>
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/frooodle/s-pdf)](https://hub.docker.com/r/frooodle/s-pdf)
 [![Discord](https://img.shields.io/discord/1068636748814483718?label=Discord)](https://discord.gg/Cn8pWhQRxZ)
@@ -342,6 +341,48 @@ To access your account settings go to Account settings in the settings cog menu 
 To add new users go to the bottom of Account settings and hit 'Admin Settings', here you can add new users. The different roles mentioned within this are for rate limiting. This is a Work in progress which will be expanding on more in future
 
 For API usage you must provide a header with 'X-API-Key' and the associated API key for that user.
+
+## Konfuzio.com Deployment
+
+This repo is publically served via konfuzio.com/tools. A Cloudflare Worker (https://dash.cloudflare.com/c3a4e203bd542436b2abc5f2a93bb812/workers/services/edit/konfuzio-pdf-tools/production) is used to redirect traffic to "/tools".
+
+```
+const myBlog = {
+  hostname: "tools.konfuzio.com",
+  targetSubdirectory: "/tools"
+}
+
+async function handleRequest(request) {
+  const parsedUrl = new URL(request.url);
+  const requestMatches = match => new RegExp(match).test(parsedUrl.pathname);
+  
+  // Create a new URL based on the condition
+  const targetUrl = requestMatches(myBlog.targetSubdirectory) ? 
+                    `https://${myBlog.hostname}${parsedUrl.pathname}` : 
+                    request.url;
+  
+  // Check if the request is a POST request
+  if (request.method === "POST") {
+    // Forward the POST request with its body and headers
+    const response = await fetch(targetUrl, {
+      method: 'POST', // Set method to POST
+      headers: request.headers, // Forward the headers
+      body: request.body // Forward the body
+    });
+    return response;
+  }
+  
+  // For other types of requests (GET, PUT, DELETE, etc.), simply forward the request as is
+  return fetch(targetUrl, {
+    method: request.method, // Use the original request method
+    headers: request.headers // Forward the headers
+  });
+}
+
+addEventListener("fetch", event => {
+  event.respondWith(handleRequest(event.request));
+});
+```
 
 ## FAQ
 
