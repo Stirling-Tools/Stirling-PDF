@@ -63,9 +63,7 @@ ui:
   appNameNavbar: Konfuzio # Name displayed on the navigation bar
 
 endpoints:
-  toRemove: # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
-    - crop
-    - pipeline
+  toRemove: [] # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
   groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
 
 metrics:
