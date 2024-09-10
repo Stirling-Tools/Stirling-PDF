@@ -40,7 +40,6 @@
                     <option value="blackwhite" th:text="#{pdfToImage.blackwhite}"></option>
                   </select>
                 </div>
-                <br>
                 <input type="hidden" id="override" name="override" value="multi">
                 <div class="mb-3">
                   <label th:text=#{imageToPDF.selectText.3}></label>
@@ -49,7 +48,7 @@
                     <option value="convert" th:text=#{imageToPDF.selectText.5} selected></option>
                   </select>
                 </div>
-                <br><br>
+                <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
                 <script>
                   $('#fileInput-input').on('change', function() {

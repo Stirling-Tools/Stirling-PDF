@@ -82,16 +82,22 @@ td {
 .modal-body,
 .modal-footer {
   background-color: var(--md-sys-color-surface-5);
-  padding: 1.5rem 2rem;
+
   border: none;
 }
 
 .modal-header {
   border-radius: 2rem 2rem 0rem 0rem;
+  padding: 1.5rem 2rem 0.5rem;
+}
+
+.modal-body{
+  padding: 0.5rem 2rem;
 }
 
 .modal-footer {
   border-radius: 0rem 0rem 2rem 2rem;
+  padding: 0.5rem 2rem 1.5rem;
 }
 
 /* Icon fill */
@@ -538,6 +544,9 @@ fieldset:disabled .btn {
 }
 
 /* Range Slider */
+.form-range{
+  margin-top: 0.25rem;
+}
 .form-range:focus::-webkit-slider-thumb {
   box-shadow: 0 0 0 1px var(--md-sys-color-surface), 0 0 0 .25rem var(--md-sys-color-primary)
 }
