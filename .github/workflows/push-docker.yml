@@ -53,9 +53,9 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
           tags: >
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{
-            github.ref == 'refs/heads/master' }}
+            github.ref == 'refs/heads/main' }}
 
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
             type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
       - name: Build and push main Dockerfile
@@ -74,7 +74,7 @@ jobs:
       - name: Generate tags ultra-lite
         id: meta2
         uses: docker/metadata-action@v5
-        if: github.ref != 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         with:
           images: |
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
@@ -82,7 +82,7 @@ jobs:
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber
             }}-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
 
-            type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/main' }}
       - name: Build and push Dockerfile-ultra-lite
         uses: docker/build-push-action@v6
         if: github.ref != 'refs/heads/main'
