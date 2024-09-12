@@ -159,7 +159,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         };
 
         for (String pattern : permitAllPatterns) {
-            if (uri.startsWith(pattern) || uri.endsWith(".svg")) {
+            if (uri.startsWith(pattern) || uri.endsWith(".svg") || uri.endsWith(".png") || uri.endsWith(".ico")) {
                 return true;
             }
         }
