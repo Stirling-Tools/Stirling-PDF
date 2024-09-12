@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.misc;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
@@ -45,6 +46,7 @@ import java.util.zip.ZipOutputStream;
 
 @RestController
 @RequestMapping("/api/v1/misc")
+@Tag(name = "Misc", description = "Miscellaneous APIs")
 public class ExtractImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
