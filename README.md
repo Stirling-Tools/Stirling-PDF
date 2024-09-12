@@ -100,6 +100,8 @@ Demo of the app is available [here](https://stirlingpdf.io).
 - [PDF-LIB.js](https://github.com/Hopding/pdf-lib)
 
 ## How to use
+### Windows
+For windows users download the latest Stirling-PDF.exe from our [release](https://github.com/Stirling-Tools/Stirling-PDF/releases) section or by clicking [here](https://github.com/Stirling-Tools/Stirling-PDF/releases/latest/download/Stirling-PDF.exe)
 
 ### Locally
 
