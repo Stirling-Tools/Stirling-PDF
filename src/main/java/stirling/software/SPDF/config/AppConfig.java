@@ -145,4 +145,19 @@ public class AppConfig {
     public String privacyPolicy() {
         return applicationProperties.getLegal().getPrivacyPolicy();
     }
+
+    @Bean(name = "cookiePolicy")
+    public String cookiePolicy() {
+        return applicationProperties.getLegal().getCookiePolicy();
+    }
+
+    @Bean(name = "impressum")
+    public String impressum() {
+        return applicationProperties.getLegal().getImpressum();
+    }
+
+    @Bean(name = "accessibilityStatement")
+    public String accessibilityStatement() {
+        return applicationProperties.getLegal().getAccessibilityStatement();
+    }
 }

@@ -46,6 +46,9 @@ public class ApplicationProperties {
     public static class Legal {
         private String termsAndConditions;
         private String privacyPolicy;
+        private String accessibilityStatement;
+        private String cookiePolicy;
+        private String impressum;
     }
 
     @Data
