@@ -25,6 +25,8 @@ import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 @PropertySource(value = "file:./configs/settings.yml", factory = YamlPropertySourceFactory.class)
 @Data
 public class ApplicationProperties {
+
+    private Legal legal = new Legal();
     private Security security = new Security();
     private System system = new System();
     private Ui ui = new Ui();
@@ -38,6 +40,12 @@ public class ApplicationProperties {
     @Data
     public static class AutoPipeline {
         private String outputFolder;
+    }
+
+    @Data
+    public static class Legal {
+        private String termsAndConditions;
+        private String privacyPolicy;
     }
 
     @Data

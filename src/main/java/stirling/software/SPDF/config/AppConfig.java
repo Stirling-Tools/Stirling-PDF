@@ -135,4 +135,14 @@ public class AppConfig {
             }
         };
     }
+
+    @Bean(name = "termsAndConditions")
+    public String termsAndConditions() {
+        return applicationProperties.getLegal().getTermsAndConditions();
+    }
+
+    @Bean(name = "privacyPolicy")
+    public String privacyPolicy() {
+        return applicationProperties.getLegal().getPrivacyPolicy();
+    }
 }

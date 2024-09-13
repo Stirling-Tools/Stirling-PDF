@@ -57,6 +57,9 @@ EnterpriseEdition:
     producer: Stirling-PDF # Supports text such as 'Company-PDF'
     title: filename # Supports keywords such as 'filename' or 'unchanged' to use the original title if it exists
 
+legal:
+  termsAndConditions: '' # URL to the terms and conditions of your application (e.g. https://example.com/terms) Empty string to disable or filename to load from local file in static folder
+  privacyPolicy: '' # URL to the privacy policy of your application (e.g. https://example.com/privacy) Empty string to disable or filename to load from local file in static folder
 
 system:
   defaultLocale: en-US # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
