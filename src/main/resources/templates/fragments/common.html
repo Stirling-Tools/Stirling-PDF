@@ -24,7 +24,7 @@
     <!-- jQuery -->
     <script th:src="@{'/js/thirdParty/jquery.min.js'}"></script>
     <script th:src="@{'/js/thirdParty/jquery.validate.min.js'}"></script>
-    <script th:src="@{'/js/thirdParty/jszip.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/jszip.min.js'}" th:if="${currentPage != 'home'}"></script>
 
     <!-- Bootstrap -->
     <script th:src="@{'/js/thirdParty/popper.min.js'}"></script>
@@ -35,10 +35,10 @@
     <link rel="stylesheet" th:href="@{'/css/bootstrap-icons.min.css'}">
 
     <!-- PDF.js -->
-    <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
+    <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"  th:if="${currentPage != 'home'}"></script>
 
     <!-- PDF-Lib -->
-    <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"  th:if="${currentPage != 'home'}"></script>
 
     <!-- Custom -->
     <link rel="stylesheet" th:href="@{'/css/general.css'}">
@@ -58,17 +58,21 @@
     <link rel="stylesheet" th:href="@{'/css/multi-tool.css'}" th:if="${currentPage == 'multi-tool'}">
     <link rel="stylesheet" th:href="@{'/css/rotate-pdf.css'}" th:if="${currentPage == 'rotate-pdf'}">
     <link rel="stylesheet" th:href="@{'/css/stamp.css'}" th:if="${currentPage == 'stamp'}">
-    <link rel="stylesheet" th:href="@{'/css/fileSelect.css'}">
+    <link rel="stylesheet" th:href="@{'/css/fileSelect.css'}"  th:if="${currentPage != 'home'}">
     <link rel="stylesheet" th:href="@{'/css/footer.css'}">
+
+    <link rel="preload" href="/fonts/google-symbol.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+
     <script th:src="@{'/js/thirdParty/fontfaceobserver.standalone.js'}"></script>
 
     <!-- Google MD Icons -->
     <link rel="stylesheet" th:href="@{'/css/theme/font.css'}">
 
     <!-- Help Modal -->
-    <link rel="stylesheet" th:href="@{'/css/errorBanner.css'}">
+    <link rel="stylesheet" th:href="@{'/css/errorBanner.css'}"  th:if="${currentPage != 'home'}">
 
-    <script th:src="@{'/js/cacheFormInputs.js'}"></script>
+    <script th:src="@{'/js/cacheFormInputs.js'}"  th:if="${currentPage != 'home'}"></script>
     <script th:src="@{'/js/tab-container.js'}"></script>
     <script th:src="@{'/js/darkmode.js'}"></script>
   </th:block>

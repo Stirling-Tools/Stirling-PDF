@@ -13,6 +13,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import stirling.software.SPDF.utils.RequestUriUtils;
 
 @Component
 public class MetricsFilter extends OncePerRequestFilter {
@@ -30,32 +31,16 @@ public class MetricsFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String uri = request.getRequestURI();
 
-        // System.out.println("uri="+uri + ", method=" + request.getMethod() );
-        // Ignore static resources
-        if (!(uri.startsWith("/js")
-                || uri.startsWith("/v1/api-docs")
-                || uri.endsWith("robots.txt")
-                || uri.startsWith("/images")
-                || uri.endsWith(".png")
-                || uri.endsWith(".ico")
-                || uri.endsWith(".css")
-                || uri.endsWith(".map")
-                || uri.endsWith(".svg")
-                || uri.endsWith(".js")
-                || uri.contains("swagger")
-                || uri.startsWith("/api/v1/info")
-                || uri.startsWith("/site.webmanifest")
-                || uri.startsWith("/fonts")
-                || uri.startsWith("/pdfjs"))) {
+        if (RequestUriUtils.isTrackableResource(request.getContextPath(), uri)) {
 
             Counter counter =
                     Counter.builder("http.requests")
-                            .tag("uri", uri)
+                            .tag("session", request.getSession().getId())
                             .tag("method", request.getMethod())
+                            .tag("uri", uri)
                             .register(meterRegistry);
 
             counter.increment();
-            // System.out.println("Counted");
         }
 
         filterChain.doFilter(request, response);

@@ -20,7 +20,7 @@ class AppUpdateAuthService implements ShowAdminInterface {
 
     @Override
     public boolean getShowUpdateOnlyAdmins() {
-        boolean showUpdate = applicationProperties.getSystem().getShowUpdate();
+        boolean showUpdate = applicationProperties.getSystem().isShowUpdate();
         if (!showUpdate) {
             return showUpdate;
         }

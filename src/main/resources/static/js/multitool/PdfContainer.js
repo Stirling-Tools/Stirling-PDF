@@ -446,7 +446,7 @@ function detectImageType(uint8Array) {
 
   // Check for TIFF signature (little-endian and big-endian)
   if ((uint8Array[0] === 73 && uint8Array[1] === 73 && uint8Array[2] === 42 && uint8Array[3] === 0) ||
-    (uint8Array[0] === 77 && uint8Array[1] === 77 && uint8Array[2] === 0 && uint8Array[3] === 42)) {
+      (uint8Array[0] === 77 && uint8Array[1] === 77 && uint8Array[2] === 0 && uint8Array[3] === 42)) {
     return 'TIFF';
   }
 

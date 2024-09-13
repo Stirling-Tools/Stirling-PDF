@@ -9,6 +9,7 @@ import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -75,7 +76,8 @@ public class ShowJavascript {
 
             return WebResponseUtils.bytesToWebResponse(
                     script.getBytes(StandardCharsets.UTF_8),
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + ".js");
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + ".js",
+                    MediaType.TEXT_PLAIN);
         }
     }
 }

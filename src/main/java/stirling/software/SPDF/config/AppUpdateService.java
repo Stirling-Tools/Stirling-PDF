@@ -18,7 +18,7 @@ class AppUpdateService {
     @Bean(name = "shouldShow")
     @Scope("request")
     public boolean shouldShow() {
-        boolean showUpdate = applicationProperties.getSystem().getShowUpdate();
+        boolean showUpdate = applicationProperties.getSystem().isShowUpdate();
         boolean showAdminResult = (showAdmin != null) ? showAdmin.getShowUpdateOnlyAdmins() : true;
         return showUpdate && showAdminResult;
     }

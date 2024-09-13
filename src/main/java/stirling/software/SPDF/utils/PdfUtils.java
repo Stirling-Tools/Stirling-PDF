@@ -6,7 +6,6 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -36,8 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
-
-import stirling.software.SPDF.model.PdfMetadata;
 
 public class PdfUtils {
 
@@ -504,30 +501,6 @@ public class PdfUtils {
         document.save(baos);
         logger.info("PDF successfully saved to byte array");
         return baos.toByteArray();
-    }
-
-    public static PdfMetadata extractMetadataFromPdf(PDDocument pdf) {
-        return PdfMetadata.builder()
-                .author(pdf.getDocumentInformation().getAuthor())
-                .producer(pdf.getDocumentInformation().getProducer())
-                .title(pdf.getDocumentInformation().getTitle())
-                .creator(pdf.getDocumentInformation().getCreator())
-                .subject(pdf.getDocumentInformation().getSubject())
-                .keywords(pdf.getDocumentInformation().getKeywords())
-                .creationDate(pdf.getDocumentInformation().getCreationDate())
-                .modificationDate(pdf.getDocumentInformation().getModificationDate())
-                .build();
-    }
-
-    public static void setMetadataToPdf(PDDocument pdf, PdfMetadata pdfMetadata) {
-        pdf.getDocumentInformation().setAuthor(pdfMetadata.getAuthor());
-        pdf.getDocumentInformation().setProducer(pdfMetadata.getProducer());
-        pdf.getDocumentInformation().setTitle(pdfMetadata.getTitle());
-        pdf.getDocumentInformation().setCreator(pdfMetadata.getCreator());
-        pdf.getDocumentInformation().setSubject(pdfMetadata.getSubject());
-        pdf.getDocumentInformation().setKeywords(pdfMetadata.getKeywords());
-        pdf.getDocumentInformation().setCreationDate(pdfMetadata.getCreationDate());
-        pdf.getDocumentInformation().setModificationDate(Calendar.getInstance());
     }
 
     /** Key for storing the dimensions of a rendered image in a map. */

@@ -43,7 +43,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
 
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
-        OAUTH2 oauth2 = applicationProperties.getSecurity().getOAUTH2();
+        OAUTH2 oauth2 = applicationProperties.getSecurity().getOauth2();
         String usernameAttribute = oauth2.getUseAsUsername();
         if (usernameAttribute == null || usernameAttribute.trim().isEmpty()) {
             Client client = oauth2.getClient();

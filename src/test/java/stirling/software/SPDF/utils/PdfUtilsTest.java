@@ -49,12 +49,5 @@ public class PdfUtilsTest {
         assertTrue(PdfUtils.hasImagesOnPage(page));
     }
 
-    @Test
-    void testExtractMetadataFromPdf() throws IOException {
-        PDDocument document = Mockito.mock(PDDocument.class);
-        Mockito.when(document.getDocumentInformation()).thenReturn(Mockito.mock(org.apache.pdfbox.pdmodel.PDDocumentInformation.class));
-        PdfMetadata metadata = PdfUtils.extractMetadataFromPdf(document);
 
-        assertNotNull(metadata);
-    }
 }
