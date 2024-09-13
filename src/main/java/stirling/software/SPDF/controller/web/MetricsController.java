@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -66,11 +64,11 @@ public class MetricsController {
         return ResponseEntity.ok(status);
     }
 
-    @GetMapping("/loads")
+    @GetMapping("/load")
     @Operation(
             summary = "GET request count",
             description =
-                    "This endpoint returns the total count of GET requests or the count of GET requests for a specific endpoint.")
+                    "This endpoint returns the total count of GET requests for a specific endpoint or all endpoints.")
     public ResponseEntity<?> getPageLoads(
             @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
                     Optional<String> endpoint) {
@@ -85,7 +83,26 @@ public class MetricsController {
         }
     }
 
-    @GetMapping("/loads/all")
+    @GetMapping("/load/unique")
+    @Operation(
+            summary = "Unique users count for GET requests",
+            description =
+                    "This endpoint returns the count of unique users for GET requests for a specific endpoint or all endpoints.")
+    public ResponseEntity<?> getUniquePageLoads(
+            @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
+                    Optional<String> endpoint) {
+        if (!metricsEnabled) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+        }
+        try {
+            double count = getUniqueUserCount("GET", endpoint);
+            return ResponseEntity.ok(count);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/load/all")
     @Operation(
             summary = "GET requests count for all endpoints",
             description = "This endpoint returns the count of GET requests for each endpoint.")
@@ -101,11 +118,28 @@ public class MetricsController {
         }
     }
 
+    @GetMapping("/load/all/unique")
+    @Operation(
+            summary = "Unique users count for GET requests for all endpoints",
+            description =
+                    "This endpoint returns the count of unique users for GET requests for each endpoint.")
+    public ResponseEntity<?> getAllUniqueEndpointLoads() {
+        if (!metricsEnabled) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+        }
+        try {
+            List<EndpointCount> results = getUniqueUserCounts("GET");
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @GetMapping("/requests")
     @Operation(
             summary = "POST request count",
             description =
-                    "This endpoint returns the total count of POST requests or the count of POST requests for a specific endpoint.")
+                    "This endpoint returns the total count of POST requests for a specific endpoint or all endpoints.")
     public ResponseEntity<?> getTotalRequests(
             @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
                     Optional<String> endpoint) {
@@ -114,6 +148,25 @@ public class MetricsController {
         }
         try {
             double count = getRequestCount("POST", endpoint);
+            return ResponseEntity.ok(count);
+        } catch (Exception e) {
+            return ResponseEntity.ok(-1);
+        }
+    }
+
+    @GetMapping("/requests/unique")
+    @Operation(
+            summary = "Unique users count for POST requests",
+            description =
+                    "This endpoint returns the count of unique users for POST requests for a specific endpoint or all endpoints.")
+    public ResponseEntity<?> getUniqueTotalRequests(
+            @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
+                    Optional<String> endpoint) {
+        if (!metricsEnabled) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
+        }
+        try {
+            double count = getUniqueUserCount("POST", endpoint);
             return ResponseEntity.ok(count);
         } catch (Exception e) {
             return ResponseEntity.ok(-1);
@@ -136,70 +189,19 @@ public class MetricsController {
         }
     }
 
-    private void printAllMetrics() {
-        log.info("Printing all metrics:");
-        meterRegistry.getMeters().forEach(this::printMeterDetails);
-    }
-
-    private void printMeterDetails(Meter meter) {
-        log.info("Meter: {}", meter.getId());
-        log.info("  Type: {}", meter.getId().getType());
-        log.info("  Name: {}", meter.getId().getName());
-        log.info("  Tags: {}", meter.getId().getTags());
-
-        if (meter instanceof Timer) {
-
-        } else if (meter instanceof Counter) {
-            Counter counter = (Counter) meter;
-            log.info("  Count: {}", counter.count());
-        } else if (meter instanceof Gauge) {
-            Gauge gauge = (Gauge) meter;
-            log.info("  Value: {}", gauge.value());
-        }
-
-        log.info("--------------------");
-    }
-
-    @GetMapping("/users")
+    @GetMapping("/requests/all/unique")
     @Operation(
-            summary = "Unique users count",
+            summary = "Unique users count for POST requests for all endpoints",
             description =
-                    "This endpoint returns the count of unique users (sessions) for all endpoints or a specific endpoint.")
-    public ResponseEntity<?> getUniqueUsers(
-            @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
-                    Optional<String> endpoint) {
+                    "This endpoint returns the count of unique users for POST requests for each endpoint.")
+    public ResponseEntity<?> getAllUniquePostRequests() {
         if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
         }
         try {
-            long uniqueUsers = getUniqueUserCount(endpoint);
-            return ResponseEntity.ok(uniqueUsers);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/users/all")
-    @Operation(
-            summary = "Unique users count for all endpoints",
-            description =
-                    "This endpoint returns the count of unique users (sessions) for each endpoint.")
-    public ResponseEntity<?> getAllUniqueUsers() {
-
-        printAllMetrics();
-
-        log.info("Entering getAllUniqueUsers method");
-        if (!metricsEnabled) {
-            log.info("Metrics are disabled. Returning FORBIDDEN status.");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
-        }
-        try {
-            log.info("Fetching unique user counts");
-            List<EndpointCount> results = getUniqueUserCounts();
-            log.info("Fetched {} unique user counts", results.size());
+            List<EndpointCount> results = getUniqueUserCounts("POST");
             return ResponseEntity.ok(results);
         } catch (Exception e) {
-            log.error("Error occurred while fetching unique user counts", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -244,55 +246,48 @@ public class MetricsController {
         return result;
     }
 
-    private long getUniqueUserCount(Optional<String> endpoint) {
-        log.info("Getting unique user count for endpoint: {}", endpoint.orElse("all"));
-        long count =
-                meterRegistry.find("http.requests").gauges().stream()
-                        .filter(
-                                gauge ->
-                                        !endpoint.isPresent()
-                                                || endpoint.get()
-                                                        .equals(gauge.getId().getTag("uri")))
-                        .map(gauge -> gauge.getId().getTag("session"))
-                        .distinct()
-                        .count();
-        log.info("Unique user count: {}", count);
-        return count;
+    private double getUniqueUserCount(String method, Optional<String> endpoint) {
+        log.info(
+                "Getting unique user count for method: {}, endpoint: {}",
+                method,
+                endpoint.orElse("all"));
+        Set<String> uniqueUsers = new HashSet<>();
+        meterRegistry.find("http.requests").tag("method", method).counters().stream()
+                .filter(
+                        counter ->
+                                !endpoint.isPresent()
+                                        || endpoint.get().equals(counter.getId().getTag("uri")))
+                .forEach(
+                        counter -> {
+                            String session = counter.getId().getTag("session");
+                            if (session != null) {
+                                uniqueUsers.add(session);
+                            }
+                        });
+        log.info("Unique user count: {}", uniqueUsers.size());
+        return uniqueUsers.size();
     }
 
-    private List<EndpointCount> getUniqueUserCounts() {
-        log.info("Getting unique user counts for all endpoints");
+    private List<EndpointCount> getUniqueUserCounts(String method) {
+        log.info("Getting unique user counts for method: {}", method);
         Map<String, Set<String>> uniqueUsers = new HashMap<>();
 
         meterRegistry
                 .find("http.requests")
+                .tag("method", method)
                 .counters()
                 .forEach(
                         counter -> {
-                            log.info("Processing counter: {}", counter.getId());
                             String uri = counter.getId().getTag("uri");
                             String session = counter.getId().getTag("session");
                             if (uri != null && session != null) {
-                                log.info("Found request - URI: {}, Session: {}", uri, session);
                                 uniqueUsers.computeIfAbsent(uri, k -> new HashSet<>()).add(session);
-                            } else {
-                                log.warn(
-                                        "Skipping counter due to missing uri or session tag: {}",
-                                        counter.getId());
                             }
                         });
 
         List<EndpointCount> result =
                 uniqueUsers.entrySet().stream()
-                        .map(
-                                entry -> {
-                                    log.info(
-                                            "Endpoint: {}, Unique Users: {}",
-                                            entry.getKey(),
-                                            entry.getValue().size());
-                                    return new EndpointCount(
-                                            entry.getKey(), entry.getValue().size());
-                                })
+                        .map(entry -> new EndpointCount(entry.getKey(), entry.getValue().size()))
                         .sorted(Comparator.comparing(EndpointCount::getCount).reversed())
                         .collect(Collectors.toList());
 
