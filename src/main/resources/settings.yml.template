@@ -60,6 +60,9 @@ EnterpriseEdition:
 legal:
   termsAndConditions: '' # URL to the terms and conditions of your application (e.g. https://example.com/terms) Empty string to disable or filename to load from local file in static folder
   privacyPolicy: '' # URL to the privacy policy of your application (e.g. https://example.com/privacy) Empty string to disable or filename to load from local file in static folder
+  accessibilityStatement: '' # URL to the accessibility statement of your application (e.g. https://example.com/accessibility) Empty string to disable or filename to load from local file in static folder
+  cookiePolicy: '' # URL to the cookie policy of your application (e.g. https://example.com/cookie) Empty string to disable or filename to load from local file in static folder
+  impressum: '' # URL to the impressum of your application (e.g. https://example.com/impressum) Empty string to disable or filename to load from local file in static folder
 
 system:
   defaultLocale: en-US # Set the default language (e.g. 'de-DE', 'fr-FR', etc)

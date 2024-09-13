@@ -88,14 +88,14 @@ public class PdfMetadataService {
     }
 
     private void setNewDocumentMetadata(PDDocument pdf, PdfMetadata pdfMetadata) {
-        String producer = "Stirling-PDF";
+
         String title = pdfMetadata.getTitle();
         String creator = "Stirling-PDF";
 
-        if (applicationProperties
-                .getEnterpriseEdition()
-                .getCustomMetadata()
-                .isAutoUpdateMetadata()) {
+//        if (applicationProperties
+//                .getEnterpriseEdition()
+//                .getCustomMetadata()
+//                .isAutoUpdateMetadata()) {
 
             // producer =
             //
@@ -104,20 +104,21 @@ public class PdfMetadataService {
             // applicationProperties.getEnterpriseEdition().getCustomMetadata().getCreator();
             // title = applicationProperties.getEnterpriseEdition().getCustomMetadata().getTitle();
 
-            if ("{filename}".equals(title)) {
-                title = "Filename"; // Replace with actual filename logic
-            } else if ("{unchanged}".equals(title)) {
-                title = pdfMetadata.getTitle(); // Keep the original title
-            }
-        }
+//            if ("{filename}".equals(title)) {
+//                title = "Filename"; // Replace with actual filename logic
+//            } else if ("{unchanged}".equals(title)) {
+//                title = pdfMetadata.getTitle(); // Keep the original title
+//            }
+//        }
 
-        pdf.getDocumentInformation().setProducer(producer + " " + appVersion);
         pdf.getDocumentInformation().setTitle(title);
         pdf.getDocumentInformation().setCreator(creator + " " + appVersion);
         pdf.getDocumentInformation().setCreationDate(Calendar.getInstance());
     }
 
     private void setCommonMetadata(PDDocument pdf, PdfMetadata pdfMetadata) {
+        String producer = "Stirling-PDF";
+        pdf.getDocumentInformation().setProducer(producer + " " + appVersion);
         pdf.getDocumentInformation().setSubject(pdfMetadata.getSubject());
         pdf.getDocumentInformation().setKeywords(pdfMetadata.getKeywords());
         pdf.getDocumentInformation().setModificationDate(Calendar.getInstance());
