@@ -88,9 +88,9 @@ public class PdfMetadataService {
     }
 
     private void setNewDocumentMetadata(PDDocument pdf, PdfMetadata pdfMetadata) {
-        String producer = pdfMetadata.getProducer();
+        String producer = "Stirling-PDF";
         String title = pdfMetadata.getTitle();
-        String creator = pdfMetadata.getCreator();
+        String creator = "Stirling-PDF";
 
         if (applicationProperties
                 .getEnterpriseEdition()

@@ -21,17 +21,6 @@ public class EEAppConfig {
 
     @Autowired ApplicationProperties applicationProperties;
 
-    @Bean
-    @ConditionalOnProperty(
-            name = "system.customHTMLFiles",
-            havingValue = "true",
-            matchIfMissing = false)
-    public SpringTemplateEngine templateEngine(ResourceLoader resourceLoader) {
-        SpringTemplateEngine templateEngine = new SpringTemplateEngine();
-        templateEngine.addTemplateResolver(new FileFallbackTemplateResolver(resourceLoader));
-        return templateEngine;
-    }
-
     @Bean(name = "RunningEE")
     public boolean runningEnterpriseEdition() {
         // TODO: Implement EE detection
