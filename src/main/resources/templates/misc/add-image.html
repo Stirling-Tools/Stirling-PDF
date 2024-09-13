@@ -45,7 +45,6 @@
               </script>
 
               <div class="tab-group show-on-file-selected">
-                <div class="tab-container" th:title="#{addImage.upload}">
                   <div th:replace="~{fragments/common :: fileSelector(name='image-upload', multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}"></div>
                   <script>
                     const imageUpload = document.querySelector('input[name=image-upload]');
@@ -62,7 +61,6 @@
                       }
                     });
                   </script>
-                </div>
               </div>
 
               <!-- draggables box -->
