@@ -25,9 +25,9 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.config.PdfMetadataService;
 import stirling.software.SPDF.model.PdfMetadata;
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
-import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -46,7 +46,7 @@ public class FlattenController {
         MultipartFile file = request.getFileInput();
 
         PDDocument document = Loader.loadPDF(file.getBytes());
-        PdfMetadata metadata = PdfUtils.extractMetadataFromPdf(document);
+        PdfMetadata metadata = PdfMetadataService.extractMetadataFromPdf(document);
         Boolean flattenOnlyForms = request.getFlattenOnlyForms();
 
         if (Boolean.TRUE.equals(flattenOnlyForms)) {
@@ -80,7 +80,7 @@ public class FlattenController {
                     logger.error("exception", e);
                 }
             }
-            PdfUtils.setMetadataToPdf(newDocument, metadata);
+            PdfMetadataService.setMetadataToPdf(newDocument, metadata);
             return WebResponseUtils.pdfDocToWebResponse(
                     newDocument, Filenames.toSimpleFileName(file.getOriginalFilename()));
         }
