@@ -100,6 +100,8 @@ Demo of the app is available [here](https://stirlingpdf.io).
 - [PDF-LIB.js](https://github.com/Hopding/pdf-lib)
 
 ## How to use
+### Windows
+For windows users download the latest Stirling-PDF.exe from our [release](https://github.com/Stirling-Tools/Stirling-PDF/releases) section or by clicking [here](https://github.com/Stirling-Tools/Stirling-PDF/releases/latest/download/Stirling-PDF.exe)
 
 ### Locally
 
@@ -197,7 +199,7 @@ Stirling PDF currently supports 38!
 | Romanian (Română) (ro_RO)                   | ![98%](https://geps.dev/progress/98)   |
 | Russian (Русский) (ru_RU)                   | ![82%](https://geps.dev/progress/82)   |
 | Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![76%](https://geps.dev/progress/76)   |
-| Simplified Chinese (简体中文) (zh_CN)       | ![96%](https://geps.dev/progress/96)   |
+| Simplified Chinese (简体中文) (zh_CN)       | ![99%](https://geps.dev/progress/99)   |
 | Slovakian (Slovensky) (sk_SK)               | ![90%](https://geps.dev/progress/90)   |
 | Spanish (Español) (es_ES)                   | ![99%](https://geps.dev/progress/99)   |
 | Swedish (Svenska) (sv_SE)                   | ![98%](https://geps.dev/progress/98)   |
