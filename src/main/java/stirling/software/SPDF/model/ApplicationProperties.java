@@ -185,7 +185,6 @@ public class ApplicationProperties {
             private String author;
             private String creator;
             private String producer;
-            private String title;
 
             public String getCreator() {
                 return creator == null || creator.trim().isEmpty() ? "Stirling-PDF" : creator;

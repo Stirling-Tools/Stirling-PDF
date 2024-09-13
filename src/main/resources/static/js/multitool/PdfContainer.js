@@ -19,7 +19,6 @@ class PdfContainer {
     this.setDownloadAttribute = this.setDownloadAttribute.bind(this);
     this.preventIllegalChars = this.preventIllegalChars.bind(this);
     this.addImageFile = this.addImageFile.bind(this);
-    this.addImageFile = this.addImageFile.bind(this);
     this.nameAndArchiveFiles = this.nameAndArchiveFiles.bind(this);
     this.splitPDF = this.splitPDF.bind(this);
     this.splitAll = this.splitAll.bind(this);

@@ -97,10 +97,12 @@ public class PdfMetadataService {
                 .getCustomMetadata()
                 .isAutoUpdateMetadata()) {
 
-            //producer =
-            //        applicationProperties.getEnterpriseEdition().getCustomMetadata().getProducer();
-            //creator = applicationProperties.getEnterpriseEdition().getCustomMetadata().getCreator();
-            //title = applicationProperties.getEnterpriseEdition().getCustomMetadata().getTitle();
+            // producer =
+            //
+            // applicationProperties.getEnterpriseEdition().getCustomMetadata().getProducer();
+            // creator =
+            // applicationProperties.getEnterpriseEdition().getCustomMetadata().getCreator();
+            // title = applicationProperties.getEnterpriseEdition().getCustomMetadata().getTitle();
 
             if ("{filename}".equals(title)) {
                 title = "Filename"; // Replace with actual filename logic
@@ -121,16 +123,16 @@ public class PdfMetadataService {
         pdf.getDocumentInformation().setModificationDate(Calendar.getInstance());
 
         String author = pdfMetadata.getAuthor();
-        //if (applicationProperties
+        // if (applicationProperties
         //        .getEnterpriseEdition()
         //        .getCustomMetadata()
         //        .isAutoUpdateMetadata()) {
         //    author = applicationProperties.getEnterpriseEdition().getCustomMetadata().getAuthor();
 
-            //if (userService != null) {
-            //    author = author.replace("username", userService.getCurrentUsername());
-            //}
-        //}
+        // if (userService != null) {
+        //    author = author.replace("username", userService.getCurrentUsername());
+        // }
+        // }
         pdf.getDocumentInformation().setAuthor(author);
     }
 }

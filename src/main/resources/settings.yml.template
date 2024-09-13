@@ -48,6 +48,7 @@ security:
     scopes: openid, profile, email # Specify the scopes for which the application will request permissions
     provider: google # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
 
+# Enterprise edition settings unused for now please ignore!
 EnterpriseEdition:
   key: 00000000-0000-0000-0000-000000000000
   CustomMetadata:
@@ -55,7 +56,6 @@ EnterpriseEdition:
     author: username # Supports text such as 'John Doe' or types such as username
     creator: Stirling-PDF # Supports text such as 'Company-PDF'
     producer: Stirling-PDF # Supports text such as 'Company-PDF'
-    title: filename # Supports keywords such as 'filename' or 'unchanged' to use the original title if it exists
 
 legal:
   termsAndConditions: '' # URL to the terms and conditions of your application (e.g. https://example.com/terms) Empty string to disable or filename to load from local file in static folder
@@ -66,7 +66,7 @@ system:
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   enableAlphaFunctionality: false # Set to enable functionality which might need more testing before it fully goes live (This feature might make no changes)
   showUpdate: false # see when a new update is available
-  showUpdateOnlyAdmin: false # Only admins can see when a new updsate is available, depending on showUpdate it must be set to 'true'
+  showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template html files
   tessdataDir: /usr/share/tessdata # Path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
 
