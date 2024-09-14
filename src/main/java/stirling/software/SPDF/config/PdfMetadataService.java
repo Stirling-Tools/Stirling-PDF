@@ -7,15 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.PdfMetadata;
 
 @Service
 public class PdfMetadataService {
-
-    private static PdfMetadataService instance;
 
     private final ApplicationProperties applicationProperties;
     private final String appVersion;
@@ -31,33 +28,7 @@ public class PdfMetadataService {
         this.userService = userService;
     }
 
-    @PostConstruct
-    public void init() {
-        instance = this;
-    }
-
-    // Static methods for easy access
-
-    public static PdfMetadata extractMetadataFromPdf(PDDocument pdf) {
-        return instance.extractMetadataFromPdfInstance(pdf);
-    }
-
-    public static void setDefaultMetadata(PDDocument pdf) {
-        instance.setDefaultMetadataInstance(pdf);
-    }
-
-    public static void setMetadataToPdf(PDDocument pdf, PdfMetadata pdfMetadata) {
-        instance.setMetadataToPdfInstance(pdf, pdfMetadata);
-    }
-
-    public static void setMetadataToPdf(
-            PDDocument pdf, PdfMetadata pdfMetadata, boolean newlyCreated) {
-        instance.setMetadataToPdfInstance(pdf, pdfMetadata, newlyCreated);
-    }
-
-    // Instance methods
-
-    private PdfMetadata extractMetadataFromPdfInstance(PDDocument pdf) {
+    public PdfMetadata extractMetadataFromPdf(PDDocument pdf) {
         return PdfMetadata.builder()
                 .author(pdf.getDocumentInformation().getAuthor())
                 .producer(pdf.getDocumentInformation().getProducer())
@@ -70,17 +41,16 @@ public class PdfMetadataService {
                 .build();
     }
 
-    private void setDefaultMetadataInstance(PDDocument pdf) {
-        PdfMetadata metadata = extractMetadataFromPdfInstance(pdf);
-        setMetadataToPdfInstance(pdf, metadata);
+    public void setDefaultMetadata(PDDocument pdf) {
+        PdfMetadata metadata = extractMetadataFromPdf(pdf);
+        setMetadataToPdf(pdf, metadata);
     }
 
-    private void setMetadataToPdfInstance(PDDocument pdf, PdfMetadata pdfMetadata) {
-        setMetadataToPdfInstance(pdf, pdfMetadata, true);
+    public void setMetadataToPdf(PDDocument pdf, PdfMetadata pdfMetadata) {
+        setMetadataToPdf(pdf, pdfMetadata, false);
     }
 
-    private void setMetadataToPdfInstance(
-            PDDocument pdf, PdfMetadata pdfMetadata, boolean newlyCreated) {
+    public void setMetadataToPdf(PDDocument pdf, PdfMetadata pdfMetadata, boolean newlyCreated) {
         if (newlyCreated || pdfMetadata.getCreationDate() == null) {
             setNewDocumentMetadata(pdf, pdfMetadata);
         }
@@ -89,35 +59,35 @@ public class PdfMetadataService {
 
     private void setNewDocumentMetadata(PDDocument pdf, PdfMetadata pdfMetadata) {
 
-        String title = pdfMetadata.getTitle();
         String creator = "Stirling-PDF";
 
-//        if (applicationProperties
-//                .getEnterpriseEdition()
-//                .getCustomMetadata()
-//                .isAutoUpdateMetadata()) {
+        //        if (applicationProperties
+        //                .getEnterpriseEdition()
+        //                .getCustomMetadata()
+        //                .isAutoUpdateMetadata()) {
 
-            // producer =
-            //
-            // applicationProperties.getEnterpriseEdition().getCustomMetadata().getProducer();
-            // creator =
-            // applicationProperties.getEnterpriseEdition().getCustomMetadata().getCreator();
-            // title = applicationProperties.getEnterpriseEdition().getCustomMetadata().getTitle();
+        // producer =
+        //
+        // applicationProperties.getEnterpriseEdition().getCustomMetadata().getProducer();
+        // creator =
+        // applicationProperties.getEnterpriseEdition().getCustomMetadata().getCreator();
+        // title = applicationProperties.getEnterpriseEdition().getCustomMetadata().getTitle();
 
-//            if ("{filename}".equals(title)) {
-//                title = "Filename"; // Replace with actual filename logic
-//            } else if ("{unchanged}".equals(title)) {
-//                title = pdfMetadata.getTitle(); // Keep the original title
-//            }
-//        }
+        //            if ("{filename}".equals(title)) {
+        //                title = "Filename"; // Replace with actual filename logic
+        //            } else if ("{unchanged}".equals(title)) {
+        //                title = pdfMetadata.getTitle(); // Keep the original title
+        //            }
+        //        }
 
-        pdf.getDocumentInformation().setTitle(title);
         pdf.getDocumentInformation().setCreator(creator + " " + appVersion);
         pdf.getDocumentInformation().setCreationDate(Calendar.getInstance());
     }
 
     private void setCommonMetadata(PDDocument pdf, PdfMetadata pdfMetadata) {
         String producer = "Stirling-PDF";
+        String title = pdfMetadata.getTitle();
+        pdf.getDocumentInformation().setTitle(title);
         pdf.getDocumentInformation().setProducer(producer + " " + appVersion);
         pdf.getDocumentInformation().setSubject(pdfMetadata.getSubject());
         pdf.getDocumentInformation().setKeywords(pdfMetadata.getKeywords());
