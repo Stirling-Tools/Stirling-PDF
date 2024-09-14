@@ -172,16 +172,23 @@
         });
 
         function toggleFileOption() {
+          const stampImage = document.getElementById('stampImage');
           const stampType = document.getElementById('stampType').value;
           const stampTextGroup = document.getElementById('stampTextGroup');
           const stampImageGroup = document.getElementById('stampImageGroup');
           const alphabetGroup = document.getElementById('alphabetGroup');
 
           if (stampType === 'text') {
+            if (stampImage.hasAttribute('required')) {
+              stampImage.removeAttribute('required');
+            }
             stampTextGroup.style.display = 'block';
             stampImageGroup.style.display = 'none';
             alphabetGroup.style.display = 'block';
           } else if (stampType === 'image') {
+            if (!stampImage.hasAttribute('required')) {
+              stampImage.setAttribute('required', '');
+            }
             stampTextGroup.style.display = 'none';
             stampImageGroup.style.display = 'block';
             alphabetGroup.style.display = 'none';
