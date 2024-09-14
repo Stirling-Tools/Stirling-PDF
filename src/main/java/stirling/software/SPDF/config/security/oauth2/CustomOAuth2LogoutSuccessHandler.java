@@ -43,7 +43,7 @@ public class CustomOAuth2LogoutSuccessHandler extends SimpleUrlLogoutSuccessHand
             }
             return;
         }
-        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
 
         if (authentication instanceof OAuth2AuthenticationToken) {
             OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
