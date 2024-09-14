@@ -123,12 +123,18 @@
                   const watermarkImage = document.getElementById('watermarkImage');
 
                   if (watermarkType === 'text') {
+                    if (watermarkImage.hasAttribute('required')) {
+                      watermarkImage.removeAttribute('required');
+                    }
                     watermarkTextGroup.style.display = 'block';
                     watermarkText.required = true;
                     watermarkImageGroup.style.display = 'none';
                     watermarkImage.required = false;
                     alphabetGroup.style.display = 'block';
                   } else if (watermarkType === 'image') {
+                    if (watermarkImage.hasAttribute('required')) {
+                      watermarkImage.removeAttribute('required');
+                    }
                     watermarkTextGroup.style.display = 'none';
                     watermarkText.required = false;
                     watermarkImageGroup.style.display = 'block';
