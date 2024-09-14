@@ -21,7 +21,9 @@
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-md-12 bg-card">
+              <form>
               <div class="row justify-content-center">
+
                 <div class="col-md-3">
                   <div id="sliders-container" style="display:none;">
                     <h4><span th:text="#{adjustContrast.contrast}"></span> <span id="contrast-val">100</span>%</h4>
@@ -48,7 +50,9 @@
                   <button id="download-button" class="btn btn-primary" th:text="#{adjustContrast.download}"></button>
                   </div>
                 </div>
+
               </div>
+              </form>
 
               <script>
                 var canvas = document.getElementById('contrast-pdf-canvas');
@@ -219,7 +223,7 @@
                 function adjustBrightnessForPixel(pixel, brightness) {
                   return Math.max(0, Math.min(255, pixel * brightness));
                 }
-
+                let inputFileName = '';
                 async function downloadPDF() {
                   for (var i = 0; i < allPages.length; i++) {
                     await renderPageAndAdjustImageProperties(allPages[i]);
@@ -248,7 +252,10 @@
                   // Create download link
                   const downloadLink = document.createElement('a');
                   downloadLink.href = URL.createObjectURL(blob);
-                  downloadLink.download = "download.pdf";
+                  let newFileName = inputFileName ? inputFileName.replace('.pdf', '') : 'download';
+                  newFileName += '_adjusted_color.pdf';
+
+                  downloadLink.download = newFileName;
                   downloadLink.click();
 
                   // After download, reset the viewer and clear stored data
@@ -264,6 +271,7 @@
                 // Event listeners
                 document.getElementById('fileInput-input').addEventListener('change', function(e) {
                   if (e.target.files.length > 0) {
+                    inputFileName = e.target.files[0].name;
                     renderPDFAndSaveOriginalImageData(e.target.files[0]);
                   }
                 });
