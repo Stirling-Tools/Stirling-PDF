@@ -15,6 +15,7 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocume
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -43,6 +44,13 @@ public class SplitPdfByChaptersController {
 
     private static final Logger logger =
             LoggerFactory.getLogger(SplitPdfByChaptersController.class);
+
+    private final PdfMetadataService pdfMetadataService;
+
+    @Autowired
+    public SplitPdfByChaptersController(PdfMetadataService pdfMetadataService) {
+        this.pdfMetadataService = pdfMetadataService;
+    }
 
     @PostMapping(value = "/split-pdf-by-chapters", consumes = "multipart/form-data")
     @Operation(
@@ -258,7 +266,7 @@ public class SplitPdfByChaptersController {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
         PdfMetadata metadata = null;
         if (includeMetadata) {
-            metadata = PdfMetadataService.extractMetadataFromPdf(sourceDocument);
+            metadata = pdfMetadataService.extractMetadataFromPdf(sourceDocument);
         }
         for (Bookmark bookmark : bookmarks) {
             try (PDDocument splitDocument = new PDDocument()) {
@@ -273,7 +281,7 @@ public class SplitPdfByChaptersController {
                 }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 if (includeMetadata) {
-                    PdfMetadataService.setMetadataToPdf(splitDocument, metadata);
+                    pdfMetadataService.setMetadataToPdf(splitDocument, metadata);
                 }
 
                 splitDocument.save(baos);

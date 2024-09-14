@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
@@ -17,6 +16,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +29,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -39,6 +40,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertPDFToPDFA {
 
     private static final Logger logger = LoggerFactory.getLogger(ConvertPDFToPDFA.class);
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public ConvertPDFToPDFA(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
     @Operation(
@@ -54,7 +62,7 @@ public class ConvertPDFToPDFA {
         byte[] pdfBytes = inputFile.getBytes();
 
         // Load the PDF document
-        PDDocument document = Loader.loadPDF(pdfBytes);
+        PDDocument document = pdfDocumentFactory.load(pdfBytes);
 
         // Get the document catalog
         PDDocumentCatalog catalog = document.getDocumentCatalog();
@@ -101,18 +109,18 @@ public class ConvertPDFToPDFA {
                 ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
                         .runCommandWithOutputHandling(command);
 
-        // Read the optimized PDF file
-        byte[] optimizedPdfBytes = Files.readAllBytes(tempOutputFile);
-
-        // Clean up the temporary files
-        Files.deleteIfExists(tempInputFile);
-        Files.deleteIfExists(tempOutputFile);
-
-        // Return the optimized PDF as a response
-        String outputFilename =
-                Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_PDFA.pdf";
-        return WebResponseUtils.bytesToWebResponse(optimizedPdfBytes, outputFilename);
+        try {
+            PDDocument doc = pdfDocumentFactory.load(tempOutputFile.toFile());
+            // Return the optimized PDF as a response
+            String outputFilename =
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
+                            + "_PDFA.pdf";
+            return WebResponseUtils.pdfDocToWebResponse(doc, outputFilename);
+        } finally {
+            // Clean up the temporary files
+            Files.deleteIfExists(tempInputFile);
+            Files.deleteIfExists(tempOutputFile);
+        }
     }
 }

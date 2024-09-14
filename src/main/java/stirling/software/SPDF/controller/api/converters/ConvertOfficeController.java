@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,6 +9,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +23,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.GeneralFile;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -29,7 +33,7 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/convert")
 public class ConvertOfficeController {
 
-    public byte[] convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
+    public File convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
         // Check for valid file extension
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null
@@ -62,18 +66,23 @@ public class ConvertOfficeController {
                             .runCommandWithOutputHandling(command);
 
             // Read the converted PDF file
-            byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
-            return pdfBytes;
+            return tempOutputFile.toFile();
         } finally {
             // Clean up the temporary files
             if (tempInputFile != null) Files.deleteIfExists(tempInputFile);
-            Files.deleteIfExists(tempOutputFile);
         }
     }
 
     private boolean isValidFileExtension(String fileExtension) {
         String extensionPattern = "^(?i)[a-z0-9]{2,4}$";
         return fileExtension.matches(extensionPattern);
+    }
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public ConvertOfficeController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/file/pdf")
@@ -86,12 +95,18 @@ public class ConvertOfficeController {
         MultipartFile inputFile = request.getFileInput();
         // unused but can start server instance if startup time is to long
         // LibreOfficeListener.getInstance().start();
+        File file = null;
+        try {
+            file = convertToPdf(inputFile);
 
-        byte[] pdfByteArray = convertToPdf(inputFile);
-        return WebResponseUtils.bytesToWebResponse(
-                pdfByteArray,
-                Filenames.toSimpleFileName(inputFile.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
-                        + "_convertedToPDF.pdf");
+            PDDocument doc = pdfDocumentFactory.load(file);
+            return WebResponseUtils.pdfDocToWebResponse(
+                    doc,
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
+                            + "_convertedToPDF.pdf");
+        } finally {
+            if (file != null) file.delete();
+        }
     }
 }

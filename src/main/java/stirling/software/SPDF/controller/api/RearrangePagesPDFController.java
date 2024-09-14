@@ -10,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.SortTypes;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -33,6 +35,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class RearrangePagesPDFController {
 
     private static final Logger logger = LoggerFactory.getLogger(RearrangePagesPDFController.class);
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public RearrangePagesPDFController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/remove-pages")
     @Operation(
@@ -45,7 +54,7 @@ public class RearrangePagesPDFController {
         MultipartFile pdfFile = request.getFileInput();
         String pagesToDelete = request.getPageNumbers();
 
-        PDDocument document = Loader.loadPDF(pdfFile.getBytes());
+        PDDocument document = pdfDocumentFactory.load(pdfFile);
 
         // Split the page order string into an array of page numbers or range of numbers
         String[] pageOrderArr = pagesToDelete.split(",");

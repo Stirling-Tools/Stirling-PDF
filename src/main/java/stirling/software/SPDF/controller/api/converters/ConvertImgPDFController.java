@@ -16,6 +16,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.rendering.ImageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -30,6 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.CheckProgramInstall;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
@@ -42,6 +44,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertImgPDFController {
 
     private static final Logger logger = LoggerFactory.getLogger(ConvertImgPDFController.class);
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public ConvertImgPDFController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/img")
     @Operation(
@@ -178,7 +187,8 @@ public class ConvertImgPDFController {
         boolean autoRotate = request.isAutoRotate();
 
         // Convert the file to PDF and get the resulting bytes
-        byte[] bytes = PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType);
+        byte[] bytes =
+                PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);
         return WebResponseUtils.bytesToWebResponse(
                 bytes,
                 file[0].getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_converted.pdf");

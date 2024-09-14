@@ -16,6 +16,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.misc.RemoveBlankPagesRequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -39,6 +41,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class BlankPageController {
 
     private static final Logger logger = LoggerFactory.getLogger(BlankPageController.class);
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public BlankPageController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/remove-blanks")
     @Operation(
@@ -124,7 +133,7 @@ public class BlankPageController {
 
     public void createZipEntry(ZipOutputStream zos, List<PDPage> pages, String entryName)
             throws IOException {
-        try (PDDocument document = new PDDocument()) {
+        try (PDDocument document = pdfDocumentFactory.createNewDocument()) {
 
             for (PDPage page : pages) {
                 document.addPage(page);

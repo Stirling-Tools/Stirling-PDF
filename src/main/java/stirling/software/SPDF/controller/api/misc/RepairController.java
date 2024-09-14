@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.PDFFile;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -30,6 +32,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class RepairController {
 
     private static final Logger logger = LoggerFactory.getLogger(RepairController.class);
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public RepairController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/repair")
     @Operation(
@@ -58,7 +67,7 @@ public class RepairController {
                             .runCommandWithOutputHandling(command);
 
             // Read the optimized PDF file
-            pdfBytes = Files.readAllBytes(tempOutputFile);
+            pdfBytes = pdfDocumentFactory.loadToBytes(tempOutputFile.toFile());
 
             // Return the optimized PDF as a response
             String outputFilename =

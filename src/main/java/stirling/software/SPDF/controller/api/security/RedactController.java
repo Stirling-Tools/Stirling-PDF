@@ -5,12 +5,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.pdf.TextFinder;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -34,6 +35,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class RedactController {
 
     private static final Logger logger = LoggerFactory.getLogger(RedactController.class);
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public RedactController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(value = "/auto-redact", consumes = "multipart/form-data")
     @Operation(
@@ -52,8 +60,7 @@ public class RedactController {
 
         System.out.println(listOfTextString);
         String[] listOfText = listOfTextString.split("\n");
-        byte[] bytes = file.getBytes();
-        PDDocument document = Loader.loadPDF(bytes);
+        PDDocument document = pdfDocumentFactory.load(file);
 
         Color redactColor;
         try {

@@ -13,6 +13,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -32,6 +34,13 @@ public class CropController {
 
     private static final Logger logger = LoggerFactory.getLogger(CropController.class);
 
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public CropController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
+
     @PostMapping(value = "/crop", consumes = "multipart/form-data")
     @Operation(
             summary = "Crops a PDF document",
@@ -40,7 +49,8 @@ public class CropController {
     public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm form) throws IOException {
         PDDocument sourceDocument = Loader.loadPDF(form.getFileInput().getBytes());
 
-        PDDocument newDocument = new PDDocument();
+        PDDocument newDocument =
+                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
 
         int totalPages = sourceDocument.getNumberOfPages();
 

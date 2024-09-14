@@ -36,6 +36,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
+
 public class PdfUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
@@ -380,9 +382,13 @@ public class PdfUtils {
     }
 
     public static byte[] imageToPdf(
-            MultipartFile[] files, String fitOption, boolean autoRotate, String colorType)
+            MultipartFile[] files,
+            String fitOption,
+            boolean autoRotate,
+            String colorType,
+            CustomPDDocumentFactory pdfDocumentFactory)
             throws IOException {
-        try (PDDocument doc = new PDDocument()) {
+        try (PDDocument doc = pdfDocumentFactory.createNewDocument()) {
             for (MultipartFile file : files) {
                 String contentType = file.getContentType();
                 String originalFilename = Filenames.toSimpleFileName(file.getOriginalFilename());
@@ -470,10 +476,15 @@ public class PdfUtils {
     }
 
     public static byte[] overlayImage(
-            byte[] pdfBytes, byte[] imageBytes, float x, float y, boolean everyPage)
+            CustomPDDocumentFactory pdfDocumentFactory,
+            byte[] pdfBytes,
+            byte[] imageBytes,
+            float x,
+            float y,
+            boolean everyPage)
             throws IOException {
 
-        PDDocument document = Loader.loadPDF(pdfBytes);
+        PDDocument document = pdfDocumentFactory.load(pdfBytes);
 
         // Get the first page of the PDF
         int pages = document.getNumberOfPages();

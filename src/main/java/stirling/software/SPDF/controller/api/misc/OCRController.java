@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -50,6 +52,13 @@ public class OCRController {
                 .map(file -> file.getName().replace(".traineddata", ""))
                 .filter(lang -> !lang.equalsIgnoreCase("osd"))
                 .collect(Collectors.toList());
+    }
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public OCRController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/ocr-pdf")
@@ -175,7 +184,7 @@ public class OCRController {
                 tempOutputFile = tempPdfWithoutImages;
             }
             // Read the OCR processed PDF file
-            byte[] pdfBytes = Files.readAllBytes(tempOutputFile);
+            byte[] pdfBytes = pdfDocumentFactory.loadToBytes(tempOutputFile.toFile());
 
             // Return the OCR processed PDF as a response
             String outputFilename =
@@ -196,7 +205,13 @@ public class OCRController {
                     // Add PDF file to the zip
                     ZipEntry pdfEntry = new ZipEntry(outputFilename);
                     zipOut.putNextEntry(pdfEntry);
-                    Files.copy(tempOutputFile, zipOut);
+                    try (ByteArrayInputStream pdfInputStream = new ByteArrayInputStream(pdfBytes)) {
+                        byte[] buffer = new byte[1024];
+                        int length;
+                        while ((length = pdfInputStream.read(buffer)) != -1) {
+                            zipOut.write(buffer, 0, length);
+                        }
+                    }
                     zipOut.closeEntry();
 
                     // Add text file to the zip
