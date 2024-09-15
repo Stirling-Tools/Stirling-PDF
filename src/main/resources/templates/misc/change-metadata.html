@@ -84,6 +84,7 @@
                 <br>
                 <br>
                 <button class="btn btn-primary" type="submit" id="submitBtn" th:text="#{changeMetadata.submit}"></button>
+                <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
                 <script>
                   const deleteAllCheckbox = document.querySelector("#deleteAll");
                   let inputs = document.querySelectorAll("input");
