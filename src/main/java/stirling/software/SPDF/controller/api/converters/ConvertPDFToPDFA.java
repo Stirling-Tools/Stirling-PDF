@@ -58,7 +58,7 @@ public class ConvertPDFToPDFA {
         // Prepare the ghostscript command
         List<String> command = new ArrayList<>();
         command.add("gs");
-        command.add("-dPDFA=" + (outputFormat.equals("pdfa") ? "2" : "1"));
+        command.add("-dPDFA=" + ("pdfa".equals(outputFormat) ? "2" : "1"));
         command.add("-dNOPAUSE");
         command.add("-dBATCH");
         command.add("-sColorConversionStrategy=UseDeviceIndependentColor");
