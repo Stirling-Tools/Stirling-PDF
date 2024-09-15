@@ -1,22 +1,15 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
-import org.apache.pdfbox.pdmodel.interactive.form.PDField;
-import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,7 +22,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
-import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -40,13 +32,6 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ConvertPDFToPDFA {
 
     private static final Logger logger = LoggerFactory.getLogger(ConvertPDFToPDFA.class);
-
-    private final CustomPDDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public ConvertPDFToPDFA(CustomPDDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
     @Operation(
@@ -61,32 +46,7 @@ public class ConvertPDFToPDFA {
         // Convert MultipartFile to byte[]
         byte[] pdfBytes = inputFile.getBytes();
 
-        // Load the PDF document
-        PDDocument document = pdfDocumentFactory.load(pdfBytes);
-
-        // Get the document catalog
-        PDDocumentCatalog catalog = document.getDocumentCatalog();
-
-        // Get the AcroForm
-        PDAcroForm acroForm = catalog.getAcroForm();
-        if (acroForm != null) {
-            // Remove signature fields safely
-            List<PDField> fieldsToRemove =
-                    acroForm.getFields().stream()
-                            .filter(field -> field instanceof PDSignatureField)
-                            .collect(Collectors.toList());
-
-            if (!fieldsToRemove.isEmpty()) {
-                acroForm.flatten(fieldsToRemove, false);
-
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                document.save(baos);
-                pdfBytes = baos.toByteArray();
-            }
-        }
-        document.close();
-
-        // Save the uploaded (and possibly modified) file to a temporary location
+        // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");
         try (OutputStream outputStream = new FileOutputStream(tempInputFile.toFile())) {
             outputStream.write(pdfBytes);
@@ -95,28 +55,37 @@ public class ConvertPDFToPDFA {
         // Prepare the output file path
         Path tempOutputFile = Files.createTempFile("output_", ".pdf");
 
-        // Prepare the OCRmyPDF command
+        // Prepare the ghostscript command
         List<String> command = new ArrayList<>();
-        command.add("ocrmypdf");
-        command.add("--skip-text");
-        command.add("--tesseract-timeout=0");
-        command.add("--output-type");
-        command.add(outputFormat.toString());
-        command.add(tempInputFile.toString());
+        command.add("gs");
+        command.add("-dPDFA=" + (outputFormat.equals("pdfa") ? "2" : "1"));
+        command.add("-dNOPAUSE");
+        command.add("-dBATCH");
+        command.add("-sColorConversionStrategy=UseDeviceIndependentColor");
+        command.add("-sDEVICE=pdfwrite");
+        command.add("-dPDFACompatibilityPolicy=2");
+        command.add("-o");
         command.add(tempOutputFile.toString());
+        command.add(tempInputFile.toString());
 
         ProcessExecutorResult returnCode =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
                         .runCommandWithOutputHandling(command);
 
+        if (returnCode.getRc() != 0) {
+            logger.info(
+                    outputFormat + " conversion failed with return code: " + returnCode.getRc());
+        }
+
         try {
-            PDDocument doc = pdfDocumentFactory.load(tempOutputFile.toFile());
+            byte[] pdfBytesOutput = Files.readAllBytes(tempOutputFile);
             // Return the optimized PDF as a response
             String outputFilename =
                     Filenames.toSimpleFileName(inputFile.getOriginalFilename())
                                     .replaceFirst("[.][^.]+$", "")
                             + "_PDFA.pdf";
-            return WebResponseUtils.pdfDocToWebResponse(doc, outputFilename);
+            return WebResponseUtils.bytesToWebResponse(
+                    pdfBytesOutput, outputFilename, MediaType.APPLICATION_PDF);
         } finally {
             // Clean up the temporary files
             Files.deleteIfExists(tempInputFile);
