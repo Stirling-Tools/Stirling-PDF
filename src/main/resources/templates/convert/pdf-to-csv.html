@@ -33,6 +33,7 @@
                 </div>
                 <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2;"></canvas>
               </div>
+              <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
               <script>
                 let pdfCanvas  = document.getElementById('crop-pdf-canvas');
                 let overlayCanvas = document.getElementById('overlayCanvas');
