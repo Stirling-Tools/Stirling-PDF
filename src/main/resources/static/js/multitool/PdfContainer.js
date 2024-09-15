@@ -117,6 +117,12 @@ class PdfContainer {
     const newAngle = lastAngle + deg;
 
     element.style.rotate = newAngle + "deg";
+
+    // Update the larger preview rotation
+    const previewElement = document.getElementById("pdf-preview");
+    if (previewElement) {
+      previewElement.style.rotate = newAngle + "deg";
+    }
   }
 
   async addPdfFile(file, nextSiblingElement) {
