@@ -21,6 +21,7 @@
 
               <!-- pdf selector -->
               <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+              <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
               <script>
                 let originalFileName = '';
                 document.querySelector('input[name=pdf-upload]').addEventListener('change', async (event) => {
