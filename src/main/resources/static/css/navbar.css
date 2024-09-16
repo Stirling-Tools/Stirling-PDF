@@ -136,7 +136,7 @@ span.icon-text::after {
 /* Dropdown Scrollbar*/
 .scrollable-y {
   overflow-y: scroll;
-  height: 360px;
+  height: 190px;
 }
 
 .scrollable-y::-webkit-scrollbar {
