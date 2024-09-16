@@ -22,6 +22,25 @@ function filterCards() {
   }
 }
 
+function updateFavoritesSection() {
+  const favoritesContainer = document.getElementById("groupFavorites").querySelector(".feature-group-container");
+  favoritesContainer.innerHTML = "";
+  const cards = Array.from(document.querySelectorAll(".feature-card"));
+  let favoritesAmount = 0;
+  cards.forEach(card => {
+    if (localStorage.getItem(card.id) === "favorite") {
+      const duplicate = card.cloneNode(true);
+      favoritesContainer.appendChild(duplicate);
+      favoritesAmount++;
+    }
+  });
+  if (favoritesAmount === 0) {
+    document.getElementById("groupFavorites").style.display = "none";
+  } else {
+    document.getElementById("groupFavorites").style.display = "flex";
+  };
+};
+
 function toggleFavorite(element) {
   var span = element.querySelector("span.material-symbols-rounded");
   var card = element.closest(".feature-card");
@@ -38,6 +57,7 @@ function toggleFavorite(element) {
     localStorage.removeItem(cardId);
   }
   reorderCards();
+  updateFavoritesSection();
   updateFavoritesDropdown();
   filterCards();
 }
@@ -64,7 +84,7 @@ function reorderCards() {
     return 0;
   });
   cards.forEach(function (card) {
-    container.appendChild(card);
+    //container.appendChild(card);
   });
 }
 
@@ -80,20 +100,35 @@ function initializeCards() {
     }
   });
   reorderCards();
+  updateFavoritesSection();
   updateFavoritesDropdown();
   filterCards();
 }
 
 window.onload = initializeCards;
 
-  document.addEventListener("DOMContentLoaded", function() {
-    const materialIcons = new FontFaceObserver('Material Symbols Rounded');
-    
-    materialIcons.load().then(() => {
-      document.querySelectorAll('.feature-card.hidden').forEach(el => {
-        el.classList.remove('hidden');
-      });
-    }).catch(() => {
-      console.error('Material Symbols Rounded font failed to load.');
+document.addEventListener("DOMContentLoaded", function () {
+  const materialIcons = new FontFaceObserver('Material Symbols Rounded');
+
+  materialIcons.load().then(() => {
+    document.querySelectorAll('.feature-card.hidden').forEach(el => {
+      el.classList.remove('hidden');
     });
+  }).catch(() => {
+    console.error('Material Symbols Rounded font failed to load.');
   });
+
+  Array.from(document.querySelectorAll(".feature-group-header")).forEach(header => {
+    const parent = header.parentNode;
+    const container = header.parentNode.querySelector(".feature-group-container");
+    if (parent.id !== "groupFavorites") {
+      container.style.maxHeight = container.clientHeight + "px";
+    } else {
+      container.style.maxHeight = "500px";
+    }
+    header.onclick = () => {
+      parent.classList.toggle("collapsed");
+      parent.querySelector(".header-expand-button").classList.toggle("collapsed");
+    };
+  })
+});
