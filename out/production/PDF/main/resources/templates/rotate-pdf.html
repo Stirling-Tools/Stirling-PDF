@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{rotate.title}, header=#{rotate.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon organize">rotate_right</span>
+                <span class="tool-header-text" th:text="#{rotate.header}"></span>
+              </div>
+
+              <form action="#" th:action="@{'/api/v1/general/rotate-pdf'}" th:object="${rotateForm}" method="post" enctype="multipart/form-data">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <input type="hidden" id="angleInput" name="angle" value="0">
+
+                <div id="editSection" style="display: none">
+                  <div id="previewContainer">
+                    <!-- pdf-preview -->
+                  </div>
+
+                  <div class="buttonContainer">
+                    <button type="button" class="btn btn-secondary" onclick="rotate(-90)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z" />
+                        <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z" />
+                      </svg>
+                    </button>
+                    <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{rotate.submit}"></button>
+                    <button type="button" class="btn btn-secondary" onclick="rotate(90)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
+                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+    <script>
+      const angleInput = document.getElementById("angleInput");
+      const fileInput = document.getElementById("fileInput-input");
+      const previewContainer = document.getElementById("previewContainer");
+      // const preview = document.getElementById("pdf-preview");
+      fileInput.addEventListener("change", async function() {
+        console.log("loading pdf");
+
+        document.querySelector("#editSection").style.display = "";
+        
+        const existingPreview = document.getElementById("pdf-preview");
+        if (existingPreview) {
+          existingPreview.remove();
+        }
+        var url = URL.createObjectURL(fileInput.files[0])
+        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
+        const pdf = await pdfjsLib.getDocument(url).promise;
+        const page = await pdf.getPage(1);
+
+        const canvas = document.createElement("canvas");
+
+        // set the canvas size to the size of the page
+        if (page.rotate == 90 || page.rotate == 270) {
+          canvas.width = page.view[3];
+          canvas.height = page.view[2];
+        } else {
+          canvas.width = page.view[2];
+          canvas.height = page.view[3];
+        }
+
+        // render the page onto the canvas
+        var renderContext = {
+          canvasContext: canvas.getContext("2d"),
+          viewport: page.getViewport({ scale: 1 })
+        };
+
+        await page.render(renderContext).promise;
+        const  preview = document.createElement("img");
+        preview.id = "pdf-preview";
+        preview.alt = "preview";
+        preview.src = canvas.toDataURL();
+        previewContainer.appendChild(preview);
+      });
+
+      function rotate(deg) {
+        const preview = document.getElementById("pdf-preview");
+        var lastTransform = preview.style.rotate;
+        if (!lastTransform) {
+          lastTransform = "0";
+        }
+        const lastAngle = parseInt(lastTransform.replace(/[^\d-]/g, ''));
+        const newAngle = lastAngle + deg;
+        preview.style.rotate = newAngle + "deg";
+        angleInput.value = newAngle;
+      }
+    </script>
+  </body>
+</html>

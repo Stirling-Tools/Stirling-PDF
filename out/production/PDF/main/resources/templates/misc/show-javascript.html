@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{showJS.title}, header=#{showJS.header})}"></th:block>
+    <link th:href="@{'/css/prism.css'}" rel="stylesheet">
+    <script th:src="@{'/js/thirdParty/prism.js'}"></script>
+    <style>
+      /* Add a max-height and make it scrollable */
+      #script-content {
+          max-height: 1000px; /* Adjust this to your preferred maximum height */
+          overflow-y: auto;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-12 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon advance">javascript</span>
+                <span class="tool-header-text" th:text="#{showJS.header}"></span>
+              </div>
+              <form id="pdfInfoForm" method="post" enctype="multipart/form-data" th:action="@{'/show-javascript'}">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, remoteCall='false', accept='application/pdf')}"></div>
+                <br>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{showJS.submit}"></button>
+              </form>
+              <div class="container mt-5">
+                <!-- Iterate over each main section in the JSON -->
+                <div id="script-content">
+                  <!-- JavaScript will populate this section -->
+                </div>
+
+                <!-- Button to download the JSON -->
+                <a href="#" id="downloadJS" class="btn btn-primary mt-3" style="display: none;" th:text="#{showJS.downloadJS}">Download JSON</a>
+              </div>
+              <script>
+                document.querySelector('#pdfInfoForm').addEventListener('submit', function(event){
+                  event.preventDefault();
+
+                  // Fetch the formData
+                  const formData = new FormData(event.target);
+
+                  fetch('api/v1/misc/show-javascript', {
+                    method: 'POST',
+                    body: formData
+                  }).then(response => response.text())
+                  .then(data => {
+                    // Escape < and > characters
+                    let escapedData = data.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+                    // Create the elements manually
+                    let preElement = document.createElement('pre');
+                    let codeElement = document.createElement('code');
+                    codeElement.classList.add('language-javascript');
+                    codeElement.textContent = escapedData;  // Use textContent instead of innerHTML
+                    preElement.appendChild(codeElement);
+
+                    let scriptContent = document.querySelector('#script-content');
+                    // Clear existing content, if any
+                    while (scriptContent.firstChild) {
+                      scriptContent.removeChild(scriptContent.firstChild);
+                    }
+                    scriptContent.appendChild(preElement);
+
+                    // Highlight the code using Prism.js
+                    Prism.highlightAll();
+
+                    // Create a blob object from the data and create a URL for it
+                    let blob = new Blob([data], {type: 'application/javascript'});
+                    let url = URL.createObjectURL(blob);
+
+                    // Set the URL as the href of the download button and provide a download name
+                    let downloadButton = document.querySelector('#downloadJS');
+                    downloadButton.href = url;
+                    downloadButton.download = 'extracted.js';
+                    downloadButton.style.display = 'block';
+                  })
+                  .catch(error => {
+                    console.error('Error:', error);
+                  });
+                });
+              </script>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

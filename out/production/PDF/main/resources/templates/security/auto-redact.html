@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{autoRedact.title}, header=#{autoRedact.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon security">ink_eraser</span>
+                <span class="tool-header-text" th:text="#{autoRedact.header}"></span>
+              </div>
+              <form action="api/v1/security/auto-redact" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <input type="file" class="form-control" id="fileInput" name="fileInput" required accept="application/pdf">
+                </div>
+
+                <div class="mb-3">
+                  <label for="listOfText" class="form-label" th:text="#{autoRedact.textsToRedactLabel}"></label>
+                  <textarea class="form-control" id="listOfText" name="listOfText" rows="4" required th:placeholder="#{autoRedact.textsToRedactPlaceholder}"></textarea>
+                </div>
+
+                <div class="mb-3">
+                  <label for="defaultColor" class="form-label" th:text="#{autoRedact.colorLabel}">Color</label>
+                  <select class="form-control" id="defaultColor" name="defaultColor" onchange="handleColorChange(this.value)">
+                    <option value="#000000" th:text="#{black}">Black</option>
+                    <option value="#FFFFFF" th:text="#{white}">White</option>
+                    <option value="#FF0000" th:text="#{red}">Red</option>
+                    <option value="#00FF00" th:text="#{green}">Green</option>
+                    <option value="#0000FF" th:text="#{blue}">Blue</option>
+                    <option value="custom" th:text="#{custom}">Custom...</option>
+                  </select>
+                </div>
+
+                <!-- Custom Color Input -->
+                <div class="mb-3" id="customColorContainer" style="display: none;">
+                  <label for="customColor" class="form-label" th:text="#{autoRedact.colorLabel}">Custom Color</label>
+                  <input type="text" class="form-control" id="customColor" name="redactColor" placeholder="#FF00FF">
+                </div>
+
+                <script>
+                  function handleColorChange(selectedValue) {
+                    if (selectedValue === "custom") {
+                      document.getElementById('customColorContainer').style.display = 'block';
+                    } else {
+                      document.getElementById('customColorContainer').style.display = 'none';
+                      document.getElementById('customColor').value = selectedValue;
+                    }
+                  }
+                </script>
+                <div class="mb-3 form-check">
+                  <input type="checkbox" id="useRegex" name="useRegex">
+                  <label for="useRegex" th:text="#{autoRedact.useRegexLabel}"></label>
+                </div>
+
+                <div class="mb-3 form-check">
+                  <input type="checkbox" id="wholeWordSearch" name="wholeWordSearch">
+                  <label for="wholeWordSearch" th:text="#{autoRedact.wholeWordSearchLabel}"></label>
+                </div>
+
+                <div class="mb-3">
+                  <label for="customPadding" class="form-label" th:text="#{autoRedact.customPaddingLabel}"></label>
+                  <input type="number" step="0.1" class="form-control" id="customPadding" name="customPadding" value="0.1">
+                </div>
+
+                <div class="mb-3 form-check">
+                  <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage" checked>
+                  <label for="convertPDFToImage" th:text="#{autoRedact.convertPDFToImageLabel}"></label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" th:text="#{autoRedact.submitButton}"></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

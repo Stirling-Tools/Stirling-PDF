@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{pdfToImage.title}, header=#{pdfToImage.header})}"></th:block>
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon image">image</span>
+                <span class="tool-header-text" th:text="#{pdfToImage.header}"></span>
+              </div>
+              <p th:text="#{processTimeWarning}"></p>
+              <p th:if="${!isPython}" th:text="#{pdfToImage.info}">Python is not installed. Required for WebP conversion.</p>
+              <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/img'}">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <div class="mb-3">
+                  <label th:text="#{pdfToImage.selectText}"></label>
+                  <select class="form-control" name="imageFormat">
+                    <option value="png">PNG</option>
+                    <option value="jpg">JPG</option>
+                    <option value="gif">GIF</option>
+                    <option value="tiff">TIFF</option>
+                    <option value="bmp">BMP</option>
+                    <option th:if="${isPython}" value="webp">WEBP</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label th:text="#{pdfToImage.singleOrMultiple}"></label>
+                  <select class="form-control" name="singleOrMultiple">
+                    <option value="multiple" th:text="#{pdfToImage.multi}"></option>
+                    <option value="single" th:text="#{pdfToImage.single}"></option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label th:text="#{pdfToImage.colorType}"></label>
+                  <select class="form-control" name="colorType">
+                    <option value="color" th:text="#{pdfToImage.color}"></option>
+                    <option value="greyscale" th:text="#{pdfToImage.grey}"></option>
+                    <option value="blackwhite" th:text="#{pdfToImage.blackwhite}"></option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="dpi">DPI:</label>
+                  <input type="number" name="dpi" class="form-control" id="dpi" min="1" step="1" value="300" required>
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfToImage.submit}"></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

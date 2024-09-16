@@ -1,0 +1,171 @@
+<th:block th:fragment="head">
+    <!-- Title -->
+    <title th:text="${@appName} + (${title} != null and ${title} != '' ? ' - ' + ${title} : '')"></title>
+
+    <!-- Metadata -->
+    <meta charset="utf-8">
+    <meta name="description" th:content="${@appName} + (${header} != null and ${header} != '' ? ' - ' + ${header} : '')">
+    <meta name="msapplication-TileColor" content="#2d89ef">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" th:href="@{'/apple-touch-icon.png'}">
+    <link rel="icon" type="image/png" sizes="32x32" th:href="@{'/favicon-32x32.png'}">
+    <link rel="icon" type="image/png" sizes="16x16" th:href="@{'/favicon-16x16.png'}">
+    <link rel="manifest" th:href="@{'/site.webmanifest'}" crossorigin="use-credentials">
+    <link rel="mask-icon" th:href="@{'/safari-pinned-tab.svg'}" color="#ca2b2a">
+    <link rel="shortcut icon" th:href="@{'/favicon.ico'}">
+    <meta name="apple-mobile-web-app-title" content="Stirling PDF">
+    <meta name="application-name" content="Stirling PDF">
+    <meta name="msapplication-TileColor" content="#00aba9">
+    <meta name="theme-color" content="#ffffff">
+
+    <!-- jQuery -->
+    <script th:src="@{'/js/thirdParty/jquery.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/jquery.validate.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/jszip.min.js'}"></script>
+
+    <!-- Bootstrap -->
+    <script th:src="@{'/js/thirdParty/popper.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/bootstrap.min.js'}"></script>
+    <link rel="stylesheet" th:href="@{'/css/bootstrap.min.css'}">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" th:href="@{'/css/bootstrap-icons.min.css'}">
+
+    <!-- PDF.js -->
+    <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
+
+    <!-- PDF-Lib -->
+    <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
+
+    <!-- Custom -->
+    <link rel="stylesheet" th:href="@{'/css/general.css'}">
+    <link rel="stylesheet" th:href="@{'/css/theme/theme.css'}">
+    <link rel="stylesheet" th:href="@{'/css/theme/componentes.css'}">
+    <link rel="stylesheet" th:href="@{'/css/theme/theme.light.css'}" id="light-mode-styles">
+    <link rel="stylesheet" th:href="@{'/css/theme/theme.dark.css'}" id="dark-mode-styles">
+    <link rel="stylesheet" th:href="@{'/css/rainbow-mode.css'}" id="rainbow-mode-styles" disabled>
+    <link rel="stylesheet" th:href="@{'/css/tab-container.css'}">
+    <link rel="stylesheet" th:href="@{'/css/navbar.css'}">
+
+    <link rel="stylesheet" th:href="@{'/css/error.css'}" th:if="${error}">
+
+    <link rel="stylesheet" th:href="@{'/css/home.css'}" th:if="${currentPage == 'home'}">
+    <link rel="stylesheet" th:href="@{'/css/account.css'}" th:if="${currentPage == 'account'}">
+    <link rel="stylesheet" th:href="@{'/css/licenses.css'}" th:if="${currentPage == 'licenses'}">
+    <link rel="stylesheet" th:href="@{'/css/multi-tool.css'}" th:if="${currentPage == 'multi-tool'}">
+    <link rel="stylesheet" th:href="@{'/css/rotate-pdf.css'}" th:if="${currentPage == 'rotate-pdf'}">
+    <link rel="stylesheet" th:href="@{'/css/stamp.css'}" th:if="${currentPage == 'stamp'}">
+    <link rel="stylesheet" th:href="@{'/css/fileSelect.css'}">
+    <link rel="stylesheet" th:href="@{'/css/footer.css'}">
+    <script th:src="@{'/js/thirdParty/fontfaceobserver.standalone.js'}"></script>
+
+    <!-- Google MD Icons -->
+    <link rel="stylesheet" th:href="@{'/css/theme/font.css'}">
+
+    <!-- Help Modal -->
+    <link rel="stylesheet" th:href="@{'/css/errorBanner.css'}">
+
+    <script th:src="@{'/js/cacheFormInputs.js'}"></script>
+    <script th:src="@{'/js/tab-container.js'}"></script>
+    <script th:src="@{'/js/darkmode.js'}"></script>
+  </th:block>
+
+<th:block th:fragment="game">
+    <dialog id="game-container-wrapper" class="game-container-wrapper" data-bs-modal>
+      <script th:inline="javascript">
+        console.log("loaded game");
+        $(document).ready(function() {
+
+           // Find the file input within the form
+          var fileInput = $('input[type="file"]');
+
+          // Find the closest enclosing form of the file input
+          var form = fileInput.closest('form');
+
+          // Find the submit button within the form
+          var submitButton = form.find('button[type="submit"], input[type="submit"]');
+
+          const boredWaitingText = /*[[#{bored}]]*/ 'Bored Waiting?';
+          const downloadCompleteText = /*[[#{downloadComplete}]]*/ 'Download Complete';
+          window.downloadCompleteText = downloadCompleteText;
+          // Create the 'show-game-btn' button
+          var gameButton = $('<button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">' + boredWaitingText + '</button><br><br>');
+
+          // Insert the 'show-game-btn' just above the submit button
+          submitButton.before(gameButton);
+
+          function loadGameScript(callback) {
+            console.log('loadGameScript called');
+            const script = document.createElement('script');
+            script.src = 'js/game.js';
+            script.onload = callback;
+            document.body.appendChild(script);
+          }
+          let gameScriptLoaded = false;
+          const gameDialog = document.getElementById('game-container-wrapper');
+          $('#show-game-btn').on('click', function() {
+            console.log('Show game button clicked');
+            if (!gameScriptLoaded) {
+              console.log('Show game button load');
+              loadGameScript(function() {
+                console.log('Game script loaded');
+                window.initializeGame();
+                gameScriptLoaded = true;
+              });
+            } else {
+              window.resetGame();
+            }
+            gameDialog.showModal();
+          });
+          gameDialog.addEventListener("click", e => {
+            const dialogDimensions = gameDialog.getBoundingClientRect()
+            if (
+              e.clientX < dialogDimensions.left ||
+              e.clientX > dialogDimensions.right ||
+              e.clientY < dialogDimensions.top ||
+              e.clientY > dialogDimensions.bottom
+            ) {
+              gameDialog.close();
+            }
+          })
+        })
+      </script>
+      <div id="game-container">
+        <div id="lives">Lives: 3</div>
+        <div id="score">Score: 0</div>
+        <div id="high-score">High Score: 0</div>
+        <div id="level">Level: 1</div>
+        <img th:src="@{'/favicon.svg'}" class="player" id="player" alt="favicon">
+      </div>
+      <link rel="stylesheet" th:href="@{'/css/game.css'}">
+    </dialog>
+</th:block>
+
+<th:block th:fragment="fileSelector(name, multipleInputsForSingleRequest)" th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, disableMultipleFiles=${disableMultipleFiles} ?: false, notRequired=${notRequired} ?: false">
+                <script th:inline="javascript">
+                  const pdfPasswordPrompt = /*[[#{error.pdfPassword}]]*/ '';
+                  const multipleInputsForSingleRequest = /*[[${multipleInputsForSingleRequest}]]*/ false;
+                  const disableMultipleFiles = /*[[${disableMultipleFiles}]]*/ false;
+                  const remoteCall = /*[[${remoteCall}]]*/ true;
+                </script>
+                <script th:src="@{'/js/downloader.js'}"></script>
+
+                <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
+                  <div class="mb-3">
+                    <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" th:attr="multiple=${!disableMultipleFiles}" th:required="${notRequired} ? null : 'required'">
+                  </div>
+                  <div class="selected-files"></div>
+                </div>
+
+                <div class="progressBarContainer" style="display: none; position: relative;">
+                  <div class="progress" style="height: 1rem;">
+                    <div class="progressBar progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                      <span class="visually-hidden">Loading...</span>
+                    </div>
+                  </div>
+                </div>
+                <script th:src="@{'/js/fileInput.js'}"></script>
+</th:block>

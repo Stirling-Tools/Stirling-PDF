@@ -1,0 +1,54 @@
+#game-container {
+  position: relative;
+  width: 100vh;
+  height: 0;
+  padding-bottom: 75%; /* 4:3 aspect ratio */
+  background-color: transparent;
+  margin: auto;
+  overflow: hidden;
+  border: 2px solid black; /* Add border */
+}
+
+.pdf,
+.player,
+.projectile {
+  position: absolute;
+}
+.pdf {
+  width: 50px;
+  height: 50px;
+}
+.player {
+  width: 50px;
+  height: 50px;
+}
+.projectile {
+  background-color: black !important;
+  width: 5px;
+  height: 10px;
+}
+#score,
+#level,
+#lives,
+#high-score {
+  color: black;
+  font-family: sans-serif;
+  position: absolute;
+  font-size: calc(14px + 0.25vw); /* Reduced font size */
+}
+#score {
+  top: 10px;
+  left: 10px;
+}
+#lives {
+  top: 10px;
+  left: calc(9vw); /* Adjusted position */
+}
+#high-score {
+  top: 10px;
+  left: calc(14vw); /* Adjusted position */
+}
+#level {
+  top: 10px;
+  right: 10px;
+}

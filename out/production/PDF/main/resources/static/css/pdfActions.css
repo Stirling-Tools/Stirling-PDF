@@ -1,0 +1,119 @@
+.pdf-actions_button-container {
+  z-index: 2;
+  display: flex;
+  opacity: 0;
+  transition: opacity 0.1s linear;
+}
+
+.pdf-actions_container:hover .pdf-actions_button-container {
+  opacity: 1;
+}
+
+.pdf-actions_button-container>* {
+  padding: 0.25rem 0.5rem;
+  display: block;
+}
+
+.pdf-actions_button-container>*:focus {
+  box-shadow: none !important;
+}
+
+.pdf-actions_button-container .btn {
+  border-radius: 12px;
+}
+
+.pdf-actions_button-container> :first-child,
+.pdf-actions_container:first-child>.pdf-actions_button-container> :first-child+* {
+  border-radius: 12px 0px 0px 12px;
+}
+
+.pdf-actions_container svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pdf-actions_container:nth-child(1) .pdf-actions_move-left-button {
+  display: none;
+}
+
+.pdf-actions_container:last-child .pdf-actions_move-right-button {
+  display: none;
+}
+
+/* "insert pdf" buttons that appear on the right when hover */
+.pdf-actions_insert-file-button-container {
+  translate: 0 -50%;
+  width: 80px;
+  height: 100%;
+
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.pdf-actions_insert-file-button-container button .material-symbols-rounded {
+  vertical-align: top;
+}
+
+.pdf-actions_insert-file-button-container.left button,
+.pdf-actions_insert-file-button-container.right button {
+  padding: 0.45rem;
+}
+
+.pdf-actions_button-container button .material-symbols-rounded {
+  font-size: 1.25rem;
+  vertical-align: sub;
+}
+
+.pdf-actions_insert-file-button {
+  padding: 0;
+  vertical-align: sub;
+}
+
+.pdf-actions_insert-file-button-container.left {
+  left: -20px;
+}
+
+.pdf-actions_insert-file-button-container.right {
+  right: -20px;
+}
+
+html[dir="ltr"] .pdf-actions_insert-file-button-container.right {
+  display: none;
+}
+
+html[dir="rtl"] .pdf-actions_insert-file-button-container.left {
+  display: none;
+}
+
+.pdf-actions_insert-file-button-container.left .pdf-actions_insert-file-button {
+  left: 0;
+  translate: 0 -50%;
+}
+
+.pdf-actions_insert-file-button-container.right .pdf-actions_insert-file-button {
+  right: 0;
+  translate: 0 -50%;
+}
+
+html[dir="ltr"] .pdf-actions_container:last-child>.pdf-actions_insert-file-button-container.right {
+  display: block;
+}
+
+html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-button-container.left {
+  display: block;
+}
+
+.pdf-actions_insert-file-button-container:hover {
+  opacity: 1;
+  transition: opacity 0.05s;
+}
+
+.pdf-actions_insert-file-button {
+  position: absolute;
+  top: 50%;
+  right: 50%;
+  translate: 50% -50%;
+  aspect-ratio: 1;
+  border-radius: 100px;
+}

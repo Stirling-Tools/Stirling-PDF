@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{home.ScannerImageSplit.title}, header=#{home.ScannerImageSplit.header})}"></th:block>
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon advance">scanner</span>
+                <span class="tool-header-text" th:text="#{home.ScannerImageSplit.title}"></span>
+              </div>
+
+              <p th:if="${!isPython}" th:text="#{ScannerImageSplit.info}" class="alert alert-success text-center">Python is not installed. It is required to run.</p>
+
+              <form th:if="${isPython}" id="multiPdfForm" th:action="@{'/api/v1/misc/extract-image-scans'}" method="post" enctype="multipart/form-data">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='image/*, application/pdf')}"></div>
+                <div class="mb-3">
+                  <label for="angleThreshold" th:text="#{ScannerImageSplit.selectText.1}"></label>
+                  <input type="number" class="form-control" id="angleThreshold" name="angle_threshold" value="10">
+                  <small id="angleThresholdHelp" class="form-text text-muted" th:text="#{ScannerImageSplit.selectText.2}"></small>
+                </div>
+                <div class="mb-3">
+                  <label for="tolerance" th:text="#{ScannerImageSplit.selectText.3}"></label>
+                  <input type="number" class="form-control" id="tolerance" name="tolerance" value="20">
+                  <small id="toleranceHelp" class="form-text text-muted" th:text="#{ScannerImageSplit.selectText.4}"></small>
+                </div>
+                <div class="mb-3">
+                  <label for="minArea" th:text="#{ScannerImageSplit.selectText.5}"></label>
+                  <input type="number" class="form-control" id="minArea" name="min_area" value="8000">
+                  <small id="minAreaHelp" class="form-text text-muted" th:text="#{ScannerImageSplit.selectText.6}"></small>
+                </div>
+                <div class="mb-3">
+                  <label for="minContourArea" th:text="#{ScannerImageSplit.selectText.7}"></label>
+                  <input type="number" class="form-control" id="minContourArea" name="min_contour_area" value="500">
+                  <small id="minContourAreaHelp" class="form-text text-muted" th:text="#{ScannerImageSplit.selectText.8}"></small>
+                </div>
+                <div class="mb-3">
+                  <label for="borderSize" th:text="#{ScannerImageSplit.selectText.9}"></label>
+                  <input type="number" class="form-control" id="borderSize" name="border_size" value="1">
+                  <small id="borderSizeHelp" class="form-text text-muted" th:text="#{ScannerImageSplit.selectText.10}"></small>
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{genericSubmit}"></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{multiTool.title}, header=#{multiTool.header})}"></th:block>
+</head>
+
+<body>
+  <div id="image-highlighter"></div>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-12">
+            <div class="bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon advance">construction</span>
+                <span class="tool-header-text" th:text="#{multiTool.header}"></span>
+              </div>
+              <div class="mt-action-bar d-flex flex-wrap">
+                <div class="mt-filename">
+                  <label for="filename-input" th:text="#{multiTool.uploadPrompts}">Filename</label>
+                  <input type="text" class="form-control" id="filename-input"
+                    th:placeholder="#{multiTool.uploadPrompts}">
+                </div>
+                <div class="mt-action-btn">
+                  <button class="btn btn-primary" onclick="addFiles()">
+                    <span class="material-symbols-rounded">
+                      add
+                    </span>
+                  </button>
+                  <button class="btn btn-secondary enable-on-file" onclick="rotateAll(-90)" disabled>
+                    <span class="material-symbols-rounded">
+                      rotate_left
+                    </span>
+                  </button>
+                  <button class="btn btn-secondary enable-on-file" onclick="rotateAll(90)" disabled>
+                    <span class="material-symbols-rounded">
+                      rotate_right
+                    </span>
+                  </button>
+                  <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
+                    <span class="material-symbols-rounded">
+                      download
+                    </span>
+                  </button>
+                </div>
+              </div>
+              <div class="multi-tool-container">
+                <div class="d-flex flex-wrap" id="pages-container-wrapper">
+                  <div id="pages-container">
+                    <div class="page-container" th:each="file, status: ${fileList}"
+                      th:id="'page-container-' + ${status.index}">
+                      <div class="page-number-container">
+                        <span th:text="${status.index + 1}"></span>
+                      </div>
+                      <img th:src="${file.imageUrl}" alt="File Page">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="drag-container"></div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+
+  <script type="module">
+    import PdfContainer from './js/multitool/PdfContainer.js';
+    import DragDropManager from "./js/multitool/DragDropManager.js";
+    import scrollDivHorizontally from "./js/multitool/horizontalScroll.js";
+    import ImageHighlighter from "./js/multitool/ImageHighlighter.js";
+    import PdfActionsManager from './js/multitool/PdfActionsManager.js';
+    import FileDragManager from './js/multitool/fileInput.js';
+    // enables drag and drop
+    const dragDropManager = new DragDropManager('drag-container', 'pages-container');
+    // enables image highlight on click
+    const imageHighlighter = new ImageHighlighter('image-highlighter');
+    // enables the default action buttons on each file
+    const pdfActionsManager = new PdfActionsManager('pages-container');
+    const fileDragManager = new FileDragManager();
+
+    // Scroll the wrapper horizontally
+    scrollDivHorizontally('pages-container-wrapper');
+
+    // Automatically exposes rotateAll, addFiles and exportPdf to the window for the global buttons.
+    const pdfContainer = new PdfContainer(
+      'pages-container',
+      'pages-container-wrapper',
+      [
+        dragDropManager,
+        imageHighlighter,
+        pdfActionsManager,
+        fileDragManager
+      ]
+    )
+
+    fileDragManager.setCallback(async (files) => pdfContainer.addFilesFromFiles(files));
+  </script>
+</body>
+
+</html>

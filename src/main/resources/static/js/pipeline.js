@@ -74,10 +74,12 @@ function updateValidateButton(isValid) {
   }
 }
 
+
 document.getElementById("submitConfigBtn").addEventListener("click", function () {
   if (validatePipeline() === false) {
     return;
   }
+
   let selectedOperation = document.getElementById("operationsDropdown").value;
 
   var pipelineName = document.getElementById("pipelineName").value;

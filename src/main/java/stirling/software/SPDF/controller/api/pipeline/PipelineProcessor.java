@@ -299,7 +299,6 @@ public class PipelineProcessor {
                     // Extracts filename and removes quotes if present
                     filename = part.split("=")[1].trim().replace("\"", "");
                     filename = URLDecoder.decode(filename, StandardCharsets.UTF_8);
-
                     break;
                 }
             }
@@ -311,7 +310,8 @@ public class PipelineProcessor {
     List<Resource> generateInputFiles(File[] files) throws Exception {
         if (files == null || files.length == 0) {
             logger.info("No files");
-            return null;
+            throw new Exception("Please choose file");
+            //return null;
         }
 
         List<Resource> outputFiles = new ArrayList<>();
@@ -340,7 +340,8 @@ public class PipelineProcessor {
     List<Resource> generateInputFiles(MultipartFile[] files) throws Exception {
         if (files == null || files.length == 0) {
             logger.info("No files");
-            return null;
+            throw new Exception("Please choose file");
+            //return null;
         }
 
         List<Resource> outputFiles = new ArrayList<>();

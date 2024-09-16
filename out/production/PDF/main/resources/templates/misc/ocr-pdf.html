@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{ocr.title}, header=#{ocr.header})}"></th:block>
+    <script>
+      function handleLangSelection() {
+        let checkboxes = document.getElementsByName("languages");
+        let selected = false;
+        for (let i = 0; i < checkboxes.length; i++) {
+          if (checkboxes[i].checked) {
+            selected = true;
+            checkboxes[i].setAttribute('required', 'false');
+          }
+        }
+        if (selected) {
+          for (let i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].removeAttribute('required');
+          }
+        }
+        else {
+          for (let i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].setAttribute('required', 'true');
+          }
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon other">quick_reference_all</span>
+                <span class="tool-header-text" th:text="#{ocr.header}"></span>
+              </div>
+              <form th:if="${#lists.size(languages) > 0}" action="#" th:action="@{'/api/v1/misc/ocr-pdf'}" method="post" enctype="multipart/form-data" class="mb-3">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <div class="mb-3">
+                  <label for="languages" class="form-label" th:text="#{ocr.selectText.1}"></label>
+                  <hr>
+                  <div id="languages">
+                    <div class="form-check" th:each="language, iterStat : ${languages}">
+                      <input type="checkbox" th:name="languages" th:value="${language}" required th:id="${'language-' + language}" onchange="handleLangSelection()" />
+                      <label th:for="${'language-' + language}" th:text="${language}"></label>
+                    </div>
+                  </div>
+                  <hr>
+                </div>
+                <div class="mb-3">
+                  <label th:text="#{ocr.selectText.10}"></label>
+                  <select class="form-control" name="ocrType">
+                    <option value="skip-text" th:text="#{ocr.selectText.6}"></option>
+                    <option value="force-ocr" th:text="#{ocr.selectText.7}"></option>
+                    <option value="Normal" th:text="#{ocr.selectText.8}"></option>
+                  </select>
+                </div>
+                <br>
+                <label for="languages" class="form-label" th:text="#{ocr.selectText.9}"></label>
+                <div class="form-check ms-3">
+                  <input type="checkbox" name="sidecar" id="sidecar" />
+                  <label for="sidecar" th:text="#{ocr.selectText.2}"></label>
+                </div>
+                <div class="form-check ms-3">
+                  <input type="checkbox" name="deskew" id="deskew" />
+                  <label for="deskew" th:text="#{ocr.selectText.3}"></label>
+                </div>
+                <div class="form-check ms-3">
+                  <input type="checkbox" name="clean" id="clean" />
+                  <label for="clean" th:text="#{ocr.selectText.4}"></label>
+                </div>
+                <div class="form-check ms-3">
+                  <input type="checkbox" name="clean-final" id="clean-final" />
+                  <label for="clean-final" th:text="#{ocr.selectText.5}"></label>
+                </div>
+                <div class="form-check ms-3">
+                  <input type="checkbox" name="removeImagesAfter" id="removeImagesAfter" />
+                  <label for="removeImagesAfter" th:text="#{ocr.selectText.11}"></label>
+                </div>
+                <div class="mb-3">
+                  <label th:text="#{ocr.selectText.12}"></label>
+                  <select class="form-control" name="ocrRenderType">
+                    <option value="hocr">HOCR (Latin/Roman alphabet only)</option>
+                    <option value="sandwich">Sandwich</option>
+                  </select>
+                </div>
+                <br>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{ocr.submit}"></button>
+              </form>
+              <script>
+                const languageMap = {
+                  'afr': 'Afrikaans',
+                  'amh': 'Amharic',
+                  'ara': 'Arabic',
+                  'asm': 'Assamese',
+                  'aze': 'Azerbaijani',
+                  'aze_cyrl': 'Azerbaijani (Cyrillic)',
+                  'bel': 'Belarusian',
+                  'ben': 'Bengali',
+                  'bod': 'Tibetan',
+                  'bos': 'Bosnian',
+                  'bre': 'Breton',
+                  'bul': 'Bulgarian',
+                  'cat': 'Catalan',
+                  'ceb': 'Cebuano',
+                  'ces': 'Czech',
+                  'chi_sim': 'Chinese (Simplified)',
+                  'chi_sim_vert': 'Chinese (Simplified, Vertical)',
+                  'chi_tra': 'Chinese (Traditional)',
+                  'chi_tra_vert': 'Chinese (Traditional, Vertical)',
+                  'chr': 'Cherokee',
+                  'cos': 'Corsican',
+                  'cym': 'Welsh',
+                  'dan': 'Danish',
+                  'dan_frak': 'Danish (Fraktur)',
+                  'deu': 'German',
+                  'deu_frak': 'German (Fraktur)',
+                  'div': 'Divehi',
+                  'dzo': 'Dzongkha',
+                  'ell': 'Greek',
+                  'eng': 'English',
+                  'enm': 'English, Middle (1100-1500)',
+                  'epo': 'Esperanto',
+                  'equ': 'Math / equation detection module',
+                  'est': 'Estonian',
+                  'eus': 'Basque',
+                  'fao': 'Faroese',
+                  'fas': 'Persian',
+                  'fil': 'Filipino',
+                  'fin': 'Finnish',
+                  'fra': 'French',
+                  'frk': 'Frankish',
+                  'frm': 'French, Middle (ca.1400-1600)',
+                  'fry': 'Western Frisian',
+                  'gla': 'Scottish Gaelic',
+                  'gle': 'Irish',
+                  'glg': 'Galician',
+                  'grc': 'Ancient Greek',
+                  'guj': 'Gujarati',
+                  'hat': 'Haitian, Haitian Creole',
+                  'heb': 'Hebrew',
+                  'hin': 'Hindi',
+                  'hrv': 'Croatian',
+                  'hun': 'Hungarian',
+                  'hye': 'Armenian',
+                  'iku': 'Inuktitut',
+                  'ind': 'Indonesian',
+                  'isl': 'Icelandic',
+                  'ita': 'Italian',
+                  'ita_old': 'Italian (Old)',
+                  'jav': 'Javanese',
+                  'jpn': 'Japanese',
+                  'jpn_vert': 'Japanese (Vertical)',
+                  'kan': 'Kannada',
+                  'kat': 'Georgian',
+                  'kat_old': 'Georgian (Old)',
+                  'kaz': 'Kazakh',
+                  'khm': 'Central Khmer',
+                  'kir': 'Kirghiz, Kyrgyz',
+                  'kmr': 'Northern Kurdish',
+                  'kor': 'Korean',
+                  'kor_vert': 'Korean (Vertical)',
+                  'lao': 'Lao',
+                  'lat': 'Latin',
+                  'lav': 'Latvian',
+                  'lit': 'Lithuanian',
+                  'ltz': 'Luxembourgish',
+                  'mal': 'Malayalam',
+                  'mar': 'Marathi',
+                  'mkd': 'Macedonian',
+                  'mlt': 'Maltese',
+                  'mon': 'Mongolian',
+                  'mri': 'Maori',
+                  'msa': 'Malay',
+                  'mya': 'Burmese',
+                  'nep': 'Nepali',
+                  'nld': 'Dutch; Flemish',
+                  'nor': 'Norwegian',
+                  'oci': 'Occitan (post 1500)',
+                  'ori': 'Oriya',
+                  'osd': 'Orientation and script detection module',
+                  'pan': 'Panjabi, Punjabi',
+                  'pol': 'Polish',
+                  'por': 'Portuguese',
+                  'pus': 'Pushto, Pashto',
+                  'que': 'Quechua',
+                  'ron': 'Romanian, Moldavian, Moldovan',
+                  'rus': 'Russian',
+                  'san': 'Sanskrit',
+                  'sin': 'Sinhala, Sinhalese',
+                  'slk': 'Slovak',
+                  'slk_frak': 'Slovak (Fraktur)',
+                  'slv': 'Slovenian',
+                  'snd': 'Sindhi',
+                  'spa': 'Spanish',
+                  'spa_old': 'Spanish (Old)',
+                  'sqi': 'Albanian',
+                  'srp': 'Serbian',
+                  'srp_latn': 'Serbian (Latin)',
+                  'sun': 'Sundanese',
+                  'swa': 'Swahili',
+                  'swe': 'Swedish',
+                  'syr': 'Syriac',
+                  'tam': 'Tamil',
+                  'tat': 'Tatar',
+                  'tel': 'Telugu',
+                  'tgk': 'Tajik',
+                  'tgl': 'Tagalog',
+                  'tha': 'Thai',
+                  'tir': 'Tigrinya',
+                  'ton': 'Tonga (Tonga Islands)',
+                  'tur': 'Turkish',
+                  'uig': 'Uighur, Uyghur',
+                  'ukr': 'Ukrainian',
+                  'urd': 'Urdu',
+                  'uzb': 'Uzbek',
+                  'uzb_cyrl': 'Uzbek (Cyrillic)',
+                  'vie': 'Vietnamese',
+                  'yid': 'Yiddish',
+                  'yor': 'Yoruba'
+                };
+
+                // Step 2: Function to get the full language name
+                function getFullLanguageName(shortCode) {
+                  return languageMap[shortCode] || shortCode;
+                }
+
+                // Step 3: Apply the function to your labels
+                document.addEventListener('DOMContentLoaded', () => {
+                  const labels = document.querySelectorAll('#languages label');
+                  labels.forEach(label => {
+                    const languageCode = label.getAttribute('for').split('-')[1];
+                    label.textContent = getFullLanguageName(languageCode);
+                  });
+                });
+              </script>
+              <p th:text="#{ocr.credit}"></p>
+              <p th:text="#{ocr.help}"></p>
+              <a href="https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md">https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

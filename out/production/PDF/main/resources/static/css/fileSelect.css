@@ -1,0 +1,10 @@
+.custom-file-label {
+  padding-right: 90px;
+}
+
+.selected-files {
+  margin-top: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}

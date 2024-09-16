@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{watermark.title}, header=#{watermark.header})}"></th:block>
+  </head>
+
+  <body onload="toggleFileOption()">
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon security">water_drop</span>
+                <span class="tool-header-text" th:text="#{watermark.header}"></span>
+              </div>
+
+              <form method="post" enctype="multipart/form-data" action="api/v1/security/add-watermark">
+                <div class="mb-3">
+                  <label th:text="#{watermark.selectText.1}"></label>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                </div>
+
+                <div class="mb-3">
+                  <label th:text="#{watermark.selectText.8}"></label>
+                  <select class="form-control" id="watermarkType" name="watermarkType" onchange="toggleFileOption()">
+                    <option value="text" th:text="#{watermark.type.1}"></option>
+                    <option value="image" th:text="#{watermark.type.2}"></option>
+                  </select>
+                </div>
+                <div id="alphabetGroup" class="mb-3">
+                  <label for="fontSize" th:text="#{alphabet} + ':'"></label>
+                  <select class="form-control" name="alphabet" id="alphabet-select">
+                    <option value="roman">Roman</option>
+                    <option value="arabic">العربية</option>
+                    <option value="japanese">日本語</option>
+                    <option value="korean">한국어</option>
+                    <option value="chinese">简体中文</option>
+                  </select>
+                </div>
+                <div id="watermarkTextGroup" class="mb-3">
+                  <label for="watermarkText" th:text="#{watermark.selectText.2}"></label>
+                  <input type="text" id="watermarkText" name="watermarkText" class="form-control" placeholder="Stirling-PDF" required>
+                </div>
+
+                <div id="watermarkImageGroup" class="mb-3" style="display: none;">
+                  <label for="watermarkImage" th:text="#{watermark.selectText.9}"></label>
+                  <input type="file" id="watermarkImage" name="watermarkImage" class="form-control-file" accept="image/*">
+                </div>
+
+                <div class="mb-3">
+                  <label for="fontSize" th:text="#{watermark.selectText.3}"></label>
+                  <input type="text" id="fontSize" name="fontSize" class="form-control" value="30">
+                </div>
+                <div class="mb-3">
+                  <label for="opacity" th:text="#{watermark.selectText.7}"></label>
+                  <input type="text" id="opacity" name="opacityText" class="form-control" value="50" onblur="updateOpacityValue()">
+                  <input type="hidden" id="opacityReal" name="opacity" value="0.5">
+                </div>
+                <script>
+                  const opacityInput = document.getElementById('opacity');
+                  const opacityRealInput = document.getElementById('opacityReal');
+
+                  const updateOpacityValue = () => {
+                    let percentageValue = parseFloat(opacityInput.value.replace('%', ''));
+                    if (isNaN(percentageValue)) {
+                      percentageValue = 0;
+                    }
+                    percentageValue = Math.min(Math.max(percentageValue, 0), 100);
+                    opacityInput.value = `${percentageValue}`;
+                    opacityRealInput.value = (percentageValue / 100).toFixed(2);
+                  };
+
+                  const appendPercentageSymbol = () => {
+                    if (!opacityInput.value.endsWith('%')) {
+                      opacityInput.value += '%';
+                    }
+                  };
+
+                  opacityInput.addEventListener('focus', () => {
+                    opacityInput.value = opacityInput.value.replace('%', '');
+                  });
+                  opacityInput.addEventListener('blur', () => {
+                    updateOpacityValue();
+                    appendPercentageSymbol();
+                  });
+
+                  // Set initial values
+                  updateOpacityValue();
+                  appendPercentageSymbol();
+                </script>
+
+                <div class="mb-3">
+                  <label for="rotation" th:text="#{watermark.selectText.4}"></label>
+                  <input type="text" id="rotation" name="rotation" class="form-control" value="45">
+                </div>
+                <div class="mb-3">
+                  <label for="widthSpacer" th:text="#{watermark.selectText.5}"></label>
+                  <input type="text" id="widthSpacer" name="widthSpacer" class="form-control" value="50">
+                </div>
+                <div class="mb-3">
+                  <label for="heightSpacer" th:text="#{watermark.selectText.6}"></label>
+                  <input type="text" id="heightSpacer" name="heightSpacer" class="form-control" value="50">
+                </div>
+                <div class="mb-3 form-check">
+                  <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage">
+                  <label for="convertPDFToImage" th:text="#{watermark.selectText.10}"></label>
+                </div>
+                <div class="mb-3 text-center">
+                  <input type="submit" id="submitBtn" th:value="#{watermark.submit}" class="btn btn-primary">
+                </div>
+              </form>
+
+              <script>
+                function toggleFileOption() {
+                  const watermarkType = document.getElementById('watermarkType').value;
+                  const watermarkTextGroup = document.getElementById('watermarkTextGroup');
+                  const watermarkImageGroup = document.getElementById('watermarkImageGroup');
+                  const alphabetGroup = document.getElementById('alphabetGroup'); // This is the new addition
+                  const watermarkText = document.getElementById('watermarkText');
+                  const watermarkImage = document.getElementById('watermarkImage');
+
+                  if (watermarkType === 'text') {
+                    watermarkTextGroup.style.display = 'block';
+                    watermarkText.required = true;
+                    watermarkImageGroup.style.display = 'none';
+                    watermarkImage.required = false;
+                    alphabetGroup.style.display = 'block';
+                  } else if (watermarkType === 'image') {
+                    watermarkTextGroup.style.display = 'none';
+                    watermarkText.required = false;
+                    watermarkImageGroup.style.display = 'block';
+                    watermarkImage.required = true;
+                    alphabetGroup.style.display = 'none';
+                  }
+                }
+              </script>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

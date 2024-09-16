@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{sanitizePDF.title}, header=#{sanitizePDF.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon security">sanitizer</span>
+                <span class="tool-header-text" th:text="#{sanitizePDF.header}"></span>
+              </div>
+              <form action="api/v1/security/sanitize-pdf" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                </div>
+                <div class="form-check ms-3">
+                  <input type="checkbox" id="removeJavaScript" name="removeJavaScript" checked>
+                  <label for="removeJavaScript" th:text="#{sanitizePDF.selectText.1}"></label>
+                </div>
+                <div class="form-check ms-3">
+                  <input type="checkbox" id="removeEmbeddedFiles" name="removeEmbeddedFiles" checked>
+                  <label for="removeEmbeddedFiles" th:text="#{sanitizePDF.selectText.2}"></label>
+                </div>
+                <div class="form-check ms-3">
+                  <input type="checkbox" id="removeMetadata" name="removeMetadata" checked>
+                  <label for="removeMetadata" th:text="#{sanitizePDF.selectText.3}"></label>
+                </div>
+                <div class="form-check ms-3">
+                  <input type="checkbox" id="removeLinks" name="removeLinks">
+                  <label for="removeLinks" th:text="#{sanitizePDF.selectText.4}"></label>
+                </div>
+                <div class="form-check ms-3">
+                  <input type="checkbox" id="removeFonts" name="removeFonts">
+                  <label for="removeFonts" th:text="#{sanitizePDF.selectText.5}"></label>
+                </div>
+                <br>
+                <div class="mb-3 text-center">
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{sanitizePDF.submit}"></button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

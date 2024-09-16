@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{PDFToCSV.title}, header=#{PDFToCSV.header})}"></th:block>
+  </head>
+
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon convert">csv</span>
+                <span class="tool-header-text" th:text="#{PDFToCSV.header}"></span>
+              </div>
+              <form id="PDFToCSVForm" th:action="@{'/api/v1/convert/pdf/csv'}" method="post" enctype="multipart/form-data">
+                <input  id="pageId" type="hidden" name="pageId">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <button type="submit" class="btn btn-primary" th:text="#{PDFToCSV.submit}"></button>
+              </form>
+              <p id="instruction-text" style="margin: 0; display: none" th:text="#{PDFToCSV.prompt}"></p>
+
+              <div style="position: relative; display: inline-block;">
+                <div>
+                  <div style="display:none ;margin: 3px;position: absolute;top: 0;width: 120px;justify-content:space-between;z-index: 10" id="pagination-button-container">
+                    <button id='previous-page-btn' style='opacity: 80% ; width: 50px; height: 30px; display: flex;align-items: center;justify-content: center; background: grey; color: #ffffff;  ;border: none;outline: none; border-radius: 4px;'> &lt; </button>
+                    <button id='next-page-btn' style='opacity: 80% ; width: 50px; height: 30px; display: flex;align-items: center;justify-content: center; background: grey; color: #ffffff;  ;border: none;outline: none; border-radius: 4px;'> &gt; </button>
+                  </div>
+                  <canvas id="crop-pdf-canvas" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
+                </div>
+                <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2;"></canvas>
+              </div>
+              <script>
+                let pdfCanvas  = document.getElementById('crop-pdf-canvas');
+                let overlayCanvas = document.getElementById('overlayCanvas');
+                // let paginationBtnContainer = ;
+
+                let context = pdfCanvas.getContext('2d');
+
+                let btn1Object = document.getElementById('previous-page-btn');
+                let btn2Object = document.getElementById('next-page-btn');
+                overlayCanvas.width = pdfCanvas.width;
+                overlayCanvas.height = pdfCanvas.height;
+
+                let fileInput = document.getElementById('fileInput-input');
+
+                let file;
+
+                let pdfDoc = null;
+                let pageId = document.getElementById('pageId');
+                let currentPage = 1;
+                let totalPages = 0;
+
+                let startX = 0;
+                let startY = 0;
+                let rectWidth = 0;
+                let rectHeight = 0;
+
+                btn1Object.addEventListener('click',function (e){
+                  if (currentPage !== 1) {
+                    currentPage = currentPage - 1;
+                    pageId.value = currentPage;
+
+                    if (file.type === 'application/pdf') {
+                      let reader = new FileReader();
+                      reader.onload = function (ev) {
+                        let typedArray = new Uint8Array(reader.result);
+                        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
+                        pdfjsLib.getDocument(typedArray).promise.then(function (pdf) {
+                          pdfDoc = pdf;
+                          totalPages = pdf.numPages;
+                          renderPage(currentPage);
+                        });
+                      };
+                      reader.readAsArrayBuffer(file);
+                    }
+                  }
+                });
+
+                btn2Object.addEventListener('click',function (e){
+                  if (currentPage !== totalPages){
+                    currentPage=currentPage+1;
+                    pageId.value = currentPage;
+
+                    if (file.type === 'application/pdf') {
+                      let reader = new FileReader();
+                      reader.onload = function(ev) {
+                        let typedArray = new Uint8Array(reader.result);
+                        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs'
+                        pdfjsLib.getDocument(typedArray).promise.then(function(pdf) {
+                          pdfDoc = pdf;
+                          totalPages = pdf.numPages;
+                          renderPage(currentPage);
+                        });
+                      };
+                      reader.readAsArrayBuffer(file);
+                    }
+                  }
+                });
+
+                fileInput.addEventListener('change', function(e) {
+                  file = e.target.files[0];
+                  if (file.type === 'application/pdf') {
+                    let reader = new FileReader();
+                    reader.onload = function(ev) {
+                      let typedArray = new Uint8Array(reader.result);
+                      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
+                      pdfjsLib.getDocument(typedArray).promise.then(function(pdf) {
+                        pdfDoc = pdf;
+                        totalPages = pdf.numPages;
+                        renderPage(currentPage);
+                      });
+                      pageId.value = currentPage;
+                    };
+                    reader.readAsArrayBuffer(file);
+                    document.getElementById("pagination-button-container").style.display="flex";
+                    document.getElementById("instruction-text").style.display="block";
+                  }
+                });
+
+                function renderPage(pageNumber) {
+                  pdfDoc.getPage(pageNumber).then(function(page) {
+                    let viewport = page.getViewport({ scale: 1.0 });
+                    pdfCanvas.width = viewport.width;
+                    pdfCanvas.height = viewport.height;
+
+                    overlayCanvas.width = viewport.width;  // Match overlay canvas size with PDF canvas
+                    overlayCanvas.height = viewport.height;
+
+                    let renderContext = { canvasContext: context, viewport: viewport };
+                    page.render(renderContext);
+                    pdfCanvas.classList.add("shadow-canvas");
+                  });
+                }
+              </script>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

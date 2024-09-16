@@ -8,7 +8,7 @@
         <processorPath useClasspath="false">
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.34/ec547ef414ab1d2c040118fb9c1c265ada63af14/lombok-1.18.34.jar" />
         </processorPath>
-        <module name="Stirling-PDF.main" />
+        <module name="stirling.software.Stirling-PDF.main" />
       </profile>
     </annotationProcessing>
   </component>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{imageToPDF.title}, header=#{imageToPDF.header})}"></th:block>
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon image">image</span>
+                <span class="tool-header-text" th:text="#{imageToPDF.header}"></span>
+              </div>
+              <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/img/pdf'}">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='image/*', inputText=#{imgPrompt})}"></div>
+                <div class="mb-3">
+                  <label for="fitOption" th:text="#{imageToPDF.selectLabel}">Fit Options</label>
+                  <select class="form-control" id="fitOption" name="fitOption">
+                    <option value="fillPage" th:text="#{imageToPDF.fillPage}">Fill Page</option>
+                    <option value="fitDocumentToImage" th:text="#{imageToPDF.fitDocumentToImage}">Fit Document to Image</option>
+                    <option value="maintainAspectRatio" th:text="#{imageToPDF.maintainAspectRatio}">Maintain Aspect Ratio</option>
+                  </select>
+                </div>
+
+                <div class="form-check ms-3">
+                  <input type="checkbox" name="autoRotate" id="autoRotate">
+                  <label for="autoRotate" th:text=#{imageToPDF.selectText.2}></label>
+                </div>
+                <div class="mb-3">
+                  <label th:text="#{pdfToImage.colorType}"></label>
+                  <select class="form-control" id="colorType" name="colorType">
+                    <option value="color" th:text="#{pdfToImage.color}"></option>
+                    <option value="greyscale" th:text="#{pdfToImage.grey}"></option>
+                    <option value="blackwhite" th:text="#{pdfToImage.blackwhite}"></option>
+                  </select>
+                </div>
+                <br>
+                <input type="hidden" id="override" name="override" value="multi">
+                <div class="mb-3">
+                  <label th:text=#{imageToPDF.selectText.3}></label>
+                  <select class="form-control" id="conversionType" name="conversionType" disabled>
+                    <option value="merge" th:text=#{imageToPDF.selectText.4}></option>
+                    <option value="convert" th:text=#{imageToPDF.selectText.5} selected></option>
+                  </select>
+                </div>
+                <br><br>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
+                <script>
+                  $('#fileInput-input').on('change', function() {
+                    var files = document.getElementById("fileInput-input").files;
+                    var conversionType = document.getElementById("conversionType");
+                    console.log("files.length=" + files.length)
+                    if (files.length > 1) {
+                      conversionType.disabled = false;
+                    } else {
+                      conversionType.disabled = true;
+                    }
+                  });
+
+                  $('#conversionType').change(function() {
+                    var selectedValue = $(this).val();
+                    var override = document.getElementById("override");
+                    console.log("selectedValue=" + selectedValue)
+                    if (selectedValue === 'merge') {
+                      override.value = "single";
+                    } else if (selectedValue === 'convert') {
+                      override.value = "multi";
+                    }
+                  });
+                </script>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

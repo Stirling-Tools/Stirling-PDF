@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{adminUserSettings.title}, header=#{adminUserSettings.header})}"></th:block>
+    <style>
+      .active-user {
+        color: green;
+        text-shadow: 0 0 5px green;
+      }
+
+      .text-overflow {
+        max-width: 100px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow:ellipsis;
+      }
+    </style>
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-9 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon organize">manage_accounts</span>
+                <span class="tool-header-text" th:text="#{adminUserSettings.header}">Admin User Control Settings</span>
+              </div>
+
+              <!-- User Settings Title -->
+              <div style="background: var(--md-sys-color-outline-variant);padding: .8rem; margin: 10px 0; border-radius: 2rem; text-align: center;">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#addUserModal" class="btn btn-outline-success" th:title="#{adminUserSettings.addUser}">
+                  <span class="material-symbols-rounded">person_add</span>
+                  <span th:text="#{adminUserSettings.addUser}">Add New User</span>
+                </a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#changeUserRoleModal" class="btn btn-outline-success" th:title="#{adminUserSettings.changeUserRole}">
+                  <span class="material-symbols-rounded">edit</span>
+                  <span th:text="#{adminUserSettings.changeUserRole}">Change User's Role</span>
+                </a>
+                <div class="my-4">
+                  <strong th:text="#{adminUserSettings.totalUsers}">Total Users:</strong> <span th:text="${totalUsers}"></span>
+                  <strong style="margin-left: 20px;" th:text="#{adminUserSettings.activeUsers}">Active Users:</strong> <span th:text="${activeUsers}"></span>
+                  <strong style="margin-left: 20px;" th:text="#{adminUserSettings.disabledUsers}">Disabled Users:</strong> <span th:text="${disabledUsers}"></span>
+                </div>
+              </div>
+              <div th:if="${addMessage}" class="p-3" style="background: var(--md-sys-color-outline-variant);border-radius: 2rem; text-align: center;">
+                <div class="alert alert-danger mb-auto">
+                  <span th:text="#{${addMessage}}">Default message if not found</span>
+                </div>
+              </div>
+              <div th:if="${changeMessage}" class="p-3" style="background: var(--md-sys-color-outline-variant);border-radius: 2rem; text-align: center;">
+                <div class="alert alert-danger mb-auto">
+                  <span th:text="#{${changeMessage}}">Default message if not found</span>
+                </div>
+              </div>
+              <div th:if="${deleteMessage}" class="alert alert-danger">
+                <span th:text="#{${deleteMessage}}">Default message if not found</span>
+              </div>
+              <div class="bg-card mt-3 mb-3">
+                <table class="table table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th scope="col">#</th>
+                      <th scope="col" th:title="#{username}" th:text="#{username}">Username</th>
+                      <th scope="col" th:title="#{adminUserSettings.roles}" th:text="#{adminUserSettings.roles}">Roles</th>
+                      <th scope="col" th:title="#{adminUserSettings.authenticated}" class="text-overflow" th:text="#{adminUserSettings.authenticated}">Authenticated</th>
+                      <th scope="col" th:title="#{adminUserSettings.lastRequest}" class="text-overflow" th:text="#{adminUserSettings.lastRequest}">Last Request</th>
+                      <th scope="col" th:title="#{adminUserSettings.actions}" th:text="#{adminUserSettings.actions}" colspan="2">Actions</th>
+                      <!-- <th scope="col"></th> -->
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="user : ${users}">
+                      <th scope="row" style="align-content: center;" th:text="${user.id}"></th>
+                      <td style="align-content: center;" th:text="${user.username}" th:classappend="${userSessions[user.username] ? 'active-user' : ''}"></td>
+                      <td style="align-content: center;" th:text="#{${user.roleName}}"></td>
+                      <td style="align-content: center;" th:text="${user.authenticationType}"></td>
+                      <td style="align-content: center;" th:text="${userLastRequest[user.username] != null ? #dates.format(userLastRequest[user.username], 'yyyy-MM-dd HH:mm:ss') : 'N/A'}"></td>
+                      <td style="align-content: center;">
+                        <form th:if="${user.username != currentUsername}" th:action="@{'/api/v1/user/admin/deleteUser/' + ${user.username}}" method="post" onsubmit="return confirmDeleteUser()">
+                          <button type="submit" th:title="#{adminUserSettings.deleteUser}" class="btn btn-info btn-sm"><span class="material-symbols-rounded">person_remove</span></button>
+                        </form>
+                        <a th:if="${user.username == currentUsername}" th:title="#{adminUserSettings.editOwnProfil}" th:href="@{'/account'}" class="btn btn-outline-success btn-sm"><span class="material-symbols-rounded">edit</span></a>
+                      </td>
+                      <td style="align-content: center;">
+                        <form th:action="@{'/api/v1/user/admin/changeUserEnabled/' + ${user.username}}" method="post" onsubmit="return confirmChangeUserStatus()">
+                          <input type="hidden" name="enabled" th:value="!${user.enabled}" />
+                          <button th:if="${user.enabled}" th:title="#{adminUserSettings.enabledUser}" type="submit" class="btn btn-success btn-sm">
+                            <span class="material-symbols-rounded">person</span>
+                          </button>
+                          <button th:unless="${user.enabled}" th:title="#{adminUserSettings.disabledUser}" type="submit" class="btn btn-danger btn-sm">
+                            <span class="material-symbols-rounded">person_off</span>
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <script th:inline="javascript">
+                const delete_confirm_text = /*[[#{adminUserSettings.confirmDeleteUser}]]*/ 'Should the user be deleted?';
+                const change_confirm_text = /*[[#{adminUserSettings.confirmChangeUserStatus}]]*/ 'Should the user be disabled/enabled?';
+                function confirmDeleteUser() {
+                  return confirm(delete_confirm_text);
+                }
+                function confirmChangeUserStatus() {
+                  return confirm(change_confirm_text);
+                }
+              </script>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- change User role Modal start -->
+      <div class="modal fade" id="changeUserRoleModal" tabindex="-1" aria-labelledby="changeUserRoleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2 th:text="#{adminUserSettings.changeUserRole}">Change User's Role</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{downgradeCurrentUserLongMessage}" th:text="#{help}">Help</button>
+              <form th:action="@{'/api/v1/user/admin/changeRole'}" method="post">
+                <div class="mb-3">
+                  <label for="username" th:text="#{username}">Username</label>
+                  <select name="username" class="form-control" required>
+                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
+                    <option th:each="user : ${users}" th:if="${user.username != currentUsername}" th:value="${user.username}" th:text="${user.username}">Username</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="role" th:text="#{adminUserSettings.role}">Role</label>
+                  <select name="role" class="form-control" required>
+                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
+                    <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
+                  </select>
+                </div>
+
+                <!-- Add other fields as required -->
+                <button type="submit" class="btn btn-primary" th:text="#{adminUserSettings.submit}">Save User</button>
+              </form>
+            </div>
+            <div class="modal-footer"></div>
+          </div>
+        </div>
+      </div>
+      <!-- change User role Modal end -->
+
+      <!-- Add User Modal start -->
+      <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="addUserModalLabel" th:text="#{adminUserSettings.addUser}">Add New User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <button class="btn btn-outline-info" data-toggle="tooltip" data-placement="auto" th:title="#{adminUserSettings.usernameInfo}" th:text="#{help}">Help</button>
+              <form id="formsaveuser" th:action="@{'/api/v1/user/admin/saveUser'}" method="post">
+                <div class="mb-3">
+                  <label for="username" th:text="#{username}">Username</label>
+                  <input type="text" class="form-control" name="username" id="username" th:title="#{adminUserSettings.usernameInfo}" required>
+                  <span id="usernameError" style="display: none;" th:text="#{invalidUsernameMessage}">Invalid username!</span>
+                </div>
+                <div class="mb-3" id="passwordContainer">
+                  <label for="password" th:text="#{password}">Password</label>
+                  <input type="password" class="form-control" name="password" id="password" required>
+                </div>
+                <div class="mb-3">
+                  <label for="role" th:text="#{adminUserSettings.role}">Role</label>
+                  <select name="role" class="form-control" id="role" required>
+                    <option value="" disabled selected th:text="#{selectFillter}">-- Select --</option>
+                    <option th:each="roleDetail : ${roleDetails}" th:value="${roleDetail.key}" th:text="#{${roleDetail.value}}">Role</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="authType">Authentication Type</label>
+                  <select id="authType" name="authType" class="form-control" required>
+                    <option value="web" selected>WEB</option>
+                    <option value="oauth2">OAUTH2</option>
+                  </select>
+                </div>
+                <div class="form-check mb-3" id="checkboxContainer">
+                  <input type="checkbox" class="form-check-input" id="forceChange" name="forceChange">
+                  <label class="form-check-label" for="forceChange" th:text="#{adminUserSettings.forceChange}">Force user to change username/password on login</label>
+                </div>
+                <button type="submit" class="btn btn-primary" th:text="#{adminUserSettings.submit}">Save User</button>
+              </form>
+            </div>
+            <div class="modal-footer"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Add User Modal end -->
+
+      <script th:inline="javascript">
+        jQuery.validator.addMethod("usernamePattern", function(value, element) {
+            return this.optional(element) || /^[a-zA-Z0-9][a-zA-Z0-9@._+-]*[a-zA-Z0-9]$|^(?=.{1,64}@)[A-Za-z0-9]+(\.[A-Za-z0-9_+.-]+)*@[^-][A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(\.[A-Za-z]{2,})$/.test(value);
+        }, /*[[#{invalidUsernameMessage}]]*/ "Invalid username format");
+        $(document).ready(function() {
+          $('[data-toggle="tooltip"]').tooltip();
+
+          $('#formsaveuser').validate({
+            rules: {
+              username: {
+                required: true,
+                usernamePattern: true
+              },
+              password: {
+                required: true
+              },
+              role: {
+                required: true
+              },
+              authType: {
+                required: true
+              }
+            },
+            messages: {
+                username: {
+                    usernamePattern: /*[[#{invalidUsernameMessage}]]*/ "Invalid username format"
+                },
+            },
+            errorPlacement: function(error, element) {
+              if (element.attr("name") === "username") {
+                $("#usernameError").text(error.text()).show();
+              } else if (element.attr("name") !== "role" && element.attr("name") !== "authType") {
+                error.insertAfter(element);
+              }
+            },
+            success: function(label, element) {
+              if ($(element).attr("name") === "username") {
+                $("#usernameError").hide();
+              }
+            }
+          });
+
+          $('#username').on('input', function() {
+              var usernameInput = $(this);
+              var isValid = usernameInput[0].checkValidity();
+              var errorSpan = $('#usernameError');
+
+              if (isValid) {
+                  usernameInput.removeClass('invalid').addClass('valid');
+                  errorSpan.hide();
+              } else {
+                  usernameInput.removeClass('valid').addClass('invalid');
+                  errorSpan.show();
+              }
+          });
+
+          $('#authType').on('change', function() {
+              var authType = $(this).val();
+              var passwordField = $('#password');
+              var passwordFieldContainer = $('#passwordContainer');
+              var checkboxContainer = $('#checkboxContainer');
+
+              if (authType === 'oauth2') {
+                  passwordField.removeAttr('required');
+                  passwordField.prop('disabled', true).val('');
+                  passwordFieldContainer.slideUp('fast');
+                  checkboxContainer.slideUp('fast');
+              } else {
+                  passwordField.prop('disabled', false);
+                  passwordField.attr('required', 'required');
+                  passwordFieldContainer.slideDown('fast');
+                  checkboxContainer.slideDown('fast');
+              }
+          });
+        });
+      </script>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+    <div th:if="${oAuth2Enabled}" class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editUserModalLabel" th:text="#{login.ssoSignIn}"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+              <span class="material-symbols-rounded">close</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3" th:each="provider : ${providerlist}">
+              <a th:href="@{|/oauth2/authorization/${provider.key}|}" th:text="${provider.value}" class="w-100 btn btn-lg btn-primary">OpenID Connect</a>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

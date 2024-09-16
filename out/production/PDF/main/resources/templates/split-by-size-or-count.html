@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+  <th:block th:insert="~{fragments/common :: head(title=#{split-by-size-or-count.title}, header=#{split-by-size-or-count.header})}"></th:block>
+  </head>
+
+  <body>
+    <th:block th:insert="~{fragments/common :: game}"></th:block>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon advance">vertical_split</span>
+                <span class="tool-header-text" th:text="#{split-by-size-or-count.header}"></span>
+              </div>
+              <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/split-by-size-or-count'}">
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <label for="splitType" th:text="#{split-by-size-or-count.type.label}">Split Type</label>
+                <select id="splitType" name="splitType" class="form-control">
+                  <option value="0" th:text="#{split-by-size-or-count.type.size}">Size</option>
+                  <option value="1" th:text="#{split-by-size-or-count.type.pageCount}">Page Count</option>
+                  <option value="2" th:text="#{split-by-size-or-count.type.docCount}">Document Count</option>
+                </select>
+                <br>
+                <label for="splitValue" th:text="#{split-by-size-or-count.value.label}">Split Value</label>
+                <input type="text" id="splitValue" name="splitValue" class="form-control" required th:placeholder="#{split-by-size-or-count.value.placeholder}">
+                <br>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{split-by-size-or-count.submit}">Submit</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+  </body>
+</html>

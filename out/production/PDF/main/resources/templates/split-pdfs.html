@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
+  <th:block th:insert="~{fragments/common :: head(title=#{split.title}, header=#{split.header})}"></th:block>
+</head>
+
+<body>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon organize">cut</span>
+              <span class="tool-header-text" th:text="#{split.header}"></span>
+            </div>
+            <form th:action="@{'/api/v1/general/split-pages'}" method="post" enctype="multipart/form-data">
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+              </div>
+
+              <div class="mb-3">
+                <label for="pageNumbers" th:text="#{split.splitPages}"></label>
+                <input type="text" class="form-control" id="pageNumbers" name="pageNumbers" placeholder="1,3,5-10"
+                  required>
+              </div>
+
+              <p>
+                <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#info" role="button"
+                  aria-expanded="false" aria-controls="info" th:text="#{info}"></a>
+              </p>
+              <div class="collapse" id="info">
+                <p th:text="#{split.desc.1}"></p>
+                <p th:text="#{split.desc.2}"></p>
+                <p th:text="#{split.desc.3}"></p>
+                <p th:text="#{split.desc.4}"></p>
+                <p th:text="#{split.desc.5}"></p>
+                <p th:text="#{split.desc.6}"></p>
+                <p th:text="#{split.desc.7}"></p>
+                <p th:text="#{split.desc.8}"></p>
+              </div>
+
+              <br>
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{split.submit}"></button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
+</html>
