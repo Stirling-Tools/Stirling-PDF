@@ -16,7 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("FROM User u LEFT JOIN FETCH u.settings where upper(u.username) = upper(:username)")
     Optional<User> findByUsernameIgnoreCaseWithSettings(@Param("username") String username);
 
-
     Optional<User> findByUsername(String username);
 
     Optional<User> findByApiKey(String apiKey);

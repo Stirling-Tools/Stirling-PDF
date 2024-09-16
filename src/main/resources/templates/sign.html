@@ -37,6 +37,7 @@
 
               <!-- pdf selector -->
               <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multipleInputsForSingleRequest=false, disableMultipleFiles=true,  accept='application/pdf')}"></div>
+              <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
               <script>
                 let originalFileName = '';
                 document.querySelector('input[name=pdf-upload]').addEventListener('change', async (event) => {
@@ -229,6 +230,7 @@
               <!-- draggables box -->
               <div id="box-drag-container" class="show-on-file-selected">
                 <canvas id="pdf-canvas"></canvas>
+                <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
                 <script th:src="@{'/js/draggable-utils.js'}"></script>
                 <div class="draggable-buttons-box ignore-rtl">
                   <button class="btn btn-outline-secondary" onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())">

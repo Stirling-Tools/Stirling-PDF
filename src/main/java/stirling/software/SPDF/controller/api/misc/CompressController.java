@@ -20,6 +20,7 @@ import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +33,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
@@ -43,6 +45,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class CompressController {
 
     private static final Logger logger = LoggerFactory.getLogger(CompressController.class);
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public CompressController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/compress-pdf")
     @Operation(
@@ -258,7 +267,7 @@ public class CompressController {
             }
             // Read the optimized PDF file
             pdfBytes = Files.readAllBytes(tempOutputFile);
-
+            Path finalFile = tempOutputFile;
             // Check if optimized file is larger than the original
             if (pdfBytes.length > inputFileSize) {
                 // Log the occurrence
@@ -266,14 +275,15 @@ public class CompressController {
                         "Optimized file is larger than the original. Returning the original file instead.");
 
                 // Read the original file again
-                pdfBytes = Files.readAllBytes(tempInputFile);
+                finalFile = tempInputFile;
             }
             // Return the optimized PDF as a response
             String outputFilename =
                     Filenames.toSimpleFileName(inputFile.getOriginalFilename())
                                     .replaceFirst("[.][^.]+$", "")
                             + "_Optimized.pdf";
-            return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
+            return WebResponseUtils.pdfDocToWebResponse(
+                    pdfDocumentFactory.load(finalFile.toFile()), outputFilename);
 
         } finally {
             // Clean up the temporary files

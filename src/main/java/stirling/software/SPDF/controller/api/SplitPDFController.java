@@ -15,6 +15,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -27,9 +28,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import stirling.software.SPDF.model.PdfMetadata;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
-import stirling.software.SPDF.utils.PdfUtils;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -38,6 +38,12 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class SplitPDFController {
 
     private static final Logger logger = LoggerFactory.getLogger(SplitPDFController.class);
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public SplitPDFController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/split-pages")
     @Operation(
@@ -51,7 +57,7 @@ public class SplitPDFController {
         // open the pdf document
 
         PDDocument document = Loader.loadPDF(file.getBytes());
-        PdfMetadata metadata = PdfUtils.extractMetadataFromPdf(document);
+        // PdfMetadata metadata = PdfMetadataService.extractMetadataFromPdf(document);
         int totalPages = document.getNumberOfPages();
         List<Integer> pageNumbers = request.getPageNumbersList(document, false);
         System.out.println(
@@ -70,7 +76,8 @@ public class SplitPDFController {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
         int previousPageNumber = 0;
         for (int splitPoint : pageNumbers) {
-            try (PDDocument splitDocument = new PDDocument()) {
+            try (PDDocument splitDocument =
+                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
                 for (int i = previousPageNumber; i <= splitPoint; i++) {
                     PDPage page = document.getPage(i);
                     splitDocument.addPage(page);
@@ -79,7 +86,7 @@ public class SplitPDFController {
                 previousPageNumber = splitPoint + 1;
 
                 // Transfer metadata to split pdf
-                PdfUtils.setMetadataToPdf(splitDocument, metadata);
+                // PdfMetadataService.setMetadataToPdf(splitDocument, metadata);
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 splitDocument.save(baos);

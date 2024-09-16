@@ -51,7 +51,7 @@ public class AccountWebController {
 
         Map<String, String> providerList = new HashMap<>();
 
-        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
         if (oauth != null) {
             if (oauth.isSettingsValid()) {
                 providerList.put("oidc", oauth.getProvider());
@@ -82,7 +82,7 @@ public class AccountWebController {
 
         model.addAttribute("loginMethod", applicationProperties.getSecurity().getLoginMethod());
         model.addAttribute(
-                "oAuth2Enabled", applicationProperties.getSecurity().getOAUTH2().getEnabled());
+                "oAuth2Enabled", applicationProperties.getSecurity().getOauth2().getEnabled());
 
         model.addAttribute("currentPage", "login");
 
@@ -345,7 +345,7 @@ public class AccountWebController {
                 // Retrieve username and other attributes
                 username =
                         userDetails.getAttribute(
-                                applicationProperties.getSecurity().getOAUTH2().getUseAsUsername());
+                                applicationProperties.getSecurity().getOauth2().getUseAsUsername());
                 // Add oAuth2 Login attributes to the model
                 model.addAttribute("oAuth2Login", true);
             }

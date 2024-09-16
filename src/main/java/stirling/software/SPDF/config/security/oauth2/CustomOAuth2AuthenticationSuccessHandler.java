@@ -66,7 +66,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {
-            OAUTH2 oAuth = applicationProperties.getSecurity().getOAUTH2();
+            OAUTH2 oAuth = applicationProperties.getSecurity().getOauth2();
 
             if (loginAttemptService.isBlocked(username)) {
                 if (session != null) {
