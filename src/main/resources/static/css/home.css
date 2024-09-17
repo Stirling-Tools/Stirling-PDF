@@ -32,7 +32,7 @@
   align-items: center;
   justify-content: flex-start;
   color: var(--md-sys-color-on-surface);
-  margin-bottom: 40px;
+  margin-bottom: 15px;
   user-select: none;
   cursor: pointer;
   gap: 10px;
