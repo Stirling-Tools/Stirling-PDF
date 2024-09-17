@@ -120,8 +120,6 @@ public class ExtractImagesController {
 
                 // Add the Future object to the list to track completion
                 futures.add(future);
-                // Your PDF extraction logic
-
             }
 
             // Wait for all tasks to complete
