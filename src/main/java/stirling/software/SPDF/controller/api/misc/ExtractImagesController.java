@@ -90,23 +90,39 @@ public class ExtractImagesController {
             // Iterate over each page
             for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
                 PDPage page = document.getPage(pgNum);
-                int pageNum = document.getPages().indexOf(page) + 1;
-                // Submit a task for processing each page
                 Future<Void> future =
                         executor.submit(
                                 () -> {
-                                    extractImagesFromPage(
-                                            page,
-                                            format,
-                                            filename,
-                                            pageNum,
-                                            processedImages,
-                                            zos,
-                                            allowDuplicates);
-                                    return null;
+                                    // Use the page number directly from the iterator, so no need to
+                                    // calculate manually
+                                    int pageNum = document.getPages().indexOf(page) + 1;
+
+                                    try {
+                                        // Call the image extraction method for each page
+                                        extractImagesFromPage(
+                                                page,
+                                                format,
+                                                filename,
+                                                pageNum,
+                                                processedImages,
+                                                zos,
+                                                allowDuplicates);
+                                    } catch (IOException e) {
+                                        // Log the error and continue processing other pages
+                                        System.err.println(
+                                                "Error extracting images from page "
+                                                        + pageNum
+                                                        + ": "
+                                                        + e.getMessage());
+                                    }
+
+                                    return null; // Callable requires a return type
                                 });
 
+                // Add the Future object to the list to track completion
                 futures.add(future);
+                // Your PDF extraction logic
+
             }
 
             // Wait for all tasks to complete
