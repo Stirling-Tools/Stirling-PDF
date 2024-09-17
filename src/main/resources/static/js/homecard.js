@@ -39,6 +39,7 @@ function updateFavoritesSection() {
   } else {
     document.getElementById("groupFavorites").style.display = "flex";
   };
+  reorderCards(favoritesContainer);
 };
 
 function toggleFavorite(element) {
@@ -56,16 +57,17 @@ function toggleFavorite(element) {
     card.classList.remove("favorite");
     localStorage.removeItem(cardId);
   }
-  reorderCards();
+  reorderCards(card.parentNode);
   updateFavoritesSection();
   updateFavoritesDropdown();
   filterCards();
 }
 
-
-function reorderCards() {
-  var container = document.querySelector(".features-container");
-  var cards = Array.from(container.getElementsByClassName("feature-card"));
+function reorderCards(container) {
+  var cards = Array.from(container.querySelectorAll(".feature-card"));
+  cards.forEach(function (card) {
+    container.removeChild(card);
+  });
   cards.sort(function (a, b) {
     var aIsFavorite = localStorage.getItem(a.id) === "favorite";
     var bIsFavorite = localStorage.getItem(b.id) === "favorite";
@@ -75,17 +77,27 @@ function reorderCards() {
     if (b.id === "update-link") {
       return 1;
     }
+
     if (aIsFavorite && !bIsFavorite) {
       return -1;
     }
-    if (!aIsFavorite && bIsFavorite) {
+    else if (!aIsFavorite && bIsFavorite) {
       return 1;
     }
-    return 0;
+    else {
+      return a.id > b.id;
+    }
   });
   cards.forEach(function (card) {
-    //container.appendChild(card);
+    container.appendChild(card);
   });
+}
+
+function reorderAllCards() {
+  const containers = Array.from(document.querySelectorAll(".feature-group-container"));
+  containers.forEach(function (container) {
+    reorderCards(container);
+  })
 }
 
 function initializeCards() {
@@ -99,7 +111,7 @@ function initializeCards() {
       card.classList.add("favorite");
     }
   });
-  reorderCards();
+  reorderAllCards();
   updateFavoritesSection();
   updateFavoritesDropdown();
   filterCards();
