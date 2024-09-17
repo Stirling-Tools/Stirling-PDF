@@ -117,6 +117,68 @@ function initializeCards() {
   filterCards();
 }
 
+function showFavoritesOnly() {
+  const groups = Array.from(document.querySelectorAll(".feature-group"));
+  if (localStorage.getItem("favoritesOnly") === "true") {
+    groups.forEach((group) => {
+      if (group.id !== "groupFavorites") {
+        group.style.display = "none";
+      };
+    })
+  } else {
+    groups.forEach((group) => {
+      if (group.id !== "groupFavorites") {
+        group.style.display = "flex";
+      };
+    })
+  };
+}
+
+function toggleFavoritesOnly() {
+  if (localStorage.getItem("favoritesOnly") === "true") {
+    localStorage.setItem("favoritesOnly", "false");
+  } else {
+    localStorage.setItem("favoritesOnly", "true");
+  }
+  showFavoritesOnly();
+}
+
+// Expands a feature group on true, collapses it on false and toggles state on null.
+function expandCollapseToggle(group, expand = null) {
+  if (expand === null) {
+    group.classList.toggle("collapsed");
+    group.querySelector(".header-expand-button").classList.toggle("collapsed");
+  } else if (expand) {
+    group.classList.remove("collapsed");
+    group.querySelector(".header-expand-button").classList.remove("collapsed");
+  } else {
+    group.classList.add("collapsed");
+    group.querySelector(".header-expand-button").classList.add("collapsed");
+  }
+
+  const collapsed = localStorage.getItem("collapsedGroups") ? JSON.parse(localStorage.getItem("collapsedGroups")) : [];
+  const groupIndex = collapsed.indexOf(group.id);
+
+  if (group.classList.contains("collapsed")) {
+    if (groupIndex === -1) {
+      collapsed.push(group.id);
+    }
+  } else {
+    if (groupIndex !== -1) {
+      collapsed.splice(groupIndex, 1);
+    }
+  }
+
+  localStorage.setItem("collapsedGroups", JSON.stringify(collapsed));
+}
+
+function expandCollapseAll(expandAll) {
+  const groups = Array.from(document.querySelectorAll(".feature-group"));
+  groups.forEach((group) => {
+    expandCollapseToggle(group, expandAll);
+  })
+}
+
 window.onload = initializeCards;
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -139,8 +201,17 @@ document.addEventListener("DOMContentLoaded", function () {
       container.style.maxHeight = "500px";
     }
     header.onclick = () => {
-      parent.classList.toggle("collapsed");
-      parent.querySelector(".header-expand-button").classList.toggle("collapsed");
+      expandCollapseToggle(parent);
     };
   })
+
+  const collapsed = localStorage.getItem("collapsedGroups") ? JSON.parse(localStorage.getItem("collapsedGroups")) : [];
+
+  Array.from(document.querySelectorAll(".feature-group")).forEach(group => {
+    if (collapsed.indexOf(group.id) !== -1) {
+      expandCollapseToggle(group, false);
+    }
+  })
+
+  showFavoritesOnly();
 });

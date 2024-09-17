@@ -28,6 +28,22 @@
           search
         </span>
         <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
+
+        <div id="filtersContainer">
+          <span class="material-symbols-rounded filter-button" onclick="toggleFavoritesOnly()">
+            star
+          </span>
+          <span class="material-symbols-rounded filter-button" onclick="expandCollapseAll(true)">
+            expand_all
+          </span>
+          <span class="material-symbols-rounded filter-button" onclick="expandCollapseAll(false)">
+            collapse_all
+          </span>
+          <span class="material-symbols-rounded filter-button" onclick="switchViewMode()">
+            dashboard
+          </span>
+        </div>
+
         <div class="features-container">
 
           <div th:if="${@shouldShow}" class="feature-card favorite update-notice" id="update-link"

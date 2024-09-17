@@ -10,6 +10,26 @@
   outline-color: var(--md-sys-color-outline-variant);
 }
 
+#filtersContainer {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.filter-button {
+  color: var(--md-sys-color-secondary);
+  user-select: none;
+  cursor: pointer;
+  transition: transform 0.3s;
+  transform-origin: center center;
+}
+
+.filter-button:hover {
+  transform: scale(1.08);
+}
+
 .search-icon {
   position: absolute;
   margin: 0.75rem 1rem;
