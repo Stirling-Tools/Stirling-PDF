@@ -109,11 +109,10 @@ public class ExtractImagesController {
                                                 allowDuplicates);
                                     } catch (IOException e) {
                                         // Log the error and continue processing other pages
-                                        System.err.println(
-                                                "Error extracting images from page "
-                                                        + pageNum
-                                                        + ": "
-                                                        + e.getMessage());
+                                        logger.error(
+                                                "Error extracting images from page {}: {}",
+                                                pageNum,
+                                                e.getMessage());
                                     }
 
                                     return null; // Callable requires a return type
