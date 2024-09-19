@@ -26,7 +26,7 @@
 }
 
 .fill {
-  font-variation-settings: var(--md-sys-icon-fill-1);
+  color: var(--md-nav-section-color-image);
 }
 
 .no-fill {
