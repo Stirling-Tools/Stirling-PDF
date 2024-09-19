@@ -31,9 +31,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import stirling.software.SPDF.config.PdfMetadataService;
 import stirling.software.SPDF.model.PdfMetadata;
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
-import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -258,7 +258,7 @@ public class SplitPdfByChaptersController {
         List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
         PdfMetadata metadata = null;
         if (includeMetadata) {
-            metadata = PdfUtils.extractMetadataFromPdf(sourceDocument);
+            metadata = PdfMetadataService.extractMetadataFromPdf(sourceDocument);
         }
         for (Bookmark bookmark : bookmarks) {
             try (PDDocument splitDocument = new PDDocument()) {
@@ -273,7 +273,7 @@ public class SplitPdfByChaptersController {
                 }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 if (includeMetadata) {
-                    PdfUtils.setMetadataToPdf(splitDocument, metadata);
+                    PdfMetadataService.setMetadataToPdf(splitDocument, metadata);
                 }
 
                 splitDocument.save(baos);

@@ -208,8 +208,8 @@ public class UserController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/admin/saveUser")
     public RedirectView saveUser(
-            @RequestParam String username,
-            @RequestParam(name = "password", required = false) String password,
+            @RequestParam(name = "username", required = true) String username,
+            @RequestParam(name = "password", required = true) String password,
             @RequestParam(name = "role") String role,
             @RequestParam(name = "authType") String authType,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
