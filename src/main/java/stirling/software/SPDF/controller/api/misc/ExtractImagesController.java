@@ -264,6 +264,7 @@ public class ExtractImagesController {
                         if (processedImages.contains(imageHash)) {
                             continue; // Skip already processed images
                         }
+                        processedImages.add(imageHash);
                     }
 
                     RenderedImage renderedImage = image.getImage(); // Get the image from the PDF
@@ -308,39 +309,38 @@ public class ExtractImagesController {
         try {
             if ("png".equalsIgnoreCase(format)) {
                 rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            } else if ("jpeg".equalsIgnoreCase(format) || "jpg".equalsIgnoreCase(format)) {
-                rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             } else if ("gif".equalsIgnoreCase(format)) {
                 rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED);
             } else {
                 rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             }
-
             Graphics2D g = rgbImage.createGraphics();
             g.drawImage((Image) renderedImage, 0, 0, null);
             g.dispose();
+
         } catch (NullPointerException e) {
             logger.error("NullPointerException while converting image to RGB format", e);
             rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = rgbImage.createGraphics();
-            // g.setBackground(Color.WHITE);
+            //g.setBackground(Color.WHITE);
             g.clearRect(0, 0, width, height);
             g.dispose();
         } catch (IllegalArgumentException e) {
             logger.error("IllegalArgumentException while converting image to RGB format", e);
             rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = rgbImage.createGraphics();
-            // g.setBackground(Color.WHITE);
+            //g.setBackground(Color.WHITE);
             g.clearRect(0, 0, width, height);
             g.dispose();
         } catch (Exception e) {
             logger.error("Unexpected error while converting image to RGB format", e);
             rgbImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = rgbImage.createGraphics();
-            // g.setBackground(Color.WHITE);
+            //g.setBackground(Color.WHITE);
             g.clearRect(0, 0, width, height);
             g.dispose();
         }
+
         return rgbImage;
     }
 }
