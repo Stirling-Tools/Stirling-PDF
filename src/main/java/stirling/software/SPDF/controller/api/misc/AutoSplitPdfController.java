@@ -12,11 +12,11 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -49,6 +50,13 @@ public class AutoSplitPdfController {
     private static final String QR_CONTENT = "https://github.com/Stirling-Tools/Stirling-PDF";
     private static final String QR_CONTENT_OLD = "https://github.com/Frooodle/Stirling-PDF";
 
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public AutoSplitPdfController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
+
     @PostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
     @Operation(
             summary = "Auto split PDF pages into separate documents",
@@ -59,73 +67,93 @@ public class AutoSplitPdfController {
         MultipartFile file = request.getFileInput();
         boolean duplexMode = request.isDuplexMode();
 
-        PDDocument document = Loader.loadPDF(file.getBytes());
-        PDFRenderer pdfRenderer = new PDFRenderer(document);
-        pdfRenderer.setSubsamplingAllowed(true);
+        PDDocument document = null;
         List<PDDocument> splitDocuments = new ArrayList<>();
-        List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
+        Path zipFile = null;
+        byte[] data = null;
 
-        for (int page = 0; page < document.getNumberOfPages(); ++page) {
-            BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 150);
-            String result = decodeQRCode(bim);
-            if ((QR_CONTENT.equals(result) || QR_CONTENT_OLD.equals(result)) && page != 0) {
-                splitDocuments.add(new PDDocument());
+        try {
+            document = pdfDocumentFactory.load(file.getInputStream());
+            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            pdfRenderer.setSubsamplingAllowed(true);
+
+            for (int page = 0; page < document.getNumberOfPages(); ++page) {
+                BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 150);
+                String result = decodeQRCode(bim);
+                if ((QR_CONTENT.equals(result) || QR_CONTENT_OLD.equals(result)) && page != 0) {
+                    splitDocuments.add(new PDDocument());
+                }
+
+                if (!splitDocuments.isEmpty()
+                        && !QR_CONTENT.equals(result)
+                        && !QR_CONTENT_OLD.equals(result)) {
+                    splitDocuments.get(splitDocuments.size() - 1).addPage(document.getPage(page));
+                } else if (page == 0) {
+                    PDDocument firstDocument = new PDDocument();
+                    firstDocument.addPage(document.getPage(page));
+                    splitDocuments.add(firstDocument);
+                }
+
+                // If duplexMode is true and current page is a divider, then skip next page
+                if (duplexMode && (QR_CONTENT.equals(result) || QR_CONTENT_OLD.equals(result))) {
+                    page++;
+                }
             }
 
-            if (!splitDocuments.isEmpty()
-                    && !QR_CONTENT.equals(result)
-                    && !QR_CONTENT_OLD.equals(result)) {
-                splitDocuments.get(splitDocuments.size() - 1).addPage(document.getPage(page));
-            } else if (page == 0) {
-                PDDocument firstDocument = new PDDocument();
-                firstDocument.addPage(document.getPage(page));
-                splitDocuments.add(firstDocument);
+            // Remove split documents that have no pages
+            splitDocuments.removeIf(pdDocument -> pdDocument.getNumberOfPages() == 0);
+
+            zipFile = Files.createTempFile("split_documents", ".zip");
+            String filename =
+                    Filenames.toSimpleFileName(file.getOriginalFilename())
+                            .replaceFirst("[.][^.]+$", "");
+
+            try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+                for (int i = 0; i < splitDocuments.size(); i++) {
+                    String fileName = filename + "_" + (i + 1) + ".pdf";
+                    PDDocument splitDocument = splitDocuments.get(i);
+
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    splitDocument.save(baos);
+                    byte[] pdf = baos.toByteArray();
+
+                    ZipEntry pdfEntry = new ZipEntry(fileName);
+                    zipOut.putNextEntry(pdfEntry);
+                    zipOut.write(pdf);
+                    zipOut.closeEntry();
+                }
             }
 
-            // If duplexMode is true and current page is a divider, then skip next page
-            if (duplexMode && (QR_CONTENT.equals(result) || QR_CONTENT_OLD.equals(result))) {
-                page++;
-            }
-        }
-
-        // Remove split documents that have no pages
-        splitDocuments.removeIf(pdDocument -> pdDocument.getNumberOfPages() == 0);
-
-        for (PDDocument splitDocument : splitDocuments) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            splitDocument.save(baos);
-            splitDocumentsBoas.add(baos);
-            splitDocument.close();
-        }
-
-        document.close();
-
-        Path zipFile = Files.createTempFile("split_documents", ".zip");
-        String filename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
-        byte[] data;
-
-        try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
-            for (int i = 0; i < splitDocumentsBoas.size(); i++) {
-                String fileName = filename + "_" + (i + 1) + ".pdf";
-                ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
-                byte[] pdf = baos.toByteArray();
-
-                ZipEntry pdfEntry = new ZipEntry(fileName);
-                zipOut.putNextEntry(pdfEntry);
-                zipOut.write(pdf);
-                zipOut.closeEntry();
-            }
-        } catch (Exception e) {
-            logger.error("exception", e);
-        } finally {
             data = Files.readAllBytes(zipFile);
-            Files.deleteIfExists(zipFile);
-        }
 
-        return WebResponseUtils.bytesToWebResponse(
-                data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+            return WebResponseUtils.bytesToWebResponse(
+                    data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+        } finally {
+            // Clean up resources
+            if (document != null) {
+                try {
+                    document.close();
+                } catch (IOException e) {
+                    logger.error("Error closing main PDDocument", e);
+                }
+            }
+
+            for (PDDocument splitDoc : splitDocuments) {
+                try {
+                    splitDoc.close();
+                } catch (IOException e) {
+                    logger.error("Error closing split PDDocument", e);
+                }
+            }
+
+            if (zipFile != null) {
+                try {
+                    Files.deleteIfExists(zipFile);
+                } catch (IOException e) {
+                    logger.error("Error deleting temporary zip file", e);
+                }
+            }
+        }
     }
 
     private static String decodeQRCode(BufferedImage bufferedImage) {

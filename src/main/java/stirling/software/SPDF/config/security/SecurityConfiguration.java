@@ -152,8 +152,8 @@ public class SecurityConfiguration {
                                             .authenticated());
 
             // Handle OAUTH2 Logins
-            if (applicationProperties.getSecurity().getOAUTH2() != null
-                    && applicationProperties.getSecurity().getOAUTH2().getEnabled()
+            if (applicationProperties.getSecurity().getOauth2() != null
+                    && applicationProperties.getSecurity().getOauth2().getEnabled()
                     && !applicationProperties
                             .getSecurity()
                             .getLoginMethod()
@@ -222,7 +222,7 @@ public class SecurityConfiguration {
     }
 
     private Optional<ClientRegistration> googleClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
         if (oauth == null || !oauth.getEnabled()) {
             return Optional.empty();
         }
@@ -251,7 +251,7 @@ public class SecurityConfiguration {
     }
 
     private Optional<ClientRegistration> keycloakClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
         if (oauth == null || !oauth.getEnabled()) {
             return Optional.empty();
         }
@@ -275,7 +275,7 @@ public class SecurityConfiguration {
     }
 
     private Optional<ClientRegistration> githubClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
         if (oauth == null || !oauth.getEnabled()) {
             return Optional.empty();
         }
@@ -304,7 +304,7 @@ public class SecurityConfiguration {
     }
 
     private Optional<ClientRegistration> oidcClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
         if (oauth == null
                 || oauth.getIssuer() == null
                 || oauth.getIssuer().isEmpty()
@@ -352,7 +352,7 @@ public class SecurityConfiguration {
                             String useAsUsername =
                                     applicationProperties
                                             .getSecurity()
-                                            .getOAUTH2()
+                                            .getOauth2()
                                             .getUseAsUsername();
                             Optional<User> userOpt =
                                     userService.findByUsernameIgnoreCase(
