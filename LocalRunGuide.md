@@ -257,9 +257,11 @@ To override the default configuration, you can add the following to `/.git/Stirl
 
 ```bash
 server:
-  host: 0.0.0.0
+  host: 0.0.0.0 # Not working - use instead address
+  address: 0.0.0.0
   port: 3000
 ```
+'-Djava.net.preferIPv4Stack=true' --> To force ipv4 only in the java starting command
 
 **Note:** This file is created after the first application launch. To have it before that, you can create the directory and add the file yourself.
 
