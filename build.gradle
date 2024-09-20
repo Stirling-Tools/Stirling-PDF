@@ -187,8 +187,8 @@ dependencies {
     implementation "io.micrometer:micrometer-core:1.13.4"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
-    implementation "org.commonmark:commonmark:0.22.0"
-    implementation "org.commonmark:commonmark-ext-gfm-tables:0.22.0"
+    implementation "org.commonmark:commonmark:0.23.0"
+    implementation "org.commonmark:commonmark-ext-gfm-tables:0.23.0"
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "com.bucket4j:bucket4j_jdk17-core:8.14.0"
     implementation "com.fathzer:javaluator:3.0.5"
