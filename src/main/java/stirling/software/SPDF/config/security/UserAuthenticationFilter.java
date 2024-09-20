@@ -56,17 +56,17 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         // Check for session expiration (unsure if needed)
-//        if (authentication != null && authentication.isAuthenticated()) {
-//            String sessionId = request.getSession().getId();
-//            SessionInformation sessionInfo =
-//                    sessionPersistentRegistry.getSessionInformation(sessionId);
-//
-//            if (sessionInfo != null && sessionInfo.isExpired()) {
-//                SecurityContextHolder.clearContext();
-//                response.sendRedirect(request.getContextPath() + "/login?expired=true");
-//                return;
-//            }
-//        }
+        //        if (authentication != null && authentication.isAuthenticated()) {
+        //            String sessionId = request.getSession().getId();
+        //            SessionInformation sessionInfo =
+        //                    sessionPersistentRegistry.getSessionInformation(sessionId);
+        //
+        //            if (sessionInfo != null && sessionInfo.isExpired()) {
+        //                SecurityContextHolder.clearContext();
+        //                response.sendRedirect(request.getContextPath() + "/login?expired=true");
+        //                return;
+        //            }
+        //        }
 
         // Check for API key in the request headers if no authentication exists
         if (authentication == null || !authentication.isAuthenticated()) {

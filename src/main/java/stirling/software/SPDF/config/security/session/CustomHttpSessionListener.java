@@ -26,11 +26,10 @@ public class CustomHttpSessionListener implements HttpSessionListener {
 
     @Override
     public void sessionCreated(HttpSessionEvent se) {
-            log.info(
-                    "Session created: {} with count {}",
-                    se.getSession().getId(),
-                    activeSessions.incrementAndGet());
-
+        log.info(
+                "Session created: {} with count {}",
+                se.getSession().getId(),
+                activeSessions.incrementAndGet());
     }
 
     @Override
