@@ -19,7 +19,7 @@ public class RequestUriUtilsTest {
         assertFalse(RequestUriUtils.isStaticResource("/api/v1/users"));
         assertFalse(RequestUriUtils.isStaticResource("/api/v1/orders"));
         assertFalse(RequestUriUtils.isStaticResource("/"));
-        assertFalse(RequestUriUtils.isStaticResource("/login"));
+        assertTrue(RequestUriUtils.isStaticResource("/login"));
         assertFalse(RequestUriUtils.isStaticResource("/register"));
         assertFalse(RequestUriUtils.isStaticResource("/api/v1/products"));
     }

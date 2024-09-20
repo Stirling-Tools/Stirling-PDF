@@ -75,7 +75,8 @@
     <div id="drag-container"></div>
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
-
+  <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
+  <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
   <script type="module">
     import PdfContainer from './js/multitool/PdfContainer.js';
     import DragDropManager from "./js/multitool/DragDropManager.js";
