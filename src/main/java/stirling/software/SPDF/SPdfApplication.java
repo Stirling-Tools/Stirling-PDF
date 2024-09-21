@@ -1,13 +1,13 @@
 package stirling.software.SPDF;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.net.ServerSocket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,6 @@ import jakarta.annotation.PostConstruct;
 import stirling.software.SPDF.config.ConfigInitializer;
 import stirling.software.SPDF.model.ApplicationProperties;
 
-
 @SpringBootApplication
 @EnableScheduling
 public class SPdfApplication {
@@ -39,7 +38,7 @@ public class SPdfApplication {
     @Value("${server.port:8080}")
     public void setServerPortStatic(String port) {
         if (port.equalsIgnoreCase("auto")) {
-            SPdfApplication.serverPortStatic = findAvailablePort(8080);  // Start from port 8080
+            SPdfApplication.serverPortStatic = findAvailablePort(8080); // Start from port 8080
         } else {
             SPdfApplication.serverPortStatic = port;
         }
@@ -102,17 +101,23 @@ public class SPdfApplication {
         }
 
         if (Files.exists(Paths.get("configs/custom_settings.yml"))) {
-            String existingLocation = propertyFiles.getOrDefault("spring.config.additional-location", "");
+            String existingLocation =
+                    propertyFiles.getOrDefault("spring.config.additional-location", "");
             if (!existingLocation.isEmpty()) {
                 existingLocation += ",";
             }
-            propertyFiles.put("spring.config.additional-location", existingLocation + "file:configs/custom_settings.yml");
+            propertyFiles.put(
+                    "spring.config.additional-location",
+                    existingLocation + "file:configs/custom_settings.yml");
         } else {
             logger.warn("Custom configuration file 'configs/custom_settings.yml' does not exist.");
         }
 
         if (!propertyFiles.isEmpty()) {
-            app.setDefaultProperties(Collections.singletonMap("spring.config.additional-location", propertyFiles.get("spring.config.additional-location")));
+            app.setDefaultProperties(
+                    Collections.singletonMap(
+                            "spring.config.additional-location",
+                            propertyFiles.get("spring.config.additional-location")));
         }
 
         app.run(args);
@@ -137,5 +142,8 @@ public class SPdfApplication {
     public static String getStaticPort() {
         return serverPortStatic;
     }
-}
 
+    public String getNonStaticPort() {
+        return serverPortStatic;
+    }
+}
