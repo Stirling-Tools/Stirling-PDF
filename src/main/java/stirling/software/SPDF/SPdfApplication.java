@@ -38,7 +38,7 @@ public class SPdfApplication {
     @Value("${server.port:8080}")
     public void setServerPortStatic(String port) {
         if (port.equalsIgnoreCase("auto")) {
-            SPdfApplication.serverPortStatic = findAvailablePort(8080); // Start from port 8080
+            SPdfApplication.serverPortStatic = findAvailablePort(0); // Start from port 0
         } else {
             SPdfApplication.serverPortStatic = port;
         }
