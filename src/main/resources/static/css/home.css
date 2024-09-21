@@ -96,6 +96,14 @@
   filter: brightness(0) invert(var(--md-theme-filter-color));
 }
 
+.favorite-icon:hover .material-symbols-rounded {
+  transform: scale(1.2);
+}
+
+.favorite-icon .material-symbols-rounded.fill{
+  color: #f5c000;
+}
+
 .jumbotron {
   padding: 3rem 3rem;
   /* Reduce vertical padding */
