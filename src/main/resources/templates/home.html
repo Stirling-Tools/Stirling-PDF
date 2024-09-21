@@ -68,11 +68,39 @@
             </div>
           </div>
 
+
+          <div id="popularTools" class="feature-group">
+            <div
+                    th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.popular})}">
+            </div>
+            <div class="feature-group-container">
+              <div
+                      th:replace="~{fragments/card :: card(id='view-pdf', cardTitle=#{home.viewPdf.title}, cardText=#{home.viewPdf.desc}, cardLink='view-pdf', toolIcon='menu_book', tags=#{viewPdf.tags}, toolGroup='other')}">
+              </div>
+
+              <div
+                      th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', toolIcon='construction', tags=#{multiTool.tags}, toolGroup='organize')}">
+              </div>
+              <div
+                      th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', toolIcon='family_history', tags=#{pipeline.tags}, toolGroup='advance')}">
+              </div>
+              <div
+                      th:replace="~{fragments/card :: card(id='compress-pdf', cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf', toolIcon='zoom_in_map', tags=#{compressPdfs.tags}, toolGroup='advance')}">
+              </div>
+            </div>
+          </div>
+
+
+
+
           <div id="groupOrganize" class="feature-group">
             <div
               th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.organize})}">
             </div>
             <div class="feature-group-container">
+              <div
+                      th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', toolIcon='construction', tags=#{multiTool.tags}, toolGroup='organize')}">
+              </div>
               <div
                 th:replace="~{fragments/card :: card(id='merge-pdfs', cardTitle=#{home.merge.title}, cardText=#{home.merge.desc}, cardLink='merge-pdfs', toolIcon='add_to_photos', tags=#{merge.tags}, toolGroup='organize')}">
               </div>
@@ -199,6 +227,9 @@
               <div
                 th:replace="~{fragments/card :: card(id='stamp', cardTitle=#{home.AddStampRequest.title}, cardText=#{home.AddStampRequest.desc}, cardLink='stamp', toolIcon='approval', tags=#{AddStampRequest.tags}, toolGroup='security')}">
               </div>
+              <div
+                th:replace="~{fragments/card :: card(id='add-watermark', cardTitle=#{home.watermark.title}, cardText=#{home.watermark.desc}, cardLink='add-watermark', toolIcon='water_drop', tags=#{watermark.tags}, toolGroup='security')}">
+              </div>
             </div>
           </div>
 
@@ -215,9 +246,7 @@
               <div
                 th:replace="~{fragments/card :: card(id='add-image', cardTitle=#{home.addImage.title}, cardText=#{home.addImage.desc}, cardLink='add-image', toolIcon='text_fields', tags=#{addImage.tags}, toolGroup='other')}">
               </div>
-              <div
-                th:replace="~{fragments/card :: card(id='add-watermark', cardTitle=#{home.watermark.title}, cardText=#{home.watermark.desc}, cardLink='add-watermark', toolIcon='water_drop', tags=#{watermark.tags}, toolGroup='security')}">
-              </div>
+
               <div
                 th:replace="~{fragments/card :: card(id='change-metadata', cardTitle=#{home.changeMetadata.title}, cardText=#{home.changeMetadata.desc}, cardLink='change-metadata', toolIcon='assignment', tags=#{changeMetadata.tags}, toolGroup='other')}">
               </div>
@@ -226,9 +255,6 @@
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='extract-images', cardTitle=#{home.extractImages.title}, cardText=#{home.extractImages.desc}, cardLink='extract-images', toolIcon='photo_library', tags=#{extractImages.tags}, toolGroup='other')}">
-              </div>
-              <div
-                th:replace="~{fragments/card :: card(id='extract-image-scans', cardTitle=#{home.ScannerImageSplit.title}, cardText=#{home.ScannerImageSplit.desc}, cardLink='extract-image-scans', toolIcon='scanner', tags=#{ScannerImageSplit.tags}, toolGroup='advance')}">
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='flatten', cardTitle=#{home.flatten.title}, cardText=#{home.flatten.desc}, cardLink='flatten', toolIcon='layers_clear', tags=#{flatten.tags}, toolGroup='other')}">
@@ -260,13 +286,13 @@
                 th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', toolIcon='family_history', tags=#{pipeline.tags}, toolGroup='advance')}">
               </div>
               <div
-                th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', toolIcon='construction', tags=#{multiTool.tags}, toolGroup='advance')}">
-              </div>
-              <div
                 th:replace="~{fragments/card :: card(id='adjust-contrast', cardTitle=#{home.adjust-contrast.title}, cardText=#{home.adjust-contrast.desc}, cardLink='adjust-contrast', toolIcon='palette', tags=#{adjust-contrast.tags}, toolGroup='advance')}">
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='compress-pdf', cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf', toolIcon='zoom_in_map', tags=#{compressPdfs.tags}, toolGroup='advance')}">
+              </div>
+              <div
+                      th:replace="~{fragments/card :: card(id='extract-image-scans', cardTitle=#{home.ScannerImageSplit.title}, cardText=#{home.ScannerImageSplit.desc}, cardLink='extract-image-scans', toolIcon='scanner', tags=#{ScannerImageSplit.tags}, toolGroup='advance')}">
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='repair', cardTitle=#{home.repair.title}, cardText=#{home.repair.desc}, cardLink='repair', toolIcon='build', tags=#{repair.tags}, toolGroup='advance')}">
@@ -299,8 +325,7 @@
 
 
   <!-- Survey Modal -->
-  <div class="modal fade" id="surveyModal" tabindex="-1" role="dialog" aria-labelledby="surveyModalLabel"
-    aria-hidden="true">
+  <div class="modal fade" id="surveyModal" tabindex="-1" role="dialog" aria-labelledby="surveyModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -308,13 +333,12 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <p th:text="#{survey.description}">Stirling-PDF has no tracking so we want to hear from our users to improve
-            Stirling-PDF!</h5>
+          <p th:text="#{survey.changes}">Stirling-PDF has changed since the last survey! To find out more please check our blog post here:</h5>
+            <a href="https://stirlingpdf.info/blog/stirling-pdf-survey-results" target="_blank" th:text="#{survey.changes2}">https://stirlingpdf.info/blog/stirling-pdf-survey-results</a>
+          <p th:text="#{survey.changes2}">With these changes we are getting paid business support and funding</p>
           <p th:text="#{survey.please}">Please consider taking our survey!</p>
-          <p th:text="#{survey.disabled}">Survey popup will be disabled in following updates but available at foot of
-            page)</p>
-          <a href="https://stirlingpdf.info/s/clwzgtfw7000gltkmwz1n212m" target="_blank" class="btn btn-primary"
-            id="takeSurvey" th:text="#{survey.button}">Take Survey</a>
+          <p th:text="#{survey.disabled}">Survey popup will be disabled in following updates but available at foot of page)</p>
+          <a href="https://stirlingpdf.info/s/clwzgtfw7000gltkmwz1n212m" target="_blank" class="btn btn-primary" id="takeSurvey"th:text="#{survey.button}" >Take Survey</a>
         </div>
         <div class="modal-footer">
           <div class="form-check mb-3">
@@ -330,17 +354,34 @@
   </div>
 
   <script>
-    /*
+
     document.addEventListener("DOMContentLoaded", function() {
-      const surveyVersion = "1.1";
+      const surveyVersion = "2.0";
       const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
       const dontShowAgain = document.getElementById('dontShowAgain');
       const takeSurveyButton = document.getElementById('takeSurvey');
 
-      if (localStorage.getItem('surveyVersion') !== surveyVersion || !localStorage.getItem('dontShowSurvey')) {
-        modal.show();
+      const viewThresholds = [5, 15, 30, 50, 75, 100, 150, 200];
+      let pageViews = parseInt(localStorage.getItem('pageViews') || '0');
+
+      pageViews++;
+      localStorage.setItem('pageViews', pageViews.toString());
+
+      function shouldShowSurvey() {
+        if (localStorage.getItem('dontShowSurvey') === 'true' || localStorage.getItem('surveyTaken') === 'true') {
+          return false;
+        }
+
+        if (localStorage.getItem('surveyVersion') !== surveyVersion) {
+          return true;
+        }
+
+        return viewThresholds.includes(pageViews);
       }
 
+      if (shouldShowSurvey()) {
+        modal.show();
+      }
 
       dontShowAgain.addEventListener('change', function() {
         if (this.checked) {
@@ -353,15 +394,11 @@
       });
 
       takeSurveyButton.addEventListener('click', function() {
-        localStorage.setItem('dontShowSurvey', 'true');
+        localStorage.setItem('surveyTaken', 'true');
         localStorage.setItem('surveyVersion', surveyVersion);
         modal.hide();
       });
-
-      if (localStorage.getItem('dontShowSurvey')) {
-        modal.hide();
-      }
-    });*/
+    });
   </script>
 
 

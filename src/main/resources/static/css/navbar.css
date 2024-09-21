@@ -89,6 +89,14 @@
   width: 80%;
 }
 
+.close-icon {
+  color: var(--md-sys-color-secondary);
+}
+
+.close-icon:hover {
+  transform: scale(1.15);
+}
+
 span.icon-text::after {
   content: attr(data-text);
   content: attr(data-text) / "";
