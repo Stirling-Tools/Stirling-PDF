@@ -30,13 +30,13 @@ import stirling.software.SPDF.model.api.extract.PDFFilePage;
 @RestController
 @RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
-public class ExtractController {
+public class ExtractCSVController {
 
     private static final Logger logger = LoggerFactory.getLogger(CropController.class);
 
     @PostMapping(value = "/pdf/csv", consumes = "multipart/form-data")
     @Operation(
-            summary = "Extracts a PDF document to csv",
+            summary = "Extracts a CSV document from a PDF",
             description =
                     "This operation takes an input PDF file and returns CSV file of whole page. Input:PDF Output:CSV Type:SISO")
     public ResponseEntity<String> PdfToCsv(@ModelAttribute PDFFilePage form) throws Exception {

@@ -1,4 +1,3 @@
-version: '3.3'
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Ultra-Lite-Security

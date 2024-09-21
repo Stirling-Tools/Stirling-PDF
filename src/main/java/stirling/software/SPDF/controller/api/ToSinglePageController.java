@@ -13,6 +13,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.PDFFile;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -31,6 +33,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class ToSinglePageController {
 
     private static final Logger logger = LoggerFactory.getLogger(ToSinglePageController.class);
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public ToSinglePageController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf-to-single-page")
     @Operation(
@@ -53,7 +62,8 @@ public class ToSinglePageController {
         }
 
         // Create new document and page with calculated dimensions
-        PDDocument newDocument = new PDDocument();
+        PDDocument newDocument =
+                pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
         PDPage newPage = new PDPage(new PDRectangle(maxWidth, totalHeight));
         newDocument.addPage(newPage);
 

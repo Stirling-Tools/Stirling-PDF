@@ -12,6 +12,7 @@ import java.util.Map;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.Overlay;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -25,6 +26,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
@@ -32,6 +34,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class PdfOverlayController {
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public PdfOverlayController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(value = "/overlay-pdfs", consumes = "multipart/form-data")
     @Operation(
@@ -56,7 +65,7 @@ public class PdfOverlayController {
             // "FixedRepeatOverlay"
             int[] counts = request.getCounts(); // Used for FixedRepeatOverlay mode
 
-            try (PDDocument basePdf = Loader.loadPDF(baseFile.getBytes());
+            try (PDDocument basePdf = pdfDocumentFactory.load(baseFile);
                     Overlay overlay = new Overlay()) {
                 Map<Integer, String> overlayGuide =
                         prepareOverlayGuide(

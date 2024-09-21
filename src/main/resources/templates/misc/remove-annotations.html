@@ -28,6 +28,7 @@
       </div>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
+    <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
     <script th:src="@{'/js/local-pdf-input-download.js'}"></script>
     <script>
       document.getElementById('pdfForm').addEventListener('submit', async (e) => {
