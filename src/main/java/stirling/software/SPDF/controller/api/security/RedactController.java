@@ -1,23 +1,16 @@
 package stirling.software.SPDF.controller.api.security;
 
 import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +25,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.pdf.TextFinder;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -40,6 +35,13 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class RedactController {
 
     private static final Logger logger = LoggerFactory.getLogger(RedactController.class);
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public RedactController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
 
     @PostMapping(value = "/auto-redact", consumes = "multipart/form-data")
     @Operation(
@@ -58,8 +60,7 @@ public class RedactController {
 
         System.out.println(listOfTextString);
         String[] listOfText = listOfTextString.split("\n");
-        byte[] bytes = file.getBytes();
-        PDDocument document = Loader.loadPDF(bytes);
+        PDDocument document = pdfDocumentFactory.load(file);
 
         Color redactColor;
         try {
@@ -81,22 +82,9 @@ public class RedactController {
         }
 
         if (convertPDFToImage) {
-            PDDocument imageDocument = new PDDocument();
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
-            pdfRenderer.setSubsamplingAllowed(true);
-            for (int page = 0; page < document.getNumberOfPages(); ++page) {
-                BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
-                PDPage newPage = new PDPage(new PDRectangle(bim.getWidth(), bim.getHeight()));
-                imageDocument.addPage(newPage);
-                PDImageXObject pdImage = LosslessFactory.createFromImage(imageDocument, bim);
-                PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                imageDocument, newPage, AppendMode.APPEND, true, true);
-                contentStream.drawImage(pdImage, 0, 0);
-                contentStream.close();
-            }
+            PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document);
             document.close();
-            document = imageDocument;
+            document = convertedPdf;
         }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

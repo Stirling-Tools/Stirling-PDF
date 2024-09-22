@@ -195,6 +195,9 @@
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('get-info-on-pdf', 'info', 'home.getPdfInfo.title', 'home.getPdfInfo.desc', 'getPdfInfo.tags', 'other')}">
                         </div>
+                        <div
+                                th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-image-pdf','remove_selection', 'home.removeImagePdf.title', 'home.removeImagePdf.desc', 'removeImagePdf.tags', 'other')}">
+                        </div>
                       </div>
                       <!-- Advance menu items -->
                       <div class="col-lg-2 col-sm-6 py px-xl-1 px-2">
@@ -332,7 +335,7 @@
               </div>
             </div>
           </li>
-          
+
           <li class="nav-item dropdown">
             <a class="nav-link" href="#" id="searchDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <span class="material-symbols-rounded">
@@ -394,11 +397,6 @@
               <a href="https://discord.gg/Cn8pWhQRxZ" class="mx-1" role="button" th:title="#{joinDiscord}">
                 <img th:src="@{'/images/discord.svg'}" alt="discord">
               </a>
-              <a href="https://github.com/sponsors/Frooodle" class="mx-1" role="button" th:title="#{donate}">
-                <span class="material-symbols-rounded fill footer-icon" style="font-size: 2.5rem;">
-                  favorite
-                </span>
-              </a>
             </div>
 
             <a th:href="@{'/swagger-ui/index.html'}" class="btn btn-sm btn-outline-primary mx-1" role="button"
@@ -417,7 +415,7 @@
             </select>
           </div>
           <div class="mb-3">
-            <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label>
+            <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label><br/>
             <input type="range" class="form-range" min="1" max="9" step="1" id="zipThreshold" value="4">
             <span id="zipThresholdValue" class="ms-2"></span>
           </div>

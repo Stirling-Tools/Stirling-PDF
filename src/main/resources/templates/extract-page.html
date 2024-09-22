@@ -17,7 +17,7 @@
                 <span class="tool-header-text" th:text="#{pageExtracter.header}"></span>
               </div>
               <form th:action="@{'/api/v1/general/rearrange-pages'}" method="post" enctype="multipart/form-data">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <input type="hidden" id="customMode" name="customMode" value="">
                 <div class="mb-3">
                   <label for="pageOrder" th:text="#{pageOrderPrompt}"></label>

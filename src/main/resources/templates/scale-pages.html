@@ -17,15 +17,16 @@
                 <span class="tool-header-text" th:text="#{scalePages.header}"></span>
               </div>
               <form id="scalePagesFrom" th:action="@{'/api/v1/general/scale-pages'}" method="post" enctype="multipart/form-data">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label for="pageSize" th:text="#{scalePages.pageSize}"></label>
                   <select class="form-control" id="pageSize" name="pageSize">
+                    <option value="KEEP" th:text="#{scalePages.keepPageSize}" selected></option>
                     <option value="A0">A0</option>
                     <option value="A1">A1</option>
                     <option value="A2">A2</option>
                     <option value="A3">A3</option>
-                    <option value="A4" selected>A4</option>
+                    <option value="A4">A4</option>
                     <option value="A5">A5</option>
                     <option value="A6">A6</option>
                     <option value="LETTER">Letter</option>

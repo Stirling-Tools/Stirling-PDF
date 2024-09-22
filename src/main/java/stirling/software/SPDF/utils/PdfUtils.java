@@ -6,7 +6,6 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -37,7 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 
-import stirling.software.SPDF.model.PdfMetadata;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 
 public class PdfUtils {
 
@@ -341,6 +340,30 @@ public class PdfUtils {
         }
     }
 
+    /**
+     * Converts a given Pdf file to PDF-Image.
+     *
+     * @param document to be converted. Note: the caller is responsible for closing the document
+     * @return converted document to PDF-Image
+     * @throws IOException if conversion fails
+     */
+    public static PDDocument convertPdfToPdfImage(PDDocument document) throws IOException {
+        PDDocument imageDocument = new PDDocument();
+        PDFRenderer pdfRenderer = new PDFRenderer(document);
+        pdfRenderer.setSubsamplingAllowed(true);
+        for (int page = 0; page < document.getNumberOfPages(); ++page) {
+            BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
+            PDPage newPage = new PDPage(new PDRectangle(bim.getWidth(), bim.getHeight()));
+            imageDocument.addPage(newPage);
+            PDImageXObject pdImage = LosslessFactory.createFromImage(imageDocument, bim);
+            PDPageContentStream contentStream =
+                    new PDPageContentStream(imageDocument, newPage, AppendMode.APPEND, true, true);
+            contentStream.drawImage(pdImage, 0, 0);
+            contentStream.close();
+        }
+        return imageDocument;
+    }
+
     private static BufferedImage prepareImageForPdfToImage(
             int maxWidth, int height, String imageType) {
         BufferedImage combined;
@@ -359,9 +382,13 @@ public class PdfUtils {
     }
 
     public static byte[] imageToPdf(
-            MultipartFile[] files, String fitOption, boolean autoRotate, String colorType)
+            MultipartFile[] files,
+            String fitOption,
+            boolean autoRotate,
+            String colorType,
+            CustomPDDocumentFactory pdfDocumentFactory)
             throws IOException {
-        try (PDDocument doc = new PDDocument()) {
+        try (PDDocument doc = pdfDocumentFactory.createNewDocument()) {
             for (MultipartFile file : files) {
                 String contentType = file.getContentType();
                 String originalFilename = Filenames.toSimpleFileName(file.getOriginalFilename());
@@ -449,10 +476,15 @@ public class PdfUtils {
     }
 
     public static byte[] overlayImage(
-            byte[] pdfBytes, byte[] imageBytes, float x, float y, boolean everyPage)
+            CustomPDDocumentFactory pdfDocumentFactory,
+            byte[] pdfBytes,
+            byte[] imageBytes,
+            float x,
+            float y,
+            boolean everyPage)
             throws IOException {
 
-        PDDocument document = Loader.loadPDF(pdfBytes);
+        PDDocument document = pdfDocumentFactory.load(pdfBytes);
 
         // Get the first page of the PDF
         int pages = document.getNumberOfPages();
@@ -480,30 +512,6 @@ public class PdfUtils {
         document.save(baos);
         logger.info("PDF successfully saved to byte array");
         return baos.toByteArray();
-    }
-
-    public static PdfMetadata extractMetadataFromPdf(PDDocument pdf) {
-        return PdfMetadata.builder()
-                .author(pdf.getDocumentInformation().getAuthor())
-                .producer(pdf.getDocumentInformation().getProducer())
-                .title(pdf.getDocumentInformation().getTitle())
-                .creator(pdf.getDocumentInformation().getCreator())
-                .subject(pdf.getDocumentInformation().getSubject())
-                .keywords(pdf.getDocumentInformation().getKeywords())
-                .creationDate(pdf.getDocumentInformation().getCreationDate())
-                .modificationDate(pdf.getDocumentInformation().getModificationDate())
-                .build();
-    }
-
-    public static void setMetadataToPdf(PDDocument pdf, PdfMetadata pdfMetadata) {
-        pdf.getDocumentInformation().setAuthor(pdfMetadata.getAuthor());
-        pdf.getDocumentInformation().setProducer(pdfMetadata.getProducer());
-        pdf.getDocumentInformation().setTitle(pdfMetadata.getTitle());
-        pdf.getDocumentInformation().setCreator(pdfMetadata.getCreator());
-        pdf.getDocumentInformation().setSubject(pdfMetadata.getSubject());
-        pdf.getDocumentInformation().setKeywords(pdfMetadata.getKeywords());
-        pdf.getDocumentInformation().setCreationDate(pdfMetadata.getCreationDate());
-        pdf.getDocumentInformation().setModificationDate(Calendar.getInstance());
     }
 
     /** Key for storing the dimensions of a rendered image in a map. */

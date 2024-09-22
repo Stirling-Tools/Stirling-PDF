@@ -28,7 +28,7 @@
                 <span class="tool-header-text" th:text="#{AddStampRequest.header}"></span>
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/add-stamp'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <br>
                 <div class="mb-3">
                   <label for="pageOrder" th:text="#{pageSelectionPrompt}"></label>
@@ -119,7 +119,22 @@
 
                 <div class="mb-3">
                   <label for="customColor" class="form-label" th:text="#{AddStampRequest.customColor}">Custom Color</label>
-                  <input type="color" class="form-control form-control-color" id="customColor" name="customColor" value="#d3d3d3">
+                  <div class="form-control form-control-color" style="background-color: #d3d3d3;">
+                    <input type="color" id="customColor" name="customColor" value="#d3d3d3">
+                  </div>
+                  <script>
+                    let colorInput = document.getElementById("customColor");
+                    if (colorInput) {
+                      let colorInputContainer = colorInput.parentElement;
+                      if (colorInputContainer) {
+                        colorInput.onchange = function() {
+                          colorInputContainer.style.backgroundColor = colorInput.value;
+                        }
+                        colorInputContainer.style.backgroundColor = colorInput.value;
+                      }
+                    }
+
+                  </script>
                 </div>
 
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{AddStampRequest.submit}"></button>
@@ -157,16 +172,23 @@
         });
 
         function toggleFileOption() {
+          const stampImage = document.getElementById('stampImage');
           const stampType = document.getElementById('stampType').value;
           const stampTextGroup = document.getElementById('stampTextGroup');
           const stampImageGroup = document.getElementById('stampImageGroup');
           const alphabetGroup = document.getElementById('alphabetGroup');
 
           if (stampType === 'text') {
+            if (stampImage.hasAttribute('required')) {
+              stampImage.removeAttribute('required');
+            }
             stampTextGroup.style.display = 'block';
             stampImageGroup.style.display = 'none';
             alphabetGroup.style.display = 'block';
           } else if (stampType === 'image') {
+            if (!stampImage.hasAttribute('required')) {
+              stampImage.setAttribute('required', '');
+            }
             stampTextGroup.style.display = 'none';
             stampImageGroup.style.display = 'block';
             alphabetGroup.style.display = 'none';

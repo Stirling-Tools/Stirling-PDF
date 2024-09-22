@@ -96,7 +96,8 @@ class DragDropManager {
   }
 
   adapt(div) {
-    const onDragStart = () => {
+    const onDragStart = (e) => {
+      e.preventDefault();
       this.startDraggingPage(div);
     };
 

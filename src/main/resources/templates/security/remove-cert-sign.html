@@ -19,9 +19,9 @@
               <form action="api/v1/security/remove-cert-sign" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                   <label th:text="#{removeCertSign.selectPDF}"></label>
-                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 </div>
-                <div class="mb-3 text-center">
+                <div class="mb-3 text-left">
                   <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{removeCertSign.submit}"></button>
                 </div>
               </form>

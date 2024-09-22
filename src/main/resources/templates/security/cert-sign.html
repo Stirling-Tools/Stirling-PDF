@@ -19,7 +19,7 @@
               <form action="api/v1/security/cert-sign" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                   <label th:text="#{certSign.selectPDF}"></label>
-                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 </div>
                 <!-- Tell users to use keytool to generate JKS for other formats -->
                 <div class="mb-3">
@@ -37,20 +37,20 @@
                 <div id="pemGroup" style="display: none;">
                   <div class="mb-3">
                     <label th:text="#{certSign.selectKey}"></label>
-                    <div th:replace="~{fragments/common :: fileSelector(name='privateKeyFile', multiple=false, notRequired=true, accept='.pem,.der')}"></div>
+                    <div th:replace="~{fragments/common :: fileSelector(name='privateKeyFile', multipleInputsForSingleRequest=false, notRequired=true, accept='.pem,.der')}"></div>
                   </div>
                   <div class="mb-3">
                     <label th:text="#{certSign.selectCert}"></label>
-                    <div th:replace="~{fragments/common :: fileSelector(name='certFile', multiple=false, notRequired=true, accept='.pem,.der')}"></div>
+                    <div th:replace="~{fragments/common :: fileSelector(name='certFile', multipleInputsForSingleRequest=false, notRequired=true, accept='.pem,.der')}"></div>
                   </div>
                 </div>
                 <div class="mb-3" id="p12Group" style="display: none;">
                   <label th:text="#{certSign.selectP12}"></label>
-                  <div th:replace="~{fragments/common :: fileSelector(name='p12File', notRequired=true, multiple=false, accept='.p12,.pfx')}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='p12File', notRequired=true, multipleInputsForSingleRequest=false, accept='.p12,.pfx')}"></div>
                 </div>
                 <div class="mb-3" id="jksGroup" style="display: none;">
                   <label th:text="#{certSign.selectJKS}"></label>
-                  <div th:replace="~{fragments/common :: fileSelector(name='jksFile', notRequired=true, multiple=false, accept='.jks,.keystore')}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='jksFile', notRequired=true, multipleInputsForSingleRequest=false, accept='.jks,.keystore')}"></div>
                 </div>
                 <div class="mb-3">
                   <label th:text="#{certSign.password}" for="password"></label>
@@ -74,7 +74,7 @@
                     <label for="pageNumber" th:text="#{pageNum}"></label> <input type="number" class="form-control" id="pageNumber" name="pageNumber" min="1" disabled>
                   </div>
                 </div>
-                <div class="mb-3 text-center">
+                <div class="mb-3 text-left">
                   <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{certSign.submit}"></button>
                 </div>
               </form>

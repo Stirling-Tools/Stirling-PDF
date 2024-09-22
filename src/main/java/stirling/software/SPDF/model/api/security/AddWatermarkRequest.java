@@ -15,7 +15,7 @@ public class AddWatermarkRequest extends PDFFile {
     @Schema(
             description = "The watermark type (text or image)",
             allowableValues = {"text", "image"},
-            required = true)
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String watermarkType;
 
     @Schema(description = "The watermark text")
@@ -44,4 +44,7 @@ public class AddWatermarkRequest extends PDFFile {
 
     @Schema(description = "The height spacer between watermark elements", example = "50")
     private int heightSpacer;
+
+    @Schema(description = "Convert the redacted PDF to an image", defaultValue = "false")
+    private boolean convertPDFToImage;
 }

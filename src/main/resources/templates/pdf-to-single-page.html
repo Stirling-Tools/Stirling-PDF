@@ -17,7 +17,7 @@
                 <span class="tool-header-text" th:text="#{pdfToSinglePage.header}"></span>
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/pdf-to-single-page'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfToSinglePage.submit}"></button>
               </form>
             </div>

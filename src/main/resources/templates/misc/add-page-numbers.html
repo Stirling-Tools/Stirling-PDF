@@ -1,140 +1,152 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
-  <head>
+<head>
   <th:block th:insert="~{fragments/common :: head(title=#{addPageNumbers.title}, header=#{addPageNumbers.header})}"></th:block>
-    <style>
-      .a4container {
-        position: relative;
-        width: 50%;
-        aspect-ratio: 0.707/1;
-        border: 1px solid #ddd;
-        box-sizing: border-box;
-        background-color: white;
-      }
+  <style>
+    .a4container {
+      position: relative;
+      width: 50%;
+      aspect-ratio: 0.707/1;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+      background-color: white;
+    }
 
-      .pageNumber {
-        position: absolute;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1em;
-        color: #333;
-        cursor: pointer;
-        background-color: #ccc;
-        width: 15%;
-        height: 15%;
-        transform: translate(-50%, -50%);
-      }
+    .pageNumber {
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1em;
+      color: #333;
+      cursor: pointer;
+      background-color: #ccc;
+      width: 15%;
+      height: 15%;
+      transform: translate(-50%, -50%);
+    }
 
-      .pageNumber:hover {
-        background-color: #eee;
-      }
+    .pageNumber:hover {
+      background-color: #eee;
+    }
 
-      #myForm {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 20px;
-      }
+    #myForm {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
 
-      .selectedPosition {
-        background-color: #0a0;
-      }
+    .selectedPosition {
+      background-color: #0a0;
+    }
 
-      .selectedPosition.selectedHovered {
-        background-color: #006600;
-      }
-    </style>
-  </head>
+    .selectedPosition.selectedHovered {
+      background-color: #006600;
+    }
+  </style>
+</head>
 
-  <body>
-    <th:block th:insert="~{fragments/common :: game}"></th:block>
-    <div id="page-container">
-      <div id="content-wrap">
-        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br><br>
-        <div class="container">
-          <div class="row justify-content-center">
-            <div class="col-md-6 bg-card">
-              <div class="tool-header">
-                <span class="material-symbols-rounded tool-header-icon other">123</span>
-                <span class="tool-header-text" th:text="#{addPageNumbers.header}"></span>
-              </div>
-              <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/add-page-numbers'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-                <br>
-                <div class="mb-3">
-                  <label for="customMargin" th:text="#{addPageNumbers.selectText.2}"></label>
-                  <select class="form-control" id="customMargin" name="customMargin">
-                    <option value="small" th:text="#{sizes.small}"></option>
-                    <option value="medium" selected th:text="#{sizes.medium}"></option>
-                    <option value="large" th:text="#{sizes.large}"></option>
-                    <option value="x-large" th:text="#{sizes.x-large}"></option>
-                  </select>
-                </div>
-                <div class="mb-3">
-                  <label th:text="#{addPageNumbers.selectText.3}"></label>
-                  <div class="a4container">
-                    <div class="pageNumber" id="1" style="top: 10%; left: 10%;">1</div>
-                    <div class="pageNumber" id="2" style="top: 10%; left: 50%;">2</div>
-                    <div class="pageNumber" id="3" style="top: 10%; left: 90%;">3</div>
-                    <div class="pageNumber" id="4" style="top: 50%; left: 10%;">4</div>
-                    <div class="pageNumber" id="5" style="top: 50%; left: 50%;">5</div>
-                    <div class="pageNumber" id="6" style="top: 50%; left: 90%;">6</div>
-                    <div class="pageNumber" id="7" style="top: 90%; left: 10%;">7</div>
-                    <div class="pageNumber selectedPosition" id="8" style="top: 90%; left: 50%;">8</div>
-                    <div class="pageNumber" id="9" style="top: 90%; left: 90%;">9</div>
-                  </div>
-                </div>
-                <input type="hidden" id="numberInput" name="position" value="8">
-                <div class="mb-3">
-                  <label for="startingNumber" th:text="#{addPageNumbers.selectText.4}"></label>
-                  <input type="number" class="form-control" id="startingNumber" name="startingNumber" min="1" required value="1">
-                </div>
-                <div class="mb-3">
-                  <label for="pagesToNumber" th:text="#{addPageNumbers.selectText.5}"></label>
-                  <input type="text" class="form-control" id="pagesToNumber" name="pagesToNumber" th:placeholder="#{addPageNumbers.numberPagesDesc}">
-                </div>
-                <div class="mb-3">
-                  <label for="customText" th:text="#{addPageNumbers.selectText.6}"></label>
-                  <input type="text" class="form-control" id="customText" name="customText" th:placeholder="#{addPageNumbers.customNumberDesc}">
-                </div>
-                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{addPageNumbers.submit}"></button>
-              </form>
-            </div>
+<body>
+<th:block th:insert="~{fragments/common :: game}"></th:block>
+<div id="page-container">
+  <div id="content-wrap">
+    <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+    <br><br>
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-6 bg-card">
+          <div class="tool-header">
+            <span class="material-symbols-rounded tool-header-icon other">123</span>
+            <span class="tool-header-text" th:text="#{addPageNumbers.header}"></span>
           </div>
+          <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/add-page-numbers'}">
+            <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+            <br>
+            <div class="mb-3">
+              <label for="customMargin" th:text="#{addPageNumbers.selectText.2}"></label>
+              <select class="form-control" id="customMargin" name="customMargin">
+                <option value="small" th:text="#{sizes.small}"></option>
+                <option value="medium" selected th:text="#{sizes.medium}"></option>
+                <option value="large" th:text="#{sizes.large}"></option>
+                <option value="x-large" th:text="#{sizes.x-large}"></option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label th:text="#{addPageNumbers.selectText.3}"></label>
+              <div class="a4container">
+                <div class="pageNumber" id="1" style="top: 10%; left: 10%;">1</div>
+                <div class="pageNumber" id="2" style="top: 10%; left: 50%;">2</div>
+                <div class="pageNumber" id="3" style="top: 10%; left: 90%;">3</div>
+                <div class="pageNumber" id="4" style="top: 50%; left: 10%;">4</div>
+                <div class="pageNumber" id="5" style="top: 50%; left: 50%;">5</div>
+                <div class="pageNumber" id="6" style="top: 50%; left: 90%;">6</div>
+                <div class="pageNumber" id="7" style="top: 90%; left: 10%;">7</div>
+                <div class="pageNumber selectedPosition" id="8" style="top: 90%; left: 50%;">8</div>
+                <div class="pageNumber" id="9" style="top: 90%; left: 90%;">9</div>
+              </div>
+            </div>
+            <input type="hidden" id="numberInput" name="position" value="8">
+            <div class="mb-3">
+              <label for="fontSize" th:text="#{addPageNumbers.fontSize}"></label>
+              <input type="number" class="form-control" id="fontSize" name="fontSize" min="1" value="12" required>
+            </div>
+            <div class="mb-3">
+              <label for="fontType" th:text="#{addPageNumbers.fontName}"></label>
+              <select class="form-control" id="fontType" name="fontType">
+                <option value="Times">Times Roman</option>
+                <option value="Helvetica">Helvetica</option>
+                <option value="Courier">Courier New</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="startingNumber" th:text="#{addPageNumbers.selectText.4}"></label>
+              <input type="number" class="form-control" id="startingNumber" name="startingNumber" min="1" required value="1">
+            </div>
+            <div class="mb-3">
+              <label for="pagesToNumber" th:text="#{addPageNumbers.selectText.5}"></label>
+              <input type="text" class="form-control" id="pagesToNumber" name="pagesToNumber" th:placeholder="#{addPageNumbers.numberPagesDesc}">
+            </div>
+            <div class="mb-3">
+              <label for="customText" th:text="#{addPageNumbers.selectText.6}"></label>
+              <input type="text" class="form-control" id="customText" name="customText" th:placeholder="#{addPageNumbers.customNumberDesc}">
+            </div>
+            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{addPageNumbers.submit}"></button>
+          </form>
         </div>
-        <script>
-          let cells = document.querySelectorAll('.pageNumber');
-          let inputField = document.getElementById('numberInput');
-
-          cells.forEach(cell => {
-            cell.addEventListener('click', function(e) {
-              cells.forEach(cell => {
-                cell.classList.remove('selectedPosition'); // Remove selected class from all cells
-                cell.classList.remove('selectedHovered'); // Also remove selectedHovered class
-              });
-              let selectedLocation = e.target.id;
-              inputField.value = selectedLocation;
-              e.target.classList.add('selectedPosition'); // Add selected class to clicked cell
-              e.target.classList.add('selectedHovered'); // Add selectedHovered class
-            });
-
-            cell.addEventListener('mouseenter', function(e) {
-              if(e.target.classList.contains('selectedPosition')) {
-                e.target.classList.add('selectedHovered');
-              }
-            });
-
-            cell.addEventListener('mouseleave', function(e) {
-              if(e.target.classList.contains('selectedPosition')) {
-                e.target.classList.remove('selectedHovered');
-              }
-            });
-          });
-        </script>
       </div>
-      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-  </body>
+    <script>
+      let cells = document.querySelectorAll('.pageNumber');
+      let inputField = document.getElementById('numberInput');
+
+      cells.forEach(cell => {
+        cell.addEventListener('click', function(e) {
+          cells.forEach(cell => {
+            cell.classList.remove('selectedPosition'); // Remove selected class from all cells
+            cell.classList.remove('selectedHovered'); // Also remove selectedHovered class
+          });
+          let selectedLocation = e.target.id;
+          inputField.value = selectedLocation;
+          e.target.classList.add('selectedPosition'); // Add selected class to clicked cell
+          e.target.classList.add('selectedHovered'); // Add selectedHovered class
+        });
+
+        cell.addEventListener('mouseenter', function(e) {
+          if(e.target.classList.contains('selectedPosition')) {
+            e.target.classList.add('selectedHovered');
+          }
+        });
+
+        cell.addEventListener('mouseleave', function(e) {
+          if(e.target.classList.contains('selectedPosition')) {
+            e.target.classList.remove('selectedHovered');
+          }
+        });
+      });
+    </script>
+  </div>
+  <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+</div>
+</body>
 </html>

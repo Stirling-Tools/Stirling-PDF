@@ -163,6 +163,10 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
 
     // Deletes a backup file.
     public boolean deleteBackupFile(String fileName) throws IOException {
+        if (!isValidFileName(fileName)) {
+            log.error("Invalid file name: {}", fileName);
+            return false;
+        }
         Path filePath = this.getBackupFilePath(fileName);
         if (Files.deleteIfExists(filePath)) {
             log.info("Deleted backup file: {}", fileName);
@@ -175,7 +179,11 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
 
     // Gets the Path object for a given backup file name.
     public Path getBackupFilePath(String fileName) {
-        return Paths.get(backupPath.toString(), fileName);
+        Path filePath = Paths.get(backupPath.toString(), fileName).normalize();
+        if (!filePath.startsWith(backupPath)) {
+            throw new SecurityException("Path traversal detected");
+        }
+        return filePath;
     }
 
     private boolean executeDatabaseScript(Path scriptPath) {
@@ -201,5 +209,20 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
                 log.error("Error creating directories: {}", e.getMessage());
             }
         }
+    }
+
+    private boolean isValidFileName(String fileName) {
+        // Check for invalid characters or sequences
+        return fileName != null
+                && !fileName.contains("..")
+                && !fileName.contains("/")
+                && !fileName.contains("\\")
+                && !fileName.contains(":")
+                && !fileName.contains("*")
+                && !fileName.contains("?")
+                && !fileName.contains("\"")
+                && !fileName.contains("<")
+                && !fileName.contains(">")
+                && !fileName.contains("|");
     }
 }

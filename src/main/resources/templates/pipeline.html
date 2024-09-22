@@ -64,10 +64,10 @@
                   </div>
                   <div class="element-margin">
                     <div
-                      th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=true)}"
+                      th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=true)}"
                     ></div>
                   </div>
-                  <div class="element-margin">
+                  <div class="element-margin text-start">
                     <button
                       class="btn btn-primary"
                       id="submitConfigBtn"
@@ -164,7 +164,7 @@
                         class="btn btn-danger"
                         th:text="#{delete}"
                       ></button>
-                      
+
                       <button
                         id="saveBrowserPipelineBtn"
                         class="btn btn-success"

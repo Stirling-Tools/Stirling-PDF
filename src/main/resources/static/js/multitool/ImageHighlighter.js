@@ -1,4 +1,4 @@
-class ImageHiglighter {
+class ImageHighlighter {
   imageHighlighter;
   constructor(id) {
     this.imageHighlighter = document.getElementById(id);
@@ -29,6 +29,7 @@ class ImageHiglighter {
       imageClickEvent.stopPropagation();
     };
     bigImg.src = highlightEvent.target.src;
+    bigImg.style.rotate = highlightEvent.target.style.rotate;
     this.imageHighlighter.appendChild(bigImg);
   }
 
@@ -41,6 +42,25 @@ class ImageHiglighter {
     img.addEventListener("click", this.imageHighlightCallback);
     return div;
   }
+
+  async addImageFile(file, nextSiblingElement) {
+    const div = document.createElement("div");
+    div.classList.add("page-container");
+
+    var img = document.createElement("img");
+    img.classList.add("page-image");
+    img.src = URL.createObjectURL(file);
+    div.appendChild(img);
+
+    this.pdfAdapters.forEach((adapter) => {
+      adapter.adapt?.(div);
+    });
+    if (nextSiblingElement) {
+      this.pagesContainer.insertBefore(div, nextSiblingElement);
+    } else {
+      this.pagesContainer.appendChild(div);
+    }
+  }
 }
 
-export default ImageHiglighter;
+export default ImageHighlighter;

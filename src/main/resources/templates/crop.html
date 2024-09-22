@@ -17,7 +17,7 @@
                 <span class="tool-header-text" th:text="#{crop.header}"></span>
               </div>
               <form id="cropForm" th:action="@{'/api/v1/general/crop'}" method="post" enctype="multipart/form-data">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <input id="x" type="hidden" name="x">
                 <input id="y" type="hidden" name="y">
                 <input id="width" type="hidden" name="width">
@@ -30,6 +30,7 @@
               </div>
             </div>
           </div>
+          <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
           <script>
             let pdfCanvas  = document.getElementById('crop-pdf-canvas');
             let overlayCanvas = document.getElementById('overlayCanvas');

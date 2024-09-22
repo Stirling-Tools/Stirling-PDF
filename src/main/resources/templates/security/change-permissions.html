@@ -20,7 +20,7 @@
               <form action="api/v1/security/add-password" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                   <label th:text="#{permissions.selectText.1}"></label>
-                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 </div>
                 <div class="mb-3">
                   <label class="mb-2" th:text="#{permissions.selectText.2}"></label>
@@ -58,7 +58,7 @@
                   </div>
                 </div>
                 <br>
-                <div class="mb-3 text-center">
+                <div class="mb-3 text-left">
                   <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{permissions.submit}"></button>
                 </div>
               </form>

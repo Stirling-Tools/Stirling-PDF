@@ -18,8 +18,8 @@
                 <span class="tool-header-text" th:text="#{overlay-pdfs.header}"></span>
               </div>
               <form id="overlayForm" method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/overlay-pdfs'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
-                <div th:replace="~{fragments/common :: fileSelector(name='overlayFiles', multiple=true, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='overlayFiles', multipleInputsForSingleRequest=true, accept='application/pdf')}"></div>
 
                 <label for="overlayMode" th:text="#{overlay-pdfs.mode.label}">Overlay Mode</label>
                 <select id="overlayMode" name="overlayMode" class="form-control">
@@ -33,7 +33,6 @@
                   <option value="0" th:text="#{overlay-pdfs.position.foreground}">Foreground</option>
                   <option value="1" th:text="#{overlay-pdfs.position.background}">Background</option>
                 </select>
-                <br>
                 <div id="countsContainer" style="display: none;">
                   <label th:text="#{overlay-pdfs.counts.label}">Overlay Counts</label>
                   <!-- Inputs for counts will be dynamically added here -->
@@ -57,7 +56,11 @@
                       console.log("files",files);
                       if(files) {
                         const fileCount = files.length;
-
+                        countsContainer.appendChild(document.createElement("br"));
+                        const label = document.createElement('label');
+                        label.setAttribute('th:text', '#{overlay-pdfs.counts.label}');
+                        label.textContent = "Overlay Counts";
+                        countsContainer.appendChild(label);
                         for (let i = 0; i < fileCount; i++) {
                           const input = document.createElement('input');
                           input.type = 'text';

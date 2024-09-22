@@ -18,7 +18,7 @@
               </div>
 
               <form action="#" th:action="@{'/api/v1/general/rotate-pdf'}" th:object="${rotateForm}" method="post" enctype="multipart/form-data">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <input type="hidden" id="angleInput" name="angle" value="0">
 
                 <div id="editSection" style="display: none">
@@ -49,6 +49,7 @@
       </div>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
+    <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
     <script>
       const angleInput = document.getElementById("angleInput");
       const fileInput = document.getElementById("fileInput-input");
@@ -58,7 +59,7 @@
         console.log("loading pdf");
 
         document.querySelector("#editSection").style.display = "";
-        
+
         const existingPreview = document.getElementById("pdf-preview");
         if (existingPreview) {
           existingPreview.remove();

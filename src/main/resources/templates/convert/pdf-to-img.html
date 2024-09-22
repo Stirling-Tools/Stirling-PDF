@@ -18,8 +18,9 @@
                 <span class="tool-header-text" th:text="#{pdfToImage.header}"></span>
               </div>
               <p th:text="#{processTimeWarning}"></p>
+              <p th:if="${!isPython}" th:text="#{pdfToImage.info}">Python is not installed. Required for WebP conversion.</p>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/img'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label th:text="#{pdfToImage.selectText}"></label>
                   <select class="form-control" name="imageFormat">
@@ -28,6 +29,7 @@
                     <option value="gif">GIF</option>
                     <option value="tiff">TIFF</option>
                     <option value="bmp">BMP</option>
+                    <option th:if="${isPython}" value="webp">WEBP</option>
                   </select>
                 </div>
                 <div class="mb-3">

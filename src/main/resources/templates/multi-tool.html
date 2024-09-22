@@ -27,7 +27,7 @@
                     th:placeholder="#{multiTool.uploadPrompts}">
                 </div>
                 <div class="mt-action-btn">
-                  <button class="btn btn-primary" onclick="addPdfs()">
+                  <button class="btn btn-primary" onclick="addFiles()">
                     <span class="material-symbols-rounded">
                       add
                     </span>
@@ -42,6 +42,11 @@
                       rotate_right
                     </span>
                   </button>
+                  <button class="btn btn-secondary enable-on-file" onclick="splitAll()" disabled>
+                    <span class="material-symbols-rounded">
+                      cut
+                    </span>
+                  </button>
                   <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
                     <span class="material-symbols-rounded">
                       download
@@ -52,12 +57,12 @@
               <div class="multi-tool-container">
                 <div class="d-flex flex-wrap" id="pages-container-wrapper">
                   <div id="pages-container">
-                    <div class="page-container" th:each="pdf, status: ${pdfList}"
+                    <div class="page-container" th:each="file, status: ${fileList}"
                       th:id="'page-container-' + ${status.index}">
                       <div class="page-number-container">
                         <span th:text="${status.index + 1}"></span>
                       </div>
-                      <img th:src="${pdf.imageUrl}" alt="PDF Page">
+                      <img th:src="${file.imageUrl}" alt="File Page">
                     </div>
                   </div>
                 </div>
@@ -70,7 +75,8 @@
     <div id="drag-container"></div>
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
-
+  <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
+  <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
   <script type="module">
     import PdfContainer from './js/multitool/PdfContainer.js';
     import DragDropManager from "./js/multitool/DragDropManager.js";
@@ -82,14 +88,14 @@
     const dragDropManager = new DragDropManager('drag-container', 'pages-container');
     // enables image highlight on click
     const imageHighlighter = new ImageHighlighter('image-highlighter');
-    // enables the default action buttons on each pdf
+    // enables the default action buttons on each file
     const pdfActionsManager = new PdfActionsManager('pages-container');
     const fileDragManager = new FileDragManager();
 
     // Scroll the wrapper horizontally
     scrollDivHorizontally('pages-container-wrapper');
 
-    // Automatically exposes rotateAll, addPdfs and exportPdf to the window for the global buttons.
+    // Automatically exposes rotateAll, addFiles and exportPdf to the window for the global buttons.
     const pdfContainer = new PdfContainer(
       'pages-container',
       'pages-container-wrapper',
@@ -101,7 +107,7 @@
       ]
     )
 
-    fileDragManager.setCallback(async (files) => pdfContainer.addPdfsFromFiles(files));
+    fileDragManager.setCallback(async (files) => pdfContainer.addFilesFromFiles(files));
   </script>
 </body>
 

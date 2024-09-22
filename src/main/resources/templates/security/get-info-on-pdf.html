@@ -17,11 +17,11 @@
                 <span class="tool-header-text" th:text="#{getPdfInfo.header}"></span>
               </div>
               <form id="pdfInfoForm" method="post" enctype="multipart/form-data" th:action="@{'/api/v1/security/get-info-on-pdf'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, remoteCall='false', accept='application/pdf')}"></div>
-                <br>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, remoteCall='false', accept='application/pdf')}"></div>
+
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{getPdfInfo.submit}"></button>
               </form>
-              <div class="container mt-5">
+              <div class="container mt-0">
                 <!-- Iterate over each main section in the JSON -->
                 <div id="json-content">
                   <!-- JavaScript will populate this section -->

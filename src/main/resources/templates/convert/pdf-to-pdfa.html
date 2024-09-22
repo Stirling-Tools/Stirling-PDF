@@ -19,7 +19,7 @@
               </div>
               <p th:text="#{pdfToPDFA.tip}"></p>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/pdfa'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
                   <label for="outputFormat" th:text="#{pdfToPDFA.outputFormat}"></label>
                   <select class="form-control" name="outputFormat" id="outputFormat">
@@ -30,6 +30,7 @@
                 <div id="result" class="alert-warning"></div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfToPDFA.submit}"></button>
               </form>
+              <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
               <script th:inline="javascript">
                 document.getElementById('fileInput-input').addEventListener('change', async () => {
                   pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
@@ -41,7 +42,7 @@
 
                   try {
                     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                    
+
                     let hasSignature = false;
 
                     for (let i = 1; i <= pdf.numPages; i++) {

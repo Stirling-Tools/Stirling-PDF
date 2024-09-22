@@ -24,7 +24,7 @@
     <!-- jQuery -->
     <script th:src="@{'/js/thirdParty/jquery.min.js'}"></script>
     <script th:src="@{'/js/thirdParty/jquery.validate.min.js'}"></script>
-    <script th:src="@{'/js/thirdParty/jszip.min.js'}"></script>
+    <script th:src="@{'/js/thirdParty/jszip.min.js'}" th:if="${currentPage != 'home'}"></script>
 
     <!-- Bootstrap -->
     <script th:src="@{'/js/thirdParty/popper.min.js'}"></script>
@@ -33,12 +33,6 @@
 
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" th:href="@{'/css/bootstrap-icons.min.css'}">
-
-    <!-- PDF.js -->
-    <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
-
-    <!-- PDF-Lib -->
-    <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
 
     <!-- Custom -->
     <link rel="stylesheet" th:href="@{'/css/general.css'}">
@@ -58,17 +52,21 @@
     <link rel="stylesheet" th:href="@{'/css/multi-tool.css'}" th:if="${currentPage == 'multi-tool'}">
     <link rel="stylesheet" th:href="@{'/css/rotate-pdf.css'}" th:if="${currentPage == 'rotate-pdf'}">
     <link rel="stylesheet" th:href="@{'/css/stamp.css'}" th:if="${currentPage == 'stamp'}">
-    <link rel="stylesheet" th:href="@{'/css/fileSelect.css'}">
+    <link rel="stylesheet" th:href="@{'/css/fileSelect.css'}"  th:if="${currentPage != 'home'}">
     <link rel="stylesheet" th:href="@{'/css/footer.css'}">
+
+    <link rel="preload" href="/fonts/google-symbol.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+
     <script th:src="@{'/js/thirdParty/fontfaceobserver.standalone.js'}"></script>
 
     <!-- Google MD Icons -->
     <link rel="stylesheet" th:href="@{'/css/theme/font.css'}">
 
     <!-- Help Modal -->
-    <link rel="stylesheet" th:href="@{'/css/errorBanner.css'}">
+    <link rel="stylesheet" th:href="@{'/css/errorBanner.css'}"  th:if="${currentPage != 'home'}">
 
-    <script th:src="@{'/js/cacheFormInputs.js'}"></script>
+    <script th:src="@{'/js/cacheFormInputs.js'}"  th:if="${currentPage != 'home'}"></script>
     <script th:src="@{'/js/tab-container.js'}"></script>
     <script th:src="@{'/js/darkmode.js'}"></script>
   </th:block>
@@ -81,19 +79,19 @@
 
            // Find the file input within the form
           var fileInput = $('input[type="file"]');
-          
+
           // Find the closest enclosing form of the file input
           var form = fileInput.closest('form');
-          
+
           // Find the submit button within the form
           var submitButton = form.find('button[type="submit"], input[type="submit"]');
-          
+
           const boredWaitingText = /*[[#{bored}]]*/ 'Bored Waiting?';
           const downloadCompleteText = /*[[#{downloadComplete}]]*/ 'Download Complete';
           window.downloadCompleteText = downloadCompleteText;
           // Create the 'show-game-btn' button
-          var gameButton = $('<button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">' + boredWaitingText + '</button><br><br>');
-          
+          var gameButton = $('<button type="button" class="btn btn-primary" id="show-game-btn" style="display:none;">' + boredWaitingText + '</button>');
+
           // Insert the 'show-game-btn' just above the submit button
           submitButton.before(gameButton);
 
@@ -144,17 +142,18 @@
     </dialog>
 </th:block>
 
-<th:block th:fragment="fileSelector(name, multiple)" th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, notRequired=${notRequired} ?: false">
+<th:block th:fragment="fileSelector(name, multipleInputsForSingleRequest)" th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, disableMultipleFiles=${disableMultipleFiles} ?: false, notRequired=${notRequired} ?: false">
                 <script th:inline="javascript">
                   const pdfPasswordPrompt = /*[[#{error.pdfPassword}]]*/ '';
-                  const multiple = [[${multiple}]] || false;
-                  const remoteCall = [[${remoteCall}]] || true;
+                  const multipleInputsForSingleRequest = /*[[${multipleInputsForSingleRequest}]]*/ false;
+                  const disableMultipleFiles = /*[[${disableMultipleFiles}]]*/ false;
+                  const remoteCall = /*[[${remoteCall}]]*/ true;
                 </script>
                 <script th:src="@{'/js/downloader.js'}"></script>
 
                 <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
                   <div class="mb-3">
-                    <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" multiple th:required="${notRequired} ? null : 'required'">
+                    <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" th:attr="multiple=${!disableMultipleFiles}" th:required="${notRequired} ? null : 'required'">
                   </div>
                   <div class="selected-files"></div>
                 </div>

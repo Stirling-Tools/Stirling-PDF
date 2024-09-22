@@ -21,7 +21,7 @@
             </div>
             <p th:text="#{processTimeWarning}"></p>
             <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/file/pdf'}">
-              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false)}"></div>
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false)}"></div>
               <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#info" role="button"
                 aria-expanded="false" aria-controls="info" th:text="#{fileToPDF.supportedFileTypesInfo}"></a>
               <div class="collapse" id="info">
@@ -41,9 +41,10 @@
                 <a
                   href="https://help.libreoffice.org/latest/en-US/text/shared/guide/supported_formats.html">https://help.libreoffice.org/latest/en-US/text/shared/guide/supported_formats.html</a>
               </div>
-              <br>
-              
-              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{fileToPDF.submit}"></button>
+              <div>
+                <br/>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{fileToPDF.submit}"></button>
+              </div>
             </form>
 
           </div>

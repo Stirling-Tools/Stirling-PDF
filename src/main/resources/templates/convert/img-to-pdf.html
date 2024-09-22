@@ -18,7 +18,7 @@
                 <span class="tool-header-text" th:text="#{imageToPDF.header}"></span>
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/img/pdf'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='image/*', inputText=#{imgPrompt})}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='image/*', inputText=#{imgPrompt})}"></div>
                 <div class="mb-3">
                   <label for="fitOption" th:text="#{imageToPDF.selectLabel}">Fit Options</label>
                   <select class="form-control" id="fitOption" name="fitOption">
@@ -40,7 +40,6 @@
                     <option value="blackwhite" th:text="#{pdfToImage.blackwhite}"></option>
                   </select>
                 </div>
-                <br>
                 <input type="hidden" id="override" name="override" value="multi">
                 <div class="mb-3">
                   <label th:text=#{imageToPDF.selectText.3}></label>
@@ -49,7 +48,7 @@
                     <option value="convert" th:text=#{imageToPDF.selectText.5} selected></option>
                   </select>
                 </div>
-                <br><br>
+                <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
                 <script>
                   $('#fileInput-input').on('change', function() {

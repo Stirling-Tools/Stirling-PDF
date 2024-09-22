@@ -18,7 +18,7 @@
               </div>
               <form id="pdfForm" class="mb-3">
                 <div class="custom-file">
-                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}"></div>
                 </div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{removeAnnotations.submit}"></button>
               </form>
@@ -28,6 +28,7 @@
       </div>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
+    <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
     <script th:src="@{'/js/local-pdf-input-download.js'}"></script>
     <script>
       document.getElementById('pdfForm').addEventListener('submit', async (e) => {

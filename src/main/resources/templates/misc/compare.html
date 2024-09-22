@@ -51,8 +51,8 @@
                 <span class="material-symbols-rounded tool-header-icon other">compare</span>
                 <span class="tool-header-text" th:text="#{compare.header}"></span>
               </div>
-              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
-              <div th:replace="~{fragments/common :: fileSelector(name='fileInput2', multiple=false, accept='application/pdf', remoteCall='false')}"></div>
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}"></div>
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput2', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}"></div>
 
               <div class="row">
                 <div class="flex-container">
@@ -79,6 +79,7 @@
                   <div id="result2" class="result-column"></div>
                 </div>
               </div>
+              <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
               <script>
                 // get the elements
                 var result1 = document.getElementById('result1');

@@ -17,7 +17,7 @@
                 <span class="tool-header-text" th:text="#{changeMetadata.header}"></span>
               </div>
               <form method="post" id="form1" enctype="multipart/form-data" th:action="@{'/api/v1/misc/update-metadata'}">
-                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multiple=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <p class="text-muted" th:text="#{changeMetadata.selectText.1}"></p>
                 <div class="form-check mb-3-inline ms-3">
                   <input type="checkbox" id="deleteAll" name="deleteAll">
@@ -84,6 +84,7 @@
                 <br>
                 <br>
                 <button class="btn btn-primary" type="submit" id="submitBtn" th:text="#{changeMetadata.submit}"></button>
+                <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
                 <script>
                   const deleteAllCheckbox = document.querySelector("#deleteAll");
                   let inputs = document.querySelectorAll("input");

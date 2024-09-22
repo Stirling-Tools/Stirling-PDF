@@ -2,10 +2,9 @@ package stirling.software.SPDF.config.security.oauth2;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.SavedRequest;
@@ -26,9 +25,6 @@ public class CustomOAuth2AuthenticationSuccessHandler
 
     private LoginAttemptService loginAttemptService;
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(CustomOAuth2AuthenticationSuccessHandler.class);
-
     private ApplicationProperties applicationProperties;
     private UserService userService;
 
@@ -46,6 +42,17 @@ public class CustomOAuth2AuthenticationSuccessHandler
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws ServletException, IOException {
 
+        Object principal = authentication.getPrincipal();
+        String username = "";
+
+        if (principal instanceof OAuth2User) {
+            OAuth2User oauthUser = (OAuth2User) principal;
+            username = oauthUser.getName();
+        } else if (principal instanceof UserDetails) {
+            UserDetails oauthUser = (UserDetails) principal;
+            username = oauthUser.getUsername();
+        }
+
         // Get the saved request
         HttpSession session = request.getSession(false);
         String contextPath = request.getContextPath();
@@ -59,10 +66,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {
-            OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
-            OAUTH2 oAuth = applicationProperties.getSecurity().getOAUTH2();
-
-            String username = oauthUser.getName();
+            OAUTH2 oAuth = applicationProperties.getSecurity().getOauth2();
 
             if (loginAttemptService.isBlocked(username)) {
                 if (session != null) {
@@ -78,15 +82,21 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     && oAuth.getAutoCreateUser()) {
                 response.sendRedirect(contextPath + "/logout?oauth2AuthenticationErrorWeb=true");
                 return;
-            } else {
-                try {
-                    userService.processOAuth2PostLogin(username, oAuth.getAutoCreateUser());
-                    response.sendRedirect(contextPath + "/");
-                    return;
-                } catch (IllegalArgumentException e) {
-                    response.sendRedirect(contextPath + "/logout?invalidUsername=true");
+            }
+            try {
+                if (oAuth.getBlockRegistration()
+                        && !userService.usernameExistsIgnoreCase(username)) {
+                    response.sendRedirect(contextPath + "/logout?oauth2_admin_blocked_user=true");
                     return;
                 }
+                if (principal instanceof OAuth2User) {
+                    userService.processOAuth2PostLogin(username, oAuth.getAutoCreateUser());
+                }
+                response.sendRedirect(contextPath + "/");
+                return;
+            } catch (IllegalArgumentException e) {
+                response.sendRedirect(contextPath + "/logout?invalidUsername=true");
+                return;
             }
         }
     }

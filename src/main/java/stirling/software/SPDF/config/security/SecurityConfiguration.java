@@ -10,7 +10,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,8 +17,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -37,6 +34,7 @@ import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationF
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2LogoutSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
+import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
@@ -47,7 +45,7 @@ import stirling.software.SPDF.model.provider.KeycloakProvider;
 import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 
 @Configuration
-@EnableWebSecurity()
+@EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
@@ -73,11 +71,7 @@ public class SecurityConfiguration {
     @Autowired private LoginAttemptService loginAttemptService;
 
     @Autowired private FirstLoginFilter firstLoginFilter;
-
-    @Bean
-    public SessionRegistry sessionRegistry() {
-        return new SessionRegistryImpl();
-    }
+    @Autowired private SessionPersistentRegistry sessionRegistry;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -94,7 +88,7 @@ public class SecurityConfiguration {
                                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                                     .maximumSessions(10)
                                     .maxSessionsPreventsLogin(false)
-                                    .sessionRegistry(sessionRegistry())
+                                    .sessionRegistry(sessionRegistry)
                                     .expiredUrl("/login?logout=true"));
 
             http.formLogin(
@@ -103,7 +97,7 @@ public class SecurityConfiguration {
                                             .loginPage("/login")
                                             .successHandler(
                                                     new CustomAuthenticationSuccessHandler(
-                                                            loginAttemptService))
+                                                            loginAttemptService, userService))
                                             .defaultSuccessUrl("/")
                                             .failureHandler(
                                                     new CustomAuthenticationFailureHandler(
@@ -155,12 +149,15 @@ public class SecurityConfiguration {
                                                     })
                                             .permitAll()
                                             .anyRequest()
-                                            .authenticated())
-                    .authenticationProvider(authenticationProvider());
+                                            .authenticated());
 
             // Handle OAUTH2 Logins
-            if (applicationProperties.getSecurity().getOAUTH2() != null
-                    && applicationProperties.getSecurity().getOAUTH2().getEnabled()) {
+            if (applicationProperties.getSecurity().getOauth2() != null
+                    && applicationProperties.getSecurity().getOauth2().getEnabled()
+                    && !applicationProperties
+                            .getSecurity()
+                            .getLoginMethod()
+                            .equalsIgnoreCase("normal")) {
 
                 http.oauth2Login(
                                 oauth2 ->
@@ -191,10 +188,8 @@ public class SecurityConfiguration {
                         .logout(
                                 logout ->
                                         logout.logoutSuccessHandler(
-                                                        new CustomOAuth2LogoutSuccessHandler(
-                                                                this.applicationProperties,
-                                                                sessionRegistry()))
-                                                .invalidateHttpSession(true));
+                                                new CustomOAuth2LogoutSuccessHandler(
+                                                        applicationProperties)));
             }
         } else {
             http.csrf(csrf -> csrf.disable())
@@ -227,7 +222,7 @@ public class SecurityConfiguration {
     }
 
     private Optional<ClientRegistration> googleClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
         if (oauth == null || !oauth.getEnabled()) {
             return Optional.empty();
         }
@@ -256,7 +251,7 @@ public class SecurityConfiguration {
     }
 
     private Optional<ClientRegistration> keycloakClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
         if (oauth == null || !oauth.getEnabled()) {
             return Optional.empty();
         }
@@ -280,7 +275,7 @@ public class SecurityConfiguration {
     }
 
     private Optional<ClientRegistration> githubClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
         if (oauth == null || !oauth.getEnabled()) {
             return Optional.empty();
         }
@@ -309,7 +304,7 @@ public class SecurityConfiguration {
     }
 
     private Optional<ClientRegistration> oidcClientRegistration() {
-        OAUTH2 oauth = applicationProperties.getSecurity().getOAUTH2();
+        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
         if (oauth == null
                 || oauth.getIssuer() == null
                 || oauth.getIssuer().isEmpty()
@@ -357,7 +352,7 @@ public class SecurityConfiguration {
                             String useAsUsername =
                                     applicationProperties
                                             .getSecurity()
-                                            .getOAUTH2()
+                                            .getOauth2()
                                             .getUseAsUsername();
                             Optional<User> userOpt =
                                     userService.findByUsernameIgnoreCase(
@@ -380,14 +375,6 @@ public class SecurityConfiguration {
     public IPRateLimitingFilter rateLimitingFilter() {
         int maxRequestsPerIp = 1000000; // Example limit TODO add config level
         return new IPRateLimitingFilter(maxRequestsPerIp, maxRequestsPerIp);
-    }
-
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
     }
 
     @Bean
