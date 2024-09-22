@@ -7,6 +7,8 @@ import java.io.InputStream;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +19,8 @@ import stirling.software.SPDF.model.api.PDFFile;
 
 @Component
 public class CustomPDDocumentFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(CustomPDDocumentFactory.class);
 
     private final PdfMetadataService pdfMetadataService;
 
@@ -71,6 +75,7 @@ public class CustomPDDocumentFactory {
     public PDDocument load(byte[] input) throws IOException {
         PDDocument document = Loader.loadPDF(input);
         pdfMetadataService.setDefaultMetadata(document);
+        removezeropassword(document);
         return document;
     }
 
@@ -93,6 +98,18 @@ public class CustomPDDocumentFactory {
     private PDDocument load(byte[] bytes, String password) throws IOException {
         PDDocument document = Loader.loadPDF(bytes, password);
         pdfMetadataService.setDefaultMetadata(document);
+        return document;
+    }
+
+    private PDDocument removezeropassword(PDDocument document) throws IOException {
+        if (document.isEncrypted()) {
+            try {
+                logger.info("Removing security from the source document");
+                document.setAllSecurityToBeRemoved(true);
+            } catch (Exception e) {
+                logger.warn("Cannot decrypt the pdf");
+            }
+        }
         return document;
     }
 
