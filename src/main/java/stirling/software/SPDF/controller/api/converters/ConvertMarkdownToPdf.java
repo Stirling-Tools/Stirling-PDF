@@ -29,17 +29,15 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 // @RequestMapping("/api/v1/convert")
 public class ConvertMarkdownToPdf {
 
-    // @Autowired
+
     @Qualifier("bookAndHtmlFormatsInstalled")
     private boolean bookAndHtmlFormatsInstalled;
 
     @PostMapping(consumes = "multipart/form-data", value = "/markdown/pdf")
     @Operation(
             summary = "Convert a Markdown file to PDF",
-            description =
-                    "This endpoint takes a Markdown file input, converts it to HTML, and then to PDF format. Input:MARKDOWN Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> markdownToPdf(@ModelAttribute GeneralFile request)
-            throws Exception {
+            description = "This endpoint takes a Markdown file input, converts it to HTML, and then to PDF format. Input:MARKDOWN Output:PDF Type:SISO")
+    public ResponseEntity<byte[]> markdownToPdf(@ModelAttribute GeneralFile request) throws Exception {
         MultipartFile fileInput = request.getFileInput();
 
         if (fileInput == null) {
@@ -52,28 +50,22 @@ public class ConvertMarkdownToPdf {
         }
 
         // Convert Markdown to HTML using CommonMark
-        List<Extension> extensions = List.of(TablesExtension.create());
-        Parser parser = Parser.builder().extensions(extensions).build();
+        //List<Extension> extensions = List.of(TablesExtension.create());
+        Parser parser = Parser.builder().extensions(List.of(TablesExtension.create())).build();
 
         Node document = parser.parse(new String(fileInput.getBytes()));
-        HtmlRenderer renderer =
-                HtmlRenderer.builder()
+        HtmlRenderer renderer = HtmlRenderer.builder()
                         .attributeProviderFactory(context -> new TableAttributeProvider())
-                        .extensions(extensions)
+                        .extensions(List.of(TablesExtension.create()))
                         .build();
 
         String htmlContent = renderer.render(document);
 
-        byte[] pdfBytes =
-                FileToPdf.convertHtmlToPdf(
-                        null,
-                        htmlContent.getBytes(),
-                        "converted.html",
+        byte[] pdfBytes = FileToPdf.convertHtmlToPdf(null, htmlContent.getBytes(), "converted.html",
                         bookAndHtmlFormatsInstalled);
 
         String outputFilename =
-                originalFilename.replaceFirst("[.][^.]+$", "")
-                        + ".pdf"; // Remove file extension and append .pdf
+                originalFilename.replaceFirst("\\.md$", ".pdf"); // Directly replacing ".md" extension
         return WebResponseUtils.bytesToWebResponse(pdfBytes, outputFilename);
     }
 }
