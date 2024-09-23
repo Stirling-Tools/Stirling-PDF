@@ -1,0 +1,22 @@
+name: TestDriver.ai
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: "TestDriver"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: testdriverai/action@main
+        version: v4.0.0
+        key: ${{secrets.TESTDRIVER_API_KEY}}
+        with:
+          prompt: |
+            1. /run /Users/ec2-user/actions-runner/_work/testdriver/testdriver/testdriver/test.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE_COLOR: "3"

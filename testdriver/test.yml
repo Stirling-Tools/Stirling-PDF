@@ -1,0 +1,184 @@
+version: 4.0.44
+steps:
+  - prompt: open chrome
+    commands:
+      - command: focus-application
+        name: Google Chrome
+  - prompt: click on view PDF
+    commands:
+      - command: focus-application
+        name: Google Chrome
+      - command: hover-text
+        text: View PDF
+        description: button to view PDF
+        action: click
+  - prompt: click on view PDF
+    commands:
+      - command: assert
+        expect: a pdf is open
+  - prompt: go back to the previous page
+    commands:
+      - command: focus-application
+        name: Google Chrome
+      - command: press-keys
+        keys:
+          - alt
+          - left
+  - prompt: go back to the previous page
+    commands:
+      - command: assert
+        expect: it is in homepage
+  - prompt: >-
+      click on the globe icon and select Español and check if the texts are in
+      Spanish
+    commands:
+      - command: focus-application
+        name: Google Chrome
+      - command: hover-image
+        description: globe icon in the header
+        action: click
+      - command: hover-text
+        text: Español
+        description: language option for Spanish
+        action: click
+      - command: assert
+        expect: los textos están en español
+  - prompt: Change it back to English(US)
+    commands:
+      - command: focus-application
+        name: Google Chrome
+      - command: hover-image
+        description: globe icon in the header
+        action: click
+      - command: hover-text
+        text: English (US)
+        description: language option for English
+        action: click
+      - command: assert
+        expect: The texts are in english
+  - prompt: >-
+      click on sun icon in the header section and make sure the theme of the
+      website changes, if it does then change it back by clicking on the moon
+      icon at the exact same place
+    commands:
+      - command: focus-application
+        name: Google Chrome
+      - command: hover-image
+        description: sun icon in the header section
+        action: click
+      - command: assert
+        expect: the theme of the website has changed
+      - command: hover-image
+        description: moon icon in the header section
+        action: click
+  - prompt: >-
+      click on search icon in the header section and search for "rotate", click
+      on it in the drop down, you will be taken to the rotate pdf page, if so
+      then go back to the homepage
+    commands:
+      - command: focus-application
+        name: Google Chrome
+      - command: hover-image
+        description: search icon in the header section
+        action: click
+      - command: type
+        text: rotate
+      - command: wait
+        timeout: 2000
+      - command: hover-text
+        text: Rotate
+        description: dropdown option for rotate
+        action: click
+      - command: wait
+        timeout: 5000
+      - command: assert
+        expect: the page title is "Rotate PDF"
+      - command: press-keys
+        keys:
+          - alt
+          - left
+  - prompt: >-
+      click on search bar and search for "rotate", click on it in the drop down,
+      you will be taken to the rotate pdf page, if so then go back to the
+      homepage and clear the search bar and make sure all the tools are
+      displayed
+    commands:
+      - command: focus-application
+        name: Google Chrome
+      - command: hover-text
+        text: Search for features...
+        description: search bar
+        action: click
+      - command: type
+        text: rotate
+      - command: wait
+        timeout: 2000
+      - command: hover-text
+        text: Rotate
+        description: dropdown option for rotate
+        action: click
+      - command: wait
+        timeout: 5000
+      - command: assert
+        expect: the page title is "Rotate PDF"
+      - command: press-keys
+        keys:
+          - alt
+          - left
+      - command: wait
+        timeout: 2000
+      - command: hover-text
+        text: Search for features...
+        description: search bar
+        action: click
+      - command: press-keys
+        keys:
+          - control
+          - a
+      - command: press-keys
+        keys:
+          - delete
+      - command: assert
+        expect: all tools are displayed
+  - prompt: >-
+      click on Tools button in the header section and hover over merge button
+      and check if the background for the button is changed, similarly hover
+      over all the rest of the buttons and check for the background of the
+      button to change
+    commands:
+      - command: focus-application
+        name: Google Chrome
+      - command: hover-text
+        text: Tools
+        description: Tools button in the header section
+        action: click
+      - command: hover-text
+        text: Merge
+        description: Merge button
+        action: hover
+      - command: assert
+        expect: the background of the Merge button is changed
+      - command: hover-text
+        text: PDF to Image
+        description: PDF to Image button
+        action: hover
+      - command: assert
+        expect: the background of the PDF to Image button is changed
+      - command: hover-text
+        text: PDF to CSV
+        description: PDF to CSV button
+        action: hover
+      - command: assert
+        expect: the background of the PDF to CSV button is changed
+      - command: hover-text
+        text: Sign
+        description: Sign button
+        action: hover
+      - command: assert
+        expect: the background of the Sign button is changed
+      - command: hover-text
+        text: Add Watermark
+        description: Add Watermark button
+        action: hover
+      - command: assert
+        expect: the background of the Add Watermark button is changed
