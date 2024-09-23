@@ -1,6 +1,7 @@
 package stirling.software.SPDF;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,14 +31,35 @@ public class SPdfApplication {
     private static final Logger logger = LoggerFactory.getLogger(SPdfApplication.class);
 
     @Autowired private Environment env;
-
     @Autowired ApplicationProperties applicationProperties;
 
     private static String serverPortStatic;
 
     @Value("${server.port:8080}")
     public void setServerPortStatic(String port) {
-        SPdfApplication.serverPortStatic = port;
+        if (port.equalsIgnoreCase("auto")) {
+            // Use Spring Boot's automatic port assignment (server.port=0)
+            SPdfApplication.serverPortStatic = "0"; // This will let Spring Boot assign an available port
+        } else {
+            SPdfApplication.serverPortStatic = port;
+        }
+    }
+
+    // Optionally keep this method if you want to provide a manual port-incrementation fallback.
+    private static String findAvailablePort(int startPort) {
+        int port = startPort;
+        while (!isPortAvailable(port)) {
+            port++;
+        }
+        return String.valueOf(port);
+    }
+
+    private static boolean isPortAvailable(int port) {
+        try (ServerSocket socket = new ServerSocket(port)) {
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     @PostConstruct
@@ -47,13 +69,17 @@ public class SPdfApplication {
         boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
         if (browserOpen) {
             try {
-                String url = "http://localhost:" + getNonStaticPort();
+                String url = "http://localhost:" + getStaticPort();
 
                 String os = System.getProperty("os.name").toLowerCase();
                 Runtime rt = Runtime.getRuntime();
                 if (os.contains("win")) {
                     // For Windows
                     SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
+                } else if (os.contains("mac")) {
+                    rt.exec("open " + url);
+                } else if (os.contains("nix") || os.contains("nux")) {
+                    rt.exec("xdg-open " + url);
                 }
             } catch (Exception e) {
                 logger.error("Error opening browser: {}", e.getMessage());
@@ -69,15 +95,13 @@ public class SPdfApplication {
         app.addInitializers(new ConfigInitializer());
         Map<String, String> propertyFiles = new HashMap<>();
 
-        // stirling pdf settings file
+        // External config files
         if (Files.exists(Paths.get("configs/settings.yml"))) {
             propertyFiles.put("spring.config.additional-location", "file:configs/settings.yml");
         } else {
-            logger.warn(
-                    "External configuration file 'configs/settings.yml' does not exist. Using default configuration and environment configuration instead.");
+            logger.warn("External configuration file 'configs/settings.yml' does not exist.");
         }
 
-        // custom javs settings file
         if (Files.exists(Paths.get("configs/custom_settings.yml"))) {
             String existingLocation =
                     propertyFiles.getOrDefault("spring.config.additional-location", "");
@@ -100,19 +124,14 @@ public class SPdfApplication {
 
         app.run(args);
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Thread interrupted while sleeping", e);
-        }
-
+        // Ensure directories are created
         try {
             Files.createDirectories(Path.of("customFiles/static/"));
             Files.createDirectories(Path.of("customFiles/templates/"));
         } catch (Exception e) {
             logger.error("Error creating directories: {}", e.getMessage());
         }
+
         printStartupLogs();
     }
 
