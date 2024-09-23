@@ -67,15 +67,6 @@ public class SplitPdfByChaptersController {
         }
         PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
 
-        // checks if the document is encrypted by an empty user password
-        if (sourceDocument.isEncrypted()) {
-            try {
-                sourceDocument.setAllSecurityToBeRemoved(true);
-                logger.info("Removing security from the source document ");
-            } catch (Exception e) {
-                logger.warn("Cannot decrypt the pdf");
-            }
-        }
         PDDocumentOutline outline = sourceDocument.getDocumentCatalog().getDocumentOutline();
 
         if (outline == null) {
