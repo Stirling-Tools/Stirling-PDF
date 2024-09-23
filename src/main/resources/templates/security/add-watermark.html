@@ -108,7 +108,7 @@
                   <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage">
                   <label for="convertPDFToImage" th:text="#{watermark.selectText.10}"></label>
                 </div>
-                <div class="mb-3 text-center">
+                <div class="mb-3 text-left">
                   <input type="submit" id="submitBtn" th:value="#{watermark.submit}" class="btn btn-primary">
                 </div>
               </form>
@@ -123,12 +123,18 @@
                   const watermarkImage = document.getElementById('watermarkImage');
 
                   if (watermarkType === 'text') {
+                    if (watermarkImage.hasAttribute('required')) {
+                      watermarkImage.removeAttribute('required');
+                    }
                     watermarkTextGroup.style.display = 'block';
                     watermarkText.required = true;
                     watermarkImageGroup.style.display = 'none';
                     watermarkImage.required = false;
                     alphabetGroup.style.display = 'block';
                   } else if (watermarkType === 'image') {
+                    if (watermarkImage.hasAttribute('required')) {
+                      watermarkImage.removeAttribute('required');
+                    }
                     watermarkTextGroup.style.display = 'none';
                     watermarkText.required = false;
                     watermarkImageGroup.style.display = 'block';

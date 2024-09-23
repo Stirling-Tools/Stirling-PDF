@@ -316,7 +316,7 @@
               <span class="material-symbols-rounded" id="dark-mode-icon">
                 dark_mode
               </span>
-              <span class="icon-text icon-hide" id="dark-mode-text" th:data-text="#{navbar.darkmode}" th:text="#{navbar.darkmode}"></span>
+              <span class="icon-text icon-hide tooltip-text" id="dark-mode-text" th:data-text="#{navbar.darkmode}" th:text="#{navbar.darkmode}"></span>
             </a>
           </li>
           <li class="nav-item dropdown">
@@ -360,7 +360,7 @@
               <span class="material-symbols-rounded">
                 settings
               </span>
-              <span class="icon-text icon-hide" th:data-text="#{navbar.settings}" th:text="#{navbar.settings}"></span>
+              <span class="icon-text icon-hide tooltip-text" th:data-text="#{navbar.settings}" th:text="#{navbar.settings}"></span>
             </a>
           </li>
         </ul>
@@ -415,7 +415,7 @@
             </select>
           </div>
           <div class="mb-3">
-            <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label>
+            <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label><br/>
             <input type="range" class="form-range" min="1" max="9" step="1" id="zipThreshold" value="4">
             <span id="zipThresholdValue" class="ms-2"></span>
           </div>

@@ -29,6 +29,7 @@ class ImageHighlighter {
       imageClickEvent.stopPropagation();
     };
     bigImg.src = highlightEvent.target.src;
+    bigImg.style.rotate = highlightEvent.target.style.rotate;
     this.imageHighlighter.appendChild(bigImg);
   }
 

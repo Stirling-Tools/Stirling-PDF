@@ -86,7 +86,7 @@
         },
         {
             "moduleName": "com.fathzer:javaluator",
-            "moduleVersion": "3.0.4",
+            "moduleVersion": "3.0.5",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -286,7 +286,7 @@
         {
             "moduleName": "io.micrometer:micrometer-core",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.13.3",
+            "moduleVersion": "1.13.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -573,13 +573,13 @@
         },
         {
             "moduleName": "org.commonmark:commonmark",
-            "moduleVersion": "0.22.0",
+            "moduleVersion": "0.23.0",
             "moduleLicense": "BSD 2-Clause License",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
         },
         {
             "moduleName": "org.commonmark:commonmark-ext-gfm-tables",
-            "moduleVersion": "0.22.0",
+            "moduleVersion": "0.23.0",
             "moduleLicense": "BSD 2-Clause License",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
         },
@@ -1143,7 +1143,7 @@
         {
             "moduleName": "org.springframework:spring-webmvc",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "6.1.9",
+            "moduleVersion": "6.1.13",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },

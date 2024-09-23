@@ -16,7 +16,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.Calendar;
 
-import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.examples.signature.CreateSignatureBase;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
@@ -35,6 +34,7 @@ import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.bouncycastle.pkcs.PKCSException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,6 +47,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -69,6 +70,13 @@ public class CertSignController {
                         CertificateException {
             super(keystore, pin);
         }
+    }
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public CertSignController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/cert-sign")
@@ -122,7 +130,7 @@ public class CertSignController {
 
         CreateSignature createSignature = new CreateSignature(ks, password.toCharArray());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        sign(pdf.getBytes(), baos, createSignature, name, location, reason);
+        sign(pdfDocumentFactory, pdf.getBytes(), baos, createSignature, name, location, reason);
         return WebResponseUtils.boasToWebResponse(
                 baos,
                 Filenames.toSimpleFileName(pdf.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
@@ -130,13 +138,14 @@ public class CertSignController {
     }
 
     private static void sign(
+            CustomPDDocumentFactory pdfDocumentFactory,
             byte[] input,
             OutputStream output,
             CreateSignature instance,
             String name,
             String location,
             String reason) {
-        try (PDDocument doc = Loader.loadPDF(input)) {
+        try (PDDocument doc = pdfDocumentFactory.load(input)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
             signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
