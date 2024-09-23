@@ -15,7 +15,7 @@ import stirling.software.SPDF.utils.CheckProgramInstall;
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConverterWebController {
 
-    @ConditionalOnExpression("#{bookAndHtmlFormatsInstalled}")
+    @ConditionalOnExpression("${bookAndHtmlFormatsInstalled}")
     @GetMapping("/book-to-pdf")
     @Hidden
     public String convertBookToPdfForm(Model model) {
@@ -60,7 +60,7 @@ public class ConverterWebController {
 
     // PDF TO......
 
-    @ConditionalOnExpression("#{bookAndHtmlFormatsInstalled}")
+    @ConditionalOnExpression("${bookAndHtmlFormatsInstalled}")
     @GetMapping("/pdf-to-book")
     @Hidden
     public String convertPdfToBookForm(Model model) {
