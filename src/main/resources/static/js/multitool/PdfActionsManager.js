@@ -193,22 +193,6 @@ class PdfActionsManager {
     return div;
   }
 
-  rotateElement(element, deg) {
-    var lastTransform = element.style.rotate;
-    if (!lastTransform) {
-      lastTransform = "0";
-    }
-    const lastAngle = parseInt(lastTransform.replace(/[^\d-]/g, ""));
-    const newAngle = lastAngle + deg;
-
-    element.style.rotate = newAngle + "deg";
-
-    // Update the larger preview rotation
-    const previewElement = document.getElementById("pdf-preview");
-    if (previewElement) {
-      previewElement.style.rotate = newAngle + "deg";
-    }
-  }
 }
 
 export default PdfActionsManager;

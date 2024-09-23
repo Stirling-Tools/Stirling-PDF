@@ -9,7 +9,7 @@ function showErrorBanner(message, stackTrace) {
 function showSessionExpiredPrompt() {
   const errorContainer = document.getElementById("errorContainer");
   errorContainer.style.display = "block";
-  document.querySelector("#errorContainer .alert-heading").textContent = "Session Expired";
+  document.querySelector("#errorContainer .alert-heading").textContent = sessionExpired;
   document.querySelector("#errorContainer p").textContent = sessionExpired;
   document.querySelector("#traceContent").textContent = "";
 

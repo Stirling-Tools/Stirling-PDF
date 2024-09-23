@@ -56,7 +56,7 @@ public class FirstLoginFilter extends OncePerRequestFilter {
             }
         }
 
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             HttpSession session = request.getSession(true);
             SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
             String creationTime = timeFormat.format(new Date(session.getCreationTime()));
@@ -70,7 +70,6 @@ public class FirstLoginFilter extends OncePerRequestFilter {
                     request.getHeader("User-Agent"),
                     request.getHeader("Referer"),
                     request.getRequestURL().toString());
-
         }
         filterChain.doFilter(request, response);
     }
