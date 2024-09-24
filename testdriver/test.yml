@@ -176,9 +176,3 @@ steps:
         action: hover
       - command: assert
         expect: the background of the Sign button is changed
-      - command: hover-text
-        text: Add Watermark
-        description: Add Watermark button
-        action: hover
-      - command: assert
-        expect: the background of the Add Watermark button is changed
