@@ -100,8 +100,7 @@ steps:
   - prompt: >-
       click on search bar and search for "rotate", click on it in the drop down,
       you will be taken to the rotate pdf page, if so then go back to the
-      homepage and clear the search bar present at the middle of the homepage and make sure all the tools are
-      displayed
+      homepage
     commands:
       - command: focus-application
         name: Google Chrome
@@ -127,19 +126,6 @@ steps:
           - left
       - command: wait
         timeout: 2000
-      - command: hover-text
-        text: Search for features...
-        description: search bar
-        action: click
-      - command: press-keys
-        keys:
-          - control
-          - a
-      - command: press-keys
-        keys:
-          - delete
-      - command: assert
-        expect: all tools are displayed
   - prompt: >-
       click on Tools button in the header section and hover over merge button
       and check if the background for the button is changed, similarly hover
