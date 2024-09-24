@@ -12,11 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: testdriverai/action@main
-        version: v4.0.0
-        key: ${{secrets.TESTDRIVER_API_KEY}}
         with:
+          version: v4.0.44
+          key: ${{secrets.TESTDRIVER_API_KEY}}
+          prerun: |
+            npm install
+            npm run build
+            npm install dashcam-chrome --save
+            Start-Process "C:/Program Files/Google/Chrome/Application/chrome.exe" -ArgumentList "--start-maximized", "--load-extension=$(pwd)/node_modules/dashcam-chrome/build", "https://stirlingpdf.io"
+            Start-Sleep -Seconds 20
           prompt: |
-            1. /run /Users/ec2-user/actions-runner/_work/testdriver/testdriver/testdriver/test.yml
+            1. /run testdriver/test.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FORCE_COLOR: "3"
