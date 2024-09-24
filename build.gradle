@@ -162,7 +162,7 @@ dependencies {
     runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
 
-    implementation "commons-io:commons-io:2.16.1"
+    implementation "commons-io:commons-io:2.17.0"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0"
     //general PDF
 
