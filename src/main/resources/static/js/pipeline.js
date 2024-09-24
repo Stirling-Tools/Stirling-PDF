@@ -81,6 +81,8 @@ document.getElementById("submitConfigBtn").addEventListener("click", function ()
   let selectedOperation = document.getElementById("operationsDropdown").value;
 
   var pipelineName = document.getElementById("pipelineName").value;
+
+
   let pipelineList = document.getElementById("pipelineList").children;
   let pipelineConfig = {
     name: pipelineName,
@@ -218,7 +220,8 @@ fetch("v1/api-docs")
 
 document.getElementById('deletePipelineBtn').addEventListener('click', function(event) {
     event.preventDefault();
-    let pipelineName = document.getElementById('pipelineName').value; 
+    let pipelineName = document.getElementById('pipelineName').value;
+
 	if (confirm(deletePipelineText + pipelineName)) {
 		removePipelineFromUI(pipelineName);
 	    let key = "#Pipeline-" + pipelineName;
