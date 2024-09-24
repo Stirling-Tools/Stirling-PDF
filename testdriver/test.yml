@@ -100,7 +100,7 @@ steps:
   - prompt: >-
       click on search bar and search for "rotate", click on it in the drop down,
       you will be taken to the rotate pdf page, if so then go back to the
-      homepage and clear the search bar and make sure all the tools are
+      homepage and clear the search bar on the homepage and make sure all the tools are
       displayed
     commands:
       - command: focus-application
