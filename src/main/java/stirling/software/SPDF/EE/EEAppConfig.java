@@ -19,7 +19,7 @@ public class EEAppConfig {
 
     @Bean(name = "RunningEE")
     public boolean runningEnterpriseEdition() {
-        // TODO: Implement EE detection
-        return false;
+        return applicationProperties.getEnterpriseEdition().getEnabled();
+        // TODO: check EE license key
     }
 }

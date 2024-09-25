@@ -69,6 +69,9 @@
     <script th:src="@{'/js/cacheFormInputs.js'}"  th:if="${currentPage != 'home'}"></script>
     <script th:src="@{'/js/tab-container.js'}"></script>
     <script th:src="@{'/js/darkmode.js'}"></script>
+    <script th:inline="javascript">
+        const stirlingPDFLabel = /*[[${@StirlingPDFLabel}]]*/ '';
+    </script>
   </th:block>
 
 <th:block th:fragment="game">

@@ -209,7 +209,7 @@ public class UserController {
     @PostMapping("/admin/saveUser")
     public RedirectView saveUser(
             @RequestParam(name = "username", required = true) String username,
-            @RequestParam(name = "password", required = true) String password,
+            @RequestParam(name = "password", required = false) String password,
             @RequestParam(name = "role") String role,
             @RequestParam(name = "authType") String authType,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")

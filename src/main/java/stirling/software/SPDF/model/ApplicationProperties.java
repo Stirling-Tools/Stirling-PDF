@@ -136,6 +136,7 @@ public class ApplicationProperties {
         private boolean customHTMLFiles;
         private String tessdataDir;
         private Boolean enableAlphaFunctionality;
+        private String enableAnalytics;
     }
 
     @Data
@@ -179,6 +180,7 @@ public class ApplicationProperties {
 
     @Data
     public static class EnterpriseEdition {
+        private Boolean enabled;
         @ToString.Exclude private String key;
         private CustomMetadata customMetadata = new CustomMetadata();
 

@@ -1,7 +1,5 @@
 package stirling.software.SPDF.config.security.session;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,29 +13,17 @@ public class CustomHttpSessionListener implements HttpSessionListener {
 
     private SessionPersistentRegistry sessionPersistentRegistry;
 
-    private final AtomicInteger activeSessions;
-
     @Autowired
     public CustomHttpSessionListener(SessionPersistentRegistry sessionPersistentRegistry) {
         super();
         this.sessionPersistentRegistry = sessionPersistentRegistry;
-        activeSessions = new AtomicInteger();
     }
 
     @Override
-    public void sessionCreated(HttpSessionEvent se) {
-        log.info(
-                "Session created: {} with count {}",
-                se.getSession().getId(),
-                activeSessions.incrementAndGet());
-    }
+    public void sessionCreated(HttpSessionEvent se) {}
 
     @Override
     public void sessionDestroyed(HttpSessionEvent se) {
-        log.info(
-                "Session destroyed: {} with count {}",
-                se.getSession().getId(),
-                activeSessions.decrementAndGet());
         sessionPersistentRegistry.expireSession(se.getSession().getId());
     }
 }

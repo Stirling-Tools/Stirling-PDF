@@ -15,16 +15,16 @@ import stirling.software.SPDF.model.PdfMetadata;
 public class PdfMetadataService {
 
     private final ApplicationProperties applicationProperties;
-    private final String appVersion;
+    private final String stirlingPDFLabel;
     private final UserServiceInterface userService;
 
     @Autowired
     public PdfMetadataService(
             ApplicationProperties applicationProperties,
-            @Qualifier("appVersion") String appVersion,
+            @Qualifier("StirlingPDFLabel") String stirlingPDFLabel,
             @Autowired(required = false) UserServiceInterface userService) {
         this.applicationProperties = applicationProperties;
-        this.appVersion = appVersion;
+        this.stirlingPDFLabel = stirlingPDFLabel;
         this.userService = userService;
     }
 
@@ -59,51 +59,40 @@ public class PdfMetadataService {
 
     private void setNewDocumentMetadata(PDDocument pdf, PdfMetadata pdfMetadata) {
 
-        String creator = "Stirling-PDF";
+        String creator = stirlingPDFLabel;
 
-        //        if (applicationProperties
-        //                .getEnterpriseEdition()
-        //                .getCustomMetadata()
-        //                .isAutoUpdateMetadata()) {
+        if (applicationProperties
+                .getEnterpriseEdition()
+                .getCustomMetadata()
+                .isAutoUpdateMetadata()) {
 
-        // producer =
-        //
-        // applicationProperties.getEnterpriseEdition().getCustomMetadata().getProducer();
-        // creator =
-        // applicationProperties.getEnterpriseEdition().getCustomMetadata().getCreator();
-        // title = applicationProperties.getEnterpriseEdition().getCustomMetadata().getTitle();
+            creator = applicationProperties.getEnterpriseEdition().getCustomMetadata().getCreator();
+            pdf.getDocumentInformation().setProducer(stirlingPDFLabel);
+        }
 
-        //            if ("{filename}".equals(title)) {
-        //                title = "Filename"; // Replace with actual filename logic
-        //            } else if ("{unchanged}".equals(title)) {
-        //                title = pdfMetadata.getTitle(); // Keep the original title
-        //            }
-        //        }
-
-        pdf.getDocumentInformation().setCreator(creator + " " + appVersion);
+        pdf.getDocumentInformation().setCreator(creator);
         pdf.getDocumentInformation().setCreationDate(Calendar.getInstance());
     }
 
     private void setCommonMetadata(PDDocument pdf, PdfMetadata pdfMetadata) {
-        String producer = "Stirling-PDF";
         String title = pdfMetadata.getTitle();
         pdf.getDocumentInformation().setTitle(title);
-        pdf.getDocumentInformation().setProducer(producer + " " + appVersion);
+        pdf.getDocumentInformation().setProducer(stirlingPDFLabel);
         pdf.getDocumentInformation().setSubject(pdfMetadata.getSubject());
         pdf.getDocumentInformation().setKeywords(pdfMetadata.getKeywords());
         pdf.getDocumentInformation().setModificationDate(Calendar.getInstance());
 
         String author = pdfMetadata.getAuthor();
-        // if (applicationProperties
-        //        .getEnterpriseEdition()
-        //        .getCustomMetadata()
-        //        .isAutoUpdateMetadata()) {
-        //    author = applicationProperties.getEnterpriseEdition().getCustomMetadata().getAuthor();
+        if (applicationProperties
+                .getEnterpriseEdition()
+                .getCustomMetadata()
+                .isAutoUpdateMetadata()) {
+            author = applicationProperties.getEnterpriseEdition().getCustomMetadata().getAuthor();
 
-        // if (userService != null) {
-        //    author = author.replace("username", userService.getCurrentUsername());
-        // }
-        // }
+            if (userService != null) {
+                author = author.replace("username", userService.getCurrentUsername());
+            }
+        }
         pdf.getDocumentInformation().setAuthor(author);
     }
 }
