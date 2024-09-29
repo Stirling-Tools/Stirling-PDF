@@ -8,32 +8,32 @@
   "[java]": {
     "editor.tabSize": 4,
     "editor.detectIndentation": false,
-    "editor.rulers": [127]
+    "editor.rulers": []
   },
   "[python]": {
     "editor.tabSize": 2,
     "editor.detectIndentation": false,
-    "editor.rulers": [127]
+    "editor.rulers": []
   },
   "[gradle-build]": {
     "editor.tabSize": 4,
     "editor.detectIndentation": false,
-    "editor.rulers": [127]
+    "editor.rulers": []
   },
   "[gradle]": {
     "editor.tabSize": 4,
     "editor.detectIndentation": false,
-    "editor.rulers": [127]
+    "editor.rulers": []
   },
   "[html]": {
     "editor.tabSize": 2,
-    "editor.rulers": [127],
+    "editor.rulers": [],
     "files.trimFinalNewlines": false,
     "files.insertFinalNewline": false
   },
   "[javascript]": {
     "editor.tabSize": 2,
-    "editor.rulers": [127]
+    "editor.rulers": []
   },
   "[yaml]": {
     "files.trimFinalNewlines": false,

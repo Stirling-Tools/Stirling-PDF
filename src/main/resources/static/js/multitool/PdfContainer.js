@@ -326,6 +326,12 @@ class PdfContainer {
         page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle));
       }
     }
+
+    // Set metadata for the PDF
+    pdfDoc.setCreator('Stirling PDF');
+    pdfDoc.setProducer('Stirling PDF');
+    // -------------------------
+
     const pdfBytes = await pdfDoc.save();
     const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
 
