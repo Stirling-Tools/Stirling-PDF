@@ -24,6 +24,7 @@ function filterCards() {
 
 function updateFavoritesSection() {
   const favoritesContainer = document.getElementById("groupFavorites").querySelector(".feature-group-container");
+  favoritesContainer.style.maxHeight = "none";
   favoritesContainer.innerHTML = "";
   const cards = Array.from(document.querySelectorAll(".feature-card"));
   let favoritesAmount = 0;
@@ -40,6 +41,7 @@ function updateFavoritesSection() {
     document.getElementById("groupFavorites").style.display = "flex";
   };
   reorderCards(favoritesContainer);
+  favoritesContainer.style.maxHeight = favoritesContainer.scrollHeight + "px";
 };
 
 function toggleFavorite(element) {
@@ -197,8 +199,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const container = header.parentNode.querySelector(".feature-group-container");
     if (parent.id !== "groupFavorites") {
       container.style.maxHeight = container.clientHeight + "px";
-    } else {
-      container.style.maxHeight = "500px";
     }
     header.onclick = () => {
       expandCollapseToggle(parent);
