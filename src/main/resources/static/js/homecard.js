@@ -206,12 +206,24 @@ document.addEventListener("DOMContentLoaded", function () {
   })
 
   const collapsed = localStorage.getItem("collapsedGroups") ? JSON.parse(localStorage.getItem("collapsedGroups")) : [];
+  const groupsArray = Array.from(document.querySelectorAll(".feature-group"));
 
-  Array.from(document.querySelectorAll(".feature-group")).forEach(group => {
+  groupsArray.forEach(group => {
     if (collapsed.indexOf(group.id) !== -1) {
       expandCollapseToggle(group, false);
     }
   })
+
+  // Necessary in order to not fire the transition animation on page load, which looks wrong.
+  // The timeout isn't doing anything visible to the user, so it's not making the page load look slower.
+  setTimeout(() => {
+    groupsArray.forEach(group => {
+      const container = group.querySelector(".feature-group-container");
+      container.classList.add("animated-group");
+    })
+  }, 500);
+
+
 
   showFavoritesOnly();
 });
