@@ -162,3 +162,4 @@ steps:
         action: hover
       - command: assert
         expect: the background of the Sign button is changed
+
