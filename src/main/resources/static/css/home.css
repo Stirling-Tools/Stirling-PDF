@@ -62,10 +62,13 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 3fr));
   gap: 30px 30px;
-  transition: 0.5s all;
   overflow: hidden;
   margin: -20px;
   padding: 20px;
+}
+
+.feature-group-container.animated-group {
+  transition: 0.5s all;
 }
 
 .feature-group.collapsed>.feature-group-container {
