@@ -20,6 +20,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import stirling.software.SPDF.EE.LicenseKeyChecker;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
@@ -30,6 +31,7 @@ public class AppConfig {
 
     @Autowired ApplicationProperties applicationProperties;
 
+   
     @Bean
     @ConditionalOnProperty(
             name = "system.customHTMLFiles",
@@ -169,7 +171,7 @@ public class AppConfig {
 
     @Bean(name = "analyticsEnabled")
     public boolean analyticsEnabled() {
-        if (applicationProperties.getEnterpriseEdition().getEnabled()) return true;
+        if (applicationProperties.getEnterpriseEdition().isEnabled()) return true;
         return applicationProperties.getSystem().getEnableAnalytics() != null
                 && Boolean.parseBoolean(applicationProperties.getSystem().getEnableAnalytics());
     }
@@ -178,4 +180,11 @@ public class AppConfig {
     public String stirlingPDFLabel() {
         return "Stirling-PDF" + " v" + appVersion();
     }
+
+    @Bean(name = "UUID")
+    public String uuid() {
+        return applicationProperties.getAutomaticallyGenerated().getUUID();
+    }
+    
+    
 }

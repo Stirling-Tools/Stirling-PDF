@@ -30,6 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.AuthenticationType;
@@ -40,6 +41,7 @@ import stirling.software.SPDF.model.api.user.UsernameAndPass;
 @Controller
 @Tag(name = "User", description = "User APIs")
 @RequestMapping("/api/v1/user")
+@Slf4j
 public class UserController {
 
     @Autowired private UserService userService;
@@ -191,13 +193,12 @@ public class UserController {
         Map<String, String[]> paramMap = request.getParameterMap();
         Map<String, String> updates = new HashMap<>();
 
-        System.out.println("Received parameter map: " + paramMap);
-
+ 
         for (Map.Entry<String, String[]> entry : paramMap.entrySet()) {
             updates.put(entry.getKey(), entry.getValue()[0]);
         }
 
-        System.out.println("Processed updates: " + updates);
+        log.debug("Processed updates: " + updates);
 
         // Assuming you have a method in userService to update the settings for a user
         userService.updateUserSettings(principal.getName(), updates);

@@ -17,9 +17,11 @@ public class EEAppConfig {
 
     @Autowired ApplicationProperties applicationProperties;
 
-    @Bean(name = "RunningEE")
+    @Autowired 
+    private LicenseKeyChecker licenseKeyChecker;
+    
+    @Bean(name = "runningEE")
     public boolean runningEnterpriseEdition() {
-        return applicationProperties.getEnterpriseEdition().getEnabled();
-        // TODO: check EE license key
+        return licenseKeyChecker.getEnterpriseEnabledResult();
     }
 }

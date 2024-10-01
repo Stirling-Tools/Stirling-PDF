@@ -14,58 +14,58 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.posthog.java.shaded.org.json.JSONObject;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class KeygenLicenseVerifier {
     private static final String ACCOUNT_ID = "e5430f69-e834-4ae4-befd-b602aae5f372";
     private static final String PRODUCT_ID = "f9bb2423-62c9-4d39-8def-4fdc5aca751e";
     private static final String BASE_URL = "https://api.keygen.sh/v1/accounts";
-    private static final String PUBLIC_KEY =
-            "-----BEGIN PUBLIC KEY-----\n"
-                    + "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzJaf7jPx/bamT/ctmvrf\n"
-                    + "5HfzV9CrTx39Hv48NvRIjw9jBAlmcSndLbgcrTUWFrd7pJPPEhzmfJ9tLRg0a3Si\n"
-                    + "34Ed9gQ24mODj0Wpos5uwwxu1M5wzsKPjkLZDigB3d9L/79nyKvSUo+mx+dZmZnD\n"
-                    + "D19TMM93ZDxG+Bru5/rvvxaZzMHZAnqrTdoO55vFjpss5XJNt6kz4jxr+D6a3lFU\n"
-                    + "GGCx7bjeanHCNGRw84dLYbU8s5DGsx5JNX1xPGR1kODocvsHfHJvsxfdNtpH4vke\n"
-                    + "yOrtEUCp01Mh2kr3zM8R4Yjh4ae2qHiZne0FiVhiUaHmbf2dmcA9O1Kynz33634s\n"
-                    + "fwIDAQAB\n"
-                    + "-----END PUBLIC KEY-----";
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static boolean verifyLicense(String licenseKey) {
+    public boolean verifyLicense(String licenseKey) {
         try {
             String machineFingerprint = generateMachineFingerprint();
 
             // First, try to validate the license
-            boolean isValid = validateLicense(licenseKey, machineFingerprint);
-
-            // If validation fails, try to activate the machine
-            if (!isValid) {
-                System.out.println(
-                        "License validation failed. Attempting to activate the machine...");
-                isValid = activateMachine(licenseKey, machineFingerprint);
-
-                if (isValid) {
-                    // If activation is successful, try to validate again
-                    isValid = validateLicense(licenseKey, machineFingerprint);
+            JsonNode validationResponse = validateLicense(licenseKey, machineFingerprint);
+            log.debug(validationResponse.asText());
+            if (validationResponse != null) {
+                boolean isValid = validationResponse.path("meta").path("valid").asBoolean();
+                String licenseId = validationResponse.path("data").path("id").asText();
+                if (!isValid) {
+                    String code = validationResponse.path("meta").path("code").asText();
+                    log.debug(code);
+                    if ("NO_MACHINE".equals(code) || "NO_MACHINES".equals(code) || "FINGERPRINT_SCOPE_MISMATCH".equals(code)) {
+                    	log.info("License not activated for this machine. Attempting to activate...");
+                        boolean activated = activateMachine(licenseKey, licenseId, machineFingerprint);
+                        if (activated) {
+                            // Revalidate after activation
+                            validationResponse = validateLicense(licenseKey, machineFingerprint);
+                            isValid = validationResponse != null && validationResponse.path("meta").path("valid").asBoolean();
+                        }
+                    }
                 }
+                return isValid;
             }
 
-            return isValid;
+            return false;
         } catch (Exception e) {
-            System.out.println("Error verifying license: " + e.getMessage());
+        	log.error("Error verifying license: " + e.getMessage());
             return false;
         }
     }
 
-    private static boolean validateLicense(String licenseKey, String machineFingerprint)
+    private static JsonNode validateLicense(String licenseKey, String machineFingerprint)
             throws Exception {
         HttpClient client = HttpClient.newHttpClient();
         String requestBody =
                 String.format(
-                        "{\"meta\":{\"key\":\"%s\",\"scope\":{\"fingerprint\":\"%s\",\"product\":\"%s\"}}}",
-                        licenseKey, machineFingerprint, PRODUCT_ID);
-
+                        "{\"meta\":{\"key\":\"%s\",\"scope\":{\"fingerprint\":\"%s\"}}}",
+                        licenseKey, machineFingerprint );
         HttpRequest request =
                 HttpRequest.newBuilder()
                         .uri(
@@ -76,107 +76,81 @@ public class KeygenLicenseVerifier {
                                                 + "/licenses/actions/validate-key"))
                         .header("Content-Type", "application/vnd.api+json")
                         .header("Accept", "application/vnd.api+json")
-                        .header("Authorization", "license " + licenseKey)
+                        //.header("Authorization", "License " + licenseKey)
                         .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                         .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
+        log.debug(" validateLicenseResponse body: " + response.body());
+        JsonNode jsonResponse = objectMapper.readTree(response.body());
         if (response.statusCode() == 200) {
-            JsonNode jsonResponse = objectMapper.readTree(response.body());
+           
             JsonNode metaNode = jsonResponse.path("meta");
             boolean isValid = metaNode.path("valid").asBoolean();
+            
             String detail = metaNode.path("detail").asText();
             String code = metaNode.path("code").asText();
 
-            System.out.println("License validity: " + isValid);
-            System.out.println("Validation detail: " + detail);
-            System.out.println("Validation code: " + code);
+            log.debug("License validity: " + isValid);
+            log.debug("Validation detail: " + detail);
+            log.debug("Validation code: " + code);
 
-            if (isValid) {
-                return verifySignature(metaNode);
-            }
+            
         } else {
-            System.out.println("Error validating license. Status code: " + response.statusCode());
-            System.out.println("Response body: " + response.body());
+            log.error("Error validating license. Status code: " + response.statusCode());
         }
-        return false;
+        return jsonResponse;
     }
 
-    private static boolean activateMachine(String licenseKey, String machineFingerprint)
+    private static boolean activateMachine(String licenseKey, String licenseId, String machineFingerprint)
             throws Exception {
         HttpClient client = HttpClient.newHttpClient();
-        String requestBody =
-                String.format(
-                        "{\"data\":{\"type\":\"machines\",\"attributes\":{\"fingerprint\":\"%s\"},\"relationships\":{\"license\":{\"data\":{\"type\":\"licenses\",\"id\":\"%s\"}}}}}",
-                        machineFingerprint, licenseKey);
 
-        String licenseId = "8e072b67-3cea-454b-98bb-bb73bbc04bd4";
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(BASE_URL + "/" + ACCOUNT_ID + "/machines"))
-                        .header("Content-Type", "application/vnd.api+json")
-                        .header("Accept", "application/vnd.api+json")
-                        .header("Authorization", "license " + licenseId)
-                        .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                        .build();
+        String hostname;
+        try {
+            hostname = java.net.InetAddress.getLocalHost().getHostName();
+        } catch (Exception e) {
+            hostname = "Unknown";
+        }
+        
+        JSONObject body = new JSONObject()
+                .put("data", new JSONObject()
+                        .put("type", "machines")
+                        .put("attributes", new JSONObject()
+                                .put("fingerprint", machineFingerprint)
+                                .put("platform", System.getProperty("os.name"))  // Added platform parameter
+                                .put("name", hostname))        // Added name parameter
+                        .put("relationships", new JSONObject()
+                                .put("license", new JSONObject()
+                                        .put("data", new JSONObject()
+                                                .put("type", "licenses")
+                                                .put("id", licenseId)))));
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/" + ACCOUNT_ID + "/machines"))
+                .header("Content-Type", "application/vnd.api+json")
+                .header("Accept", "application/vnd.api+json")
+                .header("Authorization", "License " + licenseKey) // Keep the license key authentication
+                .POST(HttpRequest.BodyPublishers.ofString(body.toString())) // Send the JSON body
+                .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
+        log.debug("activateMachine Response body: " + response.body());
         if (response.statusCode() == 201) {
-            System.out.println("Machine activated successfully");
+            log.info("Machine activated successfully");
             return true;
         } else {
-            System.out.println("Error activating machine. Status code: " + response.statusCode());
-            System.out.println("Response body: " + response.body());
+            log.error("Error activating machine. Status code: " + response.statusCode());
+            
             return false;
         }
     }
 
-    private static boolean verifySignature(JsonNode metaNode) throws Exception {
-        String signature = metaNode.path("signature").asText();
-        String data = metaNode.path("data").asText();
-
-        PublicKey publicKey =
-                KeyFactory.getInstance("RSA")
-                        .generatePublic(
-                                new X509EncodedKeySpec(
-                                        Base64.getDecoder()
-                                                .decode(
-                                                        PUBLIC_KEY
-                                                                .replace(
-                                                                        "-----BEGIN PUBLIC KEY-----",
-                                                                        "")
-                                                                .replace(
-                                                                        "-----END PUBLIC KEY-----",
-                                                                        "")
-                                                                .replaceAll("\\s", ""))));
-
-        Signature sig = Signature.getInstance("SHA256withRSA");
-        sig.initVerify(publicKey);
-        sig.update(data.getBytes());
-
-        boolean isSignatureValid = sig.verify(Base64.getDecoder().decode(signature));
-        System.out.println("Signature validity: " + isSignatureValid);
-        return isSignatureValid;
-    }
 
     private static String generateMachineFingerprint() {
         // This is a simplified example. In a real-world scenario, you'd want to generate
         // a more robust and unique fingerprint based on hardware characteristics.
-        return "example-fingerprint-" + System.currentTimeMillis();
+        return "example-fingerprint";
     }
 
-    public static void test() {
-        String[] testKeys = {
-            "FYKJ-YK7F-MEVX-RYKK-JYWE-77WW-3TKN-PJRU", "EFDB57-92B4C2-EDFA20-51146E-E1AF4A-V3"
-        };
-
-        for (String licenseKey : testKeys) {
-            System.out.println("Testing license key: " + licenseKey);
-            boolean isValid = verifyLicense(licenseKey);
-            System.out.println("License is valid: " + isValid);
-            System.out.println("--------------------");
-        }
-    }
 }

@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.service.PostHogService;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -36,9 +37,13 @@ public class CropController {
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
+    private final PostHogService postHogService;
+
     @Autowired
-    public CropController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public CropController(
+            CustomPDDocumentFactory pdfDocumentFactory, PostHogService postHogService) {
         this.pdfDocumentFactory = pdfDocumentFactory;
+        this.postHogService = postHogService;
     }
 
     @PostMapping(value = "/crop", consumes = "multipart/form-data")

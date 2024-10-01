@@ -127,6 +127,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-jetty:$springBootVersion"
 
     implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
+    implementation 'com.posthog.java:posthog:1.1.1'
 
     if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
         implementation "org.springframework.boot:spring-boot-starter-security:$springBootVersion"

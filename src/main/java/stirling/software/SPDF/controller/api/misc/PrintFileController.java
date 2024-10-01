@@ -25,12 +25,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.PrintFileRequest;
 
 @RestController
 @RequestMapping("/api/v1/misc")
 @Tag(name = "Misc", description = "Miscellaneous APIs")
+@Slf4j
 public class PrintFileController {
 
     // TODO
@@ -59,7 +60,7 @@ public class PrintFileController {
                                             new IllegalArgumentException(
                                                     "No matching printer found"));
 
-            System.out.println("Selected Printer: " + selectedService.getName());
+            log.info("Selected Printer: " + selectedService.getName());
 
             if ("application/pdf".equals(contentType)) {
                 PDDocument document = Loader.loadPDF(file.getBytes());

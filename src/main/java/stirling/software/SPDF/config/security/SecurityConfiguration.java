@@ -75,10 +75,9 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.addFilterBefore(userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         if (loginEnabledValue) {
-
+            http.addFilterBefore(
+                    userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             http.csrf(csrf -> csrf.disable());
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
@@ -86,7 +85,7 @@ public class SecurityConfiguration {
                     sessionManagement ->
                             sessionManagement
                                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                                    .maximumSessions(10)
+                                    .maximumSessions(4)
                                     .maxSessionsPreventsLogin(false)
                                     .sessionRegistry(sessionRegistry)
                                     .expiredUrl("/login?logout=true"));

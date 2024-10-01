@@ -353,7 +353,71 @@
     </div>
   </div>
 
-  <script>
+
+  <!-- Analytics Modal -->
+  <div class="modal fade" id="analyticsModal" tabindex="-1" role="dialog" aria-labelledby="analyticsModalLabel" aria-hidden="true" th:if="${@analyticsPrompt}">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="analyticsModalLabel" th:text="#{analytics.title}">Do you want make Stirling PDF better?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p th:text="#{analytics.paragraph1}">Stirling PDF has opt in analytics to help us improve the product. We do not track any personal information or file contents.</p>
+          <p th:text="#{analytics.paragraph2}">Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better.</p>
+          <p th:text="#{analytics.settings}">You can change the settings for analytics in the config/settings.yml file</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" th:text="#{analytics.enable}" onclick="setAnalytics(true)">Enable analytics</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="setAnalytics(false)" th:text="#{analytics.disable}">Disable analytics</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <script th:inline="javascript">
+
+    /*<![CDATA[*/
+    const analyticsPromptBoolean = /*[[${@analyticsPrompt}]]*/ false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      if (analyticsPromptBoolean) {
+        const analyticsModal = new bootstrap.Modal(document.getElementById('analyticsModal'));
+        analyticsModal.show();
+      }
+    });
+    /*]]>*/
+    function setAnalytics(enabled) {
+      fetch('api/v1/settings/update-enable-analytics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(enabled)
+      })
+              .then(response => {
+                if (response.status === 200) {
+                  console.log('Analytics setting updated successfully');
+                  bootstrap.Modal.getInstance(document.getElementById('analyticsModal')).hide();
+                } else if (response.status === 208) {
+                  console.log('Analytics setting has already been set. Please edit /config/settings.yml to change it.', response);
+                  alert('Analytics setting has already been set. Please edit /config/settings.yml to change it.');
+                } else {
+                  throw new Error('Unexpected response status: ' + response.status);
+                }
+              })
+              .catch(error => {
+                console.error('Error updating analytics setting:', error);
+                alert('An error occurred while updating the analytics setting. Please try again.');
+              });
+    }
+
+
+
+
 
     document.addEventListener("DOMContentLoaded", function() {
       const surveyVersion = "2.0";

@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import lombok.Data;
 import lombok.ToString;
@@ -24,6 +26,7 @@ import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 @ConfigurationProperties(prefix = "")
 @PropertySource(value = "file:./configs/settings.yml", factory = YamlPropertySourceFactory.class)
 @Data
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class ApplicationProperties {
 
     private Legal legal = new Legal();
@@ -176,11 +179,12 @@ public class ApplicationProperties {
     @Data
     public static class AutomaticallyGenerated {
         @ToString.Exclude private String key;
+        private String UUID;
     }
 
     @Data
     public static class EnterpriseEdition {
-        private Boolean enabled;
+        private boolean enabled;
         @ToString.Exclude private String key;
         private CustomMetadata customMetadata = new CustomMetadata();
 

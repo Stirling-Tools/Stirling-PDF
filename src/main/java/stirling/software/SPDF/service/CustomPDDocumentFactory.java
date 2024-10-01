@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.config.PdfMetadataService;
 import stirling.software.SPDF.model.PdfMetadata;
 import stirling.software.SPDF.model.api.PDFFile;
 
