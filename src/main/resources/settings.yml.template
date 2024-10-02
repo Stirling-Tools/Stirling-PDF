@@ -49,7 +49,7 @@ security:
     provider: google # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
 
 # Enterprise edition settings unused for now please ignore!
-EnterpriseEdition:
+enterpriseEdition:
   enabled: false # set to 'true' to enable enterprise edition
   key: 00000000-0000-0000-0000-000000000000
   CustomMetadata:

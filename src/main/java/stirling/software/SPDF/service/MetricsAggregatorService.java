@@ -17,7 +17,7 @@ public class MetricsAggregatorService {
     private final MeterRegistry meterRegistry;
     private final PostHogService postHogService;
     private final Map<String, Double> lastSentMetrics = new ConcurrentHashMap<>();
-    
+
     @Autowired
     public MetricsAggregatorService(MeterRegistry meterRegistry, PostHogService postHogService) {
         this.meterRegistry = meterRegistry;
@@ -28,25 +28,26 @@ public class MetricsAggregatorService {
     public void aggregateAndSendMetrics() {
         Map<String, Object> metrics = new HashMap<>();
         Search.in(meterRegistry)
-        .name("http.requests")
-        .counters()
-        .forEach(counter -> {
-            String key = String.format(
-                    "http_requests_%s_%s",
-                    counter.getId().getTag("method"),
-                    counter.getId().getTag("uri").replace("/", "_"));
-            
-            double currentCount = counter.count();
-            double lastCount = lastSentMetrics.getOrDefault(key, 0.0);
-            double difference = currentCount - lastCount;
-            
-            if (difference > 0) {
-                metrics.put(key, difference);
-                lastSentMetrics.put(key, currentCount);
-            }
-        });
-        
-        
+                .name("http.requests")
+                .counters()
+                .forEach(
+                        counter -> {
+                            String key =
+                                    String.format(
+                                            "http_requests_%s_%s",
+                                            counter.getId().getTag("method"),
+                                            counter.getId().getTag("uri").replace("/", "_"));
+
+                            double currentCount = counter.count();
+                            double lastCount = lastSentMetrics.getOrDefault(key, 0.0);
+                            double difference = currentCount - lastCount;
+
+                            if (difference > 0) {
+                                metrics.put(key, difference);
+                                lastSentMetrics.put(key, currentCount);
+                            }
+                        });
+
         // Send aggregated metrics to PostHog
         if (!metrics.isEmpty()) {
             postHogService.captureEvent("aggregated_metrics", metrics);

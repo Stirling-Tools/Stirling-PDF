@@ -20,7 +20,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
-import stirling.software.SPDF.EE.LicenseKeyChecker;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
@@ -31,7 +30,6 @@ public class AppConfig {
 
     @Autowired ApplicationProperties applicationProperties;
 
-   
     @Bean
     @ConditionalOnProperty(
             name = "system.customHTMLFiles",
@@ -185,6 +183,4 @@ public class AppConfig {
     public String uuid() {
         return applicationProperties.getAutomaticallyGenerated().getUUID();
     }
-    
-    
 }

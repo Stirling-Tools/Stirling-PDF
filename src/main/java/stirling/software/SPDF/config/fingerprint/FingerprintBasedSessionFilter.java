@@ -56,7 +56,9 @@ public class FingerprintBasedSessionFilter extends OncePerRequestFilter {
         }
 
         session.setAttribute("userFingerprint", fingerprint);
-        session.setAttribute(FingerprintBasedSessionManager.STARTUP_TIMESTAMP, FingerprintBasedSessionManager.APP_STARTUP_TIME);
+        session.setAttribute(
+                FingerprintBasedSessionManager.STARTUP_TIMESTAMP,
+                FingerprintBasedSessionManager.APP_STARTUP_TIME);
 
         sessionManager.registerFingerprint(fingerprint, sessionId);
 

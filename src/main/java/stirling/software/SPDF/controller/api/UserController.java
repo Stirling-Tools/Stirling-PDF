@@ -193,7 +193,6 @@ public class UserController {
         Map<String, String[]> paramMap = request.getParameterMap();
         Map<String, String> updates = new HashMap<>();
 
- 
         for (Map.Entry<String, String[]> entry : paramMap.entrySet()) {
             updates.put(entry.getKey(), entry.getValue()[0]);
         }
