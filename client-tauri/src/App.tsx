@@ -1,6 +1,6 @@
-import { Suspense } from "react";
+import { Fragment, Suspense } from "react";
 
-import { Routes, Route, Outlet } from "react-router-dom";
+import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Operators from "./pages/Operators";
 import NoMatch from "./pages/NoMatch";
@@ -12,6 +12,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import i18next from "i18next";
 import resourcesToBackend from "i18next-resources-to-backend";
 import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
+import AuthenticatedRoute from "./components/AuthenticatedRoute";
 
 i18next.use(LanguageDetector).use(initReactI18next).use(resourcesToBackend((language: string, namespace: string) => import(`@stirling-pdf/shared-operations/public/locales/${namespace}/${language}.json`).catch((e) => console.warn("some component tried to render with an unsupported language, falling back to en", e))))
 .init({
@@ -26,37 +27,45 @@ i18next.use(LanguageDetector).use(initReactI18next).use(resourcesToBackend((lang
 }); // TODO: use i18next.config.ts instead
 
 export default function App() {
-
     return (
-        <Suspense fallback="loading">
+        <Suspense fallback={<Loading/>}>
             {/* Routes nest inside one another. Nested route paths build upon
             parent route paths, and nested route elements render inside
             parent route elements. See the note about <Outlet> below. */}
             <Routes>
-                <Route path="/" element={<Layout />}>
-                    <Route index element={<Home />} />
-
-                    {/* Using path="*"" means "match anything", so this route
-                acts like a catch-all for URLs that we don't have explicit
-                routes for. */}
+                <Route path="/auth" element={<Layout />}>
+                    <Route index element={<Navigate to="/auth/login" />}/>
+                    <Route path="login" element={"login test string"}></Route>
+                    <Route path="logout" element={"logout test string"}></Route>
+                    <Route path="register" element={"register test string"}></Route>
                     <Route path="*" element={<NoMatch />} />
                 </Route>
-        
-                <Route path="/operators" element={<Layout />}>
-                    <Route index element={<NoMatch />} />
-                    {listOperatorNames().map((name) => {
-                        return <Route key={name} path={name} element={<Operators/>} />;
-                    })}
-                    <Route path="*" element={<NoMatch />} />
+
+                <Route element={<AuthenticatedRoute />}>
+                    <Route path="/" element={<Layout />}>
+                        <Route index element={<Home />} />
+                        <Route path="*" element={<NoMatch />} />
+                    </Route>
+
+                    <Route path="/operators" element={<Layout />}>
+                        <Route index element={<NoMatch />} />
+                        {listOperatorNames().map((name) => {
+                            return <Route key={name} path={name} element={<Operators/>} />;
+                        })}
+                        <Route path="*" element={<NoMatch />} />
+                    </Route>
                 </Route>
             </Routes>
         </Suspense>
     );
 }
 
+function Loading() {
+    return "Loading";
+}
+
 function Layout() {
     const { t } = useTranslation();
-    console.log(t("inputs.pdffile.name"));
     return (
         <div lang-direction={t("language.direction")}>
             <NavBar/>

@@ -6,7 +6,6 @@ import dynamicImport from 'vite-plugin-dynamic-import';
 import compileTime from "vite-plugin-compile-time";
 import { fileURLToPath, URL } from 'node:url';
 
-
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
     plugins: [

@@ -11,7 +11,7 @@ import { useLocation } from 'react-router-dom'
 import InputField from "../components/fields/InputField";
 
 
-function Dynamic() {
+function Operators() {
     const [schema, setSchema] = useState<any>(undefined); // TODO: Type as joi type
 
     const location = useLocation();
@@ -95,4 +95,4 @@ function Dynamic() {
 }
 
 
-export default Dynamic;
+export default Operators;
