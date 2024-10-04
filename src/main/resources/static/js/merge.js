@@ -20,13 +20,14 @@ async function displayFiles(files) {
 
   for (let i = 0; i < files.length; i++) {
     const pageCount = await getPDFPageCount(files[i]);
+    const pageLabel = pageCount === 1 ? pageTranslation : pagesTranslation;
     const item = document.createElement("li");
     item.className = "list-group-item";
     item.innerHTML = `
             <div class="d-flex justify-content-between align-items-center w-100">
                 <div class="filename">${files[i].name}</div>
                 <div class="page-info">
-                    <span class="page-count">${pageCount} pages</span>
+                    <span class="page-count">${pageCount} ${pageLabel}</span>
                 </div>
                 <div class="arrows d-flex">
                     <button class="btn btn-secondary move-up"><span>&uarr;</span></button>
