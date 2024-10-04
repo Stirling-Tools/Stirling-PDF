@@ -1,4 +1,3 @@
-
 import { PdfFile } from "../../wrappers/PdfFile";
 import { getPages } from "./getPagesByIndex";
 

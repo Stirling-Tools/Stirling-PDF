@@ -1,4 +1,3 @@
-
 /**
  * @param pages A list of page indexes, or the number of total pages in the document (which will be converted into a list of page indexes).
  * @returns A reversed list of page indexes.

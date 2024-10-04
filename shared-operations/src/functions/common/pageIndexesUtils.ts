@@ -1,4 +1,3 @@
-
 /**
  * @param selection An array of page indexes already selected.
  * @param pageCount The number of pages of the pdfDocument.

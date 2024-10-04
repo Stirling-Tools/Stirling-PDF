@@ -3,7 +3,6 @@ import { Action } from "../../declarations/Action";
 import Joi from "@stirling-tools/joi";
 import { MaterialSymbolProps } from "react-material-symbols";
 
-
 export interface ValidationResult { 
     valid: boolean, 
     reason?: string 

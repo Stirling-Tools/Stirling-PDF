@@ -1,4 +1,3 @@
-
 import jsQR from "jsqr";
 
 import { PdfFile } from "../../wrappers/PdfFile";

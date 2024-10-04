@@ -13,6 +13,9 @@ import i18next from "i18next";
 import resourcesToBackend from "i18next-resources-to-backend";
 import { listOperatorNames } from "@stirling-pdf/shared-operations/src/workflow/operatorAccessor";
 import AuthenticatedRoute from "./components/AuthenticatedRoute";
+import Login from "./pages/Auth/Login";
+import Logout from "./pages/Auth/Logout";
+import Register from "./pages/Auth/Register";
 
 i18next.use(LanguageDetector).use(initReactI18next).use(resourcesToBackend((language: string, namespace: string) => import(`@stirling-pdf/shared-operations/public/locales/${namespace}/${language}.json`).catch((e) => console.warn("some component tried to render with an unsupported language, falling back to en", e))))
 .init({
@@ -35,9 +38,9 @@ export default function App() {
             <Routes>
                 <Route path="/auth" element={<Layout />}>
                     <Route index element={<Navigate to="/auth/login" />}/>
-                    <Route path="login" element={"login test string"}></Route>
-                    <Route path="logout" element={"logout test string"}></Route>
-                    <Route path="register" element={"register test string"}></Route>
+                    <Route path="login" element={<Login />}></Route>
+                    <Route path="logout" element={<Logout />}></Route>
+                    <Route path="register" element={<Register />}></Route>
                     <Route path="*" element={<NoMatch />} />
                 </Route>
 

@@ -1,4 +1,3 @@
-
 import { PdfFile, RepresentationType } from "../../wrappers/PdfFile";
 import { PDFDocument } from "pdf-lib";
 

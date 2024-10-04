@@ -20,16 +20,16 @@ This file should introduce you with the concepts and tools used in this project.
 
 ## Folder structure
 
-- (abandoned) client-ionic- An old test of 
-- client-tauri - The frontend
-- (abandoned) client-vanilla - The initial test to see if it is possible to run Operators in the browser environment of the user in addition to having a backend. Will be removed once development on the fronend/client-tauri has started.
-- server-node - Functions and Classes that are shared between frontend and backend e.g. Operators
+- client-tauri - The frontend - Can be built to web and to a desktop app (with extra functions) using tauri.
+- server-node - The backend - Provides extra functionality for the web client.
+- shared-operatons - Components (e.g. Operators) that are shared between frontend and backend.
 
-## Adding a PDF Operation
-StirlingPDF aims to support as many types of operations as possible, including some that cannot be executed in the client. Because of this, we have decided to move some of the shared functionality into it's own node module so that it can be shared by both client and server.
+## Adding a PDF Operator
+
+An Operator is either shared by the server and the client or it might have different implementations based on if its executed by the client, desktop-backend or web-backend. The current structure allows us to define where the Operator can be run.
 
 ## PDF Library Docs
 - [pdf-lib](https://pdf-lib.js.org) - js
-- [pdfcpu](https://pdfcpu.io) - go-wasm
-- [opencv-wasm](https://www.npmjs.com/package/opencv-wasm) - ?-wasm
 - [mozilla's pdfjs-dist/pdf.js](https://www.npmjs.com/package/pdfjs-dist) - js
+- [pdfcpu](https://pdfcpu.io) - go-wasm
+- [opencv-wasm](https://www.npmjs.com/package/opencv-wasm) - c++-wasm

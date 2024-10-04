@@ -1,4 +1,3 @@
-
 import { PDFPageProxy } from "pdfjs-dist/types/src/display/api";
 
 import * as PDFJS from "pdfjs-dist";

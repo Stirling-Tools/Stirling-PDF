@@ -1,4 +1,3 @@
-
 import { PdfFile } from "../../wrappers/PdfFile";
 import { PDFPageProxy } from "pdfjs-dist/types/src/display/api";
 import { Image, ImageKind } from "image-js";

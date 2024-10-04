@@ -2,6 +2,9 @@
 
 This is the development repository for the new StirlingPDF backend. With the power of JS, WASM & GO this will provide almost all functionality SPDF can do currently directly on the client. For automation purposes this will still provide an API to automate your workflows.
 
+![alt text](https://media.discordapp.net/attachments/1174462312904663120/1272615545719619674/image.png?ex=6700d5d6&is=66ff8456&hm=3e36a0c2214f2de07ba4ff4833f86aed5f2f3447f61fe80f5396654b202139b8&=&format=webp&quality=lossless)
+This image is here to reflect current progress and will be updated accordingly.
+
 ## Try the new API!
 
 [![Run in Postman](https://run.pstmn.io/button.svg)](https://documenter.getpostman.com/view/30633786/2s9YRB1Wto)
@@ -77,146 +80,80 @@ If you are interested in learning about this, take a look at the Example workflo
 
 ### Rewrite Roadmap
 
-* [x] Client side PDF-Manipulation
-* [x] Workflows
+* [X] Client side PDF-Manipulation
+* [X] Workflows
+* [X] passportjs backend (auth)
+* [ ] Auth in frontend
 * [ ] Feature equivalent with S-PDF v1
 * [ ] Stateful UI
 * [ ] Node based editing of Workflows
-* [ ] Propper auth using passportjs
 
 ### Functions
 
 Current functions of spdf and their progress in this repo.
 
-#### Page Operations
-| Status | Feature                  | Description |
-| ------ | ------------------------ | ----------- |
-| 🚧A    | Merge                    |             |
-| 🚧A    | Split                    |             |
-| 🚧A    | Organize                 |             |
-| 🚧S    | Rotate                   |             |
-| 🚧A    | Remove Pages             |             |
-| 🚧A    | Multi-Page Layout        |             |
-| ❌     | Adjust page size/scale   |             |
-| 🚧A    | Auto Split Pages         |             |
-| ❌     | Adjust Colours/Contrast  |             |
-| ❌     | Crop                     |             |
-| 🚧A    | Extract Pages            |             |
-| ❌     | PDF to Single large Page |             |
+#### PDF Functions
 
+| Status | Feature                                            | Description |
+| ------ | -------------------------------------------------- | ----------- |
+| ✔️   | arrange                                            |             |
+| ✔️   | extract                                            |             |
+| ✔️   | impose                                             |             |
+| ✔️   | merge                                              |             |
+| ✔️   | remove blank                                       |             |
+| ✔️   | remove                                             |             |
+| ✔️   | rotate pages                                       |             |
+| ✔️   | scale content                                      |             |
+| ✔️   | scale pages                                        |             |
+| ✔️   | split by preset                                    |             |
+| ✔️   | split by index                                     |             |
+| ✔️   | update metadata                                    |             |
+| ✔️   | pdf to single large page                           |             |
+| 🚧    | remove annotations                                 |             |
+| 🚧    | flatten                                            |             |
+| 🚧    | overlay pdfs                                       |             |
+| 🚧    | compress                                           |             |
+| 🚧    | change permissions                                 |             |
+| 🚧    | pdf to pdf/a                                       |             |
+| 🚧    | add page numbers                                   |             |
+| 🚧    | add image                                          |             |
+| 🚧    | add watermark                                      |             |
+| 🚧    | auto rename                                        |             |
+| 🚧    | add stamp                                          |             |
+| ❌     | repair                                             |             |
+| ❌     | sign with cert                                     |             |
+| ❌     | ocr                                                |             |
+| ❌     | auto split by size/count (+split by preset)        |             |
+| ❌     | split pdfs by sections/chapters (+split by preset) |             |
+| ❌     | adjust colors/contrast                             |             |
+| ❌     | adjust colors/contrast                             |             |
+| ❌     | sanitize                                           |             |
+| ❌     | sign                                               |             |
+| ❌     | basic text editing                                 |             |
+| ❌     | auto redact                                        |             |
 
-#### Convert
+#### Generic Filetype (Filetypes are not supported by workflows yet. Coming Soon™)
+
 | Status | Feature             | Description |
 | ------ | ------------------- | ----------- |
-| ❌     | Image to PDF        |             |
-| 🚧S    | Convert file to PDF |             |
-| ❌     | URL to PDF          |             |
-| ❌     | HTML to PDF         |             |
-| ❌     | Markdown to PDF     |             |
-| ❌     | PDF to Image        |             |
-| ❌     | PDF to Word         |             |
-| ❌     | PDF to Presentation |             |
-| ❌     | PDF to Text/RTF     |             |
-| ❌     | PDF to HTML         |             |
-| ❌     | PDF to PDF/A        |             |
+| 🚧    | image to pdf        |             |
+| 🚧    | pdf to image        |             |
+| 🚧    | extract images      |             |
+| 🚧    | show javascript     |             |
+| ❌     | convert file to pdf |             |
+| ❌     | pdf to word         |             |
+| ❌     | pdf to presentation |             |
+| ❌     | pdf to rtf          |             |
+| ❌     | pdf to html         |             |
+| ❌     | pdf to xml          |             |
+| ❌     | url/website to pdf  |             |
+| ❌     | markdown to pdf     |             |
+| ❌     | pdf to csv          |             |
+| ❌     | get all info        |             |
+| ❌     | compare             |             |
 
-#### Security
-| Status | Feature               | Description |
-| ------ | --------------------- | ----------- |
-| ❌     | Add Password          |             |
-| ❌     | Remove Password       |             |
-| ❌     | Change Permissions    |             |
-| ❌     | Add Watermark         |             |
-| ❌     | Sign with Certificate |             |
-| ❌     | Sanitize              |             |
-| ❌     | Auto Redact           |             |
-
-#### Miscellaneous
-| Status | Feature                     | Description |
-| ------ | --------------------------- | ----------- |
-| ❌     | OCR                         |             |
-| ❌     | Add image                   |             |
-| ❌     | Compress                    |             |
-| ❌     | Extract Images              |             |
-| 🚧S    | Change Metadata             |             |
-| 🚧A    | Detect/Split Scanned photos |             |
-| ❌     | Sign                        |             |
-| ❌     | Flatten                     |             |
-| ❌     | Repair                      |             |
-| 🚧A    | Remove Blank Pages          |             |
-| ❌     | Compare/Diff                |             |
-| ❌     | Add Page Numbers            |             |
-| ❌     | Auto Rename                 |             |
-| ❌     | Get info                    |             |
-| ❌     | Show JS                     |             |
-
-
-
-
-✔️: Done, 🚧: Started Developement, ❌: Planned Feature
-A: Available in the internal API, S: Available on the node server, C: Available in the client
+✔️: Done, 🚧: Possible with current Libraries, ❌: Planned Feature
 
 ## Contribute
 
 For initial instructions look at [CONTRIBUTE.md](./CONTRIBUTE.md)
-
-<!--
-///// CONVERT 2 pdf
-file2pdf
-url2pdf
-html2pdf
-md2pdf
-image2pdf
-
-///// CONVERT from pdf
-pdf2image
-flatten
-pdf2pdf/a
-pdf2word
-pdf2presentation
-pdf2rtf
-pdf2html
-pdf2xml
-
-///// SINGLE
-merge
-rotate
-crop
-pageNumbers
-colours/contrast
-addPassword
-removePassword
-compress
-changeMetadata
-change Permissions
-OCR
-sanitise
-repair
-compare
-extract images
-signWith certificate
-impose
-adjust page size/scale
-auto rename
-getAllInfo
-showJS
-redact
-pdf2singleLargePage
-
-///// SPLITTING
-split
-auto split
-detect/split scanned
-
-///// REARRANGE
-- organise pages (remove/re-arrange)
-- removePages
-- removeBlank
-- extractPages
-
-///// ADD OBJECTS
-add image
-add watermark
-sign
-*/
--->
