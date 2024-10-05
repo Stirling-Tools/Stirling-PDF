@@ -123,7 +123,7 @@ Feature: API Validation
     | odt    | .odt      |
     | doc    | .doc      |
 
-  @ocr
+  @ocr @pdfa1
   Scenario: PDFA
     Given I use an example file at "exampleFiles/pdfa2.pdf" as parameter "fileInput"
 	And the request data includes
@@ -134,7 +134,7 @@ Feature: API Validation
     And the response file should have extension ".pdf"
     And the response file should have size greater than 100
 	
-  @ocr
+  @ocr @pdfa2
   Scenario: PDFA1
     Given I use an example file at "exampleFiles/pdfa1.pdf" as parameter "fileInput"
 	And the request data includes

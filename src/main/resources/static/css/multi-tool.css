@@ -77,7 +77,7 @@ label {
   flex-direction: column;
   padding: 1rem;
   border-radius: 25px;
-  overflow-y: hidden;
+  overflow-y: auto;
   overflow-x: auto;
   min-height: 275px;
   margin: 0 0 30px 0;

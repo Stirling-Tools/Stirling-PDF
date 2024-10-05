@@ -37,10 +37,8 @@ public class LicenseKeyChecker {
         log.info(applicationProperties.toString());
         log.info(applicationProperties.getEnterpriseEdition().toString());
         if (!applicationProperties.getEnterpriseEdition().isEnabled()) {
-            System.out.println("gggggg");
             enterpriseEnbaledResult = false;
         } else {
-            System.out.println("ssssssssssss");
             enterpriseEnbaledResult =
                     licenseService.verifyLicense(
                             applicationProperties.getEnterpriseEdition().getKey());

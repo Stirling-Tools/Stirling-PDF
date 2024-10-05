@@ -1,22 +1,22 @@
-//package stirling.software.SPDF.config.fingerprint;
+// package stirling.software.SPDF.config.fingerprint;
 //
-//import java.io.IOException;
+// import java.io.IOException;
 //
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.stereotype.Component;
-//import org.springframework.web.filter.OncePerRequestFilter;
+// import org.springframework.beans.factory.annotation.Autowired;
+// import org.springframework.stereotype.Component;
+// import org.springframework.web.filter.OncePerRequestFilter;
 //
-//import jakarta.servlet.FilterChain;
-//import jakarta.servlet.ServletException;
-//import jakarta.servlet.http.HttpServletRequest;
-//import jakarta.servlet.http.HttpServletResponse;
-//import jakarta.servlet.http.HttpSession;
-//import lombok.extern.slf4j.Slf4j;
-//import stirling.software.SPDF.utils.RequestUriUtils;
+// import jakarta.servlet.FilterChain;
+// import jakarta.servlet.ServletException;
+// import jakarta.servlet.http.HttpServletRequest;
+// import jakarta.servlet.http.HttpServletResponse;
+// import jakarta.servlet.http.HttpSession;
+// import lombok.extern.slf4j.Slf4j;
+// import stirling.software.SPDF.utils.RequestUriUtils;
 //
-////@Component
-//@Slf4j
-//public class FingerprintBasedSessionFilter extends OncePerRequestFilter {
+//// @Component
+// @Slf4j
+// public class FingerprintBasedSessionFilter extends OncePerRequestFilter {
 //    private final FingerprintGenerator fingerprintGenerator;
 //    private final FingerprintBasedSessionManager sessionManager;
 //
@@ -65,4 +65,4 @@
 //        log.debug("Proceeding with request: {}", request.getRequestURI());
 //        filterChain.doFilter(request, response);
 //    }
-//}
+// }

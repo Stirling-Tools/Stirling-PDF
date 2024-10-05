@@ -39,9 +39,9 @@ public class PostHogService {
     }
 
     private void captureSystemInfo() {
-    	if(!Boolean.getBoolean(applicationProperties.getSystem().getEnableAnalytics())) {
-    		return;
-    	}
+        if (!Boolean.getBoolean(applicationProperties.getSystem().getEnableAnalytics())) {
+            return;
+        }
         try {
             postHog.capture(uniqueId, "system_info_captured", captureServerMetrics());
         } catch (Exception e) {
@@ -50,9 +50,9 @@ public class PostHogService {
     }
 
     public void captureEvent(String eventName, Map<String, Object> properties) {
-    	if(!Boolean.getBoolean(applicationProperties.getSystem().getEnableAnalytics())) {
-    		return;
-    	}
+        if (!Boolean.getBoolean(applicationProperties.getSystem().getEnableAnalytics())) {
+            return;
+        }
         postHog.capture(uniqueId, eventName, properties);
     }
 

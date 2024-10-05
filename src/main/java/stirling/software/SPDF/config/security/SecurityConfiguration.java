@@ -79,7 +79,7 @@ public class SecurityConfiguration {
         http.authenticationManager(authenticationManager(http));
 
         if (loginEnabledValue) {
-        	http.addFilterBefore(
+            http.addFilterBefore(
                     userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             http.csrf(csrf -> csrf.disable());
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);

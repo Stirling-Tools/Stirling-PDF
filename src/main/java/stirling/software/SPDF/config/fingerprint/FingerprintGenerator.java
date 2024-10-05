@@ -1,14 +1,14 @@
-//package stirling.software.SPDF.config.fingerprint;
+// package stirling.software.SPDF.config.fingerprint;
 //
-//import java.security.MessageDigest;
-//import java.security.NoSuchAlgorithmException;
+// import java.security.MessageDigest;
+// import java.security.NoSuchAlgorithmException;
 //
-//import org.springframework.stereotype.Component;
+// import org.springframework.stereotype.Component;
 //
-//import jakarta.servlet.http.HttpServletRequest;
+// import jakarta.servlet.http.HttpServletRequest;
 //
-//@Component
-//public class FingerprintGenerator {
+// @Component
+// public class FingerprintGenerator {
 //
 //    public String generateFingerprint(HttpServletRequest request) {
 //        if (request == null) {
@@ -74,4 +74,4 @@
 //            throw new RuntimeException("Failed to generate fingerprint hash", e);
 //        }
 //    }
-//}
+// }

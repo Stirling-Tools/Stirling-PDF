@@ -175,7 +175,10 @@ public class KeygenLicenseVerifier {
             log.info("Machine activated successfully");
             return true;
         } else {
-            log.error("Error activating machine. Status code: " + response.statusCode());
+            log.error(
+                    "Error activating machine. Status code: {}, error: {}",
+                    response.statusCode(),
+                    response.body());
 
             return false;
         }
