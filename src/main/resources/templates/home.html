@@ -274,11 +274,15 @@
               <div
                 th:replace="~{fragments/card :: card(id='remove-image-pdf', cardTitle=#{home.removeImagePdf.title}, cardText=#{home.removeImagePdf.desc}, cardLink='remove-image-pdf', toolIcon='remove_selection', tags=#{removeImagePdf.tags}, toolGroup='other')}">
               </div>
+              <div
+                      th:replace="~{fragments/card :: card(id='replace-color-pdf', cardTitle=#{home.replaceColorPdf.title}, cardText=#{home.replaceColorPdf.desc}, cardLink='replace-and-invert-color-pdf', toolIcon='format_color_fill', tags=#{replaceColorPdf.tags}, toolGroup='other')}">
+              </div>
+
             </div>
           </div>
+            <div id="groupAdvanced" class="feature-group">
+                <div
 
-          <div id="groupAdvanced" class="feature-group">
-            <div
               th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.advance})}">
             </div>
             <div class="feature-group-container">

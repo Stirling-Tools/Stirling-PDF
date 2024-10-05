@@ -24,6 +24,7 @@ function filterCards() {
 
 function updateFavoritesSection() {
   const favoritesContainer = document.getElementById("groupFavorites").querySelector(".feature-group-container");
+  favoritesContainer.style.maxHeight = "none";
   favoritesContainer.innerHTML = ""; // Clear the container first
   const cards = Array.from(document.querySelectorAll(".feature-card:not(.duplicate)"));
   const addedCardIds = new Set(); // To keep track of added card IDs
@@ -45,6 +46,7 @@ function updateFavoritesSection() {
     document.getElementById("groupFavorites").style.display = "flex";
   }
   reorderCards(favoritesContainer);
+  favoritesContainer.style.maxHeight = favoritesContainer.scrollHeight + "px";
 }
 
 function toggleFavorite(element) {
@@ -66,8 +68,6 @@ function toggleFavorite(element) {
     card.classList.remove("favorite");
     localStorage.removeItem(cardId);
   }
-
-
 
   // Use setTimeout to ensure this runs after the current call stack is clear
   setTimeout(() => {
@@ -214,7 +214,10 @@ function expandCollapseAll(expandAll) {
   })
 }
 
-window.onload = initializeCards;
+window.onload = function() {
+  initializeCards();
+  syncFavorites(); // Ensure everything is in sync on page load
+};
 
 document.addEventListener("DOMContentLoaded", function () {
   const materialIcons = new FontFaceObserver('Material Symbols Rounded');
@@ -232,8 +235,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const container = header.parentNode.querySelector(".feature-group-container");
     if (parent.id !== "groupFavorites") {
       container.style.maxHeight = container.clientHeight + "px";
-    } else {
-      container.style.maxHeight = "500px";
     }
     header.onclick = () => {
       expandCollapseToggle(parent);
@@ -241,15 +242,22 @@ document.addEventListener("DOMContentLoaded", function () {
   })
 
   const collapsed = localStorage.getItem("collapsedGroups") ? JSON.parse(localStorage.getItem("collapsedGroups")) : [];
+  const groupsArray = Array.from(document.querySelectorAll(".feature-group"));
 
-  Array.from(document.querySelectorAll(".feature-group")).forEach(group => {
+  groupsArray.forEach(group => {
     if (collapsed.indexOf(group.id) !== -1) {
       expandCollapseToggle(group, false);
     }
   })
 
-  window.onload = function() {
-    initializeCards();
-    syncFavorites(); // Add this line to ensure everything is in sync on page load
-  };
+  // Necessary in order to not fire the transition animation on page load, which looks wrong.
+  // The timeout isn't doing anything visible to the user, so it's not making the page load look slower.
+  setTimeout(() => {
+    groupsArray.forEach(group => {
+      const container = group.querySelector(".feature-group-container");
+      container.classList.add("animated-group");
+    })
+  }, 500);
+
+  showFavoritesOnly();
 });

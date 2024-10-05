@@ -198,6 +198,9 @@
                         <div
                                 th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-image-pdf','remove_selection', 'home.removeImagePdf.title', 'home.removeImagePdf.desc', 'removeImagePdf.tags', 'other')}">
                         </div>
+                        <div
+                                th:replace="~{fragments/navbarEntry :: navbarEntry ('replace-and-invert-color-pdf','format_color_fill', 'replace-color.title', 'home.replaceColorPdf.desc', 'replaceColorPdf.tags', 'other')}">
+                        </div>
                       </div>
                       <!-- Advance menu items -->
                       <div class="col-lg-2 col-sm-6 py px-xl-1 px-2">
@@ -316,7 +319,7 @@
               <span class="material-symbols-rounded" id="dark-mode-icon">
                 dark_mode
               </span>
-              <span class="icon-text icon-hide" id="dark-mode-text" th:data-text="#{navbar.darkmode}" th:text="#{navbar.darkmode}"></span>
+              <span class="icon-text icon-hide tooltip-text" id="dark-mode-text" th:data-text="#{navbar.darkmode}" th:text="#{navbar.darkmode}"></span>
             </a>
           </li>
           <li class="nav-item dropdown">
@@ -366,7 +369,7 @@
               <span class="material-symbols-rounded">
                 settings
               </span>
-              <span class="icon-text icon-hide" th:data-text="#{navbar.settings}" th:text="#{navbar.settings}"></span>
+              <span class="icon-text icon-hide tooltip-text" th:data-text="#{navbar.settings}" th:text="#{navbar.settings}"></span>
             </a>
           </li>
         </ul>

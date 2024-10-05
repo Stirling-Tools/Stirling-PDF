@@ -11,7 +11,7 @@ document.getElementById("fileInput-input").addEventListener("change", function (
 /**
  * @param {FileList} files
  */
-function displayFiles(files) {
+async function displayFiles(files) {
   const list = document.getElementById("selectedFiles");
 
   while (list.firstChild) {
@@ -19,11 +19,16 @@ function displayFiles(files) {
   }
 
   for (let i = 0; i < files.length; i++) {
+    const pageCount = await getPDFPageCount(files[i]);
+    const pageLabel = pageCount === 1 ? pageTranslation : pagesTranslation;
     const item = document.createElement("li");
     item.className = "list-group-item";
     item.innerHTML = `
             <div class="d-flex justify-content-between align-items-center w-100">
                 <div class="filename">${files[i].name}</div>
+                <div class="page-info">
+                    <span class="page-count">${pageCount} ${pageLabel}</span>
+                </div>
                 <div class="arrows d-flex">
                     <button class="btn btn-secondary move-up"><span>&uarr;</span></button>
                     <button class="btn btn-secondary move-down"><span>&darr;</span></button>
@@ -35,6 +40,13 @@ function displayFiles(files) {
   }
 
   attachMoveButtons();
+}
+
+async function getPDFPageCount(file) {
+  const blobUrl = URL.createObjectURL(file);
+  const pdf = await pdfjsLib.getDocument(blobUrl).promise;
+  URL.revokeObjectURL(blobUrl);
+  return pdf.numPages;
 }
 
 function attachMoveButtons() {
