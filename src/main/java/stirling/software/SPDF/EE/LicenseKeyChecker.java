@@ -34,15 +34,19 @@ public class LicenseKeyChecker {
     }
 
     private void checkLicense() {
-        log.info(applicationProperties.toString());
-        log.info(applicationProperties.getEnterpriseEdition().toString());
         if (!applicationProperties.getEnterpriseEdition().isEnabled()) {
             enterpriseEnbaledResult = false;
         } else {
             enterpriseEnbaledResult =
                     licenseService.verifyLicense(
                             applicationProperties.getEnterpriseEdition().getKey());
+            if (enterpriseEnbaledResult) {
+                log.info("License key is valid.");
+            } else {
+                log.info("License key is invalid.");
+            }
         }
+        
     }
 
     public void updateLicenseKey(String newKey) throws IOException {

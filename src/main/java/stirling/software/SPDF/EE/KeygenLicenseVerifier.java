@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.posthog.java.shaded.org.json.JSONObject;
 
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.utils.GeneralUtils;
 
 @Service
 @Slf4j
@@ -32,7 +33,6 @@ public class KeygenLicenseVerifier {
 
             // First, try to validate the license
             JsonNode validationResponse = validateLicense(licenseKey, machineFingerprint);
-            log.info(validationResponse.asText());
             if (validationResponse != null) {
                 boolean isValid = validationResponse.path("meta").path("valid").asBoolean();
                 String licenseId = validationResponse.path("data").path("id").asText();
@@ -185,8 +185,6 @@ public class KeygenLicenseVerifier {
     }
 
     private static String generateMachineFingerprint() {
-        // This is a simplified example. In a real-world scenario, you'd want to generate
-        // a more robust and unique fingerprint based on hardware characteristics.
-        return "example-fingerprint";
+        return GeneralUtils.generateMachineFingerprint();
     }
 }
