@@ -218,6 +218,7 @@ public class ApplicationProperties {
     public static class EnterpriseEdition {
         private boolean enabled;
         @ToString.Exclude private String key;
+        private int maxUsers;
         private CustomMetadata customMetadata = new CustomMetadata();
 
         @Data

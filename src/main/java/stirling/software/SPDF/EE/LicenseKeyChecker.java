@@ -20,7 +20,6 @@ public class LicenseKeyChecker {
 
     private boolean enterpriseEnbaledResult = false;
 
-    // Inject your license service or configuration
     @Autowired
     public LicenseKeyChecker(
             KeygenLicenseVerifier licenseService, ApplicationProperties applicationProperties) {
@@ -46,7 +45,6 @@ public class LicenseKeyChecker {
                 log.info("License key is invalid.");
             }
         }
-        
     }
 
     public void updateLicenseKey(String newKey) throws IOException {

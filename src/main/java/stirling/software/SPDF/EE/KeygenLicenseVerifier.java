@@ -5,6 +5,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,19 +13,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.posthog.java.shaded.org.json.JSONObject;
 
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.utils.GeneralUtils;
 
 @Service
 @Slf4j
 public class KeygenLicenseVerifier {
     private static final String ACCOUNT_ID = "e5430f69-e834-4ae4-befd-b602aae5f372";
-    private static final String PRODUCT_ID = "f9bb2423-62c9-4d39-8def-4fdc5aca751e";
     private static final String BASE_URL = "https://api.keygen.sh/v1/accounts";
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    //    23:26:20.344 [scheduling-1] INFO  s.s.SPDF.EE.KeygenLicenseVerifier -
-    // validateLicenseResponse body:
-    // {"data":{"id":"808ed3c9-584b-46dd-8a80-c9217ef70915","type":"licenses","attributes":{"name":"userCounTest","key":"A7EW-KUPF-PRML-RRVL-HLMP-7THR-F7KE-XF4C","expiry":"2024-10-31T21:39:49.271Z","status":"ACTIVE","uses":0,"suspended":false,"scheme":null,"encrypted":false,"strict":true,"floating":true,"protected":true,"version":null,"maxMachines":1,"maxProcesses":null,"maxUsers":null,"maxCores":null,"maxUses":null,"requireHeartbeat":false,"requireCheckIn":false,"lastValidated":"2024-10-01T22:26:18.121Z","lastCheckIn":null,"nextCheckIn":null,"lastCheckOut":null,"metadata":{"users":10},"created":"2024-10-01T21:39:49.268Z","updated":"2024-10-01T21:39:49.268Z"},"relationships":{"account":{"links":{"related":"/v1/accounts/e5430f69-e834-4ae4-befd-b602aae5f372"},"data":{"type":"accounts","id":"e5430f69-e834-4ae4-befd-b602aae5f372"}},"environment":{"links":{"related":null},"data":null},"product":{"links":{"related":"/v1/accounts/e5430f69-e834-4ae4-befd-b602aae5f372/licenses/808ed3c9-584b-46dd-8a80-c9217ef70915/product"},"data":{"type":"products","id":"f9bb2423-62c9-4d39-8def-4fdc5aca751e"}},"policy":{"links":{"related":"/v1/accounts/e5430f69-e834-4ae4-befd-b602aae5f372/licenses/808ed3c9-584b-46dd-8a80-c9217ef70915/policy"},"data":{"type":"policies","id":"04caef06-9ac2-4084-bf3c-bca4a0d29143"}},"group":{"links":{"related":"/v1/accounts/e5430f69-e834-4ae4-befd-b602aae5f372/licenses/808ed3c9-584b-46dd-8a80-c9217ef70915/group"},"data":null},"owner":{"links":{"related":"/v1/accounts/e5430f69-e834-4ae4-befd-b602aae5f372/licenses/808ed3c9-584b-46dd-8a80-c9217ef70915/owner"},"data":null},"users":{"links":{"related":"/v1/accounts/e5430f69-e834-4ae4-befd-b602aae5f372/licenses/808ed3c9-584b-46dd-8a80-c9217ef70915/users"},"meta":{"count":0}},"machines":{"links":{"related":"/v1/accounts/e5430f69-e834-4ae4-befd-b602aae5f372/licenses/808ed3c9-584b-46dd-8a80-c9217ef70915/machines"},"meta":{"cores":0,"count":0}},"tokens":{"links":{"related":"/v1/accounts/e5430f69-e834-4ae4-befd-b602aae5f372/licenses/808ed3c9-584b-46dd-8a80-c9217ef70915/tokens"}},"entitlements":{"links":{"related":"/v1/accounts/e5430f69-e834-4ae4-befd-b602aae5f372/licenses/808ed3c9-584b-46dd-8a80-c9217ef70915/entitlements"}}},"links":{"self":"/v1/accounts/e5430f69-e834-4ae4-befd-b602aae5f372/licenses/808ed3c9-584b-46dd-8a80-c9217ef70915"}},"meta":{"ts":"2024-10-01T22:26:18.124Z","valid":false,"detail":"fingerprint is not activated (has no associated machines)","code":"NO_MACHINES","scope":{"fingerprint":"example-fingerprint"}}}
+    private final ApplicationProperties applicationProperties;
+
+    @Autowired
+    public KeygenLicenseVerifier(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     public boolean verifyLicense(String licenseKey) {
         try {
@@ -68,7 +72,7 @@ public class KeygenLicenseVerifier {
         }
     }
 
-    private static JsonNode validateLicense(String licenseKey, String machineFingerprint)
+    private JsonNode validateLicense(String licenseKey, String machineFingerprint)
             throws Exception {
         HttpClient client = HttpClient.newHttpClient();
         String requestBody =
@@ -104,14 +108,24 @@ public class KeygenLicenseVerifier {
             log.debug("Validation detail: " + detail);
             log.debug("Validation code: " + code);
 
+            int users =
+                    jsonResponse
+                            .path("data")
+                            .path("attributes")
+                            .path("metadata")
+                            .path("users")
+                            .asInt(0);
+            applicationProperties.getEnterpriseEdition().setMaxUsers(users);
+            log.info(applicationProperties.toString());
+
         } else {
             log.error("Error validating license. Status code: " + response.statusCode());
         }
         return jsonResponse;
     }
 
-    private static boolean activateMachine(
-            String licenseKey, String licenseId, String machineFingerprint) throws Exception {
+    private boolean activateMachine(String licenseKey, String licenseId, String machineFingerprint)
+            throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         String hostname;
@@ -184,7 +198,7 @@ public class KeygenLicenseVerifier {
         }
     }
 
-    private static String generateMachineFingerprint() {
+    private String generateMachineFingerprint() {
         return GeneralUtils.generateMachineFingerprint();
     }
 }

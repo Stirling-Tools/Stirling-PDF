@@ -5,16 +5,21 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.NetworkInterface;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,11 +35,6 @@ import com.fathzer.soft.javaluator.DoubleEvaluator;
 
 import io.github.pixee.security.HostValidator;
 import io.github.pixee.security.Urls;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.Enumeration;
 
 public class GeneralUtils {
 
@@ -306,7 +306,7 @@ public class GeneralUtils {
         }
         settingsYml.save();
     }
-    
+
     public static String generateMachineFingerprint() {
         try {
             // Get the MAC address
@@ -346,7 +346,7 @@ public class GeneralUtils {
             return fingerprint.toString();
 
         } catch (Exception e) {
-        	return "GenericID";
+            return "GenericID";
         }
     }
 }

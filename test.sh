@@ -82,18 +82,6 @@ main() {
 	
 
     run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
-	if [ $? -eq 0 ]; then
-		cd cucumber
-		if behave; then
-			passed_tests+=("Stirling-PDF-Regression")
-		else
-			failed_tests+=("Stirling-PDF-Regression")
-			echo "Printing docker logs of failed regression"
-			docker logs "Stirling-PDF"
-			echo "Printed docker logs of failed regression"
-		fi
-		cd ..
-	fi
 	docker-compose -f "./exampleYmlFiles/docker-compose-latest.yml" down
 
     export DOCKER_ENABLE_SECURITY=true
@@ -117,6 +105,18 @@ main() {
 	docker-compose -f "./exampleYmlFiles/docker-compose-latest-security.yml" down
 	
 	run_tests "Stirling-PDF-Security-Fat" "./exampleYmlFiles/docker-compose-latest-fat-security.yml"
+	if [ $? -eq 0 ]; then
+		cd cucumber
+		if python -m behave; then
+			passed_tests+=("Stirling-PDF-Regression")
+		else
+			failed_tests+=("Stirling-PDF-Regression")
+			echo "Printing docker logs of failed regression"
+			docker logs "Stirling-PDF-Security-Fat"
+			echo "Printed docker logs of failed regression"
+		fi
+		cd ..
+	fi
 	docker-compose -f "./exampleYmlFiles/docker-compose-latest-fat-security.yml" down
 	
     # Report results

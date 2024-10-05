@@ -40,6 +40,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
     apk upgrade --no-cache -a && \
     apk add --no-cache \
+    	calibre@testing \
         ca-certificates \
         tzdata \
         tini \

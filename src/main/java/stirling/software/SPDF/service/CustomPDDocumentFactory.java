@@ -34,6 +34,37 @@ public class CustomPDDocumentFactory {
         return document;
     }
 
+    public byte[] createNewBytesBasedOnOldDocument(byte[] oldDocument) throws IOException {
+        PDDocument document = Loader.loadPDF(oldDocument);
+        return createNewBytesBasedOnOldDocument(document);
+    }
+
+    public byte[] createNewBytesBasedOnOldDocument(File oldDocument) throws IOException {
+        PDDocument document = Loader.loadPDF(oldDocument);
+        return createNewBytesBasedOnOldDocument(document);
+    }
+
+    public byte[] createNewBytesBasedOnOldDocument(PDDocument oldDocument) throws IOException {
+        PDDocument document = new PDDocument();
+        pdfMetadataService.setMetadataToPdf(
+                document, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        document.save(baos);
+        document.close();
+        return baos.toByteArray();
+    }
+
+    public PDDocument createNewDocumentBasedOnOldDocument(byte[] oldDocument) throws IOException {
+        PDDocument document = Loader.loadPDF(oldDocument);
+        return createNewDocumentBasedOnOldDocument(document);
+    }
+
+    public PDDocument createNewDocumentBasedOnOldDocument(File oldDocument) throws IOException {
+        PDDocument document = Loader.loadPDF(oldDocument);
+        return createNewDocumentBasedOnOldDocument(document);
+    }
+
     public PDDocument createNewDocumentBasedOnOldDocument(PDDocument oldDocument)
             throws IOException {
         PDDocument document = new PDDocument();
