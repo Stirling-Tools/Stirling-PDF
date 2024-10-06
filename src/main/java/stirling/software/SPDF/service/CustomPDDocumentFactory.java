@@ -44,14 +44,14 @@ public class CustomPDDocumentFactory {
         return createNewBytesBasedOnOldDocument(document);
     }
 
+
     public byte[] createNewBytesBasedOnOldDocument(PDDocument oldDocument) throws IOException {
-        PDDocument document = new PDDocument();
         pdfMetadataService.setMetadataToPdf(
-                document, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);
+        		oldDocument, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        document.save(baos);
-        document.close();
+        oldDocument.save(baos);
+        oldDocument.close();
         return baos.toByteArray();
     }
 

@@ -15,6 +15,7 @@ public class CustomHtmlSanitizer {
                     .and(new HtmlPolicyBuilder().disallowElements("noscript").toFactory());
 
     public static String sanitize(String html) {
-        return POLICY.sanitize(html);
+        String htmlAfter = POLICY.sanitize(html);
+        return htmlAfter;
     }
 }
