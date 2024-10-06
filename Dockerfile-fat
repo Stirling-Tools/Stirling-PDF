@@ -12,7 +12,7 @@ RUN DOCKER_ENABLE_SECURITY=true \
 ./gradlew clean build
 
 # Main stage
-FROM alpine:3.20.3
+FROM alpine:3.20
 
 # Copy necessary files
 COPY scripts /scripts
@@ -65,7 +65,9 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         python3 \
     py3-pip && \
 # uno unoconv and HTML
-    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint pdf2image pillow && \
+	apk add --no-cache gcc g++ make musl-dev linux-headers python3-dev && \
+    pip install --break-system-packages --no-cache-dir --upgrade unoconv PyQt6-sip==13.8.0 WeasyPrint pdf2image pillow && \
+    apk del gcc g++ make musl-dev linux-headers python3-dev && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
     fc-cache -f -v && \
