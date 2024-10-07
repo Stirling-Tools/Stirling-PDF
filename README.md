@@ -189,7 +189,7 @@ Stirling PDF currently supports 38!
 | Hungarian (Magyar) (hu_HU)                  | ![71%](https://geps.dev/progress/71)   |
 | Indonesia (Bahasa Indonesia) (id_ID)        | ![72%](https://geps.dev/progress/72)   |
 | Irish (Gaeilge) (ga_IE)                     | ![93%](https://geps.dev/progress/93)   |
-| Italian (Italiano) (it_IT)                  | ![97%](https://geps.dev/progress/97)   |
+| Italian (Italiano) (it_IT)                  | ![99%](https://geps.dev/progress/99)   |
 | Japanese (日本語) (ja_JP)                   | ![90%](https://geps.dev/progress/90)   |
 | Korean (한국어) (ko_KR)                     | ![80%](https://geps.dev/progress/80)   |
 | Norwegian (Norsk) (no_NB)                   | ![93%](https://geps.dev/progress/93)   |
