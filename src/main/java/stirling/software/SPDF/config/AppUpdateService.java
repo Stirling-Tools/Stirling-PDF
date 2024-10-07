@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import stirling.software.SPDF.config.interfaces.ShowAdminInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Service

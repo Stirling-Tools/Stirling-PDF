@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -14,7 +15,6 @@ import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.FileToPdf;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
-// Disabled for now
 // @RestController
 // @Tag(name = "Convert", description = "Convert APIs")
 // @RequestMapping("/api/v1/convert")
@@ -24,7 +24,7 @@ public class ConvertBookToPDFController {
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
-    // @Autowired
+    @Autowired
     public ConvertBookToPDFController(
             CustomPDDocumentFactory pdfDocumentFactory,
             @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled) {
@@ -65,6 +65,8 @@ public class ConvertBookToPDFController {
             }
         }
         byte[] pdfBytes = FileToPdf.convertBookTypeToPdf(fileInput.getBytes(), originalFilename);
+
+        pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")

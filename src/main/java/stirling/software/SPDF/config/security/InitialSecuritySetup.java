@@ -1,19 +1,14 @@
 package stirling.software.SPDF.config.security;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.UUID;
 
-import org.simpleyaml.configuration.file.YamlFile;
-import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
-import org.simpleyaml.configuration.implementation.snakeyaml.lib.DumperOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.config.DatabaseBackupInterface;
+import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Role;
 
@@ -37,15 +32,6 @@ public class InitialSecuritySetup {
             databaseBackupHelper.exportDatabase();
         }
         initializeInternalApiUser();
-    }
-
-    @PostConstruct
-    public void initSecretKey() throws IOException {
-        String secretKey = applicationProperties.getAutomaticallyGenerated().getKey();
-        if (!isValidUUID(secretKey)) {
-            secretKey = UUID.randomUUID().toString(); // Generating a random UUID as the secret key
-            saveKeyToConfig(secretKey);
-        }
     }
 
     private void initializeAdminUser() throws IOException {
@@ -87,35 +73,6 @@ public class InitialSecuritySetup {
                     Role.INTERNAL_API_USER.getRoleId());
             userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
             log.info("Internal API user created: " + Role.INTERNAL_API_USER.getRoleId());
-        }
-    }
-
-    private void saveKeyToConfig(String key) throws IOException {
-        Path path = Paths.get("configs", "settings.yml"); // Target the configs/settings.yml
-
-        final YamlFile settingsYml = new YamlFile(path.toFile());
-        DumperOptions yamlOptionssettingsYml =
-                ((SimpleYamlImplementation) settingsYml.getImplementation()).getDumperOptions();
-        yamlOptionssettingsYml.setSplitLines(false);
-
-        settingsYml.loadWithComments();
-
-        settingsYml
-                .path("AutomaticallyGenerated.key")
-                .set(key)
-                .comment("# Automatically Generated Settings (Do Not Edit Directly)");
-        settingsYml.save();
-    }
-
-    private boolean isValidUUID(String uuid) {
-        if (uuid == null) {
-            return false;
-        }
-        try {
-            UUID.fromString(uuid);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
         }
     }
 }

@@ -1,6 +1,8 @@
 package stirling.software.SPDF.config.security;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +16,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.utils.RequestUriUtils;
 
+@Slf4j
 @Component
 public class FirstLoginFilter extends OncePerRequestFilter {
 
@@ -49,6 +54,22 @@ public class FirstLoginFilter extends OncePerRequestFilter {
                 response.sendRedirect(contextPath + "/change-creds");
                 return;
             }
+        }
+
+        if (log.isDebugEnabled()) {
+            HttpSession session = request.getSession(true);
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+            String creationTime = timeFormat.format(new Date(session.getCreationTime()));
+
+            log.debug(
+                    "Request Info - New: {}, creationTimeSession {}, ID:  {}, IP: {}, User-Agent: {}, Referer: {}, Request URL: {}",
+                    session.isNew(),
+                    creationTime,
+                    session.getId(),
+                    request.getRemoteAddr(),
+                    request.getHeader("User-Agent"),
+                    request.getHeader("Referer"),
+                    request.getRequestURL().toString());
         }
         filterChain.doFilter(request, response);
     }

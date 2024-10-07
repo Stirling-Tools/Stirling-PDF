@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import io.github.pixee.security.SystemCommand;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class LibreOfficeListener {
 
     private static final Logger logger = LoggerFactory.getLogger(LibreOfficeListener.class);
@@ -31,7 +34,7 @@ public class LibreOfficeListener {
     private LibreOfficeListener() {}
 
     private boolean isListenerRunning() {
-        System.out.println("waiting for listener to start");
+        log.info("waiting for listener to start");
         try (Socket socket = new Socket()) {
             socket.connect(
                     new InetSocketAddress("localhost", 2002), 1000); // Timeout after 1 second

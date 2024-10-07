@@ -108,6 +108,13 @@ public class GeneralWebController {
         return "split-pdf-by-sections";
     }
 
+    @GetMapping("/split-pdf-by-chapters")
+    @Hidden
+    public String splitPdfByChapters(Model model) {
+        model.addAttribute("currentPage", "split-pdf-by-chapters");
+        return "split-pdf-by-chapters";
+    }
+
     @GetMapping("/view-pdf")
     @Hidden
     public String ViewPdfForm2(Model model) {

@@ -14,7 +14,7 @@ import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
-public class Beans implements WebMvcConfigurer {
+public class LocaleConfiguration implements WebMvcConfigurer {
 
     @Autowired ApplicationProperties applicationProperties;
 

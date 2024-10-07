@@ -1,4 +1,4 @@
-package stirling.software.SPDF.config;
+package stirling.software.SPDF.config.interfaces;
 
 public interface ShowAdminInterface {
     default boolean getShowUpdateOnlyAdmins() {

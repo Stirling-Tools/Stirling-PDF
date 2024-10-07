@@ -13,6 +13,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import stirling.software.SPDF.utils.RequestUriUtils;
 
 @Component
@@ -32,10 +33,11 @@ public class MetricsFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
 
         if (RequestUriUtils.isTrackableResource(request.getContextPath(), uri)) {
-
+            HttpSession session = request.getSession(false);
+            String sessionId = (session != null) ? session.getId() : "no-session";
             Counter counter =
                     Counter.builder("http.requests")
-                            .tag("session", request.getSession().getId())
+                            .tag("session", sessionId)
                             .tag("method", request.getMethod())
                             .tag("uri", uri)
                             .register(meterRegistry);

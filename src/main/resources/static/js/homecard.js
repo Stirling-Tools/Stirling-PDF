@@ -25,29 +25,38 @@ function filterCards() {
 function updateFavoritesSection() {
   const favoritesContainer = document.getElementById("groupFavorites").querySelector(".feature-group-container");
   favoritesContainer.style.maxHeight = "none";
-  favoritesContainer.innerHTML = "";
-  const cards = Array.from(document.querySelectorAll(".feature-card"));
+  favoritesContainer.innerHTML = ""; // Clear the container first
+  const cards = Array.from(document.querySelectorAll(".feature-card:not(.duplicate)"));
+  const addedCardIds = new Set(); // To keep track of added card IDs
   let favoritesAmount = 0;
+
   cards.forEach(card => {
-    if (localStorage.getItem(card.id) === "favorite") {
+    if (localStorage.getItem(card.id) === "favorite" && !addedCardIds.has(card.id)) {
       const duplicate = card.cloneNode(true);
+      duplicate.classList.add("duplicate");
       favoritesContainer.appendChild(duplicate);
+      addedCardIds.add(card.id); // Mark this card as added
       favoritesAmount++;
     }
   });
+
   if (favoritesAmount === 0) {
     document.getElementById("groupFavorites").style.display = "none";
   } else {
     document.getElementById("groupFavorites").style.display = "flex";
-  };
+  }
   reorderCards(favoritesContainer);
   favoritesContainer.style.maxHeight = favoritesContainer.scrollHeight + "px";
-};
+}
 
 function toggleFavorite(element) {
   var span = element.querySelector("span.material-symbols-rounded");
   var card = element.closest(".feature-card");
   var cardId = card.id;
+
+  // Prevent the event from bubbling up to parent elements
+  event.stopPropagation();
+
   if (span.classList.contains("no-fill")) {
     span.classList.remove("no-fill");
     span.classList.add("fill");
@@ -59,7 +68,31 @@ function toggleFavorite(element) {
     card.classList.remove("favorite");
     localStorage.removeItem(cardId);
   }
-  reorderCards(card.parentNode);
+
+  // Use setTimeout to ensure this runs after the current call stack is clear
+  setTimeout(() => {
+    reorderCards(card.parentNode);
+    updateFavoritesSection();
+    updateFavoritesDropdown();
+    filterCards();
+  }, 0);
+}
+
+function syncFavorites() {
+  const cards = Array.from(document.querySelectorAll(".feature-card"));
+  cards.forEach(card => {
+    const isFavorite = localStorage.getItem(card.id) === "favorite";
+    const starIcon = card.querySelector(".favorite-icon span.material-symbols-rounded");
+    if (isFavorite) {
+      starIcon.classList.remove("no-fill");
+      starIcon.classList.add("fill");
+      card.classList.add("favorite");
+    } else {
+      starIcon.classList.remove("fill");
+      starIcon.classList.add("no-fill");
+      card.classList.remove("favorite");
+    }
+  });
   updateFavoritesSection();
   updateFavoritesDropdown();
   filterCards();
@@ -181,7 +214,10 @@ function expandCollapseAll(expandAll) {
   })
 }
 
-window.onload = initializeCards;
+window.onload = function() {
+  initializeCards();
+  syncFavorites(); // Ensure everything is in sync on page load
+};
 
 document.addEventListener("DOMContentLoaded", function () {
   const materialIcons = new FontFaceObserver('Material Symbols Rounded');
@@ -222,8 +258,6 @@ document.addEventListener("DOMContentLoaded", function () {
       container.classList.add("animated-group");
     })
   }, 500);
-
-
 
   showFavoritesOnly();
 });

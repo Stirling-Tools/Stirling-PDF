@@ -278,7 +278,7 @@
                   let allKeys = new Set([...Object.keys(accountSettings), ...Object.keys(localStorage)]);
 
                   allKeys.forEach(key => {
-                    if(key === 'debug' || key === '0' || key === '1') return;  // Ignoring specific keys
+                    if(key === 'debug' || key === '0' || key === '1' || key.includes('pdfjs') || key.includes('posthog') || key.includes('pageViews')) return;  // Ignoring specific keys
 
                     const accountValue = accountSettings[key] || '-';
                     const browserValue = localStorage.getItem(key) || '-';
@@ -299,7 +299,7 @@
 
                     // Then, set the account settings to local storage
                     for (let key in accountSettings) {
-                      if(key !== 'debug' && key !== '0' && key !== '1') { // Only sync non-ignored keys
+                      if(key !== 'debug' && key !== '0' && key !== '1' && !key.includes('pdfjs') && !key.includes('posthog') && !key.includes('pageViews')) { // Only sync non-ignored keys
                         localStorage.setItem(key, accountSettings[key]);
                       }
                     }
@@ -316,7 +316,7 @@
 
                     for (let i = 0; i < localStorage.length; i++) {
                       const key = localStorage.key(i);
-                      if(key !== 'debug' && key !== '0' && key !== '1') { // Only send non-ignored keys
+                      if(key !== 'debug' && key !== '0' && key !== '1' && !key.includes('pdfjs') && !key.includes('posthog') && !key.includes('pageViews')) { // Only send non-ignored keys
                         let hiddenField = document.createElement("input");
                         hiddenField.type = "hidden";
                         hiddenField.name = key;
