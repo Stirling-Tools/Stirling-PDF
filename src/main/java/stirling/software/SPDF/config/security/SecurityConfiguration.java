@@ -270,12 +270,12 @@ public class SecurityConfiguration {
         return true;
     }
 
-    // Only Dev test
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) ->
-                web.ignoring()
-                        .requestMatchers(
-                                "/css/**", "/images/**", "/js/**", "/**.svg", "/pdfjs-legacy/**");
-    }
+//    // Only Dev test
+//    @Bean
+//    public WebSecurityCustomizer webSecurityCustomizer() {
+//        return (web) ->
+//                web.ignoring()
+//                        .requestMatchers(
+//                                "/css/**", "/images/**", "/js/**", "/**.svg", "/pdfjs-legacy/**");
+//    }
 }

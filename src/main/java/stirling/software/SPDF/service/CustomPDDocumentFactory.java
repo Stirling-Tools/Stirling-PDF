@@ -44,10 +44,9 @@ public class CustomPDDocumentFactory {
         return createNewBytesBasedOnOldDocument(document);
     }
 
-
     public byte[] createNewBytesBasedOnOldDocument(PDDocument oldDocument) throws IOException {
         pdfMetadataService.setMetadataToPdf(
-        		oldDocument, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);
+                oldDocument, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         oldDocument.save(baos);
