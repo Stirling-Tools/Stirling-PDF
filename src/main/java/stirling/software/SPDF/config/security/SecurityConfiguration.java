@@ -12,7 +12,6 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -81,7 +80,9 @@ public class SecurityConfiguration {
         if (loginEnabledValue) {
             http.addFilterBefore(
                     userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            http.csrf(csrf -> csrf.disable());
+            if(applicationProperties.getSecurity().getCsrfDisabled()) {
+            	http.csrf(csrf -> csrf.disable());
+            }
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
             http.sessionManagement(
@@ -219,8 +220,10 @@ public class SecurityConfiguration {
                                 userAuthenticationFilter, Saml2WebSsoAuthenticationFilter.class);
             }
         } else {
-            http.csrf(csrf -> csrf.disable())
-                    .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
+        	if(applicationProperties.getSecurity().getCsrfDisabled()) {
+        		http.csrf(csrf -> csrf.disable());
+        	}
+        	http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
 
         return http.build();
@@ -270,12 +273,13 @@ public class SecurityConfiguration {
         return true;
     }
 
-//    // Only Dev test
-//    @Bean
-//    public WebSecurityCustomizer webSecurityCustomizer() {
-//        return (web) ->
-//                web.ignoring()
-//                        .requestMatchers(
-//                                "/css/**", "/images/**", "/js/**", "/**.svg", "/pdfjs-legacy/**");
-//    }
+    //    // Only Dev test
+    //    @Bean
+    //    public WebSecurityCustomizer webSecurityCustomizer() {
+    //        return (web) ->
+    //                web.ignoring()
+    //                        .requestMatchers(
+    //                                "/css/**", "/images/**", "/js/**", "/**.svg",
+    // "/pdfjs-legacy/**");
+    //    }
 }
