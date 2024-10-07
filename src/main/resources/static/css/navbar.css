@@ -55,7 +55,6 @@
   /* Adjust this to your desired shadow */
 }
 
-
 .main-icon {
   width: 36px;
   height: 36px;
@@ -70,7 +69,7 @@
   border-radius: 1rem;
 }
 
-.icon+.icon {
+.icon + .icon {
   margin-left: -4px;
 }
 
@@ -91,7 +90,7 @@
 
 span.icon-text::after {
   content: attr(data-text);
-  content: attr(data-text) / "";
+  content: attr(data-text) / '';
   font-weight: 600;
   height: 0;
   visibility: hidden;
@@ -107,7 +106,7 @@ span.icon-text::after {
 }
 
 .nav-item-separator::before {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   top: 10%;
@@ -158,7 +157,7 @@ span.icon-text::after {
 
 .dropdown-menu.scrollable-y {
   overflow-y: scroll;
-  height: 360px;
+  height: 265px;
 }
 
 /* Dropdown Scrollbar*/
@@ -310,7 +309,7 @@ span.icon-text::after {
   display: inline-flex;
 }
 
-@media (min-width:992px) {
+@media (min-width: 992px) {
   .dropdown:hover .dropdown-menu {
     display: block;
     margin-top: 0;
