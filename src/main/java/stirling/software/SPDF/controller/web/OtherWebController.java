@@ -31,6 +31,13 @@ public class OtherWebController {
         return "misc/compress-pdf";
     }
 
+    @GetMapping("/replace-and-invert-color-pdf")
+    @Hidden
+    public String replaceAndInvertColorPdfForm(Model model) {
+        model.addAttribute("currentPage", "replace-invert-color-pdf");
+        return "misc/replace-color";
+    }
+
     @GetMapping("/extract-image-scans")
     @Hidden
     public ModelAndView extractImageScansForm() {
