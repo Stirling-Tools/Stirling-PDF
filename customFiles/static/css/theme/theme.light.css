@@ -58,11 +58,11 @@
     --md-nav-on-section-color-organize: rgba(255, 251, 254, var(--md-nav-on-section-color-opacity));
     --md-nav-section-color-convert: rgba(25, 177, 212, var(--md-nav-section-color-opacity));
     --md-nav-on-section-color-convert: rgba(255, 251, 254, var(--md-nav-on-section-color-opacity));
-    --md-nav-section-color-security: rgba(255, 120, 146, var(--md-nav-section-color-opacity));
+    --md-nav-section-color-security: rgba(66, 72, 80, var(--md-nav-section-color-opacity));
     --md-nav-on-section-color-security: rgba(255, 251, 254, var(--md-nav-on-section-color-opacity));
     --md-nav-section-color-other: rgba(72, 189, 84, var(--md-nav-section-color-opacity));
     --md-nav-on-section-color-other: rgba(255, 251, 254, var(--md-nav-on-section-color-opacity));
-    --md-nav-section-color-advance: rgba(245, 84, 84, var(--md-nav-section-color-opacity));
+    --md-nav-section-color-advance: rgba(68, 183, 139, var(--md-nav-section-color-opacity));
     --md-nav-on-section-color-advance: rgba(255, 251, 254, var(--md-nav-on-section-color-opacity));
     --md-nav-section-color-image: rgba(212, 172, 25, var(--md-nav-section-color-opacity));
     --md-nav-on-section-color-image: rgba(255, 251, 254, var(--md-nav-on-section-color-opacity));
