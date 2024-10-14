@@ -58,7 +58,6 @@ public class RedactController {
         float customPadding = request.getCustomPadding();
         boolean convertPDFToImage = request.isConvertPDFToImage();
 
-        System.out.println(listOfTextString);
         String[] listOfText = listOfTextString.split("\n");
         PDDocument document = pdfDocumentFactory.load(file);
 
@@ -75,7 +74,6 @@ public class RedactController {
 
         for (String text : listOfText) {
             text = text.trim();
-            System.out.println(text);
             TextFinder textFinder = new TextFinder(text, useRegex, wholeWordSearchBool);
             List<PDFText> foundTexts = textFinder.getTextLocations(document);
             redactFoundText(document, foundTexts, customPadding, redactColor);

@@ -84,6 +84,14 @@ public class SessionPersistentRegistry implements SessionRegistry {
         }
 
         if (principalName != null) {
+            // Clear old sessions for the principal (unsure if needed)
+            //            List<SessionEntity> existingSessions =
+            //                    sessionRepository.findByPrincipalName(principalName);
+            //            for (SessionEntity session : existingSessions) {
+            //                session.setExpired(true);
+            //                sessionRepository.save(session);
+            //            }
+
             SessionEntity sessionEntity = new SessionEntity();
             sessionEntity.setSessionId(sessionId);
             sessionEntity.setPrincipalName(principalName);

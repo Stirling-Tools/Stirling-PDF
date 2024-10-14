@@ -89,6 +89,14 @@
   width: 80%;
 }
 
+.close-icon {
+  color: var(--md-sys-color-secondary);
+}
+
+.close-icon:hover {
+  transform: scale(1.15);
+}
+
 span.icon-text::after {
   content: attr(data-text);
   content: attr(data-text) / "";
@@ -319,4 +327,27 @@ span.icon-text::after {
   .icon-hide {
     display: none;
   }
+}
+
+ .go-pro-link {
+   position: relative;
+   padding: 0.5rem 1rem;
+   transition: all 0.3s ease;
+ }
+
+.go-pro-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #007bff;
+  border-radius: 0.25rem;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.go-pro-link:hover .go-pro-badge {
+  background-color: #0056b3;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
