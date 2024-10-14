@@ -144,7 +144,7 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
 		implementation 'org.springframework.security:spring-security-saml2-service-provider:6.3.3'
-	    implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
+	    implementation 'com.unboundid.product.scim2:scim2-sdk-client:3.1.0'
         //2.2.x requires rebuild of DB file.. need migration path
         runtimeOnly "com.h2database:h2:2.1.214"
         // implementation "com.h2database:h2:2.2.224"
