@@ -192,6 +192,7 @@ class PdfActionsManager {
 
     return div;
   }
+
 }
 
 export default PdfActionsManager;

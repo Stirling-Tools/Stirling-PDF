@@ -6,11 +6,12 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvert;
 
 @Data
-// @EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 public abstract class ReplaceAndInvertColorStrategy extends PDFFile {
 
     protected ReplaceAndInvert replaceAndInvert;

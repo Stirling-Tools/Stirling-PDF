@@ -10,8 +10,10 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.PDFText;
 
+@Slf4j
 public class TextFinder extends PDFTextStripper {
 
     private final String searchText;
@@ -92,7 +94,7 @@ public class TextFinder extends PDFTextStripper {
 
     public List<PDFText> getTextLocations(PDDocument document) throws Exception {
         this.getText(document);
-        System.out.println(
+        log.debug(
                 "Found "
                         + textOccurrences.size()
                         + " occurrences of '"

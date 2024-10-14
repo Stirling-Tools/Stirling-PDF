@@ -17,6 +17,7 @@ public class RequestUriUtils {
                 || requestURI.startsWith(contextPath + "/public/")
                 || requestURI.startsWith(contextPath + "/pdfjs/")
                 || requestURI.startsWith(contextPath + "/login")
+                || requestURI.startsWith(contextPath + "/error")
                 || requestURI.endsWith(".svg")
                 || requestURI.endsWith(".png")
                 || requestURI.endsWith(".ico")

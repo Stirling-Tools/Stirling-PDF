@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
@@ -30,13 +29,18 @@ import stirling.software.SPDF.model.User;
 @Component
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired @Lazy private UserService userService;
+    private final UserService userService;
+    private final SessionPersistentRegistry sessionPersistentRegistry;
+    private final boolean loginEnabledValue;
 
-    @Autowired private SessionPersistentRegistry sessionPersistentRegistry;
-
-    @Autowired
-    @Qualifier("loginEnabled")
-    public boolean loginEnabledValue;
+    public UserAuthenticationFilter(
+            @Lazy UserService userService,
+            SessionPersistentRegistry sessionPersistentRegistry,
+            @Qualifier("loginEnabled") boolean loginEnabledValue) {
+        this.userService = userService;
+        this.sessionPersistentRegistry = sessionPersistentRegistry;
+        this.loginEnabledValue = loginEnabledValue;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -50,6 +54,19 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
         String requestURI = request.getRequestURI();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Check for session expiration (unsure if needed)
+        //        if (authentication != null && authentication.isAuthenticated()) {
+        //            String sessionId = request.getSession().getId();
+        //            SessionInformation sessionInfo =
+        //                    sessionPersistentRegistry.getSessionInformation(sessionId);
+        //
+        //            if (sessionInfo != null && sessionInfo.isExpired()) {
+        //                SecurityContextHolder.clearContext();
+        //                response.sendRedirect(request.getContextPath() + "/login?expired=true");
+        //                return;
+        //            }
+        //        }
 
         // Check for API key in the request headers if no authentication exists
         if (authentication == null || !authentication.isAuthenticated()) {

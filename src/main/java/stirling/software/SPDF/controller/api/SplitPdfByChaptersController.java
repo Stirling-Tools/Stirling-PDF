@@ -32,9 +32,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import stirling.software.SPDF.config.PdfMetadataService;
 import stirling.software.SPDF.model.PdfMetadata;
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
+import stirling.software.SPDF.service.PdfMetadataService;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController

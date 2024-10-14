@@ -27,3 +27,16 @@
   display: flex;
   justify-content: space-around;
 }
+
+#pdf-preview-large {
+  margin: 0 auto;
+  display: block;
+  max-width: calc(100% - 30px);
+  max-height: calc(100% - 30px);
+  box-shadow: 0 0 4px rgba(100, 100, 100, 0.25);
+  transition: rotate 0.3s;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+}

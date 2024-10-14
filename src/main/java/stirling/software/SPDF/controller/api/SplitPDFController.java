@@ -60,8 +60,6 @@ public class SplitPDFController {
         // PdfMetadata metadata = PdfMetadataService.extractMetadataFromPdf(document);
         int totalPages = document.getNumberOfPages();
         List<Integer> pageNumbers = request.getPageNumbersList(document, false);
-        System.out.println(
-                pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
         if (!pageNumbers.contains(totalPages - 1)) {
             // Create a mutable ArrayList so we can add to it
             pageNumbers = new ArrayList<>(pageNumbers);

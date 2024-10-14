@@ -1,27 +1,39 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
+import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.FileToPdf;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
-// Disabled for now
-// @RestController
-// @Tag(name = "Convert", description = "Convert APIs")
-// @RequestMapping("/api/v1/convert")
+@RestController
+@Tag(name = "Convert", description = "Convert APIs")
+@RequestMapping("/api/v1/convert")
 public class ConvertHtmlToPDF {
 
-    // @Autowired
-    @Qualifier("bookAndHtmlFormatsInstalled")
-    private boolean bookAndHtmlFormatsInstalled;
+    private final boolean bookAndHtmlFormatsInstalled;
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public ConvertHtmlToPDF(
+            CustomPDDocumentFactory pdfDocumentFactory,
+            @Qualifier("bookAndHtmlFormatsInstalled") boolean bookAndHtmlFormatsInstalled) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+        this.bookAndHtmlFormatsInstalled = bookAndHtmlFormatsInstalled;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/html/pdf")
     @Operation(
@@ -48,6 +60,8 @@ public class ConvertHtmlToPDF {
                         fileInput.getBytes(),
                         originalFilename,
                         bookAndHtmlFormatsInstalled);
+
+        pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 
         String outputFilename =
                 originalFilename.replaceFirst("[.][^.]+$", "")

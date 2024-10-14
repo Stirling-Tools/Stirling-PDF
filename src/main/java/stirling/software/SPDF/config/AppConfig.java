@@ -160,4 +160,27 @@ public class AppConfig {
     public String accessibilityStatement() {
         return applicationProperties.getLegal().getAccessibilityStatement();
     }
+
+    @Bean(name = "analyticsPrompt")
+    public boolean analyticsPrompt() {
+        return applicationProperties.getSystem().getEnableAnalytics() == null
+                || "undefined".equals(applicationProperties.getSystem().getEnableAnalytics());
+    }
+
+    @Bean(name = "analyticsEnabled")
+    public boolean analyticsEnabled() {
+        if (applicationProperties.getEnterpriseEdition().isEnabled()) return true;
+        return applicationProperties.getSystem().getEnableAnalytics() != null
+                && Boolean.parseBoolean(applicationProperties.getSystem().getEnableAnalytics());
+    }
+
+    @Bean(name = "StirlingPDFLabel")
+    public String stirlingPDFLabel() {
+        return "Stirling-PDF" + " v" + appVersion();
+    }
+
+    @Bean(name = "UUID")
+    public String uuid() {
+        return applicationProperties.getAutomaticallyGenerated().getUUID();
+    }
 }
