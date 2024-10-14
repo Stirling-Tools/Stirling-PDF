@@ -319,6 +319,9 @@
               <div
                 th:replace="~{fragments/card :: card(id='split-pdf-by-sections', cardTitle=#{home.split-by-sections.title}, cardText=#{home.split-by-sections.desc}, cardLink='split-pdf-by-sections', toolIcon='grid_on', tags=#{split-by-sections.tags}, toolGroup='advance')}">
               </div>
+              <div
+                th:replace="~{fragments/card :: card(id='split-pdf-by-chapters', cardTitle=#{home.splitPdfByChapters.title}, cardText=#{home.splitPdfByChapters.desc}, cardLink='split-pdf-by-chapters', toolIcon='book', tags=#{splitPdfByChapters.tags}, toolGroup='advance')}">
+              </div>
             </div>
           </div>
         </div>
@@ -337,8 +340,8 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <p th:text="#{survey.changes}">Stirling-PDF has changed since the last survey! To find out more please check our blog post here:</h5>
-            <a href="https://stirlingpdf.info/blog/stirling-pdf-survey-results" target="_blank" th:text="#{survey.changes2}">https://stirlingpdf.info/blog/stirling-pdf-survey-results</a>
+          <p><span th:text="#{survey.changes}">Stirling-PDF has changed since the last survey! To find out more please check our blog post here: </span><a href="https://www.stirlingpdf.com/blog/stirling-pdf-future" target="_blank"> Stirling PDF</a></p>
+
           <p th:text="#{survey.changes2}">With these changes we are getting paid business support and funding</p>
           <p th:text="#{survey.please}">Please consider taking our survey!</p>
           <p th:text="#{survey.disabled}">Survey popup will be disabled in following updates but available at foot of page)</p>

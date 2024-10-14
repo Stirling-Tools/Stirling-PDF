@@ -2,12 +2,12 @@ package stirling.software.SPDF.config.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -80,8 +80,8 @@ public class SecurityConfiguration {
         if (loginEnabledValue) {
             http.addFilterBefore(
                     userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            if(applicationProperties.getSecurity().getCsrfDisabled()) {
-            	http.csrf(csrf -> csrf.disable());
+            if (applicationProperties.getSecurity().getCsrfDisabled()) {
+                http.csrf(csrf -> csrf.disable());
             }
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
@@ -220,16 +220,20 @@ public class SecurityConfiguration {
                                 userAuthenticationFilter, Saml2WebSsoAuthenticationFilter.class);
             }
         } else {
-        	if(applicationProperties.getSecurity().getCsrfDisabled()) {
-        		http.csrf(csrf -> csrf.disable());
-        	}
-        	http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
+            if (applicationProperties.getSecurity().getCsrfDisabled()) {
+                http.csrf(csrf -> csrf.disable());
+            }
+            http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
 
         return http.build();
     }
 
     @Bean
+    @ConditionalOnProperty(
+            name = "security.saml.enabled",
+            havingValue = "true",
+            matchIfMissing = false)
     public AuthenticationProvider samlAuthenticationProvider() {
         OpenSaml4AuthenticationProvider authenticationProvider =
                 new OpenSaml4AuthenticationProvider();
@@ -237,23 +241,28 @@ public class SecurityConfiguration {
         return authenticationProvider;
     }
 
-    @Bean
-    public AuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService); // UserDetailsService
-        provider.setPasswordEncoder(passwordEncoder()); // PasswordEncoder
-        return provider;
-    }
+    //    @Bean
+    //    public AuthenticationProvider daoAuthenticationProvider() {
+    //        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+    //        provider.setUserDetailsService(userDetailsService); // UserDetailsService
+    //        provider.setPasswordEncoder(passwordEncoder()); // PasswordEncoder
+    //        return provider;
+    //    }
 
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder =
                 http.getSharedObject(AuthenticationManagerBuilder.class);
 
-        authenticationManagerBuilder
-                .authenticationProvider(daoAuthenticationProvider()) // Benutzername/Passwort
-                .authenticationProvider(samlAuthenticationProvider()); // SAML
+        //        authenticationManagerBuilder =
+        //                authenticationManagerBuilder.authenticationProvider(
+        //                        daoAuthenticationProvider()); // Benutzername/Passwort
 
+        if (applicationProperties.getSecurity().getSaml() != null
+                && applicationProperties.getSecurity().getSaml().getEnabled()) {
+            authenticationManagerBuilder.authenticationProvider(
+                    samlAuthenticationProvider()); // SAML
+        }
         return authenticationManagerBuilder.build();
     }
 
