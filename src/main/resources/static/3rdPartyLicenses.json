@@ -1,6 +1,13 @@
 {
     "dependencies": [
         {
+            "moduleName": "Stirling-PDF",
+            "moduleUrl": "https://www.stirlingpdf.com/",
+            "moduleVersion": "0.29.0",
+            "moduleLicense": "MIT License",
+            "moduleLicenseUrl": "https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE"
+        },
+        {
             "moduleName": "ch.qos.logback:logback-classic",
             "moduleUrl": "http://www.qos.ch",
             "moduleVersion": "1.5.11",
