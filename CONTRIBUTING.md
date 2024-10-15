@@ -41,4 +41,4 @@ If, at any point of time, you have a question, please feel free to ask in the sa
 
 ## License
 
-By contributing to this project, you agree that your contributions will be licensed under the [GPL 3 License](LICENSE). You also acknowledge and agree that your contributions will be included in Stirling-PDF and that they can be relicensed in the future under the MPL 2.0 (Mozilla Public License Version 2.0) license.
+By contributing to this project, you agree that your contributions will be licensed under the [MIT License](LICENSE).
