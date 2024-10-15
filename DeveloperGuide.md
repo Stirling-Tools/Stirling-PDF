@@ -22,7 +22,7 @@ Stirling-PDF is built using:
 ### Prerequisites
 - Docker
 - Git
-- Java JDK 17 or later (
+- Java JDK 17 or later
 - Gradle 7.0 or later (Included within repo)
 
 ### Setup Steps
