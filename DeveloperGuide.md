@@ -1,17 +1,5 @@
 # Stirling-PDF Developer Guide
 
-## Table of Contents
-1. [Introduction](#introduction)
-2. [Project Overview](#project-overview)
-3. [Development Environment Setup](#development-environment-setup)
-4. [Project Structure](#project-structure)
-5. [Docker-based Development](#docker-based-development)
-6. [Testing](#testing)
-7. [Contributing](#contributing)
-8. [API Documentation](#api-documentation)
-9. [Customization](#customization)
-10. [Language Translations](#language-translations)
-
 ## 1. Introduction
 
 Stirling-PDF is a robust, locally hosted web-based PDF manipulation tool. This guide focuses on Docker-based development and testing, which is the recommended approach for working with the full version of Stirling-PDF.
