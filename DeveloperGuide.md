@@ -298,3 +298,260 @@ When contributing translations:
 3. The PR checks will verify consistency in language file updates.
 
 Remember to test your changes thoroughly to ensure they don't break any existing functionality.
+
+
+
+
+# Code examples
+
+### Overview of Thymeleaf
+
+Thymeleaf is a  server-side Java HTML template engine. It is used in Stirling-PDF to render dynamic web pages. Thymeleaf integrates heavily with Spring Boot
+
+### Thymeleaf overview
+
+In Stirling-PDF, Thymeleaf is used to create HTML templates that are rendered on the server side. These templates are located in the `src/main/resources/templates` directory. Thymeleaf templates use a combination of HTML and special Thymeleaf attributes to dynamically generate content.
+Some examples of this are 
+```html
+<th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+or
+<th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+```
+Where it uses the th:block, th: indicating its a special thymeleaf element to be used serverside in generating the html, and block being the actual element type.
+In this case we are inserting the ``navbar`` entry within the ``fragments/navbar.html`` fragment into the ``th:block`` element.
+
+They can be more complex such as
+```html
+<th:block th:insert="~{fragments/common :: head(title=#{pageExtracter.title}, header=#{pageExtracter.header})}"></th:block>
+```
+Which is the same as above but passes the parameters title and header into the fragment common.html to be used in its HTML generation
+
+Thymeleaf can also be used to loop through objects or pass things from java side into html side.
+```java
+ @GetMapping
+       public String newFeaturePage(Model model) {
+           model.addAttribute("exampleData", exampleData);
+           return "new-feature";
+       }
+```
+in above example if exampleData is a list of  plain java objects of class Person and within it you had id, name, age etc. You can reference it like so
+```html
+<tbody>
+   <!-- Use th:each to iterate over the list -->
+   <tr th:each="person : ${exampleData}">
+       <td th:text="${person.id}"></td>
+       <td th:text="${person.name}"></td>
+       <td th:text="${person.age}"></td>
+       <td th:text="${person.email}"></td>
+   </tr>
+</tbody>
+```
+This would generate n entries of tr for each person in exampleData
+
+### Adding a New Feature to the Backend (API)
+
+1. **Create a New Controller:**
+   - Create a new Java class in the `src/main/java/stirling/software/SPDF/controller/api` directory.
+   - Annotate the class with `@RestController` and `@RequestMapping` to define the API endpoint.
+   - Ensure to add API documentation annotations like `@Tag(name = "General", description = "General APIs")` and `@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO")`.
+
+   ```java
+   package stirling.software.SPDF.controller.api;
+
+   import org.springframework.web.bind.annotation.GetMapping;
+   import org.springframework.web.bind.annotation.RequestMapping;
+   import org.springframework.web.bind.annotation.RestController;
+   import io.swagger.v3.oas.annotations.Operation;
+   import io.swagger.v3.oas.annotations.tags.Tag;
+
+   @RestController
+   @RequestMapping("/api/v1/new-feature")
+   @Tag(name = "General", description = "General APIs")
+   public class NewFeatureController {
+
+       @GetMapping
+       @Operation(summary = "New Feature", description = "This is a new feature endpoint.")
+       public String newFeature() {
+           return "NewFeatureResponse"; // This refers to the NewFeatureResponse.html template presenting the user with the generated html from that file when they navigate to /api/v1/new-feature
+       }
+   }
+   ```
+
+2. **Define the Service Layer:** (Not required but often useful)
+   - Create a new service class in the `src/main/java/stirling/software/SPDF/service` directory.
+   - Implement the business logic for the new feature.
+
+   ```java
+   package stirling.software.SPDF.service;
+
+   import org.springframework.stereotype.Service;
+
+   @Service
+   public class NewFeatureService {
+
+       public String getNewFeatureData() {
+           // Implement business logic here
+           return "New Feature Data";
+       }
+   }
+   ```
+
+2b. **Integrate the Service with the Controller:**
+   - Autowire the service class in the controller and use it to handle the API request.
+
+   ```java
+   package stirling.software.SPDF.controller.api;
+
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.web.bind.annotation.GetMapping;
+   import org.springframework.web.bind.annotation.RequestMapping;
+   import org.springframework.web.bind.annotation.RestController;
+   import stirling.software.SPDF.service.NewFeatureService;
+   import io.swagger.v3.oas.annotations.Operation;
+   import io.swagger.v3.oas.annotations.tags.Tag;
+
+   @RestController
+   @RequestMapping("/api/v1/new-feature")
+   @Tag(name = "General", description = "General APIs")
+   public class NewFeatureController {
+
+       @Autowired
+       private NewFeatureService newFeatureService;
+
+       @GetMapping
+       @Operation(summary = "New Feature", description = "This is a new feature endpoint.")
+       public String newFeature() {
+           return newFeatureService.getNewFeatureData();
+       }
+   }
+   ```
+
+### Adding a New Feature to the Frontend (UI)
+
+1. **Create a New Thymeleaf Template:**
+   - Create a new HTML file in the `src/main/resources/templates` directory.
+   - Use Thymeleaf attributes to dynamically generate content.
+   - Use `extract-page.html` as a base example for the HTML template, useful to ensure importing of the general layout, navbar and footer.
+
+   ```html
+   <!DOCTYPE html>
+   <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+     <head>
+     <th:block th:insert="~{fragments/common :: head(title=#{newFeature.title}, header=#{newFeature.header})}"></th:block>
+     </head>
+
+     <body>
+       <div id="page-container">
+         <div id="content-wrap">
+           <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+           <br><br>
+           <div class="container">
+             <div class="row justify-content-center">
+               <div class="col-md-6 bg-card">
+                 <div class="tool-header">
+                   <span class="material-symbols-rounded tool-header-icon organize">upload</span>
+                   <span class="tool-header-text" th:text="#{newFeature.header}"></span>
+                 </div>
+                 <form th:action="@{'/api/v1/new-feature'}" method="post" enctype="multipart/form-data">
+                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                   <input type="hidden" id="customMode" name="customMode" value="">
+                   <div class="mb-3">
+                     <label for="featureInput" th:text="#{newFeature.prompt}"></label>
+                     <input type="text" class="form-control" id="featureInput" name="featureInput" th:placeholder="#{newFeature.placeholder}" required>
+                   </div>
+
+                   <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{newFeature.submit}"></button>
+                 </form>
+               </div>
+             </div>
+           </div>
+         </div>
+         <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+       </div>
+     </body>
+   </html>
+   ```
+
+2. **Create a New Controller for the UI:**
+   - Create a new Java class in the `src/main/java/stirling/software/SPDF/controller/ui` directory.
+   - Annotate the class with `@Controller` and `@RequestMapping` to define the UI endpoint.
+
+   ```java
+   package stirling.software.SPDF.controller.ui;
+
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.stereotype.Controller;
+   import org.springframework.ui.Model;
+   import org.springframework.web.bind.annotation.GetMapping;
+   import org.springframework.web.bind.annotation.RequestMapping;
+   import stirling.software.SPDF.service.NewFeatureService;
+
+   @Controller
+   @RequestMapping("/new-feature")
+   public class NewFeatureUIController {
+
+       @Autowired
+       private NewFeatureService newFeatureService;
+
+       @GetMapping
+       public String newFeaturePage(Model model) {
+           model.addAttribute("newFeatureData", newFeatureService.getNewFeatureData());
+           return "new-feature";
+       }
+   }
+   ```
+
+3. **Update the Navigation Bar:**
+   - Add a link to the new feature page in the navigation bar.
+   - Update the `src/main/resources/templates/fragments/navbar.html` file.
+
+   ```html
+   <li class="nav-item">
+       <a class="nav-link" th:href="@{/new-feature}">New Feature</a>
+   </li>
+   ```
+
+
+## Adding New Translations to Existing Language Files in Stirling-PDF
+
+When adding a new feature or modifying existing ones in Stirling-PDF, you'll need to add new translation entries to the existing language files. Here's a step-by-step guide:
+
+### 1. Locate Existing Language Files
+
+Find the existing `messages.properties` files in the `src/main/resources` directory. You'll see files like:
+
+- `messages.properties` (default, usually English)
+- `messages_en_GB.properties`
+- `messages_fr.properties`
+- `messages_de.properties`
+- etc.
+
+### 2. Add New Translation Entries
+
+Open each of these files and add your new translation entries. For example, if you're adding a new feature called "PDF Splitter", 
+Use descriptive, hierarchical keys (e.g., `feature.element.description`)
+you might add:
+
+```properties
+pdfSplitter.title=PDF Splitter
+pdfSplitter.description=Split your PDF into multiple documents
+pdfSplitter.button.split=Split PDF
+pdfSplitter.input.pages=Enter page numbers to split
+```
+
+Add these entries to the default GB language file and any others you wish, translating the values as appropriate for each language.
+
+### 3. Use Translations in Thymeleaf Templates
+
+In your Thymeleaf templates, use the `#{key}` syntax to reference the new translations:
+
+```html
+<h1 th:text="#{pdfSplitter.title}">PDF Splitter</h1>
+<p th:text="#{pdfSplitter.description}">Split your PDF into multiple documents</p>
+<input type="text" th:placeholder="#{pdfSplitter.input.pages}">
+<button th:text="#{pdfSplitter.button.split}">Split PDF</button>
+```
+
+
+
+Remember, never hard-code text in your templates or Java code. Always use translation keys to ensure proper localization.
