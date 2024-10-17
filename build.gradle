@@ -153,7 +153,7 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 
     // Batik
-    implementation "org.apache.xmlgraphics:batik-all:1.17"
+    implementation "org.apache.xmlgraphics:batik-all:1.18"
 
     // TwelveMonkeys
     runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
