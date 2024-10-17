@@ -78,9 +78,9 @@ public class SPdfApplication {
                     // For Windows
                     SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
                 } else if (os.contains("mac")) {
-                    rt.exec("open " + url);
+                    SystemCommand.runCommand(rt, "open " + url);
                 } else if (os.contains("nix") || os.contains("nux")) {
-                    rt.exec("xdg-open " + url);
+                    SystemCommand.runCommand(rt, "xdg-open " + url);
                 }
             } catch (Exception e) {
                 logger.error("Error opening browser: {}", e.getMessage());
