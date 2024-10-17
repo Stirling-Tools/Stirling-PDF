@@ -11,6 +11,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 
 import lombok.Data;
 import lombok.ToString;
@@ -24,6 +29,7 @@ import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 @ConfigurationProperties(prefix = "")
 @PropertySource(value = "file:./configs/settings.yml", factory = YamlPropertySourceFactory.class)
 @Data
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class ApplicationProperties {
 
     private Legal legal = new Legal();
@@ -57,6 +63,7 @@ public class ApplicationProperties {
         private Boolean csrfDisabled;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
+        private SAML saml = new SAML();
         private int loginAttemptCount;
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
@@ -65,6 +72,34 @@ public class ApplicationProperties {
         public static class InitialLogin {
             private String username;
             @ToString.Exclude private String password;
+        }
+
+        @Data
+        public static class SAML {
+            private Boolean enabled = false;
+            private String entityId;
+            private String registrationId;
+            private String spBaseUrl;
+            private String idpMetadataLocation;
+            private KeyStore keystore;
+
+            @Data
+            public static class KeyStore {
+                private String keystoreLocation;
+                private String keystorePassword;
+                private String keyAlias;
+                private String keyPassword;
+                private String realmCertificateAlias;
+
+                public Resource getKeystoreResource() {
+                    if (keystoreLocation.startsWith("classpath:")) {
+                        return new ClassPathResource(
+                                keystoreLocation.substring("classpath:".length()));
+                    } else {
+                        return new FileSystemResource(keystoreLocation);
+                    }
+                }
+            }
         }
 
         @Data
@@ -136,6 +171,7 @@ public class ApplicationProperties {
         private boolean customHTMLFiles;
         private String tessdataDir;
         private Boolean enableAlphaFunctionality;
+        private String enableAnalytics;
     }
 
     @Data
@@ -175,11 +211,14 @@ public class ApplicationProperties {
     @Data
     public static class AutomaticallyGenerated {
         @ToString.Exclude private String key;
+        private String UUID;
     }
 
     @Data
     public static class EnterpriseEdition {
+        private boolean enabled;
         @ToString.Exclude private String key;
+        private int maxUsers;
         private CustomMetadata customMetadata = new CustomMetadata();
 
         @Data
