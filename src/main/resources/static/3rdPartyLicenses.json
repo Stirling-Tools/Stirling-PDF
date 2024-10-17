@@ -263,61 +263,61 @@
         },
         {
             "moduleName": "com.twelvemonkeys.common:common-image",
-            "moduleVersion": "3.11.0",
+            "moduleVersion": "3.12.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
             "moduleName": "com.twelvemonkeys.common:common-io",
-            "moduleVersion": "3.11.0",
+            "moduleVersion": "3.12.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
             "moduleName": "com.twelvemonkeys.common:common-lang",
-            "moduleVersion": "3.11.0",
+            "moduleVersion": "3.12.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
             "moduleName": "com.twelvemonkeys.imageio:imageio-batik",
-            "moduleVersion": "3.11.0",
+            "moduleVersion": "3.12.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
             "moduleName": "com.twelvemonkeys.imageio:imageio-bmp",
-            "moduleVersion": "3.11.0",
+            "moduleVersion": "3.12.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
             "moduleName": "com.twelvemonkeys.imageio:imageio-core",
-            "moduleVersion": "3.11.0",
+            "moduleVersion": "3.12.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
             "moduleName": "com.twelvemonkeys.imageio:imageio-jpeg",
-            "moduleVersion": "3.11.0",
+            "moduleVersion": "3.12.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
             "moduleName": "com.twelvemonkeys.imageio:imageio-metadata",
-            "moduleVersion": "3.11.0",
+            "moduleVersion": "3.12.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
             "moduleName": "com.twelvemonkeys.imageio:imageio-tiff",
-            "moduleVersion": "3.11.0",
+            "moduleVersion": "3.12.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
             "moduleName": "com.twelvemonkeys.imageio:imageio-webp",
-            "moduleVersion": "3.11.0",
+            "moduleVersion": "3.12.0",
             "moduleLicense": "The BSD License",
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
@@ -687,14 +687,14 @@
         },
         {
             "moduleName": "org.apache.xmlgraphics:batik-all",
-            "moduleVersion": "1.17",
+            "moduleVersion": "1.18",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.xmlgraphics:xmlgraphics-commons",
             "moduleUrl": "http://xmlgraphics.apache.org/commons/",
-            "moduleVersion": "2.9",
+            "moduleVersion": "2.10",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
