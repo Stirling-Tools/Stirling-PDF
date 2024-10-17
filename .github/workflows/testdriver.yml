@@ -1,0 +1,36 @@
+name: TestDriver.ai
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: "TestDriver"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug - Print masked secret
+        run: |
+          if [ -n "${{secrets.TESTDRIVER_API_KEY}}" ]; 
+            then
+              echo "yes the api is there"
+          else
+            echo "nope"
+          fi
+      - uses: testdriverai/action@main
+        with:
+          version: v4.0.44
+          key: ${{secrets.TESTDRIVER_API_KEY}}
+          prerun: |
+            npm install
+            npm run build
+            npm install dashcam-chrome --save
+            Start-Process "C:/Program Files/Google/Chrome/Application/chrome.exe" -ArgumentList "--start-maximized", "--load-extension=$(pwd)/node_modules/dashcam-chrome/build", "https://stirlingpdf.io"
+            Start-Sleep -Seconds 20
+          prompt: |
+            1. /run testdriver/test.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE_COLOR: "3"
