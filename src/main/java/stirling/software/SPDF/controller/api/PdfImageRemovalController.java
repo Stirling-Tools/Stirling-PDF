@@ -21,6 +21,7 @@ import stirling.software.SPDF.utils.WebResponseUtils;
  */
 @RestController
 @RequestMapping("/api/v1/general")
+@Tag(name = "General", description = "General APIs")
 public class PdfImageRemovalController {
 
     // Service for removing images from PDFs
