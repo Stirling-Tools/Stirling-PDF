@@ -109,7 +109,7 @@ public class ScalePagesController {
     }
 
     private PDRectangle getTargetSize(String targetPDRectangle, PDDocument sourceDocument) {
-        if (targetPDRectangle.equals("KEEP")) {
+        if ("KEEP".equals(targetPDRectangle)) {
             if (sourceDocument.getNumberOfPages() == 0) {
                 return null;
             }
