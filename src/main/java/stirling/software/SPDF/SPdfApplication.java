@@ -37,7 +37,7 @@ public class SPdfApplication {
 
     @Value("${server.port:8080}")
     public void setServerPortStatic(String port) {
-        if (port.equalsIgnoreCase("auto")) {
+        if ("auto".equalsIgnoreCase(port)) {
             // Use Spring Boot's automatic port assignment (server.port=0)
             SPdfApplication.serverPortStatic =
                     "0"; // This will let Spring Boot assign an available port
