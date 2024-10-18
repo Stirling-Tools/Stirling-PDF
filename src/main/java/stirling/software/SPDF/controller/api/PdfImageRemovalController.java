@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
