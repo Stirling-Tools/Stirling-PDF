@@ -3,6 +3,8 @@ package stirling.software.SPDF.model;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -131,19 +133,20 @@ public class ApplicationProperties {
             private String privateKey;
             private String spCert;
 
-            private String entityId;
-            private String spBaseUrl;
-            private String idpMetadataLocation;
-
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
                     return new ClassPathResource(idpMetadataUri.substring("classpath".length()))
                             .getInputStream();
                 }
-                URL url = new URL(idpMetadataUri);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                return connection.getInputStream();
+                try {
+                    URI uri = new URI(idpMetadataUri);
+                    URL url = uri.toURL();
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    return connection.getInputStream();
+                } catch (URISyntaxException e) {
+                    throw new IOException("Invalid URI format: " + idpMetadataUri, e);
+                }
             }
 
             public Resource getSpCert() {
