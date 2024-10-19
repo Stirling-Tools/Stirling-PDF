@@ -374,6 +374,10 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    @ConditionalOnProperty(
+            name = "security.saml2.enabled",
+            havingValue = "true",
+            matchIfMissing = false)
     public RelyingPartyRegistrationRepository relyingPartyRegistrations() throws Exception {
 
         SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
