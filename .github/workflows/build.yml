@@ -36,7 +36,12 @@ jobs:
           gradle-version: 8.7
 
       - name: Build with Gradle
-        run: ./gradlew build --no-build-cache
+        run: |
+          if ! ./gradlew build --no-build-cache; then
+            echo "Gradle build failed. Printing test report:"
+            cat build/reports/tests/test/index.html
+            exit 1
+          fi
 
   docker-compose-tests:
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
