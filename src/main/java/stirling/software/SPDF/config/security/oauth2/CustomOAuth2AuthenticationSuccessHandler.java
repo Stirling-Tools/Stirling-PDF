@@ -75,6 +75,11 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 throw new LockedException(
                         "Your account has been locked due to too many failed login attempts.");
             }
+            if (userService.isUserDisabled(username)) {
+                getRedirectStrategy()
+                        .sendRedirect(request, response, "/logout?userIsDisabled=true");
+                return;
+            }
             if (userService.usernameExistsIgnoreCase(username)
                     && userService.hasPassword(username)
                     && !userService.isAuthenticationTypeByUsername(

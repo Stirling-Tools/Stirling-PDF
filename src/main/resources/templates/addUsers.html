@@ -283,7 +283,7 @@
       </script>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-    <div th:if="${oAuth2Enabled}" class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div th:if="${altLogin}" class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
           <div class="modal-header">

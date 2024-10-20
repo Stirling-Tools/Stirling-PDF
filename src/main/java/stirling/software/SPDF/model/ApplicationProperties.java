@@ -1,13 +1,17 @@
 package stirling.software.SPDF.model;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -18,6 +22,8 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import stirling.software.SPDF.config.YamlPropertySourceFactory;
 import stirling.software.SPDF.model.provider.GithubProvider;
@@ -41,7 +47,6 @@ public class ApplicationProperties {
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
     private EnterpriseEdition enterpriseEdition = new EnterpriseEdition();
     private AutoPipeline autoPipeline = new AutoPipeline();
-    private static final Logger logger = LoggerFactory.getLogger(ApplicationProperties.class);
 
     @Data
     public static class AutoPipeline {
@@ -63,10 +68,49 @@ public class ApplicationProperties {
         private Boolean csrfDisabled;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
-        private SAML saml = new SAML();
+        private SAML2 saml2 = new SAML2();
         private int loginAttemptCount;
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
+
+        public Boolean isAltLogin() {
+            return saml2.getEnabled() || oauth2.getEnabled();
+        }
+
+        public enum LoginMethods {
+            ALL("all"),
+            NORMAL("normal"),
+            OAUTH2("oauth2"),
+            SAML2("saml2");
+
+            private String method;
+
+            LoginMethods(String method) {
+                this.method = method;
+            }
+
+            @Override
+            public String toString() {
+                return method;
+            }
+        }
+
+        public boolean isUserPass() {
+            return (loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString())
+                    || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
+        }
+
+        public boolean isOauth2Activ() {
+            return (oauth2 != null
+                    && oauth2.getEnabled()
+                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
+        }
+
+        public boolean isSaml2Activ() {
+            return (saml2 != null
+                    && saml2.getEnabled()
+                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
+        }
 
         @Data
         public static class InitialLogin {
@@ -74,30 +118,58 @@ public class ApplicationProperties {
             @ToString.Exclude private String password;
         }
 
-        @Data
-        public static class SAML {
+        @Getter
+        @Setter
+        public static class SAML2 {
             private Boolean enabled = false;
-            private String entityId;
-            private String registrationId;
-            private String spBaseUrl;
-            private String idpMetadataLocation;
-            private KeyStore keystore;
+            private Boolean autoCreateUser = false;
+            private Boolean blockRegistration = false;
+            private String registrationId = "stirling";
+            private String idpMetadataUri;
+            private String idpSingleLogoutUrl;
+            private String idpSingleLoginUrl;
+            private String idpIssuer;
+            private String idpCert;
+            private String privateKey;
+            private String spCert;
 
-            @Data
-            public static class KeyStore {
-                private String keystoreLocation;
-                private String keystorePassword;
-                private String keyAlias;
-                private String keyPassword;
-                private String realmCertificateAlias;
+            public InputStream getIdpMetadataUri() throws IOException {
+                if (idpMetadataUri.startsWith("classpath:")) {
+                    return new ClassPathResource(idpMetadataUri.substring("classpath".length()))
+                            .getInputStream();
+                }
+                try {
+                    URI uri = new URI(idpMetadataUri);
+                    URL url = uri.toURL();
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    return connection.getInputStream();
+                } catch (URISyntaxException e) {
+                    throw new IOException("Invalid URI format: " + idpMetadataUri, e);
+                }
+            }
 
-                public Resource getKeystoreResource() {
-                    if (keystoreLocation.startsWith("classpath:")) {
-                        return new ClassPathResource(
-                                keystoreLocation.substring("classpath:".length()));
-                    } else {
-                        return new FileSystemResource(keystoreLocation);
-                    }
+            public Resource getSpCert() {
+                if (spCert.startsWith("classpath:")) {
+                    return new ClassPathResource(spCert.substring("classpath:".length()));
+                } else {
+                    return new FileSystemResource(spCert);
+                }
+            }
+
+            public Resource getidpCert() {
+                if (idpCert.startsWith("classpath:")) {
+                    return new ClassPathResource(idpCert.substring("classpath:".length()));
+                } else {
+                    return new FileSystemResource(idpCert);
+                }
+            }
+
+            public Resource getPrivateKey() {
+                if (privateKey.startsWith("classpath:")) {
+                    return new ClassPathResource(privateKey.substring("classpath:".length()));
+                } else {
+                    return new FileSystemResource(privateKey);
                 }
             }
         }
