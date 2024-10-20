@@ -21,10 +21,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.*;
+import stirling.software.SPDF.model.ApplicationProperties.Security;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
+import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
 import stirling.software.SPDF.model.provider.GithubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
 import stirling.software.SPDF.model.provider.KeycloakProvider;
@@ -51,27 +54,44 @@ public class AccountWebController {
 
         Map<String, String> providerList = new HashMap<>();
 
-        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
+        Security securityProps = applicationProperties.getSecurity();
+
+        OAUTH2 oauth = securityProps.getOauth2();
         if (oauth != null) {
-            if (oauth.isSettingsValid()) {
-                providerList.put("oidc", oauth.getProvider());
+            if (oauth.getEnabled()) {
+                if (oauth.isSettingsValid()) {
+                    providerList.put("/oauth2/authorization/oidc", oauth.getProvider());
+                }
+                Client client = oauth.getClient();
+                if (client != null) {
+                    GoogleProvider google = client.getGoogle();
+                    if (google.isSettingsValid()) {
+                        providerList.put(
+                                "/oauth2/authorization/" + google.getName(),
+                                google.getClientName());
+                    }
+
+                    GithubProvider github = client.getGithub();
+                    if (github.isSettingsValid()) {
+                        providerList.put(
+                                "/oauth2/authorization/" + github.getName(),
+                                github.getClientName());
+                    }
+
+                    KeycloakProvider keycloak = client.getKeycloak();
+                    if (keycloak.isSettingsValid()) {
+                        providerList.put(
+                                "/oauth2/authorization/" + keycloak.getName(),
+                                keycloak.getClientName());
+                    }
+                }
             }
-            Client client = oauth.getClient();
-            if (client != null) {
-                GoogleProvider google = client.getGoogle();
-                if (google.isSettingsValid()) {
-                    providerList.put(google.getName(), google.getClientName());
-                }
+        }
 
-                GithubProvider github = client.getGithub();
-                if (github.isSettingsValid()) {
-                    providerList.put(github.getName(), github.getClientName());
-                }
-
-                KeycloakProvider keycloak = client.getKeycloak();
-                if (keycloak.isSettingsValid()) {
-                    providerList.put(keycloak.getName(), keycloak.getClientName());
-                }
+        SAML2 saml2 = securityProps.getSaml2();
+        if (saml2 != null) {
+            if (saml2.getEnabled()) {
+                providerList.put("/saml2/authenticate/" + saml2.getRegistrationId(), "SAML 2");
             }
         }
         // Remove any null keys/values from the providerList
@@ -80,9 +100,8 @@ public class AccountWebController {
                 .removeIf(entry -> entry.getKey() == null || entry.getValue() == null);
         model.addAttribute("providerlist", providerList);
 
-        model.addAttribute("loginMethod", applicationProperties.getSecurity().getLoginMethod());
-        model.addAttribute(
-                "oAuth2Enabled", applicationProperties.getSecurity().getOauth2().getEnabled());
+        model.addAttribute("loginMethod", securityProps.getLoginMethod());
+        model.addAttribute("altLogin", securityProps.isAltLogin());
 
         model.addAttribute("currentPage", "login");
 
@@ -349,6 +368,17 @@ public class AccountWebController {
                 // Add oAuth2 Login attributes to the model
                 model.addAttribute("oAuth2Login", true);
             }
+            if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
+                // Cast the principal object to OAuth2User
+                CustomSaml2AuthenticatedPrincipal userDetails =
+                        (CustomSaml2AuthenticatedPrincipal) principal;
+
+                // Retrieve username and other attributes
+                username = userDetails.getName();
+                // Add oAuth2 Login attributes to the model
+                model.addAttribute("oAuth2Login", true);
+            }
+
             if (username != null) {
                 // Fetch user details from the database
                 Optional<User> user =

@@ -32,11 +32,9 @@ java {
 repositories {
     mavenCentral()
     maven { url "https://jitpack.io" }
-     maven {
-        url "https://build.shibboleth.net/nexus/content/repositories/releases/"
-    }
+    maven { url "https://build.shibboleth.net/nexus/content/repositories/releases/" }
     maven {
-        url "https://build.shibboleth.net/maven/releases/"
+        url 'https://build.shibboleth.net/maven/releases'
     }
 }
 
@@ -135,7 +133,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
     implementation 'com.posthog.java:posthog:1.1.1'
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
-    
+
 
     if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
         implementation "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
@@ -148,6 +146,14 @@ dependencies {
         //2.2.x requires rebuild of DB file.. need migration path
         runtimeOnly "com.h2database:h2:2.1.214"
         // implementation "com.h2database:h2:2.2.224"
+        constraints {
+            implementation "org.opensaml:opensaml-core"
+            implementation "org.opensaml:opensaml-saml-api"
+            implementation "org.opensaml:opensaml-saml-impl"
+        }
+        implementation "org.springframework.security:spring-security-saml2-service-provider"
+
+        implementation 'com.coveo:saml-client:5.0.0'
     }
 
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"

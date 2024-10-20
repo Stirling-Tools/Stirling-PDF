@@ -47,6 +47,18 @@ security:
     useAsUsername: email # Default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # Specify the scopes for which the application will request permissions
     provider: google # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
+  saml2:
+    enabled: false
+    autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
+    blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
+    registrationId: stirling
+    idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata
+    idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml
+    idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml
+    idpIssuer: http://www.okta.com/externalKey
+    idpCert: classpath:octa.crt
+    privateKey: classpath:saml-private-key.key
+    spCert: classpath:saml-public-cert.crt
 
 # Enterprise edition settings unused for now please ignore!
 enterpriseEdition:

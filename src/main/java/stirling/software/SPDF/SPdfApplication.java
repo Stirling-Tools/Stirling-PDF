@@ -33,7 +33,11 @@ public class SPdfApplication {
     @Autowired private Environment env;
     @Autowired ApplicationProperties applicationProperties;
 
+    private static String baseUrlStatic;
     private static String serverPortStatic;
+
+    @Value("${baseUrl:http://localhost}")
+    private String baseUrl;
 
     @Value("${server.port:8080}")
     public void setServerPortStatic(String port) {
@@ -65,12 +69,13 @@ public class SPdfApplication {
 
     @PostConstruct
     public void init() {
+        baseUrlStatic = this.baseUrl;
         // Check if the BROWSER_OPEN environment variable is set to true
         String browserOpenEnv = env.getProperty("BROWSER_OPEN");
         boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
         if (browserOpen) {
             try {
-                String url = "http://localhost:" + getStaticPort();
+                String url = baseUrl + ":" + getStaticPort();
 
                 String os = System.getProperty("os.name").toLowerCase();
                 Runtime rt = Runtime.getRuntime();
@@ -138,8 +143,16 @@ public class SPdfApplication {
 
     private static void printStartupLogs() {
         logger.info("Stirling-PDF Started.");
-        String url = "http://localhost:" + getStaticPort();
+        String url = baseUrlStatic + ":" + getStaticPort();
         logger.info("Navigate to {}", url);
+    }
+
+    public static String getStaticBaseUrl() {
+        return baseUrlStatic;
+    }
+
+    public String getNonStaticBaseUrl() {
+        return baseUrlStatic;
     }
 
     public static String getStaticPort() {

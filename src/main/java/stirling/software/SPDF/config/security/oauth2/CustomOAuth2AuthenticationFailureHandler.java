@@ -51,8 +51,7 @@ public class CustomOAuth2AuthenticationFailureHandler
             }
             log.error("OAuth2 Authentication error: " + errorCode);
             log.error("OAuth2AuthenticationException", exception);
-            getRedirectStrategy()
-                    .sendRedirect(request, response, "/logout?erroroauth=" + errorCode);
+            getRedirectStrategy().sendRedirect(request, response, "/login?erroroauth=" + errorCode);
             return;
         }
         log.error("Unhandled authentication exception", exception);
