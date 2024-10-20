@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
+import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.AuthenticationType;
@@ -338,6 +339,10 @@ public class UserService implements UserServiceInterface {
                 } else if (principal instanceof OAuth2User) {
                     OAuth2User oAuth2User = (OAuth2User) principal;
                     usernameP = oAuth2User.getName();
+                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
+                    CustomSaml2AuthenticatedPrincipal saml2User =
+                            (CustomSaml2AuthenticatedPrincipal) principal;
+                    usernameP = saml2User.getName();
                 } else if (principal instanceof String) {
                     usernameP = (String) principal;
                 }
