@@ -1,7 +1,9 @@
 select#font-select,
 select#font-select option {
-  height: 60px; /* Adjust as needed */
-  font-size: 30px; /* Adjust as needed */
+  height: 60px;
+  /* Adjust as needed */
+  font-size: 30px;
+  /* Adjust as needed */
 }
 
 .drawing-pad-container {
@@ -13,10 +15,12 @@ select#font-select option {
   width: 100%;
   height: 300px;
 }
+
 #box-drag-container {
   position: relative;
   margin: 20px 0;
 }
+
 .draggable-buttons-box {
   position: absolute;
   top: 0;
@@ -24,16 +28,37 @@ select#font-select option {
   width: 100%;
   display: flex;
   gap: 5px;
+  z-index: 5;
 }
-.draggable-buttons-box > button {
-  z-index: 10;
+
+.draggable-buttons-box>button {
+  z-index: 4;
   background-color: rgba(13, 110, 253, 0.1);
 }
+
 .draggable-canvas {
-  border: 1px solid red;
+  border: 2px solid #3498db;
   position: absolute;
   touch-action: none;
   user-select: none;
   top: 0px;
   left: 0;
+  z-index: 100;
+  cursor: grab;
+  transition: transform 0.1s ease-out;
+  background-color: rgba(52, 152, 219, 0.1);
+  /* Light blue background */
+}
+
+.draggable-canvas:active {
+  cursor: grabbing;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  /* Shadow on active drag */
+}
+
+.draggable-canvas:hover {
+  border: 2px solid #2980b9;
+  /* Darker border on hover */
+  background-color: rgba(52, 152, 219, 0.2);
+  /* Darken background on hover */
 }
