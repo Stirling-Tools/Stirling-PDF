@@ -22,6 +22,13 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "com.coveo:saml-client",
+            "moduleUrl": "https://github.com/coveo/saml-client",
+            "moduleVersion": "5.0.0",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
             "moduleName": "com.fasterxml.jackson.core:jackson-annotations",
             "moduleUrl": "https://github.com/FasterXML/jackson",
             "moduleVersion": "2.17.2",
