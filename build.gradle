@@ -119,7 +119,7 @@ configurations.all {
 }
 dependencies {
     //security updates
-    implementation "org.springframework:spring-webmvc:6.1.13"
+    implementation "org.springframework:spring-webmvc:6.1.14"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.0")
 
