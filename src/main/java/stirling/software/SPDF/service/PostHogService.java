@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import com.posthog.java.PostHog;
 
+import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Service
@@ -26,15 +27,18 @@ public class PostHogService {
     private final PostHog postHog;
     private final String uniqueId;
     private final ApplicationProperties applicationProperties;
+    private final UserServiceInterface userService;
+
 
     @Autowired
     public PostHogService(
             PostHog postHog,
             @Qualifier("UUID") String uuid,
-            ApplicationProperties applicationProperties) {
+            ApplicationProperties applicationProperties, @Autowired(required = false) UserServiceInterface userService) {
         this.postHog = postHog;
         this.uniqueId = uuid;
         this.applicationProperties = applicationProperties;
+        this.userService = userService;
         captureSystemInfo();
     }
 
@@ -133,6 +137,11 @@ public class PostHogService {
                 metrics.put("docker_metrics", getDockerMetrics());
             }
             metrics.put("application_properties", captureApplicationProperties());
+            
+            
+            if(userService != null) {
+            	metrics.put("total_users_created", userService.getTotalUsersCount());
+            }
 
         } catch (Exception e) {
             metrics.put("error", e.getMessage());

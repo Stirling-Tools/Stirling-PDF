@@ -8,6 +8,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -39,4 +40,26 @@ public class InitialSetup {
             applicationProperties.getAutomaticallyGenerated().setKey(secretKey);
         }
     }
+    
+    @PostConstruct
+    public void initLegalUrls() throws IOException {
+        // Initialize Terms and Conditions
+        String termsUrl = applicationProperties.getLegal().getTermsAndConditions();
+        if (StringUtils.isEmpty(termsUrl)) {
+            String defaultTermsUrl = "https://www.stirlingpdf.com/terms-and-conditions";
+            GeneralUtils.saveKeyToConfig("legal.termsAndConditions", defaultTermsUrl);
+            applicationProperties.getLegal().setTermsAndConditions(defaultTermsUrl);
+        }
+
+        // Initialize Privacy Policy
+        String privacyUrl = applicationProperties.getLegal().getPrivacyPolicy();
+        if (StringUtils.isEmpty(privacyUrl)) {
+            String defaultPrivacyUrl = "https://www.stirlingpdf.com/privacy-policy";
+            GeneralUtils.saveKeyToConfig("legal.privacyPolicy", defaultPrivacyUrl);
+            applicationProperties.getLegal().setPrivacyPolicy(defaultPrivacyUrl);
+        }
+    }
+    
 }
+
+
