@@ -1,15 +1,17 @@
 package stirling.software.SPDF.config.security;
 
+import java.security.cert.X509Certificate;
 import java.util.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.io.Resource;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -24,20 +26,32 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrations;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
+import org.springframework.security.saml2.core.Saml2X509Credential;
+import org.springframework.security.saml2.core.Saml2X509Credential.Saml2X509CredentialType;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
+import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
+import org.springframework.security.saml2.provider.service.web.authentication.Saml2WebSsoAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
-import stirling.software.SPDF.config.security.oauth2.CustomOAuth2LogoutSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
+import stirling.software.SPDF.config.security.saml2.CertificateUtils;
+import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationFailureHandler;
+import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationSuccessHandler;
+import stirling.software.SPDF.config.security.saml2.CustomSaml2ResponseAuthenticationConverter;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2.Client;
+import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.model.provider.GithubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
@@ -47,11 +61,10 @@ import stirling.software.SPDF.repository.JPATokenRepositoryImpl;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@Slf4j
 public class SecurityConfiguration {
 
     @Autowired private CustomUserDetailsService userDetailsService;
-
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -75,11 +88,13 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.addFilterBefore(userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         if (loginEnabledValue) {
-
-            http.csrf(csrf -> csrf.disable());
+            http.addFilterBefore(
+                    userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            if (applicationProperties.getSecurity().getCsrfDisabled()) {
+                http.csrf(csrf -> csrf.disable());
+            }
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
             http.sessionManagement(
@@ -91,112 +106,140 @@ public class SecurityConfiguration {
                                     .sessionRegistry(sessionRegistry)
                                     .expiredUrl("/login?logout=true"));
 
-            http.formLogin(
-                            formLogin ->
-                                    formLogin
-                                            .loginPage("/login")
-                                            .successHandler(
-                                                    new CustomAuthenticationSuccessHandler(
-                                                            loginAttemptService, userService))
-                                            .defaultSuccessUrl("/")
-                                            .failureHandler(
-                                                    new CustomAuthenticationFailureHandler(
-                                                            loginAttemptService, userService))
-                                            .permitAll())
-                    .requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()))
-                    .logout(
-                            logout ->
-                                    logout.logoutRequestMatcher(
-                                                    new AntPathRequestMatcher("/logout"))
-                                            .logoutSuccessHandler(new CustomLogoutSuccessHandler())
-                                            .invalidateHttpSession(true) // Invalidate session
-                                            .deleteCookies("JSESSIONID", "remember-me"))
-                    .rememberMe(
-                            rememberMeConfigurer ->
-                                    rememberMeConfigurer // Use the configurator directly
-                                            .key("uniqueAndSecret")
-                                            .tokenRepository(persistentTokenRepository())
-                                            .tokenValiditySeconds(1209600) // 2 weeks
-                            )
-                    .authorizeHttpRequests(
-                            authz ->
-                                    authz.requestMatchers(
-                                                    req -> {
-                                                        String uri = req.getRequestURI();
-                                                        String contextPath = req.getContextPath();
+            http.authenticationProvider(daoAuthenticationProvider());
+            http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
+            http.logout(
+                    logout ->
+                            logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                                    .logoutSuccessHandler(
+                                            new CustomLogoutSuccessHandler(applicationProperties))
+                                    .invalidateHttpSession(true) // Invalidate session
+                                    .deleteCookies("JSESSIONID", "remember-me"));
+            http.rememberMe(
+                    rememberMeConfigurer ->
+                            rememberMeConfigurer // Use the configurator directly
+                                    .key("uniqueAndSecret")
+                                    .tokenRepository(persistentTokenRepository())
+                                    .tokenValiditySeconds(1209600) // 2 weeks
+                    );
+            http.authorizeHttpRequests(
+                    authz ->
+                            authz.requestMatchers(
+                                            req -> {
+                                                String uri = req.getRequestURI();
+                                                String contextPath = req.getContextPath();
 
-                                                        // Remove the context path from the URI
-                                                        String trimmedUri =
-                                                                uri.startsWith(contextPath)
-                                                                        ? uri.substring(
-                                                                                contextPath
-                                                                                        .length())
-                                                                        : uri;
+                                                // Remove the context path from the URI
+                                                String trimmedUri =
+                                                        uri.startsWith(contextPath)
+                                                                ? uri.substring(
+                                                                        contextPath.length())
+                                                                : uri;
 
-                                                        return trimmedUri.startsWith("/login")
-                                                                || trimmedUri.startsWith("/oauth")
-                                                                || trimmedUri.endsWith(".svg")
-                                                                || trimmedUri.startsWith(
-                                                                        "/register")
-                                                                || trimmedUri.startsWith("/error")
-                                                                || trimmedUri.startsWith("/images/")
-                                                                || trimmedUri.startsWith("/public/")
-                                                                || trimmedUri.startsWith("/css/")
-                                                                || trimmedUri.startsWith("/fonts/")
-                                                                || trimmedUri.startsWith("/js/")
-                                                                || trimmedUri.startsWith(
-                                                                        "/api/v1/info/status");
-                                                    })
-                                            .permitAll()
-                                            .anyRequest()
-                                            .authenticated());
+                                                return trimmedUri.startsWith("/login")
+                                                        || trimmedUri.startsWith("/oauth")
+                                                        || trimmedUri.startsWith("/saml2")
+                                                        || trimmedUri.endsWith(".svg")
+                                                        || trimmedUri.startsWith("/register")
+                                                        || trimmedUri.startsWith("/error")
+                                                        || trimmedUri.startsWith("/images/")
+                                                        || trimmedUri.startsWith("/public/")
+                                                        || trimmedUri.startsWith("/css/")
+                                                        || trimmedUri.startsWith("/fonts/")
+                                                        || trimmedUri.startsWith("/js/")
+                                                        || trimmedUri.startsWith(
+                                                                "/api/v1/info/status");
+                                            })
+                                    .permitAll()
+                                    .anyRequest()
+                                    .authenticated());
+
+            // Handle User/Password Logins
+            if (applicationProperties.getSecurity().isUserPass()) {
+                http.formLogin(
+                        formLogin ->
+                                formLogin
+                                        .loginPage("/login")
+                                        .successHandler(
+                                                new CustomAuthenticationSuccessHandler(
+                                                        loginAttemptService, userService))
+                                        .failureHandler(
+                                                new CustomAuthenticationFailureHandler(
+                                                        loginAttemptService, userService))
+                                        .defaultSuccessUrl("/")
+                                        .permitAll());
+            }
 
             // Handle OAUTH2 Logins
-            if (applicationProperties.getSecurity().getOauth2() != null
-                    && applicationProperties.getSecurity().getOauth2().getEnabled()
-                    && !applicationProperties
-                            .getSecurity()
-                            .getLoginMethod()
-                            .equalsIgnoreCase("normal")) {
+            if (applicationProperties.getSecurity().isOauth2Activ()) {
 
                 http.oauth2Login(
-                                oauth2 ->
-                                        oauth2.loginPage("/oauth2")
-                                                /*
-                                                This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
-                                                If user exists, login proceeds as usual. If user does not exist, then it is autocreated but only if 'OAUTH2AutoCreateUser'
-                                                is set as true, else login fails with an error message advising the same.
-                                                 */
+                        oauth2 ->
+                                oauth2.loginPage("/oauth2")
+                                        /*
+                                        This Custom handler is used to check if the OAUTH2 user trying to log in, already exists in the database.
+                                        If user exists, login proceeds as usual. If user does not exist, then it is autocreated but only if 'OAUTH2AutoCreateUser'
+                                        is set as true, else login fails with an error message advising the same.
+                                         */
+                                        .successHandler(
+                                                new CustomOAuth2AuthenticationSuccessHandler(
+                                                        loginAttemptService,
+                                                        applicationProperties,
+                                                        userService))
+                                        .failureHandler(
+                                                new CustomOAuth2AuthenticationFailureHandler())
+                                        // Add existing Authorities from the database
+                                        .userInfoEndpoint(
+                                                userInfoEndpoint ->
+                                                        userInfoEndpoint
+                                                                .oidcUserService(
+                                                                        new CustomOAuth2UserService(
+                                                                                applicationProperties,
+                                                                                userService,
+                                                                                loginAttemptService))
+                                                                .userAuthoritiesMapper(
+                                                                        userAuthoritiesMapper()))
+                                        .permitAll());
+            }
+
+            // Handle SAML
+            if (applicationProperties.getSecurity().isSaml2Activ()) {
+                http.authenticationProvider(samlAuthenticationProvider());
+                http.saml2Login(
+                                saml2 ->
+                                        saml2.loginPage("/saml2")
                                                 .successHandler(
-                                                        new CustomOAuth2AuthenticationSuccessHandler(
+                                                        new CustomSaml2AuthenticationSuccessHandler(
                                                                 loginAttemptService,
                                                                 applicationProperties,
                                                                 userService))
                                                 .failureHandler(
-                                                        new CustomOAuth2AuthenticationFailureHandler())
-                                                // Add existing Authorities from the database
-                                                .userInfoEndpoint(
-                                                        userInfoEndpoint ->
-                                                                userInfoEndpoint
-                                                                        .oidcUserService(
-                                                                                new CustomOAuth2UserService(
-                                                                                        applicationProperties,
-                                                                                        userService,
-                                                                                        loginAttemptService))
-                                                                        .userAuthoritiesMapper(
-                                                                                userAuthoritiesMapper())))
-                        .logout(
-                                logout ->
-                                        logout.logoutSuccessHandler(
-                                                new CustomOAuth2LogoutSuccessHandler(
-                                                        applicationProperties)));
+                                                        new CustomSaml2AuthenticationFailureHandler())
+                                                .permitAll())
+                        .addFilterBefore(
+                                userAuthenticationFilter, Saml2WebSsoAuthenticationFilter.class);
             }
         } else {
-            http.csrf(csrf -> csrf.disable())
-                    .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
+            if (applicationProperties.getSecurity().getCsrfDisabled()) {
+                http.csrf(csrf -> csrf.disable());
+            }
+            http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
 
         return http.build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(
+            name = "security.saml2.enabled",
+            havingValue = "true",
+            matchIfMissing = false)
+    public AuthenticationProvider samlAuthenticationProvider() {
+        OpenSaml4AuthenticationProvider authenticationProvider =
+                new OpenSaml4AuthenticationProvider();
+        authenticationProvider.setResponseAuthenticationConverter(
+                new CustomSaml2ResponseAuthenticationConverter(userService));
+        return authenticationProvider;
     }
 
     // Client Registration Repository for OAUTH2 OIDC Login
@@ -214,7 +257,7 @@ public class SecurityConfiguration {
         keycloakClientRegistration().ifPresent(registrations::add);
 
         if (registrations.isEmpty()) {
-            logger.error("At least one OAuth2 provider must be configured");
+            log.error("At least one OAuth2 provider must be configured");
             System.exit(1);
         }
 
@@ -275,6 +318,7 @@ public class SecurityConfiguration {
     }
 
     private Optional<ClientRegistration> githubClientRegistration() {
+
         OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
         if (oauth == null || !oauth.getEnabled()) {
             return Optional.empty();
@@ -327,6 +371,52 @@ public class SecurityConfiguration {
                         .userNameAttributeName(oauth.getUseAsUsername())
                         .clientName("OIDC")
                         .build());
+    }
+
+    @Bean
+    @ConditionalOnProperty(
+            name = "security.saml2.enabled",
+            havingValue = "true",
+            matchIfMissing = false)
+    public RelyingPartyRegistrationRepository relyingPartyRegistrations() throws Exception {
+
+        SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
+
+        Resource privateKeyResource = samlConf.getPrivateKey();
+
+        Resource certificateResource = samlConf.getSpCert();
+
+        Saml2X509Credential signingCredential =
+                new Saml2X509Credential(
+                        CertificateUtils.readPrivateKey(privateKeyResource),
+                        CertificateUtils.readCertificate(certificateResource),
+                        Saml2X509CredentialType.SIGNING);
+
+        X509Certificate idpCert = CertificateUtils.readCertificate(samlConf.getidpCert());
+
+        Saml2X509Credential verificationCredential = Saml2X509Credential.verification(idpCert);
+
+        RelyingPartyRegistration rp =
+                RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())
+                        .signingX509Credentials((c) -> c.add(signingCredential))
+                        .assertingPartyDetails(
+                                (details) ->
+                                        details.entityId(samlConf.getIdpIssuer())
+                                                .singleSignOnServiceLocation(
+                                                        samlConf.getIdpSingleLoginUrl())
+                                                .verificationX509Credentials(
+                                                        (c) -> c.add(verificationCredential))
+                                                .wantAuthnRequestsSigned(true))
+                        .build();
+        return new InMemoryRelyingPartyRegistrationRepository(rp);
+    }
+
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
     }
 
     /*
@@ -386,4 +476,14 @@ public class SecurityConfiguration {
     public boolean activSecurity() {
         return true;
     }
+
+    //    // Only Dev test
+    //    @Bean
+    //    public WebSecurityCustomizer webSecurityCustomizer() {
+    //        return (web) ->
+    //                web.ignoring()
+    //                        .requestMatchers(
+    //                                "/css/**", "/images/**", "/js/**", "/**.svg",
+    // "/pdfjs-legacy/**");
+    //    }
 }

@@ -5,6 +5,22 @@ function showErrorBanner(message, stackTrace) {
   document.querySelector("#errorContainer p").textContent = message;
   document.querySelector("#traceContent").textContent = stackTrace;
 }
+
+function showSessionExpiredPrompt() {
+  const errorContainer = document.getElementById("errorContainer");
+  errorContainer.style.display = "block";
+  document.querySelector("#errorContainer .alert-heading").textContent = sessionExpired;
+  document.querySelector("#errorContainer p").textContent = sessionExpired;
+  document.querySelector("#traceContent").textContent = "";
+
+  // Optional: Add a refresh button
+  const refreshButton = document.createElement("button");
+  refreshButton.textContent = "Refresh Page";
+  refreshButton.className = "btn btn-primary mt-3";
+  refreshButton.onclick = () => location.reload();
+  errorContainer.appendChild(refreshButton);
+}
+
 let firstErrorOccurred = false;
 
 $(document).ready(function () {
@@ -79,6 +95,11 @@ async function handleSingleDownload(url, formData, isMulti = false, isZip = fals
     const contentType = response.headers.get("content-type");
 
     if (!response.ok) {
+      if (response.status === 401) {
+        // Handle 401 Unauthorized error
+        showSessionExpiredPrompt();
+        return;
+      }
       if (contentType && contentType.includes("application/json")) {
         console.error("Throwing error banner, response was not okay");
         return handleJsonResponse(response);
@@ -97,7 +118,7 @@ async function handleSingleDownload(url, formData, isMulti = false, isZip = fals
     }
   } catch (error) {
     console.error("Error in handleSingleDownload:", error);
-    throw error; // Re-throw the error if you want it to be handled higher up.
+    throw error;
   }
 }
 

@@ -16,13 +16,13 @@ ext {
     springBootVersion = "3.3.4"
     pdfboxVersion = "3.0.3"
     logbackVersion = "1.5.7"
-    imageioVersion = "3.11.0"
+    imageioVersion = "3.12.0"
     lombokVersion = "1.18.34"
     bouncycastleVersion = "1.78.1"
 }
 
 group = "stirling.software"
-version = "0.29.0"
+version = "0.30.0"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -32,6 +32,10 @@ java {
 repositories {
     mavenCentral()
     maven { url "https://jitpack.io" }
+    maven { url "https://build.shibboleth.net/nexus/content/repositories/releases/" }
+    maven {
+        url 'https://build.shibboleth.net/maven/releases'
+    }
 }
 
 licenseReport {
@@ -115,7 +119,7 @@ configurations.all {
 }
 dependencies {
     //security updates
-    implementation "org.springframework:spring-webmvc:6.1.13"
+    implementation "org.springframework:spring-webmvc:6.1.14"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.0")
 
@@ -127,6 +131,9 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-jetty:$springBootVersion"
 
     implementation "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
+    implementation 'com.posthog.java:posthog:1.1.1'
+    implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
+
 
     if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
         implementation "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
@@ -134,15 +141,25 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
+		implementation 'org.springframework.security:spring-security-saml2-service-provider:6.3.3'
+	    implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         //2.2.x requires rebuild of DB file.. need migration path
         runtimeOnly "com.h2database:h2:2.1.214"
         // implementation "com.h2database:h2:2.2.224"
+        constraints {
+            implementation "org.opensaml:opensaml-core"
+            implementation "org.opensaml:opensaml-saml-api"
+            implementation "org.opensaml:opensaml-saml-impl"
+        }
+        implementation "org.springframework.security:spring-security-saml2-service-provider"
+
+        implementation 'com.coveo:saml-client:5.0.0'
     }
 
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 
     // Batik
-    implementation "org.apache.xmlgraphics:batik-all:1.17"
+    implementation "org.apache.xmlgraphics:batik-all:1.18"
 
     // TwelveMonkeys
     runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
@@ -184,11 +201,11 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.13.4"
+    implementation "io.micrometer:micrometer-core:1.13.6"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
-    implementation "org.commonmark:commonmark:0.23.0"
-    implementation "org.commonmark:commonmark-ext-gfm-tables:0.23.0"
+    implementation "org.commonmark:commonmark:0.24.0"
+    implementation "org.commonmark:commonmark-ext-gfm-tables:0.24.0"
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "com.bucket4j:bucket4j_jdk17-core:8.14.0"
     implementation "com.fathzer:javaluator:3.0.5"
