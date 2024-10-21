@@ -755,8 +755,8 @@
         },
         {
             "moduleName": "org.commonmark:commonmark-ext-gfm-tables",
-            "moduleVersion": "0.23.0",
-            "moduleLicense": "BSD 2-Clause License",
+            "moduleVersion": "0.24.0",
+            "moduleLicense": "BSD-2-Clause",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
         },
         {
@@ -1405,7 +1405,7 @@
         {
             "moduleName": "org.springframework:spring-webmvc",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "6.1.13",
+            "moduleVersion": "6.1.14",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
