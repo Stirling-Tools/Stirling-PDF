@@ -749,8 +749,8 @@
         },
         {
             "moduleName": "org.commonmark:commonmark",
-            "moduleVersion": "0.23.0",
-            "moduleLicense": "BSD 2-Clause License",
+            "moduleVersion": "0.24.0",
+            "moduleLicense": "BSD-2-Clause",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
         },
         {
