@@ -1,4 +1,3 @@
-version: 4.0.44
 steps:
   - prompt: open chrome
     commands:
