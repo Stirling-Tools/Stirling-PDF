@@ -127,10 +127,10 @@ steps:
       - command: wait
         timeout: 2000
   - prompt: >-
-      click on Tools button in the header section and hover over merge button
-      and check if the background for the button is changed, similarly hover
-      over all the rest of the buttons and check for the background of the
-      button to change
+      click on Tools button in the header section and Check if the background of
+      the button transforms when hovered over, similarly hover over a few other
+      buttons and check for the background of the button to transform when
+      hovered over
     commands:
       - command: focus-application
         name: Google Chrome
