@@ -61,7 +61,7 @@ public class ConvertPDFToPDFA {
         command.add("-dPDFA=" + ("pdfa".equals(outputFormat) ? "2" : "1"));
         command.add("-dNOPAUSE");
         command.add("-dBATCH");
-        command.add("-sColorConversionStrategy=UseDeviceIndependentColor");
+        command.add("-sColorConversionStrategy=sRGB");
         command.add("-sDEVICE=pdfwrite");
         command.add("-dPDFACompatibilityPolicy=2");
         command.add("-o");

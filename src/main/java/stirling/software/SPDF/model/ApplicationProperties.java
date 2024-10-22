@@ -1,18 +1,29 @@
 package stirling.software.SPDF.model;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import stirling.software.SPDF.config.YamlPropertySourceFactory;
 import stirling.software.SPDF.model.provider.GithubProvider;
@@ -24,6 +35,7 @@ import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 @ConfigurationProperties(prefix = "")
 @PropertySource(value = "file:./configs/settings.yml", factory = YamlPropertySourceFactory.class)
 @Data
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class ApplicationProperties {
 
     private Legal legal = new Legal();
@@ -35,7 +47,6 @@ public class ApplicationProperties {
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
     private EnterpriseEdition enterpriseEdition = new EnterpriseEdition();
     private AutoPipeline autoPipeline = new AutoPipeline();
-    private static final Logger logger = LoggerFactory.getLogger(ApplicationProperties.class);
 
     @Data
     public static class AutoPipeline {
@@ -57,14 +68,110 @@ public class ApplicationProperties {
         private Boolean csrfDisabled;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
+        private SAML2 saml2 = new SAML2();
         private int loginAttemptCount;
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
+
+        public Boolean isAltLogin() {
+            return saml2.getEnabled() || oauth2.getEnabled();
+        }
+
+        public enum LoginMethods {
+            ALL("all"),
+            NORMAL("normal"),
+            OAUTH2("oauth2"),
+            SAML2("saml2");
+
+            private String method;
+
+            LoginMethods(String method) {
+                this.method = method;
+            }
+
+            @Override
+            public String toString() {
+                return method;
+            }
+        }
+
+        public boolean isUserPass() {
+            return (loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString())
+                    || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
+        }
+
+        public boolean isOauth2Activ() {
+            return (oauth2 != null
+                    && oauth2.getEnabled()
+                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
+        }
+
+        public boolean isSaml2Activ() {
+            return (saml2 != null
+                    && saml2.getEnabled()
+                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
+        }
 
         @Data
         public static class InitialLogin {
             private String username;
             @ToString.Exclude private String password;
+        }
+
+        @Getter
+        @Setter
+        public static class SAML2 {
+            private Boolean enabled = false;
+            private Boolean autoCreateUser = false;
+            private Boolean blockRegistration = false;
+            private String registrationId = "stirling";
+            private String idpMetadataUri;
+            private String idpSingleLogoutUrl;
+            private String idpSingleLoginUrl;
+            private String idpIssuer;
+            private String idpCert;
+            private String privateKey;
+            private String spCert;
+
+            public InputStream getIdpMetadataUri() throws IOException {
+                if (idpMetadataUri.startsWith("classpath:")) {
+                    return new ClassPathResource(idpMetadataUri.substring("classpath".length()))
+                            .getInputStream();
+                }
+                try {
+                    URI uri = new URI(idpMetadataUri);
+                    URL url = uri.toURL();
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    return connection.getInputStream();
+                } catch (URISyntaxException e) {
+                    throw new IOException("Invalid URI format: " + idpMetadataUri, e);
+                }
+            }
+
+            public Resource getSpCert() {
+                if (spCert.startsWith("classpath:")) {
+                    return new ClassPathResource(spCert.substring("classpath:".length()));
+                } else {
+                    return new FileSystemResource(spCert);
+                }
+            }
+
+            public Resource getidpCert() {
+                if (idpCert.startsWith("classpath:")) {
+                    return new ClassPathResource(idpCert.substring("classpath:".length()));
+                } else {
+                    return new FileSystemResource(idpCert);
+                }
+            }
+
+            public Resource getPrivateKey() {
+                if (privateKey.startsWith("classpath:")) {
+                    return new ClassPathResource(privateKey.substring("classpath:".length()));
+                } else {
+                    return new FileSystemResource(privateKey);
+                }
+            }
         }
 
         @Data
@@ -136,6 +243,7 @@ public class ApplicationProperties {
         private boolean customHTMLFiles;
         private String tessdataDir;
         private Boolean enableAlphaFunctionality;
+        private String enableAnalytics;
     }
 
     @Data
@@ -175,11 +283,14 @@ public class ApplicationProperties {
     @Data
     public static class AutomaticallyGenerated {
         @ToString.Exclude private String key;
+        private String UUID;
     }
 
     @Data
     public static class EnterpriseEdition {
+        private boolean enabled;
         @ToString.Exclude private String key;
+        private int maxUsers;
         private CustomMetadata customMetadata = new CustomMetadata();
 
         @Data

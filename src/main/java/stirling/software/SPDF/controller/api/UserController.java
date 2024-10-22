@@ -30,7 +30,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Role;
@@ -40,6 +42,7 @@ import stirling.software.SPDF.model.api.user.UsernameAndPass;
 @Controller
 @Tag(name = "User", description = "User APIs")
 @RequestMapping("/api/v1/user")
+@Slf4j
 public class UserController {
 
     @Autowired private UserService userService;
@@ -191,13 +194,11 @@ public class UserController {
         Map<String, String[]> paramMap = request.getParameterMap();
         Map<String, String> updates = new HashMap<>();
 
-        System.out.println("Received parameter map: " + paramMap);
-
         for (Map.Entry<String, String[]> entry : paramMap.entrySet()) {
             updates.put(entry.getKey(), entry.getValue()[0]);
         }
 
-        System.out.println("Processed updates: " + updates);
+        log.debug("Processed updates: " + updates);
 
         // Assuming you have a method in userService to update the settings for a user
         userService.updateUserSettings(principal.getName(), updates);
@@ -209,7 +210,7 @@ public class UserController {
     @PostMapping("/admin/saveUser")
     public RedirectView saveUser(
             @RequestParam(name = "username", required = true) String username,
-            @RequestParam(name = "password", required = true) String password,
+            @RequestParam(name = "password", required = false) String password,
             @RequestParam(name = "role") String role,
             @RequestParam(name = "authType") String authType,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
@@ -336,6 +337,8 @@ public class UserController {
                     userNameP = ((UserDetails) principal).getUsername();
                 } else if (principal instanceof OAuth2User) {
                     userNameP = ((OAuth2User) principal).getName();
+                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
+                    userNameP = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
                 } else if (principal instanceof String) {
                     userNameP = (String) principal;
                 }
