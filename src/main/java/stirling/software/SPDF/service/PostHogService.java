@@ -43,7 +43,7 @@ public class PostHogService {
     }
 
     private void captureSystemInfo() {
-        if (!Boolean.getBoolean(applicationProperties.getSystem().getEnableAnalytics())) {
+        if (!Boolean.parseBoolean(applicationProperties.getSystem().getEnableAnalytics())) {
             return;
         }
         try {
