@@ -32,6 +32,7 @@ public class SettingsController {
         }
         GeneralUtils.saveKeyToConfig("system.enableAnalytics", String.valueOf(enabled), false);
         applicationProperties.getSystem().setEnableAnalytics(String.valueOf(enabled));
+
         return ResponseEntity.ok("Updated");
     }
 }

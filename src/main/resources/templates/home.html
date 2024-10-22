@@ -374,10 +374,10 @@
           <p th:text="#{analytics.paragraph2}">Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better.</p>
           <p th:text="#{analytics.settings}">You can change the settings for analytics in the config/settings.yml file</p>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" th:text="#{analytics.enable}" onclick="setAnalytics(true)">Enable analytics</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="setAnalytics(false)" th:text="#{analytics.disable}">Disable analytics</button>
-        </div>
+        <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="setAnalytics(false)" th:text="#{analytics.disable}">Disable analytics</button>
+                <button type="button" class="btn btn-primary" th:text="#{analytics.enable}" onclick="setAnalytics(true)">Enable analytics</button>
+            </div>
       </div>
     </div>
   </div>
@@ -426,50 +426,60 @@
 
 
 
-    document.addEventListener("DOMContentLoaded", function() {
-      const surveyVersion = "2.0";
-      const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
-      const dontShowAgain = document.getElementById('dontShowAgain');
-      const takeSurveyButton = document.getElementById('takeSurvey');
+document.addEventListener("DOMContentLoaded", function() {
+    const surveyVersion = "2.0";
+    const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
+    const dontShowAgain = document.getElementById('dontShowAgain');
+    const takeSurveyButton = document.getElementById('takeSurvey');
 
-      const viewThresholds = [5, 15, 30, 50, 75, 100, 150, 200];
-      let pageViews = parseInt(localStorage.getItem('pageViews') || '0');
+    const viewThresholds = [5, 10, 15, 22, 30, 50, 75, 100, 150, 200];
 
-      pageViews++;
-      localStorage.setItem('pageViews', pageViews.toString());
+    // Check if survey version changed and reset page views if it did
+    const storedVersion = localStorage.getItem('surveyVersion');
+    if (storedVersion && storedVersion !== surveyVersion) {
+        localStorage.setItem('pageViews', '0');
+    }
 
-      function shouldShowSurvey() {
-        if (localStorage.getItem('dontShowSurvey') === 'true' || localStorage.getItem('surveyTaken') === 'true') {
-          return false;
+    let pageViews = parseInt(localStorage.getItem('pageViews') || '0');
+
+    pageViews++;
+    localStorage.setItem('pageViews', pageViews.toString());
+
+    function shouldShowSurvey() {
+        if (localStorage.getItem('dontShowSurvey') === 'true' ||
+            localStorage.getItem('surveyTaken') === 'true') {
+            return false;
         }
 
-        if (localStorage.getItem('surveyVersion') !== surveyVersion) {
-          return true;
+        // If survey version changed and we hit a threshold, show the survey
+        if (localStorage.getItem('surveyVersion') !== surveyVersion &&
+            viewThresholds.includes(pageViews)) {
+            return true;
         }
 
         return viewThresholds.includes(pageViews);
-      }
+    }
 
-      if (shouldShowSurvey()) {
+    if (shouldShowSurvey()) {
         modal.show();
-      }
+    }
 
-      dontShowAgain.addEventListener('change', function() {
+    dontShowAgain.addEventListener('change', function() {
         if (this.checked) {
-          localStorage.setItem('dontShowSurvey', 'true');
-          localStorage.setItem('surveyVersion', surveyVersion);
+            localStorage.setItem('dontShowSurvey', 'true');
+            localStorage.setItem('surveyVersion', surveyVersion);
         } else {
-          localStorage.removeItem('dontShowSurvey');
-          localStorage.removeItem('surveyVersion');
+            localStorage.removeItem('dontShowSurvey');
+            localStorage.removeItem('surveyVersion');
         }
-      });
+    });
 
-      takeSurveyButton.addEventListener('click', function() {
+    takeSurveyButton.addEventListener('click', function() {
         localStorage.setItem('surveyTaken', 'true');
         localStorage.setItem('surveyVersion', surveyVersion);
         modal.hide();
-      });
     });
+});
   </script>
 
 
