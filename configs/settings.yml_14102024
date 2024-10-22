@@ -1,0 +1,29 @@
+# Welcome to settings file
+# Remove comment marker # if on start of line to enable the configuration
+# If you want to override with environment parameter follow parameter naming SECURITY_INITIALLOGIN_USERNAME
+
+security:
+  enableLogin: false # set to 'true' to enable login
+  csrfDisabled: true # Set to 'true' to disable CSRF protection (not recommended for production)
+  loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
+  loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
+
+system:
+
+  defaultLocale: en-US # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
+  googlevisibility: true # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
+  enableAlphaFunctionality: false # Set to enable functionality which might need more testing before it fully goes live (This feature might make no changes)
+  customApplications:
+    bookAndHtmlFormatsInstalled: false # Installs Calibre for book format conversion (For non docker it must be manually downloaded but will need to be true to show in UI)
+
+ui:
+  appName: Konfuzio PDF Tools # Application's visible name
+  homeDescription: PDF Tools from Konfuzio # Short description or tagline shown on homepage.
+  appNameNavbar: Konfuzio # Name displayed on the navigation bar
+
+endpoints:
+  toRemove: # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
+  groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
+
+metrics:
+  enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
