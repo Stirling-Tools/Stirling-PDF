@@ -128,8 +128,8 @@ steps:
         timeout: 2000
   - prompt: >-
       click on Tools button in the header section and Check if the background of
-      the button transforms when hovered over, similarly hover over a few other
-      buttons and check for the background of the button to transform when
+      the merge button transforms when hovered over, similarly hover over a few
+      other buttons and check for the background of the button to transform when
       hovered over
     commands:
       - command: focus-application
@@ -143,23 +143,23 @@ steps:
         description: Merge button
         action: hover
       - command: assert
-        expect: the background of the Merge button is changed
+        expect: the background of the Merge button is transformed
       - command: hover-text
         text: PDF to Image
         description: PDF to Image button
         action: hover
       - command: assert
-        expect: the background of the PDF to Image button is changed
+        expect: the background of the PDF to Image button is transformed
       - command: hover-text
         text: PDF to CSV
         description: PDF to CSV button
         action: hover
       - command: assert
-        expect: the background of the PDF to CSV button is changed
+        expect: the background of the PDF to CSV button is transformed
       - command: hover-text
         text: Sign
         description: Sign button
         action: hover
       - command: assert
-        expect: the background of the Sign button is changed
+        expect: the background of the Sign button is transformed
 
