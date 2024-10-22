@@ -360,7 +360,7 @@
             </div>
           </li>
 
-          <li class="nav-item">
+          <li class="nav-item" th:if="${!@runningEE}">
             <a href="https://stirlingpdf.com/pricing" class="nav-link go-pro-link" target="_blank" rel="noopener noreferrer">
         <span class="go-pro-badge" th:text="#{enterpriseEdition.button}"></span>
             </a>
