@@ -82,7 +82,7 @@ public class ConvertImgPDFController {
         result =
                 PdfUtils.convertFromPdf(
                         pdfBytes,
-                        imageFormat.equalsIgnoreCase("webp") ? "png" : imageFormat.toUpperCase(),
+                        "webp".equalsIgnoreCase(imageFormat) ? "png" : imageFormat.toUpperCase(),
                         colorTypeResult,
                         singleImage,
                         Integer.valueOf(dpi),
@@ -90,9 +90,9 @@ public class ConvertImgPDFController {
         if (result == null || result.length == 0) {
             logger.error("resultant bytes for {} is null, error converting ", filename);
         }
-        if (imageFormat.equalsIgnoreCase("webp") && !CheckProgramInstall.isPythonAvailable()) {
+        if ("webp".equalsIgnoreCase(imageFormat) && !CheckProgramInstall.isPythonAvailable()) {
             throw new IOException("Python is not installed. Required for WebP conversion.");
-        } else if (imageFormat.equalsIgnoreCase("webp")
+        } else if ("webp".equalsIgnoreCase(imageFormat)
                 && CheckProgramInstall.isPythonAvailable()) {
             // Write the output stream to a temp file
             Path tempFile = Files.createTempFile("temp_png", ".png");

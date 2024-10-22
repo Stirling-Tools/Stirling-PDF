@@ -114,7 +114,7 @@
           <img class="my-4" th:src="@{'/favicon.svg'}" alt="favicon" width="144" height="144">
 
           <h1 class="h1 mb-3 fw-normal" th:text="${@appName}">Stirling-PDF</h1>
-          <div th:if="${oAuth2Enabled} and (${loginMethod} == 'all' or ${loginMethod} == 'oauth2')">
+          <div th:if="${altLogin} and (${loginMethod} == 'all' or ${loginMethod} == 'oauth2')">
             <a href="#" class="w-100 btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#loginsModal" th:text="#{login.ssoSignIn}">Login Via SSO</a>
             <br>
             <br>
@@ -168,7 +168,7 @@
       </main>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-    <div th:if="${oAuth2Enabled}" class="modal fade" id="loginsModal" tabindex="-1" role="dialog" aria-labelledby="loginsModalLabel" aria-hidden="true">
+    <div th:if="${altLogin}" class="modal fade" id="loginsModal" tabindex="-1" role="dialog" aria-labelledby="loginsModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -181,7 +181,7 @@
           </div>
           <div class="modal-body">
             <div class="mb-3" th:each="provider : ${providerlist}">
-              <a th:href="@{|/oauth2/authorization/${provider.key}|}" th:text="${provider.value}" class="w-100 btn btn-lg btn-primary">OpenID Connect</a>
+              <a th:href="@{|${provider.key}|}" th:text="${provider.value}" class="w-100 btn btn-lg btn-primary">Login Provider</a>
             </div>
           </div>
           <div class="modal-footer">

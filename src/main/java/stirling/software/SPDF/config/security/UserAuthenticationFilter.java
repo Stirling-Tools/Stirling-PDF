@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
@@ -23,6 +22,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApiKeyAuthenticationToken;
 import stirling.software.SPDF.model.User;
@@ -30,13 +30,18 @@ import stirling.software.SPDF.model.User;
 @Component
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired @Lazy private UserService userService;
+    private final UserService userService;
+    private final SessionPersistentRegistry sessionPersistentRegistry;
+    private final boolean loginEnabledValue;
 
-    @Autowired private SessionPersistentRegistry sessionPersistentRegistry;
-
-    @Autowired
-    @Qualifier("loginEnabled")
-    public boolean loginEnabledValue;
+    public UserAuthenticationFilter(
+            @Lazy UserService userService,
+            SessionPersistentRegistry sessionPersistentRegistry,
+            @Qualifier("loginEnabled") boolean loginEnabledValue) {
+        this.userService = userService;
+        this.sessionPersistentRegistry = sessionPersistentRegistry;
+        this.loginEnabledValue = loginEnabledValue;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -50,6 +55,19 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
         String requestURI = request.getRequestURI();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Check for session expiration (unsure if needed)
+        //        if (authentication != null && authentication.isAuthenticated()) {
+        //            String sessionId = request.getSession().getId();
+        //            SessionInformation sessionInfo =
+        //                    sessionPersistentRegistry.getSessionInformation(sessionId);
+        //
+        //            if (sessionInfo != null && sessionInfo.isExpired()) {
+        //                SecurityContextHolder.clearContext();
+        //                response.sendRedirect(request.getContextPath() + "/login?expired=true");
+        //                return;
+        //            }
+        //        }
 
         // Check for API key in the request headers if no authentication exists
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -94,7 +112,9 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.getWriter()
                         .write(
-                                "Authentication required. Please provide a X-API-KEY in request header.\nThis is found in Settings -> Account Settings -> API Key\nAlternatively you can disable authentication if this is unexpected");
+                                "Authentication required. Please provide a X-API-KEY in request header.\n"
+                                        + "This is found in Settings -> Account Settings -> API Key\n"
+                                        + "Alternatively you can disable authentication if this is unexpected");
                 return;
             }
         }
@@ -107,6 +127,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 username = ((UserDetails) principal).getUsername();
             } else if (principal instanceof OAuth2User) {
                 username = ((OAuth2User) principal).getName();
+            } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
+                username = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
             } else if (principal instanceof String) {
                 username = (String) principal;
             }

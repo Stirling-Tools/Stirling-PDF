@@ -60,8 +60,6 @@ public class ExtractImagesController {
         MultipartFile file = request.getFileInput();
         String format = request.getFormat();
         boolean allowDuplicates = request.isAllowDuplicates();
-        System.out.println(
-                System.currentTimeMillis() + " file=" + file.getName() + ", format=" + format);
         PDDocument document = Loader.loadPDF(file.getBytes());
 
         // Determine if multithreading should be used based on PDF size or number of pages

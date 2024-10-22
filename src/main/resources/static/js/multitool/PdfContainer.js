@@ -117,6 +117,7 @@ class PdfContainer {
     const newAngle = lastAngle + deg;
 
     element.style.rotate = newAngle + "deg";
+
   }
 
   async addPdfFile(file, nextSiblingElement) {
@@ -326,6 +327,9 @@ class PdfContainer {
         page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle));
       }
     }
+    pdfDoc.setCreator(stirlingPDFLabel);
+    pdfDoc.setProducer(stirlingPDFLabel);
+
     const pdfBytes = await pdfDoc.save();
     const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
 

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -20,13 +21,12 @@ import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
-// Disabled for now
 // @RestController
 // @Tag(name = "Convert", description = "Convert APIs")
 // @RequestMapping("/api/v1/convert")
 public class ConvertPDFToBookController {
 
-    // @Autowired
+    @Autowired
     @Qualifier("bookAndHtmlFormatsInstalled")
     private boolean bookAndHtmlFormatsInstalled;
 
