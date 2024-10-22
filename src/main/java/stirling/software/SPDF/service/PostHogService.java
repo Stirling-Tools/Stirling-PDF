@@ -54,7 +54,7 @@ public class PostHogService {
     }
 
     public void captureEvent(String eventName, Map<String, Object> properties) {
-        if (!Boolean.getBoolean(applicationProperties.getSystem().getEnableAnalytics())) {
+        if (!Boolean.parseBoolean(applicationProperties.getSystem().getEnableAnalytics())) {
             return;
         }
         postHog.capture(uniqueId, eventName, properties);
