@@ -36,10 +36,12 @@ import org.springframework.security.saml2.provider.service.web.authentication.Sa
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import lombok.extern.slf4j.Slf4j;
+import org.thymeleaf.extras.springsecurity4.dialect.SpringSecurityDialect;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
@@ -94,6 +96,10 @@ public class SecurityConfiguration {
                     userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             if (applicationProperties.getSecurity().getCsrfDisabled()) {
                 http.csrf(csrf -> csrf.disable());
+            } else {
+                http.csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                );
             }
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
@@ -227,6 +233,16 @@ public class SecurityConfiguration {
         }
 
         return http.build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(
+            name = "security.csrfDisabled.false",
+            havingValue = "true",
+            matchIfMissing = false)
+    //need to make conditional check for csrf disablement OR remove that option alltogether
+    public SpringSecurityDialect springSecurityDialect() {
+        return new SpringSecurityDialect();
     }
 
     @Bean

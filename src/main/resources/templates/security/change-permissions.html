@@ -17,7 +17,7 @@
                 <span class="tool-header-text" th:text="#{permissions.header}"></span>
               </div>
               <p th:text="#{permissions.warning}"></p>
-              <form action="api/v1/security/add-password" method="post" enctype="multipart/form-data">
+              <form th:action="@{'api/v1/security/add-password'}" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                   <label th:text="#{permissions.selectText.1}"></label>
                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>

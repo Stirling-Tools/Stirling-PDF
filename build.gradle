@@ -154,6 +154,10 @@ dependencies {
         implementation "org.springframework.security:spring-security-saml2-service-provider"
 
         implementation 'com.coveo:saml-client:5.0.0'
+        // https://mvnrepository.com/artifact/org.thymeleaf.extras/thymeleaf-extras-springsecurity4
+        implementation group: 'org.thymeleaf.extras', name: 'thymeleaf-extras-springsecurity4', version: '3.0.5.RELEASE'
+
+
     }
 
     testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"

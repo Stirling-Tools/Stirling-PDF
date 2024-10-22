@@ -16,7 +16,7 @@
                 <span class="material-symbols-rounded tool-header-icon security">water_drop</span>
                 <span class="tool-header-text" th:text="#{remove-watermark.header}"></span>
               </div>
-              <form method="post" enctype="multipart/form-data" action="api/v1/security/remove-watermark">
+              <form method="post" enctype="multipart/form-data" th:action="@{'api/v1/security/remove-watermark'}">
                 <div class="mb-3">
                   <label th:text="#{remove-watermark.selectText.1}"></label>
                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
