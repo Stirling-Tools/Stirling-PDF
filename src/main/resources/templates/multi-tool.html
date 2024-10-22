@@ -80,7 +80,6 @@
   <script type="module">
     import PdfContainer from './js/multitool/PdfContainer.js';
     import DragDropManager from "./js/multitool/DragDropManager.js";
-    import scrollDivHorizontally from "./js/multitool/horizontalScroll.js";
     import ImageHighlighter from "./js/multitool/ImageHighlighter.js";
     import PdfActionsManager from './js/multitool/PdfActionsManager.js';
     import FileDragManager from './js/multitool/fileInput.js';
@@ -93,7 +92,6 @@
     const fileDragManager = new FileDragManager();
 
     // Scroll the wrapper horizontally
-    scrollDivHorizontally('pages-container-wrapper');
 
     // Automatically exposes rotateAll, addFiles and exportPdf to the window for the global buttons.
     const pdfContainer = new PdfContainer(
