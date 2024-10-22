@@ -7,20 +7,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Configuration
 @Lazy
+@Slf4j
 public class EEAppConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(EEAppConfig.class);
-
     @Autowired ApplicationProperties applicationProperties;
-
     @Autowired private LicenseKeyChecker licenseKeyChecker;
 
     @Bean(name = "runningEE")
     public boolean runningEnterpriseEdition() {
-        return licenseKeyChecker.getEnterpriseEnabledResult();
+    	return licenseKeyChecker.getEnterpriseEnabledResult();
     }
 }
