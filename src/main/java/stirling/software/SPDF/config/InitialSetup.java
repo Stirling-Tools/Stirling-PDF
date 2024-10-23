@@ -9,6 +9,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import io.micrometer.common.util.StringUtils;
+
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -40,7 +41,7 @@ public class InitialSetup {
             applicationProperties.getAutomaticallyGenerated().setKey(secretKey);
         }
     }
-    
+
     @PostConstruct
     public void initLegalUrls() throws IOException {
         // Initialize Terms and Conditions
@@ -59,7 +60,4 @@ public class InitialSetup {
             applicationProperties.getLegal().setPrivacyPolicy(defaultPrivacyUrl);
         }
     }
-    
 }
-
-

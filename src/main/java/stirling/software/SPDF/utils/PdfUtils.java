@@ -194,7 +194,8 @@ public class PdfUtils {
 
         pdfDocument.close();
 
-        // Assumes the expectedPageSize is in the format "widthxheight", e.g. "595x842" for A4
+        // Assumes the expectedPageSize is in the format "widthxheight", e.g. "595x842"
+        // for A4
         String[] dimensions = expectedPageSize.split("x");
         float expectedPageWidth = Float.parseFloat(dimensions[0]);
         float expectedPageHeight = Float.parseFloat(dimensions[1]);
@@ -407,7 +408,7 @@ public class PdfUtils {
                         addImageToDocument(doc, pdImage, fitOption, autoRotate);
                     }
                 } else {
-                    BufferedImage image = ImageIO.read(file.getInputStream());
+                    BufferedImage image = ImageProcessingUtils.loadImageWithExifOrientation(file);
                     BufferedImage convertedImage =
                             ImageProcessingUtils.convertColorType(image, colorType);
                     // Use JPEGFactory if it's JPEG since JPEG is lossy
