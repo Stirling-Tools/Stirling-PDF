@@ -65,7 +65,7 @@ public class ExternalAppDepConfig {
         if (word.isEmpty()) {
             return word;
         }
-        if (word.equalsIgnoreCase("pdf")) {
+        if ("pdf".equalsIgnoreCase(word)) {
             return "PDF";
         }
         return word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase();
