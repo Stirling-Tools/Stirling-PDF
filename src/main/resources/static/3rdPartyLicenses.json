@@ -15,6 +15,13 @@
             "moduleLicenseUrl": "http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
         {
+            "moduleName": "com.adobe.xmp:xmpcore",
+            "moduleUrl": "https://www.adobe.com/devnet/xmp/library/eula-xmp-library-java.html",
+            "moduleVersion": "6.1.11",
+            "moduleLicense": "The BSD 3-Clause License (BSD3)",
+            "moduleLicenseUrl": "https://opensource.org/licenses/BSD-3-Clause"
+        },
+        {
             "moduleName": "com.bucket4j:bucket4j_jdk17-core",
             "moduleUrl": "http://github.com/bucket4j/bucket4j/bucket4j_jdk17-core",
             "moduleVersion": "8.14.0",
@@ -27,6 +34,13 @@
             "moduleVersion": "5.0.0",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "com.drewnoakes:metadata-extractor",
+            "moduleUrl": "https://drewnoakes.com/code/exif/",
+            "moduleVersion": "2.19.0",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "com.fasterxml.jackson.core:jackson-annotations",
