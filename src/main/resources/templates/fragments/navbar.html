@@ -403,23 +403,21 @@
           <p class="mb-0" th:utext="#{settings.appVersion} + ' ' + ${@appVersion}"></p>
           <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
             <div class="footer-center" style="flex-direction: row;">
-              <a href="https://github.com/Stirling-Tools/Stirling-PDF" class="mx-1" role="button"
-                th:title="#{visitGithub}">
+              <a href="https://github.com/" class="mx-1" role="button" th:title="#{visitGithub}">
                 <img th:src="@{'/images/github.svg'}" alt="github">
               </a>
               <a href="https://hub.docker.com/r/frooodle/s-pdf" class="mx-1" role="button" th:title="#{seeDockerHub}">
                 <img th:src="@{'/images/docker.svg'}" alt="docker">
               </a>
-              <a href="https://discord.gg/Cn8pWhQRxZ" class="mx-1" role="button" th:title="#{joinDiscord}">
+              <a href="https://discord.gg/" class="mx-1" role="button" th:title="#{joinDiscord}">
                 <img th:src="@{'/images/discord.svg'}" alt="discord">
               </a>
             </div>
 
             <a th:href="@{'/swagger-ui/index.html'}" class="btn btn-sm btn-outline-primary mx-1" role="button"
               target="_blank">API</a>
-            <a href="https://github.com/Stirling-Tools/Stirling-PDF/releases"
-              class="btn btn-sm btn-outline-primary mx-1" id="update-btn" th:utext="#{settings.update}" role="button"
-              target="_blank"></a>
+            <a href="https://github.com/" class="btn btn-sm btn-outline-primary mx-1" id="update-btn"
+              th:utext="#{settings.update}" role="button" target="_blank"></a>
           </div>
 
           <div class="mb-3">

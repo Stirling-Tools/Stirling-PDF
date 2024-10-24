@@ -2,15 +2,15 @@ apiVersion: v2
 appVersion: 0.30.1
 description: locally hosted web application that allows you to perform various operations
   on PDF files
-home: https://github.com/Stirling-Tools/Stirling-PDF
+home: https://github.com/
 keywords:
 - stirling-pdf
 - helm
 - charts repo
 maintainers:
 - name: Stirling-Tools
-  url: https://github.com/Stirling-Tools/Stirling-PDF
+  url: https://github.com/
 name: stirling-pdf-chart
 sources:
-- https://github.com/Stirling-Tools/Stirling-PDF
+- https://github.com/
 version: 1.0.0
