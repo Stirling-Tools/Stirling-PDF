@@ -90,7 +90,7 @@
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('markdown-to-pdf', 'markdown', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags', 'convert')}">
                         </div>
-                         <div
+                        <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('book-to-pdf', 'book', 'home.BookToPDF.title', 'home.BookToPDF.desc', 'BookToPDF.tags', 'convert')}">
                         </div>
                       </div>
@@ -196,10 +196,10 @@
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('get-info-on-pdf', 'info', 'home.getPdfInfo.title', 'home.getPdfInfo.desc', 'getPdfInfo.tags', 'other')}">
                         </div>
                         <div
-                                th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-image-pdf','remove_selection', 'home.removeImagePdf.title', 'home.removeImagePdf.desc', 'removeImagePdf.tags', 'other')}">
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-image-pdf','remove_selection', 'home.removeImagePdf.title', 'home.removeImagePdf.desc', 'removeImagePdf.tags', 'other')}">
                         </div>
                         <div
-                                th:replace="~{fragments/navbarEntry :: navbarEntry ('replace-and-invert-color-pdf','format_color_fill', 'replace-color.title', 'home.replaceColorPdf.desc', 'replaceColorPdf.tags', 'other')}">
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('replace-and-invert-color-pdf','format_color_fill', 'replace-color.title', 'home.replaceColorPdf.desc', 'replaceColorPdf.tags', 'other')}">
                         </div>
                       </div>
                       <!-- Advance menu items -->
@@ -230,7 +230,7 @@
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdf-by-sections', 'grid_on', 'home.split-by-sections.title', 'home.split-by-sections.desc', 'split-by-sections.tags', 'advance')}">
                         </div>
                         <div
-                                th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdf-by-chapters', 'book', 'home.splitPdfByChapters.title', 'home.splitPdfByChapters.desc', 'splitPdfByChapters.tags', 'advance')}">
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdf-by-chapters', 'book', 'home.splitPdfByChapters.title', 'home.splitPdfByChapters.desc', 'splitPdfByChapters.tags', 'advance')}">
                         </div>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('split-by-size-or-count', 'vertical_split', 'home.autoSizeSplitPDF.title', 'home.autoSizeSplitPDF.desc', 'autoSizeSplitPDF.tags', 'advance')}">
@@ -260,7 +260,7 @@
             </a>
           </li>
 
-          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('pipeline')}" >
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('pipeline')}">
             <a class="nav-link" href="#" th:href="@{'/pipeline'}"
               th:classappend="${currentPage}=='pipeline' ? 'active' : ''" th:title="#{home.pipeline.desc}">
               <span class="material-symbols-rounded">
@@ -270,7 +270,7 @@
             </a>
           </li>
 
-          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('compress-pdf')}" >
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('compress-pdf')}">
             <a class="nav-link" href="#" title="#{home.compressPdfs.title}" th:href="@{'/compress-pdf'}"
               th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''" th:title="#{home.compressPdfs.desc}">
               <span class="material-symbols-rounded">
@@ -312,17 +312,18 @@
               <span class="icon-text icon-hide" th:data-text="#{navbar.favorite}" th:text="#{navbar.favorite}"></span>
             </a>
             <div class="dropdown-menu dropdown-menu-tp dropdown-mw-28" aria-labelledby="navbarDropdown-5">
-              <div class="dropdown-menu-wrapper px-xl-2 px-2" id="favoritesDropdown" >
-              <!-- Dropdown items will be added here by JavaScript -->
+              <div class="dropdown-menu-wrapper px-xl-2 px-2" id="favoritesDropdown">
+                <!-- Dropdown items will be added here by JavaScript -->
+              </div>
             </div>
-          </div>
           </li>
           <li class="nav-item">
             <a class="nav-link" id="dark-mode-toggle" href="#">
               <span class="material-symbols-rounded" id="dark-mode-icon">
                 dark_mode
               </span>
-              <span class="icon-text icon-hide tooltip-text" id="dark-mode-text" th:data-text="#{navbar.darkmode}" th:text="#{navbar.darkmode}"></span>
+              <span class="icon-text icon-hide tooltip-text" id="dark-mode-text" th:data-text="#{navbar.darkmode}"
+                th:text="#{navbar.darkmode}"></span>
             </a>
           </li>
           <li class="nav-item dropdown">
@@ -343,7 +344,8 @@
           </li>
 
           <li class="nav-item dropdown">
-            <a class="nav-link" href="#" id="searchDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <a class="nav-link" href="#" id="searchDropdown" role="button" data-bs-toggle="dropdown"
+              aria-haspopup="true" aria-expanded="false">
               <span class="material-symbols-rounded">
                 search
               </span>
@@ -352,7 +354,8 @@
             <div class="dropdown-menu dropdown-menu-tp" aria-labelledby="searchDropdown">
               <div class="dropdown-menu-wrapper px-xl-2 px-2">
                 <form class="d-flex p-2 search-form" id="searchForm">
-                  <input class="form-control search-input" type="search" placeholder="Search" aria-label="Search" id="navbarSearchInput">
+                  <input class="form-control search-input" type="search" placeholder="Search" aria-label="Search"
+                    id="navbarSearchInput">
                 </form>
                 <!-- Search Results -->
                 <div id="searchResults" class="search-results scrollable-y dropdown-mw-20"></div>
@@ -361,8 +364,8 @@
           </li>
 
           <li class="nav-item" th:if="${!@runningEE}">
-            <a href="https://stirlingpdf.com/pricing" class="nav-link go-pro-link" target="_blank" rel="noopener noreferrer">
-        <span class="go-pro-badge" th:text="#{enterpriseEdition.button}"></span>
+            <a href="https://pdf.asg.li/pricing" class="nav-link go-pro-link" target="_blank" rel="noopener noreferrer">
+              <span class="go-pro-badge" th:text="#{enterpriseEdition.button}"></span>
             </a>
           </li>
 
@@ -372,7 +375,8 @@
               <span class="material-symbols-rounded">
                 settings
               </span>
-              <span class="icon-text icon-hide tooltip-text" th:data-text="#{navbar.settings}" th:text="#{navbar.settings}"></span>
+              <span class="icon-text icon-hide tooltip-text" th:data-text="#{navbar.settings}"
+                th:text="#{navbar.settings}"></span>
             </a>
           </li>
         </ul>
@@ -427,7 +431,7 @@
             </select>
           </div>
           <div class="mb-3">
-            <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label><br/>
+            <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label><br />
             <input type="range" class="form-range" min="1" max="9" step="1" id="zipThreshold" value="4">
             <span id="zipThresholdValue" class="ms-2"></span>
           </div>

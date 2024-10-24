@@ -71,21 +71,21 @@
 
           <div id="popularTools" class="feature-group">
             <div
-                    th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.popular})}">
+              th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.popular})}">
             </div>
             <div class="feature-group-container">
               <div
-                      th:replace="~{fragments/card :: card(id='view-pdf', cardTitle=#{home.viewPdf.title}, cardText=#{home.viewPdf.desc}, cardLink='view-pdf', toolIcon='menu_book', tags=#{viewPdf.tags}, toolGroup='other')}">
+                th:replace="~{fragments/card :: card(id='view-pdf', cardTitle=#{home.viewPdf.title}, cardText=#{home.viewPdf.desc}, cardLink='view-pdf', toolIcon='menu_book', tags=#{viewPdf.tags}, toolGroup='other')}">
               </div>
 
               <div
-                      th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', toolIcon='construction', tags=#{multiTool.tags}, toolGroup='organize')}">
+                th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', toolIcon='construction', tags=#{multiTool.tags}, toolGroup='organize')}">
               </div>
               <div
-                      th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', toolIcon='family_history', tags=#{pipeline.tags}, toolGroup='advance')}">
+                th:replace="~{fragments/card :: card(id='pipeline', cardTitle=#{home.pipeline.title}, cardText=#{home.pipeline.desc}, cardLink='pipeline', toolIcon='family_history', tags=#{pipeline.tags}, toolGroup='advance')}">
               </div>
               <div
-                      th:replace="~{fragments/card :: card(id='compress-pdf', cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf', toolIcon='zoom_in_map', tags=#{compressPdfs.tags}, toolGroup='advance')}">
+                th:replace="~{fragments/card :: card(id='compress-pdf', cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf', toolIcon='zoom_in_map', tags=#{compressPdfs.tags}, toolGroup='advance')}">
               </div>
             </div>
           </div>
@@ -99,7 +99,7 @@
             </div>
             <div class="feature-group-container">
               <div
-                      th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', toolIcon='construction', tags=#{multiTool.tags}, toolGroup='organize')}">
+                th:replace="~{fragments/card :: card(id='multi-tool', cardTitle=#{home.multiTool.title}, cardText=#{home.multiTool.desc}, cardLink='multi-tool', toolIcon='construction', tags=#{multiTool.tags}, toolGroup='organize')}">
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='merge-pdfs', cardTitle=#{home.merge.title}, cardText=#{home.merge.desc}, cardLink='merge-pdfs', toolIcon='add_to_photos', tags=#{merge.tags}, toolGroup='organize')}">
@@ -275,14 +275,13 @@
                 th:replace="~{fragments/card :: card(id='remove-image-pdf', cardTitle=#{home.removeImagePdf.title}, cardText=#{home.removeImagePdf.desc}, cardLink='remove-image-pdf', toolIcon='remove_selection', tags=#{removeImagePdf.tags}, toolGroup='other')}">
               </div>
               <div
-                      th:replace="~{fragments/card :: card(id='replace-color-pdf', cardTitle=#{home.replaceColorPdf.title}, cardText=#{home.replaceColorPdf.desc}, cardLink='replace-and-invert-color-pdf', toolIcon='format_color_fill', tags=#{replaceColorPdf.tags}, toolGroup='other')}">
+                th:replace="~{fragments/card :: card(id='replace-color-pdf', cardTitle=#{home.replaceColorPdf.title}, cardText=#{home.replaceColorPdf.desc}, cardLink='replace-and-invert-color-pdf', toolIcon='format_color_fill', tags=#{replaceColorPdf.tags}, toolGroup='other')}">
               </div>
 
             </div>
           </div>
-            <div id="groupAdvanced" class="feature-group">
-                <div
-
+          <div id="groupAdvanced" class="feature-group">
+            <div
               th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.advance})}">
             </div>
             <div class="feature-group-container">
@@ -296,7 +295,7 @@
                 th:replace="~{fragments/card :: card(id='compress-pdf', cardTitle=#{home.compressPdfs.title}, cardText=#{home.compressPdfs.desc}, cardLink='compress-pdf', toolIcon='zoom_in_map', tags=#{compressPdfs.tags}, toolGroup='advance')}">
               </div>
               <div
-                      th:replace="~{fragments/card :: card(id='extract-image-scans', cardTitle=#{home.ScannerImageSplit.title}, cardText=#{home.ScannerImageSplit.desc}, cardLink='extract-image-scans', toolIcon='scanner', tags=#{ScannerImageSplit.tags}, toolGroup='advance')}">
+                th:replace="~{fragments/card :: card(id='extract-image-scans', cardTitle=#{home.ScannerImageSplit.title}, cardText=#{home.ScannerImageSplit.desc}, cardLink='extract-image-scans', toolIcon='scanner', tags=#{ScannerImageSplit.tags}, toolGroup='advance')}">
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='repair', cardTitle=#{home.repair.title}, cardText=#{home.repair.desc}, cardLink='repair', toolIcon='build', tags=#{repair.tags}, toolGroup='advance')}">
@@ -332,7 +331,8 @@
 
 
   <!-- Survey Modal -->
-  <div class="modal fade" id="surveyModal" tabindex="-1" role="dialog" aria-labelledby="surveyModalLabel" aria-hidden="true">
+  <div class="modal fade" id="surveyModal" tabindex="-1" role="dialog" aria-labelledby="surveyModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -340,12 +340,16 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <p><span th:text="#{survey.changes}">Stirling-PDF has changed since the last survey! To find out more please check our blog post here: </span><a href="https://www.stirlingpdf.com/blog/stirling-pdf-future" target="_blank"> Stirling PDF</a></p>
+          <p><span th:text="#{survey.changes}">Stirling-PDF has changed since the last survey! To find out more please
+              check our blog post here: </span><a href="https://www.pdf.asg.li/blog/stirling-pdf-future"
+              target="_blank"> Stirling PDF</a></p>
 
           <p th:text="#{survey.changes2}">With these changes we are getting paid business support and funding</p>
           <p th:text="#{survey.please}">Please consider taking our survey!</p>
-          <p th:text="#{survey.disabled}">Survey popup will be disabled in following updates but available at foot of page)</p>
-          <a href="https://stirlingpdf.info/s/cm28y3niq000o56dv7liv8wsu" target="_blank" class="btn btn-primary" id="takeSurvey"th:text="#{survey.button}" >Take Survey</a>
+          <p th:text="#{survey.disabled}">Survey popup will be disabled in following updates but available at foot of
+            page)</p>
+          <a href="https://stirlingpdf.info/s/cm28y3niq000o56dv7liv8wsu" target="_blank" class="btn btn-primary"
+            id="takeSurvey" th:text="#{survey.button}">Take Survey</a>
         </div>
         <div class="modal-footer">
           <div class="form-check mb-3">
@@ -362,22 +366,29 @@
 
 
   <!-- Analytics Modal -->
-  <div class="modal fade" id="analyticsModal" tabindex="-1" role="dialog" aria-labelledby="analyticsModalLabel" aria-hidden="true" th:if="${@analyticsPrompt}">
+  <div class="modal fade" id="analyticsModal" tabindex="-1" role="dialog" aria-labelledby="analyticsModalLabel"
+    aria-hidden="true" th:if="${@analyticsPrompt}">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="analyticsModalLabel" th:text="#{analytics.title}">Do you want make Stirling PDF better?</h5>
+          <h5 class="modal-title" id="analyticsModalLabel" th:text="#{analytics.title}">Do you want make Stirling PDF
+            better?</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <p th:text="#{analytics.paragraph1}">Stirling PDF has opt in analytics to help us improve the product. We do not track any personal information or file contents.</p>
-          <p th:text="#{analytics.paragraph2}">Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better.</p>
-          <p th:text="#{analytics.settings}">You can change the settings for analytics in the config/settings.yml file</p>
+          <p th:text="#{analytics.paragraph1}">Stirling PDF has opt in analytics to help us improve the product. We do
+            not track any personal information or file contents.</p>
+          <p th:text="#{analytics.paragraph2}">Please consider enabling analytics to help Stirling-PDF grow and to allow
+            us to understand our users better.</p>
+          <p th:text="#{analytics.settings}">You can change the settings for analytics in the config/settings.yml file
+          </p>
         </div>
         <div class="modal-footer justify-content-between">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="setAnalytics(false)" th:text="#{analytics.disable}">Disable analytics</button>
-                <button type="button" class="btn btn-primary" th:text="#{analytics.enable}" onclick="setAnalytics(true)">Enable analytics</button>
-            </div>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="setAnalytics(false)"
+            th:text="#{analytics.disable}">Disable analytics</button>
+          <button type="button" class="btn btn-primary" th:text="#{analytics.enable}"
+            onclick="setAnalytics(true)">Enable analytics</button>
+        </div>
       </div>
     </div>
   </div>
@@ -390,7 +401,7 @@
     /*<![CDATA[*/
     const analyticsPromptBoolean = /*[[${@analyticsPrompt}]]*/ false;
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       if (analyticsPromptBoolean) {
         const analyticsModal = new bootstrap.Modal(document.getElementById('analyticsModal'));
         analyticsModal.show();
@@ -405,81 +416,81 @@
         },
         body: JSON.stringify(enabled)
       })
-              .then(response => {
-                if (response.status === 200) {
-                  console.log('Analytics setting updated successfully');
-                  bootstrap.Modal.getInstance(document.getElementById('analyticsModal')).hide();
-                } else if (response.status === 208) {
-                  console.log('Analytics setting has already been set. Please edit /config/settings.yml to change it.', response);
-                  alert('Analytics setting has already been set. Please edit /config/settings.yml to change it.');
-                } else {
-                  throw new Error('Unexpected response status: ' + response.status);
-                }
-              })
-              .catch(error => {
-                console.error('Error updating analytics setting:', error);
-                alert('An error occurred while updating the analytics setting. Please try again.');
-              });
+        .then(response => {
+          if (response.status === 200) {
+            console.log('Analytics setting updated successfully');
+            bootstrap.Modal.getInstance(document.getElementById('analyticsModal')).hide();
+          } else if (response.status === 208) {
+            console.log('Analytics setting has already been set. Please edit /config/settings.yml to change it.', response);
+            alert('Analytics setting has already been set. Please edit /config/settings.yml to change it.');
+          } else {
+            throw new Error('Unexpected response status: ' + response.status);
+          }
+        })
+        .catch(error => {
+          console.error('Error updating analytics setting:', error);
+          alert('An error occurred while updating the analytics setting. Please try again.');
+        });
     }
 
 
 
 
 
-document.addEventListener("DOMContentLoaded", function() {
-    const surveyVersion = "2.0";
-    const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
-    const dontShowAgain = document.getElementById('dontShowAgain');
-    const takeSurveyButton = document.getElementById('takeSurvey');
+    document.addEventListener("DOMContentLoaded", function () {
+      const surveyVersion = "2.0";
+      const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
+      const dontShowAgain = document.getElementById('dontShowAgain');
+      const takeSurveyButton = document.getElementById('takeSurvey');
 
-    const viewThresholds = [5, 10, 15, 22, 30, 50, 75, 100, 150, 200];
+      const viewThresholds = [5, 10, 15, 22, 30, 50, 75, 100, 150, 200];
 
-    // Check if survey version changed and reset page views if it did
-    const storedVersion = localStorage.getItem('surveyVersion');
-    if (storedVersion && storedVersion !== surveyVersion) {
+      // Check if survey version changed and reset page views if it did
+      const storedVersion = localStorage.getItem('surveyVersion');
+      if (storedVersion && storedVersion !== surveyVersion) {
         localStorage.setItem('pageViews', '0');
-    }
+      }
 
-    let pageViews = parseInt(localStorage.getItem('pageViews') || '0');
+      let pageViews = parseInt(localStorage.getItem('pageViews') || '0');
 
-    pageViews++;
-    localStorage.setItem('pageViews', pageViews.toString());
+      pageViews++;
+      localStorage.setItem('pageViews', pageViews.toString());
 
-    function shouldShowSurvey() {
+      function shouldShowSurvey() {
         if (localStorage.getItem('dontShowSurvey') === 'true' ||
-            localStorage.getItem('surveyTaken') === 'true') {
-            return false;
+          localStorage.getItem('surveyTaken') === 'true') {
+          return false;
         }
 
         // If survey version changed and we hit a threshold, show the survey
         if (localStorage.getItem('surveyVersion') !== surveyVersion &&
-            viewThresholds.includes(pageViews)) {
-            return true;
+          viewThresholds.includes(pageViews)) {
+          return true;
         }
 
         return viewThresholds.includes(pageViews);
-    }
+      }
 
-    if (shouldShowSurvey()) {
+      if (shouldShowSurvey()) {
         modal.show();
-    }
+      }
 
-    dontShowAgain.addEventListener('change', function() {
+      dontShowAgain.addEventListener('change', function () {
         if (this.checked) {
-            localStorage.setItem('dontShowSurvey', 'true');
-            localStorage.setItem('surveyVersion', surveyVersion);
+          localStorage.setItem('dontShowSurvey', 'true');
+          localStorage.setItem('surveyVersion', surveyVersion);
         } else {
-            localStorage.removeItem('dontShowSurvey');
-            localStorage.removeItem('surveyVersion');
+          localStorage.removeItem('dontShowSurvey');
+          localStorage.removeItem('surveyVersion');
         }
-    });
+      });
 
-    takeSurveyButton.addEventListener('click', function() {
+      takeSurveyButton.addEventListener('click', function () {
         localStorage.setItem('surveyTaken', 'true');
         localStorage.setItem('surveyVersion', surveyVersion);
         modal.hide();
+      });
     });
-});
   </script>
 
 

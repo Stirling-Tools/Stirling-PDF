@@ -47,7 +47,7 @@ security:
     useAsUsername: email # Default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # Specify the scopes for which the application will request permissions
     provider: google # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
-  saml2: 
+  saml2:
     enabled: false # Currently in alpha, not recommended for use yet, enableAlphaFunctionality must be set to true
     autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
@@ -70,8 +70,8 @@ enterpriseEdition:
     producer: Stirling-PDF # Supports text such as 'Company-PDF'
 
 legal:
-  termsAndConditions: https://www.stirlingpdf.com/terms-and-conditions # URL to the terms and conditions of your application (e.g. https://example.com/terms) Empty string to disable or filename to load from local file in static folder
-  privacyPolicy: https://www.stirlingpdf.com/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy) Empty string to disable or filename to load from local file in static folder
+  termsAndConditions: https://www.pdf.asg.li/terms-and-conditions # URL to the terms and conditions of your application (e.g. https://example.com/terms) Empty string to disable or filename to load from local file in static folder
+  privacyPolicy: https://www.pdf.asg.li/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy) Empty string to disable or filename to load from local file in static folder
   accessibilityStatement: '' # URL to the accessibility statement of your application (e.g. https://example.com/accessibility) Empty string to disable or filename to load from local file in static folder
   cookiePolicy: '' # URL to the cookie policy of your application (e.g. https://example.com/cookie) Empty string to disable or filename to load from local file in static folder
   impressum: '' # URL to the impressum of your application (e.g. https://example.com/impressum) Empty string to disable or filename to load from local file in static folder
