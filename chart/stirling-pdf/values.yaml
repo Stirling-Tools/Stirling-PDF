@@ -20,15 +20,15 @@ rootPath: /
 
 envs: []
 # - name: UI_APP_NAME
-#   value: "Stirling PDF"
+#   value: "ASG PDF"
 # - name: UI_HOME_DESCRIPTION
 #   value: "Your locally hosted one-stop-shop for all your PDF needs."
 # - name: UI_APP_NAVBAR_NAME
-#   value: "Stirling PDF"
+#   value: "ASG PDF"
 # - name: ALLOW_GOOGLE_VISIBILITY
 #   value: "true"
 # - name: APP_LOCALE
-#   value: "en_GB"
+#   value: "zh_CN"
 
 deployment:
   ## stirling-pdf Deployment annotations
