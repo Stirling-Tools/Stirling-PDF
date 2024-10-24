@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Debug - Print masked secret
         run: |
-          if [ -n "${{secrets.TESTDRIVER_API_KEY}}" ]; 
+          if [ -n "${{secrets.TESTDRIVER_API_KEY}}" ];
             then
               echo "yes the api is there"
           else
@@ -21,7 +21,6 @@ jobs:
           fi
       - uses: testdriverai/action@main
         with:
-          version: v4.0.44
           key: ${{secrets.TESTDRIVER_API_KEY}}
           prerun: |
             npm install

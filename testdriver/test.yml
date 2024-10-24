@@ -14,6 +14,8 @@ steps:
         action: click
   - prompt: click on view PDF
     commands:
+      - command: wait
+        timeout: 5000
       - command: assert
         expect: a pdf is open
   - prompt: go back to the previous page
@@ -127,10 +129,10 @@ steps:
       - command: wait
         timeout: 2000
   - prompt: >-
-      click on Tools button in the header section and hover over merge button
-      and check if the background for the button is changed, similarly hover
-      over all the rest of the buttons and check for the background of the
-      button to change
+      click on Tools button in the header section and Check if the background of
+      the merge button is highlighted when hovered over, similarly hover over a
+      few other buttons and check for the background of the button is highlighted
+      when hovered over
     commands:
       - command: focus-application
         name: Google Chrome
@@ -138,28 +140,29 @@ steps:
         text: Tools
         description: Tools button in the header section
         action: click
+      - command: assert
+        expect: the Tools dropdown is open
       - command: hover-text
         text: Merge
         description: Merge button
         action: hover
       - command: assert
-        expect: the background of the Merge button is changed
+        expect: the background of the Merge button is highlighted
       - command: hover-text
         text: PDF to Image
         description: PDF to Image button
         action: hover
       - command: assert
-        expect: the background of the PDF to Image button is changed
+        expect: the background of the PDF to Image button is highlighted
       - command: hover-text
         text: PDF to CSV
         description: PDF to CSV button
         action: hover
       - command: assert
-        expect: the background of the PDF to CSV button is changed
+        expect: the background of the PDF to CSV button is highlighted
       - command: hover-text
         text: Sign
         description: Sign button
         action: hover
       - command: assert
-        expect: the background of the Sign button is changed
-
+        expect: the background of the Sign button is highlighted
