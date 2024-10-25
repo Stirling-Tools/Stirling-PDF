@@ -1,30 +1,46 @@
 package stirling.software.SPDF.utils;
 
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import javax.imageio.ImageIO;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.MetadataException;
+import com.drew.metadata.exif.ExifSubIFDDirectory;
+
 public class ImageProcessingUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
 
     static BufferedImage convertColorType(BufferedImage sourceImage, String colorType) {
         BufferedImage convertedImage;
         switch (colorType) {
             case "greyscale":
-                convertedImage =
-                        new BufferedImage(
-                                sourceImage.getWidth(),
-                                sourceImage.getHeight(),
-                                BufferedImage.TYPE_BYTE_GRAY);
+                convertedImage = new BufferedImage(
+                        sourceImage.getWidth(),
+                        sourceImage.getHeight(),
+                        BufferedImage.TYPE_BYTE_GRAY);
                 convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
                 break;
             case "blackwhite":
-                convertedImage =
-                        new BufferedImage(
-                                sourceImage.getWidth(),
-                                sourceImage.getHeight(),
-                                BufferedImage.TYPE_BYTE_BINARY);
+                convertedImage = new BufferedImage(
+                        sourceImage.getWidth(),
+                        sourceImage.getHeight(),
+                        BufferedImage.TYPE_BYTE_BINARY);
                 convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
                 break;
             default: // full color
@@ -58,5 +74,50 @@ public class ImageProcessingUtils {
             }
             return data;
         }
+    }
+
+    public static double extractImageOrientation(InputStream is) throws IOException {
+        try {
+            Metadata metadata = ImageMetadataReader.readMetadata(is);
+            ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
+            if (directory == null) {
+                return 0;
+            }
+            int orientationTag = directory.getInt(ExifSubIFDDirectory.TAG_ORIENTATION);
+            switch (orientationTag) {
+                case 1:
+                    return 0;
+                case 6:
+                    return 90;
+                case 3:
+                    return 180;
+                case 8:
+                    return 270;
+                default:
+                    logger.warn("Unknown orientation tag: {}", orientationTag);
+                    return 0;
+            }
+        } catch (ImageProcessingException | MetadataException e) {
+            return 0;
+        }
+    }
+
+    public static BufferedImage applyOrientation(BufferedImage image, double orientation) {
+        if (orientation == 0) {
+            return image;
+        }
+        AffineTransform transform = AffineTransform.getRotateInstance(
+                Math.toRadians(orientation),
+                image.getWidth() / 2.0,
+                image.getHeight() / 2.0);
+        AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
+        return op.filter(image, null);
+    }
+
+    public static BufferedImage loadImageWithExifOrientation(MultipartFile file)
+            throws IOException {
+        BufferedImage image = ImageIO.read(file.getInputStream());
+        double orientation = extractImageOrientation(file.getInputStream());
+        return applyOrientation(image, orientation);
     }
 }

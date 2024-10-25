@@ -45,7 +45,6 @@ public class UserService implements UserServiceInterface {
 
     @Autowired DatabaseBackupInterface databaseBackupHelper;
 
-
     // Handle OAUTH2 login and user auto creation.
     public boolean processOAuth2PostLogin(String username, boolean autoCreateUser)
             throws IllegalArgumentException, IOException {
@@ -360,8 +359,8 @@ public class UserService implements UserServiceInterface {
         }
     }
 
-	@Override
-	public long getTotalUsersCount() {
-		return userRepository.count();
-	}
+    @Override
+    public long getTotalUsersCount() {
+        return userRepository.count();
+    }
 }
