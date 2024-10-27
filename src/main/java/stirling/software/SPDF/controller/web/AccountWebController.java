@@ -89,10 +89,9 @@ public class AccountWebController {
         }
 
         SAML2 saml2 = securityProps.getSaml2();
-        if (saml2 != null) {
-            if (saml2.getEnabled()) {
-                providerList.put("/saml2/authenticate/" + saml2.getRegistrationId(), "SAML 2");
-            }
+        if (securityProps.isSaml2Activ()
+                && applicationProperties.getSystem().getEnableAlphaFunctionality()) {
+            providerList.put("/saml2/authenticate/" + saml2.getRegistrationId(), "SAML 2");
         }
         // Remove any null keys/values from the providerList
         providerList
@@ -101,7 +100,8 @@ public class AccountWebController {
         model.addAttribute("providerlist", providerList);
 
         model.addAttribute("loginMethod", securityProps.getLoginMethod());
-        model.addAttribute("altLogin", securityProps.isAltLogin());
+        boolean altLogin = providerList.size() > 0 ? securityProps.isAltLogin() : false;
+        model.addAttribute("altLogin", altLogin);
 
         model.addAttribute("currentPage", "login");
 
@@ -163,6 +163,17 @@ public class AccountWebController {
                     break;
                 case "userIsDisabled":
                     erroroauth = "login.userIsDisabled";
+                    break;
+                case "invalid_destination":
+                    erroroauth = "login.invalid_destination";
+                    break;
+                    // Valid InResponseTo was not available from the validation context, unable to
+                    // evaluate
+                case "invalid_in_response_to":
+                    erroroauth = "login.invalid_in_response_to";
+                    break;
+                case "not_authentication_provider_found":
+                    erroroauth = "login.not_authentication_provider_found";
                     break;
                 default:
                     break;
