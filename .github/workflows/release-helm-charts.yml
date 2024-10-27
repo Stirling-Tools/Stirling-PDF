@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feat/github-pages
 
 permissions:
   contents: write

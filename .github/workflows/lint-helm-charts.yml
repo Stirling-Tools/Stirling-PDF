@@ -2,7 +2,7 @@ name: Lint and Test Helm Charts
 
 on:
   push:
-    branches: ["main", "feat/github-pages"]
+    branches: ["main"]
   pull_request:
     branches: ["main"]
 
