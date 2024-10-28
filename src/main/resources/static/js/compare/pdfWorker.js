@@ -21,10 +21,23 @@ self.onmessage = async function (e) {
   const isComplex = words1.length > COMPLEX_WORD_COUNT || words2.length > COMPLEX_WORD_COUNT;
   const isTooLarge = words1.length > MAX_WORD_COUNT || words2.length > MAX_WORD_COUNT;
 
+  let complexMessage = 'One or both of the provided documents are large files, accuracy of comparison may be reduced';
+  let tooLargeMessage = 'One or Both of the provided documents are too large to process';
+
+  // Listen for messages from the main thread
+  self.addEventListener('message', (event) => {
+    if (event.data.type === 'SET_TOO_LARGE_MESSAGE') {
+      tooLargeMessage = event.data.message;
+    }
+    if (event.data.type === 'SET_COMPLEX_MESSAGE') {
+      complexMessage = event.data.message;
+    }
+  });
+
   if (isTooLarge) {
     self.postMessage({
       status: 'warning',
-      message: 'One or Both of the provided documents are too large to process',
+      message: tooLargeMessage,
     });
     return;
   } else {
@@ -32,7 +45,7 @@ self.onmessage = async function (e) {
     if (isComplex) {
       self.postMessage({
         status: 'warning',
-        message: 'One or both of the provided documents are large files, accuracy of comparison may be reduced.',
+        message: complexMessage,
       });
     }
     // Perform diff operation depending on document size

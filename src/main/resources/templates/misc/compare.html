@@ -92,7 +92,7 @@
               </div>
             </div>
             <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
-            <script>
+            <script th:inline="javascript">
               // get the elements
               var result1 = document.getElementById('result1');
               var result2 = document.getElementById('result2');
@@ -146,14 +146,38 @@
 
                 const resultDiv1 = document.getElementById("result1");
                 const resultDiv2 = document.getElementById("result2");
-                resultDiv1.innerHTML = "Loading...";
-                resultDiv2.innerHTML = "Loading...";
+                const loading = /*[[#{loading}]]*/ 'Loading...';
+
+                resultDiv1.innerHTML = loading;
+                resultDiv2.innerHTML = loading;
 
                 // Create a new Worker
                 const worker = new Worker('/js/compare/pdfWorker.js');
+
+                const complexMessage = /*[[#{compare.complex.message}]]*/ 'One or both of the provided documents are large files, accuracy of comparison may be reduced';
+                const largeFilesMessage = /*[[#{compare.large.message}]]*/ 'One or Both of the provided documents are too large to process';
+
+                // Post messages to the worker
+                worker.postMessage({
+                  type: 'SET_COMPLEX_MESSAGE',
+                  message: complexMessage
+                });
+
+                worker.postMessage({
+                  type: 'SET_TOO_LARGE_MESSAGE',
+                  message: largeFilesMessage
+                });
+
+                // Error handling for the worker
+                worker.onerror = function (error) {
+                  console.error('Worker error:', error);
+                };
                 worker.onmessage = function (e) {
                   const { status, differences, message } = e.data;
                   if (status === 'error') {
+
+                    resultDiv1.innerHTML = '';
+                    resultDiv2.innerHTML = '';
                     alert(message);
                     return;
                   }
@@ -167,7 +191,6 @@
                   }
                 };
 
-                // Send text and colors to the worker
                 worker.postMessage({ text1, text2, color1, color2 });
 
                 const displayDifferences = (differences) => {
@@ -180,13 +203,12 @@
                     const span1 = document.createElement("span");
                     const span2 = document.createElement("span");
 
-                    // If it's an addition, show it in color2 in the second document and transparent in the first
                     if (color === color2) {
                       span1.style.color = "transparent";
                       span1.style.userSelect = "none";
                       span2.style.color = color;
                     }
-                    // If it's a deletion, show it in color1 in the first document and transparent in the second
+                    // If it's a deletion, show it in  in the first document and transparent in the second
                     else if (color === color1) {
                       span1.style.color = color;
                       span2.style.color = "transparent";
