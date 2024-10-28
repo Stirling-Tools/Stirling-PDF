@@ -13,7 +13,7 @@ plugins {
 import com.github.jk1.license.render.*
 
 ext {
-    springBootVersion = "3.3.4"
+    springBootVersion = "3.3.5"
     pdfboxVersion = "3.0.3"
     logbackVersion = "1.5.7"
     imageioVersion = "3.12.0"
