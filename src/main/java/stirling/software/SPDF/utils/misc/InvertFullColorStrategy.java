@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import javax.imageio.ImageIO;
 
@@ -30,7 +31,7 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
     public InputStreamResource replace() throws IOException {
 
         // Create a temporary file, with the original filename from the multipart file
-        File file = File.createTempFile("temp", getFileInput().getOriginalFilename());
+        File file = Files.createTempFile("temp", getFileInput().getOriginalFilename()).toFile();
 
         // Transfer the content of the multipart file to the file
         getFileInput().transferTo(file);
