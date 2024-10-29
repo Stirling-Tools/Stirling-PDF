@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,7 @@ public class EndpointConfiguration {
 
     public void disableEndpoint(String endpoint) {
         if (!endpointStatuses.containsKey(endpoint) || endpointStatuses.get(endpoint) != false) {
-            logger.info("Disabling {}", endpoint);
+            logger.debug("Disabling {}", endpoint);
             endpointStatuses.put(endpoint, false);
         }
     }
@@ -73,6 +74,23 @@ public class EndpointConfiguration {
             for (String endpoint : endpoints) {
                 disableEndpoint(endpoint);
             }
+        }
+    }
+
+    public void logDisabledEndpointsSummary() {
+        List<String> disabledList =
+                endpointStatuses.entrySet().stream()
+                        .filter(entry -> !entry.getValue()) // only get disabled endpoints (value
+                        // is false)
+                        .map(Map.Entry::getKey)
+                        .sorted()
+                        .collect(Collectors.toList());
+
+        if (!disabledList.isEmpty()) {
+            logger.info(
+                    "Total disabled endpoints: {}. Disabled endpoints: {}",
+                    disabledList.size(),
+                    String.join(", ", disabledList));
         }
     }
 
@@ -163,14 +181,12 @@ public class EndpointConfiguration {
 
         // python
         addEndpointToGroup("Python", "extract-image-scans");
-        addEndpointToGroup("Python", REMOVE_BLANKS);
         addEndpointToGroup("Python", "html-to-pdf");
         addEndpointToGroup("Python", "url-to-pdf");
         addEndpointToGroup("Python", "pdf-to-img");
 
         // openCV
         addEndpointToGroup("OpenCV", "extract-image-scans");
-        addEndpointToGroup("OpenCV", REMOVE_BLANKS);
 
         // LibreOffice
         addEndpointToGroup("LibreOffice", "repair");
@@ -230,6 +246,17 @@ public class EndpointConfiguration {
         addEndpointToGroup("Javascript", "sign");
         addEndpointToGroup("Javascript", "compare");
         addEndpointToGroup("Javascript", "adjust-contrast");
+
+        // Ghostscript dependent endpoints
+        addEndpointToGroup("Ghostscript", "compress-pdf");
+        addEndpointToGroup("Ghostscript", "pdf-to-pdfa");
+
+        // Weasyprint dependent endpoints
+        addEndpointToGroup("Weasyprint", "html-to-pdf");
+        addEndpointToGroup("Weasyprint", "url-to-pdf");
+
+        // Pdftohtml dependent endpoints
+        addEndpointToGroup("Pdftohtml", "pdf-to-html");
     }
 
     private void processEnvironmentConfigs() {
@@ -249,6 +276,10 @@ public class EndpointConfiguration {
                 disableGroup(group.trim());
             }
         }
+    }
+
+    public Set<String> getEndpointsForGroup(String group) {
+        return endpointGroups.getOrDefault(group, new HashSet<>());
     }
 
     private static final String REMOVE_BLANKS = "remove-blanks";
