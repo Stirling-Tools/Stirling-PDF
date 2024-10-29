@@ -3,6 +3,7 @@
 bin/
 tmp/
 *.tmp
+*.bak
 *.exe
 *.swp
 *~.nib
