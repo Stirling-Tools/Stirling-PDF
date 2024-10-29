@@ -91,6 +91,7 @@ public class SignatureService {
                 || fileName.endsWith(".png")
                 || fileName.endsWith(".gif");
     }
+
     private void validateFileName(String fileName) {
         if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
             throw new IllegalArgumentException("Invalid filename");
