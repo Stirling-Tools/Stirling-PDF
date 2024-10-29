@@ -60,10 +60,10 @@
               <span class="tool-header-text" th:text="#{compare.header}"></span>
             </div>
             <div
-              th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}">
+              th:replace="~{fragments/common :: fileSelector(name='fileInput', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}">
             </div>
             <div
-              th:replace="~{fragments/common :: fileSelector(name='fileInput2', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}">
+              th:replace="~{fragments/common :: fileSelector(name='fileInput2', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}">
             </div>
 
             <div class="row">
