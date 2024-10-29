@@ -137,7 +137,7 @@ dependencies {
 
     if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
         implementation "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
-        runtimeOnly "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE"
+        implementation "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE"
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 

@@ -34,14 +34,22 @@ import org.springframework.security.saml2.provider.service.registration.RelyingP
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.web.authentication.Saml2WebSsoAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.csrf.InvalidCsrfTokenException;
 import org.springframework.security.web.savedrequest.NullRequestCache;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.thymeleaf.extras.springsecurity5.dialect.SpringSecurityDialect;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.thymeleaf.extras.springsecurity4.dialect.SpringSecurityDialect;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2UserService;
@@ -91,15 +99,23 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
+    	
+    	
+    	
         if (loginEnabledValue) {
             http.addFilterBefore(
                     userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             if (applicationProperties.getSecurity().getCsrfDisabled()) {
                 http.csrf(csrf -> csrf.disable());
             } else {
-                http.csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                );
+             CookieCsrfTokenRepository cookieRepo =  CookieCsrfTokenRepository.withHttpOnlyFalse();
+           	 CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+           	 requestHandler.setCsrfRequestAttributeName(null);
+            	http.csrf(csrf -> 
+                csrf.csrfTokenRepository(cookieRepo)
+                    .csrfTokenRequestHandler(requestHandler)
+            );
+            	
             }
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
@@ -111,7 +127,7 @@ public class SecurityConfiguration {
                                     .maxSessionsPreventsLogin(false)
                                     .sessionRegistry(sessionRegistry)
                                     .expiredUrl("/login?logout=true"));
-
+     
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
@@ -119,6 +135,7 @@ public class SecurityConfiguration {
                             logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(applicationProperties))
+                                    .clearAuthentication(true)
                                     .invalidateHttpSession(true) // Invalidate session
                                     .deleteCookies("JSESSIONID", "remember-me"));
             http.rememberMe(
@@ -209,7 +226,8 @@ public class SecurityConfiguration {
             }
 
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Activ() && applicationProperties.getSystem().getEnableAlphaFunctionality()) {
+            if (applicationProperties.getSecurity().isSaml2Activ()
+                    && applicationProperties.getSystem().getEnableAlphaFunctionality()) {
                 http.authenticationProvider(samlAuthenticationProvider());
                 http.saml2Login(
                                 saml2 ->
@@ -228,21 +246,19 @@ public class SecurityConfiguration {
         } else {
             if (applicationProperties.getSecurity().getCsrfDisabled()) {
                 http.csrf(csrf -> csrf.disable());
+            } else {
+            	CookieCsrfTokenRepository cookieRepo =  CookieCsrfTokenRepository.withHttpOnlyFalse();
+              	 CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+              	 requestHandler.setCsrfRequestAttributeName(null);
+               	http.csrf(csrf -> 
+                   csrf.csrfTokenRepository(cookieRepo)
+                       .csrfTokenRequestHandler(requestHandler)
+               );
             }
             http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
 
         return http.build();
-    }
-
-    @Bean
-    @ConditionalOnProperty(
-            name = "security.csrfDisabled.false",
-            havingValue = "true",
-            matchIfMissing = false)
-    //need to make conditional check for csrf disablement OR remove that option alltogether
-    public SpringSecurityDialect springSecurityDialect() {
-        return new SpringSecurityDialect();
     }
 
     @Bean
