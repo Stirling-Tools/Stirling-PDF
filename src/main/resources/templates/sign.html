@@ -223,9 +223,9 @@
         <!-- View Toggle Button -->
         <div class="view-toggle mb-3">
             <button class="btn btn-outline-secondary btn-sm" onclick="toggleSignatureView()">
-                <span class="grid-view-text">Switch to List View</span>
-                <span class="list-view-text" style="display: none;">Switch to Grid View</span>
-            </button>
+		        <span class="material-symbols-rounded grid-view-text">view_list</span>
+		        <span class="material-symbols-rounded list-view-text" style="display: none;">grid_view</span>
+		    </button>
         </div>
 
         <!-- Preview Modal -->
@@ -233,15 +233,15 @@
 		    <div class="modal-dialog modal-dialog-centered">
 		        <div class="modal-content">
 		            <div class="modal-header">
-		                <h5 class="modal-title">Signature Preview: <span id="previewFileName"></span></h5>
+		                <h5 class="modal-title"><span id="previewFileName"></span></h5>
 		                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 		            </div>
 		            <div class="modal-body text-center">
 		                <img id="previewImage" src="" alt="Signature Preview" style="max-width: 100%;">
 		            </div>
 		            <div class="modal-footer">
-		                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-		                <button type="button" class="btn btn-primary" onclick="addSignatureFromPreview()">Add to Document</button>
+		                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}"></button>
+		                <button type="button" class="btn btn-primary" onclick="addSignatureFromPreview()" th:text="#{addToDoc}">Add to Document</button>
 		            </div>
 		        </div>
 		    </div>
