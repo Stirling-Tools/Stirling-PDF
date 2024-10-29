@@ -17,7 +17,7 @@
                 <span class="tool-header-text" th:text="#{watermark.header}"></span>
               </div>
 
-              <form method="post" enctype="multipart/form-data" action="api/v1/security/add-watermark">
+              <form method="post" enctype="multipart/form-data" th:action="@{'api/v1/security/add-watermark'}">
                 <div class="mb-3">
                   <label th:text="#{watermark.selectText.1}"></label>
                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
