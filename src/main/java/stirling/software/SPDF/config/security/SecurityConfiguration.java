@@ -104,7 +104,32 @@ public class SecurityConfiguration {
                 requestHandler.setCsrfRequestAttributeName(null);
                 http.csrf(
                         csrf ->
-                                csrf.csrfTokenRepository(cookieRepo)
+                                csrf.ignoringRequestMatchers(
+                                                request -> {
+                                                    String apiKey = request.getHeader("X-API-Key");
+
+                                                    // If there's no API key, don't ignore CSRF
+                                                    // (return false)
+                                                    if (apiKey == null || apiKey.trim().isEmpty()) {
+                                                        return false;
+                                                    }
+
+                                                    // Validate API key using existing UserService
+                                                    try {
+                                                        Optional<User> user =
+                                                                userService.getUserByApiKey(apiKey);
+                                                        // If API key is valid, ignore CSRF (return
+                                                        // true)
+                                                        // If API key is invalid, don't ignore CSRF
+                                                        // (return false)
+                                                        return user.isPresent();
+                                                    } catch (Exception e) {
+                                                        // If there's any error validating the API
+                                                        // key, don't ignore CSRF
+                                                        return false;
+                                                    }
+                                                })
+                                        .csrfTokenRepository(cookieRepo)
                                         .csrfTokenRequestHandler(requestHandler));
             }
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
