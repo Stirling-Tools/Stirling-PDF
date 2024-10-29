@@ -29,12 +29,12 @@ public class PostHogService {
     private final ApplicationProperties applicationProperties;
     private final UserServiceInterface userService;
 
-
     @Autowired
     public PostHogService(
             PostHog postHog,
             @Qualifier("UUID") String uuid,
-            ApplicationProperties applicationProperties, @Autowired(required = false) UserServiceInterface userService) {
+            ApplicationProperties applicationProperties,
+            @Autowired(required = false) UserServiceInterface userService) {
         this.postHog = postHog;
         this.uniqueId = uuid;
         this.applicationProperties = applicationProperties;
@@ -137,10 +137,9 @@ public class PostHogService {
                 metrics.put("docker_metrics", getDockerMetrics());
             }
             metrics.put("application_properties", captureApplicationProperties());
-            
-            
-            if(userService != null) {
-            	metrics.put("total_users_created", userService.getTotalUsersCount());
+
+            if (userService != null) {
+                metrics.put("total_users_created", userService.getTotalUsersCount());
             }
 
         } catch (Exception e) {

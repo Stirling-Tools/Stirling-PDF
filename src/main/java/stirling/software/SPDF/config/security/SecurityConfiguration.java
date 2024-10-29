@@ -209,7 +209,8 @@ public class SecurityConfiguration {
             }
 
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Activ() && applicationProperties.getSystem().getEnableAlphaFunctionality()) {
+            if (applicationProperties.getSecurity().isSaml2Activ()
+                    && applicationProperties.getSystem().getEnableAlphaFunctionality()) {
                 http.authenticationProvider(samlAuthenticationProvider());
                 http.saml2Login(
                                 saml2 ->
