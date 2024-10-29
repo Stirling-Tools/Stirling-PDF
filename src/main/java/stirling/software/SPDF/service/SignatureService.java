@@ -23,6 +23,7 @@ public class SignatureService {
     private static final String ALL_USERS_FOLDER = "ALL_USERS";
 
     public boolean hasAccessToFile(String username, String fileName) throws IOException {
+        validateFileName(fileName);
         // Check if file exists in user's personal folder or ALL_USERS folder
         Path userPath = Paths.get(SIGNATURE_BASE_PATH, username, fileName);
         Path allUsersPath = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER, fileName);
@@ -67,6 +68,7 @@ public class SignatureService {
     }
 
     public byte[] getSignatureBytes(String username, String fileName) throws IOException {
+        validateFileName(fileName);
         // First try user's personal folder
         Path userPath = Paths.get(SIGNATURE_BASE_PATH, username, fileName);
         if (Files.exists(userPath)) {
@@ -88,5 +90,10 @@ public class SignatureService {
                 || fileName.endsWith(".jpeg")
                 || fileName.endsWith(".png")
                 || fileName.endsWith(".gif");
+    }
+    private void validateFileName(String fileName) {
+        if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
+            throw new IllegalArgumentException("Invalid filename");
+        }
     }
 }
