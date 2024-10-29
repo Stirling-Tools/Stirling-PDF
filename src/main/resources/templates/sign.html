@@ -43,6 +43,46 @@
             </div>
             <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
             <script>
+            let currentPreviewSrc = null;
+
+              function toggleSignatureView() {
+                  const gridView = document.getElementById('gridView');
+                  const listView = document.getElementById('listView');
+                  const gridText = document.querySelector('.grid-view-text');
+                  const listText = document.querySelector('.list-view-text');
+              
+                  if (gridView.style.display !== 'none') {
+                      gridView.style.display = 'none';
+                      listView.style.display = 'block';
+                      gridText.style.display = 'none';
+                      listText.style.display = 'inline';
+                  } else {
+                      gridView.style.display = 'block';
+                      listView.style.display = 'none';
+                      gridText.style.display = 'inline';
+                      listText.style.display = 'none';
+                  }
+              }
+              
+              function previewSignature(element) {
+                  const src = element.dataset.src;
+                  currentPreviewSrc = src;
+                  
+                  const previewImage = document.getElementById('previewImage');
+                  previewImage.src = src;
+                  
+                  const modal = new bootstrap.Modal(document.getElementById('signaturePreview'));
+                  modal.show();
+              }
+
+              function addSignatureFromPreview() {
+                  if (currentPreviewSrc) {
+                      DraggableUtils.createDraggableCanvasFromUrl(currentPreviewSrc);
+                      bootstrap.Modal.getInstance(document.getElementById('signaturePreview')).hide();
+                  }
+              }
+
+
               let originalFileName = '';
               document.querySelector('input[name=pdf-upload]').addEventListener('change', async (event) => {
                 const file = event.target.files[0];
@@ -68,7 +108,7 @@
             <div class="tab-group show-on-file-selected">
               <div class="tab-container" th:title="#{sign.upload}">
                 <div
-                  th:replace="~{fragments/common :: fileSelector(name='image-upload', multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}">
+                  th:replace="~{fragments/common :: fileSelector(name='image-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}">
                 </div>
                 <script>
                   const imageUpload = document.querySelector('input[name=image-upload]');
@@ -164,6 +204,126 @@
                   new ResizeObserver(resizeCanvas).observe(signaturePadCanvas);
                 </script>
               </div>
+
+
+
+
+
+
+
+	<div class="tab-container" th:title="#{sign.saved}">
+    <div class="saved-signatures-section" th:if="${not #lists.isEmpty(signatures)}">
+        <!-- View Toggle Button -->
+        <div class="view-toggle mb-3">
+            <button class="btn btn-outline-secondary btn-sm" onclick="toggleSignatureView()">
+                <span class="grid-view-text">Switch to List View</span>
+                <span class="list-view-text" style="display: none;">Switch to Grid View</span>
+            </button>
+        </div>
+
+        <!-- Preview Modal -->
+        <div class="modal fade" id="signaturePreview" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Signature Preview</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="previewImage" src="" alt="Signature Preview" style="max-width: 100%;">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="addSignatureFromPreview()">Add to Document</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid View -->
+        <div id="gridView">
+            <!-- Personal Signatures -->
+            <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Personal'])}">
+                <h5 th:text="#{sign.personalSigs}"></h5>
+                <div class="signature-grid">
+                    <div th:each="sig : ${signatures}" th:if="${sig.category == 'Personal'}" class="signature-item">
+                        <img th:src="@{'/api/v1/general/sign/' + ${sig.fileName}}" 
+                             th:alt="${sig.fileName}"
+                             th:data-filename="${sig.fileName}"
+                             style="max-width: 200px; cursor: pointer;"
+                             onclick="DraggableUtils.createDraggableCanvasFromUrl(this.src)"/>
+                        <div class="signature-name" th:text="${sig.fileName}"></div>
+          
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shared Signatures -->
+            <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Shared'])}">
+                <h5 th:text="#{sign.sharedSigs}"></h5>
+                <div class="signature-grid">
+                    <div th:each="sig : ${signatures}" th:if="${sig.category == 'Shared'}" class="signature-item">
+                        <img th:src="@{'/api/v1/general/sign/' + ${sig.fileName}}" 
+                             th:alt="${sig.fileName}"
+                             th:data-filename="${sig.fileName}"
+                             style="max-width: 200px; cursor: pointer;"
+                             onclick="DraggableUtils.createDraggableCanvasFromUrl(this.src)"/>
+                        <div class="signature-name" th:text="${sig.fileName}"></div>
+                  
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- List View (Initially Hidden) -->
+        <div id="listView" style="display: none;">
+            <!-- Personal Signatures -->
+            <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Personal'])}">
+                <h5 th:text="#{sign.personalSigs}"></h5>
+                <div class="signature-list">
+                    <div th:each="sig : ${signatures}" th:if="${sig.category == 'Personal'}" 
+                         class="signature-list-item" 
+                         th:data-src="@{'/api/v1/general/sign/' + ${sig.fileName}}"
+                         onclick="previewSignature(this)">
+                        <div class="signature-list-info">
+                            <span th:text="${sig.fileName}" class="signature-list-name"></span>
+   
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shared Signatures -->
+            <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Shared'])}">
+                <h5 th:text="#{sign.sharedSigs}"></h5>
+                <div class="signature-list">
+                    <div th:each="sig : ${signatures}" th:if="${sig.category == 'Shared'}" 
+                         class="signature-list-item"
+                         th:data-src="@{'/api/v1/general/sign/' + ${sig.fileName}}"
+                         onclick="previewSignature(this)">
+                        <div class="signature-list-info">
+                            <span th:text="${sig.fileName}" class="signature-list-name"></span>
+                 
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:if="${#lists.isEmpty(signatures)}" class="text-center p-3">
+        <p th:text="#{sign.noSavedSigs}">No saved signatures found</p>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
 
               <div class="tab-container" th:title="#{sign.text}">
                 <label class="form-check-label" for="sigText" th:text="#{text}"></label>
