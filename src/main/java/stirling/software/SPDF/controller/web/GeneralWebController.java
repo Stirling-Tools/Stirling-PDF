@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import stirling.software.SPDF.config.security.UserService;
+import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.SPDF.service.SignatureService;
 
@@ -181,7 +181,7 @@ public class GeneralWebController {
     @Autowired private SignatureService signatureService;
 
     @Autowired(required = false)
-    private UserService userService;
+    private UserServiceInterface userService;
 
     @GetMapping("/sign")
     @Hidden
