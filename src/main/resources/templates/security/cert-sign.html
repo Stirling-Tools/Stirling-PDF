@@ -16,7 +16,7 @@
                 <span class="material-symbols-rounded tool-header-icon security">workspace_premium</span>
                 <span class="tool-header-text" th:text="#{certSign.header}"></span>
               </div>
-              <form action="api/v1/security/cert-sign" method="post" enctype="multipart/form-data">
+              <form th:action="@{'api/v1/security/cert-sign'}" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                   <label th:text="#{certSign.selectPDF}"></label>
                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>

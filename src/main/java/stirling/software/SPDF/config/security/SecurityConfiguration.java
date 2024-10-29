@@ -36,6 +36,8 @@ import org.springframework.security.saml2.provider.service.web.authentication.Sa
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
@@ -94,6 +96,16 @@ public class SecurityConfiguration {
                     userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             if (applicationProperties.getSecurity().getCsrfDisabled()) {
                 http.csrf(csrf -> csrf.disable());
+            } else {
+                CookieCsrfTokenRepository cookieRepo =
+                        CookieCsrfTokenRepository.withHttpOnlyFalse();
+                CsrfTokenRequestAttributeHandler requestHandler =
+                        new CsrfTokenRequestAttributeHandler();
+                requestHandler.setCsrfRequestAttributeName(null);
+                http.csrf(
+                        csrf ->
+                                csrf.csrfTokenRepository(cookieRepo)
+                                        .csrfTokenRequestHandler(requestHandler));
             }
             http.addFilterBefore(rateLimitingFilter(), UsernamePasswordAuthenticationFilter.class);
             http.addFilterAfter(firstLoginFilter, UsernamePasswordAuthenticationFilter.class);
@@ -113,6 +125,7 @@ public class SecurityConfiguration {
                             logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                                     .logoutSuccessHandler(
                                             new CustomLogoutSuccessHandler(applicationProperties))
+                                    .clearAuthentication(true)
                                     .invalidateHttpSession(true) // Invalidate session
                                     .deleteCookies("JSESSIONID", "remember-me"));
             http.rememberMe(
@@ -223,6 +236,16 @@ public class SecurityConfiguration {
         } else {
             if (applicationProperties.getSecurity().getCsrfDisabled()) {
                 http.csrf(csrf -> csrf.disable());
+            } else {
+                CookieCsrfTokenRepository cookieRepo =
+                        CookieCsrfTokenRepository.withHttpOnlyFalse();
+                CsrfTokenRequestAttributeHandler requestHandler =
+                        new CsrfTokenRequestAttributeHandler();
+                requestHandler.setCsrfRequestAttributeName(null);
+                http.csrf(
+                        csrf ->
+                                csrf.csrfTokenRepository(cookieRepo)
+                                        .csrfTokenRequestHandler(requestHandler));
             }
             http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }

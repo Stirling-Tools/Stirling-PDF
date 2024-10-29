@@ -19,7 +19,7 @@
               <span class="material-symbols-rounded tool-header-icon organize">add_to_photos</span>
               <span class="tool-header-text" th:text="#{merge.header}"></span>
             </div>
-            <form action="api/v1/general/merge-pdfs" method="post" enctype="multipart/form-data">
+            <form th:action="@{'api/v1/general/merge-pdfs'}" method="post" enctype="multipart/form-data">
               <div class="mb-3">
                 <label th:text="#{multiPdfDropPrompt}" for="fileInput-input"></label>
                 <div
