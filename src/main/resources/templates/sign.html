@@ -65,15 +65,22 @@
               }
               
               function previewSignature(element) {
-                  const src = element.dataset.src;
-                  currentPreviewSrc = src;
-                  
-                  const previewImage = document.getElementById('previewImage');
-                  previewImage.src = src;
-                  
-                  const modal = new bootstrap.Modal(document.getElementById('signaturePreview'));
-                  modal.show();
-              }
+			    const src = element.dataset.src;
+			    currentPreviewSrc = src;
+			    
+			    // Extract filename from the data source path
+			    const filename = element.querySelector('.signature-list-name').textContent;
+			    
+			    // Update preview modal
+			    const previewImage = document.getElementById('previewImage');
+			    const previewFileName = document.getElementById('previewFileName');
+			    
+			    previewImage.src = src;
+			    previewFileName.textContent = filename;
+			    
+			    const modal = new bootstrap.Modal(document.getElementById('signaturePreview'));
+			    modal.show();
+			}
 
               function addSignatureFromPreview() {
                   if (currentPreviewSrc) {
@@ -223,22 +230,22 @@
 
         <!-- Preview Modal -->
         <div class="modal fade" id="signaturePreview" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Signature Preview</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body text-center">
-                        <img id="previewImage" src="" alt="Signature Preview" style="max-width: 100%;">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" onclick="addSignatureFromPreview()">Add to Document</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+		    <div class="modal-dialog modal-dialog-centered">
+		        <div class="modal-content">
+		            <div class="modal-header">
+		                <h5 class="modal-title">Signature Preview: <span id="previewFileName"></span></h5>
+		                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+		            </div>
+		            <div class="modal-body text-center">
+		                <img id="previewImage" src="" alt="Signature Preview" style="max-width: 100%;">
+		            </div>
+		            <div class="modal-footer">
+		                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+		                <button type="button" class="btn btn-primary" onclick="addSignatureFromPreview()">Add to Document</button>
+		            </div>
+		        </div>
+		    </div>
+		</div>
 
         <!-- Grid View -->
         <div id="gridView">
