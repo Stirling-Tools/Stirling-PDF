@@ -111,6 +111,10 @@
                 var color1 = document.getElementById('color-box1').value;
                 var color2 = document.getElementById('color-box2').value;
 
+                const complexMessage = /*[[#{compare.complex.message}]]*/ 'One or both of the provided documents are large files, accuracy of comparison may be reduced';
+                const largeFilesMessage = /*[[#{compare.large.file.message}]]*/ 'One or Both of the provided documents are too large to process';
+                const noTextMessage = /*[[#{compare.no.text.message}]]*/ 'One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison."';
+
                 if (!file1 || !file2) {
                   console.error("Please select two PDF files to compare");
                   return;
@@ -140,7 +144,7 @@
                 ]);
 
                 if (text1.trim() === "" || text2.trim() === "") {
-                  alert("One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison.");
+                  alert(noTextMessage);
                   return;
                 }
 
@@ -154,8 +158,6 @@
                 // Create a new Worker
                 const worker = new Worker('/js/compare/pdfWorker.js');
 
-                const complexMessage = /*[[#{compare.complex.message}]]*/ 'One or both of the provided documents are large files, accuracy of comparison may be reduced';
-                const largeFilesMessage = /*[[#{compare.large.message}]]*/ 'One or Both of the provided documents are too large to process';
 
                 // Post messages to the worker
                 worker.postMessage({
