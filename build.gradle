@@ -1,6 +1,6 @@
 plugins {
     id "java"
-    id "org.springframework.boot" version "3.3.4"
+    id "org.springframework.boot" version "3.3.5"
     id "io.spring.dependency-management" version "1.1.6"
     id "org.springdoc.openapi-gradle-plugin" version "1.8.0"
     id "io.swagger.swaggerhub" version "1.3.2"
@@ -13,7 +13,7 @@ plugins {
 import com.github.jk1.license.render.*
 
 ext {
-    springBootVersion = "3.3.4"
+    springBootVersion = "3.3.5"
     pdfboxVersion = "3.0.3"
     logbackVersion = "1.5.7"
     imageioVersion = "3.12.0"
@@ -22,7 +22,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.30.0"
+version = "0.30.1"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -119,7 +119,7 @@ configurations.all {
 }
 dependencies {
     //security updates
-    implementation "org.springframework:spring-webmvc:6.1.13"
+    implementation "org.springframework:spring-webmvc:6.1.14"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.0")
 
@@ -179,6 +179,9 @@ dependencies {
     runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
 
+    // Image metadata extractor
+    implementation "com.drewnoakes:metadata-extractor:2.19.0"
+
     implementation "commons-io:commons-io:2.17.0"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0"
     //general PDF
@@ -204,8 +207,8 @@ dependencies {
     implementation "io.micrometer:micrometer-core:1.13.6"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
-    implementation "org.commonmark:commonmark:0.23.0"
-    implementation "org.commonmark:commonmark-ext-gfm-tables:0.23.0"
+    implementation "org.commonmark:commonmark:0.24.0"
+    implementation "org.commonmark:commonmark-ext-gfm-tables:0.24.0"
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "com.bucket4j:bucket4j_jdk17-core:8.14.0"
     implementation "com.fathzer:javaluator:3.0.5"
