@@ -1328,7 +1328,7 @@
         {
             "moduleName": "org.springframework.security:spring-security-saml2-service-provider",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "6.3.3",
+            "moduleVersion": "6.3.4",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
