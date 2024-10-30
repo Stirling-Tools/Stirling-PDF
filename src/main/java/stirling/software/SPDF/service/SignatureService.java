@@ -19,7 +19,7 @@ import stirling.software.SPDF.model.SignatureFile;
 @Slf4j
 public class SignatureService {
 
-    private static final String SIGNATURE_BASE_PATH = "customFiles/static/signatures/";
+    private static final String SIGNATURE_BASE_PATH = "customFiles/signatures/";
     private static final String ALL_USERS_FOLDER = "ALL_USERS";
 
     public boolean hasAccessToFile(String username, String fileName) throws IOException {

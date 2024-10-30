@@ -166,6 +166,13 @@ Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "pod
 
 Please view https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md
 
+## Reuse stored files
+
+Certain functionality like ``Sign`` Supports pre-saved files stored at ``/customFiles/signatures/``, image files placed within here will be accesable to be used via webUI
+Currently this supports two folder types
+- ``/customFiles/signatures/ALL_USERS`` accessible to all users, useful for orginasations were many users use same files or for users not using authentication
+- ``/customFiles/signatures/{username}`` such as ``/customFiles/signatures/froodle``  accessible to only the ``froodle`` username, private for all others
+
 ## Supported Languages
 
 Stirling PDF currently supports 38!

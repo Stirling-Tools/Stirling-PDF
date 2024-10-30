@@ -270,7 +270,7 @@
                 <h5 th:text="#{sign.sharedSigs}"></h5>
                 <div class="signature-grid">
                     <div th:each="sig : ${signatures}" th:if="${sig.category == 'Shared'}" class="signature-item">
-                        <img th:src="@{'/api/v1/general/sign/' + ${sig.fileName}}" 
+                        <img th:src="@{'/api/v1/general/sign/' + ${sig.fileName}}"
                              th:alt="${sig.fileName}"
                              th:data-filename="${sig.fileName}"
                              style="max-width: 200px; cursor: pointer;"
