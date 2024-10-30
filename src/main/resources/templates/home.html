@@ -384,7 +384,7 @@
 
 
 
-
+  <script th:src="@{'/js/fetch-utils.js'}"></script>
   <script th:inline="javascript">
 
     /*<![CDATA[*/
@@ -398,7 +398,7 @@
     });
     /*]]>*/
     function setAnalytics(enabled) {
-      fetch('api/v1/settings/update-enable-analytics', {
+      fetchWithCsrf('api/v1/settings/update-enable-analytics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

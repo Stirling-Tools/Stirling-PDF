@@ -20,7 +20,7 @@
               </div>
 
               <!-- pdf selector -->
-              <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+              <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
               <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
               <script>
                 let originalFileName = '';
@@ -46,7 +46,7 @@
               </script>
 
               <div class="tab-group show-on-file-selected">
-                  <div th:replace="~{fragments/common :: fileSelector(name='image-upload', multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}"></div>
+                  <div th:replace="~{fragments/common :: fileSelector(name='image-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}"></div>
                   <script>
                     const imageUpload = document.querySelector('input[name=image-upload]');
                     imageUpload.addEventListener('change', e => {

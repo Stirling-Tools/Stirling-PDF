@@ -62,3 +62,53 @@ select#font-select option {
   background-color: rgba(52, 152, 219, 0.2);
   /* Darken background on hover */
 }
+.signature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.signature-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.signature-list-item {
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.signature-list-item:hover {
+    background-color: #f8f9fa;
+}
+
+.signature-list-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.signature-list-name {
+    font-weight: 500;
+}
+
+.signature-list-details {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.signature-list-details small:not(:last-child) {
+    margin-right: 1rem;
+}
+
+.view-toggle {
+    text-align: right;
+    padding: 0.5rem 1rem;
+}

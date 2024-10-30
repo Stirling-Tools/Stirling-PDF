@@ -30,17 +30,19 @@ public class ImageProcessingUtils {
         BufferedImage convertedImage;
         switch (colorType) {
             case "greyscale":
-                convertedImage = new BufferedImage(
-                        sourceImage.getWidth(),
-                        sourceImage.getHeight(),
-                        BufferedImage.TYPE_BYTE_GRAY);
+                convertedImage =
+                        new BufferedImage(
+                                sourceImage.getWidth(),
+                                sourceImage.getHeight(),
+                                BufferedImage.TYPE_BYTE_GRAY);
                 convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
                 break;
             case "blackwhite":
-                convertedImage = new BufferedImage(
-                        sourceImage.getWidth(),
-                        sourceImage.getHeight(),
-                        BufferedImage.TYPE_BYTE_BINARY);
+                convertedImage =
+                        new BufferedImage(
+                                sourceImage.getWidth(),
+                                sourceImage.getHeight(),
+                                BufferedImage.TYPE_BYTE_BINARY);
                 convertedImage.getGraphics().drawImage(sourceImage, 0, 0, null);
                 break;
             default: // full color
@@ -79,7 +81,8 @@ public class ImageProcessingUtils {
     public static double extractImageOrientation(InputStream is) throws IOException {
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(is);
-            ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
+            ExifSubIFDDirectory directory =
+                    metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
             if (directory == null) {
                 return 0;
             }
@@ -106,10 +109,11 @@ public class ImageProcessingUtils {
         if (orientation == 0) {
             return image;
         }
-        AffineTransform transform = AffineTransform.getRotateInstance(
-                Math.toRadians(orientation),
-                image.getWidth() / 2.0,
-                image.getHeight() / 2.0);
+        AffineTransform transform =
+                AffineTransform.getRotateInstance(
+                        Math.toRadians(orientation),
+                        image.getWidth() / 2.0,
+                        image.getHeight() / 2.0);
         AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
         return op.filter(image, null);
     }
