@@ -21,6 +21,7 @@ import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.examples.signature.CreateSignatureBase;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -92,7 +93,7 @@ public class CertSignController {
     }
 
     class CreateSignature extends CreateSignatureBase {
-        File imageFile;
+        File logoFile;
 
         public CreateSignature(KeyStore keystore, char[] pin)
                 throws KeyStoreException,
@@ -102,11 +103,17 @@ public class CertSignController {
                         CertificateException {
             super(keystore, pin);
             ClassPathResource resource = new ClassPathResource("static/images/signature.png");
-            imageFile = resource.getFile();
+            try (InputStream is = resource.getInputStream()) {
+                logoFile = File.createTempFile("signature", ".png");
+                FileUtils.copyInputStreamToFile(is, logoFile);
+            } catch (IOException e) {
+                logger.error("Failed to load image signature file");
+                throw e;
+            }
         }
 
         public InputStream createVisibleSignature(
-                PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showImage)
+                PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showLogo)
                 throws IOException {
             // modified from org.apache.pdfbox.examples.signature.CreateVisibleSignature2
             try (PDDocument doc = new PDDocument()) {
@@ -145,7 +152,7 @@ public class CertSignController {
                 widget.setAppearance(appearance);
 
                 try (PDPageContentStream cs = new PDPageContentStream(doc, appearanceStream)) {
-                    if (showImage) {
+                    if (showLogo) {
                         cs.saveGraphicsState();
                         PDExtendedGraphicsState extState = new PDExtendedGraphicsState();
                         extState.setBlendMode(BlendMode.MULTIPLY);
@@ -153,7 +160,7 @@ public class CertSignController {
                         cs.setGraphicsStateParameters(extState);
                         cs.transform(Matrix.getScaleInstance(0.08f, 0.08f));
                         PDImageXObject img =
-                                PDImageXObject.createFromFileByExtension(imageFile, doc);
+                                PDImageXObject.createFromFileByExtension(logoFile, doc);
                         cs.drawImage(img, 100, 0);
                         cs.restoreGraphicsState();
                     }
@@ -219,6 +226,7 @@ public class CertSignController {
         String location = request.getLocation();
         String name = request.getName();
         Integer pageNumber = request.getPageNumber() - 1;
+        Boolean showLogo = request.isShowLogo();
 
         if (certType == null) {
             throw new IllegalArgumentException("Cert type must be provided");
@@ -258,7 +266,8 @@ public class CertSignController {
                 pageNumber,
                 name,
                 location,
-                reason);
+                reason,
+                showLogo);
         return WebResponseUtils.boasToWebResponse(
                 baos,
                 Filenames.toSimpleFileName(pdf.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
@@ -274,7 +283,8 @@ public class CertSignController {
             Integer pageNumber,
             String name,
             String location,
-            String reason) {
+            String reason,
+            Boolean showLogo) {
         try (PDDocument doc = pdfDocumentFactory.load(input)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -287,7 +297,7 @@ public class CertSignController {
             if (showSignature) {
                 SignatureOptions signatureOptions = new SignatureOptions();
                 signatureOptions.setVisualSignature(
-                        instance.createVisibleSignature(doc, signature, pageNumber, true));
+                        instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
                 signatureOptions.setPage(pageNumber);
 
                 doc.addSignature(signature, instance, signatureOptions);
