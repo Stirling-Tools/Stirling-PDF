@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -104,7 +105,7 @@ public class CertSignController {
             super(keystore, pin);
             ClassPathResource resource = new ClassPathResource("static/images/signature.png");
             try (InputStream is = resource.getInputStream()) {
-                logoFile = File.createTempFile("signature", ".png");
+                logoFile = Files.createTempFile("signature", ".png").toFile();
                 FileUtils.copyInputStreamToFile(is, logoFile);
             } catch (IOException e) {
                 logger.error("Failed to load image signature file");
