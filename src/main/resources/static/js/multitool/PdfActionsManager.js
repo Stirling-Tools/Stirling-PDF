@@ -1,6 +1,7 @@
 class PdfActionsManager {
   pageDirection;
   pagesContainer;
+  static selectedPages = []; // Static property shared across all instances
 
   constructor(id) {
     this.pagesContainer = document.getElementById(id);
@@ -131,6 +132,31 @@ class PdfActionsManager {
     buttonContainer.appendChild(deletePage);
 
     div.appendChild(buttonContainer);
+
+    const selectCheckbox = document.createElement("input");
+    selectCheckbox.type = "checkbox";
+    selectCheckbox.classList.add("pdf-actions_checkbox", "form-check-input");
+    selectCheckbox.id = "selectPageCheckbox";
+    div.appendChild(selectCheckbox);
+
+    if (!window.toggleSelectPage) {
+      selectCheckbox.classList.add("hidden");
+    } else {
+      selectCheckbox.classList.remove("hidden");
+    }
+
+    selectCheckbox.onchange = () => {
+      const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
+      if (selectCheckbox.checked) {
+        window.selectedPages.push(pageNumber);
+      } else {
+        const index = window.selectedPages.indexOf(pageNumber);
+        if (index !== -1) {
+          window.selectedPages.splice(index, 1);
+        }
+      }
+      console.log(window.selectedPages);
+    };
 
     const insertFileButtonContainer = document.createElement("div");
 

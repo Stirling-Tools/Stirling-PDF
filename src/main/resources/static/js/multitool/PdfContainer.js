@@ -215,11 +215,16 @@ class PdfContainer {
   }
 
   rotateAll(deg) {
-    for (var i = 0; i < this.pagesContainer.childNodes.length; i++) {
+    for (let i = 0; i < this.pagesContainer.childNodes.length; i++) {
       const child = this.pagesContainer.children[i];
       if (!child) continue;
+
+      const pageIndex = i + 1;
+      if (window.toggleSelectPage && !window.selectedPages.includes(pageIndex)) continue;
+
       const img = child.querySelector("img");
       if (!img) continue;
+
       this.rotateElement(img, deg);
     }
   }
@@ -450,7 +455,7 @@ function detectImageType(uint8Array) {
 
   // Check for TIFF signature (little-endian and big-endian)
   if ((uint8Array[0] === 73 && uint8Array[1] === 73 && uint8Array[2] === 42 && uint8Array[3] === 0) ||
-      (uint8Array[0] === 77 && uint8Array[1] === 77 && uint8Array[2] === 0 && uint8Array[3] === 42)) {
+    (uint8Array[0] === 77 && uint8Array[1] === 77 && uint8Array[2] === 0 && uint8Array[3] === 42)) {
     return 'TIFF';
   }
 

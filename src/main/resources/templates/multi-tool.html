@@ -47,6 +47,10 @@
                       cut
                     </span>
                   </button>
+                  <div>
+                    <input type="checkbox" class="form-check-input" id="toggleSelectPageVisibility"
+                      onclick="toggleSelectPageVisibility()">
+                  </div>
                   <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
                     <span class="material-symbols-rounded">
                       download
@@ -77,6 +81,18 @@
   </div>
   <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
   <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
+  <script>
+    window.selectedPages = [];
+    window.selectpages = false;
+    function toggleSelectPageVisibility() {
+      window.toggleSelectPage = !window.toggleSelectPage;
+      const checkboxes = document.querySelectorAll(".pdf-actions_checkbox");
+
+      checkboxes.forEach(checkbox => {
+        checkbox.classList.toggle("hidden", !window.toggleSelectPage);
+      });
+    }
+  </script>
   <script type="module">
     import PdfContainer from './js/multitool/PdfContainer.js';
     import DragDropManager from "./js/multitool/DragDropManager.js";
@@ -90,7 +106,6 @@
     // enables the default action buttons on each file
     const pdfActionsManager = new PdfActionsManager('pages-container');
     const fileDragManager = new FileDragManager();
-
     // Scroll the wrapper horizontally
 
     // Automatically exposes rotateAll, addFiles and exportPdf to the window for the global buttons.
