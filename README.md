@@ -280,14 +280,44 @@ security:
     useAsUsername: email # Default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # Specify the scopes for which the application will request permissions
     provider: google # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
+  saml2: 
+    enabled: false # Currently in alpha, not recommended for use yet, enableAlphaFunctionality must be set to true
+    autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
+    blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
+    registrationId: stirling
+    idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata
+    idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml
+    idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml
+    idpIssuer: http://www.okta.com/externalKey
+    idpCert: classpath:octa.crt
+    privateKey: classpath:saml-private-key.key
+    spCert: classpath:saml-public-cert.crt
+
+enterpriseEdition:
+  enabled: false # set to 'true' to enable enterprise edition
+  key: 00000000-0000-0000-0000-000000000000
+  CustomMetadata:
+    autoUpdateMetadata: false # set to 'true' to automatically update metadata with below values
+    author: username # Supports text such as 'John Doe' or types such as username to autopopulate with users username
+    creator: Stirling-PDF # Supports text such as 'Company-PDF'
+    producer: Stirling-PDF # Supports text such as 'Company-PDF'
+
+legal:
+  termsAndConditions: https://www.stirlingpdf.com/terms-and-conditions # URL to the terms and conditions of your application (e.g. https://example.com/terms) Empty string to disable or filename to load from local file in static folder
+  privacyPolicy: https://www.stirlingpdf.com/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy) Empty string to disable or filename to load from local file in static folder
+  accessibilityStatement: '' # URL to the accessibility statement of your application (e.g. https://example.com/accessibility) Empty string to disable or filename to load from local file in static folder
+  cookiePolicy: '' # URL to the cookie policy of your application (e.g. https://example.com/cookie) Empty string to disable or filename to load from local file in static folder
+  impressum: '' # URL to the impressum of your application (e.g. https://example.com/impressum) Empty string to disable or filename to load from local file in static folder
 
 system:
-  defaultLocale: 'en-US' # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
+  defaultLocale: en-US # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   enableAlphaFunctionality: false # Set to enable functionality which might need more testing before it fully goes live (This feature might make no changes)
-  showUpdate: true # see when a new update is available
+  showUpdate: false # see when a new update is available
   showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template html files
+  tessdataDir: /usr/share/tessdata # Path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
+  enableAnalytics: undefined # Set to 'true' to enable analytics, set to 'false' to disable analytics, for enterprise users this is set to true
 
 ui:
   appName: '' # Application's visible name
@@ -300,6 +330,11 @@ endpoints:
 
 metrics:
   enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
+
+# Automatically Generated Settings (Do Not Edit Directly)
+AutomaticallyGenerated:
+  key: example
+  UUID: example
 ```
 
 There is an additional config file ``/configs/custom_settings.yml`` were users familiar with java and spring application.properties can input their own settings on-top of Stirling-PDFs existing ones
