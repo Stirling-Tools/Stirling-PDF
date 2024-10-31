@@ -20,7 +20,6 @@
               <span class="tool-header-text" th:text="#{compress.header}"></span>
             </div>
             <form action="#" th:action="@{'/api/v1/misc/compress-pdf'}" method="post" enctype="multipart/form-data">
-             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
               <div
                 th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
               </div>
