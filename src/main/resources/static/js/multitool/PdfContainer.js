@@ -22,6 +22,7 @@ class PdfContainer {
     this.nameAndArchiveFiles = this.nameAndArchiveFiles.bind(this);
     this.splitPDF = this.splitPDF.bind(this);
     this.splitAll = this.splitAll.bind(this);
+    this.deleteSelected = this.deleteSelected.bind(this);
 
     this.pdfAdapters = pdfAdapters;
 
@@ -31,6 +32,7 @@ class PdfContainer {
         addFiles: this.addFiles,
         rotateElement: this.rotateElement,
         updateFilename: this.updateFilename,
+        deleteSelected: this.deleteSelected,
       });
     });
 
@@ -38,6 +40,7 @@ class PdfContainer {
     window.exportPdf = this.exportPdf;
     window.rotateAll = this.rotateAll;
     window.splitAll = this.splitAll;
+    window.deleteSelected = this.deleteSelected;
 
     const filenameInput = document.getElementById("filename-input");
     const downloadBtn = document.getElementById("export-button");
@@ -227,6 +230,37 @@ class PdfContainer {
 
       this.rotateElement(img, deg);
     }
+  }
+
+  deleteSelected() {
+
+    window.selectedPages.sort((a, b) => a - b);
+
+    let deletions = 0;
+
+    window.selectedPages.forEach((pageIndex) => {
+      const adjustedIndex = pageIndex - 1 - deletions;
+      const child = this.pagesContainer.children[adjustedIndex];
+
+      if (child) {
+        this.pagesContainer.removeChild(child);
+        deletions++;
+      }
+    });
+
+    if (this.pagesContainer.childElementCount === 0) {
+      const filenameInput = document.getElementById("filename-input");
+      const filenameParagraph = document.getElementById("filename");
+      const downloadBtn = document.getElementById("export-button");
+
+      filenameInput.disabled = true;
+      filenameInput.value = "";
+      filenameParagraph.innerText = "";
+
+      downloadBtn.disabled = true;
+    }
+
+    window.selectedPages = [];
   }
 
   splitAll() {

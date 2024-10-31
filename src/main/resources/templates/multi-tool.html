@@ -51,6 +51,11 @@
                     <input type="checkbox" class="form-check-input" id="toggleSelectPageVisibility"
                       onclick="toggleSelectPageVisibility()">
                   </div>
+                  <div class="button-container">
+                    <button id="delete-button" class="btn btn-danger hidden" onclick="deleteSelected()">
+                      <span class="material-symbols-rounded">delete</span>
+                    </button>
+                  </div>
                   <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
                     <span class="material-symbols-rounded">
                       download
@@ -87,10 +92,11 @@
     function toggleSelectPageVisibility() {
       window.toggleSelectPage = !window.toggleSelectPage;
       const checkboxes = document.querySelectorAll(".pdf-actions_checkbox");
-
       checkboxes.forEach(checkbox => {
         checkbox.classList.toggle("hidden", !window.toggleSelectPage);
       });
+      const deleteButton = document.getElementById("delete-button");
+      deleteButton.classList.toggle("hidden", !window.toggleSelectPage);
     }
   </script>
   <script type="module">
