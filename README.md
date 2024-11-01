@@ -175,7 +175,7 @@ Currently this supports two folder types
 
 ## Supported Languages
 
-Stirling PDF currently supports 38!
+Stirling PDF currently supports 36!
 
 | Language                                    | Progress                               |
 | ------------------------------------------- | -------------------------------------- |
@@ -280,7 +280,7 @@ security:
     useAsUsername: email # Default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # Specify the scopes for which the application will request permissions
     provider: google # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
-  saml2: 
+  saml2:
     enabled: false # Currently in alpha, not recommended for use yet, enableAlphaFunctionality must be set to true
     autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
