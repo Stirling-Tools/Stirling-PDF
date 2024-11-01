@@ -93,6 +93,39 @@ class PdfActionsManager {
     this.splitFileButtonCallback = this.splitFileButtonCallback.bind(this);
   }
 
+  updateSelectedPagesDisplay() {
+    const selectedPagesList = document.getElementById("selected-pages-list");
+    selectedPagesList.innerHTML = ""; // Clear the list
+
+    window.selectedPages.forEach((page) => {
+      const pageItem = document.createElement("div");
+      pageItem.className = "page-item";
+
+      const pageNumber = document.createElement("span");
+      pageNumber.className = "selected-page-number";
+      pageNumber.innerText = `Page ${page}`;
+      pageItem.appendChild(pageNumber);
+
+      const removeBtn = document.createElement("span");
+      removeBtn.className = "remove-btn";
+      removeBtn.innerHTML = "✕";
+      removeBtn.onclick = () => {
+        window.selectedPages = window.selectedPages.filter((p) => p !== page);
+        this.updateSelectedPagesDisplay();
+
+        const checkbox = document.getElementById(`selectPageCheckbox-${page}`);
+        if (checkbox) {
+          checkbox.checked = false;
+        }
+      };
+
+      pageItem.appendChild(removeBtn);
+      selectedPagesList.appendChild(pageItem);
+    });
+  }
+
+
+
   adapt(div) {
     div.classList.add("pdf-actions_container");
     const leftDirection = this.pageDirection === "rtl" ? "right" : "left";
@@ -136,7 +169,7 @@ class PdfActionsManager {
     const selectCheckbox = document.createElement("input");
     selectCheckbox.type = "checkbox";
     selectCheckbox.classList.add("pdf-actions_checkbox", "form-check-input");
-    selectCheckbox.id = "selectPageCheckbox";
+    selectCheckbox.id = `selectPageCheckbox`;
     div.appendChild(selectCheckbox);
 
     if (!window.toggleSelectPage) {
@@ -155,7 +188,7 @@ class PdfActionsManager {
           window.selectedPages.splice(index, 1);
         }
       }
-      console.log(window.selectedPages);
+      this.updateSelectedPagesDisplay();
     };
 
     const insertFileButtonContainer = document.createElement("div");
@@ -214,6 +247,10 @@ class PdfActionsManager {
       if (pageNumberElement) {
         div.removeChild(pageNumberElement);
       }
+    });
+
+    document.addEventListener("selectedPagesUpdated", () => {
+      this.updateSelectedPagesDisplay();
     });
 
     return div;

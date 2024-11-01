@@ -62,7 +62,12 @@
                     </span>
                   </button>
                 </div>
+                <div id="selected-pages-display" class="selected-pages-container hidden">
+                  <h3>Selected Pages</h3>
+                  <ul id="selected-pages-list" class="pages-list"></ul>
+                </div>
               </div>
+
               <div class="multi-tool-container">
                 <div class="d-flex flex-wrap" id="pages-container-wrapper">
                   <div id="pages-container">
@@ -97,6 +102,22 @@
       });
       const deleteButton = document.getElementById("delete-button");
       deleteButton.classList.toggle("hidden", !window.toggleSelectPage);
+      const selectedPages = document.getElementById("selected-pages-display");
+      selectedPages.classList.toggle("hidden", !window.toggleSelectPage);
+
+      if (window.toggleSelectPage) {
+        updatePageNumbersAndCheckboxes();
+      }
+    }
+    function updatePageNumbersAndCheckboxes() {
+      const pageDivs = document.querySelectorAll(".pdf-actions_container");
+
+      pageDivs.forEach((div, index) => {
+        const pageNumber = index + 1;
+        const checkbox = div.querySelector(".pdf-actions_checkbox");
+        checkbox.id = `selectPageCheckbox-${pageNumber}`;
+        checkbox.checked = window.selectedPages.includes(pageNumber);
+      });
     }
   </script>
   <script type="module">

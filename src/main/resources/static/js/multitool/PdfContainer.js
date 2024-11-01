@@ -233,15 +233,12 @@ class PdfContainer {
   }
 
   deleteSelected() {
-
     window.selectedPages.sort((a, b) => a - b);
-
     let deletions = 0;
 
     window.selectedPages.forEach((pageIndex) => {
       const adjustedIndex = pageIndex - 1 - deletions;
       const child = this.pagesContainer.children[adjustedIndex];
-
       if (child) {
         this.pagesContainer.removeChild(child);
         deletions++;
@@ -261,6 +258,8 @@ class PdfContainer {
     }
 
     window.selectedPages = [];
+
+    document.dispatchEvent(new Event("selectedPagesUpdated"));
   }
 
   splitAll() {

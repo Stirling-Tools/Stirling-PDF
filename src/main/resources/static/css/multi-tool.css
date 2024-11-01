@@ -224,3 +224,50 @@ label {
 .tool-header {
   margin: 0.5rem 1rem 2rem;
 }
+
+
+.selected-pages-container {
+  background-color: var(--md-sys-color-surface);
+  border-radius: 16px;
+  padding: 15px;
+  width: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+.selected-pages-container h3 {
+  color: var(--md-sys-color-on-surface);
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+.pages-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.page-item {
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Adds space between number and remove button */
+  font-weight: bold;
+  color: var(--md-sys-color-on-surface);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.selected-page-number {
+  margin-right: 8px;
+}
+
+.remove-btn {
+  cursor: pointer;
+  color: var(--md-sys-color-on-surface);
+  font-size: 1.2em;
+}
