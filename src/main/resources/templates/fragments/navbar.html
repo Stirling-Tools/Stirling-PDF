@@ -1,5 +1,11 @@
 <div th:fragment="navbar" class="mx-auto">
   <script th:src="@{'/js/languageSelection.js'}"></script>
+  <script th:src="@{'/js/additionalLanguageCode.js'}"></script>
+  <script th:inline="javascript">
+    // Initializing the scripts
+    initLanguageSettings();
+    removeElements();
+  </script>
   <script th:inline="javascript">
     const currentVersion = /*[[${@appVersion}]]*/ '';
     const noFavourites = /*[[#{noFavourites}]]*/ '';
@@ -36,7 +42,7 @@
                   <div class="container-fluid">
                     <div class="row">
                       <!-- Page tools menu items -->
-                      <div class="col-lg-2 col-sm-6 py px-xl-1 px-2">
+                      <div class="navbar-item col-lg-2 col-sm-6 py px-xl-1 px-2">
                         <h6 class="menu-title" th:text="#{navbar.sections.organize}"></h6>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('compress-pdf', 'zoom_in_map', 'home.compressPdfs.title', 'home.compressPdfs.desc', 'compressPdfs.tags', 'advance')}">
@@ -73,7 +79,7 @@
                         </div>
                       </div>
                       <!-- Convert to PDF menu items -->
-                      <div class="col-lg-2 col-sm-6 py px-xl-1 px-2">
+                      <div class="navbar-item col-lg-2 col-sm-6 py px-xl-1 px-2">
                         <h6 class="menu-title" th:text="#{navbar.sections.convertTo}"></h6>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('img-to-pdf', 'image', 'home.imageToPdf.title', 'home.imageToPdf.desc', 'imageToPdf.tags', 'image')}">
@@ -95,7 +101,7 @@
                         </div>
                       </div>
                       <!-- Convert from PDF menu items -->
-                      <div class="col-lg-2 col-sm-6 py px-xl-1 px-2">
+                      <div class="navbar-item col-lg-2 col-sm-6 py px-xl-1 px-2">
                         <h6 class="menu-title" th:text="#{navbar.sections.convertFrom}"></h6>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-img', 'image', 'home.pdfToImage.title', 'home.pdfToImage.desc', 'pdfToImage.tags', 'image')}">
@@ -126,7 +132,7 @@
                         </div>
                       </div>
                       <!-- Security menu items -->
-                      <div class="col-lg-2 col-sm-6 py px-xl-1 px-2">
+                      <div class="navbar-item col-lg-2 col-sm-6 py px-xl-1 px-2">
                         <h6 class="menu-title" th:text="#{navbar.sections.security}"></h6>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('sign', 'signature', 'home.sign.title', 'home.sign.desc', 'sign.tags', 'sign')}">
@@ -160,7 +166,7 @@
                         </div>
                       </div>
                       <!-- View & Edit menu items -->
-                      <div class="col-lg-2 col-sm-6 py px-xl-1 px-2">
+                      <div class="navbar-item col-lg-2 col-sm-6 py px-xl-1 px-2">
                         <h6 class="menu-title" th:text="#{navbar.sections.edit}"></h6>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('view-pdf', 'menu_book', 'home.viewPdf.title', 'home.viewPdf.desc', 'viewPdf.tags', 'other')}">
@@ -196,14 +202,14 @@
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('get-info-on-pdf', 'info', 'home.getPdfInfo.title', 'home.getPdfInfo.desc', 'getPdfInfo.tags', 'other')}">
                         </div>
                         <div
-                                th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-image-pdf','remove_selection', 'home.removeImagePdf.title', 'home.removeImagePdf.desc', 'removeImagePdf.tags', 'other')}">
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-image-pdf','remove_selection', 'home.removeImagePdf.title', 'home.removeImagePdf.desc', 'removeImagePdf.tags', 'other')}">
                         </div>
                         <div
-                                th:replace="~{fragments/navbarEntry :: navbarEntry ('replace-and-invert-color-pdf','format_color_fill', 'replace-color.title', 'home.replaceColorPdf.desc', 'replaceColorPdf.tags', 'other')}">
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('replace-and-invert-color-pdf','format_color_fill', 'replace-color.title', 'home.replaceColorPdf.desc', 'replaceColorPdf.tags', 'other')}">
                         </div>
                       </div>
                       <!-- Advance menu items -->
-                      <div class="col-lg-2 col-sm-6 py px-xl-1 px-2">
+                      <div class="navbar-item col-lg-2 col-sm-6 py px-xl-1 px-2">
                         <h6 class="menu-title" th:text="#{navbar.sections.advance}"></h6>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'advance')}">
@@ -230,7 +236,7 @@
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdf-by-sections', 'grid_on', 'home.split-by-sections.title', 'home.split-by-sections.desc', 'split-by-sections.tags', 'advance')}">
                         </div>
                         <div
-                                th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdf-by-chapters', 'book', 'home.splitPdfByChapters.title', 'home.splitPdfByChapters.desc', 'splitPdfByChapters.tags', 'advance')}">
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('split-pdf-by-chapters', 'book', 'home.splitPdfByChapters.title', 'home.splitPdfByChapters.desc', 'splitPdfByChapters.tags', 'advance')}">
                         </div>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('split-by-size-or-count', 'vertical_split', 'home.autoSizeSplitPDF.title', 'home.autoSizeSplitPDF.desc', 'autoSizeSplitPDF.tags', 'advance')}">
