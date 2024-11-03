@@ -21,6 +21,10 @@
     <meta name="msapplication-TileColor" content="#00aba9">
     <meta name="theme-color" content="#ffffff">
 
+    <script>
+      window.stirlingPDF = window.stirlingPDF || {};
+    </script>
+
     <!-- jQuery -->
     <script th:src="@{'/js/thirdParty/jquery.min.js'}"></script>
     <script th:src="@{'/js/thirdParty/jquery.validate.min.js'}"></script>
@@ -187,11 +191,15 @@
 
 <th:block th:fragment="fileSelector(name, multipleInputsForSingleRequest)" th:with="accept=${accept} ?: '*/*', inputText=${inputText} ?: #{pdfPrompt}, remoteCall=${remoteCall} ?: true, disableMultipleFiles=${disableMultipleFiles} ?: false, notRequired=${notRequired} ?: false">
                 <script th:inline="javascript">
-                  const pdfPasswordPrompt = /*[[#{error.pdfPassword}]]*/ '';
-                  const multipleInputsForSingleRequest = /*[[${multipleInputsForSingleRequest}]]*/ false;
-                  const disableMultipleFiles = /*[[${disableMultipleFiles}]]*/ false;
-                  const remoteCall = /*[[${remoteCall}]]*/ true;
-                  const sessionExpired = /*[[#{session.expired}]]*/ '';
+                  (function() {
+                    window.stirlingPDF.pdfPasswordPrompt = /*[[#{error.pdfPassword}]]*/ '';
+                    window.stirlingPDF.multipleInputsForSingleRequest = /*[[${multipleInputsForSingleRequest}]]*/ false;
+                    window.stirlingPDF.disableMultipleFiles = /*[[${disableMultipleFiles}]]*/ false;
+                    window.stirlingPDF.remoteCall = /*[[${remoteCall}]]*/ true;
+                    window.stirlingPDF.sessionExpired = /*[[#{session.expired}]]*/ '';
+                    window.stirlingPDF.refreshPage = /*[[#{session.refreshPage}]]*/ 'Refresh Page';
+                    window.stirlingPDF.error = /*[[#{error}]]*/ "Error";
+                  })();
                 </script>
                 <script th:src="@{'/js/downloader.js'}"></script>
 
