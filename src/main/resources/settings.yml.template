@@ -13,42 +13,42 @@
 
 security:
   enableLogin: false # set to 'true' to enable login
-  csrfDisabled: true # Set to 'true' to disable CSRF protection (not recommended for production)
+  csrfDisabled: true # set to 'true' to disable CSRF protection (not recommended for production)
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
   loginMethod: all # 'all' (Login Username/Password and OAuth2[must be enabled and configured]), 'normal'(only Login with Username/Password) or 'oauth2'(only Login with OAuth2)
   initialLogin:
-    username: '' # Initial username for the first login
-    password: '' # Initial password for the first login
+    username: '' # initial username for the first login
+    password: '' # initial password for the first login
   oauth2:
     enabled: false # set to 'true' to enable login (Note: enableLogin must also be 'true' for this to work)
     client:
       keycloak:
         issuer: '' # URL of the Keycloak realm's OpenID Connect Discovery endpoint
-        clientId: '' # Client ID for Keycloak OAuth2
-        clientSecret: '' # Client Secret for Keycloak OAuth2
-        scopes: openid, profile, email # Scopes for Keycloak OAuth2
-        useAsUsername: preferred_username # Field to use as the username for Keycloak OAuth2
+        clientId: '' # client ID for Keycloak OAuth2
+        clientSecret: '' # client secret for Keycloak OAuth2
+        scopes: openid, profile, email # scopes for Keycloak OAuth2
+        useAsUsername: preferred_username # field to use as the username for Keycloak OAuth2
       google:
-        clientId: '' # Client ID for Google OAuth2
-        clientSecret: '' # Client Secret for Google OAuth2
-        scopes: https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile # Scopes for Google OAuth2
-        useAsUsername: email # Field to use as the username for Google OAuth2
+        clientId: '' # client ID for Google OAuth2
+        clientSecret: '' # client secret for Google OAuth2
+        scopes: https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/userinfo.profile # scopes for Google OAuth2
+        useAsUsername: email # field to use as the username for Google OAuth2
       github:
-        clientId: '' # Client ID for GitHub OAuth2
-        clientSecret: '' # Client Secret for GitHub OAuth2
-        scopes: read:user # Scope for GitHub OAuth2
-        useAsUsername: login # Field to use as the username for GitHub OAuth2
-    issuer: '' # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) end-point
-    clientId: '' # Client ID from your provider
-    clientSecret: '' # Client Secret from your provider
+        clientId: '' # client ID for GitHub OAuth2
+        clientSecret: '' # client secret for GitHub OAuth2
+        scopes: read:user # scope for GitHub OAuth2
+        useAsUsername: login # field to use as the username for GitHub OAuth2
+    issuer: '' # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) endpoint
+    clientId: '' # client ID from your provider
+    clientSecret: '' # client secret from your provider
     autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
-    useAsUsername: email # Default is 'email'; custom fields can be used as the username
-    scopes: openid, profile, email # Specify the scopes for which the application will request permissions
-    provider: google # Set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
-  saml2: 
-    enabled: false # Currently in alpha, not recommended for use yet, enableAlphaFunctionality must be set to true
+    useAsUsername: email # default is 'email'; custom fields can be used as the username
+    scopes: openid, profile, email # specify the scopes for which the application will request permissions
+    provider: google # set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
+  saml2:
+    enabled: false # currently in alpha, not recommended for use yet, enableAlphaFunctionality must be set to true
     autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     registrationId: stirling
@@ -56,7 +56,7 @@ security:
     idpSingleLogoutUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/slo/saml
     idpSingleLoginUrl: https://dev-XXXXXXXX.okta.com/app/dev-XXXXXXXX_stirlingpdf_1/externalKey/sso/saml
     idpIssuer: http://www.okta.com/externalKey
-    idpCert: classpath:octa.crt
+    idpCert: classpath:okta.crt
     privateKey: classpath:saml-private-key.key
     spCert: classpath:saml-public-cert.crt
 
@@ -65,35 +65,35 @@ enterpriseEdition:
   key: 00000000-0000-0000-0000-000000000000
   CustomMetadata:
     autoUpdateMetadata: false # set to 'true' to automatically update metadata with below values
-    author: username # Supports text such as 'John Doe' or types such as username to autopopulate with users username
-    creator: Stirling-PDF # Supports text such as 'Company-PDF'
-    producer: Stirling-PDF # Supports text such as 'Company-PDF'
+    author: username # supports text such as 'John Doe' or types such as username to autopopulate with user's username
+    creator: Stirling-PDF # supports text such as 'Company-PDF'
+    producer: Stirling-PDF # supports text such as 'Company-PDF'
 
 legal:
-  termsAndConditions: https://www.stirlingpdf.com/terms-and-conditions # URL to the terms and conditions of your application (e.g. https://example.com/terms) Empty string to disable or filename to load from local file in static folder
-  privacyPolicy: https://www.stirlingpdf.com/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy) Empty string to disable or filename to load from local file in static folder
-  accessibilityStatement: '' # URL to the accessibility statement of your application (e.g. https://example.com/accessibility) Empty string to disable or filename to load from local file in static folder
-  cookiePolicy: '' # URL to the cookie policy of your application (e.g. https://example.com/cookie) Empty string to disable or filename to load from local file in static folder
-  impressum: '' # URL to the impressum of your application (e.g. https://example.com/impressum) Empty string to disable or filename to load from local file in static folder
+  termsAndConditions: https://www.stirlingpdf.com/terms-and-conditions # URL to the terms and conditions of your application (e.g. https://example.com/terms). Empty string to disable or filename to load from local file in static folder
+  privacyPolicy: https://www.stirlingpdf.com/privacy-policy # URL to the privacy policy of your application (e.g. https://example.com/privacy). Empty string to disable or filename to load from local file in static folder
+  accessibilityStatement: '' # URL to the accessibility statement of your application (e.g. https://example.com/accessibility). Empty string to disable or filename to load from local file in static folder
+  cookiePolicy: '' # URL to the cookie policy of your application (e.g. https://example.com/cookie). Empty string to disable or filename to load from local file in static folder
+  impressum: '' # URL to the impressum of your application (e.g. https://example.com/impressum). Empty string to disable or filename to load from local file in static folder
 
 system:
-  defaultLocale: en-US # Set the default language (e.g. 'de-DE', 'fr-FR', etc)
+  defaultLocale: en-US # set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
-  enableAlphaFunctionality: false # Set to enable functionality which might need more testing before it fully goes live (This feature might make no changes)
+  enableAlphaFunctionality: false # set to enable functionality which might need more testing before it fully goes live (this feature might make no changes)
   showUpdate: false # see when a new update is available
-  showUpdateOnlyAdmin: false # Only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
-  customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template html files
-  tessdataDir: /usr/share/tessdata # Path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
-  enableAnalytics: undefined # Set to 'true' to enable analytics, set to 'false' to disable analytics, for enterprise users this is set to true
+  showUpdateOnlyAdmin: false # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
+  customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
+  tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
+  enableAnalytics: undefined # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
 
 ui:
-  appName: '' # Application's visible name
-  homeDescription: '' # Short description or tagline shown on homepage.
-  appNameNavbar: '' # Name displayed on the navigation bar
+  appName: '' # application's visible name
+  homeDescription: '' # short description or tagline shown on the homepage
+  appNameNavbar: '' # name displayed on the navigation bar
 
 endpoints:
-  toRemove: [] # List endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
-  groupsToRemove: [] # List groups to disable (e.g. ['LibreOffice'])
+  toRemove: [] # list endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])
+  groupsToRemove: [] # list groups to disable (e.g. ['LibreOffice'])
 
 metrics:
   enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
