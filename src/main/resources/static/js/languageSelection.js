@@ -1,24 +1,3 @@
-function getDetailedLanguageCode() {
-  const supportedLanguages = [
-      "bg_BG", "ar_AR", "ca_CA", "zh_CN", "zh_TW", "da_DK", "de_DE",
-      "en_GB", "en_US", "eu_ES", "es_ES", "fr_FR", "id_ID", "ga_IE",
-      "it_IT", "nl_NL", "pl_PL", "pt_BR", "pt_PT", "ro_RO", "sk_SK",
-      "sv_SE", "tr_TR", "ru_RU", "ko_KR", "ja_JP", "el_GR", "hu_HU",
-      "hi_IN", "sr_LATN_RS", "uk_UA", "cs_CZ", "hr_HR", "no_NB", "th_TH",
-      "vi_VN"
-  ];
-
-  const userLanguages = navigator.languages ? navigator.languages : [navigator.language];
-  for (let lang of userLanguages) {
-      let matchedLang = supportedLanguages.find(supportedLang => supportedLang.startsWith(lang.replace('-', '_')));
-      if (matchedLang) {
-          return matchedLang;
-      }
-  }
-  // Fallback
-  return "en_GB";
-}
-
 function getStoredOrDefaultLocale() {
   const storedLocale = localStorage.getItem("languageCode");
   return storedLocale || getDetailedLanguageCode();
