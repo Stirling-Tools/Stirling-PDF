@@ -1,6 +1,7 @@
 # New Database Backup and Import Functionality
 
-**Full activation will take place on approximately January 5th, 2025!**
+> [!IMPORTANT]
+> **Full activation will take place on approximately January 5th, 2025!**
 
 Why is the waiting time six months?
 
