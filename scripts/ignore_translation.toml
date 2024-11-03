@@ -19,7 +19,6 @@ ignore = [
 
 [cs_CZ]
 ignore = [
-    'info',
     'language.direction',
     'pipeline.header',
     'text',
@@ -79,7 +78,6 @@ ignore = [
     'alphabet',
     'compare.document.1',
     'compare.document.2',
-    'info',
     'language.direction',
     'licenses.license',
     'licenses.module',
@@ -87,8 +85,6 @@ ignore = [
     'licenses.version',
     'pdfOrganiser.mode',
     'pipeline.title',
-    'pipelineOptions.pipelineHeader',
-    'sponsor',
     'watermark.type.2',
 ]
 
@@ -105,11 +101,8 @@ ignore = [
 [hr_HR]
 ignore = [
     'PDFToBook.selectText.1',
-    'font',
     'home.pipeline.title',
-    'info',
     'language.direction',
-    'pdfOrganiser.tags',
     'showJS.tags',
 ]
 
@@ -125,7 +118,6 @@ ignore = [
 
 [it_IT]
 ignore = [
-    'font',
     'language.direction',
     'no',
     'password',
@@ -148,18 +140,10 @@ ignore = [
 
 [nl_NL]
 ignore = [
-    'HTMLToPDF.print',
-    'adjustContrast.contrast',
     'compare.document.1',
     'compare.document.2',
-    'error',
-    'getPdfInfo.downloadJson',
-    'help',
-    'info',
     'language.direction',
     'navbar.allTools',
-    'printFile.submit',
-    'showJS.downloadJS',
     'sponsor',
 ]
 
@@ -181,7 +165,6 @@ ignore = [
 
 [pt_BR]
 ignore = [
-    'changeMetadata.trapped',
     'language.direction',
     'pipelineOptions.pipelineHeader',
 ]
@@ -227,7 +210,6 @@ ignore = [
 [th_TH]
 ignore = [
     'language.direction',
-    'pipeline.title',
     'pipelineOptions.pipelineHeader',
     'showJS.tags',
 ]
