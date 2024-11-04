@@ -121,9 +121,9 @@
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-xml', 'code', 'home.PDFToXML.title', 'home.PDFToXML.desc', 'PDFToXML.tags', 'convert')}">
                         </div>
-                        <div
+                        <!-- <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-pdfa', 'picture_as_pdf', 'home.pdfToPDFA.title', 'home.pdfToPDFA.desc', 'pdfToPDFA.tags', 'convert')}">
-                        </div>
+                        </div> -->
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-csv', 'csv', 'home.tableExtraxt.title', 'home.tableExtraxt.desc', 'pdfToPDFA.tags', 'convert')}">
                         </div>
@@ -171,9 +171,9 @@
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('view-pdf', 'menu_book', 'home.viewPdf.title', 'home.viewPdf.desc', 'viewPdf.tags', 'other')}">
                         </div>
-                        <div
+                        <!-- <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('ocr-pdf', 'quick_reference_all', 'home.ocr.title', 'home.ocr.desc', 'ocr.tags', 'other')}">
-                        </div>
+                        </div> -->
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('add-page-numbers', '123', 'home.add-page-numbers.title', 'home.add-page-numbers.desc', 'add-page-numbers.tags', 'other')}">
                         </div>
@@ -189,9 +189,9 @@
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-annotations', 'thread_unread', 'home.removeAnnotations.title', 'home.removeAnnotations.desc', 'removeAnnotations.tags', 'other')}">
                         </div>
-                        <div
+                        <!-- <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-blanks', 'scan_delete', 'home.removeBlanks.title', 'home.removeBlanks.desc', 'removeBlanks.tags', 'other')}">
-                        </div>
+                        </div> -->
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('compare', 'compare', 'home.compare.title', 'home.compare.desc', 'compare.tags', 'other')}">
                         </div>
@@ -241,9 +241,9 @@
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('split-by-size-or-count', 'vertical_split', 'home.autoSizeSplitPDF.title', 'home.autoSizeSplitPDF.desc', 'autoSizeSplitPDF.tags', 'advance')}">
                         </div>
-                        <div
+                        <!-- <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('extract-image-scans', 'scanner', 'home.ScannerImageSplit.title', 'home.ScannerImageSplit.desc', 'ScannerImageSplit.tags', 'advance')}">
-                        </div>
+                        </div> -->
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('show-javascript', 'javascript', 'home.showJS.title', 'home.showJS.desc', 'showJS.tags', 'advance')}">
                         </div>
@@ -297,7 +297,7 @@
             </a>
           </li>
 
-          <!-- <li class="nav-item">
+          <li class="nav-item">
             <a class="nav-link" href="#" th:href="@{'/merge-pdfs'}"
               th:classappend="${currentPage}=='merge-pdfs' ? 'active' : ''" th:title="#{home.merge.desc}">
               <span class="material-symbols-rounded">
@@ -305,7 +305,7 @@
               </span>
               <span class="icon-text" th:data-text="#{home.merge.title}" th:text="#{home.merge.title}"></span>
             </a>
-          </li> -->
+          </li>
 
         </ul>
         <ul class="navbar-nav  flex-nowrap">
