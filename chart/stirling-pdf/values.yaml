@@ -1,4 +1,5 @@
-extraArgs: []
+extraArgs:
+  []
   # - --storage-timestamp-tolerance 1s
 replicaCount: 1
 strategy:
@@ -10,12 +11,11 @@ image:
   pullPolicy: IfNotPresent
 secret:
   labels: {}
-## Labels to apply to all resources
-##
+# -- Labels to apply to all resources
 commonLabels: {}
 # team_name: dev
 
-# rootpath for the application
+# -- Rootpath for the application
 rootPath: /
 
 envs: []
@@ -31,22 +31,22 @@ envs: []
 #   value: "en_GB"
 
 deployment:
-  ## stirling-pdf Deployment annotations
+  # -- Stirling-pdf Deployment annotations
   annotations: {}
   #   name: value
   labels: {}
   #   name: value
-  # additional volumes
+  # -- Additional volumes
   extraVolumes: []
   #  - name: nginx-config
   #    secret:
   #      secretName: nginx-config
-  # additional volumes to mount
+  # -- Additional volumes to mount
   extraVolumeMounts: []
-  ## sidecarContainers for the stirling-pdf
-  # Can be used to add a proxy to the pod that does
-  # scanning for secrets, signing, authentication, validation
-  # of the chart's content, send notifications...
+  # -- sidecarContainers for the stirling-pdf
+  # -- Can be used to add a proxy to the pod that does
+  # -- scanning for secrets, signing, authentication, validation
+  # -- of the chart's content, send notifications...
   sidecarContainers: {}
   ## Example sidecarContainer which uses an extraVolume from above and
   ## a named port that can be referenced in the service as targetPort.
@@ -60,33 +60,34 @@ deployment:
   #        readOnly: true
   #        mountPath: /etc/nginx
 
-## Pod annotations
-## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-## Read more about kube2iam to provide access to s3 https://github.com/jtblin/kube2iam
-##
-podAnnotations: {}
+# -- Pod annotations
+# -- ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+# -- Read more about kube2iam to provide access to s3 https://github.com/jtblin/kube2iam
+podAnnotations:
+  {}
   # iam.amazonaws.com/role: role-arn
 
-## Pod labels
-## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-podLabels: {}
+# -- Pod labels
+# -- ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels:
+  {}
   # name: value
 
 service:
   servicename:
   type: ClusterIP
   externalTrafficPolicy: Local
-  ## Uses pre-assigned IP address from cloud provider
-  ## Only valid if service.type: LoadBalancer
+  # -- Uses pre-assigned IP address from cloud provider
+  # -- Only valid if service.type: LoadBalancer
   loadBalancerIP:
-  ## Limits which cidr blocks can connect to service's load balancer
-  ## Only valid if service.type: LoadBalancer
+  # -- Limits which cidr blocks can connect to service's load balancer
+  # -- Only valid if service.type: LoadBalancer
   loadBalancerSourceRanges: []
   # clusterIP: None
   externalPort: 8080
-  ## targetPort of the container to use. If a sidecar should handle the
-  ## requests first, use the named port from the sidecar. See sidecar example
-  ## from deployment above. Leave empty to use stirling-pdf directly.
+  # -- targetPort of the container to use. If a sidecar should handle the
+  # -- requests first, use the named port from the sidecar. See sidecar example
+  # -- from deployment above. Leave empty to use stirling-pdf directly.
   targetPort:
   nodePort:
   annotations: {}
@@ -133,10 +134,10 @@ serviceAccount:
   ## Annotations for the Service Account
   annotations: {}
 
-# UID/GID 1000 is the default user "stirling-pdf" used in
-# the container image starting in v0.8.0 and above. This
-# is required for local persistent storage. If your cluster
-# does not allow this, try setting securityContext: {}
+# -- UID/GID 1000 is the default user "stirling-pdf" used in
+# -- the container image starting in v0.8.0 and above. This
+# -- is required for local persistent storage. If your cluster
+# -- does not allow this, try setting securityContext: {}
 securityContext:
   enabled: true
   fsGroup: 1000
@@ -159,7 +160,8 @@ persistence:
   enabled: false
   accessMode: ReadWriteOnce
   size: 8Gi
-  labels: {}
+  labels:
+    {}
     # name: value
   path: /tmp
   ## A manually managed Persistent Volume and Claim
@@ -167,13 +169,12 @@ persistence:
   ## If defined, PVC must be created manually before volume will be bound
   # existingClaim:
 
-  ## stirling-pdf data Persistent Volume Storage Class
-  ## If defined, storageClassName: <storageClass>
-  ## If set to "-", storageClassName: "", which disables dynamic provisioning
-  ## If undefined (the default) or set to null, no storageClassName spec is
-  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-  ##   GKE, AWS & OpenStack)
-  ##
+  # -- stirling-pdf data Persistent Volume Storage Class
+  # If defined, storageClassName: <storageClass>
+  # If set to "-", storageClassName: "", which disables dynamic provisioning
+  # If undefined (the default) or set to null, no storageClassName spec is
+  #   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  #   GKE, AWS & OpenStack)
   # storageClass: "-"
   # volumeName:
   pv:
@@ -186,9 +187,8 @@ persistence:
       server:
       path:
 
-## Init containers parameters:
-## volumePermissions: Change the owner of the persistent volume mountpoint to RunAsUser:fsGroup
-##
+# -- Init containers parameters:
+# -- volumePermissions: Change the owner of the persistent volume mountpoint to RunAsUser:fsGroup
 volumePermissions:
   image:
     registry: docker.io
@@ -202,25 +202,25 @@ volumePermissions:
     # pullSecrets:
     #   - myRegistryKeySecretName
 
-## Ingress for load balancer
+# -- Ingress for load balancer
 ingress:
   enabled: false
   pathType: "ImplementationSpecific"
-  ## stirling-pdf Ingress labels
-  ##
-  labels: {}
+  # -- Stirling-pdf Ingress labels
+  labels:
+    {}
     # dns: "route53"
 
-  ## stirling-pdf Ingress annotations
-  ##
-  annotations: {}
+  # -- Stirling-pdf Ingress annotations
+  annotations:
+    {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
 
-  ## stirling-pdf Ingress hostnames
-  ## Must be provided if Ingress is enabled
-  ##
-  hosts: []
+  # -- Stirling-pdf Ingress hostnames
+  # -- Must be provided if Ingress is enabled
+  hosts:
+    []
     # - name: stirling-pdf.domain1.com
     #   path: /
     #   tls: false
@@ -234,7 +234,6 @@ ingress:
     #   ## Secrets must be added manually to the namespace
     #   tlsSecret: stirling-pdf.domain2-tls
 
-  # For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
-  # See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
+  # -- For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
+  # -- See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
   ingressClassName:
-

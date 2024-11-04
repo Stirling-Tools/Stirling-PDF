@@ -37,3 +37,9 @@ repos:
         language: python
         exclude: ^(src/main/resources/static/pdfjs|src/main/resources/static/pdfjs-legacy)
         files: ^.*(\.html|\.css|\.js)$
+  - repo: https://github.com/norwoodj/helm-docs
+    rev: v1.14.2
+    hooks:
+      - id: helm-docs-built
+        args:
+          - --chart-search-root=chart
