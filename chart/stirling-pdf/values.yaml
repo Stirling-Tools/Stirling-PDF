@@ -18,6 +18,7 @@ commonLabels: {}
 # -- Rootpath for the application
 rootPath: /
 
+# -- Environment variables to add to the stirling-pdf pods
 envs: []
 # - name: UI_APP_NAME
 #   value: "Stirling PDF"
@@ -29,6 +30,13 @@ envs: []
 #   value: "true"
 # - name: APP_LOCALE
 #   value: "en_GB"
+
+# -- Environment variables from secrets or configmaps to add to the stirling-pdf pods
+envsFrom: []
+# - configMapRef:
+#     name: config
+# - secretRef:
+#     name: config
 
 deployment:
   # -- Stirling-pdf Deployment annotations

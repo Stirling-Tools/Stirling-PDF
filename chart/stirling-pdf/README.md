@@ -1,6 +1,6 @@
 # stirling-pdf-chart
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 0.30.1](https://img.shields.io/badge/AppVersion-0.30.1-informational?style=flat-square)
+![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-informational?style=flat-square) ![AppVersion: 0.31.1](https://img.shields.io/badge/AppVersion-0.31.1-informational?style=flat-square)
 
 locally hosted web application that allows you to perform various operations on PDF files
 
@@ -21,7 +21,7 @@ locally hosted web application that allows you to perform various operations on 
 Add the following repo to use the chart:
 
 ```console
-helm repo add stirling-pdf https://stirling-tools.github.io/Stirling-PDF
+helm repo add stirling-pdf https://docs.stirlingpdf.com/Stirling-PDF/
 ```
 
 ## Values
@@ -36,7 +36,8 @@ helm repo add stirling-pdf https://stirling-tools.github.io/Stirling-PDF
 | deployment.extraVolumes | list | `[]` | Additional volumes |
 | deployment.labels | object | `{}` |  |
 | deployment.sidecarContainers | object | `{}` | of the chart's content, send notifications... |
-| envs | list | `[]` |  |
+| envs | list | `[]` | Environment variables to add to the stirling-pdf pods |
+| envsFrom | list | `[]` | Environment variables from secrets or configmaps to add to the stirling-pdf pods |
 | extraArgs | list | `[]` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.repository | string | `"frooodle/s-pdf"` |  |

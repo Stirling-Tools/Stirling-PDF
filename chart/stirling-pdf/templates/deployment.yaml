@@ -68,6 +68,10 @@ spec:
 {{- if .Values.envs }}
 {{ toYaml .Values.envs | indent 8 }}
 {{- end }}
+{{- with .Values.envsFrom }}
+        envFrom:
+{{- toYaml . | nindent 8 }}
+{{- end }}
 {{- if .Values.extraArgs }}
         args:
 {{ toYaml .Values.extraArgs | indent 8 }}
