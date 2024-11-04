@@ -81,7 +81,7 @@ jobs:
             type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/main' }}
       - name: Build and push Dockerfile-ultra-lite
         uses: docker/build-push-action@v6
-        if: github.ref != 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         with:
           context: .
           file: ./Dockerfile-ultra-lite
@@ -95,7 +95,7 @@ jobs:
       - name: Generate tags fat
         id: meta3
         uses: docker/metadata-action@v5
-        if: github.ref != 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         with:
           images: |
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
@@ -106,7 +106,7 @@ jobs:
             type=raw,value=latest-fat,enable=${{ github.ref == 'refs/heads/master' }}
       - name: Build and push main Dockerfile fat
         uses: docker/build-push-action@v6
-        if: github.ref != 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
