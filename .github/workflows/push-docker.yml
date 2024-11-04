@@ -51,7 +51,7 @@ jobs:
         with:
           images: |
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
-          tags: >
+          tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{github.ref == 'refs/heads/main' }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
@@ -75,7 +75,7 @@ jobs:
         with:
           images: |
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
-          tags: >
+          tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/main' }}
       - name: Build and push Dockerfile-ultra-lite
@@ -98,7 +98,7 @@ jobs:
         with:
           images: |
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/s-pdf
-          tags: >
+          tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-fat,enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=latest-fat,enable=${{ github.ref == 'refs/heads/master' }}
       - name: Build and push main Dockerfile fat
