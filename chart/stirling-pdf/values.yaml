@@ -76,6 +76,10 @@ podLabels:
 service:
   servicename:
   type: ClusterIP
+  # -- set the ip family policy to configure dual-stack
+  ipFamilyPolicy: ""
+  # -- Can be IPv4 and/or IPv6
+  ipFamilies: []
   externalTrafficPolicy: Local
   # -- Uses pre-assigned IP address from cloud provider
   # -- Only valid if service.type: LoadBalancer

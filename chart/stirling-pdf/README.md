@@ -1,6 +1,6 @@
 # stirling-pdf-chart
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 0.30.1](https://img.shields.io/badge/AppVersion-0.30.1-informational?style=flat-square)
+![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-informational?style=flat-square) ![AppVersion: 0.31.1](https://img.shields.io/badge/AppVersion-0.31.1-informational?style=flat-square)
 
 locally hosted web application that allows you to perform various operations on PDF files
 
@@ -21,7 +21,7 @@ locally hosted web application that allows you to perform various operations on 
 Add the following repo to use the chart:
 
 ```console
-helm repo add stirling-pdf https://stirling-tools.github.io/Stirling-PDF
+helm repo add stirling-pdf https://docs.stirlingpdf.com/Stirling-PDF/
 ```
 
 ## Values
@@ -76,6 +76,8 @@ helm repo add stirling-pdf https://stirling-tools.github.io/Stirling-PDF
 | service.annotations | object | `{}` |  |
 | service.externalPort | int | `8080` |  |
 | service.externalTrafficPolicy | string | `"Local"` |  |
+| service.ipFamilies | list | `[]` | Can be IPv4 and/or IPv6 |
+| service.ipFamilyPolicy | string | `""` | set the ip family policy to configure dual-stack |
 | service.labels | object | `{}` |  |
 | service.loadBalancerIP | string | `nil` | Only valid if service.type: LoadBalancer |
 | service.loadBalancerSourceRanges | list | `[]` | Only valid if service.type: LoadBalancer |

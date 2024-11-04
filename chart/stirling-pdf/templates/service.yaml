@@ -13,6 +13,12 @@ metadata:
     {{- end }}
 spec:
   type: {{ .Values.service.type }}
+  {{- if .Values.service.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ .Values.service.ipFamilyPolicy }}
+  {{- end }}
+  {{- if .Values.service.ipFamilies }}
+  ipFamilies: {{ .Values.service.ipFamilies | toYaml | nindent 2 }}
+  {{- end }}
   {{- if (or (eq .Values.service.type "LoadBalancer") (and (eq .Values.service.type "NodePort") (not (empty .Values.service.nodePort)))) }}
   externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
   {{- end }}
