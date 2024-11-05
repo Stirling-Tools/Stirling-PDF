@@ -2,20 +2,14 @@
           <div id="errorContainer" class="alert alert-danger alert-dismissible fade show" role="alert" style="display: none;">
             <h4 class="alert-heading" th:text="#{error}"></h4>
             <p></p>
-            <button type="button" class="btn btn-danger" onclick="toggletrace()" th:text="#{error.showStack}"></button>
-            <button type="button" class="btn btn-secondary" onclick="copytrace()" th:text="#{error.copyStack}"></button>
+            <!-- <button type="button" class="btn btn-danger" onclick="toggletrace()" th:text="#{error.showStack}"></button> -->
+            <!-- <button type="button" class="btn btn-secondary" onclick="copytrace()" th:text="#{error.copyStack}"></button> -->
             <button type="button" class="btn btn-info" onclick="showHelp()" th:text="#{help}"></button>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
               <span class="material-symbols-rounded">
                 close
               </span>
             </button>
-            <!-- Stack trace section -->
-            <div id="trace" style="max-height: 0; overflow: hidden;">
-              <div>
-                <pre id="traceContent"></pre>
-              </div>
-            </div>
           </div>
 
           <div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
@@ -36,10 +30,9 @@
                       <p class="lead" th:text="#{error.sorry}"></p>
                       <br>
                       <h2 th:text="#{error.needHelp}"></h2>
-                      <p th:text="#{error.contactTip}"></p>
+                      <p>"If you're still having trouble, don't hesitate to reach out to us for help. You can submit a ticket:"</p>
                       <div id="button-group">
-                        <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" target="_blank" th:text="#{error.githubSubmit}"></a>
-                        <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" target="_blank" th:text="#{error.discordSubmit}"></a>
+                        <a href="https://konfuzio.com/support" id="github-button" target="_blank">"Submit a ticket"</a>
                       </div>
                       <a th:href="@{'/'}" class="home-button" th:text="#{goHomepage}"></a>
                       <a data-bs-dismiss="modal" class="home-button" th:text="#{close}"></a>

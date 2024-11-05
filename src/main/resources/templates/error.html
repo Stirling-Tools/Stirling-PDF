@@ -16,10 +16,9 @@
             <p class="lead" th:unless="${param.status == '404'}" th:text="#{error.404.2}"></p>
             <br>
             <h2 th:text="#{error.needHelp}"></h2>
-            <p th:text="#{error.contactTip}"></p>
+            <p>If you're still having trouble, don't hesitate to reach out to us for help. You can submit a ticket:</p>
             <div id="button-group">
-              <a href="https://github.com/Stirling-Tools/Stirling-PDF/issues" id="github-button" class="btn btn-primary" target="_blank" th:text="#{error.github}"></a>
-              <a href="https://discord.gg/Cn8pWhQRxZ" id="discord-button" class="btn btn-primary" target="_blank" th:text="#{joinDiscord}"></a>
+              <a href="https://konfuzio.com/support" id="github-button" class="btn btn-primary" target="_blank">Submit a ticket</a>
             </div>
             <a th:href="@{'/'}" id="home-button" class="home-button btn btn-primary"  th:text="#{goHomepage}"></a>
           </div>
