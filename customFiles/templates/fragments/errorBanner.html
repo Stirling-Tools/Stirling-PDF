@@ -4,8 +4,8 @@
   <div id="errorContainer" th:if="${message}" class="alert alert-danger alert-dismissible alert-container fade show" role="alert">
     <div class="alert-header d-flex">
       <span class="alert-heading" th:text="'Error:  ' + ${status} + '  ' + ${error}"></span>
-      <button type="button" class="btn btn-danger" th:if="${trace}" onclick="toggletrace()" th:text="#{error.showStack}"></button>
-      <button type="button" class="btn btn-secondary" th:if="${trace}" onclick="copytrace()" th:text="#{error.copyStack}"></button>
+      <!-- <button type="button" class="btn btn-danger" th:if="${trace}" onclick="toggletrace()" th:text="#{error.showStack}"></button> -->
+      <!-- <button type="button" class="btn btn-secondary" th:if="${trace}" onclick="copytrace()" th:text="#{error.copyStack}"></button> -->
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissError()">
         <span class="material-symbols-rounded">
           close
