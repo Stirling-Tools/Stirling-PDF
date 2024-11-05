@@ -93,38 +93,6 @@ class PdfActionsManager {
     this.splitFileButtonCallback = this.splitFileButtonCallback.bind(this);
   }
 
-  updateSelectedPagesDisplay() {
-    const selectedPagesList = document.getElementById("selected-pages-list");
-    selectedPagesList.innerHTML = ""; // Clear the list
-
-    window.selectedPages.forEach((page) => {
-      const pageItem = document.createElement("div");
-      pageItem.className = "page-item";
-
-      const pageNumber = document.createElement("span");
-      pageNumber.className = "selected-page-number";
-      pageNumber.innerText = `Page ${page}`;
-      pageItem.appendChild(pageNumber);
-
-      const removeBtn = document.createElement("span");
-      removeBtn.className = "remove-btn";
-      removeBtn.innerHTML = "✕";
-      removeBtn.onclick = () => {
-        window.selectedPages = window.selectedPages.filter((p) => p !== page);
-        this.updateSelectedPagesDisplay();
-
-        const checkbox = document.getElementById(`selectPageCheckbox-${page}`);
-        if (checkbox) {
-          checkbox.checked = false;
-        }
-      };
-
-      pageItem.appendChild(removeBtn);
-      selectedPagesList.appendChild(pageItem);
-    });
-  }
-
-
 
   adapt(div) {
     div.classList.add("pdf-actions_container");
@@ -170,6 +138,7 @@ class PdfActionsManager {
     selectCheckbox.type = "checkbox";
     selectCheckbox.classList.add("pdf-actions_checkbox", "form-check-input");
     selectCheckbox.id = `selectPageCheckbox`;
+    selectCheckbox.checked = window.selectAll;
     div.appendChild(selectCheckbox);
 
     if (!window.toggleSelectPage) {
@@ -188,7 +157,7 @@ class PdfActionsManager {
           window.selectedPages.splice(index, 1);
         }
       }
-      this.updateSelectedPagesDisplay();
+      window.updateSelectedPagesDisplay();
     };
 
     const insertFileButtonContainer = document.createElement("div");
@@ -250,7 +219,7 @@ class PdfActionsManager {
     });
 
     document.addEventListener("selectedPagesUpdated", () => {
-      this.updateSelectedPagesDisplay();
+      window.updateSelectedPagesDisplay();
     });
 
     return div;

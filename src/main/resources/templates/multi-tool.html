@@ -47,11 +47,16 @@
                       cut
                     </span>
                   </button>
-                  <div>
+                  <div id="select-pages-container" class="checkbox-container hidden">
+                    <label class="checkbox-label">Select Pages</label>
                     <input type="checkbox" class="form-check-input" id="toggleSelectPageVisibility"
                       onclick="toggleSelectPageVisibility()">
                   </div>
-                  <div class="button-container">
+                  <div id="select-All-Container" class="checkbox-container hidden">
+                    <label class="checkbox-label">Select All</label>
+                    <input type="checkbox" class="form-check-input" id="selectAll" onclick="toggleSelectAll(this)">
+                  </div>
+                  <div class=" button-container">
                     <button id="delete-button" class="btn btn-danger hidden" onclick="deleteSelected()">
                       <span class="material-symbols-rounded">delete</span>
                     </button>
@@ -94,31 +99,7 @@
   <script>
     window.selectedPages = [];
     window.selectpages = false;
-    function toggleSelectPageVisibility() {
-      window.toggleSelectPage = !window.toggleSelectPage;
-      const checkboxes = document.querySelectorAll(".pdf-actions_checkbox");
-      checkboxes.forEach(checkbox => {
-        checkbox.classList.toggle("hidden", !window.toggleSelectPage);
-      });
-      const deleteButton = document.getElementById("delete-button");
-      deleteButton.classList.toggle("hidden", !window.toggleSelectPage);
-      const selectedPages = document.getElementById("selected-pages-display");
-      selectedPages.classList.toggle("hidden", !window.toggleSelectPage);
-
-      if (window.toggleSelectPage) {
-        updatePageNumbersAndCheckboxes();
-      }
-    }
-    function updatePageNumbersAndCheckboxes() {
-      const pageDivs = document.querySelectorAll(".pdf-actions_container");
-
-      pageDivs.forEach((div, index) => {
-        const pageNumber = index + 1;
-        const checkbox = div.querySelector(".pdf-actions_checkbox");
-        checkbox.id = `selectPageCheckbox-${pageNumber}`;
-        checkbox.checked = window.selectedPages.includes(pageNumber);
-      });
-    }
+    window.selectAll = false;
   </script>
   <script type="module">
     import PdfContainer from './js/multitool/PdfContainer.js';

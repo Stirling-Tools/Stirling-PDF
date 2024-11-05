@@ -271,3 +271,14 @@ label {
   color: var(--md-sys-color-on-surface);
   font-size: 1.2em;
 }
+
+.checkbox-container {
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.checkbox-label {
+  font-size: medium;
+}
