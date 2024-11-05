@@ -49,7 +49,6 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
     @Transactional
     public void removeUserTokens(String username) {
         try {
-            // Use either deleteByUsername or deleteAllUserTokens
             persistentLoginRepository.deleteByUsername(username);
         } catch (Exception e) {
         }
