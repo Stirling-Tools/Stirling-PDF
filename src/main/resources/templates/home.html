@@ -330,60 +330,6 @@
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
 
-
-  <!-- Survey Modal -->
-  <div class="modal fade" id="surveyModal" tabindex="-1" role="dialog" aria-labelledby="surveyModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="surveyModalLabel" th:text="#{survey.title}">Stirling-PDF Survey</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <p><span th:text="#{survey.changes}">Stirling-PDF has changed since the last survey! To find out more please check our blog post here: </span><a href="https://www.stirlingpdf.com/blog/stirling-pdf-future" target="_blank"> Stirling PDF</a></p>
-
-          <p th:text="#{survey.changes2}">With these changes we are getting paid business support and funding</p>
-          <p th:text="#{survey.please}">Please consider taking our survey!</p>
-          <p th:text="#{survey.disabled}">Survey popup will be disabled in following updates but available at foot of page)</p>
-          <a href="https://stirlingpdf.info/s/cm28y3niq000o56dv7liv8wsu" target="_blank" class="btn btn-primary" id="takeSurvey"th:text="#{survey.button}" >Take Survey</a>
-        </div>
-        <div class="modal-footer">
-          <div class="form-check mb-3">
-            <input type="checkbox" id="dontShowAgain">
-            <label for="dontShowAgain" th:text="#{survey.dontShowAgain}">Don't show again</label>
-          </div>
-
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{close}">Close</button>
-
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- Analytics Modal -->
-  <div class="modal fade" id="analyticsModal" tabindex="-1" role="dialog" aria-labelledby="analyticsModalLabel" aria-hidden="true" th:if="${@analyticsPrompt}">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="analyticsModalLabel" th:text="#{analytics.title}">Do you want make Stirling PDF better?</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <p th:text="#{analytics.paragraph1}">Stirling PDF has opt in analytics to help us improve the product. We do not track any personal information or file contents.</p>
-          <p th:text="#{analytics.paragraph2}">Please consider enabling analytics to help Stirling-PDF grow and to allow us to understand our users better.</p>
-          <p th:text="#{analytics.settings}">You can change the settings for analytics in the config/settings.yml file</p>
-        </div>
-        <div class="modal-footer justify-content-between">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="setAnalytics(false)" th:text="#{analytics.disable}">Disable analytics</button>
-                <button type="button" class="btn btn-primary" th:text="#{analytics.enable}" onclick="setAnalytics(true)">Enable analytics</button>
-            </div>
-      </div>
-    </div>
-  </div>
-
-
-
   <script th:src="@{'/js/fetch-utils.js'}"></script>
   <script th:inline="javascript">
 
