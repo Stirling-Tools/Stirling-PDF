@@ -21,26 +21,54 @@ async function displayFiles(files) {
   for (let i = 0; i < files.length; i++) {
     const pageCount = await getPDFPageCount(files[i]);
     const pageLabel = pageCount === 1 ? pageTranslation : pagesTranslation;
+    
+    // Create list item
     const item = document.createElement("li");
     item.className = "list-group-item";
-    item.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center w-100">
-                <div class="filename">${files[i].name}</div>
-                <div class="page-info">
-                    <span class="page-count">${pageCount} ${pageLabel}</span>
-                </div>
-                <div class="arrows d-flex">
-                    <button class="btn btn-secondary move-up"><span>&uarr;</span></button>
-                    <button class="btn btn-secondary move-down"><span>&darr;</span></button>
-                    <button class="btn btn-danger remove-file"><span>&times;</span></button>
-                </div>
-            </div>
-        `;
+
+    // Create filename div and set textContent to sanitize
+    const fileNameDiv = document.createElement("div");
+    fileNameDiv.className = "filename";
+    fileNameDiv.textContent = files[i].name;
+
+    // Create page info div and set textContent to sanitize
+    const pageInfoDiv = document.createElement("div");
+    pageInfoDiv.className = "page-info";
+    const pageCountSpan = document.createElement("span");
+    pageCountSpan.className = "page-count";
+    pageCountSpan.textContent = `${pageCount} ${pageLabel}`;
+    pageInfoDiv.appendChild(pageCountSpan);
+
+    // Create arrows div with buttons
+    const arrowsDiv = document.createElement("div");
+    arrowsDiv.className = "arrows d-flex";
+
+    const moveUpButton = document.createElement("button");
+    moveUpButton.className = "btn btn-secondary move-up";
+    moveUpButton.innerHTML = "<span>&uarr;</span>";
+
+    const moveDownButton = document.createElement("button");
+    moveDownButton.className = "btn btn-secondary move-down";
+    moveDownButton.innerHTML = "<span>&darr;</span>";
+
+    const removeButton = document.createElement("button");
+    removeButton.className = "btn btn-danger remove-file";
+    removeButton.innerHTML = "<span>&times;</span>";
+
+    arrowsDiv.append(moveUpButton, moveDownButton, removeButton);
+
+    // Append elements to item and then to list
+    const itemContainer = document.createElement("div");
+    itemContainer.className = "d-flex justify-content-between align-items-center w-100";
+    itemContainer.append(fileNameDiv, pageInfoDiv, arrowsDiv);
+
+    item.appendChild(itemContainer);
     list.appendChild(item);
   }
 
   attachMoveButtons();
 }
+
 
 async function getPDFPageCount(file) {
   const blobUrl = URL.createObjectURL(file);
