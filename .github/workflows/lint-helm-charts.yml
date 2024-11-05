@@ -26,10 +26,10 @@ jobs:
           with:
             python-version: '3.10'
 
-        - name: Run pre-commit
-          uses: pre-commit/action@v3.0.1
+        - name: Ensure documentation is updated
+          uses: docker://jnorwood/helm-docs:v1.14.2
           with:
-            extra_args: helm-docs-built --chart-search-root=chart
+            args: --chart-search-root=chart
 
         - name: Set up chart-testing
           uses: helm/chart-testing-action@v2
