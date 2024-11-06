@@ -141,7 +141,7 @@ class PdfActionsManager {
     selectCheckbox.checked = window.selectAll;
     div.appendChild(selectCheckbox);
 
-    if (!window.toggleSelectPage) {
+    if (!window.selectPage) {
       selectCheckbox.classList.add("hidden");
     } else {
       selectCheckbox.classList.remove("hidden");
@@ -149,6 +149,9 @@ class PdfActionsManager {
 
     selectCheckbox.onchange = () => {
       const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
+      if (window.selectAll) {
+        selectCheckbox.checked = true;
+      }
       if (selectCheckbox.checked) {
         window.selectedPages.push(pageNumber);
       } else {

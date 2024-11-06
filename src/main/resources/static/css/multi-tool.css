@@ -247,6 +247,8 @@ label {
   gap: 10px;
   padding: 0;
   list-style: none;
+  max-height: 10rem;
+  overflow: auto;
 }
 
 .page-item {
@@ -256,14 +258,16 @@ label {
   display: flex;
   align-items: center;
   gap: 8px;
-  /* Adds space between number and remove button */
   font-weight: bold;
   color: var(--md-sys-color-on-surface);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 8rem;
+  height: 2.5rem;
 }
 
 .selected-page-number {
   margin-right: 8px;
+  width: 6rem;
 }
 
 .remove-btn {

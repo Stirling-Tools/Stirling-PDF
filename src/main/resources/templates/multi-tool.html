@@ -48,12 +48,12 @@
                     </span>
                   </button>
                   <div id="select-pages-container" class="checkbox-container hidden">
-                    <label class="checkbox-label">Select Pages</label>
+                    <label class="checkbox-label" th:text="#{multiTool.selectPages}">Select Pages</label>
                     <input type="checkbox" class="form-check-input" id="toggleSelectPageVisibility"
                       onclick="toggleSelectPageVisibility()">
                   </div>
                   <div id="select-All-Container" class="checkbox-container hidden">
-                    <label class="checkbox-label">Select All</label>
+                    <label class="checkbox-label" th:text="#{multiTool.selectAll}">Select All</label>
                     <input type="checkbox" class="form-check-input" id="selectAll" onclick="toggleSelectAll(this)">
                   </div>
                   <div class=" button-container">
@@ -68,7 +68,7 @@
                   </button>
                 </div>
                 <div id="selected-pages-display" class="selected-pages-container hidden">
-                  <h3>Selected Pages</h3>
+                  <h3 th:text="#{multiTool.selectedPages}">Selected Pages</h3>
                   <ul id="selected-pages-list" class="pages-list"></ul>
                 </div>
               </div>

@@ -99,8 +99,8 @@ class PdfContainer {
 
       const selectAll = document.getElementById("select-pages-container");
       selectAll.classList.toggle("hidden", false);
-    };
 
+    };
     input.click();
   }
 
@@ -232,7 +232,7 @@ class PdfContainer {
       if (!child) continue;
 
       const pageIndex = i + 1;
-      if (window.toggleSelectPage && !window.selectedPages.includes(pageIndex)) continue;
+      if (window.selectPage && !window.selectedPages.includes(pageIndex)) continue;
 
       const img = child.querySelector("img");
       if (!img) continue;
@@ -269,7 +269,7 @@ class PdfContainer {
     }
 
     window.selectedPages = [];
-
+    this.updatePageNumbersAndCheckboxes();
     document.dispatchEvent(new Event("selectedPagesUpdated"));
   }
 
@@ -306,8 +306,9 @@ class PdfContainer {
       pageItem.className = "page-item";
 
       const pageNumber = document.createElement("span");
+      const pagelabel = /*[[#{multiTool.page}]]*/ 'Page';
       pageNumber.className = "selected-page-number";
-      pageNumber.innerText = `Page ${page}`;
+      pageNumber.innerText = `${pagelabel} ${page}`;
       pageItem.appendChild(pageNumber);
 
       const removeBtn = document.createElement("span");
@@ -388,48 +389,50 @@ class PdfContainer {
     const pdfDoc = await PDFLib.PDFDocument.create();
     const pageContainers = this.pagesContainer.querySelectorAll(".page-container"); // Select all .page-container elements
     for (var i = 0; i < pageContainers.length; i++) {
-      const img = pageContainers[i].querySelector("img"); // Find the img element within each .page-container
-      if (!img) continue;
-      let page;
-      if (img.doc) {
-        const pages = await pdfDoc.copyPages(img.doc, [img.pageIdx]);
-        page = pages[0];
-        pdfDoc.addPage(page);
-      } else {
-        page = pdfDoc.addPage([img.naturalWidth, img.naturalHeight]);
-        const imageBytes = await fetch(img.src).then((res) => res.arrayBuffer());
-        const uint8Array = new Uint8Array(imageBytes);
-        const imageType = detectImageType(uint8Array);
+      if (!window.selectPage || window.selectedPages.includes(i + 1)) {
+        const img = pageContainers[i].querySelector("img"); // Find the img element within each .page-container
+        if (!img) continue;
+        let page;
+        if (img.doc) {
+          const pages = await pdfDoc.copyPages(img.doc, [img.pageIdx]);
+          page = pages[0];
+          pdfDoc.addPage(page);
+        } else {
+          page = pdfDoc.addPage([img.naturalWidth, img.naturalHeight]);
+          const imageBytes = await fetch(img.src).then((res) => res.arrayBuffer());
+          const uint8Array = new Uint8Array(imageBytes);
+          const imageType = detectImageType(uint8Array);
 
-        let image;
-        switch (imageType) {
-          case 'PNG':
-            image = await pdfDoc.embedPng(imageBytes);
-            break;
-          case 'JPEG':
-            image = await pdfDoc.embedJpg(imageBytes);
-            break;
-          case 'TIFF':
-            image = await pdfDoc.embedTiff(imageBytes);
-            break;
-          case 'GIF':
-            console.warn(`Unsupported image type: ${imageType}`);
-            continue; // Skip this image
-          default:
-            console.warn(`Unsupported image type: ${imageType}`);
-            continue; // Skip this image
+          let image;
+          switch (imageType) {
+            case 'PNG':
+              image = await pdfDoc.embedPng(imageBytes);
+              break;
+            case 'JPEG':
+              image = await pdfDoc.embedJpg(imageBytes);
+              break;
+            case 'TIFF':
+              image = await pdfDoc.embedTiff(imageBytes);
+              break;
+            case 'GIF':
+              console.warn(`Unsupported image type: ${imageType}`);
+              continue; // Skip this image
+            default:
+              console.warn(`Unsupported image type: ${imageType}`);
+              continue; // Skip this image
+          }
+          page.drawImage(image, {
+            x: 0,
+            y: 0,
+            width: img.naturalWidth,
+            height: img.naturalHeight,
+          });
         }
-        page.drawImage(image, {
-          x: 0,
-          y: 0,
-          width: img.naturalWidth,
-          height: img.naturalHeight,
-        });
-      }
-      const rotation = img.style.rotate;
-      if (rotation) {
-        const rotationAngle = parseInt(rotation.replace(/[^\d-]/g, ""));
-        page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle));
+        const rotation = img.style.rotate;
+        if (rotation) {
+          const rotationAngle = parseInt(rotation.replace(/[^\d-]/g, ""));
+          page.setRotation(PDFLib.degrees(page.getRotation().angle + rotationAngle));
+        }
       }
     }
     pdfDoc.setCreator(stirlingPDFLabel);
@@ -544,23 +547,23 @@ class PdfContainer {
 
 
   toggleSelectPageVisibility() {
-    window.toggleSelectPage = !window.toggleSelectPage;
+    window.selectPage = !window.selectPage;
     const checkboxes = document.querySelectorAll(".pdf-actions_checkbox");
     checkboxes.forEach(checkbox => {
-      checkbox.classList.toggle("hidden", !window.toggleSelectPage);
+      checkbox.classList.toggle("hidden", !window.selectPage);
     });
     const deleteButton = document.getElementById("delete-button");
-    deleteButton.classList.toggle("hidden", !window.toggleSelectPage);
+    deleteButton.classList.toggle("hidden", !window.selectPage);
     const selectedPages = document.getElementById("selected-pages-display");
-    selectedPages.classList.toggle("hidden", !window.toggleSelectPage);
+    selectedPages.classList.toggle("hidden", !window.selectPage);
     const selectAll = document.getElementById("select-All-Container");
-    selectAll.classList.toggle("hidden", !window.toggleSelectPage);
+    selectAll.classList.toggle("hidden", !window.selectPage);
 
-    if (window.toggleSelectPage) {
+    if (window.selectPage) {
       this.updatePageNumbersAndCheckboxes();
     }
-
   }
+
 
   updatePageNumbersAndCheckboxes() {
     const pageDivs = document.querySelectorAll(".pdf-actions_container");
