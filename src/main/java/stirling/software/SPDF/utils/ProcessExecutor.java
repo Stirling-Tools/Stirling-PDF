@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +22,7 @@ import io.github.pixee.security.BoundedLineReader;
 public class ProcessExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessExecutor.class);
+    private static final Properties properties = new Properties();
 
     public enum Processes {
         LIBRE_OFFICE,
@@ -45,26 +47,74 @@ public class ProcessExecutor {
                 key -> {
                     int semaphoreLimit =
                             switch (key) {
-                                case LIBRE_OFFICE -> 1;
-                                case PDFTOHTML -> 1;
-                                case OCR_MY_PDF -> 2;
-                                case PYTHON_OPENCV -> 8;
-                                case GHOSTSCRIPT -> 16;
-                                case WEASYPRINT -> 16;
-                                case INSTALL_APP -> 1;
-                                case CALIBRE -> 1;
+                                case LIBRE_OFFICE ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "semaphoreLimit.libreOffice", 1);
+                                case PDFTOHTML ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "semaphoreLimit.pdfToHtml", 1);
+                                case OCR_MY_PDF ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "semaphoreLimit.ocrMyPdf", 2);
+                                case PYTHON_OPENCV ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "semaphoreLimit.pythonOpenCv", 8);
+                                case GHOSTSCRIPT ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "semaphoreLimit.ghostScript", 16);
+                                case WEASYPRINT ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "semaphoreLimit.weasyPrint", 16);
+                                case INSTALL_APP ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "semaphoreLimit.installApp", 1);
+                                case CALIBRE ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "semaphoreLimit.calibre", 1);
                             };
 
                     long timeoutMinutes =
                             switch (key) {
-                                case LIBRE_OFFICE -> 30;
-                                case PDFTOHTML -> 20;
-                                case OCR_MY_PDF -> 30;
-                                case PYTHON_OPENCV -> 30;
-                                case GHOSTSCRIPT -> 30;
-                                case WEASYPRINT -> 30;
-                                case INSTALL_APP -> 60;
-                                case CALIBRE -> 30;
+                                case LIBRE_OFFICE ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "timeoutMinutes.libreOffice", 30);
+                                case PDFTOHTML ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "timeoutMinutes.pdfToHtml", 20);
+                                case OCR_MY_PDF ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "timeoutMinutes.ocrMyPdf", 30);
+                                case PYTHON_OPENCV ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "timeoutMinutes.pythonOpenCv", 30);
+                                case GHOSTSCRIPT ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "timeoutMinutes.ghostScript", 30);
+                                case WEASYPRINT ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "timeoutMinutes.weasyPrint", 30);
+                                case INSTALL_APP ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "timeoutMinutes.installApp", 60);
+                                case CALIBRE ->
+                                        (Integer)
+                                                properties.getOrDefault(
+                                                        "timeoutMinutes.calibre", 30);
                             };
                     return new ProcessExecutor(semaphoreLimit, liveUpdates, timeoutMinutes);
                 });
