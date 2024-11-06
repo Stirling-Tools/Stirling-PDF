@@ -102,3 +102,24 @@ metrics:
 AutomaticallyGenerated:
   key: example
   UUID: example
+
+# Process executor instances limits
+semaphoreLimit:
+  libreOfficeSemaphoreLimit: 1
+  pdfToHtmlSemaphoreLimit: 1
+  ocrMyPdfSemaphoreLimit: 2
+  pythonOpenCvSemaphoreLimit: 8
+  ghostScriptSemaphoreLimit: 16
+  weasyPrintSemaphoreLimit: 16
+  installAppSemaphoreLimit: 1
+  calibreSemaphoreLimit: 1
+
+# Process executor timeout in minutes
+timeoutMinutes:
+  libreOfficetimeoutMinutes: 30
+  pdfToHtmltimeoutMinutes: 20
+  pythonOpenCvtimeoutMinutes: 30
+  ghostScripttimeoutMinutes: 30
+  weasyPrinttimeoutMinutes: 30
+  installApptimeoutMinutes: 60
+  calibretimeoutMinutes: 30

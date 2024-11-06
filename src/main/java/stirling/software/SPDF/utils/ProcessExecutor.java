@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -19,10 +18,13 @@ import org.slf4j.LoggerFactory;
 
 import io.github.pixee.security.BoundedLineReader;
 
+import stirling.software.SPDF.model.ApplicationProperties;
+
 public class ProcessExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessExecutor.class);
-    private static final Properties properties = new Properties();
+
+    private static ApplicationProperties applicationProperties = new ApplicationProperties();
 
     public enum Processes {
         LIBRE_OFFICE,
@@ -48,73 +50,73 @@ public class ProcessExecutor {
                     int semaphoreLimit =
                             switch (key) {
                                 case LIBRE_OFFICE ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "semaphoreLimit.libreOffice", 1);
+                                        applicationProperties
+                                                .getSemaphoreLimit()
+                                                .getLibreOfficeSemaphoreLimit();
                                 case PDFTOHTML ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "semaphoreLimit.pdfToHtml", 1);
+                                        applicationProperties
+                                                .getSemaphoreLimit()
+                                                .getPdfToHtmlSemaphoreLimit();
                                 case OCR_MY_PDF ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "semaphoreLimit.ocrMyPdf", 2);
+                                        applicationProperties
+                                                .getSemaphoreLimit()
+                                                .getOcrMyPdfSemaphoreLimit();
                                 case PYTHON_OPENCV ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "semaphoreLimit.pythonOpenCv", 8);
+                                        applicationProperties
+                                                .getSemaphoreLimit()
+                                                .getPythonOpenCvSemaphoreLimit();
                                 case GHOSTSCRIPT ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "semaphoreLimit.ghostScript", 16);
+                                        applicationProperties
+                                                .getSemaphoreLimit()
+                                                .getGhostScriptSemaphoreLimit();
                                 case WEASYPRINT ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "semaphoreLimit.weasyPrint", 16);
+                                        applicationProperties
+                                                .getSemaphoreLimit()
+                                                .getWeasyPrintSemaphoreLimit();
                                 case INSTALL_APP ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "semaphoreLimit.installApp", 1);
+                                        applicationProperties
+                                                .getSemaphoreLimit()
+                                                .getInstallAppSemaphoreLimit();
                                 case CALIBRE ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "semaphoreLimit.calibre", 1);
+                                        applicationProperties
+                                                .getSemaphoreLimit()
+                                                .getCalibreSemaphoreLimit();
                             };
 
                     long timeoutMinutes =
                             switch (key) {
                                 case LIBRE_OFFICE ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "timeoutMinutes.libreOffice", 30);
+                                        applicationProperties
+                                                .getTimeoutMinutes()
+                                                .getLibreOfficeTimeoutMinutes();
                                 case PDFTOHTML ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "timeoutMinutes.pdfToHtml", 20);
+                                        applicationProperties
+                                                .getTimeoutMinutes()
+                                                .getPdfToHtmlTimeoutMinutes();
                                 case OCR_MY_PDF ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "timeoutMinutes.ocrMyPdf", 30);
+                                        applicationProperties
+                                                .getTimeoutMinutes()
+                                                .getOcrMyPdfTimeoutMinutes();
                                 case PYTHON_OPENCV ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "timeoutMinutes.pythonOpenCv", 30);
+                                        applicationProperties
+                                                .getTimeoutMinutes()
+                                                .getPythonOpenCvTimeoutMinutes();
                                 case GHOSTSCRIPT ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "timeoutMinutes.ghostScript", 30);
+                                        applicationProperties
+                                                .getTimeoutMinutes()
+                                                .getGhostScriptTimeoutMinutes();
                                 case WEASYPRINT ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "timeoutMinutes.weasyPrint", 30);
+                                        applicationProperties
+                                                .getTimeoutMinutes()
+                                                .getWeasyPrintTimeoutMinutes();
                                 case INSTALL_APP ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "timeoutMinutes.installApp", 60);
+                                        applicationProperties
+                                                .getTimeoutMinutes()
+                                                .getInstallAppTimeoutMinutes();
                                 case CALIBRE ->
-                                        (Integer)
-                                                properties.getOrDefault(
-                                                        "timeoutMinutes.calibre", 30);
+                                        applicationProperties
+                                                .getTimeoutMinutes()
+                                                .getCalibreTimeoutMinutes();
                             };
                     return new ProcessExecutor(semaphoreLimit, liveUpdates, timeoutMinutes);
                 });
