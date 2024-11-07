@@ -26,6 +26,10 @@ jobs:
         run: pip install pyyaml
       - name: Sync versions
         run: python .github/scripts/gradle_to_chart.py
+      - name: Run pre-commit helm-docs-built
+        uses: pre-commit/action@v3.0.1
+        with:
+          extra_args: helm-docs-built
       - name: Set up git config
         run: |
           git config --global user.name "github-actions[bot]"
