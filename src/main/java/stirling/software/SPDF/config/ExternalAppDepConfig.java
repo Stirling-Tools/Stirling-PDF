@@ -42,6 +42,7 @@ public class ExternalAppDepConfig {
                     put("ocrmypdf", List.of("OCRmyPDF"));
                     put("weasyprint", List.of("Weasyprint"));
                     put("pdftohtml", List.of("Pdftohtml"));
+                    put("unoconv", List.of("Unoconv"));
                 }
             };
 
@@ -101,6 +102,7 @@ public class ExternalAppDepConfig {
         checkDependencyAndDisableGroup("ocrmypdf");
         checkDependencyAndDisableGroup("weasyprint");
         checkDependencyAndDisableGroup("pdftohtml");
+        checkDependencyAndDisableGroup("unoconv");
 
         // Special handling for Python/OpenCV dependencies
         boolean pythonAvailable = isCommandAvailable("python3") || isCommandAvailable("python");

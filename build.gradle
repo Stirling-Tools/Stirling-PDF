@@ -78,7 +78,7 @@ launch4j {
 
     errTitle="Encountered error, Do you have Java 21?"
     downloadUrl="https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
-    variables=["BROWSER_OPEN=true", "ENDPOINTS_GROUPS_TO_REMOVE=CLI"]
+    variables=["BROWSER_OPEN=true"]
     jreMinVersion="17"
 
     mutexName="Stirling-PDF"
