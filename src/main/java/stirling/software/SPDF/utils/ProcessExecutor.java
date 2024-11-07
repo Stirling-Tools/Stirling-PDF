@@ -51,70 +51,86 @@ public class ProcessExecutor {
                             switch (key) {
                                 case LIBRE_OFFICE ->
                                         applicationProperties
-                                                .getSemaphoreLimit()
-                                                .getLibreOfficeSemaphoreLimit();
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getLibreOfficeSessionLimit();
                                 case PDFTOHTML ->
                                         applicationProperties
-                                                .getSemaphoreLimit()
-                                                .getPdfToHtmlSemaphoreLimit();
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getPdfToHtmlSessionLimit();
                                 case OCR_MY_PDF ->
                                         applicationProperties
-                                                .getSemaphoreLimit()
-                                                .getOcrMyPdfSemaphoreLimit();
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getOcrMyPdfSessionLimit();
                                 case PYTHON_OPENCV ->
                                         applicationProperties
-                                                .getSemaphoreLimit()
-                                                .getPythonOpenCvSemaphoreLimit();
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getPythonOpenCvSessionLimit();
                                 case GHOSTSCRIPT ->
                                         applicationProperties
-                                                .getSemaphoreLimit()
-                                                .getGhostScriptSemaphoreLimit();
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getGhostScriptSessionLimit();
                                 case WEASYPRINT ->
                                         applicationProperties
-                                                .getSemaphoreLimit()
-                                                .getWeasyPrintSemaphoreLimit();
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getWeasyPrintSessionLimit();
                                 case INSTALL_APP ->
                                         applicationProperties
-                                                .getSemaphoreLimit()
-                                                .getInstallAppSemaphoreLimit();
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getInstallAppSessionLimit();
                                 case CALIBRE ->
                                         applicationProperties
-                                                .getSemaphoreLimit()
-                                                .getCalibreSemaphoreLimit();
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getCalibreSessionLimit();
                             };
 
                     long timeoutMinutes =
                             switch (key) {
                                 case LIBRE_OFFICE ->
                                         applicationProperties
+                                                .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getLibreOfficeTimeoutMinutes();
                                 case PDFTOHTML ->
                                         applicationProperties
+                                                .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getPdfToHtmlTimeoutMinutes();
                                 case OCR_MY_PDF ->
                                         applicationProperties
+                                                .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getOcrMyPdfTimeoutMinutes();
                                 case PYTHON_OPENCV ->
                                         applicationProperties
+                                                .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getPythonOpenCvTimeoutMinutes();
                                 case GHOSTSCRIPT ->
                                         applicationProperties
+                                                .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getGhostScriptTimeoutMinutes();
                                 case WEASYPRINT ->
                                         applicationProperties
+                                                .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getWeasyPrintTimeoutMinutes();
                                 case INSTALL_APP ->
                                         applicationProperties
+                                                .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getInstallAppTimeoutMinutes();
                                 case CALIBRE ->
                                         applicationProperties
+                                                .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getCalibreTimeoutMinutes();
                             };

@@ -47,8 +47,7 @@ public class ApplicationProperties {
     private AutomaticallyGenerated automaticallyGenerated = new AutomaticallyGenerated();
     private EnterpriseEdition enterpriseEdition = new EnterpriseEdition();
     private AutoPipeline autoPipeline = new AutoPipeline();
-    private SemaphoreLimit semaphoreLimit = new SemaphoreLimit();
-    private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
+    private ProcessExecutor processExecutor = new ProcessExecutor();
 
     @Data
     public static class AutoPipeline {
@@ -313,90 +312,96 @@ public class ApplicationProperties {
     }
 
     @Data
-    public static class SemaphoreLimit {
-        private int libreOfficeSemaphoreLimit;
-        private int pdfToHtmlSemaphoreLimit;
-        private int ocrMyPdfSemaphoreLimit;
-        private int pythonOpenCvSemaphoreLimit;
-        private int ghostScriptSemaphoreLimit;
-        private int weasyPrintSemaphoreLimit;
-        private int installAppSemaphoreLimit;
-        private int calibreSemaphoreLimit;
+    public static class ProcessExecutor {
+        private SessionLimit sessionLimit = new SessionLimit();
+        private TimeoutMinutes timeoutMinutes = new TimeoutMinutes();
 
-        public int getLibreOfficeSemaphoreLimit() {
-            return libreOfficeSemaphoreLimit > 0 ? libreOfficeSemaphoreLimit : 1;
+        @Data
+        public static class SessionLimit {
+            private int libreOfficeSessionLimit;
+            private int pdfToHtmlSessionLimit;
+            private int ocrMyPdfSessionLimit;
+            private int pythonOpenCvSessionLimit;
+            private int ghostScriptSessionLimit;
+            private int weasyPrintSessionLimit;
+            private int installAppSessionLimit;
+            private int calibreSessionLimit;
+
+            public int getLibreOfficeSessionLimit() {
+                return libreOfficeSessionLimit > 0 ? libreOfficeSessionLimit : 1;
+            }
+
+            public int getPdfToHtmlSessionLimit() {
+                return pdfToHtmlSessionLimit > 0 ? pdfToHtmlSessionLimit : 1;
+            }
+
+            public int getOcrMyPdfSessionLimit() {
+                return ocrMyPdfSessionLimit > 0 ? ocrMyPdfSessionLimit : 2;
+            }
+
+            public int getPythonOpenCvSessionLimit() {
+                return pythonOpenCvSessionLimit > 0 ? pythonOpenCvSessionLimit : 8;
+            }
+
+            public int getGhostScriptSessionLimit() {
+                return ghostScriptSessionLimit > 0 ? ghostScriptSessionLimit : 16;
+            }
+
+            public int getWeasyPrintSessionLimit() {
+                return weasyPrintSessionLimit > 0 ? weasyPrintSessionLimit : 16;
+            }
+
+            public int getInstallAppSessionLimit() {
+                return installAppSessionLimit > 0 ? installAppSessionLimit : 1;
+            }
+
+            public int getCalibreSessionLimit() {
+                return calibreSessionLimit > 0 ? calibreSessionLimit : 1;
+            }
         }
 
-        public int getPdfToHtmlSemaphoreLimit() {
-            return pdfToHtmlSemaphoreLimit > 0 ? pdfToHtmlSemaphoreLimit : 1;
-        }
+        @Data
+        public static class TimeoutMinutes {
+            private long libreOfficeTimeoutMinutes;
+            private long pdfToHtmlTimeoutMinutes;
+            private long ocrMyPdfTimeoutMinutes;
+            private long pythonOpenCvTimeoutMinutes;
+            private long ghostScriptTimeoutMinutes;
+            private long weasyPrintTimeoutMinutes;
+            private long installAppTimeoutMinutes;
+            private long calibreTimeoutMinutes;
 
-        public int getOcrMyPdfSemaphoreLimit() {
-            return ocrMyPdfSemaphoreLimit > 0 ? ocrMyPdfSemaphoreLimit : 2;
-        }
+            public long getLibreOfficeTimeoutMinutes() {
+                return libreOfficeTimeoutMinutes > 0 ? libreOfficeTimeoutMinutes : 30;
+            }
 
-        public int getPythonOpenCvSemaphoreLimit() {
-            return pythonOpenCvSemaphoreLimit > 0 ? pythonOpenCvSemaphoreLimit : 8;
-        }
+            public long getPdfToHtmlTimeoutMinutes() {
+                return pdfToHtmlTimeoutMinutes > 0 ? pdfToHtmlTimeoutMinutes : 20;
+            }
 
-        public int getGhostScriptSemaphoreLimit() {
-            return ghostScriptSemaphoreLimit > 0 ? ghostScriptSemaphoreLimit : 16;
-        }
+            public long getOcrMyPdfTimeoutMinutes() {
+                return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
+            }
 
-        public int getWeasyPrintSemaphoreLimit() {
-            return weasyPrintSemaphoreLimit > 0 ? weasyPrintSemaphoreLimit : 16;
-        }
+            public long getPythonOpenCvTimeoutMinutes() {
+                return pythonOpenCvTimeoutMinutes > 0 ? pythonOpenCvTimeoutMinutes : 30;
+            }
 
-        public int getInstallAppSemaphoreLimit() {
-            return installAppSemaphoreLimit > 0 ? installAppSemaphoreLimit : 1;
-        }
+            public long getGhostScriptTimeoutMinutes() {
+                return ghostScriptTimeoutMinutes > 0 ? ghostScriptTimeoutMinutes : 30;
+            }
 
-        public int getCalibreSemaphoreLimit() {
-            return calibreSemaphoreLimit > 0 ? calibreSemaphoreLimit : 1;
-        }
-    }
+            public long getWeasyPrintTimeoutMinutes() {
+                return weasyPrintTimeoutMinutes > 0 ? weasyPrintTimeoutMinutes : 30;
+            }
 
-    @Data
-    public static class TimeoutMinutes {
-        private long libreOfficeTimeoutMinutes;
-        private long pdfToHtmlTimeoutMinutes;
-        private long ocrMyPdfTimeoutMinutes;
-        private long pythonOpenCvTimeoutMinutes;
-        private long ghostScriptTimeoutMinutes;
-        private long weasyPrintTimeoutMinutes;
-        private long installAppTimeoutMinutes;
-        private long calibreTimeoutMinutes;
+            public long getInstallAppTimeoutMinutes() {
+                return installAppTimeoutMinutes > 0 ? installAppTimeoutMinutes : 60;
+            }
 
-        public long getLibreOfficeTimeoutMinutes() {
-            return libreOfficeTimeoutMinutes > 0 ? libreOfficeTimeoutMinutes : 30;
-        }
-
-        public long getPdfToHtmlTimeoutMinutes() {
-            return pdfToHtmlTimeoutMinutes > 0 ? pdfToHtmlTimeoutMinutes : 20;
-        }
-
-        public long getOcrMyPdfTimeoutMinutes() {
-            return ocrMyPdfTimeoutMinutes > 0 ? ocrMyPdfTimeoutMinutes : 30;
-        }
-
-        public long getPythonOpenCvTimeoutMinutes() {
-            return pythonOpenCvTimeoutMinutes > 0 ? pythonOpenCvTimeoutMinutes : 30;
-        }
-
-        public long getGhostScriptTimeoutMinutes() {
-            return ghostScriptTimeoutMinutes > 0 ? ghostScriptTimeoutMinutes : 30;
-        }
-
-        public long getWeasyPrintTimeoutMinutes() {
-            return weasyPrintTimeoutMinutes > 0 ? weasyPrintTimeoutMinutes : 30;
-        }
-
-        public long getInstallAppTimeoutMinutes() {
-            return installAppTimeoutMinutes > 0 ? installAppTimeoutMinutes : 60;
-        }
-
-        public long getCalibreTimeoutMinutes() {
-            return calibreTimeoutMinutes > 0 ? calibreTimeoutMinutes : 30;
+            public long getCalibreTimeoutMinutes() {
+                return calibreTimeoutMinutes > 0 ? calibreTimeoutMinutes : 30;
+            }
         }
     }
 }
