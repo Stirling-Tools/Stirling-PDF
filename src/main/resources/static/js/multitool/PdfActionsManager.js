@@ -73,6 +73,11 @@ class PdfActionsManager {
     this.addFiles(imgContainer);
   }
 
+  insertFileBlankButtonCallback(e) {
+    var imgContainer = this.getPageContainer(e.target);
+    this.addFiles(imgContainer, true);
+  }
+
   splitFileButtonCallback(e) {
     var imgContainer = this.getPageContainer(e.target);
     imgContainer.classList.toggle("split-before");
@@ -89,6 +94,7 @@ class PdfActionsManager {
     this.rotateCWButtonCallback = this.rotateCWButtonCallback.bind(this);
     this.deletePageButtonCallback = this.deletePageButtonCallback.bind(this);
     this.insertFileButtonCallback = this.insertFileButtonCallback.bind(this);
+    this.insertFileBlankButtonCallback = this.insertFileBlankButtonCallback.bind(this);
     this.splitFileButtonCallback = this.splitFileButtonCallback.bind(this);
   }
 
@@ -151,6 +157,12 @@ class PdfActionsManager {
     splitFileButton.innerHTML = `<span class="material-symbols-rounded">cut</span>`;
     splitFileButton.onclick = this.splitFileButtonCallback;
     insertFileButtonContainer.appendChild(splitFileButton);
+
+    const insertFileBlankButton = document.createElement("button");
+    insertFileBlankButton.classList.add("btn", "btn-primary", "pdf-actions_insert-file-blank-button");
+    insertFileBlankButton.innerHTML = `<span class="material-symbols-rounded">insert_page_break</span>`;
+    insertFileBlankButton.onclick = this.insertFileBlankButtonCallback;
+    insertFileButtonContainer.appendChild(insertFileBlankButton);
 
     div.appendChild(insertFileButtonContainer);
 
