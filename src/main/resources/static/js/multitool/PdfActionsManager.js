@@ -149,9 +149,6 @@ class PdfActionsManager {
 
     selectCheckbox.onchange = () => {
       const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
-      if (window.selectAll) {
-        selectCheckbox.checked = true;
-      }
       if (selectCheckbox.checked) {
         window.selectedPages.push(pageNumber);
       } else {
