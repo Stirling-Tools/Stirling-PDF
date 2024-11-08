@@ -139,7 +139,7 @@ class PdfContainer {
       const div = document.createElement("div");
 
       div.classList.add("page-container");
-
+      div.id = "page-container-" + (i + 1);
       var img = document.createElement("img");
       img.classList.add("page-image");
       const imageSrc = await renderer.renderPage(i);
@@ -148,7 +148,6 @@ class PdfContainer {
       img.rend = renderer;
       img.doc = pdfDocument;
       div.appendChild(img);
-
       this.pdfAdapters.forEach((adapter) => {
         adapter.adapt?.(div);
       });

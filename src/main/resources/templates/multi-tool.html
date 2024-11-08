@@ -76,13 +76,6 @@
               <div class="multi-tool-container">
                 <div class="d-flex flex-wrap" id="pages-container-wrapper">
                   <div id="pages-container">
-                    <div class="page-container" th:each="file, status: ${fileList}"
-                      th:id="'page-container-' + ${status.index}">
-                      <div class="page-number-container">
-                        <span th:text="${status.index + 1}"></span>
-                      </div>
-                      <img th:src="${file.imageUrl}" alt="File Page">
-                    </div>
                   </div>
                 </div>
               </div>
@@ -103,7 +96,7 @@
   </script>
   <script type="module">
     import PdfContainer from './js/multitool/PdfContainer.js';
-    import DragDropManager from "./js/multitool/DragDropManager.js";
+    import DragDropManager from "./js/multitool/MultiPageDragDropManager.js";
     import ImageHighlighter from "./js/multitool/ImageHighlighter.js";
     import PdfActionsManager from './js/multitool/PdfActionsManager.js';
     import FileDragManager from './js/multitool/fileInput.js';
