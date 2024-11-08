@@ -22,6 +22,7 @@ class PdfContainer {
     this.nameAndArchiveFiles = this.nameAndArchiveFiles.bind(this);
     this.splitPDF = this.splitPDF.bind(this);
     this.splitAll = this.splitAll.bind(this);
+    this.addFilesBlankAll = this.addFilesBlankAll.bind(this)
 
     this.pdfAdapters = pdfAdapters;
 
@@ -38,6 +39,7 @@ class PdfContainer {
     window.exportPdf = this.exportPdf;
     window.rotateAll = this.rotateAll;
     window.splitAll = this.splitAll;
+    window.addFilesBlankAll = this.addFilesBlankAll
 
     const filenameInput = document.getElementById("filename-input");
     const downloadBtn = document.getElementById("export-button");
@@ -77,19 +79,25 @@ class PdfContainer {
     }
   }
 
-  addFiles(nextSiblingElement) {
-    var input = document.createElement("input");
-    input.type = "file";
-    input.multiple = true;
-    input.setAttribute("accept", "application/pdf,image/*");
-    input.onchange = async (e) => {
-      const files = e.target.files;
+  addFiles(nextSiblingElement, blank = false) {
+    if (blank) {
 
-      this.addFilesFromFiles(files, nextSiblingElement);
-      this.updateFilename(files ? files[0].name : "");
-    };
+      this.addFilesBlank(nextSiblingElement);
 
-    input.click();
+    } else {
+      var input = document.createElement("input");
+      input.type = "file";
+      input.multiple = true;
+      input.setAttribute("accept", "application/pdf,image/*");
+      input.onchange = async (e) => {
+        const files = e.target.files;
+
+        this.addFilesFromFiles(files, nextSiblingElement);
+        this.updateFilename(files ? files[0].name : "");
+      };
+
+      input.click();
+    }
   }
 
   async addFilesFromFiles(files, nextSiblingElement) {
@@ -107,6 +115,47 @@ class PdfContainer {
       element.disabled = false;
     });
   }
+
+  async addFilesBlank(nextSiblingElement) {
+    const pdfContent = `
+      %PDF-1.4
+      1 0 obj
+      << /Type /Catalog /Pages 2 0 R >>
+      endobj
+      2 0 obj
+      << /Type /Pages /Kids [3 0 R] /Count 1 >>
+      endobj
+      3 0 obj
+      << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 5 0 R >>
+      endobj
+      5 0 obj
+      << /Length 44 >>
+      stream
+      0 0 0 595 0 842 re
+      W
+      n
+      endstream
+      endobj
+      xref
+      0 6
+      0000000000 65535 f
+      0000000010 00000 n
+      0000000071 00000 n
+      0000000121 00000 n
+      0000000205 00000 n
+      0000000400 00000 n
+      trailer
+      << /Size 6 /Root 1 0 R >>
+      startxref
+      278
+      %%EOF
+    `;
+    const blob = new Blob([pdfContent], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const file = new File([blob], "blank_page.pdf", { type: "application/pdf" });
+    await this.addPdfFile(file, nextSiblingElement);
+  }
+
 
   rotateElement(element, deg) {
     var lastTransform = element.style.rotate;
@@ -223,6 +272,17 @@ class PdfContainer {
       this.rotateElement(img, deg);
     }
   }
+
+
+  addFilesBlankAll() {
+    const allPages = this.pagesContainer.querySelectorAll(".page-container");
+    allPages.forEach((page, index) => {
+      if (index !== 0) {
+        this.addFiles(page, true)
+      }
+    });
+  }
+
 
   splitAll() {
     const allPages = this.pagesContainer.querySelectorAll(".page-container");
@@ -450,7 +510,7 @@ function detectImageType(uint8Array) {
 
   // Check for TIFF signature (little-endian and big-endian)
   if ((uint8Array[0] === 73 && uint8Array[1] === 73 && uint8Array[2] === 42 && uint8Array[3] === 0) ||
-      (uint8Array[0] === 77 && uint8Array[1] === 77 && uint8Array[2] === 0 && uint8Array[3] === 42)) {
+    (uint8Array[0] === 77 && uint8Array[1] === 77 && uint8Array[2] === 0 && uint8Array[3] === 42)) {
     return 'TIFF';
   }
 
