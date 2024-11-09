@@ -4,9 +4,15 @@
 
 <head>
   <th:block th:insert="~{fragments/common :: head(title='')}"></th:block>
+  <link rel="stylesheet" th:href="@{'/css/welcome-message.css'}">
 </head>
 
 <body>
+<div id="welcome-message" class="welcome-message">
+  <h1>Welcome to Stirling PDF!</h1>
+  <p>This is your local hosting environment. Local hosting allows you to run web applications directly from your computer without the need for an internet connection. It's a great way to develop, test, and use web applications privately and securely.</p>
+  <p>Get started by exploring the tools available on this platform.</p>
+</div>
   <div id="page-container">
     <div id="content-wrap">
       <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>

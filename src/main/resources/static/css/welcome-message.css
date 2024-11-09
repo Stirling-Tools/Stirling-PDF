@@ -1,0 +1,22 @@
+.welcome-message {
+  text-align: center;
+  margin-top: 50px;
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #f8f9fa; /* Light gray background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+.welcome-message h1 {
+  color: #333; /* Dark text color */
+  font-size: 2.5rem; /* Large font size for the title */
+  margin-bottom: 0.5rem;
+}
+
+.welcome-message p {
+  color: #666; /* Slightly darker than the background */
+  font-size: 1.1rem; /* Medium font size for the paragraphs */
+  margin-bottom: 1rem; /* Spacing between paragraphs */
+  line-height: 1.5; /* Line height for better readability */
+}
