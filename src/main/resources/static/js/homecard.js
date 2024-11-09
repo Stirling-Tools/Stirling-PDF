@@ -83,14 +83,16 @@ function syncFavorites() {
   cards.forEach(card => {
     const isFavorite = localStorage.getItem(card.id) === "favorite";
     const starIcon = card.querySelector(".favorite-icon span.material-symbols-rounded");
-    if (isFavorite) {
-      starIcon.classList.remove("no-fill");
-      starIcon.classList.add("fill");
-      card.classList.add("favorite");
-    } else {
-      starIcon.classList.remove("fill");
-      starIcon.classList.add("no-fill");
-      card.classList.remove("favorite");
+    if (starIcon) {
+      if (isFavorite) {
+        starIcon.classList.remove("no-fill");
+        starIcon.classList.add("fill");
+        card.classList.add("favorite");
+      } else {
+        starIcon.classList.remove("fill");
+        starIcon.classList.add("no-fill");
+        card.classList.remove("favorite");
+      }
     }
   });
   updateFavoritesSection();
