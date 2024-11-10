@@ -22,7 +22,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.31.1"
+version = "0.32.0"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -78,7 +78,7 @@ launch4j {
 
     errTitle="Encountered error, Do you have Java 21?"
     downloadUrl="https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
-    variables=["BROWSER_OPEN=true", "ENDPOINTS_GROUPS_TO_REMOVE=CLI"]
+    variables=["BROWSER_OPEN=true"]
     jreMinVersion="17"
 
     mutexName="Stirling-PDF"
