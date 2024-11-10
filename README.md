@@ -161,6 +161,10 @@ services:
 
 Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
 
+### Kubernetes
+
+See the kubernetes helm chart [here](https://github.com/Stirling-Tools/Stirling-PDF-chart)
+
 ## Enable OCR/Compression Feature
 
 Please view the [HowToUseOCR.md](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md).
