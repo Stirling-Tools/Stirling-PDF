@@ -191,6 +191,7 @@ public class EndpointConfiguration {
         // LibreOffice
         addEndpointToGroup("LibreOffice", "repair");
         addEndpointToGroup("LibreOffice", "file-to-pdf");
+        addEndpointToGroup("Unoconv", "file-to-pdf");
         addEndpointToGroup("LibreOffice", "xlsx-to-pdf");
         addEndpointToGroup("LibreOffice", "pdf-to-word");
         addEndpointToGroup("LibreOffice", "pdf-to-presentation");

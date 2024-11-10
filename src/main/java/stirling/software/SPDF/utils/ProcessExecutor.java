@@ -18,9 +18,13 @@ import org.slf4j.LoggerFactory;
 
 import io.github.pixee.security.BoundedLineReader;
 
+import stirling.software.SPDF.model.ApplicationProperties;
+
 public class ProcessExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessExecutor.class);
+
+    private static ApplicationProperties applicationProperties = new ApplicationProperties();
 
     public enum Processes {
         LIBRE_OFFICE,
@@ -45,26 +49,90 @@ public class ProcessExecutor {
                 key -> {
                     int semaphoreLimit =
                             switch (key) {
-                                case LIBRE_OFFICE -> 1;
-                                case PDFTOHTML -> 1;
-                                case OCR_MY_PDF -> 2;
-                                case PYTHON_OPENCV -> 8;
-                                case GHOSTSCRIPT -> 16;
-                                case WEASYPRINT -> 16;
-                                case INSTALL_APP -> 1;
-                                case CALIBRE -> 1;
+                                case LIBRE_OFFICE ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getLibreOfficeSessionLimit();
+                                case PDFTOHTML ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getPdfToHtmlSessionLimit();
+                                case OCR_MY_PDF ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getOcrMyPdfSessionLimit();
+                                case PYTHON_OPENCV ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getPythonOpenCvSessionLimit();
+                                case GHOSTSCRIPT ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getGhostScriptSessionLimit();
+                                case WEASYPRINT ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getWeasyPrintSessionLimit();
+                                case INSTALL_APP ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getInstallAppSessionLimit();
+                                case CALIBRE ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getCalibreSessionLimit();
                             };
 
                     long timeoutMinutes =
                             switch (key) {
-                                case LIBRE_OFFICE -> 30;
-                                case PDFTOHTML -> 20;
-                                case OCR_MY_PDF -> 30;
-                                case PYTHON_OPENCV -> 30;
-                                case GHOSTSCRIPT -> 30;
-                                case WEASYPRINT -> 30;
-                                case INSTALL_APP -> 60;
-                                case CALIBRE -> 30;
+                                case LIBRE_OFFICE ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getLibreOfficeTimeoutMinutes();
+                                case PDFTOHTML ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getPdfToHtmlTimeoutMinutes();
+                                case OCR_MY_PDF ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getOcrMyPdfTimeoutMinutes();
+                                case PYTHON_OPENCV ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getPythonOpenCvTimeoutMinutes();
+                                case GHOSTSCRIPT ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getGhostScriptTimeoutMinutes();
+                                case WEASYPRINT ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getWeasyPrintTimeoutMinutes();
+                                case INSTALL_APP ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getInstallAppTimeoutMinutes();
+                                case CALIBRE ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getCalibreTimeoutMinutes();
                             };
                     return new ProcessExecutor(semaphoreLimit, liveUpdates, timeoutMinutes);
                 });

@@ -156,10 +156,14 @@ public class SecurityConfiguration {
             http.rememberMe(
                     rememberMeConfigurer ->
                             rememberMeConfigurer // Use the configurator directly
-                                    .key("uniqueAndSecret")
                                     .tokenRepository(persistentTokenRepository())
-                                    .tokenValiditySeconds(1209600) // 2 weeks
-                    );
+                                    .tokenValiditySeconds(14 * 24 * 60 * 60) // 14 days
+                                    .userDetailsService(
+                                            userDetailsService) // Your existing UserDetailsService
+                                    .useSecureCookie(true) // Enable secure cookie
+                                    .rememberMeParameter("remember-me") // Form parameter name
+                                    .rememberMeCookieName("remember-me") // Cookie name
+                                    .alwaysRemember(false));
             http.authorizeHttpRequests(
                     authz ->
                             authz.requestMatchers(
