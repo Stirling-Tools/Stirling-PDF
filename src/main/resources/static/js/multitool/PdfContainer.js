@@ -232,6 +232,7 @@ class PdfContainer {
       if (!child) continue;
 
       const pageIndex = i + 1;
+      //if in page select mode is active rotate only selected pages
       if (window.selectPage && !window.selectedPages.includes(pageIndex)) continue;
 
       const img = child.querySelector("img");
@@ -273,11 +274,22 @@ class PdfContainer {
     document.dispatchEvent(new Event("selectedPagesUpdated"));
   }
 
-  toggleSelectAll(selectAllCheckbox) {
+  toggleSelectAll() {
     const checkboxes = document.querySelectorAll(".pdf-actions_checkbox");
     window.selectAll = !window.selectAll;
+    const selectIcon = document.getElementById("select-icon");
+    const deselectIcon = document.getElementById("deselect-icon");
+
+    if (selectIcon.style.display === "none") {
+      selectIcon.style.display = "inline";
+      deselectIcon.style.display = "none";
+    } else {
+      selectIcon.style.display = "none";
+      deselectIcon.style.display = "inline";
+    }
     checkboxes.forEach((checkbox) => {
-      checkbox.checked = selectAllCheckbox.checked;
+
+      checkbox.checked = window.selectAll;
 
       const pageNumber = Array.from(checkbox.parentNode.parentNode.children).indexOf(checkbox.parentNode) + 1;
 
@@ -314,6 +326,7 @@ class PdfContainer {
       const removeBtn = document.createElement("span");
       removeBtn.className = "remove-btn";
       removeBtn.innerHTML = "✕";
+      //remove page from selected pages list and update checkbox for page
       removeBtn.onclick = () => {
         window.selectedPages = window.selectedPages.filter((p) => p !== page);
         this.updateSelectedPagesDisplay();

@@ -134,6 +134,7 @@ class PdfActionsManager {
 
     div.appendChild(buttonContainer);
 
+    //enerate checkbox to select individual pages
     const selectCheckbox = document.createElement("input");
     selectCheckbox.type = "checkbox";
     selectCheckbox.classList.add("pdf-actions_checkbox", "form-check-input");
@@ -141,6 +142,7 @@ class PdfActionsManager {
     selectCheckbox.checked = window.selectAll;
     div.appendChild(selectCheckbox);
 
+    //only show whenpage select mode is active
     if (!window.selectPage) {
       selectCheckbox.classList.add("hidden");
     } else {
@@ -150,8 +152,10 @@ class PdfActionsManager {
     selectCheckbox.onchange = () => {
       const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
       if (selectCheckbox.checked) {
+        //adds to array of selected pages
         window.selectedPages.push(pageNumber);
       } else {
+        //remove page from selected pages array
         const index = window.selectedPages.indexOf(pageNumber);
         if (index !== -1) {
           window.selectedPages.splice(index, 1);

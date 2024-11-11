@@ -47,15 +47,18 @@
                       cut
                     </span>
                   </button>
-                  <div id="select-pages-container" class="checkbox-container hidden">
-                    <label class="checkbox-label" th:text="#{multiTool.selectPages}">Select Pages</label>
-                    <input type="checkbox" class="form-check-input" id="toggleSelectPageVisibility"
-                      onclick="toggleSelectPageVisibility()">
-                  </div>
-                  <div id="select-All-Container" class="checkbox-container hidden">
-                    <label class="checkbox-label" th:text="#{multiTool.selectAll}">Select All</label>
-                    <input type="checkbox" class="form-check-input" id="selectAll" onclick="toggleSelectAll(this)">
-                  </div>
+                  <button id="select-pages-container" class="btn btn-secondary enable-on-file"
+                    th:title="#{multiTool.selectPages}" onclick="toggleSelectPageVisibility()" disabled>
+                    <span class="material-icons">
+                      pages
+                    </span>
+                  </button>
+                  <button id="select-All-Container" class="btn btn-secondary enable-on-file hidden"
+                    onclick="toggleSelectAll()" disabled>
+                    <span th:title="#{multiTool.selectAll}" class="material-icons" id="select-icon">select_all</span>
+                    <span th:title="#{multiTool.deselectAll}" class="material-icons" style="display: none;"
+                      id="deselect-icon">deselect</span>
+                  </button>
                   <div class=" button-container">
                     <button id="delete-button" class="btn btn-danger hidden" onclick="deleteSelected()">
                       <span class="material-symbols-rounded">delete</span>
