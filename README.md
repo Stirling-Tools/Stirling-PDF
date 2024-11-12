@@ -7,9 +7,8 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/stirling-tools/stirling-pdf?style=social)](https://github.com/Stirling-Tools/stirling-pdf)
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Stirling-Tools/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
-[<img src="https://www.ssdnodes.com/wp-content/uploads/2023/11/footer-logo.svg" alt="Name" height="40">](https://www.ssdnodes.com/manage/aff.php?aff=2216&register=true)
 
-Stirling-PDF is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
+[Stirling-PDF](https://www.stirlingpdf.com) is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
 
 Stirling-PDF does not initiate any outbound calls for record-keeping or tracking purposes.
 
@@ -19,6 +18,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 
 ## Features
 
+- Enterprise features like SSO Check [here](https://docs.stirlingpdf.com/Enterprise%20Edition) 
 - Dark mode support
 - Custom download options
 - Parallel file processing and downloads
@@ -26,6 +26,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - API for integration with external scripts
 - Optional Login and Authentication support (see [here](https://github.com/Stirling-Tools/Stirling-PDF/tree/main#login-authentication) for documentation)
 - Database Backup and Import (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/DATABASE.md) for documentation)
+
 
 ## PDF Features
 
@@ -46,6 +47,8 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Extract page(s)
 - Convert PDF to a single page
 - Overlay PDFs on top of each other
+- PDF to single page
+- Split PDF by sections
 
 ### Conversion Operations
 
@@ -53,6 +56,8 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Convert any common file to PDF (using LibreOffice)
 - Convert PDF to Word/PowerPoint/others (using LibreOffice)
 - Convert HTML to PDF
+- Convert PDF to xml
+- Convert PDF to CSV
 - URL to PDF
 - Markdown to PDF
 
@@ -68,13 +73,16 @@ All files and PDFs exist either exclusively on the client side, reside in server
 ### Other Operations
 
 - Add/generate/write signatures
+- Split by Size or PDF
 - Repair PDFs
 - Detect and remove blank pages
 - Compare two PDFs and show differences in text
 - Add images to PDFs
 - Compress PDFs to decrease their filesize (using OCRMyPDF)
 - Extract images from PDF
+- Remove images from PDF
 - Extract images from scans
+- Remove annotations
 - Add page numbers
 - Auto rename file by detecting PDF header text
 - OCR on PDF (using OCRMyPDF)
@@ -223,6 +231,23 @@ Stirling-PDF currently supports 36 languages!
 
 Please see our [Contributing Guide](CONTRIBUTING.md).
 
+## Stirling PDF Enterprise
+
+Stirling PDF offers a Enterprise edition of its software, This is the same great software but with added features and comforts
+
+### Whats included
+
+- Prioritised Support tickets via support@stirlingpdf.com to reach directly to Stirling-PDF team for support and 1:1 meetings where applicable (Provided they come from same email domain registered with us)
+- Prioritised Enhancements to Stirling-PDF where applicable 
+- Base SSO support
+- Advanced SSO such as automated login handling (Coming very soon)
+- SAML SSO (Coming very soon)
+- Custom automated metadata handling
+- Advanced user configurations (Coming soon)
+- Plus other exciting features to come
+
+Check out of [docs](https://docs.stirlingpdf.com/Enterprise%20Edition) on it or our official [website](https://www.stirlingpdf.com)
+
 ## Customization
 
 Stirling-PDF allows easy customization of the app, including things like:
@@ -338,6 +363,8 @@ AutomaticallyGenerated:
 ```
 
 There is an additional config file `/configs/custom_settings.yml` where users familiar with Java and Spring `application.properties` can input their own settings on top of Stirling-PDF's existing ones.
+
+
 
 ### Extra Notes
 
