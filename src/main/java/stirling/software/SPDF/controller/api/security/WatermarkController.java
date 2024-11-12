@@ -190,8 +190,14 @@ public class WatermarkController {
         int watermarkRows = (int) (pageHeight / watermarkHeight + 1);
         int watermarkCols = (int) (pageWidth / watermarkWidth + 1);
 
+        // Calculating the effective line length according to the angle used
+        float effectiveHeight = watermarkHeight / (float) Math.cos(Math.toRadians(rotation));
+        int watermarkRowsRotation = (int) (pageHeight / effectiveHeight + 1);
+
         // Add the text watermark
-        for (int i = 0; i < watermarkRows; i++) {
+        /* In the 'for' loop, is do (watermarkRowsRotation - watermarkRows) so that the watermark starts at the bottom of the page.
+        This compensate for the rotation by adjusting the starting point for inserting the watermark. */
+        for (int i = (watermarkRowsRotation - watermarkRows); i < watermarkRows; i++) {
             for (int j = 0; j < watermarkCols; j++) {
                 contentStream.beginText();
                 contentStream.setTextMatrix(
