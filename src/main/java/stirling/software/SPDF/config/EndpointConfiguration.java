@@ -117,7 +117,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "img-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-pdfa");
         addEndpointToGroup("Convert", "file-to-pdf");
-        addEndpointToGroup("Convert", "xlsx-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-word");
         addEndpointToGroup("Convert", "pdf-to-presentation");
         addEndpointToGroup("Convert", "pdf-to-text");
@@ -163,7 +162,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("CLI", "repair");
         addEndpointToGroup("CLI", "pdf-to-pdfa");
         addEndpointToGroup("CLI", "file-to-pdf");
-        addEndpointToGroup("CLI", "xlsx-to-pdf");
         addEndpointToGroup("CLI", "pdf-to-word");
         addEndpointToGroup("CLI", "pdf-to-presentation");
         addEndpointToGroup("CLI", "pdf-to-html");
@@ -184,6 +182,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Python", "html-to-pdf");
         addEndpointToGroup("Python", "url-to-pdf");
         addEndpointToGroup("Python", "pdf-to-img");
+        addEndpointToGroup("Python", "file-to-pdf");
 
         // openCV
         addEndpointToGroup("OpenCV", "extract-image-scans");
@@ -191,13 +190,14 @@ public class EndpointConfiguration {
         // LibreOffice
         addEndpointToGroup("LibreOffice", "repair");
         addEndpointToGroup("LibreOffice", "file-to-pdf");
-        addEndpointToGroup("Unoconv", "file-to-pdf");
-        addEndpointToGroup("LibreOffice", "xlsx-to-pdf");
         addEndpointToGroup("LibreOffice", "pdf-to-word");
         addEndpointToGroup("LibreOffice", "pdf-to-presentation");
         addEndpointToGroup("LibreOffice", "pdf-to-rtf");
         addEndpointToGroup("LibreOffice", "pdf-to-html");
         addEndpointToGroup("LibreOffice", "pdf-to-xml");
+
+        // Unoconv
+        addEndpointToGroup("Unoconv", "file-to-pdf");
 
         // OCRmyPDF
         addEndpointToGroup("OCRmyPDF", "compress-pdf");
@@ -251,6 +251,7 @@ public class EndpointConfiguration {
         // Ghostscript dependent endpoints
         addEndpointToGroup("Ghostscript", "compress-pdf");
         addEndpointToGroup("Ghostscript", "pdf-to-pdfa");
+        addEndpointToGroup("Ghostscript", "repair");
 
         // Weasyprint dependent endpoints
         addEndpointToGroup("Weasyprint", "html-to-pdf");
