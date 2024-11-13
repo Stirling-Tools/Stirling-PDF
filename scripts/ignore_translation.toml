@@ -13,7 +13,6 @@ ignore = [
     'PDFToText.tags',
     'adminUserSettings.admin',
     'language.direction',
-    'survey.button',
     'watermark.type.1',
 ]
 
