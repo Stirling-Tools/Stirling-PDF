@@ -182,19 +182,22 @@ public class EndpointConfiguration {
         addEndpointToGroup("Python", "html-to-pdf");
         addEndpointToGroup("Python", "url-to-pdf");
         addEndpointToGroup("Python", "pdf-to-img");
+        addEndpointToGroup("Python", "file-to-pdf");
 
         // openCV
         addEndpointToGroup("OpenCV", "extract-image-scans");
 
         // LibreOffice
-        addEndpointToGroup("LibreOffice", "repair");  // Ghostscript
+        addEndpointToGroup("LibreOffice", "repair");
         addEndpointToGroup("LibreOffice", "file-to-pdf");
-        addEndpointToGroup("Unoconv", "file-to-pdf");
         addEndpointToGroup("LibreOffice", "pdf-to-word");
         addEndpointToGroup("LibreOffice", "pdf-to-presentation");
         addEndpointToGroup("LibreOffice", "pdf-to-rtf");
         addEndpointToGroup("LibreOffice", "pdf-to-html");
         addEndpointToGroup("LibreOffice", "pdf-to-xml");
+
+        // Unoconv
+        addEndpointToGroup("Unoconv", "file-to-pdf");
 
         // OCRmyPDF
         addEndpointToGroup("OCRmyPDF", "compress-pdf");
@@ -248,6 +251,7 @@ public class EndpointConfiguration {
         // Ghostscript dependent endpoints
         addEndpointToGroup("Ghostscript", "compress-pdf");
         addEndpointToGroup("Ghostscript", "pdf-to-pdfa");
+        addEndpointToGroup("Ghostscript", "repair");
 
         // Weasyprint dependent endpoints
         addEndpointToGroup("Weasyprint", "html-to-pdf");
