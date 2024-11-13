@@ -63,7 +63,6 @@ remove-annotations      |     ✔️      |  ✔️
 remove-cert-sign        |     ✔️      |  ✔️
 remove-image-pdf        |     ✔️      |  ✔️
 file-to-pdf             |            |  ✔️
-xlsx-to-pdf             |            |  ✔️
 html-to-pdf             |            |  ✔️
 url-to-pdf              |            |  ✔️
 repair                  |            |  ✔️
