@@ -416,7 +416,7 @@ For API usage, you must provide a header with `X-API-Key` and the associated API
 - Multi-page layout (stitch PDF pages together) support x rows y columns and custom page sizing
 - Fill forms manually or automatically
 
-### Q2: Why is my application downloading .htm files?
+### Q2: Why is my application downloading .htm files? Why am i getting HTTP error 413?
 
 This is an issue commonly caused by your NGINX configuration. The default file upload size for NGINX is 1MB. You need to add the following in your Nginx sites-available file: `client_max_body_size SIZE;` (where "SIZE" is 50M for example for 50MB files).
 
