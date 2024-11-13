@@ -193,7 +193,7 @@ Stirling-PDF currently supports 36 languages!
 | Arabic (العربية) (ar_AR)                     | ![98%](https://geps.dev/progress/98)   |
 | Basque (Euskara) (eu_ES)                     | ![56%](https://geps.dev/progress/56)   |
 | Bulgarian (Български) (bg_BG)                | ![98%](https://geps.dev/progress/98)   |
-| Catalan (Català) (ca_CA)                     | ![48%](https://geps.dev/progress/48)   |
+| Catalan (Català) (ca_CA)                     | ![91%](https://geps.dev/progress/91)   |
 | Croatian (Hrvatski) (hr_HR)                  | ![99%](https://geps.dev/progress/99)   |
 | Czech (Česky) (cs_CZ)                        | ![99%](https://geps.dev/progress/99)   |
 | Danish (Dansk) (da_DK)                       | ![98%](https://geps.dev/progress/98)   |
@@ -416,7 +416,7 @@ For API usage, you must provide a header with `X-API-Key` and the associated API
 - Multi-page layout (stitch PDF pages together) support x rows y columns and custom page sizing
 - Fill forms manually or automatically
 
-### Q2: Why is my application downloading .htm files?
+### Q2: Why is my application downloading .htm files? Why am i getting HTTP error 413?
 
 This is an issue commonly caused by your NGINX configuration. The default file upload size for NGINX is 1MB. You need to add the following in your Nginx sites-available file: `client_max_body_size SIZE;` (where "SIZE" is 50M for example for 50MB files).
 
