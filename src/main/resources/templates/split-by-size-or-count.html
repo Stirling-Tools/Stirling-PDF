@@ -17,6 +17,7 @@
                 <span class="material-symbols-rounded tool-header-icon advance">vertical_split</span>
                 <span class="tool-header-text" th:text="#{split-by-size-or-count.header}"></span>
               </div>
+              <div><p th:text="#{home.split-by-size-or-count.desc}"></p></div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/split-by-size-or-count'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <label for="splitType" th:text="#{split-by-size-or-count.type.label}">Split Type</label>

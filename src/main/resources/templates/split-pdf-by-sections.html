@@ -18,6 +18,7 @@
                 <span class="material-symbols-rounded tool-header-icon advance">grid_on</span>
                 <span class="tool-header-text" th:text="#{split-by-sections.header}"></span>
               </div>
+              <div><p th:text="#{home.split-by-section.desc}"></p></div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/general/split-pdf-by-sections'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <label for="horizontalDivisions" th:text="#{split-by-sections.horizontal.label}">Horizontal Divisions</label>

@@ -36,7 +36,7 @@
               <span class="material-symbols-rounded tool-header-icon sign">signature</span>
               <span class="tool-header-text" th:text="#{sign.header}"></span>
             </div>
-
+            <div><p th:text="#{home.sign.desc}"></p></div>
             <!-- pdf selector -->
             <div
               th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
