@@ -1,6 +1,7 @@
 class PdfActionsManager {
   pageDirection;
   pagesContainer;
+  static selectedPages = []; // Static property shared across all instances
 
   constructor(id) {
     this.pagesContainer = document.getElementById(id);
@@ -98,6 +99,7 @@ class PdfActionsManager {
     this.splitFileButtonCallback = this.splitFileButtonCallback.bind(this);
   }
 
+
   adapt(div) {
     div.classList.add("pdf-actions_container");
     const leftDirection = this.pageDirection === "rtl" ? "right" : "left";
@@ -137,6 +139,45 @@ class PdfActionsManager {
     buttonContainer.appendChild(deletePage);
 
     div.appendChild(buttonContainer);
+
+    //enerate checkbox to select individual pages
+    const selectCheckbox = document.createElement("input");
+    selectCheckbox.type = "checkbox";
+    selectCheckbox.classList.add("pdf-actions_checkbox", "form-check-input");
+    selectCheckbox.id = `selectPageCheckbox`;
+    selectCheckbox.checked = window.selectAll;
+
+    div.appendChild(selectCheckbox);
+
+    //only show whenpage select mode is active
+    if (!window.selectPage) {
+      selectCheckbox.classList.add("hidden");
+    } else {
+      selectCheckbox.classList.remove("hidden");
+    }
+
+    selectCheckbox.onchange = () => {
+      const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
+      if (selectCheckbox.checked) {
+        //adds to array of selected pages
+        window.selectedPages.push(pageNumber);
+      } else {
+        //remove page from selected pages array
+        const index = window.selectedPages.indexOf(pageNumber);
+        if (index !== -1) {
+          window.selectedPages.splice(index, 1);
+        }
+      }
+
+      if (window.selectedPages.length > 0 && !window.selectPage) {
+        window.toggleSelectPageVisibility();
+      }
+      if (window.selectedPages.length == 0 && window.selectPage) {
+        window.toggleSelectPageVisibility();
+      }
+
+      window.updateSelectedPagesDisplay();
+    };
 
     const insertFileButtonContainer = document.createElement("div");
 
@@ -191,15 +232,29 @@ class PdfActionsManager {
     };
 
     div.addEventListener("mouseenter", () => {
+      window.updatePageNumbersAndCheckboxes();
       const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
       adaptPageNumber(pageNumber, div);
+      const checkbox = document.getElementById(`selectPageCheckbox-${pageNumber}`);
+      if (checkbox && !window.selectPage) {
+        checkbox.classList.remove("hidden");
+      }
     });
 
     div.addEventListener("mouseleave", () => {
+      const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
       const pageNumberElement = div.querySelector(".page-number");
       if (pageNumberElement) {
         div.removeChild(pageNumberElement);
       }
+      const checkbox = document.getElementById(`selectPageCheckbox-${pageNumber}`);
+      if (checkbox && !window.selectPage) {
+        checkbox.classList.add("hidden");
+      }
+    });
+
+    document.addEventListener("selectedPagesUpdated", () => {
+      window.updateSelectedPagesDisplay();
     });
 
     return div;
