@@ -34,6 +34,12 @@
       const url = this.action;
       const files = $("#fileInput-input")[0].files;
       const formData = new FormData(this);
+      const submitButton = document.getElementById("submitBtn");
+      const showGameBtn = document.getElementById("show-game-btn");
+      const originalButtonText = submitButton.textContent;
+      var boredWaiting = localStorage.getItem("boredWaiting") || "disabled";
+
+      showGameBtn.style.display = "none";
 
       // Remove empty file entries
       for (let [key, value] of formData.entries()) {
@@ -42,14 +48,10 @@
         }
       }
       const override = $("#override").val() || "";
-      const originalButtonText = $("#submitBtn").text();
-      $("#submitBtn").text("Processing...");
       console.log(override);
 
       // Set a timeout to show the game button if operation takes more than 5 seconds
       const timeoutId = setTimeout(() => {
-        var boredWaiting = localStorage.getItem("boredWaiting") || "disabled";
-        const showGameBtn = document.getElementById("show-game-btn");
         if (boredWaiting === "enabled" && showGameBtn) {
           showGameBtn.style.display = "block";
           showGameBtn.parentNode.insertBefore(document.createElement('br'), showGameBtn.nextSibling);
@@ -57,6 +59,9 @@
       }, 5000);
 
       try {
+        submitButton.textContent = "Processing...";
+        submitButton.disabled = true;
+
         if (remoteCall === true) {
           if (override === "multi" || (!multipleInputsForSingleRequest && files.length > 1 && override !== "single")) {
             await submitMultiPdfForm(url, files);
@@ -64,11 +69,14 @@
             await handleSingleDownload(url, formData);
           }
         }
+
         clearTimeout(timeoutId);
-        $("#submitBtn").text(originalButtonText);
+        showGameBtn.style.display = "none";
+        showGameBtn.style.marginTop = "";
+        submitButton.textContent = originalButtonText;
+        submitButton.disabled = false;
 
         // After process finishes, check for boredWaiting and gameDialog open status
-        const boredWaiting = localStorage.getItem("boredWaiting") || "disabled";
         const gameDialog = document.getElementById('game-container-wrapper');
         if (boredWaiting === "enabled" && gameDialog && gameDialog.open) {
           // Display a green banner at the bottom of the screen saying "Download complete"
@@ -86,8 +94,10 @@
 
       } catch (error) {
         clearTimeout(timeoutId);
+        showGameBtn.style.display = "none";
+        submitButton.textContent = originalButtonText;
+        submitButton.disabled = false;
         handleDownloadError(error);
-        $("#submitBtn").text(originalButtonText);
         console.error(error);
       }
     });
