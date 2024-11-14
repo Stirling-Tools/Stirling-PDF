@@ -60,6 +60,7 @@ public class SplitPdfByChaptersController {
             throws Exception {
         MultipartFile file = request.getFileInput();
         boolean includeMetadata = request.getIncludeMetadata();
+        System.out.println("includeMetada -> " + includeMetadata);
         Integer bookmarkLevel =
                 request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
         if (bookmarkLevel < 0) {
@@ -94,6 +95,7 @@ public class SplitPdfByChaptersController {
         }
 
         boolean allowDuplicates = request.getAllowDuplicates();
+        System.out.println("allowDuplicates -> " + allowDuplicates);
         if (!allowDuplicates) {
             /*
             duplicates are generated when multiple bookmarks correspond to the same page,
