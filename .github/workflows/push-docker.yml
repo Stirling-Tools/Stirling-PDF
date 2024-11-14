@@ -72,7 +72,7 @@ jobs:
           tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
-            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/testNewOrg' }}
 
       - name: Build and push main Dockerfile
         uses: docker/build-push-action@v6
@@ -91,7 +91,7 @@ jobs:
       - name: Generate tags ultra-lite
         id: meta2
         uses: docker/metadata-action@v5
-        if: github.ref != 'refs/heads/main'
+        if: github.ref != 'refs/heads/testNewOrg'
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -103,7 +103,7 @@ jobs:
 
       - name: Build and push Dockerfile-ultra-lite
         uses: docker/build-push-action@v6
-        if: github.ref != 'refs/heads/main'
+        if: github.ref != 'refs/heads/testNewOrg'
         with:
           context: .
           file: ./Dockerfile-ultra-lite
@@ -118,7 +118,7 @@ jobs:
       - name: Generate tags fat
         id: meta3
         uses: docker/metadata-action@v5
-        if: github.ref != 'refs/heads/main'
+        if: github.ref != 'refs/heads/testNewOrg'
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -130,7 +130,7 @@ jobs:
 
       - name: Build and push main Dockerfile fat
         uses: docker/build-push-action@v6
-        if: github.ref != 'refs/heads/main'
+        if: github.ref != 'refs/heads/testNewOrg'
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
