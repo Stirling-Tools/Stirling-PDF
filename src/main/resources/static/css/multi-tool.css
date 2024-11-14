@@ -209,21 +209,146 @@ label {
   margin: 0 auto;
 }
 
-.page-number {
-  position: absolute;
-  top: 5px;
-  right: 0px;
-  color: var(--md-sys-color-on-surface);
-  background-color: var(--md-sys-color-surface-5);
-  padding: 6px 8px;
-  border-radius: 8px;
-  font-size: 16px;
-  z-index: 2;
+/* 在multi-tool.css中添加空白页样式 */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+#page-container {
+  max-width: 1200px;
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .tool-header {
-  margin: 0.5rem 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
 }
+
+.tool-header-icon {
+  font-size: 2.5rem;
+  color: #007bff;
+  margin-right: 10px;
+}
+
+.tool-header-text {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.container {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -15px;
+  margin-left: -15px;
+}
+
+.col-md-12 {
+  flex: 0 0 100%;
+  max-width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+.bg-card {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mt-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.mt-filename {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+}
+
+.mt-filename label {
+  margin-right: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+.form-control {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 100%;
+  max-width: 300px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-right: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background-color: #545b62;
+}
+
+.enable-on-file {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.enable-on-file.enabled {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.multi-tool-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
 .page-container {
   position: relative;
   margin-bottom: 20px;
@@ -231,6 +356,8 @@ label {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
 }
 
 .page-container img {
@@ -242,5 +369,24 @@ label {
 .blank-page-image {
   width: 100%;
   height: auto;
-  border: 1px solid
+  border: 1px solid #ccc;
+  background-color: #f8f9fa;
+}
 
+@media (max-width: 768px) {
+  .mt-action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mt-filename {
+    margin-bottom: 10px;
+  }
+
+  .btn {
+    width: 100%;
+    max-width: none;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+}

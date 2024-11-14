@@ -31,37 +31,25 @@
               </div>
               <div class="mt-action-btn">
                 <button class="btn btn-primary" onclick="addFiles()">
-                    <span class="material-symbols-rounded">
-                      add
-                    </span>
+                  <span class="material-symbols-rounded">add</span> Add Files
                 </button>
                 <button class="btn btn-secondary enable-on-file" onclick="rotateAll(-90)" disabled>
-                    <span class="material-symbols-rounded">
-                      rotate_left
-                    </span>
+                  <span class="material-symbols-rounded">rotate_left</span> Rotate Left
                 </button>
                 <button class="btn btn-secondary enable-on-file" onclick="rotateAll(90)" disabled>
-                    <span class="material-symbols-rounded">
-                      rotate_right
-                    </span>
+                  <span class="material-symbols-rounded">rotate_right</span> Rotate Right
                 </button>
                 <button class="btn btn-secondary enable-on-file" onclick="splitAll()" disabled>
-                    <span class="material-symbols-rounded">
-                      cut
-                    </span>
+                  <span class="material-symbols-rounded">cut</span> Split Pages
                 </button>
                 <button class="btn btn-secondary enable-on-file" onclick="addFilesBlankAll()" disabled>
-                    <span class="material-symbols-rounded">
-                      insert_page_break
-                    </span>
+                  <span class="material-symbols-rounded">insert_page_break</span> Add Blank Pages
                 </button>
                 <button class="btn btn-secondary enable-on-file" onclick="addBlankPage()" disabled>
                   <span class="material-symbols-rounded">insert_drive_file</span> Add Blank Page
                 </button>
                 <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
-                    <span class="material-symbols-rounded">
-                      download
-                    </span>
+                  <span class="material-symbols-rounded">download</span> Export PDF
                 </button>
               </div>
             </div>
@@ -105,7 +93,7 @@
 
     function renderPdf(pdfDoc) {
       pdfDoc.getPages().forEach((page, index) => {
-        constpageNumber = index + 1;
+        const pageNumber = index + 1;
         const pageContainer = document.createElement('div');
         pageContainer.className = 'page-container';
         pageContainer.innerHTML = `<img src="" alt="Page ${pageNumber}" class="page-image"/>`;
