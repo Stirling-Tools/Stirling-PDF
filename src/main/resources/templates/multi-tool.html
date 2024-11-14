@@ -49,7 +49,7 @@
                   </button>
                   <button id="select-pages-container" class="btn btn-secondary enable-on-file"
                     th:title="#{multiTool.selectPages}" onclick="toggleSelectPageVisibility()" disabled>
-                    <span class="material-icons">
+                    <span id="select-pages-button" class="material-icons">
                       pages
                     </span>
                   </button>
@@ -71,7 +71,12 @@
                   </button>
                 </div>
                 <div id="selected-pages-display" class="selected-pages-container hidden">
-                  <h3 th:text="#{multiTool.selectedPages}">Selected Pages</h3>
+                  <div style="display:flex; height:3rem; margin-right:1rem">
+                    <h5 th:text="#{multiTool.selectedPages}" style="white-space: nowrap; margin-right: 1rem;">Selected
+                      Pages</h5>
+                    <input type="text" id="csv-input" class="form-control" style="height:2.5rem" placeholder="1,3,5-10"
+                      value="">
+                  </div>
                   <ul id="selected-pages-list" class="pages-list"></ul>
                 </div>
               </div>
@@ -101,8 +106,17 @@
   <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
   <script>
     window.selectedPages = [];
-    window.selectpages = false;
+    window.selectPage = false;
     window.selectAll = false;
+    const csvInput = document.getElementById("csv-input");
+    csvInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        updatePagesFromCSV();
+      }
+    });
+    csvInput.addEventListener("blur", function () {
+      updatePagesFromCSV();
+    });
   </script>
   <script type="module">
     import PdfContainer from './js/multitool/PdfContainer.js';

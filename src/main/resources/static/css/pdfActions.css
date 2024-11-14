@@ -131,7 +131,7 @@ html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-butto
 .pdf-actions_checkbox {
   position: absolute;
   top: 5px;
-  left: 0px;
+  right: 3px;
   color: var(--md-sys-color-on-surface);
   background-color: var(--md-sys-color-surface-5);
   padding: 6px 8px;
