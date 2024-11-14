@@ -31,11 +31,13 @@
             <div class="mb-3 form-check">
               <input type="checkbox" class="form-check-input" id="includeMetadata" name="includeMetadata">
               <label class="form-check-label" for="includeMetadata" th:text="#{splitByChapters.includeMetadata}"></label>
+              <input type="hidden" name="includeMetadata" value="false" />
             </div>
 
             <div class="mb-3 form-check">
               <input type="checkbox" class="form-check-input" id="allowDuplicates" name="allowDuplicates">
               <label class="form-check-label" for="allowDuplicates" th:text="#{splitByChapters.allowDuplicates}"></label>
+              <input type="hidden" name="allowDuplicates" value="false" />
             </div>
 
             <p>
