@@ -105,9 +105,8 @@ public class CertSignController {
             imageFile = resource.getFile();
         }
 
-        public InputStream createVisibleSignature(
-                PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showImage)
-                throws IOException {
+        public InputStream createVisibleSignature(PDDocument srcDoc, PDSignature signature, Integer pageNumber,
+                Boolean showImage) throws IOException {
             // modified from org.apache.pdfbox.examples.signature.CreateVisibleSignature2
             try (PDDocument doc = new PDDocument()) {
                 PDPage page = new PDPage(srcDoc.getPage(pageNumber).getMediaBox());
@@ -152,7 +151,8 @@ public class CertSignController {
                         extState.setNonStrokingAlphaConstant(0.5f);
                         cs.setGraphicsStateParameters(extState);
                         cs.transform(Matrix.getScaleInstance(0.08f, 0.08f));
-                        PDImageXObject img = PDImageXObject.createFromFileByExtension(imageFile, doc);
+                        PDImageXObject img = PDImageXObject.createFromFileByExtension(imageFile,
+                                doc);
                         cs.drawImage(img, 100, 0);
                         cs.restoreGraphicsState();
                     }
@@ -245,15 +245,7 @@ public class CertSignController {
 
         CreateSignature createSignature = new CreateSignature(ks, password.toCharArray());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        sign(
-                pdfDocumentFactory,
-                pdf.getBytes(),
-                baos,
-                createSignature,
-                showSignature,
-                pageNumber,
-                name,
-                location,
+        sign(pdfDocumentFactory, pdf.getBytes(), baos, createSignature, showSignature, pageNumber, name, location,
                 reason);
         return WebResponseUtils.boasToWebResponse(
                 baos,
@@ -282,8 +274,8 @@ public class CertSignController {
 
             if (showSignature) {
                 SignatureOptions signatureOptions = new SignatureOptions();
-                signatureOptions.setVisualSignature(
-                        instance.createVisibleSignature(doc, signature, pageNumber, true));
+                signatureOptions
+                        .setVisualSignature(instance.createVisibleSignature(doc, signature, pageNumber, true));
                 signatureOptions.setPage(pageNumber);
 
                 doc.addSignature(signature, instance, signatureOptions);
