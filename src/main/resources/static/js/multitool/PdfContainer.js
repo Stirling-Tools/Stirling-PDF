@@ -505,11 +505,11 @@ class PdfContainer {
     return zip;
   }
 
-  async exportPdf() {
+  async exportPdf(selected) {
     const pdfDoc = await PDFLib.PDFDocument.create();
     const pageContainers = this.pagesContainer.querySelectorAll(".page-container"); // Select all .page-container elements
     for (var i = 0; i < pageContainers.length; i++) {
-      if (!window.selectPage || window.selectedPages.includes(i + 1)) {
+      if (!selected || window.selectedPages.includes(i + 1)) {
         const img = pageContainers[i].querySelector("img"); // Find the img element within each .page-container
         if (!img) continue;
         let page;
@@ -677,7 +677,9 @@ class PdfContainer {
     const selectedPages = document.getElementById("selected-pages-display");
     selectedPages.classList.toggle("hidden", !window.selectPage);
     const selectAll = document.getElementById("select-All-Container");
-    selectAll.classList.toggle("hidden", !window.selectPage);
+    selectedPages.classList.toggle("hidden", !window.selectPage);
+    const exportSelected = document.getElementById("export-selected-button");
+    exportSelected.classList.toggle("hidden", !window.selectPage);
     const selectPagesButton = document.getElementById("select-pages-button");
     selectPagesButton.style.opacity = window.selectPage ? "1" : "0.5";
 

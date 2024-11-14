@@ -60,12 +60,19 @@
                       id="deselect-icon">deselect</span>
                   </button>
                   <div class=" button-container">
-                    <button id="delete-button" class="btn btn-danger hidden" onclick="deleteSelected()">
+                    <button th:title="#{multiTool.deleteSelected}" id="delete-button" class="btn btn-danger hidden"
+                      onclick="deleteSelected()">
                       <span class="material-symbols-rounded">delete</span>
                     </button>
                   </div>
-                  <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
-                    <span class="material-symbols-rounded">
+                  <button id="export-selected-button" class="btn btn-primary enable-on-file hidden"
+                    onclick="exportPdf(true)" disabled>
+                    <span th:title="#{multiTool.downloadSelected}" class="material-symbols-rounded">
+                      file_save
+                    </span>
+                  </button>
+                  <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf(false)" disabled>
+                    <span th:title="#{multiTool.downloadAll}" class="material-symbols-rounded">
                       download
                     </span>
                   </button>
