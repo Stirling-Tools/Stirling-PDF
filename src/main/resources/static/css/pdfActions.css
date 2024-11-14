@@ -143,3 +143,11 @@ html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-butto
 .hidden {
   display: none;
 }
+.pdf-actions_insert-file-blank-button {
+  position: absolute;
+  top: 75%;
+  right: 50%;
+  translate: 0% -50%;
+  aspect-ratio: 1;
+  border-radius: 100px;
+}

@@ -30,13 +30,15 @@
                 <!-- Button to download the JSON -->
                 <a href="#" id="downloadJson" class="btn btn-primary mt-3" style="display: none;" th:text="#{getPdfInfo.downloadJson}">Download JSON</a>
               </div>
+              <script th:src="@{'/js/fetch-utils.js'}"></script>
               <script>
+
                 document.getElementById("pdfInfoForm").addEventListener("submit", function(event) {
                   event.preventDefault();
 
                   const formData = new FormData(event.target);
 
-                  fetch('api/v1/security/get-info-on-pdf', {
+                  fetchWithCsrf('api/v1/security/get-info-on-pdf', {
                     method: 'POST',
                     body: formData
                   }).then(response => response.json()).then(data => {
