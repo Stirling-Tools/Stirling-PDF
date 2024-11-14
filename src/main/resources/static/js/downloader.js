@@ -1,5 +1,8 @@
 (function() {
 
+  // 初始化 PostHog
+  posthog.init('YOUR_POSTHOG_API_KEY', { api_host: 'https://app.posthog.com' });
+
   const { pdfPasswordPrompt, multipleInputsForSingleRequest, disableMultipleFiles, remoteCall, sessionExpired, refreshPage, error } = window.stirlingPDF;
 
   function showErrorBanner(message, stackTrace) {
@@ -57,6 +60,19 @@
       }, 5000);
 
       try {
+        const startTime = performance.now(); // Start time
+
+        // Record file size and PDF page count
+        let totalFileSize = 0;
+        let totalPdfPages = 0;
+        for (let file of files) {
+          totalFileSize += file.size;
+          if (file.type === 'application/pdf') {
+            const pageCount = await getPDFPageCount(file);
+            totalPdfPages += pageCount;
+          }
+        }
+
         if (remoteCall === true) {
           if (override === "multi" || (!multipleInputsForSingleRequest && files.length > 1 && override !== "single")) {
             await submitMultiPdfForm(url, files);
@@ -66,6 +82,16 @@
         }
         clearTimeout(timeoutId);
         $("#submitBtn").text(originalButtonText);
+
+        const endTime = performance.now(); // End time
+        const processingTime = endTime - startTime; // Processing time
+
+        // PostHog event tracking
+        posthog.capture('file_upload_processed', {
+          file_size: totalFileSize,
+          pdf_pages: totalPdfPages,
+          processing_time: processingTime
+        });
 
         // After process finishes, check for boredWaiting and gameDialog open status
         const boredWaiting = localStorage.getItem("boredWaiting") || "disabled";
@@ -210,85 +236,97 @@
     let progressBar = $(".progressBar");
     progressBar.css("width", "0%");
     progressBar.attr("aria-valuenow", 0);
-    progressBar.attr("aria-valuemax", files.length);
+     progressBar.attr("aria-valuemax", files.length);
 
-    if (zipFiles) {
-      jszip = new JSZip();
-    }
+     if (zipFiles) {
+       jszip = new JSZip();
+     }
 
-    // Get the form with the method attribute set to POST
-    let postForm = document.querySelector('form[method="POST"]');
+     // Get the form with the method attribute set to POST
+     let postForm = document.querySelector('form[method="POST"]');
 
-    // Get existing form data
-    let formData;
-    if (postForm) {
-      formData = new FormData($(postForm)[0]); // Convert the form to a jQuery object and get the raw DOM element
-    } else {
-      console.log("No form with POST method found.");
-    }
-    //Remove file to reuse parameters for other runs
-    formData.delete("fileInput");
-    // Remove empty file entries
-    for (let [key, value] of formData.entries()) {
-      if (value instanceof File && !value.name) {
-        formData.delete(key);
-      }
-    }
-    const CONCURRENCY_LIMIT = 8;
-    const chunks = [];
-    for (let i = 0; i < Array.from(files).length; i += CONCURRENCY_LIMIT) {
-      chunks.push(Array.from(files).slice(i, i + CONCURRENCY_LIMIT));
-    }
+     // Get existing form data
+     let formData;
+     if (postForm) {
+       formData = new FormData($(postForm)[0]); // Convert the form to a jQuery object and get the raw DOM element
+     } else {
+       console.log("No form with POST method found.");
+     }
+     // Remove file to reuse parameters for other runs
+     formData.delete("fileInput");
+     // Remove empty file entries
+     for (let [key, value] of formData.entries()) {
+       if (value instanceof File && !value.name) {
+         formData.delete(key);
+       }
+     }
+     const CONCURRENCY_LIMIT = 8;
+     const chunks = [];
+     for (let i = 0; i < Array.from(files).length; i += CONCURRENCY_LIMIT) {
+       chunks.push(Array.from(files).slice(i, i + CONCURRENCY_LIMIT));
+     }
 
-    for (const chunk of chunks) {
-      const promises = chunk.map(async (file) => {
-        let fileFormData = new FormData();
-        fileFormData.append("fileInput", file);
-        console.log(fileFormData);
-        // Add other form data
-        for (let pair of formData.entries()) {
-          fileFormData.append(pair[0], pair[1]);
-          console.log(pair[0] + ", " + pair[1]);
-        }
+     for (const chunk of chunks) {
+       const promises = chunk.map(async (file) => {
+         let fileFormData = new FormData();
+         fileFormData.append("fileInput", file);
+         console.log(fileFormData);
+         // Add other form data
+         for (let pair of formData.entries()) {
+           fileFormData.append(pair[0], pair[1]);
+           console.log(pair[0] + ", " + pair[1]);
+         }
 
-        try {
-          const downloadDetails = await handleSingleDownload(url, fileFormData, true, zipFiles);
-          console.log(downloadDetails);
-          if (zipFiles) {
-            jszip.file(downloadDetails.filename, downloadDetails.blob);
-          } else {
-            //downloadFile(downloadDetails.blob, downloadDetails.filename);
-          }
-          updateProgressBar(progressBar, Array.from(files).length);
-        } catch (error) {
-          handleDownloadError(error);
-          console.error(error);
-        }
-      });
-      await Promise.all(promises);
-    }
+         try {
+           const startTime = performance.now(); // Start time for individual file
+           const downloadDetails = await handleSingleDownload(url, fileFormData, true, zipFiles);
+           console.log(downloadDetails);
+           if (zipFiles) {
+             jszip.file(downloadDetails.filename, downloadDetails.blob);
+           } else {
+             //downloadFile(downloadDetails.blob, downloadDetails.filename);
+           }
+           const endTime = performance.now(); // End time for individual file
+           const processingTime = endTime - startTime; // Processing time for individual file
 
-    if (zipFiles) {
-      try {
-        const content = await jszip.generateAsync({ type: "blob" });
-        downloadFile(content, "files.zip");
-      } catch (error) {
-        console.error("Error generating ZIP file: " + error);
-      }
-    }
-    progressBar.css("width", "100%");
-    progressBar.attr("aria-valuenow", Array.from(files).length);
-  }
+           // PostHog event tracking for individual file
+           posthog.capture('file_upload_processed', {
+             file_size: file.size,
+             pdf_pages: await getPDFPageCount(file),
+             processing_time: processingTime
+           });
 
-  function updateProgressBar(progressBar, files) {
-    let progress = (progressBar.attr("aria-valuenow") / files.length) * 100 + 100 / files.length;
-    progressBar.css("width", progress + "%");
-    progressBar.attr("aria-valuenow", parseInt(progressBar.attr("aria-valuenow")) + 1);
-  }
-  window.addEventListener("unload", () => {
-    for (const url of urls) {
-      URL.revokeObjectURL(url);
-    }
-  });
+           updateProgressBar(progressBar, Array.from(files).length);
+         } catch (error) {
+           handleDownloadError(error);
+           console.error(error);
+         }
+       });
+       await Promise.all(promises);
+     }
 
-})();
+     if (zipFiles) {
+       try {
+         const content = await jszip.generateAsync({ type: "blob" });
+         downloadFile(content, "files.zip");
+       } catch (error) {
+         console.error("Error generating ZIP file: " + error);
+       }
+     }
+     progressBar.css("width", "100%");
+     progressBar.attr("aria-valuenow", Array.from(files).length);
+   }
+
+   function updateProgressBar(progressBar, files) {
+     let progress = (progressBar.attr("aria-valuenow") / files.length) * 100 + 100 / files.length;
+     progressBar.css("width", progress + "%");
+     progressBar.attr("aria-valuenow", parseInt(progressBar.attr("aria-valuenow")) + 1);
+   }
+
+   window.addEventListener("unload", () => {
+     for (const url of urls) {
+       URL.revokeObjectURL(url);
+     }
+   });
+
+ })();
