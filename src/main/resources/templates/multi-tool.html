@@ -1,75 +1,74 @@
 <!DOCTYPE html>
 <html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
-  xmlns:th="https://www.thymeleaf.org">
+      xmlns:th="https://www.thymeleaf.org">
 
 <head>
-  <th:block th:insert="~{fragments/common :: head(title=#{multiTool.title}, header=#{multiTool.header})}"></th:block>
+  <meta charset="UTF-8">
+  <title>Multi-Tool PDF Editor</title>
+  <link rel="stylesheet" th:href="@{'/css/multi-tool.css'}">
+  <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
+  <script th:src="@{'/js/thirdParty/pdf.js'}"></script>
 </head>
 
 <body>
-  <div id="image-highlighter"></div>
-  <div id="page-container">
-    <div id="content-wrap">
-      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-      <br><br>
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-md-12">
-            <div class="bg-card">
-              <div class="tool-header">
-                <span class="material-symbols-rounded tool-header-icon advance">construction</span>
-                <span class="tool-header-text" th:text="#{multiTool.header}"></span>
+<div id="page-container">
+  <div id="content-wrap">
+    <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+    <br><br>
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-12">
+          <div class="bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon advance">construction</span>
+              <span class="tool-header-text" th:text="#{multiTool.header}">Multi-Tool PDF Editor</span>
+            </div>
+            <div class="mt-action-bar d-flex flex-wrap">
+              <div class="mt-filename">
+                <label for="filename-input" th:text="#{multiTool.uploadPrompts}">Filename</label>
+                <input type="text" class="form-control" id="filename-input"
+                       th:placeholder="#{multiTool.uploadPrompts}">
               </div>
-              <div class="mt-action-bar d-flex flex-wrap">
-                <div class="mt-filename">
-                  <label for="filename-input" th:text="#{multiTool.uploadPrompts}">Filename</label>
-                  <input type="text" class="form-control" id="filename-input"
-                    th:placeholder="#{multiTool.uploadPrompts}">
-                </div>
-                <div class="mt-action-btn">
-                  <button class="btn btn-primary" onclick="addFiles()">
+              <div class="mt-action-btn">
+                <button class="btn btn-primary" onclick="addFiles()">
                     <span class="material-symbols-rounded">
                       add
                     </span>
-                  </button>
-                  <button class="btn btn-secondary enable-on-file" onclick="rotateAll(-90)" disabled>
+                </button>
+                <button class="btn btn-secondary enable-on-file" onclick="rotateAll(-90)" disabled>
                     <span class="material-symbols-rounded">
                       rotate_left
                     </span>
-                  </button>
-                  <button class="btn btn-secondary enable-on-file" onclick="rotateAll(90)" disabled>
+                </button>
+                <button class="btn btn-secondary enable-on-file" onclick="rotateAll(90)" disabled>
                     <span class="material-symbols-rounded">
                       rotate_right
                     </span>
-                  </button>
-                  <button class="btn btn-secondary enable-on-file" onclick="splitAll()" disabled>
+                </button>
+                <button class="btn btn-secondary enable-on-file" onclick="splitAll()" disabled>
                     <span class="material-symbols-rounded">
                       cut
                     </span>
-                  </button>
-                  <button class="btn btn-secondary enable-on-file" onclick="addFilesBlankAll()" disabled>
+                </button>
+                <button class="btn btn-secondary enable-on-file" onclick="addFilesBlankAll()" disabled>
                     <span class="material-symbols-rounded">
                       insert_page_break
                     </span>
-                  </button>
-                  <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
+                </button>
+                <button class="btn btn-secondary enable-on-file" onclick="addBlankPage()" disabled>
+                  <span class="material-symbols-rounded">insert_drive_file</span> Add Blank Page
+                </button>
+                <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
                     <span class="material-symbols-rounded">
                       download
                     </span>
-                  </button>
-                </div>
+                </button>
               </div>
-              <div class="multi-tool-container">
-                <div class="d-flex flex-wrap" id="pages-container-wrapper">
-                  <div id="pages-container">
-                    <div class="page-container" th:each="file, status: ${fileList}"
-                      th:id="'page-container-' + ${status.index}">
-                      <div class="page-number-container">
-                        <span th:text="${status.index + 1}"></span>
-                      </div>
-                      <img th:src="${file.imageUrl}" alt="File Page">
-                    </div>
-                  </div>
+            </div>
+            <div class="multi-tool-container">
+              <div class="d-flex flex-wrap" id="pages-container-wrapper">
+                <div id="pages-container">
+                  <!-- PDF pages will be dynamically added here -->
                 </div>
               </div>
             </div>
@@ -77,40 +76,122 @@
         </div>
       </div>
     </div>
-    <div id="drag-container"></div>
-    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
-  <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
-  <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
-  <script type="module">
-    import PdfContainer from './js/multitool/PdfContainer.js';
-    import DragDropManager from "./js/multitool/DragDropManager.js";
-    import ImageHighlighter from "./js/multitool/ImageHighlighter.js";
-    import PdfActionsManager from './js/multitool/PdfActionsManager.js';
-    import FileDragManager from './js/multitool/fileInput.js';
-    // enables drag and drop
-    const dragDropManager = new DragDropManager('drag-container', 'pages-container');
-    // enables image highlight on click
-    const imageHighlighter = new ImageHighlighter('image-highlighter');
-    // enables the default action buttons on each file
-    const pdfActionsManager = new PdfActionsManager('pages-container');
-    const fileDragManager = new FileDragManager();
+  <div id="drag-container"></div>
+  <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+</div>
 
-    // Scroll the wrapper horizontally
+<script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
+<script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const pdfContainer = document.getElementById('pages-container');
+    const addBlankPageButton = document.querySelector('.btn-secondary[onclick="addBlankPage()"]');
 
-    // Automatically exposes rotateAll, addFiles and exportPdf to the window for the global buttons.
-    const pdfContainer = new PdfContainer(
-      'pages-container',
-      'pages-container-wrapper',
-      [
-        dragDropManager,
-        imageHighlighter,
-        pdfActionsManager,
-        fileDragManager
-      ]
-    )
+    async function addFiles() {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.pdf';
+      fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const pdfData = await file.arrayBuffer();
+          const pdfDoc = await PDFLib.PDFDocument.load(pdfData);
+          renderPdf(pdfDoc);
+        }
+      };
+      fileInput.click();
+    }
 
-    fileDragManager.setCallback(async (files) => pdfContainer.addFilesFromFiles(files));
+    function renderPdf(pdfDoc) {
+      pdfDoc.getPages().forEach((page, index) => {
+        constpageNumber = index + 1;
+        const pageContainer = document.createElement('div');
+        pageContainer.className = 'page-container';
+        pageContainer.innerHTML = `<img src="" alt="Page ${pageNumber}" class="page-image"/>`;
+        const pageImage = pageContainer.querySelector('.page-image');
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        const scale = window.devicePixelRatio || 1;
+        const viewport = page.getViewport({ scale: scale });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport,
+        };
+        page.render(renderContext).promise.then(() => {
+          pageImage.src = canvas.toDataURL();
+        });
+        pdfContainer.appendChild(pageContainer);
+      });
+      enableButtons();
+    }
+
+    function enableButtons() {
+      const buttons = document.querySelectorAll('.enable-on-file');
+      buttons.forEach(button => button.disabled = false);
+    }
+
+    function addBlankPage() {
+      const blankPageContainer = document.createElement('div');
+      blankPageContainer.className = 'page-container';
+      blankPageContainer.innerHTML = `<img src="path/to/blank/page/image.png" alt="Blank Page" class="blank-page-image"/>`;
+      const pages = document.querySelectorAll('.page-container');
+      const lastPage = pages[pages.length - 1];
+      pdfContainer.insertBefore(blankPageContainer, lastPage.nextSibling);
+    }
+
+    function rotateAll(angle) {
+      const pages = document.querySelectorAll('.page-container img');
+      pages.forEach(page => {
+        const currentAngle = page.style.transform ? parseInt(page.style.transform.replace(/rotate\((\d+)deg\)/, '$1')) : 0;
+        page.style.transform = `rotate(${currentAngle + angle}deg)`;
+      });
+    }
+
+    function splitAll() {
+      const pages = document.querySelectorAll('.page-container');
+      pages.forEach(page => {
+        const newWindow = window.open();
+        newWindow.document.write(page.outerHTML);
+      });
+    }
+
+    function addFilesBlankAll() {
+      const pages = document.querySelectorAll('.page-container');
+      pages.forEach((page, index) => {
+        if (index !== 0) {
+          const blankPageContainer = document.createElement('div');
+          blankPageContainer.className = 'page-container';
+          blankPageContainer.innerHTML = `<img src="path/to/blank/page/image.png" alt="Blank Page" class="blank-page-image"/>`;
+          pdfContainer.insertBefore(blankPageContainer, page);
+        }
+      });
+    }
+
+    async function exportPdf() {
+      const pdfDoc = await PDFLib.PDFDocument.create();
+      const pages = document.querySelectorAll('.page-container img');
+      pages.forEach(async (page, index) => {
+        const imgData = await fetch(page.src);
+        const imgBlob = await imgData.blob();
+        const pdfPage = await pdfDoc.addPage();
+        const img = await pdfDoc.embedPng(imgBlob);
+        pdfPage.drawImage(img, {
+          x: 0,
+          y: 0,
+          width: pdfPage.getSize().width,
+          height: pdfPage.getSize().height,
+        });
+      });
+      const pdfDataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+      const a = document.createElement('a');
+      a.href = pdfDataUri;
+      a.download = 'exported-pdf.pdf';
+      a.click();
+    }
+    /*]]>*/
   </script>
 </body>
 

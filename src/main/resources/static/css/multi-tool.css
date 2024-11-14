@@ -224,3 +224,22 @@ label {
 .tool-header {
   margin: 0.5rem 1rem 2rem;
 }
+.page-container {
+  position: relative;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.page-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.blank-page-image {
+  width: 100%;
+  height: auto;
+  border: 1px solid
