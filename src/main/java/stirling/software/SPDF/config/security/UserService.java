@@ -304,7 +304,13 @@ public class UserService implements UserServiceInterface {
         boolean isValidEmail =
                 username.matches(
                         "^(?=.{1,64}@)[A-Za-z0-9]+(\\.[A-Za-z0-9_+.-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$");
-        return isValidSimpleUsername || isValidEmail;
+
+        List<String> notAllowedUserList = new ArrayList<>();
+        notAllowedUserList.add("ALL_USERS".toLowerCase());
+
+        boolean notAllowedUser = notAllowedUserList.contains(username.toLowerCase());
+
+        return (isValidSimpleUsername || isValidEmail) && !notAllowedUser;
     }
 
     private String getInvalidUsernameMessage() {

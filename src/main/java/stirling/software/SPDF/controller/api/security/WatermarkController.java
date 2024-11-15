@@ -188,8 +188,7 @@ public class WatermarkController {
         float pageWidth = page.getMediaBox().getWidth();
         float pageHeight = page.getMediaBox().getHeight();
 
-
-        //Calculating the new width and height depending on the angle.
+        // Calculating the new width and height depending on the angle.
         float radians = (float) Math.toRadians(rotation);
         float newWatermarkWidth =
                 (float)
@@ -200,7 +199,8 @@ public class WatermarkController {
                         (Math.abs(watermarkWidth * Math.sin(radians))
                                 + Math.abs(watermarkHeight * Math.cos(radians)));
 
-        //Calculating the number of rows and columns.
+        // Calculating the number of rows and columns.
+
         int watermarkRows = (int) (pageHeight / newWatermarkHeight + 1);
         int watermarkCols = (int) (pageWidth / newWatermarkWidth + 1);
 
