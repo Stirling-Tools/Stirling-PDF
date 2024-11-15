@@ -21,7 +21,7 @@ async function displayFiles(files) {
   for (let i = 0; i < files.length; i++) {
     const pageCount = await getPDFPageCount(files[i]);
     const pageLabel = pageCount === 1 ? pageTranslation : pagesTranslation;
-    
+
     // Create list item
     const item = document.createElement("li");
     item.className = "list-group-item";
@@ -173,3 +173,18 @@ function updateFiles() {
   }
   document.getElementById("fileInput-input").files = dataTransfer.files;
 }
+
+document.querySelector("#resetFileInputBtn").addEventListener("click", ()=>{
+  let formElement = document.querySelector("#fileInput-input");
+    formElement.value = '';
+    clearLiElements();
+    updateFiles();
+
+});
+
+function clearLiElements(){
+  let listGroupItemNodeList = document.querySelectorAll(".list-group-item");
+  for (let i = 0; i < listGroupItemNodeList.length; i++) {
+    listGroupItemNodeList[i].remove();
+    };
+  }
