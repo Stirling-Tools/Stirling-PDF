@@ -16,13 +16,13 @@
   <style>
     .multi-toolAdvert {
       margin-bottom: 10px;
-      margin-left: 50%;
-      transform: translateX(-50%);
+      margin-inline-start: 50%;
       max-width: 52rem;
       z-index: 0;
       background-color: var(--md-sys-color-surface-5);
       border-radius: 2rem;
-      padding: 10px 27px 10px 20px;
+      padding-block: 10px;
+      padding-inline: 20px 27px;
       font-size: 0.9rem;
       display: none;
       justify-content: center;
@@ -43,6 +43,7 @@
       const closeBtn = document.getElementById('closeMultiToolAdvert');
 
       const cacheKey = `closeMultiToolAdvert_${window.location.pathname}`;
+      const isRTL = document.documentElement.dir === 'rtl';
 
       if (localStorage.getItem(cacheKey) !== 'true') {
         advert.style.display = 'flex';
@@ -52,6 +53,13 @@
         advert.style.display = 'none';
         localStorage.setItem(cacheKey, 'true');
       });
+
+
+      if (isRTL) {
+        advert.style.transform = 'translateX(50%)'; // Flip direction for RTL
+      } else {
+        advert.style.transform = 'translateX(-50%)';
+      }
     });
   </script>
 </div>
