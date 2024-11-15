@@ -329,11 +329,14 @@ span.icon-text::after {
   }
 }
 
- .go-pro-link {
+.go-pro-link {
    position: relative;
    padding: 0.5rem 1rem;
    transition: all 0.3s ease;
- }
+   z-index: 1;
+   display: inline-block;
+   width: auto;
+}
 
 .go-pro-badge {
   display: inline-block;

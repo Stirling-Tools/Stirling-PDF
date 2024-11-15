@@ -19,10 +19,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
+import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Authority;
 import stirling.software.SPDF.model.Role;
@@ -31,6 +33,7 @@ import stirling.software.SPDF.repository.AuthorityRepository;
 import stirling.software.SPDF.repository.UserRepository;
 
 @Service
+@Slf4j
 public class UserService implements UserServiceInterface {
 
     @Autowired private UserRepository userRepository;
@@ -45,6 +48,7 @@ public class UserService implements UserServiceInterface {
 
     @Autowired DatabaseBackupInterface databaseBackupHelper;
 
+    @Autowired ApplicationProperties applicationProperties;
 
     // Handle OAUTH2 login and user auto creation.
     public boolean processOAuth2PostLogin(String username, boolean autoCreateUser)
@@ -355,13 +359,21 @@ public class UserService implements UserServiceInterface {
 
         if (principal instanceof UserDetails) {
             return ((UserDetails) principal).getUsername();
+        } else if (principal instanceof OAuth2User) {
+            return ((OAuth2User) principal)
+                    .getAttribute(
+                            applicationProperties.getSecurity().getOauth2().getUseAsUsername());
+        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
+            return ((CustomSaml2AuthenticatedPrincipal) principal).getName();
+        } else if (principal instanceof String) {
+            return (String) principal;
         } else {
             return principal.toString();
         }
     }
 
-	@Override
-	public long getTotalUsersCount() {
-		return userRepository.count();
-	}
+    @Override
+    public long getTotalUsersCount() {
+        return userRepository.count();
+    }
 }

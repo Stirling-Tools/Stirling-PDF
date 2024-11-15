@@ -126,3 +126,28 @@ html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-butto
   aspect-ratio: 1;
   border-radius: 100px;
 }
+
+
+.pdf-actions_checkbox {
+  position: absolute;
+  top: 5px;
+  right: 3px;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-5);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 16px;
+  z-index: 2;
+}
+
+.hidden {
+  display: none;
+}
+.pdf-actions_insert-file-blank-button {
+  position: absolute;
+  top: 75%;
+  right: 50%;
+  translate: 0% -50%;
+  aspect-ratio: 1;
+  border-radius: 100px;
+}

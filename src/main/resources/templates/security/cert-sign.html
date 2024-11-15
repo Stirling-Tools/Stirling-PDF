@@ -16,7 +16,7 @@
                 <span class="material-symbols-rounded tool-header-icon security">workspace_premium</span>
                 <span class="tool-header-text" th:text="#{certSign.header}"></span>
               </div>
-              <form action="api/v1/security/cert-sign" method="post" enctype="multipart/form-data">
+              <form th:action="@{'api/v1/security/cert-sign'}" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                   <label th:text="#{certSign.selectPDF}"></label>
                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
@@ -71,7 +71,11 @@
                     <label for="name" th:text="#{certSign.name}"></label> <input type="text" class="form-control" id="name" name="name">
                   </div>
                   <div class="mb-3">
-                    <label for="pageNumber" th:text="#{pageNum}"></label> <input type="number" class="form-control" id="pageNumber" name="pageNumber" min="1" disabled>
+                    <label for="pageNumber" th:text="#{pageNum}"></label> <input type="number" class="form-control" id="pageNumber" name="pageNumber" min="1" value="1">
+                  </div>
+                  <div class="form-check mb-3">
+                    <input type="checkbox" id="showLogo" name="showLogo" checked />
+                    <label th:text="#{certSign.showLogo}" for="showLogo"></label>
                   </div>
                 </div>
                 <div class="mb-3 text-left">
