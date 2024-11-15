@@ -32,7 +32,7 @@ ignore = [
 ignore = [
     'AddStampRequest.alphabet',
     'AddStampRequest.position',
-    'home.pipeline.title'
+    'home.pipeline.title',
     'PDFToBook.selectText.1',
     'PDFToText.tags',
     'addPageNumbers.selectText.3',
