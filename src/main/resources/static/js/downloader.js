@@ -64,6 +64,8 @@
             await handleSingleDownload(url, formData);
           }
         }
+
+        clearFileInput();
         clearTimeout(timeoutId);
         $("#submitBtn").text(originalButtonText);
 
@@ -85,6 +87,7 @@
         }
 
       } catch (error) {
+        clearFileInput();
         clearTimeout(timeoutId);
         handleDownloadError(error);
         $("#submitBtn").text(originalButtonText);
@@ -166,13 +169,19 @@
       let filename = getFilenameFromContentDisposition(contentDisposition);
 
       const blob = await response.blob();
-      const result = await handleResponse(blob, filename, !isMulti, isZip);
-      
-      // Track successful processing
       trackFileProcessing(file, startTime, true, null);
       
-      return result;
+      if (contentType.includes("application/pdf") || contentType.includes("image/")) {
+        clearFileInput();
+        return handleResponse(blob, filename, !isMulti, isZip);
+      } else {
+        clearFileInput();
+        return handleResponse(blob, filename, false, isZip);
+      }
+
+
     } catch (error) {
+      clearFileInput();
       console.error("Error in handleSingleDownload:", error);
       trackFileProcessing(file, startTime, false, error.message);
       throw error;
@@ -343,4 +352,27 @@ return { filename, blob, url };
     }
   });
 
+  // Clear file input after job
+  function clearFileInput(){
+    let pathname = document.location.pathname;
+    if(pathname != "/merge-pdfs"){
+      let formElement = document.querySelector("#fileInput-input");
+      formElement.value = '';
+      let editSectionElement = document.querySelector("#editSection");
+      if(editSectionElement){
+        editSectionElement.style.display = "none";
+      }
+      let cropPdfCanvas = document.querySelector("#crop-pdf-canvas");
+      let overlayCanvas = document.querySelector("#overlayCanvas");
+      if(cropPdfCanvas && overlayCanvas){
+        cropPdfCanvas.width = 0;
+        cropPdfCanvas.heigth = 0;
+
+        overlayCanvas.width = 0;
+        overlayCanvas.heigth = 0;
+      }
+    } else{
+      console.log("Disabled for 'Merge'");
+    }
+  }
 })();

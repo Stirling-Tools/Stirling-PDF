@@ -1,0 +1,57 @@
+<div th:fragment="multi-toolAdvert" class="mx-auto">
+  <div id="multi-toolAdvert" class="multi-toolAdvert">
+    <div>
+      <span th:utext="#{multiTool-advert.message(|/multi-tool|)}"></span>
+      <button id="closeMultiToolAdvert" style="position: absolute;
+    top: 10px;
+    right: 12px;
+    border: none;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;" aria-label="Close">&times;</button>
+    </div>
+  </div>
+  <style>
+    .multi-toolAdvert {
+      margin-bottom: 10px;
+      margin-left: 50%;
+      transform: translateX(-50%);
+      max-width: 52rem;
+      z-index: 0;
+      background-color: var(--md-sys-color-surface-5);
+      border-radius: 2rem;
+      padding: 10px 27px 10px 20px;
+      font-size: 0.9rem;
+      display: none;
+      justify-content: center;
+    }
+
+    .multi-toolAdvert a {
+      color: #007bff;
+      font-weight: bold;
+    }
+
+    .multi-toolAdvert a:hover {
+      text-decoration: underline;
+    }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const advert = document.getElementById('multi-toolAdvert');
+      const closeBtn = document.getElementById('closeMultiToolAdvert');
+
+      const cacheKey = `closeMultiToolAdvert_${window.location.pathname}`;
+
+      if (localStorage.getItem(cacheKey) !== 'true') {
+        advert.style.display = 'flex';
+      }
+
+      closeBtn.addEventListener('click', () => {
+        advert.style.display = 'none';
+        localStorage.setItem(cacheKey, 'true');
+      });
+    });
+  </script>
+</div>
