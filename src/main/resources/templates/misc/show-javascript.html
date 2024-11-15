@@ -39,6 +39,7 @@
                 <!-- Button to download the JSON -->
                 <a href="#" id="downloadJS" class="btn btn-primary mt-3" style="display: none;" th:text="#{showJS.downloadJS}">Download JSON</a>
               </div>
+              <script th:src="@{'/js/fetch-utils.js'}"></script>
               <script>
                 document.querySelector('#pdfInfoForm').addEventListener('submit', function(event){
                   event.preventDefault();
@@ -46,7 +47,7 @@
                   // Fetch the formData
                   const formData = new FormData(event.target);
 
-                  fetch('api/v1/misc/show-javascript', {
+                  fetchWithCsrf('api/v1/misc/show-javascript', {
                     method: 'POST',
                     body: formData
                   }).then(response => response.text())
