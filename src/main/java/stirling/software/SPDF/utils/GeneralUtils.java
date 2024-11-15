@@ -29,6 +29,10 @@ import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
 import org.simpleyaml.configuration.implementation.snakeyaml.lib.DumperOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fathzer.soft.javaluator.DoubleEvaluator;
@@ -349,4 +353,23 @@ public class GeneralUtils {
             return "GenericID";
         }
     }
+
+    public static Resource filePathToResource(String resourceFile) {
+        if (resourceFile == null) {
+            throw new IllegalStateException("file is not configured");
+        }
+        
+        if (resourceFile.startsWith("classpath:")) {
+            return new ClassPathResource(resourceFile.substring("classpath:".length()));
+        } else if (resourceFile.startsWith("http://") || resourceFile.startsWith("https://")) {
+            try {
+                return new UrlResource(resourceFile);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to create URL resource: " + resourceFile, e);
+            }
+        } else {
+            return new FileSystemResource(resourceFile);
+        }
+    }
+    
 }

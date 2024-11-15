@@ -16,23 +16,35 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CustomSaml2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-    @Override
-    public void onAuthenticationFailure(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException exception)
-            throws IOException, ServletException {
-        if (exception instanceof Saml2AuthenticationException) {
-            Saml2Error error = ((Saml2AuthenticationException) exception).getSaml2Error();
-            getRedirectStrategy()
-                    .sendRedirect(request, response, "/login?erroroauth=" + error.getErrorCode());
-        } else if (exception instanceof ProviderNotFoundException) {
-            getRedirectStrategy()
-                    .sendRedirect(
-                            request,
-                            response,
-                            "/login?erroroauth=not_authentication_provider_found");
-        }
-        log.error("AuthenticationException: " + exception);
-    }
+	@Override
+	public void onAuthenticationFailure(
+	        HttpServletRequest request,
+	        HttpServletResponse response,
+	        AuthenticationException exception)
+	        throws IOException, ServletException {
+
+	    if (exception instanceof Saml2AuthenticationException saml2Exception) {
+	        Saml2Error error = saml2Exception.getSaml2Error();
+
+	        // Log detailed information about the SAML error
+	        log.error("SAML Authentication failed with error code: {}", error.getErrorCode());
+	        log.error("Error description: {}", error.getDescription());
+
+	        // Redirect to login with specific error code
+	        getRedirectStrategy()
+	                .sendRedirect(request, response, "/login?erroroauth=" + error.getErrorCode());
+	    } else if (exception instanceof ProviderNotFoundException) {
+	        log.error("Authentication failed: No authentication provider found");
+
+	        getRedirectStrategy()
+	                .sendRedirect(
+	                        request,
+	                        response,
+	                        "/login?erroroauth=not_authentication_provider_found");
+	    } else {
+	        log.error("Unknown AuthenticationException: {}", exception.getMessage());
+	        getRedirectStrategy().sendRedirect(request, response, "/login?erroroauth=unknown_error");
+	    }
+	}
+
 }

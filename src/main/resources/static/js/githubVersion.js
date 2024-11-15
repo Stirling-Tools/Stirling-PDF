@@ -76,7 +76,7 @@ async function checkForUpdate() {
       document.getElementById("update-btn").style.display = "block";
     }
     if (updateLink !== null) {
-      document.getElementById("app-update").innerHTML = updateAvailable.replace("{0}", '<b>' + currentVersion + '</b>').replace("{1}", '<b>' + latestVersion + '</b>');
+        document.getElementById("app-update").innerText = updateAvailable.replace("{0}", '<b>' + currentVersion + '</b>').replace("{1}", '<b>' + latestVersion + '</b>');
       if (updateLink.classList.contains("visually-hidden")) {
         updateLink.classList.remove("visually-hidden");
       }

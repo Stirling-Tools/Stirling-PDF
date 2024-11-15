@@ -93,20 +93,71 @@
     });
   });
 
+  function getPDFPageCount(file) {
+    try {
+      if (file.type !== 'application/pdf') {
+        return null;
+      }
+
+      // Create a URL for the file
+      const url = URL.createObjectURL(file);
+
+      try {
+        // Ensure the worker is properly set
+        if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
+        }
+
+        // Load the PDF document
+        const loadingTask = pdfjsLib.getDocument(url);
+        const pdf = await loadingTask.promise;
+      
+        // Get the page count
+        const pageCount = pdf.numPages;
+        return pageCount;
+      } finally {
+        // Clean up the URL
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Error counting PDF pages:', error);
+      return null;
+    }
+  }
+
+  function trackFileProcessing(file, startTime, success, errorMessage = null) {
+    const endTime = performance.now();
+    const processingTime = endTime - startTime;
+
+    posthog.capture('file_processing', {
+      success: success,
+      file_type: file.type || 'unknown',
+      file_size: file.size,
+      processing_time: processingTime,
+      error_message: errorMessage,
+      pdf_pages: file.type === 'application/pdf' ? getPDFPageCount(file) : null
+    });
+  }
+  
   async function handleSingleDownload(url, formData, isMulti = false, isZip = false) {
+    const startTime = performance.now();
+    const file = formData.get('fileInput');
+
     try {
       const response = await fetch(url, { method: "POST", body: formData });
       const contentType = response.headers.get("content-type");
 
       if (!response.ok) {
         if (response.status === 401) {
-          // Handle 401 Unauthorized error
           showSessionExpiredPrompt();
+          trackFileProcessing(file, startTime, false, 'unauthorized');
           return;
         }
         if (contentType && contentType.includes("application/json")) {
           console.error("Throwing error banner, response was not okay");
-          return handleJsonResponse(response);
+          const jsonResponse = await handleJsonResponse(response);
+          trackFileProcessing(file, startTime, false, jsonResponse?.error || 'unknown_error');
+          return jsonResponse;
         }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -115,13 +166,15 @@
       let filename = getFilenameFromContentDisposition(contentDisposition);
 
       const blob = await response.blob();
-      if (contentType.includes("application/pdf") || contentType.includes("image/")) {
-        return handleResponse(blob, filename, !isMulti, isZip);
-      } else {
-        return handleResponse(blob, filename, false, isZip);
-      }
+      const result = await handleResponse(blob, filename, !isMulti, isZip);
+      
+      // Track successful processing
+      trackFileProcessing(file, startTime, true, null);
+      
+      return result;
     } catch (error) {
       console.error("Error in handleSingleDownload:", error);
+      trackFileProcessing(file, startTime, false, error.message);
       throw error;
     }
   }
@@ -162,8 +215,7 @@
     if (considerViewOptions) {
       if (downloadOption === "sameWindow") {
         const url = URL.createObjectURL(blob);
-        window.location.href = url;
-        return;
+return { filename, blob, url };
       } else if (downloadOption === "newWindow") {
         const url = URL.createObjectURL(blob);
         window.open(url, "_blank");

@@ -20,6 +20,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 
 import lombok.Data;
 import lombok.Getter;
@@ -30,6 +31,7 @@ import stirling.software.SPDF.model.provider.GithubProvider;
 import stirling.software.SPDF.model.provider.GoogleProvider;
 import stirling.software.SPDF.model.provider.KeycloakProvider;
 import stirling.software.SPDF.model.provider.UnsupportedProviderException;
+import stirling.software.SPDF.utils.GeneralUtils;
 
 @Configuration
 @ConfigurationProperties(prefix = "")
@@ -133,44 +135,20 @@ public class ApplicationProperties {
             private String privateKey;
             private String spCert;
 
-            public InputStream getIdpMetadataUri() throws IOException {
-                if (idpMetadataUri.startsWith("classpath:")) {
-                    return new ClassPathResource(idpMetadataUri.substring("classpath".length()))
-                            .getInputStream();
-                }
-                try {
-                    URI uri = new URI(idpMetadataUri);
-                    URL url = uri.toURL();
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("GET");
-                    return connection.getInputStream();
-                } catch (URISyntaxException e) {
-                    throw new IOException("Invalid URI format: " + idpMetadataUri, e);
-                }
+            public Resource getIdpMetadataUri() throws IOException {
+            	return GeneralUtils.filePathToResource(idpMetadataUri);
             }
 
             public Resource getSpCert() {
-                if (spCert.startsWith("classpath:")) {
-                    return new ClassPathResource(spCert.substring("classpath:".length()));
-                } else {
-                    return new FileSystemResource(spCert);
-                }
+            	return GeneralUtils.filePathToResource(spCert);
             }
 
             public Resource getidpCert() {
-                if (idpCert.startsWith("classpath:")) {
-                    return new ClassPathResource(idpCert.substring("classpath:".length()));
-                } else {
-                    return new FileSystemResource(idpCert);
-                }
+            	return GeneralUtils.filePathToResource(idpCert);
             }
 
             public Resource getPrivateKey() {
-                if (privateKey.startsWith("classpath:")) {
-                    return new ClassPathResource(privateKey.substring("classpath:".length()));
-                } else {
-                    return new FileSystemResource(privateKey);
-                }
+            	return GeneralUtils.filePathToResource(privateKey);
             }
         }
 
