@@ -80,3 +80,23 @@ dnf search -C tesseract-langpack-
 # View installed languages:
 rpm -qa | grep tesseract-langpack | sed 's/tesseract-langpack-//g'
 ```
+
+For Windows:
+
+Ensure ocrmypdf in installed with
+``pip install ocrmypdf``
+
+Additional languages must be downloaded manually:
+Download desired .traineddata files from tessdata or tessdata_fast
+Place them in the tessdata folder within your Tesseract installation directory
+(e.g., C:\Program Files\Tesseract-OCR\tessdata)
+
+Verify installation:
+``tesseract --list-langs``
+
+You must then edit your ``/configs/settings.yml`` and change the system.tessdataDir to match the directory containing lang files
+```
+system:
+ tessdataDir: C:/Program Files/Tesseract-OCR/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
+```
+  

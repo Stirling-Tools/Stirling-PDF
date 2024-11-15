@@ -7,9 +7,8 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/stirling-tools/stirling-pdf?style=social)](https://github.com/Stirling-Tools/stirling-pdf)
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Stirling-Tools/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
-[<img src="https://www.ssdnodes.com/wp-content/uploads/2023/11/footer-logo.svg" alt="Name" height="40">](https://www.ssdnodes.com/manage/aff.php?aff=2216&register=true)
 
-Stirling-PDF is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
+[Stirling-PDF](https://www.stirlingpdf.com) is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
 
 Stirling-PDF does not initiate any outbound calls for record-keeping or tracking purposes.
 
@@ -19,6 +18,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 
 ## Features
 
+- Enterprise features like SSO Check [here](https://docs.stirlingpdf.com/Enterprise%20Edition) 
 - Dark mode support
 - Custom download options
 - Parallel file processing and downloads
@@ -26,6 +26,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - API for integration with external scripts
 - Optional Login and Authentication support (see [here](https://github.com/Stirling-Tools/Stirling-PDF/tree/main#login-authentication) for documentation)
 - Database Backup and Import (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/DATABASE.md) for documentation)
+
 
 ## PDF Features
 
@@ -46,6 +47,8 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Extract page(s)
 - Convert PDF to a single page
 - Overlay PDFs on top of each other
+- PDF to single page
+- Split PDF by sections
 
 ### Conversion Operations
 
@@ -53,6 +56,8 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Convert any common file to PDF (using LibreOffice)
 - Convert PDF to Word/PowerPoint/others (using LibreOffice)
 - Convert HTML to PDF
+- Convert PDF to xml
+- Convert PDF to CSV
 - URL to PDF
 - Markdown to PDF
 
@@ -68,13 +73,16 @@ All files and PDFs exist either exclusively on the client side, reside in server
 ### Other Operations
 
 - Add/generate/write signatures
+- Split by Size or PDF
 - Repair PDFs
 - Detect and remove blank pages
 - Compare two PDFs and show differences in text
 - Add images to PDFs
 - Compress PDFs to decrease their filesize (using OCRMyPDF)
 - Extract images from PDF
+- Remove images from PDF
 - Extract images from scans
+- Remove annotations
 - Add page numbers
 - Auto rename file by detecting PDF header text
 - OCR on PDF (using OCRMyPDF)
@@ -161,6 +169,10 @@ services:
 
 Note: Podman is CLI-compatible with Docker, so simply replace "docker" with "podman".
 
+### Kubernetes
+
+See the kubernetes helm chart [here](https://github.com/Stirling-Tools/Stirling-PDF-chart)
+
 ## Enable OCR/Compression Feature
 
 Please view the [HowToUseOCR.md](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/HowToUseOCR.md).
@@ -179,45 +191,62 @@ Stirling-PDF currently supports 36 languages!
 | Language                                     | Progress                               |
 | -------------------------------------------- | -------------------------------------- |
 | Arabic (العربية) (ar_AR)                     | ![98%](https://geps.dev/progress/98)   |
-| Basque (Euskara) (eu_ES)                     | ![56%](https://geps.dev/progress/56)   |
-| Bulgarian (Български) (bg_BG)                | ![98%](https://geps.dev/progress/98)   |
-| Catalan (Català) (ca_CA)                     | ![44%](https://geps.dev/progress/44)   |
-| Croatian (Hrvatski) (hr_HR)                  | ![99%](https://geps.dev/progress/99)   |
-| Czech (Česky) (cs_CZ)                        | ![99%](https://geps.dev/progress/99)   |
-| Danish (Dansk) (da_DK)                       | ![98%](https://geps.dev/progress/98)   |
-| Dutch (Nederlands) (nl_NL)                   | ![97%](https://geps.dev/progress/97)   |
+| Basque (Euskara) (eu_ES)                     | ![55%](https://geps.dev/progress/55)   |
+| Bulgarian (Български) (bg_BG)                | ![97%](https://geps.dev/progress/97)   |
+| Catalan (Català) (ca_CA)                     | ![90%](https://geps.dev/progress/90)   |
+| Croatian (Hrvatski) (hr_HR)                  | ![98%](https://geps.dev/progress/98)   |
+| Czech (Česky) (cs_CZ)                        | ![98%](https://geps.dev/progress/98)   |
+| Danish (Dansk) (da_DK)                       | ![97%](https://geps.dev/progress/97)   |
+| Dutch (Nederlands) (nl_NL)                   | ![96%](https://geps.dev/progress/96)   |
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
-| French (Français) (fr_FR)                    | ![98%](https://geps.dev/progress/98)   |
-| German (Deutsch) (de_DE)                     | ![99%](https://geps.dev/progress/99)   |
+| French (Français) (fr_FR)                    | ![97%](https://geps.dev/progress/97)   |
+| German (Deutsch) (de_DE)                     | ![98%](https://geps.dev/progress/98)   |
 | Greek (Ελληνικά) (el_GR)                     | ![98%](https://geps.dev/progress/98)   |
-| Hindi (हिंदी) (hi_IN)                           | ![96%](https://geps.dev/progress/96)   |
-| Hungarian (Magyar) (hu_HU)                   | ![99%](https://geps.dev/progress/99)   |
-| Indonesian (Bahasa Indonesia) (id_ID)        | ![99%](https://geps.dev/progress/99)   |
-| Irish (Gaeilge) (ga_IE)                      | ![89%](https://geps.dev/progress/89)   |
-| Italian (Italiano) (it_IT)                   | ![99%](https://geps.dev/progress/99)   |
+| Hindi (हिंदी) (hi_IN)                           | ![95%](https://geps.dev/progress/95)   |
+| Hungarian (Magyar) (hu_HU)                   | ![98%](https://geps.dev/progress/98)   |
+| Indonesian (Bahasa Indonesia) (id_ID)        | ![98%](https://geps.dev/progress/98)   |
+| Irish (Gaeilge) (ga_IE)                      | ![88%](https://geps.dev/progress/88)   |
+| Italian (Italiano) (it_IT)                   | ![98%](https://geps.dev/progress/98)   |
 | Japanese (日本語) (ja_JP)                    | ![86%](https://geps.dev/progress/86)   |
-| Korean (한국어) (ko_KR)                      | ![97%](https://geps.dev/progress/97)   |
-| Norwegian (Norsk) (no_NB)                    | ![89%](https://geps.dev/progress/89)   |
-| Polish (Polski) (pl_PL)                      | ![98%](https://geps.dev/progress/98)   |
-| Portuguese (Português) (pt_PT)               | ![99%](https://geps.dev/progress/99)   |
-| Portuguese Brazilian (Português) (pt_BR)     | ![99%](https://geps.dev/progress/99)   |
-| Romanian (Română) (ro_RO)                    | ![91%](https://geps.dev/progress/91)   |
-| Russian (Русский) (ru_RU)                    | ![98%](https://geps.dev/progress/98)   |
-| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![71%](https://geps.dev/progress/71)   |
-| Simplified Chinese (简体中文) (zh_CN)        | ![92%](https://geps.dev/progress/92)   |
-| Slovakian (Slovensky) (sk_SK)                | ![83%](https://geps.dev/progress/83)   |
-| Spanish (Español) (es_ES)                    | ![99%](https://geps.dev/progress/99)   |
-| Swedish (Svenska) (sv_SE)                    | ![98%](https://geps.dev/progress/98)   |
-| Thai (ไทย) (th_TH)                           | ![97%](https://geps.dev/progress/97)   |
-| Traditional Chinese (繁體中文) (zh_TW)       | ![99%](https://geps.dev/progress/99)   |
-| Turkish (Türkçe) (tr_TR)                     | ![93%](https://geps.dev/progress/93)   |
-| Ukrainian (Українська) (uk_UA)               | ![81%](https://geps.dev/progress/81)   |
+| Korean (한국어) (ko_KR)                      | ![96%](https://geps.dev/progress/96)   |
+| Norwegian (Norsk) (no_NB)                    | ![88%](https://geps.dev/progress/88)   |
+| Polish (Polski) (pl_PL)                      | ![97%](https://geps.dev/progress/97)   |
+| Portuguese (Português) (pt_PT)               | ![98%](https://geps.dev/progress/98)   |
+| Portuguese Brazilian (Português) (pt_BR)     | ![98%](https://geps.dev/progress/98)   |
+| Romanian (Română) (ro_RO)                    | ![90%](https://geps.dev/progress/90)   |
+| Russian (Русский) (ru_RU)                    | ![97%](https://geps.dev/progress/97)   |
+| Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![70%](https://geps.dev/progress/70)   |
+| Simplified Chinese (简体中文) (zh_CN)        | ![91%](https://geps.dev/progress/91)   |
+| Slovakian (Slovensky) (sk_SK)                | ![82%](https://geps.dev/progress/82)   |
+| Spanish (Español) (es_ES)                    | ![98%](https://geps.dev/progress/98)   |
+| Swedish (Svenska) (sv_SE)                    | ![97%](https://geps.dev/progress/97)   |
+| Thai (ไทย) (th_TH)                           | ![96%](https://geps.dev/progress/96)   |
+| Traditional Chinese (繁體中文) (zh_TW)       | ![98%](https://geps.dev/progress/98)   |
+| Turkish (Türkçe) (tr_TR)                     | ![92%](https://geps.dev/progress/92)   |
+| Ukrainian (Українська) (uk_UA)               | ![80%](https://geps.dev/progress/80)   |
 | Vietnamese (Tiếng Việt) (vi_VN)              | ![89%](https://geps.dev/progress/89)   |
 
 ## Contributing (Creating Issues, Translations, Fixing Bugs, etc.)
 
 Please see our [Contributing Guide](CONTRIBUTING.md).
+
+## Stirling PDF Enterprise
+
+Stirling PDF offers a Enterprise edition of its software, This is the same great software but with added features and comforts
+
+### Whats included
+
+- Prioritised Support tickets via support@stirlingpdf.com to reach directly to Stirling-PDF team for support and 1:1 meetings where applicable (Provided they come from same email domain registered with us)
+- Prioritised Enhancements to Stirling-PDF where applicable 
+- Base SSO support
+- Advanced SSO such as automated login handling (Coming very soon)
+- SAML SSO (Coming very soon)
+- Custom automated metadata handling
+- Advanced user configurations (Coming soon)
+- Plus other exciting features to come
+
+Check out of [docs](https://docs.stirlingpdf.com/Enterprise%20Edition) on it or our official [website](https://www.stirlingpdf.com)
 
 ## Customization
 
@@ -335,6 +364,8 @@ AutomaticallyGenerated:
 
 There is an additional config file `/configs/custom_settings.yml` where users familiar with Java and Spring `application.properties` can input their own settings on top of Stirling-PDF's existing ones.
 
+
+
 ### Extra Notes
 
 - **Endpoints**: Currently, the `ENDPOINTS_TO_REMOVE` and `GROUPS_TO_REMOVE` endpoints can include comma-separated lists of endpoints and groups to disable. For example, `ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages` would disable both image-to-pdf and remove pages, while `GROUPS_TO_REMOVE=LibreOffice` would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md).
@@ -385,7 +416,7 @@ For API usage, you must provide a header with `X-API-Key` and the associated API
 - Multi-page layout (stitch PDF pages together) support x rows y columns and custom page sizing
 - Fill forms manually or automatically
 
-### Q2: Why is my application downloading .htm files?
+### Q2: Why is my application downloading .htm files? Why am i getting HTTP error 413?
 
 This is an issue commonly caused by your NGINX configuration. The default file upload size for NGINX is 1MB. You need to add the following in your Nginx sites-available file: `client_max_body_size SIZE;` (where "SIZE" is 50M for example for 50MB files).
 

@@ -24,16 +24,20 @@
                 <input id="height" type="hidden" name="height">
                 <button type="submit" class="btn btn-primary" th:text="#{crop.submit}"></button>
               </form>
-              <div style="position: relative; display: inline-block;">
-                <canvas id="crop-pdf-canvas" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
-                <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2;"></canvas>
+              <div id="canvasesContainer" style="position: relative; margin: 20px 0; width: auto;">
+                <canvas id="cropPdfCanvas" style="width: 100%"></canvas>
+                <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2; width: 100%"></canvas>
               </div>
+
             </div>
           </div>
           <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
           <script>
-            let pdfCanvas  = document.getElementById('crop-pdf-canvas');
+            let pdfCanvas  = document.getElementById('cropPdfCanvas');
             let overlayCanvas = document.getElementById('overlayCanvas');
+            let canvasesContainer = document.getElementById('canvasesContainer');
+            canvasesContainer.style.display = "none";
+            let containerRect = canvasesContainer.getBoundingClientRect();
 
             let context = pdfCanvas.getContext('2d');
             let overlayContext = overlayCanvas.getContext('2d');
@@ -59,8 +63,11 @@
             let rectWidth = 0;
             let rectHeight = 0;
 
-            fileInput.addEventListener('change', function(e) {
-              let file = e.target.files[0];
+
+            let pageScale = 1; // The scale which the pdf page renders
+            let timeId = null; // timeout id for resizing canvases event
+
+            function renderPageFromFile(file) {
               if (file.type === 'application/pdf') {
                 let reader = new FileReader();
                 reader.onload = function(ev) {
@@ -74,6 +81,35 @@
                 };
                 reader.readAsArrayBuffer(file);
               }
+            }
+
+            window.addEventListener("resize", function() {
+              clearTimeout(timeId);
+
+              timeId = setTimeout(function () {
+                 if (fileInput.files.length == 0) return;
+                 let canvasesContainer = document.getElementById('canvasesContainer');
+                 let containerRect = canvasesContainer.getBoundingClientRect();
+
+                 context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+
+                 overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+                 pdfCanvas.width = containerRect.width;
+                 pdfCanvas.height = containerRect.height;
+
+                 overlayCanvas.width = containerRect.width;
+                 overlayCanvas.height = containerRect.height;
+
+                 let file = fileInput.files[0];
+                 renderPageFromFile(file);
+             }, 1000);
+            });
+
+            fileInput.addEventListener('change', function(e) {
+              canvasesContainer.style.display = "block"; // set for visual purposes
+              let file = e.target.files[0];
+              renderPageFromFile(file);
             });
 
             cropForm.addEventListener('submit', function(e) {
@@ -81,8 +117,8 @@
                 // Ορίστε συντεταγμένες για ολόκληρη την επιφάνεια του PDF
                 xInput.value = 0;
                 yInput.value = 0;
-                widthInput.value = pdfCanvas.width;
-                heightInput.value = pdfCanvas.height;
+                widthInput.value = containerRect.width;
+                heightInput.value = containerRect.height;
               }
             });
 
@@ -117,10 +153,10 @@
 
               let flippedY = pdfCanvas.height - e.offsetY;
 
-              xInput.value = startX;
-              yInput.value = flippedY;
-              widthInput.value = rectWidth;
-              heightInput.value = rectHeight;
+              xInput.value = startX / pageScale;
+              yInput.value = flippedY / pageScale;
+              widthInput.value = rectWidth / pageScale;
+              heightInput.value = rectHeight /pageScale;
 
               // Draw the final rectangle on the main canvas
               context.strokeStyle = 'red';
@@ -131,7 +167,16 @@
 
             function renderPage(pageNumber) {
               pdfDoc.getPage(pageNumber).then(function(page) {
-                let viewport = page.getViewport({ scale: 1.0 });
+                let canvasesContainer = document.getElementById('canvasesContainer');
+                let containerRect = canvasesContainer.getBoundingClientRect();
+
+                pageScale = containerRect.width / page.getViewport({ scale: 1 }).width; // The new scale
+
+                let viewport = page.getViewport({ scale: containerRect.width / page.getViewport({ scale: 1 }).width });
+
+                canvasesContainer.width =viewport.width;
+                canvasesContainer.height = viewport.height;
+
                 pdfCanvas.width = viewport.width;
                 pdfCanvas.height = viewport.height;
 
