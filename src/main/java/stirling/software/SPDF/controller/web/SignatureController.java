@@ -15,7 +15,7 @@ import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.service.SignatureService;
 
 @Controller
-@RequestMapping("/api/v1/general/")
+@RequestMapping("/api/v1/general")
 public class SignatureController {
 
     @Autowired private SignatureService signatureService;
