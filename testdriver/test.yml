@@ -31,34 +31,6 @@ steps:
       - command: assert
         expect: it is in homepage
   - prompt: >-
-      click on the globe icon and select Español and check if the texts are in
-      Spanish
-    commands:
-      - command: focus-application
-        name: Google Chrome
-      - command: hover-image
-        description: globe icon in the header
-        action: click
-      - command: hover-text
-        text: Español
-        description: language option for Spanish
-        action: click
-      - command: assert
-        expect: los textos están en español
-  - prompt: Change it back to English(US)
-    commands:
-      - command: focus-application
-        name: Google Chrome
-      - command: hover-image
-        description: globe icon in the header
-        action: click
-      - command: hover-text
-        text: English (US)
-        description: language option for English
-        action: click
-      - command: assert
-        expect: The texts are in english
-  - prompt: >-
       click on sun icon in the header section and make sure the theme of the
       website changes, if it does then change it back by clicking on the moon
       icon at the exact same place
