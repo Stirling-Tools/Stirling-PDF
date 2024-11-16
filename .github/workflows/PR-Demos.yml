@@ -1,0 +1,204 @@
+name: PR Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  SERVER_IP: ${{ secrets.VPS_IP }}  # Add this to your GitHub secrets
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    if: github.event.action != 'closed'
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for relevant file changes
+        id: check
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            changes:
+              - '**/*.java'
+              - '**/*.html'
+              - '**/*.css'
+              - '**/*.js'
+              - '**/*.gradle'
+
+      - name: Set should_run output
+        run: echo "should_run=${{ steps.check.outputs.changes == 'true' }}" >> $GITHUB_OUTPUT
+
+  deploy-pr:
+    needs: check-changes
+    runs-on: ubuntu-latest
+    if: needs.check-changes.outputs.should_run == 'true'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK and Gradle
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          gradle-version: 8.7
+
+      - name: Run Gradle Command
+        run: ./gradlew clean build
+        env:
+          DOCKER_ENABLE_SECURITY: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Get version number
+        id: versionNumber
+        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
+
+      - name: Build and push PR-specific image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }}
+          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          platforms: linux/amd64
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Create PR-specific directories
+            mkdir -p /stirling/PR-${{ github.event.pull_request.number }}/{data,config,logs}
+            
+            # Create or update docker-compose file
+            cat > /stirling/PR-${{ github.event.pull_request.number }}/docker-compose.yml << 'EOL'
+            version: '3.8'
+            services:
+              stirling-pdf:
+                container_name: stirling-pdf-pr-${{ github.event.pull_request.number }}
+                image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }}
+                ports:
+                  - "${{ github.event.pull_request.number }}:8080"
+                volumes:
+                  - /stirling/PR-${{ github.event.pull_request.number }}/data:/usr/share/tessdata:rw
+                  - /stirling/PR-${{ github.event.pull_request.number }}/config:/configs:rw
+                  - /stirling/PR-${{ github.event.pull_request.number }}/logs:/logs:rw
+                environment:
+                  DOCKER_ENABLE_SECURITY: "true"
+                  SECURITY_ENABLELOGIN: "true"
+                  SYSTEM_DEFAULTLOCALE: en-GB
+                  UI_APPNAME: "Stirling-PDF PR#${{ github.event.pull_request.number }}"
+                  UI_HOMEDESCRIPTION: "PR#${{ github.event.pull_request.number }} for Stirling-PDF Latest"
+                  UI_APPNAMENAVBAR: "PR#${{ github.event.pull_request.number }}"
+                  SYSTEM_MAXFILESIZE: "100"
+                  METRICS_ENABLED: "true"
+                  SYSTEM_GOOGLEVISIBILITY: "false"
+                restart: on-failure:5
+            EOL
+            
+            # Start or restart the container
+            cd /stirling/PR-${{ github.event.pull_request.number }}
+            docker-compose pull
+            docker-compose up -d
+
+      - name: Post deployment URL to PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { GITHUB_REPOSITORY } = process.env;
+            const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
+            const prNumber = context.issue.number;
+
+            const deploymentUrl = `http://${process.env.SERVER_IP}:${prNumber}`;
+            const commentBody = `## 🚀 PR Test Deployment\n\n` +
+                              `Your PR has been deployed for testing!\n\n` +
+                              `🔗 **Test URL:** [${deploymentUrl}](${deploymentUrl})\n\n` +
+                              `This deployment will be automatically cleaned up when the PR is closed.\n\n` +
+                              `> Note: This deployment is using port \`${prNumber}\`. Please ensure this port is accessible on your firewall.`;
+
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: repoOwner,
+              repo: repoName,
+              issue_number: prNumber
+            });
+
+            const existingComment = comments.data.find(c => 
+              c.body.includes("## 🚀 PR Test Deployment") && 
+              c.user.login === "github-actions[bot]"
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: repoOwner,
+                repo: repoName,
+                comment_id: existingComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: repoOwner,
+                repo: repoName,
+                issue_number: prNumber,
+                body: commentBody
+              });
+            }
+
+  cleanup:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'closed'
+    
+    steps:
+      - name: Cleanup PR deployment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Stop and remove the container
+            cd /stirling/PR-${{ github.event.pull_request.number }}
+            docker-compose down
+            
+            # Remove PR-specific directories
+            rm -rf /stirling/PR-${{ github.event.pull_request.number }}
+            
+            # Remove the Docker image
+            docker rmi ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }}
+
+      - name: Post cleanup notice to PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { GITHUB_REPOSITORY } = process.env;
+            const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
+            const prNumber = context.issue.number;
+
+            const commentBody = `## 🧹 Deployment Cleanup\n\n` +
+                              `The test deployment for this PR has been cleaned up.`;
+
+            await github.rest.issues.createComment({
+              owner: repoOwner,
+              repo: repoName,
+              issue_number: prNumber,
+              body: commentBody
+            });
