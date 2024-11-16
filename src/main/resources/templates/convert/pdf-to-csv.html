@@ -23,23 +23,26 @@
               </form>
               <p id="instruction-text" style="margin: 0; display: none" th:text="#{PDFToCSV.prompt}"></p>
 
-              <div style="position: relative; display: inline-block;">
+              <div style="position: relative; width: auto;" id="canvasesContainer">
                 <div>
                   <div style="display:none ;margin: 3px;position: absolute;top: 0;width: 120px;justify-content:space-between;z-index: 10" id="pagination-button-container">
                     <button id='previous-page-btn' style='opacity: 80% ; width: 50px; height: 30px; display: flex;align-items: center;justify-content: center; background: grey; color: #ffffff;  ;border: none;outline: none; border-radius: 4px;'> &lt; </button>
                     <button id='next-page-btn' style='opacity: 80% ; width: 50px; height: 30px; display: flex;align-items: center;justify-content: center; background: grey; color: #ffffff;  ;border: none;outline: none; border-radius: 4px;'> &gt; </button>
                   </div>
-                  <canvas id="crop-pdf-canvas" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
+                  <canvas id="cropPdfCanvas" style="width: 100%"></canvas>
                 </div>
-                <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2;"></canvas>
+                <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2; width: 100%"></canvas>
               </div>
               <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
               <script>
-                let pdfCanvas  = document.getElementById('crop-pdf-canvas');
+                let pdfCanvas  = document.getElementById('cropPdfCanvas');
                 let overlayCanvas = document.getElementById('overlayCanvas');
+                let canvasesContainer = document.getElementById('canvasesContainer');
+                canvasesContainer.style.display = "none";
                 // let paginationBtnContainer = ;
 
                 let context = pdfCanvas.getContext('2d');
+                let overlayContext = overlayCanvas.getContext('2d');
 
                 let btn1Object = document.getElementById('previous-page-btn');
                 let btn2Object = document.getElementById('next-page-btn');
@@ -59,6 +62,8 @@
                 let startY = 0;
                 let rectWidth = 0;
                 let rectHeight = 0;
+
+                let timeId = null; // timeout id for resizing canvases event
 
                 btn1Object.addEventListener('click',function (e){
                   if (currentPage !== 1) {
@@ -102,14 +107,13 @@
                   }
                 });
 
-                fileInput.addEventListener('change', function(e) {
-                  file = e.target.files[0];
+                function renderPageFromFile(file) {
                   if (file.type === 'application/pdf') {
                     let reader = new FileReader();
-                    reader.onload = function(ev) {
+                    reader.onload = function (ev) {
                       let typedArray = new Uint8Array(reader.result);
                       pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-                      pdfjsLib.getDocument(typedArray).promise.then(function(pdf) {
+                      pdfjsLib.getDocument(typedArray).promise.then(function (pdf) {
                         pdfDoc = pdf;
                         totalPages = pdf.numPages;
                         renderPage(currentPage);
@@ -117,9 +121,37 @@
                       pageId.value = currentPage;
                     };
                     reader.readAsArrayBuffer(file);
-                    document.getElementById("pagination-button-container").style.display="flex";
-                    document.getElementById("instruction-text").style.display="block";
+                    document.getElementById("pagination-button-container").style.display = "flex";
+                    document.getElementById("instruction-text").style.display = "block";
                   }
+                }
+
+                window.addEventListener("resize", function() {
+                  clearTimeout(timeId);
+                  timeId = setTimeout(function () {
+                    if (fileInput.files.length == 0) return;
+                    let canvasesContainer = document.getElementById('canvasesContainer');
+                    let containerRect = canvasesContainer.getBoundingClientRect();
+
+                    context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+
+                    overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+                    pdfCanvas.width = containerRect.width;
+                    pdfCanvas.height = containerRect.height;
+
+                    overlayCanvas.width = containerRect.width;
+                    overlayCanvas.height = containerRect.height;
+
+                    let file = fileInput.files[0];
+                    renderPageFromFile(file);
+                  }, 1000);
+                });
+
+                fileInput.addEventListener('change', function(e) {
+                  canvasesContainer.style.display = "block"; // set for visual purposes
+                  file = e.target.files[0];
+                  renderPageFromFile(file);
                 });
 
                 function renderPage(pageNumber) {
