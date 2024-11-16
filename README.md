@@ -120,7 +120,7 @@ Please view the [LocalRunGuide](https://github.com/Stirling-Tools/Stirling-PDF/b
 ### Docker / Podman
 
 > [!NOTE]
-> <https://hub.docker.com/r/frooodle/s-pdf>
+> <https://hub.docker.com/r/stirlingtools/stirling-pdf>
 
 Stirling-PDF has three different versions: a full version, an ultra-lite version, and a 'fat' version. Depending on the types of features you use, you may want a smaller image to save on space. To see what the different versions offer, please look at our [version mapping](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Version-groups.md). For people that don't mind space optimization, just use the latest tag.
 
