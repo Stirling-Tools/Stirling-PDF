@@ -124,9 +124,9 @@ Please view the [LocalRunGuide](https://github.com/Stirling-Tools/Stirling-PDF/b
 
 Stirling-PDF has three different versions: a full version, an ultra-lite version, and a 'fat' version. Depending on the types of features you use, you may want a smaller image to save on space. To see what the different versions offer, please look at our [version mapping](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Version-groups.md). For people that don't mind space optimization, just use the latest tag.
 
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest?label=Stirling-PDF%20Full)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/frooodle/s-pdf/latest-fat?label=Stirling-PDF%20Fat)
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/stirlingtools/stirling-pdf/latest?label=Stirling-PDF%20Full)
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/stirlingtools/stirling-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/stirlingtools/stirling-pdf/latest-fat?label=Stirling-PDF%20Fat)
 
 Please note in the examples below, you may need to change the volume paths as needed, e.g., `./extraConfigs:/configs` to `/opt/stirlingpdf/extraConfigs:/configs`.
 
@@ -144,7 +144,7 @@ docker run -d \
   -e INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
   -e LANGS=en_GB \
   --name stirling-pdf \
-  frooodle/s-pdf:latest
+  stirlingtools/stirling-pdf:latest
 ```
 
 ### Docker Compose
@@ -153,7 +153,7 @@ docker run -d \
 version: '3.3'
 services:
   stirling-pdf:
-    image: frooodle/s-pdf:latest
+    image: stirlingtools/stirling-pdf:latest
     ports:
       - '8080:8080'
     volumes:
