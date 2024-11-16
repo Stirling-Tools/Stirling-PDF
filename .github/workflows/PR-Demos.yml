@@ -76,18 +76,17 @@ jobs:
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64
    
+
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
           echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
-          echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-        env:
-          SSH_KEY_PATH: ${{ github.workspace }}/../private.key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to VPS
         run: |
-          ssh -i ../private.key ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
             # Create PR-specific directories
             mkdir -p /stirling/PR-${{ github.event.pull_request.number }}/{data,config,logs}
             
@@ -122,7 +121,7 @@ jobs:
             docker-compose pull
             docker-compose up -d
           ENDSSH
-
+          
       - name: Post deployment URL to PR
         uses: actions/github-script@v7
         with:
