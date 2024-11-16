@@ -92,7 +92,7 @@ jobs:
           services:
             stirling-pdf:
               container_name: stirling-pdf-pr-${{ github.event.pull_request.number }}
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf:pr-${{ github.event.pull_request.number }}
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }}
               ports:
                 - "${{ github.event.pull_request.number }}:8080"
               volumes:
@@ -100,12 +100,12 @@ jobs:
                 - /stirling/PR-${{ github.event.pull_request.number }}/config:/configs:rw
                 - /stirling/PR-${{ github.event.pull_request.number }}/logs:/logs:rw
               environment:
-                DOCKER_ENABLE_SECURITY: "true"
-                SECURITY_ENABLELOGIN: "true"
+                DOCKER_ENABLE_SECURITY: "false"
+                SECURITY_ENABLELOGIN: "false"
                 SYSTEM_DEFAULTLOCALE: en-GB
-                UI_APPNAME: "Stirling-PDF PR#${{ github.event.pull_request.number }}"
-                UI_HOMEDESCRIPTION: "PR#${{ github.event.pull_request.number }} for Stirling-PDF Latest"
-                UI_APPNAMENAVBAR: "PR#${{ github.event.pull_request.number }}"
+                UI_APPNAME: "Stirling-PDF PR-${{ github.event.pull_request.number }}"
+                UI_HOMEDESCRIPTION: "PR-${{ github.event.pull_request.number }} for Stirling-PDF Latest"
+                UI_APPNAMENAVBAR: "PR-${{ github.event.pull_request.number }}"
                 SYSTEM_MAXFILESIZE: "100"
                 METRICS_ENABLED: "true"
                 SYSTEM_GOOGLEVISIBILITY: "false"
@@ -140,8 +140,7 @@ jobs:
             const commentBody = `## 🚀 PR Test Deployment\n\n` +
                               `Your PR has been deployed for testing!\n\n` +
                               `🔗 **Test URL:** [${deploymentUrl}](${deploymentUrl})\n\n` +
-                              `This deployment will be automatically cleaned up when the PR is closed.\n\n` +
-                              `> Note: This deployment is using port \`${prNumber}\`. Please ensure this port is accessible on your firewall.`;
+                              `This deployment will be automatically cleaned up when the PR is closed.\n`;
 
             // Find existing comment
             const comments = await github.rest.issues.listComments({
@@ -176,22 +175,37 @@ jobs:
     if: github.event.action == 'closed'
     
     steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          sudo chmod 600 ../private.key
+
       - name: Cleanup PR deployment
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            # Stop and remove the container
-            cd /stirling/PR-${{ github.event.pull_request.number }}
-            docker-compose down
-            
-            # Remove PR-specific directories
-            rm -rf /stirling/PR-${{ github.event.pull_request.number }}
-            
-            # Remove the Docker image
-            docker rmi ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }}
+        run: |
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+            # Check if directory exists before attempting cleanup
+            if [ -d "/stirling/PR-${{ github.event.pull_request.number }}" ]; then
+              echo "Found PR directory, proceeding with cleanup..."
+              
+              # Stop and remove containers
+              cd /stirling/PR-${{ github.event.pull_request.number }}
+              docker-compose down || true
+              
+              # Go back to root before removal
+              cd /
+              
+              # Remove PR-specific directories
+              rm -rf /stirling/PR-${{ github.event.pull_request.number }}
+              
+              # Remove the Docker image
+              docker rmi ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }} || true
+              
+              echo "Cleanup completed successfully"
+            else
+              echo "PR directory not found, nothing to clean up"
+            fi
+          ENDSSH
 
       - name: Post cleanup notice to PR
         uses: actions/github-script@v7
