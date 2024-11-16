@@ -75,22 +75,19 @@ jobs:
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64
-          
-      - name: Prepare SSH key
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
-          SSH_KEY_PATH: ${{ runner.temp }}/deploy_key
+   
+      - name: Set up SSH
         run: |
-          echo "$SSH_PRIVATE_KEY" > $SSH_KEY_PATH
-          chmod 600 $SSH_KEY_PATH
-          
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          sudo chmod 600 ../private.key
+          echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+        env:
+          SSH_KEY_PATH: ${{ github.workspace }}/../private.key
+
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key_path: ${{ runner.temp }}/deploy_key
-          script: |
+        run: |
+          ssh -i ../private.key ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
             # Create PR-specific directories
             mkdir -p /stirling/PR-${{ github.event.pull_request.number }}/{data,config,logs}
             
@@ -100,7 +97,7 @@ jobs:
             services:
               stirling-pdf:
                 container_name: stirling-pdf-pr-${{ github.event.pull_request.number }}
-                image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }}
+                image: ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf:pr-${{ github.event.pull_request.number }}
                 ports:
                   - "${{ github.event.pull_request.number }}:8080"
                 volumes:
@@ -124,6 +121,7 @@ jobs:
             cd /stirling/PR-${{ github.event.pull_request.number }}
             docker-compose pull
             docker-compose up -d
+          ENDSSH
 
       - name: Post deployment URL to PR
         uses: actions/github-script@v7
