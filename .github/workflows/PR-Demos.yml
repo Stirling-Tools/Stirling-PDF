@@ -107,8 +107,9 @@ jobs:
                 UI_HOMEDESCRIPTION: "PR-${{ github.event.pull_request.number }} for Stirling-PDF Latest"
                 UI_APPNAMENAVBAR: "PR-${{ github.event.pull_request.number }}"
                 SYSTEM_MAXFILESIZE: "100"
-                METRICS_ENABLED: "true"
+                METRICS_ENABLED: "false"
                 SYSTEM_GOOGLEVISIBILITY: "false"
+                SYSTEM_ENABLEANALYTICS: "false"
               restart: on-failure:5
           EOF
 
