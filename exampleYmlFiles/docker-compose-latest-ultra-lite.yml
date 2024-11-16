@@ -1,7 +1,7 @@
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Ultra-Lite
-    image: frooodle/s-pdf:latest-ultra-lite
+    image: stirlingtools/stirling-pdf:latest-ultra-lite
     deploy:
       resources:
         limits:
