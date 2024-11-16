@@ -75,13 +75,21 @@ jobs:
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64
-
+          
+      - name: Prepare SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
+          SSH_KEY_PATH: ${{ runner.temp }}/deploy_key
+        run: |
+          echo "$SSH_PRIVATE_KEY" > $SSH_KEY_PATH
+          chmod 600 $SSH_KEY_PATH
+          
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          key_path: ${{ runner.temp }}/deploy_key
           script: |
             # Create PR-specific directories
             mkdir -p /stirling/PR-${{ github.event.pull_request.number }}/{data,config,logs}
