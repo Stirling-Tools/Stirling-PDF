@@ -91,7 +91,7 @@ jobs:
             mkdir -p /stirling/PR-${{ github.event.pull_request.number }}/{data,config,logs}
             
             # Create or update docker-compose file
-            cat > /stirling/PR-${{ github.event.pull_request.number }}/docker-compose.yml << 'EOL'
+            cat > "/stirling/PR-${{ github.event.pull_request.number }}/docker-compose.yml" << EOF
             version: '3.8'
             services:
               stirling-pdf:
@@ -114,7 +114,7 @@ jobs:
                   METRICS_ENABLED: "true"
                   SYSTEM_GOOGLEVISIBILITY: "false"
                 restart: on-failure:5
-            EOL
+            EOF
             
             # Start or restart the container
             cd /stirling/PR-${{ github.event.pull_request.number }}
@@ -130,7 +130,7 @@ jobs:
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
             const prNumber = context.issue.number;
 
-            const deploymentUrl = `http://${process.env.SERVER_IP}:${prNumber}`;
+            const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${prNumber}`;
             const commentBody = `## 🚀 PR Test Deployment\n\n` +
                               `Your PR has been deployed for testing!\n\n` +
                               `🔗 **Test URL:** [${deploymentUrl}](${deploymentUrl})\n\n` +
