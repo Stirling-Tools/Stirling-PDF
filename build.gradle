@@ -10,6 +10,8 @@ plugins {
 	//id "nebula.lint" version "19.0.3"
 }
 
+
+
 import com.github.jk1.license.render.*
 
 ext {
