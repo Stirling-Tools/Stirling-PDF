@@ -16,25 +16,22 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.action != 'closed'
     outputs:
-      should_run: ${{ steps.check.outputs.should_run }}
+      should_run: ${{ steps.filter.outputs.src_changed }}
     
     steps:
       - uses: actions/checkout@v4
       
       - name: Check for relevant file changes
-        id: check
+        id: filter
         uses: dorny/paths-filter@v2
         with:
           filters: |
-            changes:
+            src_changed:
               - '**/*.java'
               - '**/*.html'
               - '**/*.css'
               - '**/*.js'
               - '**/*.gradle'
-
-      - name: Set should_run output
-        run: echo "should_run=${{ steps.check.outputs.changes == 'true' }}" >> $GITHUB_OUTPUT
 
   deploy-pr:
     needs: check-changes
