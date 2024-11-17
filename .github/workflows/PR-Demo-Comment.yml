@@ -10,7 +10,7 @@ jobs:
     # Only run on PR comments that contain @deployPR from authorized users
     if: |
       github.event.issue.pull_request && 
-      contains(toLowercase(github.event.comment.body), 'prdeploy') && 
+      contains(github.event.comment.body, 'prdeploy') && 
       (
         github.event.comment.user.login == 'frooodle' || 
         github.event.comment.user.login == 'sf298' ||
