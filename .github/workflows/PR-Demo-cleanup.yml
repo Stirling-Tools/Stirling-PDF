@@ -1,4 +1,4 @@
-name: PR Deployment
+name: PR Deployment cleanup
 
 on:
   pull_request:
@@ -42,7 +42,7 @@ jobs:
               rm -rf /stirling/PR-${{ github.event.pull_request.number }}
               
               # Remove the Docker image
-              docker rmi ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }} || true
+              docker rmi --no-prune ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }} || true
               
               echo "Cleanup completed successfully"
             else
