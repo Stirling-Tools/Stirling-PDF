@@ -25,6 +25,7 @@
                 <span class="material-symbols-rounded tool-header-icon advance">javascript</span>
                 <span class="tool-header-text" th:text="#{showJS.header}"></span>
               </div>
+              <div><p th:text="#{home.showJS.desc}"></p></div>
               <form id="pdfInfoForm" method="post" enctype="multipart/form-data" th:action="@{'/show-javascript'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, remoteCall='false', accept='application/pdf')}"></div>
                 <br>
