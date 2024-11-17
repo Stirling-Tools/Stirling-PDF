@@ -20,7 +20,7 @@
               <span class="material-symbols-rounded tool-header-icon advance">cut</span>
               <span class="tool-header-text" th:text="#{autoSplitPDF.header}"></span>
             </div>
-
+            <div><p th:text="#{home.autoSplitPDF.desc}"></p></div>
             <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/auto-split-pdf'}">
               <p th:text="#{autoSplitPDF.formPrompt}"></p>
               <div
