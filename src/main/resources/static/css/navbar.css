@@ -140,7 +140,7 @@ span.icon-text::after {
   position: relative;
 }
 
-.tooltip-text {
+/* .tooltip-text {
   visibility: hidden;
   background-color: rgb(71 67 67 / 80%);
   color: #fff;
@@ -162,7 +162,7 @@ span.icon-text::after {
 .nav-item:hover .tooltip-text {
   visibility: visible;
   opacity: 1;
-}
+} */
 
 .dropdown-menu.scrollable-y {
   overflow-y: scroll;
