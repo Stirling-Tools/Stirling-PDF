@@ -324,6 +324,18 @@ span.icon-text::after {
     margin-top: 0;
   }
 
+  /* .icon-hide {
+    display: none;
+  } */
+}
+
+@media (max-width:1199px) {
+  .icon-hide {
+    display: inline-flex;
+  }
+}
+
+@media (min-width:1200px) {
   .icon-hide {
     display: none;
   }
