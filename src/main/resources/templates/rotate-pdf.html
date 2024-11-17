@@ -16,6 +16,7 @@
                 <span class="material-symbols-rounded tool-header-icon organize">rotate_right</span>
                 <span class="tool-header-text" th:text="#{rotate.header}"></span>
               </div>
+              <div><p th:text="#{home.rotate.desc}"></p></div>
 
               <form action="#" th:action="@{'/api/v1/general/rotate-pdf'}" th:object="${rotateForm}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>

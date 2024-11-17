@@ -16,6 +16,7 @@
                 <span class="material-symbols-rounded tool-header-icon organize">fullscreen</span>
                 <span class="tool-header-text" th:text="#{scalePages.header}"></span>
               </div>
+              <div><p th:text="#{home.scalePages.desc}"></p></div>              
               <form id="scalePagesFrom" th:action="@{'/api/v1/general/scale-pages'}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">
