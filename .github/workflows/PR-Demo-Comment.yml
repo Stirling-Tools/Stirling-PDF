@@ -1,4 +1,4 @@
-name: PR Deployment
+name: PR Deployment via Comment
 
 on:
   issue_comment:
@@ -7,7 +7,7 @@ on:
 jobs:
   check-comment:
     runs-on: ubuntu-latest
-    # Only run on PR comments that contain @deployPR
+    # Only run on PR comments that contain @deployPR from authorized users
     if: |
       github.event.issue.pull_request && 
       contains(github.event.comment.body, '@deployPR') && 
@@ -21,7 +21,6 @@ jobs:
       )
     outputs:
       pr_number: ${{ steps.get-pr.outputs.pr_number }}
-      should_run: ${{ steps.check.outputs.src_changed }}
 
     steps:
       - name: Get PR data
@@ -49,26 +48,9 @@ jobs:
             
             return pr.head.ref;
 
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.get-pr-branch.outputs.result }}
-
-      - name: Check for relevant file changes
-        id: filter
-        uses: dorny/paths-filter@v2
-        with:
-          filters: |
-            src_changed:
-              - '**/*.java'
-              - '**/*.html'
-              - '**/*.css'
-              - '**/*.js'
-              - '**/*.gradle'
-
   deploy-pr:
     needs: check-comment
     runs-on: ubuntu-latest
-    if: needs.check-comment.outputs.should_run == 'true'
     
     steps:
       - uses: actions/checkout@v4
