@@ -10,7 +10,7 @@ jobs:
     # Only run on PR comments that contain @deployPR from authorized users
     if: |
       github.event.issue.pull_request && 
-      contains(github.event.comment.body, '@deployPR') && 
+      contains(toLowercase(github.event.comment.body), 'prdeploy') && 
       (
         github.event.comment.user.login == 'frooodle' || 
         github.event.comment.user.login == 'sf298' ||
@@ -21,6 +21,7 @@ jobs:
       )
     outputs:
       pr_number: ${{ steps.get-pr.outputs.pr_number }}
+      pr_branch: ${{ steps.get-pr-branch.outputs.result }}
 
     steps:
       - name: Get PR data
@@ -55,14 +56,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ steps.get-pr-branch.outputs.result }}
+          ref: ${{ needs.check-comment.outputs.pr_branch }}
       
-      - name: Set up JDK and Gradle
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          gradle-version: 8.7
 
       - name: Run Gradle Command
         run: ./gradlew clean build
