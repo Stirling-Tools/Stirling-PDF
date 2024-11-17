@@ -1,0 +1,165 @@
+name: PR Deployment via Comment
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  check-comment:
+    runs-on: ubuntu-latest
+    # Only run on PR comments that contain @deployPR from authorized users
+    if: |
+      github.event.issue.pull_request && 
+      contains(github.event.comment.body, '@deployPR') && 
+      (
+        github.event.comment.user.login == 'frooodle' || 
+        github.event.comment.user.login == 'sf298' ||
+        github.event.comment.user.login == 'Ludy87' ||
+        github.event.comment.user.login == 'LaserKaspar' ||
+        github.event.comment.user.login == 'sbplat' ||
+        github.event.comment.user.login == 'reecebrowne'
+      )
+    outputs:
+      pr_number: ${{ steps.get-pr.outputs.pr_number }}
+
+    steps:
+      - name: Get PR data
+        id: get-pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.issue.number;
+            console.log(`PR Number: ${prNumber}`);
+            core.setOutput('pr_number', prNumber);
+
+      - name: Get PR branch
+        uses: actions/github-script@v7
+        id: get-pr-branch
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.issue.number;
+            
+            const { data: pr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: prNumber,
+            });
+            
+            return pr.head.ref;
+
+  deploy-pr:
+    needs: check-comment
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.get-pr-branch.outputs.result }}
+      
+      - name: Set up JDK and Gradle
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          gradle-version: 8.7
+
+      - name: Run Gradle Command
+        run: ./gradlew clean build
+        env:
+          DOCKER_ENABLE_SECURITY: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Get version number
+        id: versionNumber
+        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
+
+      - name: Build and push PR-specific image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
+          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          platforms: linux/amd64
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          sudo chmod 600 ../private.key
+
+      - name: Deploy to VPS
+        run: |
+          # First create the docker-compose content locally
+          cat > docker-compose.yml << 'EOF'
+          version: '3.3'
+          services:
+            stirling-pdf:
+              container_name: stirling-pdf-pr-${{ needs.check-comment.outputs.pr_number }}
+              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
+              ports:
+                - "${{ needs.check-comment.outputs.pr_number }}:8080"
+              volumes:
+                - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/data:/usr/share/tessdata:rw
+                - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/config:/configs:rw
+                - /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/logs:/logs:rw
+              environment:
+                DOCKER_ENABLE_SECURITY: "false"
+                SECURITY_ENABLELOGIN: "false"
+                SYSTEM_DEFAULTLOCALE: en-GB
+                UI_APPNAME: "Stirling-PDF PR#${{ needs.check-comment.outputs.pr_number }}"
+                UI_HOMEDESCRIPTION: "PR#${{ needs.check-comment.outputs.pr_number }} for Stirling-PDF Latest"
+                UI_APPNAMENAVBAR: "PR#${{ needs.check-comment.outputs.pr_number }}"
+                SYSTEM_MAXFILESIZE: "100"
+                METRICS_ENABLED: "true"
+                SYSTEM_GOOGLEVISIBILITY: "false"
+              restart: on-failure:5
+          EOF
+
+          # Then copy the file and execute commands
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/docker-compose.yml
+
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+            # Create PR-specific directories
+            mkdir -p /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/{data,config,logs}
+            
+            # Move docker-compose file to correct location
+            mv /tmp/docker-compose.yml /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/docker-compose.yml
+            
+            # Start or restart the container
+            cd /stirling/PR-${{ needs.check-comment.outputs.pr_number }}
+            docker-compose pull
+            docker-compose up -d
+          ENDSSH
+
+      - name: Post deployment URL to PR
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { GITHUB_REPOSITORY } = process.env;
+            const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
+            const prNumber = ${{ needs.check-comment.outputs.pr_number }};
+
+            const deploymentUrl = `http://${{ secrets.VPS_HOST }}:${prNumber}`;
+            const commentBody = `## 🚀 PR Test Deployment\n\n` +
+                              `Your PR has been deployed for testing!\n\n` +
+                              `🔗 **Test URL:** [${deploymentUrl}](${deploymentUrl})\n\n` +
+                              `This deployment will be automatically cleaned up when the PR is closed.\n\n`;
+
+            await github.rest.issues.createComment({
+              owner: repoOwner,
+              repo: repoName,
+              issue_number: prNumber,
+              body: commentBody
+            });
