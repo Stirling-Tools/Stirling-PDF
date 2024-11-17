@@ -17,7 +17,7 @@
                 <span class="material-symbols-rounded tool-header-icon advance">scanner</span>
                 <span class="tool-header-text" th:text="#{home.ScannerImageSplit.title}"></span>
               </div>
-
+              <div><p th:text="#{home.ScannerImageSplit.desc}"></p></div>
               <p th:if="${!isPython}" th:text="#{ScannerImageSplit.info}" class="alert alert-success text-center">Python is not installed. It is required to run.</p>
 
               <form th:if="${isPython}" id="multiPdfForm" th:action="@{'/api/v1/misc/extract-image-scans'}" method="post" enctype="multipart/form-data">

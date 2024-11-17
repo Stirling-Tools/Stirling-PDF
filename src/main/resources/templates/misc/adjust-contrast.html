@@ -41,6 +41,7 @@
                     <span class="material-symbols-rounded tool-header-icon advance">palette</span>
                     <span class="tool-header-text" th:text="#{adjustContrast.header}"></span>
                   </div>
+                  <div><p th:text="#{home.adjustContrast.desc}"></p></div>                  
                   <div class="col-md-8">
                     <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}"></div>
                   </div>

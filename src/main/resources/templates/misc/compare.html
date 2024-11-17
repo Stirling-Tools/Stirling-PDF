@@ -59,6 +59,7 @@
               <span class="material-symbols-rounded tool-header-icon other">compare</span>
               <span class="tool-header-text" th:text="#{compare.header}"></span>
             </div>
+            <div><p th:text="#{home.compare.desc}"></p></div>            
             <div
               th:replace="~{fragments/common :: fileSelector(name='fileInput', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}">
             </div>

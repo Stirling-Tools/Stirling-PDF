@@ -17,6 +17,7 @@
                 <span class="material-symbols-rounded tool-header-icon other">photo_library</span>
                 <span class="tool-header-text" th:text="#{extractImages.header}"></span>
               </div>
+              <div><p th:text="#{home.extractImages.desc}"></p></div>
               <form id="multiPdfForm" th:action="@{'/api/v1/misc/extract-images'}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">

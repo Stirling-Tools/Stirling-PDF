@@ -60,6 +60,7 @@
             <span class="material-symbols-rounded tool-header-icon other">123</span>
             <span class="tool-header-text" th:text="#{addPageNumbers.header}"></span>
           </div>
+          <div><p th:text="#{home.addPageNumbers.desc}"></p></div>
           <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/add-page-numbers'}">
             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
             <br>
