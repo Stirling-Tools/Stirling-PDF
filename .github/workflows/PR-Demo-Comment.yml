@@ -7,10 +7,13 @@ on:
 jobs:
   check-comment:
     runs-on: ubuntu-latest
-    # Only run on PR comments that contain @deployPR from authorized users
     if: |
       github.event.issue.pull_request && 
-      contains(github.event.comment.body, 'prdeploy') && 
+      (
+      contains(github.event.comment.body, 'prdeploy') ||
+      contains(github.event.comment.body, 'deploypr')
+      )
+      && 
       (
         github.event.comment.user.login == 'frooodle' || 
         github.event.comment.user.login == 'sf298' ||
@@ -21,7 +24,8 @@ jobs:
       )
     outputs:
       pr_number: ${{ steps.get-pr.outputs.pr_number }}
-      pr_branch: ${{ steps.get-pr-branch.outputs.result }}
+      pr_repository: ${{ steps.get-pr-info.outputs.repository }}
+      pr_ref: ${{ steps.get-pr-info.outputs.ref }}
 
     steps:
       - name: Get PR data
@@ -33,9 +37,9 @@ jobs:
             console.log(`PR Number: ${prNumber}`);
             core.setOutput('pr_number', prNumber);
 
-      - name: Get PR branch
+      - name: Get PR repository and ref
+        id: get-pr-info
         uses: actions/github-script@v7
-        id: get-pr-branch
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -47,16 +51,26 @@ jobs:
               pull_number: prNumber,
             });
             
-            return pr.head.ref;
+            // For forks, use the full repository name, for internal PRs use the current repo
+            const repository = pr.head.repo.fork ? pr.head.repo.full_name : `${owner}/${repo}`;
+            
+            console.log(`PR Repository: ${repository}`);
+            console.log(`PR Branch: ${pr.head.ref}`);
+            
+            core.setOutput('repository', repository);
+            core.setOutput('ref', pr.head.ref);
 
   deploy-pr:
     needs: check-comment
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout PR
+        uses: actions/checkout@v4
         with:
-          ref: ${{ needs.check-comment.outputs.pr_branch }}
+          repository: ${{ needs.check-comment.outputs.pr_repository }}
+          ref: ${{ needs.check-comment.outputs.pr_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Set up JDK
         uses: actions/setup-java@v4
