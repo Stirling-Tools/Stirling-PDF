@@ -1,5 +1,5 @@
 # Build the application
-FROM gradle:8.7-jdk17 AS build
+FROM gradle:8.11-jdk17 AS build
 
 # Set the working directory
 WORKDIR /app
