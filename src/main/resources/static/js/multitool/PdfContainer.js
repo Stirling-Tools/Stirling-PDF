@@ -329,8 +329,8 @@ class PdfContainer {
   toggleSelectAll() {
     const checkboxes = document.querySelectorAll(".pdf-actions_checkbox");
     window.selectAll = !window.selectAll;
-    const selectIcon = document.getElementById("select-icon");
-    const deselectIcon = document.getElementById("deselect-icon");
+    const selectIcon = document.getElementById("select-All-Container");
+    const deselectIcon = document.getElementById("deselect-All-Container");
 
     if (selectIcon.style.display === "none") {
       selectIcon.style.display = "inline";
@@ -429,7 +429,7 @@ class PdfContainer {
     const selectedPagesList = document.getElementById("selected-pages-list");
     const selectedPagesInput = document.getElementById("csv-input");
     selectedPagesList.innerHTML = ""; // Clear the list
-
+    window.selectedPages.sort((a, b) => a - b);
     window.selectedPages.forEach((page) => {
       const pageItem = document.createElement("div");
       pageItem.className = "page-item";
@@ -733,7 +733,7 @@ class PdfContainer {
     const selectedPages = document.getElementById("selected-pages-display");
     selectedPages.classList.toggle("hidden", !window.selectPage);
     const selectAll = document.getElementById("select-All-Container");
-    selectedPages.classList.toggle("hidden", !window.selectPage);
+    selectAll.classList.toggle("hidden", !window.selectPage);
     const exportSelected = document.getElementById("export-selected-button");
     exportSelected.classList.toggle("hidden", !window.selectPage);
     const selectPagesButton = document.getElementById("select-pages-button");
