@@ -19,6 +19,7 @@
               <span class="material-symbols-rounded tool-header-icon convert">draft</span>
               <span class="tool-header-text" th:text="#{fileToPDF.header}"></span>
             </div>
+            <div><p th:text="#{home.fileToPDF.desc}"></p></div>
             <p th:text="#{processTimeWarning}"></p>
             <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/file/pdf'}">
               <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false)}"></div>

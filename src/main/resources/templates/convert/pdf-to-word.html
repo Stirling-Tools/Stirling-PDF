@@ -17,6 +17,7 @@
                 <span class="material-symbols-rounded tool-header-icon word">description</span>
                 <span class="tool-header-text" th:text="#{PDFToWord.header}"></span>
               </div>
+              <div><p th:text="#{home.PDFToWord.desc}"></p></div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/word'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div class="mb-3">

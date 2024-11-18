@@ -14,6 +14,7 @@
           <div class="row justify-content-center">
             <div class="col-md-6">
               <h2 th:text="#{BookToPDF.header}"></h2>
+              <div><p th:text="#{home.BookToPDF.desc}"></p></div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/book/pdf'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false)}"></div>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{BookToPDF.submit}"></button>

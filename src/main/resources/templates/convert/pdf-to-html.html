@@ -17,6 +17,7 @@
                 <span class="material-symbols-rounded tool-header-icon convert">html</span>
                 <span class="tool-header-text" th:text="#{PDFToHTML.header}"></span>
               </div>
+              <div><p th:text="#{home.PDFToHTML.desc}"></p></div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/html'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <br>

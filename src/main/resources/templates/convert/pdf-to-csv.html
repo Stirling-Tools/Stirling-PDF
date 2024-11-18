@@ -16,6 +16,7 @@
                 <span class="material-symbols-rounded tool-header-icon convert">csv</span>
                 <span class="tool-header-text" th:text="#{PDFToCSV.header}"></span>
               </div>
+              <div><p th:text="#{home.PDFToCSV.desc}"></p></div>
               <form id="PDFToCSVForm" th:action="@{'/api/v1/convert/pdf/csv'}" method="post" enctype="multipart/form-data">
                 <input  id="pageId" type="hidden" name="pageId">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>

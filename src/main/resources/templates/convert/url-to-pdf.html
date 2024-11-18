@@ -17,6 +17,7 @@
                 <span class="material-symbols-rounded tool-header-icon convert">link</span>
                 <span class="tool-header-text" th:text="#{URLToPDF.header}"></span>
               </div>
+              <div><p th:text="#{home.URLToPDF.desc}"></p></div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/url/pdf'}">
                 <input type="text" class="form-control" id="urlInput" name="urlInput" placeholder="http://">
                 <br>
