@@ -483,9 +483,12 @@ class PdfContainer {
   addFilesBlankAll() {
     const allPages = this.pagesContainer.querySelectorAll(".page-container");
     allPages.forEach((page, index) => {
+      if (window.selectPage && !window.selectedPages.includes(index)) return;
+
       if (index !== 0) {
         this.addFiles(page, true)
       }
+
     });
   }
 
