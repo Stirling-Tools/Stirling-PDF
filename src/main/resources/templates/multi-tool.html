@@ -63,7 +63,6 @@
                       event_list
                     </span>
                     <span class="btn-tooltip" th:text="#{multiTool.selectPages}"></span>
-
                   </button>
                   <button id="deselect-All-Container" class="btn btn-secondary enable-on-file hidden"
                     onclick="toggleSelectAll()" disabled>
@@ -136,6 +135,20 @@
     window.selectedPages = [];
     window.selectPage = false;
     window.selectAll = false;
+
+    window.translations = {
+        rotateLeft: '[[#{multiTool.rotateLeft}]]',
+        rotateRight: '[[#{multiTool.rotateRight}]]',
+        moveLeft: '[[#{multiTool.moveLeft}]]',
+        moveRight: '[[#{multiTool.moveRight}]]',
+        delete: '[[#{multiTool.delete}]]',
+        split: '[[#{multiTool.split}]]',
+        addFile: '[[#{multiTool.addFile}]]',
+        insertPageBreak:'[[#{multiTool.insertPageBreak}]]'
+    };
+
+
+
     const csvInput = document.getElementById("csv-input");
     csvInput.addEventListener("keydown", function (event) {
       if (event.key === "Enter") {
