@@ -241,7 +241,7 @@ const DraggableUtils = {
     }
 
     const draggablesData = pagesMap[this.pageIndex];
-    if (draggablesData) {
+    if (draggablesData && Array.isArray(draggablesData)) {
       draggablesData.forEach((draggableData) => this.boxDragContainer.appendChild(draggableData.element));
     }
 
@@ -273,6 +273,13 @@ const DraggableUtils = {
 
     //return pdfCanvas.toDataURL();
   },
+
+  async goToPage(pageIndex) {
+    this.storePageContents();
+    await this.renderPage(this.pdfDoc, pageIndex);
+    this.loadPageContents();
+  },
+
   async incrementPage() {
     if (this.pageIndex < this.pdfDoc.numPages - 1) {
       this.storePageContents();
@@ -289,7 +296,7 @@ const DraggableUtils = {
   },
 
   parseTransform(element) { },
-  async getOverlayedPdfDocument() {
+  async getOverlayedPdfDocument(allPage = false) {
     const pdfBytes = await this.pdfDoc.getData();
     const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, {
       ignoreEncryption: true,
@@ -297,6 +304,18 @@ const DraggableUtils = {
     this.storePageContents();
 
     const pagesMap = this.documentsMap.get(this.pdfDoc);
+
+
+
+    if (allPage) {
+      for (let pageIndex = 1; pageIndex < this.pdfDoc.numPages; pageIndex++) {
+        pagesMap[pageIndex] = pagesMap[0][0];
+        pagesMap[`${pageIndex}-offsetWidth`] = pagesMap[`${0}-offsetWidth`];
+        pagesMap[`${pageIndex}-offsetHeight`] = pagesMap[`${0}-offsetHeight`];
+      }
+    }
+
+
     for (let pageIdx in pagesMap) {
       if (pageIdx.includes("offset")) {
         continue;
@@ -304,7 +323,12 @@ const DraggableUtils = {
       console.log(typeof pageIdx);
 
       const page = pdfDocModified.getPage(parseInt(pageIdx));
-      const draggablesData = pagesMap[pageIdx];
+      let draggablesData = pagesMap[pageIdx];
+
+      if (allPage) {
+        draggablesData = pagesMap[0];
+      }
+
       const offsetWidth = pagesMap[pageIdx + "-offsetWidth"];
       const offsetHeight = pagesMap[pageIdx + "-offsetHeight"];
 
@@ -383,7 +407,6 @@ const DraggableUtils = {
         });
       }
     }
-
     this.loadPageContents();
     return pdfDocModified;
   },

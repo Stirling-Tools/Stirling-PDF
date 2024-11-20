@@ -62,53 +62,81 @@ select#font-select option {
   background-color: rgba(52, 152, 219, 0.2);
   /* Darken background on hover */
 }
+
 .signature-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-    padding: 1rem;
-    max-height: 400px;
-    overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .signature-list {
-    max-height: 400px;
-    overflow-y: auto;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .signature-list-item {
-    padding: 0.75rem;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  padding: 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .signature-list-item:hover {
-    background-color: #f8f9fa;
+  background-color: #f8f9fa;
 }
 
 .signature-list-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .signature-list-name {
-    font-weight: 500;
+  font-weight: 500;
 }
 
 .signature-list-details {
-    color: #6c757d;
-    font-size: 0.875rem;
+  color: #6c757d;
+  font-size: 0.875rem;
 }
 
 .signature-list-details small:not(:last-child) {
-    margin-right: 1rem;
+  margin-right: 1rem;
 }
 
 .view-toggle {
-    text-align: right;
-    padding: 0.5rem 1rem;
+  text-align: right;
+  padding: 0.5rem 1rem;
+}
+
+
+.btn-custom {
+  background-color: rgb(248 249 255);
+  border: none;
+  opacity: 0.8;
+  color: rgb(24 28 34);
+}
+
+.btn-custom:hover {
+  color: rgb(24 28 34);
+
+}
+
+.btn-custom:focus,
+.btn-custom.active {
+  border: 1px solid rgb(200, 201, 207);
+  opacity: 1;
+  padding: 3%;
+  color: rgb(24 28 34);
+}
+
+
+.btn-custom:disabled {
+  pointer-events: none;
+  opacity: 0.5;
 }
