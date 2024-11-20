@@ -96,14 +96,30 @@
     });
   });
 
+  async function getPDFPageCount(file) {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      return pdf.numPages;
+    } catch (error) {
+      console.error('Error getting PDF page count:', error);
+      return null;
+    }
+  }
+  
   async function handleSingleDownload(url, formData, isMulti = false, isZip = false) {
+    const startTime = performance.now();
+    const file = formData.get('fileInput');
+    let success = false;
+    let errorMessage = null;
+    
     try {
       const response = await fetch(url, { method: "POST", body: formData });
       const contentType = response.headers.get("content-type");
 
       if (!response.ok) {
+        errorMessage = response.status;
         if (response.status === 401) {
-          // Handle 401 Unauthorized error
           showSessionExpiredPrompt();
           return;
         }
@@ -118,6 +134,8 @@
       let filename = getFilenameFromContentDisposition(contentDisposition);
 
       const blob = await response.blob();
+      success = true;
+      
       if (contentType.includes("application/pdf") || contentType.includes("image/")) {
         clearFileInput();
         return handleResponse(blob, filename, !isMulti, isZip);
@@ -127,23 +145,26 @@
       }
 
     } catch (error) {
+      success = false;
+      errorMessage = error.message;
       clearFileInput();
       console.error("Error in handleSingleDownload:", error);
       throw error;
+    } finally {
+      const processingTime = performance.now() - startTime;
+      
+      // Capture analytics
+      const pageCount = file && file.type === 'application/pdf' ? await getPDFPageCount(file) : null;
+      
+      posthog.capture('file_processing', {
+        success: success,
+        file_type: file ? file.type || 'unknown' : 'unknown',
+        file_size: file ? file.size : 0,
+        processing_time: processingTime,
+        error_message: errorMessage,
+        pdf_pages: pageCount
+      });
     }
-  }
-
-  function getFilenameFromContentDisposition(contentDisposition) {
-    let filename;
-
-    if (contentDisposition && contentDisposition.indexOf("attachment") !== -1) {
-      filename = decodeURIComponent(contentDisposition.split("filename=")[1].replace(/"/g, "")).trim();
-    } else {
-      // If the Content-Disposition header is not present or does not contain the filename, use a default filename
-      filename = "download";
-    }
-
-    return filename;
   }
 
   async function handleJsonResponse(response) {
