@@ -1,7 +1,9 @@
 function filterCards() {
   var input = document.getElementById("searchBar");
   var filter = input.value.toUpperCase();
+
   let featureGroups = document.querySelectorAll(".feature-group");
+  const collapsedGroups = getCollapsedGroups();
 
   for (const featureGroup of featureGroups) {
     var cards = featureGroup.querySelectorAll(".feature-card");
@@ -26,8 +28,29 @@ function filterCards() {
       }
     }
 
-    if (!groupMatchesFilter) featureGroup.style.display = "none";
-    else featureGroup.style.display = "";
+    if (!groupMatchesFilter) {
+      featureGroup.style.display = "none";
+    } else {
+      featureGroup.style.display = "";
+      resetOrTemporarilyExpandGroup(featureGroup, filter, collapsedGroups);
+    }
+  }
+}
+
+function getCollapsedGroups() {
+  return localStorage.getItem("collapsedGroups") ? JSON.parse(localStorage.getItem("collapsedGroups")) : [];
+}
+
+function resetOrTemporarilyExpandGroup(featureGroup, filterKeywords = "", collapsedGroups = []) {
+  const shouldResetCollapse = filterKeywords.trim() === "";
+  if (shouldResetCollapse) {
+    // Resetting the group's expand/collapse to its original state (as in collapsed groups)
+    const isCollapsed = collapsedGroups.indexOf(featureGroup.id) != -1;
+    expandCollapseToggle(featureGroup, !isCollapsed);
+  } else {
+    // Temporarily expands feature group without affecting the actual/stored collapsed groups
+    featureGroup.classList.remove("collapsed");
+    featureGroup.querySelector(".header-expand-button").classList.remove("collapsed");
   }
 }
 
