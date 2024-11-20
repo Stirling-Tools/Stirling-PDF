@@ -201,6 +201,7 @@
                     window.stirlingPDF.error = /*[[#{error}]]*/ "Error";
                   })();
                 </script>
+                <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
                 <script th:src="@{'/js/downloader.js'}"></script>
 
                 <div class="custom-file-chooser" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
