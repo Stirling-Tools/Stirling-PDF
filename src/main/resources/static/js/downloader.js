@@ -167,6 +167,19 @@
     }
   }
 
+   function getFilenameFromContentDisposition(contentDisposition) {
+    let filename;
+
+    if (contentDisposition && contentDisposition.indexOf("attachment") !== -1) {
+      filename = decodeURIComponent(contentDisposition.split("filename=")[1].replace(/"/g, "")).trim();
+    } else {
+      // If the Content-Disposition header is not present or does not contain the filename, use a default filename
+      filename = "download";
+    }
+
+    return filename;
+  }
+  
   async function handleJsonResponse(response) {
     const json = await response.json();
     const errorMessage = JSON.stringify(json, null, 2);
