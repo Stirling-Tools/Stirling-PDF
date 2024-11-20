@@ -308,14 +308,14 @@
       if(editSectionElement){
         editSectionElement.style.display = "none";
       }
-      let cropPdfCanvas = document.querySelector("#crop-pdf-canvas");
+      let cropPdfCanvas = document.querySelector("#cropPdfCanvas");
       let overlayCanvas = document.querySelector("#overlayCanvas");
       if(cropPdfCanvas && overlayCanvas){
         cropPdfCanvas.width = 0;
-        cropPdfCanvas.heigth = 0;
+        cropPdfCanvas.height = 0;
 
         overlayCanvas.width = 0;
-        overlayCanvas.heigth = 0;
+        overlayCanvas.height = 0;
       }
     } else{
       console.log("Disabled for 'Merge'");
