@@ -22,7 +22,6 @@ jobs:
           mkdir -p ~/.ssh/
           echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
           sudo chmod 600 ../private.key
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
       - name: Cleanup PR deployment
         run: |
