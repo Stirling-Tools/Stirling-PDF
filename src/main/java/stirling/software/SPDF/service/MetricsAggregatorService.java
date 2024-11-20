@@ -32,11 +32,19 @@ public class MetricsAggregatorService {
                 .counters()
                 .forEach(
                         counter -> {
-                            String key =
-                                    String.format(
-                                            "http_requests_%s_%s",
-                                            counter.getId().getTag("method"),
-                                            counter.getId().getTag("uri").replace("/", "_"));
+                            String method = counter.getId().getTag("method");
+                            String uri = counter.getId().getTag("uri");
+                            
+                            // Skip if either method or uri is null
+                            if (method == null || uri == null) {
+                                return;
+                            }
+                
+                            String key = String.format(
+                                "http_requests_%s_%s",
+                                method,
+                                uri.replace("/", "_")
+                            );
 
                             double currentCount = counter.count();
                             double lastCount = lastSentMetrics.getOrDefault(key, 0.0);
