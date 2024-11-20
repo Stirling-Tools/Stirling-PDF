@@ -1,24 +1,33 @@
 function filterCards() {
   var input = document.getElementById("searchBar");
   var filter = input.value.toUpperCase();
-  var cards = document.querySelectorAll(".feature-card");
+  let featureGroups = document.querySelectorAll(".feature-group");
 
-  for (var i = 0; i < cards.length; i++) {
-    var card = cards[i];
-    var title = card.querySelector("h5.card-title").innerText;
-    var text = card.querySelector("p.card-text").innerText;
+  for (const featureGroup of featureGroups) {
+    var cards = featureGroup.querySelectorAll(".feature-card");
 
-    // Get the navbar tags associated with the card
-    var navbarItem = document.querySelector(`a.dropdown-item[href="${card.id}"]`);
-    var navbarTags = navbarItem ? navbarItem.getAttribute("data-bs-tags") : "";
+    let groupMatchesFilter = false;
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+      var title = card.querySelector("h5.card-title").innerText;
+      var text = card.querySelector("p.card-text").innerText;
 
-    var content = title + " " + text + " " + navbarTags;
+      // Get the navbar tags associated with the card
+      var navbarItem = document.querySelector(`a.dropdown-item[href="${card.id}"]`);
+      var navbarTags = navbarItem ? navbarItem.getAttribute("data-bs-tags") : "";
 
-    if (content.toUpperCase().indexOf(filter) > -1) {
-      card.style.display = "";
-    } else {
-      card.style.display = "none";
+      var content = title + " " + text + " " + navbarTags;
+
+      if (content.toUpperCase().indexOf(filter) > -1) {
+        card.style.display = "";
+        groupMatchesFilter = true;
+      } else {
+        card.style.display = "none";
+      }
     }
+
+    if (!groupMatchesFilter) featureGroup.style.display = "none";
+    else featureGroup.style.display = "";
   }
 }
 
