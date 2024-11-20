@@ -74,6 +74,11 @@ class PdfActionsManager {
     this.addFiles(imgContainer);
   }
 
+  insertFileBlankButtonCallback(e) {
+    var imgContainer = this.getPageContainer(e.target);
+    this.addFiles(imgContainer, true);
+  }
+
   splitFileButtonCallback(e) {
     var imgContainer = this.getPageContainer(e.target);
     imgContainer.classList.toggle("split-before");
@@ -90,6 +95,7 @@ class PdfActionsManager {
     this.rotateCWButtonCallback = this.rotateCWButtonCallback.bind(this);
     this.deletePageButtonCallback = this.deletePageButtonCallback.bind(this);
     this.insertFileButtonCallback = this.insertFileButtonCallback.bind(this);
+    this.insertFileBlankButtonCallback = this.insertFileBlankButtonCallback.bind(this);
     this.splitFileButtonCallback = this.splitFileButtonCallback.bind(this);
   }
 
@@ -134,13 +140,16 @@ class PdfActionsManager {
 
     div.appendChild(buttonContainer);
 
+    //enerate checkbox to select individual pages
     const selectCheckbox = document.createElement("input");
     selectCheckbox.type = "checkbox";
     selectCheckbox.classList.add("pdf-actions_checkbox", "form-check-input");
     selectCheckbox.id = `selectPageCheckbox`;
     selectCheckbox.checked = window.selectAll;
+
     div.appendChild(selectCheckbox);
 
+    //only show whenpage select mode is active
     if (!window.selectPage) {
       selectCheckbox.classList.add("hidden");
     } else {
@@ -149,17 +158,24 @@ class PdfActionsManager {
 
     selectCheckbox.onchange = () => {
       const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
-      if (window.selectAll) {
-        selectCheckbox.checked = true;
-      }
       if (selectCheckbox.checked) {
+        //adds to array of selected pages
         window.selectedPages.push(pageNumber);
       } else {
+        //remove page from selected pages array
         const index = window.selectedPages.indexOf(pageNumber);
         if (index !== -1) {
           window.selectedPages.splice(index, 1);
         }
       }
+
+      if (window.selectedPages.length > 0 && !window.selectPage) {
+        window.toggleSelectPageVisibility();
+      }
+      if (window.selectedPages.length == 0 && window.selectPage) {
+        window.toggleSelectPageVisibility();
+      }
+
       window.updateSelectedPagesDisplay();
     };
 
@@ -182,6 +198,12 @@ class PdfActionsManager {
     splitFileButton.innerHTML = `<span class="material-symbols-rounded">cut</span>`;
     splitFileButton.onclick = this.splitFileButtonCallback;
     insertFileButtonContainer.appendChild(splitFileButton);
+
+    const insertFileBlankButton = document.createElement("button");
+    insertFileBlankButton.classList.add("btn", "btn-primary", "pdf-actions_insert-file-blank-button");
+    insertFileBlankButton.innerHTML = `<span class="material-symbols-rounded">insert_page_break</span>`;
+    insertFileBlankButton.onclick = this.insertFileBlankButtonCallback;
+    insertFileButtonContainer.appendChild(insertFileBlankButton);
 
     div.appendChild(insertFileButtonContainer);
 
@@ -210,14 +232,24 @@ class PdfActionsManager {
     };
 
     div.addEventListener("mouseenter", () => {
+      window.updatePageNumbersAndCheckboxes();
       const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
       adaptPageNumber(pageNumber, div);
+      const checkbox = document.getElementById(`selectPageCheckbox-${pageNumber}`);
+      if (checkbox && !window.selectPage) {
+        checkbox.classList.remove("hidden");
+      }
     });
 
     div.addEventListener("mouseleave", () => {
+      const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
       const pageNumberElement = div.querySelector(".page-number");
       if (pageNumberElement) {
         div.removeChild(pageNumberElement);
+      }
+      const checkbox = document.getElementById(`selectPageCheckbox-${pageNumber}`);
+      if (checkbox && !window.selectPage) {
+        checkbox.classList.add("hidden");
       }
     });
 

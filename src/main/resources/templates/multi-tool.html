@@ -47,28 +47,49 @@
                       cut
                     </span>
                   </button>
-                  <div id="select-pages-container" class="checkbox-container hidden">
-                    <label class="checkbox-label" th:text="#{multiTool.selectPages}">Select Pages</label>
-                    <input type="checkbox" class="form-check-input" id="toggleSelectPageVisibility"
-                      onclick="toggleSelectPageVisibility()">
-                  </div>
-                  <div id="select-All-Container" class="checkbox-container hidden">
-                    <label class="checkbox-label" th:text="#{multiTool.selectAll}">Select All</label>
-                    <input type="checkbox" class="form-check-input" id="selectAll" onclick="toggleSelectAll(this)">
-                  </div>
+                  <button id="select-pages-container" class="btn btn-secondary enable-on-file"
+                    th:title="#{multiTool.selectPages}" onclick="toggleSelectPageVisibility()" disabled>
+                    <span id="select-pages-button" class="material-symbols-rounded">
+                      event_list
+                    </span>
+                  </button>
+                  <button id="select-All-Container" class="btn btn-secondary enable-on-file hidden"
+                    onclick="toggleSelectAll()" disabled>
+                    <span th:title="#{multiTool.selectAll}" class="material-symbols-rounded"
+                      id="select-icon">select_all</span>
+                    <span th:title="#{multiTool.deselectAll}" class="material-symbols-rounded" style="display: none;"
+                      id="deselect-icon">deselect</span>
+                  </button>
                   <div class=" button-container">
-                    <button id="delete-button" class="btn btn-danger hidden" onclick="deleteSelected()">
+                    <button th:title="#{multiTool.deleteSelected}" id="delete-button" class="btn btn-danger hidden"
+                      onclick="deleteSelected()">
                       <span class="material-symbols-rounded">delete</span>
                     </button>
                   </div>
-                  <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
+                  <button id="export-selected-button" class="btn btn-primary enable-on-file hidden"
+                    onclick="exportPdf(true)" disabled>
+                    <span th:title="#{multiTool.downloadSelected}" class="material-symbols-rounded">
+                      file_save
+                    </span>
+                  </button>
+                  <button class="btn btn-secondary enable-on-file" onclick="addFilesBlankAll()" disabled>
                     <span class="material-symbols-rounded">
+                      insert_page_break
+                    </span>
+                  </button>
+                  <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf(false)" disabled>
+                    <span th:title="#{multiTool.downloadAll}" class="material-symbols-rounded">
                       download
                     </span>
                   </button>
                 </div>
                 <div id="selected-pages-display" class="selected-pages-container hidden">
-                  <h3 th:text="#{multiTool.selectedPages}">Selected Pages</h3>
+                  <div style="display:flex; height:3rem; margin-right:1rem">
+                    <h5 th:text="#{multiTool.selectedPages}" style="white-space: nowrap; margin-right: 1rem;">Selected
+                      Pages</h5>
+                    <input type="text" id="csv-input" class="form-control" style="height:2.5rem" placeholder="1,3,5-10"
+                      value="">
+                  </div>
                   <ul id="selected-pages-list" class="pages-list"></ul>
                 </div>
               </div>
@@ -91,8 +112,17 @@
   <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
   <script>
     window.selectedPages = [];
-    window.selectpages = false;
+    window.selectPage = false;
     window.selectAll = false;
+    const csvInput = document.getElementById("csv-input");
+    csvInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        updatePagesFromCSV();
+      }
+    });
+    csvInput.addEventListener("blur", function () {
+      updatePagesFromCSV();
+    });
   </script>
   <script type="module">
     import PdfContainer from './js/multitool/PdfContainer.js';

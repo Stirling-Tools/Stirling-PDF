@@ -212,19 +212,23 @@ label {
 .page-number {
   position: absolute;
   top: 5px;
-  right: 0px;
-  color: var(--md-sys-color-on-surface);
-  background-color: var(--md-sys-color-surface-5);
+  left: 5px;
+  color: var(--md-sys-color-on-secondary);
+  background-color: rgba(162, 201, 255, 0.8);
   padding: 6px 8px;
   border-radius: 8px;
   font-size: 16px;
   z-index: 2;
+  font-weight: 450;
 }
 
 .tool-header {
   margin: 0.5rem 1rem 2rem;
 }
 
+#select-pages-button {
+  opacity: 0.5;
+}
 
 .selected-pages-container {
   background-color: var(--md-sys-color-surface);
@@ -261,13 +265,13 @@ label {
   font-weight: bold;
   color: var(--md-sys-color-on-surface);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 8rem;
+  width: 7rem;
   height: 2.5rem;
 }
 
 .selected-page-number {
-  margin-right: 8px;
-  width: 6rem;
+  width: 4rem;
+  font-size: small;
 }
 
 .remove-btn {

@@ -26,6 +26,8 @@ class PdfContainer {
     this.toggleSelectAll = this.toggleSelectAll.bind(this);
     this.updateSelectedPagesDisplay = this.updateSelectedPagesDisplay.bind(this);
     this.toggleSelectPageVisibility = this.toggleSelectPageVisibility.bind(this);
+    this.updatePagesFromCSV = this.updatePagesFromCSV.bind(this);
+    this.addFilesBlankAll = this.addFilesBlankAll.bind(this)
 
     this.pdfAdapters = pdfAdapters;
 
@@ -47,6 +49,10 @@ class PdfContainer {
     window.toggleSelectAll = this.toggleSelectAll;
     window.updateSelectedPagesDisplay = this.updateSelectedPagesDisplay;
     window.toggleSelectPageVisibility = this.toggleSelectPageVisibility;
+    window.updatePagesFromCSV = this.updatePagesFromCSV;
+    window.updateSelectedPagesDisplay = this.updateSelectedPagesDisplay;
+    window.updatePageNumbersAndCheckboxes = this.updatePageNumbersAndCheckboxes;
+    window.addFilesBlankAll = this.addFilesBlankAll
 
     const filenameInput = document.getElementById("filename-input");
     const downloadBtn = document.getElementById("export-button");
@@ -86,22 +92,27 @@ class PdfContainer {
     }
   }
 
-  addFiles(nextSiblingElement) {
-    var input = document.createElement("input");
-    input.type = "file";
-    input.multiple = true;
-    input.setAttribute("accept", "application/pdf,image/*");
-    input.onchange = async (e) => {
-      const files = e.target.files;
+  addFiles(nextSiblingElement, blank = false) {
+    if (blank) {
 
-      this.addFilesFromFiles(files, nextSiblingElement);
-      this.updateFilename(files ? files[0].name : "");
+      this.addFilesBlank(nextSiblingElement);
 
-      const selectAll = document.getElementById("select-pages-container");
-      selectAll.classList.toggle("hidden", false);
+    } else {
+      var input = document.createElement("input");
+      input.type = "file";
+      input.multiple = true;
+      input.setAttribute("accept", "application/pdf,image/*");
+      input.onchange = async (e) => {
+        const files = e.target.files;
 
-    };
-    input.click();
+        this.addFilesFromFiles(files, nextSiblingElement);
+        this.updateFilename(files ? files[0].name : "");
+        const selectAll = document.getElementById("select-pages-container");
+        selectAll.classList.toggle("hidden", false);
+      };
+
+      input.click();
+    }
   }
 
   async addFilesFromFiles(files, nextSiblingElement) {
@@ -119,6 +130,47 @@ class PdfContainer {
       element.disabled = false;
     });
   }
+
+  async addFilesBlank(nextSiblingElement) {
+    const pdfContent = `
+      %PDF-1.4
+      1 0 obj
+      << /Type /Catalog /Pages 2 0 R >>
+      endobj
+      2 0 obj
+      << /Type /Pages /Kids [3 0 R] /Count 1 >>
+      endobj
+      3 0 obj
+      << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 5 0 R >>
+      endobj
+      5 0 obj
+      << /Length 44 >>
+      stream
+      0 0 0 595 0 842 re
+      W
+      n
+      endstream
+      endobj
+      xref
+      0 6
+      0000000000 65535 f
+      0000000010 00000 n
+      0000000071 00000 n
+      0000000121 00000 n
+      0000000205 00000 n
+      0000000400 00000 n
+      trailer
+      << /Size 6 /Root 1 0 R >>
+      startxref
+      278
+      %%EOF
+    `;
+    const blob = new Blob([pdfContent], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const file = new File([blob], "blank_page.pdf", { type: "application/pdf" });
+    await this.addPdfFile(file, nextSiblingElement);
+  }
+
 
   rotateElement(element, deg) {
     var lastTransform = element.style.rotate;
@@ -231,6 +283,7 @@ class PdfContainer {
       if (!child) continue;
 
       const pageIndex = i + 1;
+      //if in page select mode is active rotate only selected pages
       if (window.selectPage && !window.selectedPages.includes(pageIndex)) continue;
 
       const img = child.querySelector("img");
@@ -272,11 +325,22 @@ class PdfContainer {
     document.dispatchEvent(new Event("selectedPagesUpdated"));
   }
 
-  toggleSelectAll(selectAllCheckbox) {
+  toggleSelectAll() {
     const checkboxes = document.querySelectorAll(".pdf-actions_checkbox");
     window.selectAll = !window.selectAll;
+    const selectIcon = document.getElementById("select-icon");
+    const deselectIcon = document.getElementById("deselect-icon");
+
+    if (selectIcon.style.display === "none") {
+      selectIcon.style.display = "inline";
+      deselectIcon.style.display = "none";
+    } else {
+      selectIcon.style.display = "none";
+      deselectIcon.style.display = "inline";
+    }
     checkboxes.forEach((checkbox) => {
-      checkbox.checked = selectAllCheckbox.checked;
+
+      checkbox.checked = window.selectAll;
 
       const pageNumber = Array.from(checkbox.parentNode.parentNode.children).indexOf(checkbox.parentNode) + 1;
 
@@ -295,9 +359,74 @@ class PdfContainer {
     this.updateSelectedPagesDisplay();
   }
 
+  parseCSVInput(csvInput, maxPageIndex) {
+    const pages = new Set();
+
+    csvInput.split(",").forEach((item) => {
+      const range = item.split("-").map((p) => parseInt(p.trim()));
+      if (range.length === 2) {
+        const [start, end] = range;
+        for (let i = start; i <= end && i <= maxPageIndex; i++) {
+          if (i > 0) { // Ensure the page number is greater than 0
+            pages.add(i);
+          }
+        }
+      } else if (range.length === 1 && Number.isInteger(range[0])) {
+        const page = range[0];
+        if (page > 0 && page <= maxPageIndex) { // Ensure page is within valid range
+          pages.add(page);
+        }
+      }
+    });
+
+    return Array.from(pages).sort((a, b) => a - b);
+  }
+
+  updatePagesFromCSV() {
+    const csvInput = document.getElementById("csv-input").value;
+
+    const allPages = this.pagesContainer.querySelectorAll(".page-container");
+    const maxPageIndex = allPages.length;
+
+    window.selectedPages = this.parseCSVInput(csvInput, maxPageIndex);
+
+    this.updateSelectedPagesDisplay();
+
+    const allCheckboxes = document.querySelectorAll(".pdf-actions_checkbox");
+    allCheckboxes.forEach((checkbox) => {
+      const page = parseInt(checkbox.getAttribute("data-page-number"));
+      checkbox.checked = window.selectedPages.includes(page);
+    });
+  }
+
+  formatSelectedPages(pages) {
+    if (pages.length === 0) return "";
+
+    pages.sort((a, b) => a - b); // Sort the page numbers in ascending order
+    const ranges = [];
+    let start = pages[0];
+    let end = start;
+
+    for (let i = 1; i < pages.length; i++) {
+      if (pages[i] === end + 1) {
+        // Consecutive page, update end
+        end = pages[i];
+      } else {
+        // Non-consecutive page, finalize current range
+        ranges.push(start === end ? `${start}` : `${start}-${end}`);
+        start = pages[i];
+        end = start;
+      }
+    }
+    // Add the last range
+    ranges.push(start === end ? `${start}` : `${start}-${end}`);
+
+    return ranges.join(", ");
+  }
 
   updateSelectedPagesDisplay() {
     const selectedPagesList = document.getElementById("selected-pages-list");
+    const selectedPagesInput = document.getElementById("csv-input");
     selectedPagesList.innerHTML = ""; // Clear the list
 
     window.selectedPages.forEach((page) => {
@@ -313,6 +442,8 @@ class PdfContainer {
       const removeBtn = document.createElement("span");
       removeBtn.className = "remove-btn";
       removeBtn.innerHTML = "✕";
+
+      // Remove page from selected pages list and update display and checkbox
       removeBtn.onclick = () => {
         window.selectedPages = window.selectedPages.filter((p) => p !== page);
         this.updateSelectedPagesDisplay();
@@ -326,21 +457,66 @@ class PdfContainer {
       pageItem.appendChild(removeBtn);
       selectedPagesList.appendChild(pageItem);
     });
+
+    // Update the input field with the formatted page list
+    selectedPagesInput.value = this.formatSelectedPages(window.selectedPages);
   }
 
+  parsePageRanges(ranges) {
+    const pages = new Set();
+
+    ranges.split(',').forEach(range => {
+      const [start, end] = range.split('-').map(Number);
+      if (end) {
+        for (let i = start; i <= end; i++) {
+          pages.add(i);
+        }
+      } else {
+        pages.add(start);
+      }
+    });
+
+    return Array.from(pages).sort((a, b) => a - b);
+  }
+
+  addFilesBlankAll() {
+    const allPages = this.pagesContainer.querySelectorAll(".page-container");
+    allPages.forEach((page, index) => {
+      if (index !== 0) {
+        this.addFiles(page, true)
+      }
+    });
+  }
 
   splitAll() {
     const allPages = this.pagesContainer.querySelectorAll(".page-container");
-    if (this.pagesContainer.querySelectorAll(".split-before").length > 0) {
-      allPages.forEach(page => {
-        page.classList.remove("split-before");
-      });
-    } else {
-      allPages.forEach(page => {
-        page.classList.add("split-before");
-      });
+
+    if (!window.selectPage) {
+      const hasSplit = this.pagesContainer.querySelectorAll(".split-before").length > 0;
+      if (hasSplit) {
+        allPages.forEach(page => {
+          page.classList.remove("split-before");
+        });
+      } else {
+        allPages.forEach(page => {
+          page.classList.add("split-before");
+        });
+      }
+      return;
     }
+
+    allPages.forEach((page, index) => {
+      const pageIndex = index;
+      if (window.selectPage && !window.selectedPages.includes(pageIndex)) return;
+
+      if (page.classList.contains("split-before")) {
+        page.classList.remove("split-before");
+      } else {
+        page.classList.add("split-before");
+      }
+    });
   }
+
 
   async splitPDF(baseDocBytes, splitters) {
     const baseDocument = await PDFLib.PDFDocument.load(baseDocBytes);
@@ -384,11 +560,11 @@ class PdfContainer {
     return zip;
   }
 
-  async exportPdf() {
+  async exportPdf(selected) {
     const pdfDoc = await PDFLib.PDFDocument.create();
     const pageContainers = this.pagesContainer.querySelectorAll(".page-container"); // Select all .page-container elements
     for (var i = 0; i < pageContainers.length; i++) {
-      if (!window.selectPage || window.selectedPages.includes(i + 1)) {
+      if (!selected || window.selectedPages.includes(i + 1)) {
         const img = pageContainers[i].querySelector("img"); // Find the img element within each .page-container
         if (!img) continue;
         let page;
@@ -556,7 +732,11 @@ class PdfContainer {
     const selectedPages = document.getElementById("selected-pages-display");
     selectedPages.classList.toggle("hidden", !window.selectPage);
     const selectAll = document.getElementById("select-All-Container");
-    selectAll.classList.toggle("hidden", !window.selectPage);
+    selectedPages.classList.toggle("hidden", !window.selectPage);
+    const exportSelected = document.getElementById("export-selected-button");
+    exportSelected.classList.toggle("hidden", !window.selectPage);
+    const selectPagesButton = document.getElementById("select-pages-button");
+    selectPagesButton.style.opacity = window.selectPage ? "1" : "0.5";
 
     if (window.selectPage) {
       this.updatePageNumbersAndCheckboxes();
@@ -571,6 +751,7 @@ class PdfContainer {
       const pageNumber = index + 1;
       const checkbox = div.querySelector(".pdf-actions_checkbox");
       checkbox.id = `selectPageCheckbox-${pageNumber}`;
+      checkbox.setAttribute("data-page-number", pageNumber);
       checkbox.checked = window.selectedPages.includes(pageNumber);
     });
   }

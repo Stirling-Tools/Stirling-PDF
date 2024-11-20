@@ -3,6 +3,8 @@
   <head>
   <th:block th:insert="~{fragments/common :: head(title=#{login.title}, header=#{login.header})}"></th:block>
     <link rel="stylesheet" th:href="@{'/css/login.css'}">
+    <script th:src="@{'/js/languageSelection.js'}"></script>
+    <script th:src="@{'/js/additionalLanguageCode.js'}"></script>
   </head>
 
   <body>
@@ -29,86 +31,28 @@
           });
 
           document.addEventListener('DOMContentLoaded', function() {
+            const defaultLocale = getStoredOrDefaultLocale();
+            checkUserLanguage(defaultLocale);
 
-            const defaultLocale = document.documentElement.getAttribute('data-language') || 'en_GB';
-            const storedLocale = localStorage.getItem('languageCode') || defaultLocale;
-
-            const currentURL = new URL(window.location.href);
-            const urlParams = currentURL.searchParams;
-            const currentLangParam = urlParams.get('lang') || defaultLocale;
-
-
-            if (defaultLocale !== storedLocale && currentLangParam !== storedLocale) {
-              urlParams.set('lang', storedLocale);
-              currentURL.search = urlParams.toString();
-              window.location.href = currentURL.toString();
-              return;
-            }
-
-            const dropdown = document.getElementById('languageDropdown');
             const dropdownItems = document.querySelectorAll('.lang_dropdown-item');
-
             let activeItem;
+
             for (let i = 0; i < dropdownItems.length; i++) {
               const item = dropdownItems[i];
               item.classList.remove('active');
-              if (item.dataset.bsLanguageCode === storedLocale) {
+              if (item.dataset.bsLanguageCode === defaultLocale) {
                 item.classList.add('active');
                 activeItem = item;
               }
               item.addEventListener('click', handleDropdownItemClick);
             }
 
+            const dropdown = document.getElementById('languageDropdown');
+
             if (activeItem) {
               dropdown.innerHTML = activeItem.innerHTML;  // This will set the dropdown button's content to the active language's flag and name
             }
-
-            // Additional functionality that was in your provided code:
-
-            document.querySelectorAll('.nav-item.dropdown').forEach((element) => {
-              const dropdownMenu = element.querySelector(".dropdown-menu");
-              if (dropdownMenu.id !== 'favoritesDropdown' &&  dropdownMenu.children.length <= 2 && dropdownMenu.querySelectorAll("hr.dropdown-divider").length === dropdownMenu.children.length) {
-                if (element.previousElementSibling && element.previousElementSibling.classList.contains('nav-item') && element.previousElementSibling.classList.contains('nav-item-separator')) {
-                  element.previousElementSibling.remove();
-                }
-                element.remove();
-              }
-            });
-
-            // Sort languages by alphabet
-            const list = Array.from(document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').children).filter(child => child.matches('a'));
-            list.sort(function(a, b) {
-              var A = a.textContent.toUpperCase();
-              var B = b.textContent.toUpperCase();
-              return (A < B) ? -1 : (A > B) ? 1 : 0;
-            }).forEach(node => document.querySelector('.dropdown-menu[aria-labelledby="languageDropdown"]').appendChild(node));
           });
-
-          function handleDropdownItemClick(event) {
-            event.preventDefault();
-            const languageCode = event.currentTarget.dataset.bsLanguageCode;
-            const dropdown = document.getElementById('languageDropdown');
-
-            if (languageCode) {
-              localStorage.setItem('languageCode', languageCode);
-              const currentLang = document.documentElement.getAttribute('language');
-              if (currentLang !== languageCode) {
-                console.log("currentLang", currentLang)
-                console.log("languageCode", languageCode)
-                const currentUrl = window.location.href;
-                if (currentUrl.indexOf("?lang=") === -1 && currentUrl.indexOf("&lang=") === -1) {
-                  window.location.href = currentUrl + "?lang=" + languageCode;
-                } else if (currentUrl.indexOf("&lang=") !== -1 && currentUrl.indexOf("?lang=") === -1) {
-                  window.location.href = currentUrl.replace(/&lang=\w{2,}/, "&lang=" + languageCode);
-                } else {
-                  window.location.href = currentUrl.replace(/\?lang=\w{2,}/, "?lang=" + languageCode);
-                }
-              }
-              dropdown.innerHTML = event.currentTarget.innerHTML;  // Update the dropdown button's content
-            } else {
-              console.error("Language code is not set for this item.");
-            }
-          }
         </script>
         <div class="text-center">
           <img class="my-4" th:src="@{'/favicon.svg'}" alt="favicon" width="144" height="144">
@@ -146,8 +90,8 @@
           </div>
 
           <div class="form-check m-2 mb-3">
-            <input type="checkbox" id="remember" value="remember-me">
-            <label for="remember" th:text="#{login.rememberme}"></label>
+            <input type="checkbox" name="remember-me" id="remember-me">
+            <label for="remember-me" th:text="#{login.rememberme}"></label>
           </div>
           <button class="w-100 btn btn-lg btn-primary" type="submit" th:text="#{login.signin}">Sign in</button>
         </form>
