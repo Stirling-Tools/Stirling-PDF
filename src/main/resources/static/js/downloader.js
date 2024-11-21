@@ -166,15 +166,16 @@
       
       // Capture analytics
       const pageCount = file && file.type === 'application/pdf' ? await getPDFPageCount(file) : null;
-      
-      posthog.capture('file_processing', {
-        success: success,
-        file_type: file ? file.type || 'unknown' : 'unknown',
-        file_size: file ? file.size : 0,
-        processing_time: processingTime,
-        error_message: errorMessage,
-        pdf_pages: pageCount
-      });
+      if(analyticsEnabled) {
+        posthog.capture('file_processing', {
+          success: success,
+          file_type: file ? file.type || 'unknown' : 'unknown',
+          file_size: file ? file.size : 0,
+          processing_time: processingTime,
+          error_message: errorMessage,
+          pdf_pages: pageCount
+        });
+      }
     }
   }
 

@@ -61,10 +61,6 @@ label {
   padding: 0;
 }
 
-#export-button {
-  margin-left: auto;
-}
-
 .bg-card {
   background-color: var(--md-sys-color-surface-5);
   border-radius: 3rem;
@@ -290,3 +286,34 @@ label {
 .checkbox-label {
   font-size: medium;
 }
+
+.btn-tooltip {
+  position: absolute;
+  display: none;
+  bottom: 3.2rem;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+  width: fit-content;
+  padding: 7px;
+  background-color: rgba(0, 29, 41, 0.9);
+  border-radius: 3px;
+  font-size: 12px;
+  color: whitesmoke;
+  animation: fadeup 0.15s linear;
+}
+.btn {
+  position: relative; /* Ensure the button is the positioning context for its children */
+}
+@keyframes fadeup {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.btn:hover .btn-tooltip {
+  display: block;
+  }
