@@ -11,6 +11,7 @@ adjusting the format.
 Usage:
     python script_name.py --reference-file <path_to_reference_file> --branch <branch_name> [--files <list_of_changed_files>]
 """
+
 import copy
 import glob
 import os
@@ -126,7 +127,7 @@ def read_properties(file_path):
         return file.read().splitlines()
 
 
-def check_for_differences(reference_file, file_list, branch):
+def check_for_differences(reference_file, file_list, branch, actor):
     reference_branch = reference_file.split("/")[0]
     basename_reference_file = os.path.basename(reference_file)
 
@@ -165,7 +166,6 @@ def check_for_differences(reference_file, file_list, branch):
                 report.append(
                     f"  - **Issue:** Too many lines! Check your translation files! Details: {reference_line_count} (reference) vs {current_line_count} (current)."
                 )
-            # update_missing_keys(reference_file, [file_path], branch + "/")
         else:
             report.append("- **Test 1 Status:** ✅ Passed")
 
@@ -201,23 +201,23 @@ def check_for_differences(reference_file, file_list, branch):
                 report.append(
                     f"  - **Issue:** There are keys in ***{basename_reference_file}*** `{extra_keys_str}` that are not present in ***{basename_current_file}***!"
                 )
-            # update_missing_keys(reference_file, [file_path], branch + "/")
         else:
             report.append("- **Test 2 Status:** ✅ Passed")
-        # if has_differences:
-        #     report.append("")
-        #     report.append(f"#### 🚧 ***{basename_current_file}*** will be corrected...")
         report.append("")
         report.append("---")
         report.append("")
-    # update_file_list = glob.glob(branch + "/src/**/messages_*.properties", recursive=True)
-    # update_missing_keys(reference_file, update_file_list)
-    # report.append("---")
-    # report.append("")
     if has_differences:
         report.append("## ❌ Overall Check Status: **_Failed_**")
+        report.append("")
+        report.append(
+            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [messages_en_GB.properties](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/src/main/resources/messages_en_GB.properties)"
+        )
     else:
         report.append("## ✅ Overall Check Status: **_Success_**")
+        report.append("")
+        report.append(
+            f"Thanks @{actor} for your help in keeping the translations up to date."
+        )
 
     if not only_reference_file:
         print("\n".join(report))
@@ -225,6 +225,11 @@ def check_for_differences(reference_file, file_list, branch):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Find missing keys")
+    parser.add_argument(
+        "--actor",
+        required=False,
+        help="Actor from PR.",
+    )
     parser.add_argument(
         "--reference-file",
         required=True,
@@ -251,4 +256,4 @@ if __name__ == "__main__":
         )
         update_missing_keys(args.reference_file, file_list)
     else:
-        check_for_differences(args.reference_file, file_list, args.branch)
+        check_for_differences(args.reference_file, file_list, args.branch, args.actor)

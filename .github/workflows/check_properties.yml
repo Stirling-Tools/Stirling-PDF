@@ -56,7 +56,7 @@ jobs:
           cd ..
           echo "Setting branch path..."
           BRANCH_PATH="pr-branch"
-          
+
           echo "BRANCH_PATH=${BRANCH_PATH}" >> $GITHUB_ENV
           echo "Processing changed files..."
           mapfile -t CHANGED_FILES < changed_files.txt
@@ -87,6 +87,7 @@ jobs:
         run: |
           echo "Running Python script to check files..."
           python main-branch/.github/scripts/check_language_properties.py \
+            --actor ${{ github.event.pull_request.user.login }} \
             --reference-file "${REFERENCE_FILE}" \
             --branch "${BRANCH_PATH}" \
             --files ${CHANGED_FILES} > failure.txt || true
@@ -123,7 +124,7 @@ jobs:
             });
 
             const comment = comments.data.find(c => c.body.includes("## 🚀 Translation Verification Summary"));
-            
+
             // Only allow the action user to update comments
             const expectedActor = "github-actions[bot]";
 
@@ -200,7 +201,7 @@ jobs:
       - name: Create Pull Request
         id: cpr
         if: env.CHANGES_DETECTED == 'true'
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Update translation files"
@@ -216,3 +217,4 @@ jobs:
           labels: Translation
           draft: false
           delete-branch: true
+          sign-commits: true
