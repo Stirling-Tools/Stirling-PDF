@@ -31,34 +31,84 @@
                     <span class="material-symbols-rounded">
                       add
                     </span>
+                    <span class="btn-tooltip" th:text="#{multiTool.addFile}"></span>
                   </button>
                   <button class="btn btn-secondary enable-on-file" onclick="rotateAll(-90)" disabled>
                     <span class="material-symbols-rounded">
                       rotate_left
                     </span>
+                    <span class="btn-tooltip" th:text="#{multiTool.rotateLeft}"></span>
                   </button>
                   <button class="btn btn-secondary enable-on-file" onclick="rotateAll(90)" disabled>
                     <span class="material-symbols-rounded">
                       rotate_right
                     </span>
+                    <span class="btn-tooltip" th:text="#{multiTool.rotateRight}"></span>
                   </button>
                   <button class="btn btn-secondary enable-on-file" onclick="splitAll()" disabled>
                     <span class="material-symbols-rounded">
                       cut
                     </span>
+                    <span class="btn-tooltip" th:text="#{multiTool.split}"></span>
                   </button>
                   <button class="btn btn-secondary enable-on-file" onclick="addFilesBlankAll()" disabled>
                     <span class="material-symbols-rounded">
                       insert_page_break
                     </span>
+                    <span class="btn-tooltip" th:text="#{multiTool.insertPageBreak}"></span>
                   </button>
-                  <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf()" disabled>
-                    <span class="material-symbols-rounded">
-                      download
+                  <button id="select-pages-container" class="btn btn-secondary enable-on-file"
+                    onclick="toggleSelectPageVisibility()" disabled>
+                    <span id="select-pages-button" class="material-symbols-rounded">
+                      event_list
                     </span>
+                    <span class="btn-tooltip" th:text="#{multiTool.selectPages}"></span>
+
                   </button>
+                  <button id="deselect-All-Container" class="btn btn-secondary enable-on-file hidden"
+                    onclick="toggleSelectAll()" disabled>
+                    <span  class="material-symbols-rounded" id="deselect-icon">deselect</span>
+                      <span class="btn-tooltip" th:text="#{multiTool.deselectAll}"></span>
+                  </button>
+                  <button id="select-All-Container" class="btn btn-secondary enable-on-file hidden"
+                  onclick="toggleSelectAll()" disabled>
+                  <span  class="material-symbols-rounded"
+                    id="select-icon">select_all</span>
+                    <span class="btn-tooltip" th:text="#{multiTool.selectAll}"></span>
+                </button>
+                  <div class="button-container">
+                    <button id="delete-button" class="btn btn-danger delete hidden"  onclick="deleteSelected()">
+                      <span class="material-symbols-rounded">delete</span>
+                      <span class="btn-tooltip" th:text="#{multiTool.deleteSelected}"></span>
+                    </button>
+                  </div>
+                  <div style="margin-left:auto">
+                    <button id="export-selected-button" class="btn btn-primary enable-on-file hidden"
+                      onclick="exportPdf(true)" disabled>
+                      <span class="btn-tooltip" th:text="#{multiTool.downloadSelected}"></span>
+                      <span  class="material-symbols-rounded">
+                        file_save
+                      </span>
+                    </button>
+                    <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf(false)"
+                      disabled>
+                      <span class="material-symbols-rounded">
+                        download
+                      </span>
+                      <span class="btn-tooltip" th:text="#{multiTool.downloadAll}"></span>
+                    </button>
+                  </div>
+                </div>
+                <div id="selected-pages-display" class="selected-pages-container hidden">
+                  <div style="display:flex; height:3rem; margin-right:1rem">
+                    <h5 th:text="#{multiTool.selectedPages}" style="white-space: nowrap; margin-right: 1rem;">Selected
+                      Pages</h5>
+                    <input type="text" id="csv-input" class="form-control" style="height:2.5rem" placeholder="1,3,5-10"  value="">
+                  </div>
+                  <ul id="selected-pages-list" class="pages-list"></ul>
                 </div>
               </div>
+
               <div class="multi-tool-container">
                 <div class="d-flex flex-wrap" id="pages-container-wrapper">
                   <div id="pages-container">
@@ -82,6 +132,34 @@
   </div>
   <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
   <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
+  <script>
+    window.selectedPages = [];
+    window.selectPage = false;
+    window.selectAll = false;
+
+    window.translations = {
+        rotateLeft: '[[#{multiTool.rotateLeft}]]',
+        rotateRight: '[[#{multiTool.rotateRight}]]',
+        moveLeft: '[[#{multiTool.moveLeft}]]',
+        moveRight: '[[#{multiTool.moveRight}]]',
+        delete: '[[#{multiTool.delete}]]',
+        split: '[[#{multiTool.split}]]',
+        addFile: '[[#{multiTool.addFile}]]',
+        insertPageBreak:'[[#{multiTool.insertPageBreak}]]'
+    };
+
+
+
+    const csvInput = document.getElementById("csv-input");
+    csvInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        updatePagesFromCSV();
+      }
+    });
+    csvInput.addEventListener("blur", function () {
+      updatePagesFromCSV();
+    });
+  </script>
   <script type="module">
     import PdfContainer from './js/multitool/PdfContainer.js';
     import DragDropManager from "./js/multitool/DragDropManager.js";
@@ -95,7 +173,6 @@
     // enables the default action buttons on each file
     const pdfActionsManager = new PdfActionsManager('pages-container');
     const fileDragManager = new FileDragManager();
-
     // Scroll the wrapper horizontally
 
     // Automatically exposes rotateAll, addFiles and exportPdf to the window for the global buttons.

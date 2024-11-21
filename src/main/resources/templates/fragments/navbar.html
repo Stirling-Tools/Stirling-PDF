@@ -9,8 +9,10 @@
   <script th:inline="javascript">
     const currentVersion = /*[[${@appVersion}]]*/ '';
     const noFavourites = /*[[#{noFavourites}]]*/ '';
-    const updateAvailable =  /*[[#{settings.updateAvailable}]]*/ '';
+    console.log(noFavourites);
+    const updateAvailable = /*[[#{settings.updateAvailable}]]*/ '';
   </script>
+  <script th:src="@{'/js/homecard.js'}"></script>
   <script th:src="@{'/js/githubVersion.js'}"></script>
   <nav class="navbar navbar-expand-xl">
     <div class="container ">
@@ -308,10 +310,10 @@
           </li> -->
 
         </ul>
-        <ul class="navbar-nav  flex-nowrap">
+        <ul class="navbar-nav flex-nowrap">
           <li class="nav-item dropdown">
             <a class="nav-link" id="navbarDropdown-5" href="#" role="button" data-bs-toggle="dropdown"
-              aria-haspopup="true" aria-expanded="false">
+              aria-haspopup="true" aria-expanded="false" th:title="#{navbar.favorite}">
               <span class="material-symbols-rounded">
                 star
               </span>
@@ -324,16 +326,16 @@
           </div>
           </li>
           <li class="nav-item">
-            <a class="nav-link" id="dark-mode-toggle" href="#">
+            <a class="nav-link" id="dark-mode-toggle" href="#" th:title="#{navbar.darkmode}">
               <span class="material-symbols-rounded" id="dark-mode-icon">
                 dark_mode
               </span>
-              <span class="icon-text icon-hide tooltip-text" id="dark-mode-text" th:data-text="#{navbar.darkmode}" th:text="#{navbar.darkmode}"></span>
+              <span class="icon-text icon-hide" id="dark-mode-text" th:data-text="#{navbar.darkmode}" th:text="#{navbar.darkmode}"></span>
             </a>
           </li>
           <li class="nav-item dropdown">
             <a class="nav-link" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown"
-              aria-haspopup="true" aria-expanded="false">
+              aria-haspopup="true" aria-expanded="false" th:title="#{navbar.language}">
               <span class="material-symbols-rounded">
                 language
               </span>
@@ -349,7 +351,7 @@
           </li>
 
           <li class="nav-item dropdown">
-            <a class="nav-link" href="#" id="searchDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <a class="nav-link" href="#" id="searchDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" th:title="#{navbar.search}">
               <span class="material-symbols-rounded">
                 search
               </span>
@@ -358,7 +360,7 @@
             <div class="dropdown-menu dropdown-menu-tp" aria-labelledby="searchDropdown">
               <div class="dropdown-menu-wrapper px-xl-2 px-2">
                 <form th:action="@{''}" class="d-flex p-2 search-form" id="searchForm">
-                  <input class="form-control search-input" type="search" placeholder="Search" aria-label="Search" id="navbarSearchInput">
+                  <input class="form-control search-input" type="search" th:placeholder="#{navbar.search}" aria-label="Search" id="navbarSearchInput">
                 </form>
                 <!-- Search Results -->
                 <div id="searchResults" class="search-results scrollable-y dropdown-mw-20"></div>
@@ -368,17 +370,17 @@
 
           <li class="nav-item" th:if="${!@runningEE}">
             <a href="https://stirlingpdf.com/pricing" class="nav-link go-pro-link" target="_blank" rel="noopener noreferrer">
-        <span class="go-pro-badge" th:text="#{enterpriseEdition.button}"></span>
+              <span class="go-pro-badge" th:text="#{enterpriseEdition.button}"></span>
             </a>
           </li>
 
           <li class="nav-item">
             <!-- Settings Button -->
-            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#settingsModal">
+            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#settingsModal" th:title="#{navbar.settings}">
               <span class="material-symbols-rounded">
                 settings
               </span>
-              <span class="icon-text icon-hide tooltip-text" th:data-text="#{navbar.settings}" th:text="#{navbar.settings}"></span>
+              <span class="icon-text icon-hide" th:data-text="#{navbar.settings}" th:text="#{navbar.settings}"></span>
             </a>
           </li>
         </ul>
@@ -405,14 +407,14 @@
           <p class="mb-0" th:utext="#{settings.appVersion} + ' ' + ${@appVersion}"></p>
           <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
             <div class="footer-center" style="flex-direction: row;">
-              <a href="https://github.com/Stirling-Tools/Stirling-PDF" class="mx-1" role="button"
+              <a href="https://github.com/Stirling-Tools/Stirling-PDF" class="mx-1" role="button" target="_blank"
                 th:title="#{visitGithub}">
                 <img th:src="@{'/images/github.svg'}" alt="github">
               </a>
-              <a href="https://hub.docker.com/r/frooodle/s-pdf" class="mx-1" role="button" th:title="#{seeDockerHub}">
+              <a href="https://hub.docker.com/r/stirlingtools/stirling-pdf" class="mx-1" role="button" target="_blank"th:title="#{seeDockerHub}">
                 <img th:src="@{'/images/docker.svg'}" alt="docker">
               </a>
-              <a href="https://discord.gg/Cn8pWhQRxZ" class="mx-1" role="button" th:title="#{joinDiscord}">
+              <a href="https://discord.gg/Cn8pWhQRxZ" class="mx-1" role="button" target="_blank" th:title="#{joinDiscord}">
                 <img th:src="@{'/images/discord.svg'}" alt="discord">
               </a>
             </div>

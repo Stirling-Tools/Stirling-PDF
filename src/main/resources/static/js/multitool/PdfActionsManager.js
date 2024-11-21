@@ -1,6 +1,7 @@
 class PdfActionsManager {
   pageDirection;
   pagesContainer;
+  static selectedPages = []; // Static property shared across all instances
 
   constructor(id) {
     this.pagesContainer = document.getElementById(id);
@@ -98,6 +99,7 @@ class PdfActionsManager {
     this.splitFileButtonCallback = this.splitFileButtonCallback.bind(this);
   }
 
+
   adapt(div) {
     div.classList.add("pdf-actions_container");
     const leftDirection = this.pageDirection === "rtl" ? "right" : "left";
@@ -108,35 +110,75 @@ class PdfActionsManager {
 
     const moveUp = document.createElement("button");
     moveUp.classList.add("pdf-actions_move-left-button", "btn", "btn-secondary");
-    moveUp.innerHTML = `<span class="material-symbols-rounded">arrow_${leftDirection}_alt</span>`;
+    moveUp.innerHTML = `<span class="material-symbols-rounded">arrow_${leftDirection}_alt</span><span class="btn-tooltip">${window.translations.moveLeft}</span>`;
     moveUp.onclick = this.moveUpButtonCallback;
     buttonContainer.appendChild(moveUp);
 
     const moveDown = document.createElement("button");
     moveDown.classList.add("pdf-actions_move-right-button", "btn", "btn-secondary");
-    moveDown.innerHTML = `<span class="material-symbols-rounded">arrow_${rightDirection}_alt</span>`;
+    moveDown.innerHTML = `<span class="material-symbols-rounded">arrow_${rightDirection}_alt</span><span class="btn-tooltip">${window.translations.moveRight}</span>`;
     moveDown.onclick = this.moveDownButtonCallback;
     buttonContainer.appendChild(moveDown);
 
+
     const rotateCCW = document.createElement("button");
     rotateCCW.classList.add("btn", "btn-secondary");
-    rotateCCW.innerHTML = `<span class="material-symbols-rounded">rotate_left</span>`;
+    rotateCCW.innerHTML = `<span class="material-symbols-rounded">rotate_left</span><span class="btn-tooltip">${window.translations.rotateLeft}</span>`;
     rotateCCW.onclick = this.rotateCCWButtonCallback;
     buttonContainer.appendChild(rotateCCW);
 
     const rotateCW = document.createElement("button");
     rotateCW.classList.add("btn", "btn-secondary");
-    rotateCW.innerHTML = `<span class="material-symbols-rounded">rotate_right</span>`;
+    rotateCW.innerHTML = `<span class="material-symbols-rounded">rotate_right</span><span class="btn-tooltip">${window.translations.rotateRight}</span>`;
     rotateCW.onclick = this.rotateCWButtonCallback;
     buttonContainer.appendChild(rotateCW);
 
     const deletePage = document.createElement("button");
     deletePage.classList.add("btn", "btn-danger");
-    deletePage.innerHTML = `<span class="material-symbols-rounded">delete</span>`;
+    deletePage.innerHTML = `<span class="material-symbols-rounded">delete</span><span class="btn-tooltip"></span><span class="btn-tooltip">${window.translations.delete}</span>`;
     deletePage.onclick = this.deletePageButtonCallback;
     buttonContainer.appendChild(deletePage);
 
     div.appendChild(buttonContainer);
+
+    //enerate checkbox to select individual pages
+    const selectCheckbox = document.createElement("input");
+    selectCheckbox.type = "checkbox";
+    selectCheckbox.classList.add("pdf-actions_checkbox", "form-check-input");
+    selectCheckbox.id = `selectPageCheckbox`;
+    selectCheckbox.checked = window.selectAll;
+
+    div.appendChild(selectCheckbox);
+
+    //only show whenpage select mode is active
+    if (!window.selectPage) {
+      selectCheckbox.classList.add("hidden");
+    } else {
+      selectCheckbox.classList.remove("hidden");
+    }
+
+    selectCheckbox.onchange = () => {
+      const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
+      if (selectCheckbox.checked) {
+        //adds to array of selected pages
+        window.selectedPages.push(pageNumber);
+      } else {
+        //remove page from selected pages array
+        const index = window.selectedPages.indexOf(pageNumber);
+        if (index !== -1) {
+          window.selectedPages.splice(index, 1);
+        }
+      }
+
+      if (window.selectedPages.length > 0 && !window.selectPage) {
+        window.toggleSelectPageVisibility();
+      }
+      if (window.selectedPages.length == 0 && window.selectPage) {
+        window.toggleSelectPageVisibility();
+      }
+
+      window.updateSelectedPagesDisplay();
+    };
 
     const insertFileButtonContainer = document.createElement("div");
 
@@ -148,19 +190,19 @@ class PdfActionsManager {
 
     const insertFileButton = document.createElement("button");
     insertFileButton.classList.add("btn", "btn-primary", "pdf-actions_insert-file-button");
-    insertFileButton.innerHTML = `<span class="material-symbols-rounded">add</span>`;
+    insertFileButton.innerHTML = `<span class="material-symbols-rounded">add</span></span><span class="btn-tooltip">${window.translations.addFile}</span>`;
     insertFileButton.onclick = this.insertFileButtonCallback;
     insertFileButtonContainer.appendChild(insertFileButton);
 
     const splitFileButton = document.createElement("button");
     splitFileButton.classList.add("btn", "btn-primary", "pdf-actions_split-file-button");
-    splitFileButton.innerHTML = `<span class="material-symbols-rounded">cut</span>`;
+    splitFileButton.innerHTML = `<span class="material-symbols-rounded">cut</span></span><span class="btn-tooltip">${window.translations.split}</span>`;
     splitFileButton.onclick = this.splitFileButtonCallback;
     insertFileButtonContainer.appendChild(splitFileButton);
 
     const insertFileBlankButton = document.createElement("button");
     insertFileBlankButton.classList.add("btn", "btn-primary", "pdf-actions_insert-file-blank-button");
-    insertFileBlankButton.innerHTML = `<span class="material-symbols-rounded">insert_page_break</span>`;
+    insertFileBlankButton.innerHTML = `<span class="material-symbols-rounded">insert_page_break</span></span><span class="btn-tooltip">${window.translations.insertPageBreak}</span>`;
     insertFileBlankButton.onclick = this.insertFileBlankButtonCallback;
     insertFileButtonContainer.appendChild(insertFileBlankButton);
 
@@ -191,15 +233,29 @@ class PdfActionsManager {
     };
 
     div.addEventListener("mouseenter", () => {
+      window.updatePageNumbersAndCheckboxes();
       const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
       adaptPageNumber(pageNumber, div);
+      const checkbox = document.getElementById(`selectPageCheckbox-${pageNumber}`);
+      if (checkbox && !window.selectPage) {
+        checkbox.classList.remove("hidden");
+      }
     });
 
     div.addEventListener("mouseleave", () => {
+      const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
       const pageNumberElement = div.querySelector(".page-number");
       if (pageNumberElement) {
         div.removeChild(pageNumberElement);
       }
+      const checkbox = document.getElementById(`selectPageCheckbox-${pageNumber}`);
+      if (checkbox && !window.selectPage) {
+        checkbox.classList.add("hidden");
+      }
+    });
+
+    document.addEventListener("selectedPagesUpdated", () => {
+      window.updateSelectedPagesDisplay();
     });
 
     return div;

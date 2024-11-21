@@ -1,7 +1,7 @@
 services:
   stirling-pdf:
     container_name: Stirling-PDF
-    image: frooodle/s-pdf:latest
+    image: stirlingtools/stirling-pdf:latest
     deploy:
       resources:
         limits:

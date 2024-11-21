@@ -1,0 +1,78 @@
+name: PR Deployment cleanup
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  SERVER_IP: ${{ secrets.VPS_IP }}  # Add this to your GitHub secrets
+  CLEANUP_PERFORMED: 'false'  # Add flag to track if cleanup occurred
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'closed'
+    
+    steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.VPS_SSH_KEY }}" > ../private.key
+          sudo chmod 600 ../private.key
+
+      - name: Cleanup PR deployment
+        id: cleanup
+        run: |
+          CLEANUP_STATUS=$(ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+            if [ -d "/stirling/PR-${{ github.event.pull_request.number }}" ]; then
+              echo "Found PR directory, proceeding with cleanup..."
+              
+              # Stop and remove containers
+              cd /stirling/PR-${{ github.event.pull_request.number }}
+              docker-compose down || true
+              
+              # Go back to root before removal
+              cd /
+              
+              # Remove PR-specific directories
+              rm -rf /stirling/PR-${{ github.event.pull_request.number }}
+              
+              # Remove the Docker image
+              docker rmi --no-prune ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }} || true
+              
+              echo "PERFORMED_CLEANUP"
+            else
+              echo "PR directory not found, nothing to clean up"
+              echo "NO_CLEANUP_NEEDED"
+            fi
+          ENDSSH
+          )
+          
+          if [[ $CLEANUP_STATUS == *"PERFORMED_CLEANUP"* ]]; then
+            echo "cleanup_performed=true" >> $GITHUB_OUTPUT
+          else
+            echo "cleanup_performed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post cleanup notice to PR
+        if: steps.cleanup.outputs.cleanup_performed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { GITHUB_REPOSITORY } = process.env;
+            const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
+            const prNumber = context.issue.number;
+
+            const commentBody = `## 🧹 Deployment Cleanup\n\n` +
+                              `The test deployment for this PR has been cleaned up.`;
+
+            await github.rest.issues.createComment({
+              owner: repoOwner,
+              repo: repoName,
+              issue_number: prNumber,
+              body: commentBody
+            });

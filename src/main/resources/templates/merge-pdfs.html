@@ -12,6 +12,7 @@
     <div id="content-wrap">
       <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
       <br><br>
+      <th:block th:insert="~{fragments/multi-toolAdvert.html :: multi-toolAdvert}"></th:block>
       <div class="container" id="dropContainer">
         <div class="row justify-content-center">
           <div class="col-md-6 bg-card">
@@ -38,6 +39,9 @@
                 <button type="button" id="sortByNameBtn" class="btn btn-info" th:text="#{merge.sortByName}"></button>
                 <button type="button" id="sortByDateBtn" class="btn btn-info" th:text="#{merge.sortByDate}"></button>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{merge.submit}"></button>
+              </div>
+              <div class="mb-3">
+                <button type="button" id="resetFileInputBtn" class="btn btn-danger" th:text="#{reset}">Reset</button>
               </div>
             </form>
             <span id="pageTranslation" th:text="#{page}" style="display:none;"></span>
