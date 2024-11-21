@@ -1,7 +1,7 @@
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Security-Fat
-    image: frooodle/s-pdf:latest-fat
+    image: stirlingtools/stirling-pdf:latest-fat
     deploy:
       resources:
         limits:

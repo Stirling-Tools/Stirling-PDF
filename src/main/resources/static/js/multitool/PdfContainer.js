@@ -28,6 +28,7 @@ class PdfContainer {
     this.toggleSelectPageVisibility = this.toggleSelectPageVisibility.bind(this);
     this.updatePagesFromCSV = this.updatePagesFromCSV.bind(this);
     this.addFilesBlankAll = this.addFilesBlankAll.bind(this)
+    this.removeAllElements = this.removeAllElements.bind(this);
 
     this.pdfAdapters = pdfAdapters;
 
@@ -53,6 +54,7 @@ class PdfContainer {
     window.updateSelectedPagesDisplay = this.updateSelectedPagesDisplay;
     window.updatePageNumbersAndCheckboxes = this.updatePageNumbersAndCheckboxes;
     window.addFilesBlankAll = this.addFilesBlankAll
+    window.removeAllElements = this.removeAllElements;
 
     const filenameInput = document.getElementById("filename-input");
     const downloadBtn = document.getElementById("export-button");
@@ -293,6 +295,16 @@ class PdfContainer {
     }
   }
 
+  removeAllElements(){
+    let pageContainerNodeList = document.querySelectorAll(".page-container");
+    for (var i = 0; i < pageContainerNodeList.length; i++) {
+      pageContainerNodeList[i].remove();
+    }
+    document.querySelectorAll(".enable-on-file").forEach((element) => {
+      element.disabled = true;
+    });
+  }
+
   deleteSelected() {
     window.selectedPages.sort((a, b) => a - b);
     let deletions = 0;
@@ -328,8 +340,8 @@ class PdfContainer {
   toggleSelectAll() {
     const checkboxes = document.querySelectorAll(".pdf-actions_checkbox");
     window.selectAll = !window.selectAll;
-    const selectIcon = document.getElementById("select-icon");
-    const deselectIcon = document.getElementById("deselect-icon");
+    const selectIcon = document.getElementById("select-All-Container");
+    const deselectIcon = document.getElementById("deselect-All-Container");
 
     if (selectIcon.style.display === "none") {
       selectIcon.style.display = "inline";
@@ -428,7 +440,7 @@ class PdfContainer {
     const selectedPagesList = document.getElementById("selected-pages-list");
     const selectedPagesInput = document.getElementById("csv-input");
     selectedPagesList.innerHTML = ""; // Clear the list
-
+    window.selectedPages.sort((a, b) => a - b);
     window.selectedPages.forEach((page) => {
       const pageItem = document.createElement("div");
       pageItem.className = "page-item";
@@ -732,7 +744,7 @@ class PdfContainer {
     const selectedPages = document.getElementById("selected-pages-display");
     selectedPages.classList.toggle("hidden", !window.selectPage);
     const selectAll = document.getElementById("select-All-Container");
-    selectedPages.classList.toggle("hidden", !window.selectPage);
+    selectAll.classList.toggle("hidden", !window.selectPage);
     const exportSelected = document.getElementById("export-selected-button");
     exportSelected.classList.toggle("hidden", !window.selectPage);
     const selectPagesButton = document.getElementById("select-pages-button");

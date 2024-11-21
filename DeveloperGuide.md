@@ -114,7 +114,7 @@ These files provide pre-configured setups for different scenarios. For example, 
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Security
-    image: frooodle/s-pdf:latest
+    image: stirlingtools/stirling-pdf:latest
     deploy:
       resources:
         limits:
@@ -173,20 +173,20 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    For the latest version:
 
    ```bash
-   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest -f ./Dockerfile .
+   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
    ```
 
    For the ultra-lite version:
 
    ```bash
-   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
+   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
    ```
 
    For the fat version (with security enabled):
 
    ```bash
    export DOCKER_ENABLE_SECURITY=true
-   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-fat -f ./Dockerfile-fat .
+   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile-fat .
    ```
 
 Note: The `--no-cache` and `--pull` flags ensure that the build process uses the latest base images and doesn't use cached layers, which is useful for testing and ensuring reproducible builds. however to improve build times these can often be removed depending on your usecase
