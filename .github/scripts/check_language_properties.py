@@ -123,8 +123,10 @@ def check_for_missing_keys(reference_file, file_list, branch):
 
 
 def read_properties(file_path):
-    with open(file_path, "r", encoding="utf-8") as file:
-        return file.read().splitlines()
+    if (os.path.isfile(file_path) and os.path.exists(file_path)):
+        with open(file_path, "r", encoding="utf-8") as file:
+            return file.read().splitlines()
+    return [""]
 
 
 def check_for_differences(reference_file, file_list, branch, actor):
@@ -140,10 +142,11 @@ def check_for_differences(reference_file, file_list, branch, actor):
 
     only_reference_file = True
 
-    for file_path in file_list:
+    for file_path in file_list[0].split():
         basename_current_file = os.path.basename(branch + "/" + file_path)
         if (
             basename_current_file == basename_reference_file
+            or not file_path.startswith("src/main/resources/messages_")
             or not file_path.endswith(".properties")
             or not basename_current_file.startswith("messages_")
         ):
