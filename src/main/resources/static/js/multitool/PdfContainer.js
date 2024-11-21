@@ -725,8 +725,7 @@ class PdfContainer {
           window.selectedPages.splice(index, 1);
         }
     });
-
-    this.updateSelectedPagesDisplay();
+    window.toggleSelectPageVisibility();
   }
 
   setDownloadAttribute() {
