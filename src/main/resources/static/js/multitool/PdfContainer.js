@@ -28,6 +28,7 @@ class PdfContainer {
     this.toggleSelectPageVisibility = this.toggleSelectPageVisibility.bind(this);
     this.updatePagesFromCSV = this.updatePagesFromCSV.bind(this);
     this.addFilesBlankAll = this.addFilesBlankAll.bind(this)
+    this.removeAllElements = this.removeAllElements.bind(this);
 
     this.pdfAdapters = pdfAdapters;
 
@@ -53,6 +54,7 @@ class PdfContainer {
     window.updateSelectedPagesDisplay = this.updateSelectedPagesDisplay;
     window.updatePageNumbersAndCheckboxes = this.updatePageNumbersAndCheckboxes;
     window.addFilesBlankAll = this.addFilesBlankAll
+    window.removeAllElements = this.removeAllElements;
 
     const filenameInput = document.getElementById("filename-input");
     const downloadBtn = document.getElementById("export-button");
@@ -292,6 +294,16 @@ class PdfContainer {
 
       this.rotateElement(img, deg);
     }
+  }
+
+  removeAllElements(){
+    let pageContainerNodeList = document.querySelectorAll(".page-container");
+    for (var i = 0; i < pageContainerNodeList.length; i++) {
+      pageContainerNodeList[i].remove();
+    }
+    document.querySelectorAll(".enable-on-file").forEach((element) => {
+      element.disabled = true;
+    });
   }
 
   deleteSelected() {

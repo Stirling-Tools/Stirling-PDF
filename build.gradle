@@ -10,6 +10,8 @@ plugins {
 	//id "nebula.lint" version "19.0.3"
 }
 
+
+
 import com.github.jk1.license.render.*
 
 ext {
@@ -17,12 +19,12 @@ ext {
     pdfboxVersion = "3.0.3"
     logbackVersion = "1.5.7"
     imageioVersion = "3.12.0"
-    lombokVersion = "1.18.34"
+    lombokVersion = "1.18.36"
     bouncycastleVersion = "1.78.1"
 }
 
 group = "stirling.software"
-version = "0.32.0"
+version = "0.33.1"
 
 java {
     // 17 is lowest but we support and recommend 21

@@ -32,12 +32,12 @@ ignore = [
 ignore = [
     'AddStampRequest.alphabet',
     'AddStampRequest.position',
-    'home.pipeline.title'
     'PDFToBook.selectText.1',
     'PDFToText.tags',
     'addPageNumbers.selectText.3',
     'alphabet',
     'certSign.name',
+    'home.pipeline.title',
     'language.direction',
     'licenses.version',
     'pipeline.title',
@@ -46,7 +46,6 @@ ignore = [
     'sponsor',
     'text',
     'watermark.type.1',
-    'certSign.name',
 ]
 
 [el_GR]
