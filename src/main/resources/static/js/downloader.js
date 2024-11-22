@@ -39,7 +39,9 @@
       const originalButtonText = submitButton.textContent;
       var boredWaiting = localStorage.getItem("boredWaiting") || "disabled";
 
-      showGameBtn.style.display = "none";
+      if (showGameBtn) {
+        showGameBtn.style.display = "none";
+      }
 
       // Remove empty file entries
       for (let [key, value] of formData.entries()) {
@@ -73,8 +75,10 @@
 
         clearFileInput();
         clearTimeout(timeoutId);
-        showGameBtn.style.display = "none";
-        showGameBtn.style.marginTop = "";
+        if (showGameBtn) {
+          showGameBtn.style.display = "none";
+          showGameBtn.style.marginTop = "";
+        }
         submitButton.textContent = originalButtonText;
         submitButton.disabled = false;
 
