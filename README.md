@@ -186,7 +186,7 @@ Certain functionality like `Sign` supports pre-saved files stored at `/customFil
 
 ## Supported Languages
 
-Stirling-PDF currently supports 36 languages!
+Stirling-PDF currently supports 37 languages!
 
 | Language                                     | Progress                               |
 | -------------------------------------------- | -------------------------------------- |
