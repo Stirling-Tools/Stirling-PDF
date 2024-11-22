@@ -29,6 +29,7 @@ class PdfContainer {
     this.updatePagesFromCSV = this.updatePagesFromCSV.bind(this);
     this.addFilesBlankAll = this.addFilesBlankAll.bind(this)
     this.removeAllElements = this.removeAllElements.bind(this);
+    this.resetPages = this.resetPages.bind(this);
 
     this.pdfAdapters = pdfAdapters;
 
@@ -55,6 +56,7 @@ class PdfContainer {
     window.updatePageNumbersAndCheckboxes = this.updatePageNumbersAndCheckboxes;
     window.addFilesBlankAll = this.addFilesBlankAll
     window.removeAllElements = this.removeAllElements;
+    window.resetPages = this.resetPages;
 
     const filenameInput = document.getElementById("filename-input");
     const downloadBtn = document.getElementById("export-button");
@@ -193,7 +195,7 @@ class PdfContainer {
       const div = document.createElement("div");
 
       div.classList.add("page-container");
-
+      div.id = "page-container-" + (i + 1);
       var img = document.createElement("img");
       img.classList.add("page-image");
       const imageSrc = await renderer.renderPage(i);
@@ -202,7 +204,6 @@ class PdfContainer {
       img.rend = renderer;
       img.doc = pdfDocument;
       div.appendChild(img);
-
       this.pdfAdapters.forEach((adapter) => {
         adapter.adapt?.(div);
       });
@@ -701,6 +702,31 @@ class PdfContainer {
     }
   }
 
+   resetPages() {
+    const pageContainers = this.pagesContainer.querySelectorAll(".page-container");
+
+    pageContainers.forEach((container, index) => {
+      container.id = "page-container-" + (index + 1);
+    });
+
+    const checkboxes = document.querySelectorAll(".pdf-actions_checkbox");
+    window.selectAll = false;
+    const selectIcon = document.getElementById("select-All-Container");
+    const deselectIcon = document.getElementById("deselect-All-Container");
+
+      selectIcon.style.display = "inline";
+      deselectIcon.style.display = "none";
+
+    checkboxes.forEach((checkbox) => {
+      const pageNumber = Array.from(checkbox.parentNode.parentNode.children).indexOf(checkbox.parentNode) + 1;
+
+        const index = window.selectedPages.indexOf(pageNumber);
+        if (index !== -1) {
+          window.selectedPages.splice(index, 1);
+        }
+    });
+    window.toggleSelectPageVisibility();
+  }
 
   setDownloadAttribute() {
     this.downloadLink.setAttribute("download", this.fileName ? this.fileName : "managed.pdf");

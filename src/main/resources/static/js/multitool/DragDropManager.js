@@ -1,29 +1,21 @@
 class DragDropManager {
-  dragContainer;
-  wrapper;
-  pageDirection;
-  movePageTo;
-  pageDragging;
-  draggelEl;
-  draggedImageEl;
-  hoveredEl;
-  endInsertionElement;
-
   constructor(id, wrapperId) {
     this.dragContainer = document.getElementById(id);
     this.pageDirection = document.documentElement.getAttribute("dir");
     this.wrapper = document.getElementById(wrapperId);
     this.pageDragging = false;
     this.hoveredEl = undefined;
-    this.draggelEl = undefined;
     this.draggedImageEl = undefined;
+    this.draggedEl = undefined;
+    this.selectedPageElements = []; // Store selected pages for multi-page mode
 
-    var styleElement = document.createElement("link");
+    // Add CSS dynamically
+    const styleElement = document.createElement("link");
     styleElement.rel = "stylesheet";
     styleElement.href = "css/dragdrop.css";
-
     document.head.appendChild(styleElement);
 
+    // Create the endpoint element
     const div = document.createElement("div");
     div.classList.add("drag-manager_endpoint");
     div.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-arrow-down" viewBox="0 0 16 16">
@@ -32,6 +24,7 @@ class DragDropManager {
         </svg>`;
     this.endInsertionElement = div;
 
+    // Bind methods
     this.startDraggingPage = this.startDraggingPage.bind(this);
     this.onDragEl = this.onDragEl.bind(this);
     this.stopDraggingPage = this.stopDraggingPage.bind(this);
@@ -40,20 +33,41 @@ class DragDropManager {
   }
 
   startDraggingPage(div) {
-    this.pageDragging = true;
-    this.draggedEl = div;
-    const img = div.querySelector("img");
-    div.classList.add("drag-manager_dragging");
-    const imageSrc = img.src;
+    if (window.selectPage) {
+      // Multi-page drag logic
+      this.selectedPageElements = window.selectedPages.map((index) => {
+        const pageEl = document.getElementById(`page-container-${index}`);
+        if (pageEl) {
+          pageEl.initialTransform = pageEl.style.transform || "translate(0px, 0px)";
+        }
+        return pageEl;
+      }).filter(Boolean);
 
-    const imgEl = document.createElement("img");
-    imgEl.classList.add("dragged-img");
-    imgEl.src = imageSrc;
-    this.draggedImageEl = imgEl;
-    imgEl.style.visibility = "hidden";
-    imgEl.style.transform = `rotate(${img.style.rotate === "" ? "0deg" : img.style.rotate}) translate(-50%, -50%)`;
-    this.dragContainer.appendChild(imgEl);
+      if (this.selectedPageElements.length === 0) return;
 
+      this.pageDragging = true;
+      this.draggedImageEl = document.createElement("div");
+      this.draggedImageEl.classList.add("multidrag");
+      this.draggedImageEl.textContent = `${this.selectedPageElements.length} ${window.translations.dragDropMessage}`;
+      this.draggedImageEl.style.visibility = "hidden";
+      this.dragContainer.appendChild(this.draggedImageEl);
+    } else {
+      // Single-page drag logic
+      this.pageDragging = true;
+      this.draggedEl = div;
+      const img = div.querySelector("img");
+      div.classList.add("drag-manager_dragging");
+
+      const imgEl = document.createElement("img");
+      imgEl.classList.add("dragged-img");
+      imgEl.src = img.src;
+      imgEl.style.visibility = "hidden";
+      imgEl.style.transform = `rotate(${img.style.rotate === "" ? "0deg" : img.style.rotate}) translate(-50%, -50%)`;
+      this.draggedImageEl = imgEl;
+      this.dragContainer.appendChild(imgEl);
+    }
+
+    // Common setup for both modes
     window.addEventListener("mouseup", this.stopDraggingPage);
     window.addEventListener("mousemove", this.onDragEl);
     this.wrapper.classList.add("drag-manager_dragging-container");
@@ -74,21 +88,43 @@ class DragDropManager {
     this.wrapper.classList.remove("drag-manager_dragging-container");
     this.wrapper.removeChild(this.endInsertionElement);
     window.removeEventListener("mouseup", this.stopDraggingPage);
-    this.draggedImageEl = undefined;
+
+    if (this.draggedImageEl) {
+      this.dragContainer.removeChild(this.draggedImageEl);
+      this.draggedImageEl = undefined;
+    }
+
+    if (window.selectPage) {
+      // Multi-page drop logic
+      if (!this.hoveredEl) {
+        this.selectedPageElements.forEach((pageEl) => {
+          pageEl.style.transform = pageEl.initialTransform || "translate(0px, 0px)";
+          pageEl.classList.remove("drag-manager_dragging");
+        });
+      } else {
+        this.selectedPageElements.forEach((pageEl) => {
+          pageEl.classList.remove("drag-manager_dragging");
+          if (this.hoveredEl === this.endInsertionElement) {
+            this.movePageTo(pageEl);
+          } else {
+            this.movePageTo(pageEl, this.hoveredEl);
+          }
+        });
+      }
+      this.selectedPageElements = [];
+      window.resetPages()
+    } else {
+      // Single-page drop logic
+      if (!this.hoveredEl) return;
+      this.draggedEl.classList.remove("drag-manager_dragging");
+      if (this.hoveredEl === this.endInsertionElement) {
+        this.movePageTo(this.draggedEl);
+      } else {
+        this.movePageTo(this.draggedEl, this.hoveredEl);
+      }
+    }
+
     this.pageDragging = false;
-    this.draggedEl.classList.remove("drag-manager_dragging");
-    this.hoveredEl?.classList.remove("drag-manager_draghover");
-    this.dragContainer.childNodes.forEach((dragChild) => {
-      this.dragContainer.removeChild(dragChild);
-    });
-    if (!this.hoveredEl) {
-      return;
-    }
-    if (this.hoveredEl === this.endInsertionElement) {
-      this.movePageTo(this.draggedEl);
-      return;
-    }
-    this.movePageTo(this.draggedEl, this.hoveredEl);
   }
 
   setActions({ movePageTo }) {
