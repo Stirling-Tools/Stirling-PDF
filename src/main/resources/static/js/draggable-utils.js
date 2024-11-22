@@ -200,7 +200,7 @@ const DraggableUtils = {
   },
   async addAllPagesDraggableCanvas(element) {
     if (element) {
-
+      let currentPage = this.pageIndex
       if (!this.elementAllPages.includes(element)) {
         this.elementAllPages.push(element)
         element.style.filter = 'sepia(1) hue-rotate(90deg) brightness(1.2)';
@@ -232,7 +232,32 @@ const DraggableUtils = {
           }
           await this.goToPage(pageIndex)
         }
+      } else {
+        const index = this.elementAllPages.indexOf(element);
+        if (index !== -1) {
+          this.elementAllPages.splice(index, 1);
+        }
+        element.style.filter = '';
+        let pagesMap = this.documentsMap.get(this.pdfDoc);
+
+        if (!pagesMap) {
+          pagesMap = {};
+          this.documentsMap.set(this.pdfDoc, pagesMap);
+        }
+        for (let pageIndex = 0; pageIndex < this.pdfDoc.numPages; pageIndex++) {
+          if (pagesMap[`${pageIndex}-offsetWidth`] && pageIndex != currentPage) {
+            const pageElements = pagesMap[pageIndex];
+            pageElements.forEach(elementPage => {
+              const elementIndex = pageElements.findIndex(elementPage => elementPage['element'].id === element.id);
+              if (elementIndex !== -1) {
+                pageElements.splice(elementIndex, 1);
+              }
+            });
+          }
+          await this.goToPage(pageIndex)
+        }
       }
+      await this.goToPage(currentPage)
     }
   },
   deleteDraggableCanvas(element) {
