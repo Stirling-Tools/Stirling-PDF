@@ -4,6 +4,7 @@ const DraggableUtils = {
   nextId: 0,
   pdfDoc: null,
   pageIndex: 0,
+  elementAllPages: [],
   documentsMap: new Map(),
   lastInteracted: null,
 
@@ -197,6 +198,68 @@ const DraggableUtils = {
   deleteAllDraggableCanvases() {
     this.boxDragContainer.querySelectorAll(".draggable-canvas").forEach((el) => el.remove());
   },
+  async addAllPagesDraggableCanvas(element) {
+    if (element) {
+      let currentPage = this.pageIndex
+      if (!this.elementAllPages.includes(element)) {
+        this.elementAllPages.push(element)
+        element.style.filter = 'sepia(1) hue-rotate(90deg) brightness(1.2)';
+        let newElement = {
+          "element": element,
+          "offsetWidth": element.width,
+          "offsetHeight": element.height
+        }
+
+        let pagesMap = this.documentsMap.get(this.pdfDoc);
+
+        if (!pagesMap) {
+          pagesMap = {};
+          this.documentsMap.set(this.pdfDoc, pagesMap);
+        }
+        let page = this.pageIndex
+
+        for (let pageIndex = 0; pageIndex < this.pdfDoc.numPages; pageIndex++) {
+
+          if (pagesMap[`${pageIndex}-offsetWidth`]) {
+            if (!pagesMap[pageIndex].includes(newElement)) {
+              pagesMap[pageIndex].push(newElement);
+            }
+          } else {
+            pagesMap[pageIndex] = []
+            pagesMap[pageIndex].push(newElement)
+            pagesMap[`${pageIndex}-offsetWidth`] = pagesMap[`${page}-offsetWidth`];
+            pagesMap[`${pageIndex}-offsetHeight`] = pagesMap[`${page}-offsetHeight`];
+          }
+          await this.goToPage(pageIndex)
+        }
+      } else {
+        const index = this.elementAllPages.indexOf(element);
+        if (index !== -1) {
+          this.elementAllPages.splice(index, 1);
+        }
+        element.style.filter = '';
+        let pagesMap = this.documentsMap.get(this.pdfDoc);
+
+        if (!pagesMap) {
+          pagesMap = {};
+          this.documentsMap.set(this.pdfDoc, pagesMap);
+        }
+        for (let pageIndex = 0; pageIndex < this.pdfDoc.numPages; pageIndex++) {
+          if (pagesMap[`${pageIndex}-offsetWidth`] && pageIndex != currentPage) {
+            const pageElements = pagesMap[pageIndex];
+            pageElements.forEach(elementPage => {
+              const elementIndex = pageElements.findIndex(elementPage => elementPage['element'].id === element.id);
+              if (elementIndex !== -1) {
+                pageElements.splice(elementIndex, 1);
+              }
+            });
+          }
+          await this.goToPage(pageIndex)
+        }
+      }
+      await this.goToPage(currentPage)
+    }
+  },
   deleteDraggableCanvas(element) {
     if (element) {
       //Check if deleted element is the last interacted
@@ -241,7 +304,7 @@ const DraggableUtils = {
     }
 
     const draggablesData = pagesMap[this.pageIndex];
-    if (draggablesData) {
+    if (draggablesData && Array.isArray(draggablesData)) {
       draggablesData.forEach((draggableData) => this.boxDragContainer.appendChild(draggableData.element));
     }
 
@@ -273,6 +336,13 @@ const DraggableUtils = {
 
     //return pdfCanvas.toDataURL();
   },
+
+  async goToPage(pageIndex) {
+    this.storePageContents();
+    await this.renderPage(this.pdfDoc, pageIndex);
+    this.loadPageContents();
+  },
+
   async incrementPage() {
     if (this.pageIndex < this.pdfDoc.numPages - 1) {
       this.storePageContents();
@@ -297,6 +367,7 @@ const DraggableUtils = {
     this.storePageContents();
 
     const pagesMap = this.documentsMap.get(this.pdfDoc);
+
     for (let pageIdx in pagesMap) {
       if (pageIdx.includes("offset")) {
         continue;
@@ -304,7 +375,8 @@ const DraggableUtils = {
       console.log(typeof pageIdx);
 
       const page = pdfDocModified.getPage(parseInt(pageIdx));
-      const draggablesData = pagesMap[pageIdx];
+      let draggablesData = pagesMap[pageIdx];
+
       const offsetWidth = pagesMap[pageIdx + "-offsetWidth"];
       const offsetHeight = pagesMap[pageIdx + "-offsetHeight"];
 
@@ -383,7 +455,6 @@ const DraggableUtils = {
         });
       }
     }
-
     this.loadPageContents();
     return pdfDocModified;
   },
