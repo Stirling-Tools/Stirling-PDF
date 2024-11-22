@@ -4,6 +4,7 @@ const DraggableUtils = {
   nextId: 0,
   pdfDoc: null,
   pageIndex: 0,
+  elementAllPages: [],
   documentsMap: new Map(),
   lastInteracted: null,
 
@@ -197,6 +198,43 @@ const DraggableUtils = {
   deleteAllDraggableCanvases() {
     this.boxDragContainer.querySelectorAll(".draggable-canvas").forEach((el) => el.remove());
   },
+  async addAllPagesDraggableCanvas(element) {
+    if (element) {
+
+      if (!this.elementAllPages.includes(element)) {
+        this.elementAllPages.push(element)
+        element.style.filter = 'sepia(1) hue-rotate(90deg) brightness(1.2)';
+        let newElement = {
+          "element": element,
+          "offsetWidth": element.width,
+          "offsetHeight": element.height
+        }
+
+        let pagesMap = this.documentsMap.get(this.pdfDoc);
+
+        if (!pagesMap) {
+          pagesMap = {};
+          this.documentsMap.set(this.pdfDoc, pagesMap);
+        }
+        let page = this.pageIndex
+
+        for (let pageIndex = 0; pageIndex < this.pdfDoc.numPages; pageIndex++) {
+
+          if (pagesMap[`${pageIndex}-offsetWidth`]) {
+            if (!pagesMap[pageIndex].includes(newElement)) {
+              pagesMap[pageIndex].push(newElement);
+            }
+          } else {
+            pagesMap[pageIndex] = []
+            pagesMap[pageIndex].push(newElement)
+            pagesMap[`${pageIndex}-offsetWidth`] = pagesMap[`${page}-offsetWidth`];
+            pagesMap[`${pageIndex}-offsetHeight`] = pagesMap[`${page}-offsetHeight`];
+          }
+          await this.goToPage(pageIndex)
+        }
+      }
+    }
+  },
   deleteDraggableCanvas(element) {
     if (element) {
       //Check if deleted element is the last interacted
@@ -296,7 +334,7 @@ const DraggableUtils = {
   },
 
   parseTransform(element) { },
-  async getOverlayedPdfDocument(allPage = false) {
+  async getOverlayedPdfDocument() {
     const pdfBytes = await this.pdfDoc.getData();
     const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, {
       ignoreEncryption: true,
@@ -304,17 +342,6 @@ const DraggableUtils = {
     this.storePageContents();
 
     const pagesMap = this.documentsMap.get(this.pdfDoc);
-
-
-
-    if (allPage) {
-      for (let pageIndex = 1; pageIndex < this.pdfDoc.numPages; pageIndex++) {
-        pagesMap[pageIndex] = pagesMap[0][0];
-        pagesMap[`${pageIndex}-offsetWidth`] = pagesMap[`${0}-offsetWidth`];
-        pagesMap[`${pageIndex}-offsetHeight`] = pagesMap[`${0}-offsetHeight`];
-      }
-    }
-
 
     for (let pageIdx in pagesMap) {
       if (pageIdx.includes("offset")) {
@@ -324,10 +351,6 @@ const DraggableUtils = {
 
       const page = pdfDocModified.getPage(parseInt(pageIdx));
       let draggablesData = pagesMap[pageIdx];
-
-      if (allPage) {
-        draggablesData = pagesMap[0];
-      }
 
       const offsetWidth = pagesMap[pageIdx + "-offsetWidth"];
       const offsetHeight = pagesMap[pageIdx + "-offsetHeight"];

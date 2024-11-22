@@ -113,30 +113,3 @@ select#font-select option {
   text-align: right;
   padding: 0.5rem 1rem;
 }
-
-
-.btn-custom {
-  background-color: rgb(248 249 255);
-  border: none;
-  opacity: 0.8;
-  color: rgb(24 28 34);
-}
-
-.btn-custom:hover {
-  color: rgb(24 28 34);
-
-}
-
-.btn-custom:focus,
-.btn-custom.active {
-  border: 1px solid rgb(200, 201, 207);
-  opacity: 1;
-  padding: 3%;
-  color: rgb(24 28 34);
-}
-
-
-.btn-custom:disabled {
-  pointer-events: none;
-  opacity: 0.5;
-}

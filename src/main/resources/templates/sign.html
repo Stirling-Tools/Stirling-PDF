@@ -111,24 +111,6 @@
                 });
               });
             </script>
-            <div class=" show-on-file-selected justify-content-center align-itens-center">
-              <ul class="nav nav-pill justify-content-center">
-                <li class="nav-item">
-                  <button class="nav-link active btn-custom " id="manualSignatureTab" data-bs-toggle="pill"
-                    onclick="manualOrAll(false)">
-                    Add Signature Manually
-                  </button>
-                </li>
-                <li class="nav-item">
-                  <button class="nav-link btn-custom " id="allPagesSignatureTab" data-bs-toggle="pill"
-                    onclick="manualOrAll(true)">
-                    Add Signature to All Pages
-                  </button>
-                </li>
-              </ul>
-
-            </div>
-
             <div class="tab-group show-on-file-selected">
               <div class="tab-container" th:title="#{sign.upload}">
                 <div
@@ -255,30 +237,6 @@
                 </div>
               </div>
             </div>
-
-            <script>
-              let allPages = false
-              async function manualOrAll(choice) {
-                const incrementPage = document.getElementById('incrementPage');
-                const decrementPage = document.getElementById('decrementPage');
-                if (choice) {
-                  incrementPage.disabled = true;
-                  decrementPage.disabled = true
-                  allPages = true
-                } else {
-                  incrementPage.disabled = false;
-                  decrementPage.disabled = false;
-                  allPages = false
-
-                }
-                // Remove all the canvases that were added
-                for (let index = 0; index < DraggableUtils.pdfDoc.numPages; index++) {
-                  await DraggableUtils.goToPage(index)
-                  await DraggableUtils.deleteAllDraggableCanvases()
-                }
-                await DraggableUtils.goToPage(0)
-              }
-            </script>
 
             <script>
               const imageUpload = document.querySelector('input[name=image-upload]');
@@ -412,6 +370,12 @@
                       d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z" />
                   </svg>
                 </button>
+                <button class="btn btn-outline-secondary"
+                  onclick="DraggableUtils.addAllPagesDraggableCanvas(DraggableUtils.getLastInteracted())">
+                  <span class="material-symbols-rounded">
+                    content_copy
+                  </span>
+                </button>
                 <button class="btn btn-outline-secondary" id="incrementPage"
                   onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.incrementPage() : DraggableUtils.decrementPage()"
                   style="margin-left:auto">
@@ -440,7 +404,7 @@
 
             <script>
               document.getElementById("download-pdf").addEventListener('click', async () => {
-                const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument(allPages);
+                const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
                 const modifiedPdfBytes = await modifiedPdf.save();
                 const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
                 const link = document.createElement('a');
