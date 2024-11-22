@@ -149,6 +149,7 @@ class PdfContainer {
 
  captureFileProcessingEvent(success, file, processingTime, errorMessage, pageCount) {
   try{
+  if(analyticsEnabled){
   posthog.capture('file_processing', {
     success,
     file_type: file?.type || 'unknown',
@@ -157,6 +158,7 @@ class PdfContainer {
     error_message: errorMessage,
     pdf_pages: pageCount,
   });
+}
 }catch{
 }
 }
