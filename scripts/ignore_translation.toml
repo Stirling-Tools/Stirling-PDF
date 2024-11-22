@@ -3,6 +3,11 @@ ignore = [
     'language.direction',
 ]
 
+[az_AZ]
+ignore = [
+    'language.direction',
+]
+
 [bg_BG]
 ignore = [
     'language.direction',
