@@ -112,13 +112,6 @@
               <div class="multi-tool-container">
                 <div class="d-flex flex-wrap" id="pages-container-wrapper">
                   <div id="pages-container">
-                    <div class="page-container" th:each="file, status: ${fileList}"
-                      th:id="'page-container-' + ${status.index}">
-                      <div class="page-number-container">
-                        <span th:text="${status.index + 1}"></span>
-                      </div>
-                      <img th:src="${file.imageUrl}" alt="File Page">
-                    </div>
                   </div>
                 </div>
               </div>
@@ -145,7 +138,8 @@
         delete: '[[#{multiTool.delete}]]',
         split: '[[#{multiTool.split}]]',
         addFile: '[[#{multiTool.addFile}]]',
-        insertPageBreak:'[[#{multiTool.insertPageBreak}]]'
+        insertPageBreak:'[[#{multiTool.insertPageBreak}]]',
+        dragDropMessage:'[[#{multiTool.dragDropMessage}]]'
     };
 
 
