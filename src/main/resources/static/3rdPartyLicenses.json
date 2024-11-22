@@ -421,7 +421,7 @@
         {
             "moduleName": "io.micrometer:micrometer-core",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.13.6",
+            "moduleVersion": "1.14.1",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -736,21 +736,21 @@
         {
             "moduleName": "org.bouncycastle:bcpkix-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/java.html",
-            "moduleVersion": "1.78.1",
+            "moduleVersion": "1.79",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
         {
             "moduleName": "org.bouncycastle:bcprov-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/java.html",
-            "moduleVersion": "1.78.1",
+            "moduleVersion": "1.79",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
         {
             "moduleName": "org.bouncycastle:bcutil-jdk18on",
             "moduleUrl": "https://www.bouncycastle.org/java.html",
-            "moduleVersion": "1.78.1",
+            "moduleVersion": "1.79",
             "moduleLicense": "Bouncy Castle Licence",
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
@@ -1328,7 +1328,7 @@
         {
             "moduleName": "org.springframework.security:spring-security-saml2-service-provider",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "6.3.4",
+            "moduleVersion": "6.4.1",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
