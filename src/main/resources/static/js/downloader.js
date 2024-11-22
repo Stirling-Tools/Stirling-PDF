@@ -95,7 +95,6 @@
         }
 
       } catch (error) {
-        clearFileInput();
         clearTimeout(timeoutId);
         showGameBtn.style.display = "none";
         submitButton.textContent = originalButtonText;
@@ -117,13 +116,13 @@
       return null;
     }
   }
-  
+
   async function handleSingleDownload(url, formData, isMulti = false, isZip = false) {
     const startTime = performance.now();
     const file = formData.get('fileInput');
     let success = false;
     let errorMessage = null;
-    
+
     try {
       const response = await fetch(url, { method: "POST", body: formData });
       const contentType = response.headers.get("content-type");
@@ -146,7 +145,7 @@
 
       const blob = await response.blob();
       success = true;
-      
+
       if (contentType.includes("application/pdf") || contentType.includes("image/")) {
         clearFileInput();
         return handleResponse(blob, filename, !isMulti, isZip);
@@ -158,12 +157,11 @@
     } catch (error) {
       success = false;
       errorMessage = error.message;
-      clearFileInput();
       console.error("Error in handleSingleDownload:", error);
       throw error;
     } finally {
       const processingTime = performance.now() - startTime;
-      
+
       // Capture analytics
       const pageCount = file && file.type === 'application/pdf' ? await getPDFPageCount(file) : null;
       if(analyticsEnabled) {
@@ -191,7 +189,7 @@
 
     return filename;
   }
-  
+
   async function handleJsonResponse(response) {
     const json = await response.json();
     const errorMessage = JSON.stringify(json, null, 2);
