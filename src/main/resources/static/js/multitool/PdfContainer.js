@@ -157,7 +157,8 @@ class PdfContainer {
     error_message: errorMessage,
     pdf_pages: pageCount,
   });
-}catch{}
+}catch{
+}
 }
 
 
@@ -214,9 +215,7 @@ class PdfContainer {
 
   }
 
-  async addPdfFile(file, nextSiblingElement) {
-    const { renderer, pdfDocument } = await this.loadFile(file);
-
+  async addPdfFile(renderer, pdfDocument, nextSiblingElement) {
     for (var i = 0; i < renderer.pageCount; i++) {
       const div = document.createElement("div");
 
