@@ -122,18 +122,44 @@ class PdfContainer {
   async addFilesFromFiles(files, nextSiblingElement) {
     this.fileName = files[0].name;
     for (var i = 0; i < files.length; i++) {
+      const startTime = Date.now();
+      let processingTime, errorMessage = null, pageCount = 0;
+      try {
       const file = files[i];
       if (file.type === "application/pdf") {
-        await this.addPdfFile(file, nextSiblingElement);
+        const { renderer, pdfDocument } = await this.loadFile(file);
+        pageCount = renderer.pageCount || 0;
+        await this.addPdfFile(renderer, pdfDocument, nextSiblingElement);
       } else if (file.type.startsWith("image/")) {
         await this.addImageFile(file, nextSiblingElement);
       }
+      processingTime = Date.now() - startTime;
+      this.captureFileProcessingEvent(true, file, processingTime, null, pageCount);
+    } catch (error) {
+      processingTime = Date.now() - startTime;
+      errorMessage = error.message || "Unknown error";
+      this.captureFileProcessingEvent(false, files[i], processingTime, errorMessage, pageCount);
+    }
     }
 
     document.querySelectorAll(".enable-on-file").forEach((element) => {
       element.disabled = false;
     });
   }
+
+ captureFileProcessingEvent(success, file, processingTime, errorMessage, pageCount) {
+  try{
+  posthog.capture('file_processing', {
+    success,
+    file_type: file?.type || 'unknown',
+    file_size: file?.size || 0,
+    processing_time: processingTime,
+    error_message: errorMessage,
+    pdf_pages: pageCount,
+  });
+}catch{}
+}
+
 
   async addFilesBlank(nextSiblingElement) {
     const pdfContent = `
