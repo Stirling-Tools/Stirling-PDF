@@ -20,11 +20,11 @@ ext {
     logbackVersion = "1.5.7"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.36"
-    bouncycastleVersion = "1.78.1"
+    bouncycastleVersion = "1.79"
 }
 
 group = "stirling.software"
-version = "0.33.1"
+version = "0.33.2"
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -143,7 +143,7 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
-		implementation 'org.springframework.security:spring-security-saml2-service-provider:6.3.4'
+		implementation 'org.springframework.security:spring-security-saml2-service-provider:6.4.1'
 	    implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         //2.2.x requires rebuild of DB file.. need migration path
         runtimeOnly "com.h2database:h2:2.1.214"
@@ -208,7 +208,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.13.6"
+    implementation "io.micrometer:micrometer-core:1.14.1"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark:0.24.0"

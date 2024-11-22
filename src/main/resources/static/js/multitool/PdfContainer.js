@@ -29,6 +29,7 @@ class PdfContainer {
     this.updatePagesFromCSV = this.updatePagesFromCSV.bind(this);
     this.addFilesBlankAll = this.addFilesBlankAll.bind(this)
     this.removeAllElements = this.removeAllElements.bind(this);
+    this.resetPages = this.resetPages.bind(this);
 
     this.pdfAdapters = pdfAdapters;
 
@@ -55,6 +56,7 @@ class PdfContainer {
     window.updatePageNumbersAndCheckboxes = this.updatePageNumbersAndCheckboxes;
     window.addFilesBlankAll = this.addFilesBlankAll
     window.removeAllElements = this.removeAllElements;
+    window.resetPages = this.resetPages;
 
     const filenameInput = document.getElementById("filename-input");
     const downloadBtn = document.getElementById("export-button");
@@ -120,18 +122,47 @@ class PdfContainer {
   async addFilesFromFiles(files, nextSiblingElement) {
     this.fileName = files[0].name;
     for (var i = 0; i < files.length; i++) {
+      const startTime = Date.now();
+      let processingTime, errorMessage = null, pageCount = 0;
+      try {
       const file = files[i];
       if (file.type === "application/pdf") {
-        await this.addPdfFile(file, nextSiblingElement);
+        const { renderer, pdfDocument } = await this.loadFile(file);
+        pageCount = renderer.pageCount || 0;
+        await this.addPdfFile(renderer, pdfDocument, nextSiblingElement);
       } else if (file.type.startsWith("image/")) {
         await this.addImageFile(file, nextSiblingElement);
       }
+      processingTime = Date.now() - startTime;
+      this.captureFileProcessingEvent(true, file, processingTime, null, pageCount);
+    } catch (error) {
+      processingTime = Date.now() - startTime;
+      errorMessage = error.message || "Unknown error";
+      this.captureFileProcessingEvent(false, files[i], processingTime, errorMessage, pageCount);
+    }
     }
 
     document.querySelectorAll(".enable-on-file").forEach((element) => {
       element.disabled = false;
     });
   }
+
+ captureFileProcessingEvent(success, file, processingTime, errorMessage, pageCount) {
+  try{
+  if(analyticsEnabled){
+  posthog.capture('file_processing', {
+    success,
+    file_type: file?.type || 'unknown',
+    file_size: file?.size || 0,
+    processing_time: processingTime,
+    error_message: errorMessage,
+    pdf_pages: pageCount,
+  });
+}
+}catch{
+}
+}
+
 
   async addFilesBlank(nextSiblingElement) {
     const pdfContent = `
@@ -186,14 +217,12 @@ class PdfContainer {
 
   }
 
-  async addPdfFile(file, nextSiblingElement) {
-    const { renderer, pdfDocument } = await this.loadFile(file);
-
+  async addPdfFile(renderer, pdfDocument, nextSiblingElement) {
     for (var i = 0; i < renderer.pageCount; i++) {
       const div = document.createElement("div");
 
       div.classList.add("page-container");
-
+      div.id = "page-container-" + (i + 1);
       var img = document.createElement("img");
       img.classList.add("page-image");
       const imageSrc = await renderer.renderPage(i);
@@ -202,7 +231,6 @@ class PdfContainer {
       img.rend = renderer;
       img.doc = pdfDocument;
       div.appendChild(img);
-
       this.pdfAdapters.forEach((adapter) => {
         adapter.adapt?.(div);
       });
@@ -701,6 +729,31 @@ class PdfContainer {
     }
   }
 
+   resetPages() {
+    const pageContainers = this.pagesContainer.querySelectorAll(".page-container");
+
+    pageContainers.forEach((container, index) => {
+      container.id = "page-container-" + (index + 1);
+    });
+
+    const checkboxes = document.querySelectorAll(".pdf-actions_checkbox");
+    window.selectAll = false;
+    const selectIcon = document.getElementById("select-All-Container");
+    const deselectIcon = document.getElementById("deselect-All-Container");
+
+      selectIcon.style.display = "inline";
+      deselectIcon.style.display = "none";
+
+    checkboxes.forEach((checkbox) => {
+      const pageNumber = Array.from(checkbox.parentNode.parentNode.children).indexOf(checkbox.parentNode) + 1;
+
+        const index = window.selectedPages.indexOf(pageNumber);
+        if (index !== -1) {
+          window.selectedPages.splice(index, 1);
+        }
+    });
+    window.toggleSelectPageVisibility();
+  }
 
   setDownloadAttribute() {
     this.downloadLink.setAttribute("download", this.fileName ? this.fileName : "managed.pdf");
