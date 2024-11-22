@@ -20,7 +20,7 @@ ext {
     logbackVersion = "1.5.7"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.36"
-    bouncycastleVersion = "1.78.1"
+    bouncycastleVersion = "1.79"
 }
 
 group = "stirling.software"
