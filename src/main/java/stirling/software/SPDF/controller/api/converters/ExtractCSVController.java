@@ -34,7 +34,7 @@ import technology.tabula.writers.Writer;
 @Tag(name = "Convert", description = "Convert APIs")
 public class ExtractCSVController {
 
-    private static final Logger logger = LoggerFactory.getLogger(CropController.class);
+    private static final Logger logger = LoggerFactory.getLogger(ExtractCSVController.class);
 
     @PostMapping(value = "/pdf/csv", consumes = "multipart/form-data")
     @Operation(summary = "Extracts a CSV document from a PDF", description = "This operation takes an input PDF file and returns CSV file of whole page. Input:PDF Output:CSV Type:SISO")
