@@ -28,7 +28,7 @@ window.onload = function () {
 // Show search results as user types in search box
 document.querySelector("#navbarSearchInput").addEventListener("input", function (e) {
   var searchText = e.target.value.trim().toLowerCase(); // Trim whitespace and convert to lowercase
-  var items = document.querySelectorAll(".dropdown-item, .nav-link");
+  var items = document.querySelectorAll('a.dropdown-item[data-bs-tags]');
   var resultsBox = document.querySelector("#searchResults");
 
   // Clear any previous results
@@ -83,7 +83,7 @@ searchDropdown.addEventListener('shown.bs.dropdown', function () {
 searchDropdown.addEventListener('mouseenter', function () {
     const dropdownInstance = new bootstrap.Dropdown(searchDropdown);
     dropdownInstance.show();
-    
+
     setTimeout(() => {
         searchInput.focus();
     }, 100);
