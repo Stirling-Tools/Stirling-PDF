@@ -219,6 +219,11 @@ def check_for_differences(reference_file, file_list, branch, actor):
             extra_keys_str = "`, `".join(extra_keys_list)
             report.append("- **Test 2 Status:** ❌ Failed")
             if missing_keys_list:
+                for key in missing_keys_list:
+                    if " " in key:
+                        report.append(
+                            f"  - **Issue:** One or more keys in ***{basename_current_file}*** contain spaces `{missing_keys_str}`!"
+                        )
                 report.append(
                     f"  - **Issue:** There are keys in ***{basename_current_file}*** `{missing_keys_str}` that are not present in ***{basename_reference_file}***!"
                 )
