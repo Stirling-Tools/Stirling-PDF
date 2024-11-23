@@ -1,6 +1,6 @@
 plugins {
     id "java"
-    id "org.springframework.boot" version "3.3.5"
+    id "org.springframework.boot" version "3.4.0"
     id "io.spring.dependency-management" version "1.1.6"
     id "org.springdoc.openapi-gradle-plugin" version "1.8.0"
     id "io.swagger.swaggerhub" version "1.3.2"
@@ -15,7 +15,7 @@ plugins {
 import com.github.jk1.license.render.*
 
 ext {
-    springBootVersion = "3.3.5"
+    springBootVersion = "3.4.0"
     pdfboxVersion = "3.0.3"
     logbackVersion = "1.5.7"
     imageioVersion = "3.12.0"
@@ -147,7 +147,7 @@ dependencies {
 	    implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         //2.2.x requires rebuild of DB file.. need migration path
         runtimeOnly "com.h2database:h2:2.1.214"
-        // implementation "com.h2database:h2:2.2.224"
+        // runtimeOnly "com.h2database:h2:2.3.232"
         constraints {
             implementation "org.opensaml:opensaml-core"
             implementation "org.opensaml:opensaml-saml-api"
