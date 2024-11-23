@@ -138,9 +138,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
     basename_reference_file = os.path.basename(reference_file)
 
     report = []
-    report.append(
-        f"### 📋 Checking with the file `{basename_reference_file}` from the `{reference_branch}` - Checking the `{branch}`"
-    )
+    report.append(f"#### 🔄 Reference Branch: `{reference_branch}`")
     reference_lines = read_properties(reference_file)
     has_differences = False
 
@@ -174,25 +172,26 @@ def check_for_differences(reference_file, file_list, branch, actor):
         ):
             continue
         only_reference_file = False
-        report.append(f"#### 📃 **Checking File:** `{basename_current_file}`...")
+        report.append(f"#### 📃 **File Check:** `{basename_current_file}`")
         current_lines = read_properties(os.path.join(branch, file_path))
         reference_line_count = len(reference_lines)
         current_line_count = len(current_lines)
 
         if reference_line_count != current_line_count:
             report.append("")
-            report.append("- **Test 1 Status:** ❌ Failed")
+            report.append("1. **Test Status:** ❌ **_Failed_**")
+            report.append("  - **Issue:**")
             has_differences = True
             if reference_line_count > current_line_count:
                 report.append(
-                    f"  - **Issue:** Missing lines! Comments, empty lines, or translation strings are missing. Details: {reference_line_count} (reference) vs {current_line_count} (current)."
+                    f"    - **_Mismatched line count_**: {reference_line_count} (reference) vs {current_line_count} (current). Comments, empty lines, or translation strings are missing."
                 )
             elif reference_line_count < current_line_count:
                 report.append(
-                    f"  - **Issue:** Too many lines! Check your translation files! Details: {reference_line_count} (reference) vs {current_line_count} (current)."
+                    f"    - **_Too many lines_**: {reference_line_count} (reference) vs {current_line_count} (current). Please verify if there is an additional line that needs to be removed."
                 )
         else:
-            report.append("- **Test 1 Status:** ✅ Passed")
+            report.append("1. **Test Status:** ✅ **_Passed_**")
 
         # Check for missing or extra keys
         current_keys = []
@@ -217,22 +216,27 @@ def check_for_differences(reference_file, file_list, branch, actor):
             has_differences = True
             missing_keys_str = "`, `".join(missing_keys_list)
             extra_keys_str = "`, `".join(extra_keys_list)
-            report.append("- **Test 2 Status:** ❌ Failed")
+            report.append("2. **Test Status:** ❌ **_Failed_**")
+            report.append("  - **Issue:**")
             if missing_keys_list:
+                spaces_keys_list = []
                 for key in missing_keys_list:
                     if " " in key:
-                        report.append(
-                            f"  - **Issue:** One or more keys in ***{basename_current_file}*** contain spaces `{missing_keys_str}`!"
-                        )
+                        spaces_keys_list.append(key)
+                if spaces_keys_list:
+                    spaces_keys_str = "`, `".join(spaces_keys_list)
+                    report.append(
+                        f"    - **_Keys containing unnecessary spaces_**: `{spaces_keys_str}`!"
+                    )
                 report.append(
-                    f"  - **Issue:** There are keys in ***{basename_current_file}*** `{missing_keys_str}` that are not present in ***{basename_reference_file}***!"
+                    f"    - **_Extra keys in `{basename_current_file}`_**: `{missing_keys_str}` that are not present in **_`{basename_reference_file}`_**."
                 )
             if extra_keys_list:
                 report.append(
-                    f"  - **Issue:** There are keys in ***{basename_reference_file}*** `{extra_keys_str}` that are not present in ***{basename_current_file}***!"
+                    f"    - **_Missing keys in `{basename_reference_file}`_**: `{extra_keys_str}` that are not present in **_`{basename_current_file}`_**."
                 )
         else:
-            report.append("- **Test 2 Status:** ✅ Passed")
+            report.append("2. **Test Status:** ✅ **_Passed_**")
         report.append("")
         report.append("---")
         report.append("")
