@@ -235,7 +235,7 @@
         {
             "moduleName": "com.h2database:h2",
             "moduleUrl": "https://h2database.com",
-            "moduleVersion": "2.1.214",
+            "moduleVersion": "2.3.232",
             "moduleLicense": "MPL 2.0",
             "moduleLicenseUrl": "https://www.mozilla.org/en-US/MPL/2.0/"
         },
@@ -1466,7 +1466,7 @@
         {
             "moduleName": "org.springframework:spring-webmvc",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "6.1.14",
+            "moduleVersion": "6.2.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
