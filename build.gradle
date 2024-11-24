@@ -145,9 +145,8 @@ dependencies {
 
 		implementation 'org.springframework.security:spring-security-saml2-service-provider:6.4.1'
 	    implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
-        //2.2.x requires rebuild of DB file.. need migration path
-        runtimeOnly "com.h2database:h2:2.1.214"
-        // runtimeOnly "com.h2database:h2:2.3.232"
+        // Don't upgrade h2database
+        runtimeOnly "com.h2database:h2:2.3.232"
         constraints {
             implementation "org.opensaml:opensaml-core"
             implementation "org.opensaml:opensaml-saml-api"
