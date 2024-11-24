@@ -121,7 +121,7 @@ configurations.all {
 }
 dependencies {
     //security updates
-    implementation "org.springframework:spring-webmvc:6.1.14"
+    implementation "org.springframework:spring-webmvc:6.2.0"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.0")
 
