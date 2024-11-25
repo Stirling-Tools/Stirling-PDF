@@ -183,6 +183,7 @@ public class ApplicationProperties {
             @ToString.Exclude private String clientSecret;
             private Boolean autoCreateUser = false;
             private Boolean blockRegistration = false;
+            private String logoutUrl;
             private String useAsUsername;
             private Collection<String> scopes = new ArrayList<>();
             private String provider;

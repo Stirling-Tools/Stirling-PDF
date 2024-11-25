@@ -47,6 +47,7 @@ security:
     useAsUsername: email # default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # specify the scopes for which the application will request permissions
     provider: google # set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
+    logoutUrl: '' # logout URL to call at he issuer, may be used with 3 variables, for instance : '/connect/logout?id_token_hint={tokenId}&client_id={clientId}&post_logout_redirect_uri={redirectUrl}'
   saml2:
     enabled: false # currently in alpha, not recommended for use yet, enableAlphaFunctionality must be set to true
     autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
