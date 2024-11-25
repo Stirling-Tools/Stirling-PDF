@@ -24,7 +24,7 @@ public class MetricsAggregatorService {
         this.postHogService = postHogService;
     }
 
-    @Scheduled(fixedRate = 900000) // Run every 15 minutes
+    @Scheduled(fixedRate = 1800000) // Run every 30 minutes
     public void aggregateAndSendMetrics() {
         Map<String, Object> metrics = new HashMap<>();
         Search.in(meterRegistry)
