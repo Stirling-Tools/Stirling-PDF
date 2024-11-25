@@ -15,6 +15,7 @@ import java.util.TimeZone;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import com.posthog.java.PostHog;
@@ -26,19 +27,25 @@ import stirling.software.SPDF.model.ApplicationProperties;
 public class PostHogService {
     private final PostHog postHog;
     private final String uniqueId;
+    private final String appVersion;
     private final ApplicationProperties applicationProperties;
     private final UserServiceInterface userService;
-
+    private final Environment env;
+    
     @Autowired
     public PostHogService(
             PostHog postHog,
             @Qualifier("UUID") String uuid,
+            @Qualifier("appVersion") String appVersion,
             ApplicationProperties applicationProperties,
-            @Autowired(required = false) UserServiceInterface userService) {
+            @Autowired(required = false) UserServiceInterface userService,
+            Environment env) {
         this.postHog = postHog;
         this.uniqueId = uuid;
+        this.appVersion = appVersion;
         this.applicationProperties = applicationProperties;
         this.userService = userService;
+        this.env = env;
         captureSystemInfo();
     }
 
@@ -64,6 +71,16 @@ public class PostHogService {
         Map<String, Object> metrics = new HashMap<>();
 
         try {
+        	//Application version
+        	metrics.put("app_version", appVersion);
+        	 String deploymentType = "JAR"; // default
+             if ("true".equalsIgnoreCase(env.getProperty("BROWSER_OPEN"))) {
+                 deploymentType = "EXE";
+             } else if (isRunningInDocker()) {
+                 deploymentType = "DOCKER";
+             }
+             metrics.put("deployment_type", deploymentType);
+        	
             // System info
             metrics.put("os_name", System.getProperty("os.name"));
             metrics.put("os_version", System.getProperty("os.version"));
@@ -132,7 +149,6 @@ public class PostHogService {
 
             // Docker detection and stats
             boolean isDocker = isRunningInDocker();
-            metrics.put("is_docker", isDocker);
             if (isDocker) {
                 metrics.put("docker_metrics", getDockerMetrics());
             }
