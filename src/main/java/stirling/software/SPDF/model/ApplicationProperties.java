@@ -326,7 +326,7 @@ public class ApplicationProperties {
             private int calibreSessionLimit;
             private int qpdfSessionLimit;
             private int tesseractSessionLimit;
-            
+
             public int getQpdfSessionLimit() {
                 return qpdfSessionLimit > 0 ? qpdfSessionLimit : 2;
             }
@@ -334,7 +334,7 @@ public class ApplicationProperties {
             public int getTesseractSessionLimit() {
                 return tesseractSessionLimit > 0 ? tesseractSessionLimit : 1;
             }
-            
+
             public int getLibreOfficeSessionLimit() {
                 return libreOfficeSessionLimit > 0 ? libreOfficeSessionLimit : 1;
             }
@@ -378,7 +378,7 @@ public class ApplicationProperties {
             public long getQpdfTimeoutMinutes() {
                 return qpdfTimeoutMinutes > 0 ? qpdfTimeoutMinutes : 30;
             }
-            
+
             public long getLibreOfficeTimeoutMinutes() {
                 return libreOfficeTimeoutMinutes > 0 ? libreOfficeTimeoutMinutes : 30;
             }
