@@ -8,7 +8,7 @@ The paths have changed for the tessdata locations on new Docker images. Please u
 
 ## How does the OCR Work
 
-Stirling-PDF uses [qpdf](https://github.com/qpdf/qpdf), which in turn uses Tesseract for its text recognition. All credit goes to them for this awesome work!
+Stirling-PDF uses Tesseract for its text recognition. All credit goes to them for this awesome work!
 
 ## Language Packs
 
@@ -52,8 +52,6 @@ Add the following to your existing Docker run command:
 
 ### Non-Docker Setup
 
-If you are not using Docker, you need to install the OCR components, including the `qpdf` app. You can see the [qpdf install guide](https://qpdf.readthedocs.io/en/latest/installation.html).
-
 For Debian-based systems, install languages with this command:
 
 ```bash
@@ -83,8 +81,7 @@ rpm -qa | grep tesseract-langpack | sed 's/tesseract-langpack-//g'
 
 For Windows:
 
-Ensure qpdf in installed with
-``pip install qpdf``
+You must ensure tesseract is installed
 
 Additional languages must be downloaded manually:
 Download desired .traineddata files from tessdata or tessdata_fast
