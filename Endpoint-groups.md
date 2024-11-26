@@ -1,4 +1,4 @@
-| Operation           | PageOps | Convert | Security | Other | CLI | Python | OpenCV | LibreOffice | OCRmyPDF | Java | Javascript | Unoconv | Ghostscript |
+| Operation           | PageOps | Convert | Security | Other | CLI | Python | OpenCV | LibreOffice | qpdf | Java | Javascript | Unoconv | Ghostscript |
 | ------------------- | ------- | ------- | -------- | ----- | --- | ------ | ------ | ----------- | -------- | ---- | ---------- | ------- | ----------- |
 | adjust-contrast     | ✔️       |         |          |       |     |        |        |             |          |      | ✔️          |         |             |
 | auto-split-pdf      | ✔️       |         |          |       |     |        |        |             |          | ✔️    |            |         |             |

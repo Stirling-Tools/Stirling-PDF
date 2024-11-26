@@ -11,7 +11,7 @@ Stirling-PDF is built using:
 - Spring Boot + Thymeleaf
 - PDFBox
 - LibreOffice
-- OcrMyPdf
+- qpdf
 - HTML, CSS, JavaScript
 - Docker
 - PDF.js
@@ -243,7 +243,7 @@ To run Stirling-PDF locally:
 
 Important notes:
 
-- Local testing doesn't include features that depend on external tools like OCRmyPDF, LibreOffice, or Python scripts.
+- Local testing doesn't include features that depend on external tools like qpdf, LibreOffice, or Python scripts.
 - There are currently no automated unit tests. All testing is done manually through the UI or API calls. (You are welcome to add JUnits!)
 - Always verify your changes in the full Docker environment before submitting pull requests, as some integrations and features will only work in the complete setup.
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 translation_key="pdfToPDFA.credit"
-old_value="OCRmyPDF"
+old_value="qpdf"
 new_value="ghostscript"
 
 for file in ../src/main/resources/messages_*.properties; do

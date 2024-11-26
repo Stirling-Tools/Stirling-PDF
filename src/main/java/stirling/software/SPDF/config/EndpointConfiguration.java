@@ -202,7 +202,9 @@ public class EndpointConfiguration {
         // qpdf
         addEndpointToGroup("qpdf", "compress-pdf");
         addEndpointToGroup("qpdf", "pdf-to-pdfa");
-        addEndpointToGroup("qpdf", "ocr-pdf");
+        
+        
+        addEndpointToGroup("tesseract", "ocr-pdf");
 
         // Java
         addEndpointToGroup("Java", "merge-pdfs");

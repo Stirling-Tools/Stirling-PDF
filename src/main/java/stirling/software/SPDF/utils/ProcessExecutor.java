@@ -33,7 +33,6 @@ public class ProcessExecutor {
         WEASYPRINT,
         INSTALL_APP,
         CALIBRE,
-        IMAGEMAGICK,
         TESSERACT,
         QPDF
     }
@@ -75,7 +74,17 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getInstallAppSessionLimit();
-                                case CALIBRE, IMAGEMAGICK, TESSERACT, QPDF ->
+                                case TESSERACT ->
+                                applicationProperties
+                                        .getProcessExecutor()
+                                        .getSessionLimit()
+                                        .getTesseractSessionLimit();
+                                case QPDF ->
+                                applicationProperties
+                                        .getProcessExecutor()
+                                        .getSessionLimit()
+                                        .getQpdfSessionLimit();
+                                case CALIBRE ->
                                         applicationProperties
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
@@ -109,7 +118,17 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getInstallAppTimeoutMinutes();
-                                case CALIBRE, IMAGEMAGICK, TESSERACT, QPDF ->
+                                case TESSERACT ->
+                                applicationProperties
+                                        .getProcessExecutor()
+                                        .getTimeoutMinutes()
+                                        .getTesseractTimeoutMinutes();
+                                case QPDF ->
+                                applicationProperties
+                                        .getProcessExecutor()
+                                        .getTimeoutMinutes()
+                                        .getQpdfTimeoutMinutes();
+                                case CALIBRE  ->
                                         applicationProperties
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()

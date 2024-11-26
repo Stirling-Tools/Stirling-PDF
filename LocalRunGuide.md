@@ -68,7 +68,7 @@ nix-env -iA nixpkgs.jbig2enc
 
 ### Step 3: Install Additional Software
 
-Next we need to install LibreOffice for conversions, ocrmypdf for OCR, and OpenCV for pattern recognition functionality.
+Next we need to install LibreOffice for conversions, qpdf for OCR, and OpenCV for pattern recognition functionality.
 
 Install the following software:
 
@@ -81,27 +81,27 @@ Install the following software:
 - unoconv
 - pngquant
 - unpaper
-- ocrmypdf
+- qpdf
 - opencv-python-headless
 
 For Debian-based systems, you can use the following command:
 
 ```bash
-sudo apt-get install -y libreoffice-writer libreoffice-calc libreoffice-impress unpaper ocrmypdf
+sudo apt-get install -y libreoffice-writer libreoffice-calc libreoffice-impress unpaper qpdf
 pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint --break-system-packages
 ```
 
 For Fedora:
 
 ```bash
-sudo dnf install -y libreoffice-writer libreoffice-calc libreoffice-impress unpaper ocrmypdf
+sudo dnf install -y libreoffice-writer libreoffice-calc libreoffice-impress unpaper qpdf
 pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint
 ```
 
 For Nix:
 
 ```bash
-nix-env -iA nixpkgs.unpaper nixpkgs.libreoffice nixpkgs.ocrmypdf nixpkgs.poppler_utils
+nix-env -iA nixpkgs.unpaper nixpkgs.libreoffice nixpkgs.qpdf nixpkgs.poppler_utils
 pip3 install uno opencv-python-headless unoconv pngquant WeasyPrint
 ```
 
@@ -146,7 +146,7 @@ The easiest method is to use the language packs provided by your repositories. S
 
 1. Download the desired language pack(s) by selecting the `.traineddata` file(s) for the language(s) you need.
 2. Place the `.traineddata` files in the Tesseract tessdata directory: `/usr/share/tessdata`
-3. Please view [OCRmyPDF install guide](https://ocrmypdf.readthedocs.io/en/latest/installation.html) for more info.
+3. Please view [qpdf install guide](https://qpdf.readthedocs.io/en/latest/installation.html) for more info.
 
 **IMPORTANT:** DO NOT REMOVE EXISTING `eng.traineddata`, IT'S REQUIRED.
 
