@@ -98,10 +98,10 @@ public class CertSignController {
 
         public CreateSignature(KeyStore keystore, char[] pin)
                 throws KeyStoreException,
-                UnrecoverableKeyException,
-                NoSuchAlgorithmException,
-                IOException,
-                CertificateException {
+                        UnrecoverableKeyException,
+                        NoSuchAlgorithmException,
+                        IOException,
+                        CertificateException {
             super(keystore, pin);
             ClassPathResource resource = new ClassPathResource("static/images/signature.png");
             try (InputStream is = resource.getInputStream()) {
@@ -160,7 +160,8 @@ public class CertSignController {
                         extState.setNonStrokingAlphaConstant(0.5f);
                         cs.setGraphicsStateParameters(extState);
                         cs.transform(Matrix.getScaleInstance(0.08f, 0.08f));
-                        PDImageXObject img = PDImageXObject.createFromFileByExtension(logoFile, doc);
+                        PDImageXObject img =
+                                PDImageXObject.createFromFileByExtension(logoFile, doc);
                         cs.drawImage(img, 100, 0);
                         cs.restoreGraphicsState();
                     }
@@ -208,7 +209,10 @@ public class CertSignController {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/cert-sign")
-    @Operation(summary = "Sign PDF with a Digital Certificate", description = "This endpoint accepts a PDF file, a digital certificate and related information to sign the PDF. It then returns the digitally signed PDF file. Input:PDF Output:PDF Type:SISO")
+    @Operation(
+            summary = "Sign PDF with a Digital Certificate",
+            description =
+                    "This endpoint accepts a PDF file, a digital certificate and related information to sign the PDF. It then returns the digitally signed PDF file. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();
@@ -238,7 +242,7 @@ public class CertSignController {
                 PrivateKey privateKey = getPrivateKeyFromPEM(privateKeyFile.getBytes(), password);
                 Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
                 ks.setKeyEntry(
-                        "alias", privateKey, password.toCharArray(), new Certificate[] { cert });
+                        "alias", privateKey, password.toCharArray(), new Certificate[] {cert});
                 break;
             case "PKCS12":
                 ks = KeyStore.getInstance("PKCS12");
@@ -310,19 +314,22 @@ public class CertSignController {
 
     private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
             throws IOException, OperatorCreationException, PKCSException {
-        try (PEMParser pemParser = new PEMParser(new InputStreamReader(new ByteArrayInputStream(pemBytes)))) {
+        try (PEMParser pemParser =
+                new PEMParser(new InputStreamReader(new ByteArrayInputStream(pemBytes)))) {
             Object pemObject = pemParser.readObject();
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
             PrivateKeyInfo pkInfo;
             if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo) {
-                InputDecryptorProvider decProv = new JceOpenSSLPKCS8DecryptorProviderBuilder()
-                        .build(password.toCharArray());
+                InputDecryptorProvider decProv =
+                        new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
                 pkInfo = ((PKCS8EncryptedPrivateKeyInfo) pemObject).decryptPrivateKeyInfo(decProv);
             } else if (pemObject instanceof PEMEncryptedKeyPair) {
-                PEMDecryptorProvider decProv = new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
-                pkInfo = ((PEMEncryptedKeyPair) pemObject)
-                        .decryptKeyPair(decProv)
-                        .getPrivateKeyInfo();
+                PEMDecryptorProvider decProv =
+                        new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
+                pkInfo =
+                        ((PEMEncryptedKeyPair) pemObject)
+                                .decryptKeyPair(decProv)
+                                .getPrivateKeyInfo();
             } else {
                 pkInfo = ((PEMKeyPair) pemObject).getPrivateKeyInfo();
             }

@@ -107,9 +107,9 @@ processExecutor:
   sessionLimit:    # Process executor instances limits
     libreOfficeSessionLimit: 1
     pdfToHtmlSessionLimit: 1
-    ocrMyPdfSessionLimit: 2
+    qpdfSessionLimit: 4
+    tesseractSessionLimit: 1
     pythonOpenCvSessionLimit: 8
-    ghostScriptSessionLimit: 16
     weasyPrintSessionLimit: 16
     installAppSessionLimit: 1
     calibreSessionLimit: 1
@@ -117,7 +117,7 @@ processExecutor:
     libreOfficetimeoutMinutes: 30
     pdfToHtmltimeoutMinutes: 20
     pythonOpenCvtimeoutMinutes: 30
-    ghostScripttimeoutMinutes: 30
     weasyPrinttimeoutMinutes: 30
     installApptimeoutMinutes: 60
     calibretimeoutMinutes: 30
+    tesseractTimeoutMinutes: 30

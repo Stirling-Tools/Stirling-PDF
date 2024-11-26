@@ -79,15 +79,15 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Detect and remove blank pages
 - Compare two PDFs and show differences in text
 - Add images to PDFs
-- Compress PDFs to decrease their filesize (using OCRMyPDF)
+- Compress PDFs to decrease their filesize (using qpdf)
 - Extract images from PDF
 - Remove images from PDF
 - Extract images from scans
 - Remove annotations
 - Add page numbers
 - Auto rename file by detecting PDF header text
-- OCR on PDF (using OCRMyPDF)
-- PDF/A conversion (using OCRMyPDF)
+- OCR on PDF (using tesseract)
+- PDF/A conversion (using libreoffice)
 - Edit metadata
 - Flatten PDFs
 - Get all information on a PDF to view or export as JSON
@@ -102,7 +102,7 @@ A demo of the app is available [here](https://stirlingpdf.io).
 - Spring Boot + Thymeleaf
 - [PDFBox](https://github.com/apache/pdfbox/tree/trunk)
 - [LibreOffice](https://www.libreoffice.org/discover/libreoffice/) for advanced conversions
-- [OcrMyPdf](https://github.com/ocrmypdf/OCRmyPDF)
+- [qpdf](https://github.com/qpdf/qpdf)
 - HTML, CSS, JavaScript
 - Docker
 - [PDF.js](https://github.com/mozilla/pdf.js)
