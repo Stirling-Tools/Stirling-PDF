@@ -1,5 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import io.github.pixee.security.BoundedLineReader;
+import io.github.pixee.security.Filenames;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -144,7 +146,7 @@ public class OCRController {
                                 new BufferedReader(
                                         new InputStreamReader(process.getErrorStream()))) {
                             String line;
-                            while ((line = reader.readLine()) != null) {
+                            while ((line = BoundedLineReader.readLine(reader, 5_000_000)) != null) {
                                 log.debug("Tesseract: {}", line);
                             }
                         }
@@ -174,7 +176,7 @@ public class OCRController {
             // Read the final PDF file
             byte[] pdfContent = Files.readAllBytes(finalOutputFile);
             String outputFilename =
-                    inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
 
             return ResponseEntity.ok()
                     .header(
