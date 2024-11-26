@@ -8,7 +8,7 @@ The 'Fat' container contains all those found in 'Full' with security jar along w
 | Libre      |            |   ✔️   |
 | Python     |            |   ✔️   |
 | OpenCV     |            |   ✔️   |
-| OCRmyPDF   |            |   ✔️   |
+| qpdf   |            |   ✔️   |
 
 | Operation              | Ultra-Lite | Full |
 | ---------------------- | ---------- | ---- |

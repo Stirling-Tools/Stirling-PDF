@@ -188,7 +188,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("OpenCV", "extract-image-scans");
 
         // LibreOffice
-        addEndpointToGroup("LibreOffice", "repair");
+        addEndpointToGroup("qpdf", "repair");
         addEndpointToGroup("LibreOffice", "file-to-pdf");
         addEndpointToGroup("LibreOffice", "pdf-to-word");
         addEndpointToGroup("LibreOffice", "pdf-to-presentation");
@@ -199,10 +199,11 @@ public class EndpointConfiguration {
         // Unoconv
         addEndpointToGroup("Unoconv", "file-to-pdf");
 
-        // OCRmyPDF
-        addEndpointToGroup("OCRmyPDF", "compress-pdf");
-        addEndpointToGroup("OCRmyPDF", "pdf-to-pdfa");
-        addEndpointToGroup("OCRmyPDF", "ocr-pdf");
+        // qpdf
+        addEndpointToGroup("qpdf", "compress-pdf");
+        addEndpointToGroup("qpdf", "pdf-to-pdfa");
+
+        addEndpointToGroup("tesseract", "ocr-pdf");
 
         // Java
         addEndpointToGroup("Java", "merge-pdfs");
@@ -248,10 +249,10 @@ public class EndpointConfiguration {
         addEndpointToGroup("Javascript", "compare");
         addEndpointToGroup("Javascript", "adjust-contrast");
 
-        // Ghostscript dependent endpoints
-        addEndpointToGroup("Ghostscript", "compress-pdf");
-        addEndpointToGroup("Ghostscript", "pdf-to-pdfa");
-        addEndpointToGroup("Ghostscript", "repair");
+        // qpdf dependent endpoints
+        addEndpointToGroup("qpdf", "compress-pdf");
+        addEndpointToGroup("qpdf", "pdf-to-pdfa");
+        addEndpointToGroup("qpdf", "repair");
 
         // Weasyprint dependent endpoints
         addEndpointToGroup("Weasyprint", "html-to-pdf");

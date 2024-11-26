@@ -31,7 +31,7 @@ public class PostHogService {
     private final ApplicationProperties applicationProperties;
     private final UserServiceInterface userService;
     private final Environment env;
-    
+
     @Autowired
     public PostHogService(
             PostHog postHog,
@@ -71,16 +71,16 @@ public class PostHogService {
         Map<String, Object> metrics = new HashMap<>();
 
         try {
-        	//Application version
-        	metrics.put("app_version", appVersion);
-        	 String deploymentType = "JAR"; // default
-             if ("true".equalsIgnoreCase(env.getProperty("BROWSER_OPEN"))) {
-                 deploymentType = "EXE";
-             } else if (isRunningInDocker()) {
-                 deploymentType = "DOCKER";
-             }
-             metrics.put("deployment_type", deploymentType);
-        	
+            // Application version
+            metrics.put("app_version", appVersion);
+            String deploymentType = "JAR"; // default
+            if ("true".equalsIgnoreCase(env.getProperty("BROWSER_OPEN"))) {
+                deploymentType = "EXE";
+            } else if (isRunningInDocker()) {
+                deploymentType = "DOCKER";
+            }
+            metrics.put("deployment_type", deploymentType);
+
             // System info
             metrics.put("os_name", System.getProperty("os.name"));
             metrics.put("os_version", System.getProperty("os.version"));
