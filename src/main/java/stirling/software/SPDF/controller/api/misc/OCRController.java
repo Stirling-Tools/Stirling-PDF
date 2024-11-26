@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import io.github.pixee.security.BoundedLineReader;
-import io.github.pixee.security.Filenames;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -176,7 +175,7 @@ public class OCRController {
             // Read the final PDF file
             byte[] pdfContent = Files.readAllBytes(finalOutputFile);
             String outputFilename =
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
+                    inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
 
             return ResponseEntity.ok()
                     .header(
