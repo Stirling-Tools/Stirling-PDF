@@ -87,7 +87,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Add page numbers
 - Auto rename file by detecting PDF header text
 - OCR on PDF (using tesseract)
-- PDF/A conversion (using qpdf)
+- PDF/A conversion (using libreoffice)
 - Edit metadata
 - Flatten PDFs
 - Get all information on a PDF to view or export as JSON
