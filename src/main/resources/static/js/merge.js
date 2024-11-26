@@ -3,7 +3,7 @@ let currentSort = {
   descending: false,
 };
 
-document.getElementById("fileInput-input").addEventListener("change", function () {
+document.getElementById("fileInput-input").addEventListener("file-input-change", function () {
   var files = this.files;
   displayFiles(files);
 });
