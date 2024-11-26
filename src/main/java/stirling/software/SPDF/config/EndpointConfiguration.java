@@ -249,7 +249,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Javascript", "compare");
         addEndpointToGroup("Javascript", "adjust-contrast");
 
-        // Ghostscript dependent endpoints
+        // qpdf dependent endpoints
         addEndpointToGroup("qpdf", "compress-pdf");
         addEndpointToGroup("qpdf", "pdf-to-pdfa");
         addEndpointToGroup("qpdf", "repair");

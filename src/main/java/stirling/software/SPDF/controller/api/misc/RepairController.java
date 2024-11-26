@@ -44,7 +44,7 @@ public class RepairController {
     @Operation(
             summary = "Repair a PDF file",
             description =
-                    "This endpoint repairs a given PDF file by running Ghostscript command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint repairs a given PDF file by running qpdf command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> repairPdf(@ModelAttribute PDFFile request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
