@@ -96,6 +96,7 @@ function setupFileInput(chooser) {
     }
 
     handleFileInputChange(this);
+    this.dispatchEvent(new CustomEvent("file-input-change", { bubbles: true }));
   });
 
   function handleFileInputChange(inputElement) {
