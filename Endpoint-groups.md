@@ -1,4 +1,4 @@
-| Operation           | PageOps | Convert | Security | Other | CLI | Python | OpenCV | LibreOffice | qpdf | Java | Javascript | Unoconv | qpdf |
+| Operation           | PageOps | Convert | Security | Other | CLI | Python | OpenCV | LibreOffice | qpdf | Java | Javascript | Unoconv | tesseract |
 | ------------------- | ------- | ------- | -------- | ----- | --- | ------ | ------ | ----------- | -------- | ---- | ---------- | ------- | ----------- |
 | adjust-contrast     | ✔️       |         |          |       |     |        |        |             |          |      | ✔️          |         |             |
 | auto-split-pdf      | ✔️       |         |          |       |     |        |        |             |          | ✔️    |            |         |             |
@@ -16,7 +16,7 @@
 | img-to-pdf          |         | ✔️       |          |       |     |        |        |             |          | ✔️    |            |         |             |
 | pdf-to-html         |         | ✔️       |          |       | ✔️   |        |        | ✔️           |          |      |            |         |             |
 | pdf-to-img          |         | ✔️       |          |       |     | ✔️      |        |             |          | ✔️    |            |         |             |
-| pdf-to-pdfa         |         | ✔️       |          |       | ✔️   |        |        |             | ✔️        |      |            |         | ✔️           |
+| pdf-to-pdfa         |         | ✔️       |          |       | ✔️   |        |        |             | ✔️        |      |            |         |            |
 | pdf-to-markdown     |         | ✔️       |          |       |     |        |        |             |          | ✔️    |            |         |             |
 | pdf-to-presentation |         | ✔️       |          |       | ✔️   |        |        | ✔️           |          |      |            |         |             |
 | pdf-to-text         |         | ✔️       |          |       | ✔️   |        |        | ✔️           |          |      |            |         |             |
@@ -34,13 +34,13 @@
 | auto-rename         |         |         |          | ✔️     |     |        |        |             |          | ✔️    |            |         |             |
 | change-metadata     |         |         |          | ✔️     |     |        |        |             |          | ✔️    |            |         |             |
 | compare             |         |         |          | ✔️     |     |        |        |             |          |      | ✔️          |         |             |
-| compress-pdf        |         |         |          | ✔️     | ✔️   |        |        |             | ✔️        |      |            |         | ✔️           |
+| compress-pdf        |         |         |          | ✔️     | ✔️   |        |        |             | ✔️        |      |            |         |            |
 | extract-image-scans |         |         |          | ✔️     | ✔️   | ✔️      | ✔️      |             |          |      |            |         |             |
 | extract-images      |         |         |          | ✔️     |     |        |        |             |          | ✔️    |            |         |             |
 | flatten             |         |         |          | ✔️     |     |        |        |             |          |      | ✔️          |         |             |
 | get-info-on-pdf     |         |         |          | ✔️     |     |        |        |             |          | ✔️    |            |         |             |
-| ocr-pdf             |         |         |          | ✔️     | ✔️   |        |        |             | ✔️        |      |            |         |             |
+| ocr-pdf             |         |         |          | ✔️     | ✔️   |        |        |             |         |      |            |         |    ✔        |
 | remove-blanks       |         |         |          | ✔️     | ✔️   | ✔️      | ✔️      |             |          |      |            |         |             |
-| repair              |         |         |          | ✔️     | ✔️   |        |        | ✔️           |          |      |            |         | ✔️           |
+| repair              |         |         |          | ✔️     | ✔️   |        |        | ✔️           |   ✔       |      |            |         |            |
 | show-javascript     |         |         |          | ✔️     |     |        |        |             |          |      | ✔️          |         |             |
 | sign                |         |         |          | ✔️     |     |        |        |             |          |      | ✔️          |         |             |
