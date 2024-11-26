@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import stirling.software.SPDF.controller.api.CropController;
+
 import stirling.software.SPDF.model.api.extract.PDFFilePage;
 import stirling.software.SPDF.pdf.FlexibleCSVWriter;
 import technology.tabula.ObjectExtractor;
@@ -37,11 +37,15 @@ public class ExtractCSVController {
     private static final Logger logger = LoggerFactory.getLogger(ExtractCSVController.class);
 
     @PostMapping(value = "/pdf/csv", consumes = "multipart/form-data")
-    @Operation(summary = "Extracts a CSV document from a PDF", description = "This operation takes an input PDF file and returns CSV file of whole page. Input:PDF Output:CSV Type:SISO")
+    @Operation(
+            summary = "Extracts a CSV document from a PDF",
+            description =
+                    "This operation takes an input PDF file and returns CSV file of whole page. Input:PDF Output:CSV Type:SISO")
     public ResponseEntity<String> PdfToCsv(@ModelAttribute PDFFilePage form) throws Exception {
         StringWriter writer = new StringWriter();
         try (PDDocument document = Loader.loadPDF(form.getFileInput().getBytes())) {
-            CSVFormat format = CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
+            CSVFormat format =
+                    CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
             Writer csvWriter = new FlexibleCSVWriter(format);
             SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
             try (ObjectExtractor extractor = new ObjectExtractor(document)) {
@@ -56,8 +60,8 @@ public class ExtractCSVController {
                 ContentDisposition.builder("attachment")
                         .filename(
                                 form.getFileInput()
-                                        .getOriginalFilename()
-                                        .replaceFirst("[.][^.]+$", "")
+                                                .getOriginalFilename()
+                                                .replaceFirst("[.][^.]+$", "")
                                         + "_extracted.csv")
                         .build());
         headers.setContentType(MediaType.parseMediaType("text/csv"));

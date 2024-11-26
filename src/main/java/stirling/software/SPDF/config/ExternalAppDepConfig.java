@@ -37,12 +37,11 @@ public class ExternalAppDepConfig {
     private final Map<String, List<String>> commandToGroupMapping =
             new HashMap<>() {
                 {
-                    put("gs", List.of("Ghostscript"));
                     put("soffice", List.of("LibreOffice"));
-                    put("ocrmypdf", List.of("OCRmyPDF"));
                     put("weasyprint", List.of("Weasyprint"));
                     put("pdftohtml", List.of("Pdftohtml"));
                     put("unoconv", List.of("Unoconv"));
+                    put("qpdf", List.of("qpdf"));
                 }
             };
 
@@ -97,9 +96,8 @@ public class ExternalAppDepConfig {
     public void checkDependencies() {
 
         // Check core dependencies
-        checkDependencyAndDisableGroup("gs");
         checkDependencyAndDisableGroup("soffice");
-        checkDependencyAndDisableGroup("ocrmypdf");
+        checkDependencyAndDisableGroup("qpdf");
         checkDependencyAndDisableGroup("weasyprint");
         checkDependencyAndDisableGroup("pdftohtml");
         checkDependencyAndDisableGroup("unoconv");

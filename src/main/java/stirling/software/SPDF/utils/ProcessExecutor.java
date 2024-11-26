@@ -29,12 +29,13 @@ public class ProcessExecutor {
     public enum Processes {
         LIBRE_OFFICE,
         PDFTOHTML,
-        OCR_MY_PDF,
         PYTHON_OPENCV,
-        GHOSTSCRIPT,
         WEASYPRINT,
         INSTALL_APP,
-        CALIBRE
+        CALIBRE,
+        IMAGEMAGICK,
+        TESSERACT,
+        QPDF
     }
 
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
@@ -59,21 +60,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getPdfToHtmlSessionLimit();
-                                case OCR_MY_PDF ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getSessionLimit()
-                                                .getOcrMyPdfSessionLimit();
                                 case PYTHON_OPENCV ->
                                         applicationProperties
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getPythonOpenCvSessionLimit();
-                                case GHOSTSCRIPT ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getSessionLimit()
-                                                .getGhostScriptSessionLimit();
                                 case WEASYPRINT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -84,7 +75,7 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
                                                 .getInstallAppSessionLimit();
-                                case CALIBRE ->
+                                case CALIBRE, IMAGEMAGICK, TESSERACT, QPDF ->
                                         applicationProperties
                                                 .getProcessExecutor()
                                                 .getSessionLimit()
@@ -103,21 +94,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getPdfToHtmlTimeoutMinutes();
-                                case OCR_MY_PDF ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getTimeoutMinutes()
-                                                .getOcrMyPdfTimeoutMinutes();
                                 case PYTHON_OPENCV ->
                                         applicationProperties
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getPythonOpenCvTimeoutMinutes();
-                                case GHOSTSCRIPT ->
-                                        applicationProperties
-                                                .getProcessExecutor()
-                                                .getTimeoutMinutes()
-                                                .getGhostScriptTimeoutMinutes();
                                 case WEASYPRINT ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -128,7 +109,7 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getInstallAppTimeoutMinutes();
-                                case CALIBRE ->
+                                case CALIBRE, IMAGEMAGICK, TESSERACT, QPDF ->
                                         applicationProperties
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()

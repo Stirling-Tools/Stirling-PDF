@@ -56,14 +56,15 @@ public class RepairController {
         try {
 
             List<String> command = new ArrayList<>();
-            command.add("gs");
-            command.add("-o");
-            command.add(tempOutputFile.toString());
-            command.add("-sDEVICE=pdfwrite");
+            command.add("qpdf");
+            command.add("--replace-input"); // Automatically fixes problems it can
+            command.add("--qdf"); // Linearizes and normalizes PDF structure
+            command.add("--object-streams=disable"); // Can help with some corruptions
             command.add(tempInputFile.toString());
+            command.add(tempOutputFile.toString());
 
             ProcessExecutorResult returnCode =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
                             .runCommandWithOutputHandling(command);
 
             // Read the optimized PDF file

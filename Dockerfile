@@ -30,6 +30,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         tini \
         bash \
         curl \
+        qpdf \
         shadow \
         su-exec \
         openssl \
@@ -40,7 +41,6 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
 # pdftohtml
         poppler-utils \
 # OCR MY PDF (unpaper for descew and other advanced features)
-        ocrmypdf \
         tesseract-ocr-data-eng \
 # CV
         py3-opencv \
