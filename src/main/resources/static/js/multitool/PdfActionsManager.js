@@ -1,4 +1,6 @@
 import { DeletePageCommand } from "./commands/delete-page.js";
+import { SelectPageCommand } from "./commands/select.js";
+
 class PdfActionsManager {
   pageDirection;
   pagesContainer;
@@ -190,25 +192,10 @@ class PdfActionsManager {
 
     selectCheckbox.onchange = () => {
       const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
-      if (selectCheckbox.checked) {
-        //adds to array of selected pages
-        window.selectedPages.push(pageNumber);
-      } else {
-        //remove page from selected pages array
-        const index = window.selectedPages.indexOf(pageNumber);
-        if (index !== -1) {
-          window.selectedPages.splice(index, 1);
-        }
-      }
+      let selectPageCommand = new SelectPageCommand(pageNumber, selectCheckbox);
+      selectPageCommand.execute();
 
-      if (window.selectedPages.length > 0 && !window.selectPage) {
-        window.toggleSelectPageVisibility();
-      }
-      if (window.selectedPages.length == 0 && window.selectPage) {
-        window.toggleSelectPageVisibility();
-      }
-
-      window.updateSelectedPagesDisplay();
+      this._pushUndoClearRedo(selectPageCommand);
     };
 
     const insertFileButtonContainer = document.createElement("div");
