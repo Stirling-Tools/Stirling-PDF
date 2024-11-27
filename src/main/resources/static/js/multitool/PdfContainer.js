@@ -1,6 +1,7 @@
 import { MovePageUpCommand, MovePageDownCommand } from "./commands/move-page.js";
 import { RemoveSelectedCommand } from "./commands/remove.js";
 import { RotateAllCommand, RotateElementCommand } from "./commands/rotate.js";
+import { SplitAllCommand } from "./commands/split.js";
 
 class PdfContainer {
   fileName;
@@ -520,33 +521,20 @@ class PdfContainer {
 
   splitAll() {
     const allPages = this.pagesContainer.querySelectorAll(".page-container");
-
-    if (!window.selectPage) {
-      const hasSplit = this.pagesContainer.querySelectorAll(".split-before").length > 0;
-      if (hasSplit) {
-        allPages.forEach(page => {
-          page.classList.remove("split-before");
-        });
-      } else {
-        allPages.forEach(page => {
-          page.classList.add("split-before");
-        });
-      }
-      return;
-    }
-
-    allPages.forEach((page, index) => {
-      const pageIndex = index;
-      if (window.selectPage && !window.selectedPages.includes(pageIndex)) return;
-
-      if (page.classList.contains("split-before")) {
-        page.classList.remove("split-before");
-      } else {
-        page.classList.add("split-before");
-      }
-    });
+    document.dispatchEvent(
+      new CustomEvent("command-execution", {
+        bubbles: true,
+        detail: {
+          command: new SplitAllCommand(
+            allPages,
+            window.selectPage,
+            window.selectedPages,
+            "split-before"
+          ),
+        },
+      })
+    );
   }
-
 
   async splitPDF(baseDocBytes, splitters) {
     const baseDocument = await PDFLib.PDFDocument.load(baseDocBytes);

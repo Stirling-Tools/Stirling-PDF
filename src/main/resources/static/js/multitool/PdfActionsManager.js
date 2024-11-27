@@ -1,5 +1,6 @@
 import { DeletePageCommand } from "./commands/delete-page.js";
 import { SelectPageCommand } from "./commands/select.js";
+import { SplitFileCommand } from "./commands/split.js";
 
 class PdfActionsManager {
   pageDirection;
@@ -97,7 +98,11 @@ class PdfActionsManager {
 
   splitFileButtonCallback(e) {
     var imgContainer = this.getPageContainer(e.target);
-    imgContainer.classList.toggle("split-before");
+
+    let splitFileCommand = new SplitFileCommand(imgContainer, "split-before");
+    splitFileCommand.execute();
+
+    this._pushUndoClearRedo(splitFileCommand);
   }
 
   execUndo() {
