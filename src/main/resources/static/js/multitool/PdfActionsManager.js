@@ -1,31 +1,25 @@
 import { DeletePageCommand } from "./commands/delete-page.js";
 import { SelectPageCommand } from "./commands/select.js";
 import { SplitFileCommand } from "./commands/split.js";
+import { UndoManager } from "./UndoManager.js";
 
 class PdfActionsManager {
   pageDirection;
   pagesContainer;
   static selectedPages = []; // Static property shared across all instances
+  undoManager;
 
-  undo = [];
-  redo = [];
-  constructor(id) {
+  constructor(id, undoManager) {
     this.pagesContainer = document.getElementById(id);
     this.pageDirection = document.documentElement.getAttribute("dir");
+
+    this.undoManager = undoManager || new UndoManager();
 
     var styleElement = document.createElement("link");
     styleElement.rel = "stylesheet";
     styleElement.href = "css/pdfActions.css";
 
     document.head.appendChild(styleElement);
-    document.addEventListener("command-execution", (e) => {
-      if (!e.detail?.command) return;
-
-      let command = e.detail.command;
-      command.execute();
-
-      this._pushUndoClearRedo(command);
-    });
   }
 
   getPageContainer(element) {
@@ -105,27 +99,8 @@ class PdfActionsManager {
     this._pushUndoClearRedo(splitFileCommand);
   }
 
-  execUndo() {
-    if (!this.undo || this.undo.length <= 0) return;
-
-    let cmd = this.undo.pop();
-    cmd.undo();
-
-    this.redo.push(cmd);
-  }
-
-  execRedo() {
-    if (!this.redo || this.redo.length <= 0) return;
-
-    let cmd = this.redo.pop();
-    cmd.redo();
-
-    this.undo.push(cmd);
-  }
-
   _pushUndoClearRedo(command) {
-    this.undo.push(command);
-    this.redo = [];
+    this.undoManager.pushUndoClearRedo(command);
   }
 
   setActions({ movePageTo, addFiles, rotateElement }) {

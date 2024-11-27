@@ -2,6 +2,7 @@ import { MovePageUpCommand, MovePageDownCommand } from "./commands/move-page.js"
 import { RemoveSelectedCommand } from "./commands/remove.js";
 import { RotateAllCommand, RotateElementCommand } from "./commands/rotate.js";
 import { SplitAllCommand } from "./commands/split.js";
+import { UndoManager } from "./UndoManager.js";
 
 class PdfContainer {
   fileName;
@@ -9,8 +10,9 @@ class PdfContainer {
   pagesContainerWrapper;
   pdfAdapters;
   downloadLink;
+  undoManager;
 
-  constructor(id, wrapperId, pdfAdapters) {
+  constructor(id, wrapperId, pdfAdapters, undoManager) {
     this.pagesContainer = document.getElementById(id);
     this.pagesContainerWrapper = document.getElementById(wrapperId);
     this.downloadLink = null;
@@ -35,6 +37,8 @@ class PdfContainer {
     this.addFilesBlankAll = this.addFilesBlankAll.bind(this)
     this.removeAllElements = this.removeAllElements.bind(this);
     this.resetPages = this.resetPages.bind(this);
+
+    this.undoManager = undoManager || new UndoManager();
 
     this.pdfAdapters = pdfAdapters;
 
@@ -320,14 +324,10 @@ class PdfContainer {
       elementsToRotate.push(img);
     }
 
-    document.dispatchEvent(
-      new CustomEvent("command-execution", {
-        bubbles: true,
-        detail: {
-          command: new RotateAllCommand(elementsToRotate, deg),
-        },
-      })
-    );
+    let rotateAllCommand = new RotateAllCommand(elementsToRotate, deg);
+    rotateAllCommand.execute();
+
+    this.undoManager.pushUndoClearRedo(rotateAllCommand);
   }
 
   removeAllElements(){
@@ -342,18 +342,13 @@ class PdfContainer {
 
   deleteSelected() {
     window.selectedPages.sort((a, b) => a - b);
-    document.dispatchEvent(
-      new CustomEvent("command-execution", {
-        bubbles: true,
-        detail: {
-          command: new RemoveSelectedCommand(
-            this.pagesContainer,
-            window.selectedPages,
-            this.updatePageNumbersAndCheckboxes
-          ),
-        },
-      })
+    let removeSelectedCommand = new RemoveSelectedCommand(
+      this.pagesContainer,
+      window.selectedPages,
+      this.updatePageNumbersAndCheckboxes
     );
+
+    this.undoManager.pushUndoClearRedo(removeSelectedCommand);
   }
 
   toggleSelectAll() {
@@ -521,19 +516,14 @@ class PdfContainer {
 
   splitAll() {
     const allPages = this.pagesContainer.querySelectorAll(".page-container");
-    document.dispatchEvent(
-      new CustomEvent("command-execution", {
-        bubbles: true,
-        detail: {
-          command: new SplitAllCommand(
-            allPages,
-            window.selectPage,
-            window.selectedPages,
-            "split-before"
-          ),
-        },
-      })
+    let splitAllCommand = new SplitAllCommand(
+      allPages,
+      window.selectPage,
+      window.selectedPages,
+      "split-before"
     );
+
+    this.undoManager.pushUndoClearRedo(splitAllCommand);
   }
 
   async splitPDF(baseDocBytes, splitters) {
