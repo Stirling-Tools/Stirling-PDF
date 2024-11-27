@@ -14,6 +14,14 @@ class PdfActionsManager {
     styleElement.href = "css/pdfActions.css";
 
     document.head.appendChild(styleElement);
+    document.addEventListener("command-execution", (e) => {
+      if (!e.detail?.command) return;
+
+      let command = e.detail.command;
+      command.execute();
+
+      this._pushUndoClearRedo(command);
+    });
   }
 
   getPageContainer(element) {
