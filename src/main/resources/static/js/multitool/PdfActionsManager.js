@@ -45,14 +45,16 @@ class PdfActionsManager {
     var imgContainer = this.getPageContainer(e.target);
     const img = imgContainer.querySelector("img");
 
-    this.rotateElement(img, -90);
+    let rotateCommand = this.rotateElement(img, -90);
+    this._pushUndoClearRedo(rotateCommand);
   }
 
   rotateCWButtonCallback(e) {
     var imgContainer = this.getPageContainer(e.target);
     const img = imgContainer.querySelector("img");
 
-    this.rotateElement(img, 90);
+    let rotateCommand = this.rotateElement(img, 90);
+    this._pushUndoClearRedo(rotateCommand);
   }
 
   deletePageButtonCallback(e) {

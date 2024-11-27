@@ -1,3 +1,5 @@
+import { RotateElementCommand } from "./commands/rotate.js";
+
 class PdfContainer {
   fileName;
   pagesContainer;
@@ -206,15 +208,10 @@ class PdfContainer {
 
 
   rotateElement(element, deg) {
-    var lastTransform = element.style.rotate;
-    if (!lastTransform) {
-      lastTransform = "0";
-    }
-    const lastAngle = parseInt(lastTransform.replace(/[^\d-]/g, ""));
-    const newAngle = lastAngle + deg;
+    let rotateCommand = new RotateElementCommand(element, deg);
+    rotateCommand.execute();
 
-    element.style.rotate = newAngle + "deg";
-
+    return rotateCommand;
   }
 
   async addPdfFile(renderer, pdfDocument, nextSiblingElement) {
