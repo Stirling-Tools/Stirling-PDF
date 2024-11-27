@@ -182,6 +182,18 @@
     )
 
     fileDragManager.setCallback(async (files) => pdfContainer.addFilesFromFiles(files));
+    document.addEventListener('keydown', function(event) {
+    let targetElementId = event.target.id;
+
+    // To avoid undoing/redoing the page when the user is simply undoing/redoing text
+    const isFilenameInputField = (targetElementId === 'filename-input') && (event.target === document.activeElement);
+
+    const isUndo = (event.ctrlKey && event.key === 'z');
+    const isRedo = (event.ctrlKey && event.key == 'y');
+    if (isUndo && !isFilenameInputField)
+      pdfActionsManager.execUndo();
+    else if (isRedo && !isFilenameInputField) pdfActionsManager.execRedo();
+});
   </script>
 </body>
 
