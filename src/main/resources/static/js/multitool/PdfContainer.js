@@ -1,4 +1,5 @@
 import { MovePageUpCommand, MovePageDownCommand } from "./commands/move-page.js";
+import { RemoveSelectedCommand } from "./commands/remove.js";
 import { RotateAllCommand, RotateElementCommand } from "./commands/rotate.js";
 
 class PdfContainer {
@@ -340,34 +341,18 @@ class PdfContainer {
 
   deleteSelected() {
     window.selectedPages.sort((a, b) => a - b);
-    let deletions = 0;
-
-    window.selectedPages.forEach((pageIndex) => {
-      const adjustedIndex = pageIndex - 1 - deletions;
-      const child = this.pagesContainer.children[adjustedIndex];
-      if (child) {
-        this.pagesContainer.removeChild(child);
-        deletions++;
-      }
-    });
-
-    if (this.pagesContainer.childElementCount === 0) {
-      const filenameInput = document.getElementById("filename-input");
-      const filenameParagraph = document.getElementById("filename");
-      const downloadBtn = document.getElementById("export-button");
-
-      if (filenameInput)
-        filenameInput.disabled = true;
-      filenameInput.value = "";
-      if (filenameParagraph)
-        filenameParagraph.innerText = "";
-
-      downloadBtn.disabled = true;
-    }
-
-    window.selectedPages = [];
-    this.updatePageNumbersAndCheckboxes();
-    document.dispatchEvent(new Event("selectedPagesUpdated"));
+    document.dispatchEvent(
+      new CustomEvent("command-execution", {
+        bubbles: true,
+        detail: {
+          command: new RemoveSelectedCommand(
+            this.pagesContainer,
+            window.selectedPages,
+            this.updatePageNumbersAndCheckboxes
+          ),
+        },
+      })
+    );
   }
 
   toggleSelectAll() {
