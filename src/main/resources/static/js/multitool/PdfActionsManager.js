@@ -1,3 +1,4 @@
+import { DeletePageCommand } from "./commands/delete-page.js";
 class PdfActionsManager {
   pageDirection;
   pagesContainer;
@@ -66,19 +67,14 @@ class PdfActionsManager {
   }
 
   deletePageButtonCallback(e) {
-    var imgContainer = this.getPageContainer(e.target);
-    this.pagesContainer.removeChild(imgContainer);
-    if (this.pagesContainer.childElementCount === 0) {
-      const filenameInput = document.getElementById("filename-input");
-      const filenameParagraph = document.getElementById("filename");
-      const downloadBtn = document.getElementById("export-button");
+    let imgContainer = this.getPageContainer(e.target);
+    let deletePageCommand = new DeletePageCommand(
+      imgContainer,
+      this.pagesContainer
+    );
+    deletePageCommand.execute();
 
-      filenameInput.disabled = true;
-      filenameInput.value = "";
-      filenameParagraph.innerText = "";
-
-      downloadBtn.disabled = true;
-    }
+    this._pushUndoClearRedo(deletePageCommand);
   }
 
   insertFileButtonCallback(e) {
