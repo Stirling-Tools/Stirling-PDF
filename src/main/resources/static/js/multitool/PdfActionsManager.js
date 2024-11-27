@@ -3,6 +3,8 @@ class PdfActionsManager {
   pagesContainer;
   static selectedPages = []; // Static property shared across all instances
 
+  undo = [];
+  redo = [];
   constructor(id) {
     this.pagesContainer = document.getElementById(id);
     this.pageDirection = document.documentElement.getAttribute("dir");
@@ -82,6 +84,29 @@ class PdfActionsManager {
   splitFileButtonCallback(e) {
     var imgContainer = this.getPageContainer(e.target);
     imgContainer.classList.toggle("split-before");
+  }
+
+  execUndo() {
+    if (!this.undo || this.undo.length <= 0) return;
+
+    let cmd = this.undo.pop();
+    cmd.undo();
+
+    this.redo.push(cmd);
+  }
+
+  execRedo() {
+    if (!this.redo || this.redo.length <= 0) return;
+
+    let cmd = this.redo.pop();
+    cmd.redo();
+
+    this.undo.push(cmd);
+  }
+
+  _pushUndoClearRedo(command) {
+    this.undo.push(command);
+    this.redo = [];
   }
 
   setActions({ movePageTo, addFiles, rotateElement }) {
