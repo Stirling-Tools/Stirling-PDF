@@ -1,4 +1,4 @@
-import { RotateElementCommand } from "./commands/rotate.js";
+import { RotateAllCommand, RotateElementCommand } from "./commands/rotate.js";
 
 class PdfContainer {
   fileName;
@@ -306,6 +306,7 @@ class PdfContainer {
   }
 
   rotateAll(deg) {
+    let elementsToRotate = [];
     for (let i = 0; i < this.pagesContainer.childNodes.length; i++) {
       const child = this.pagesContainer.children[i];
       if (!child) continue;
@@ -317,8 +318,17 @@ class PdfContainer {
       const img = child.querySelector("img");
       if (!img) continue;
 
-      this.rotateElement(img, deg);
+      elementsToRotate.push(img);
     }
+
+    document.dispatchEvent(
+      new CustomEvent("command-execution", {
+        bubbles: true,
+        detail: {
+          command: new RotateAllCommand(elementsToRotate, deg),
+        },
+      })
+    );
   }
 
   removeAllElements(){
