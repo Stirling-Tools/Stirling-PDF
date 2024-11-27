@@ -61,10 +61,6 @@ label {
   padding: 0;
 }
 
-#export-button {
-  margin-left: auto;
-}
-
 .bg-card {
   background-color: var(--md-sys-color-surface-5);
   border-radius: 3rem;
@@ -289,4 +285,7 @@ label {
 
 .checkbox-label {
   font-size: medium;
+}
+.btn {
+  position: relative;
 }

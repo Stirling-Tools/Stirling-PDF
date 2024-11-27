@@ -145,7 +145,7 @@ Feature: API Validation
     And the response file should have extension ".pdf"
     And the response file should have size greater than 100
 	
-  @compress @ghostscript @positive
+  @compress @qpdf @positive
   Scenario: Compress
     Given I use an example file at "exampleFiles/ghost3.pdf" as parameter "fileInput"
 	And the request data includes
@@ -156,7 +156,7 @@ Feature: API Validation
     And the response file should have extension ".pdf"
     And the response file should have size greater than 100
 	
-  @compress @ghostscript @positive
+  @compress @qpdf @positive
   Scenario: Compress
     Given I use an example file at "exampleFiles/ghost2.pdf" as parameter "fileInput"
 	And the request data includes
@@ -169,7 +169,7 @@ Feature: API Validation
     And the response file should have size greater than 100
 	
 	
-  @compress @ghostscript @positive
+  @compress @qpdf @positive
   Scenario: Compress
     Given I use an example file at "exampleFiles/ghost1.pdf" as parameter "fileInput"
 	And the request data includes

@@ -19,6 +19,15 @@
   transform-origin: top left;
 }
 
+#drag-container .multidrag {
+  position: fixed;
+  max-width: 200px;
+  max-height: 200px;
+  transform-origin: top left;
+  margin-left: 1rem;
+  background-color: rgba(0, 29, 41, 0.9);
+}
+
 .drag-manager_dragging {
   width: 0px;
   visibility: hidden;

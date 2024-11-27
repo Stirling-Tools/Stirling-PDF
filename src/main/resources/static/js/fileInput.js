@@ -64,7 +64,7 @@ function setupFileInput(chooser) {
 
     dragCounter = 0;
 
-    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    fileInput.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: {source: 'drag-drop'} }));
   };
 
   ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
@@ -81,8 +81,22 @@ function setupFileInput(chooser) {
   document.body.addEventListener("drop", dropListener);
 
   $("#" + elementId).on("change", function (e) {
-    allFiles = Array.from(e.target.files);
+    let element = e.target;
+    const isDragAndDrop = e.detail?.source == 'drag-drop';
+    if (element instanceof HTMLInputElement && element.hasAttribute("multiple")) {
+      allFiles = isDragAndDrop ? allFiles : [... allFiles, ... element.files];
+  } else {
+    allFiles = Array.from(isDragAndDrop ? allFiles : element.files[0]);
+  }
+
+    if (!isDragAndDrop) {
+      let dataTransfer = new DataTransfer();
+      allFiles.forEach(file => dataTransfer.items.add(file));
+      element.files = dataTransfer.files;
+    }
+
     handleFileInputChange(this);
+    this.dispatchEvent(new CustomEvent("file-input-change", { bubbles: true }));
   });
 
   function handleFileInputChange(inputElement) {

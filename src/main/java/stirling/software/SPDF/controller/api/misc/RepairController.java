@@ -44,7 +44,7 @@ public class RepairController {
     @Operation(
             summary = "Repair a PDF file",
             description =
-                    "This endpoint repairs a given PDF file by running Ghostscript command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint repairs a given PDF file by running qpdf command. The PDF is first saved to a temporary location, repaired, read back, and then returned as a response. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> repairPdf(@ModelAttribute PDFFile request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
@@ -56,14 +56,15 @@ public class RepairController {
         try {
 
             List<String> command = new ArrayList<>();
-            command.add("gs");
-            command.add("-o");
-            command.add(tempOutputFile.toString());
-            command.add("-sDEVICE=pdfwrite");
+            command.add("qpdf");
+            command.add("--replace-input"); // Automatically fixes problems it can
+            command.add("--qdf"); // Linearizes and normalizes PDF structure
+            command.add("--object-streams=disable"); // Can help with some corruptions
             command.add(tempInputFile.toString());
+            command.add(tempOutputFile.toString());
 
             ProcessExecutorResult returnCode =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
                             .runCommandWithOutputHandling(command);
 
             // Read the optimized PDF file

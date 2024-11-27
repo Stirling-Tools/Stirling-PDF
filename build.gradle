@@ -1,6 +1,6 @@
 plugins {
     id "java"
-    id "org.springframework.boot" version "3.3.5"
+    id "org.springframework.boot" version "3.4.0"
     id "io.spring.dependency-management" version "1.1.6"
     id "org.springdoc.openapi-gradle-plugin" version "1.8.0"
     id "io.swagger.swaggerhub" version "1.3.2"
@@ -15,16 +15,17 @@ plugins {
 import com.github.jk1.license.render.*
 
 ext {
-    springBootVersion = "3.3.5"
+    springBootVersion = "3.4.0"
     pdfboxVersion = "3.0.3"
     logbackVersion = "1.5.7"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.36"
-    bouncycastleVersion = "1.78.1"
+    bouncycastleVersion = "1.79"
 }
 
 group = "stirling.software"
-version = "0.33.1"
+version = "0.35.0"
+
 
 java {
     // 17 is lowest but we support and recommend 21
@@ -121,7 +122,7 @@ configurations.all {
 }
 dependencies {
     //security updates
-    implementation "org.springframework:spring-webmvc:6.1.14"
+    implementation "org.springframework:spring-webmvc:6.2.0"
 
     implementation("io.github.pixee:java-security-toolkit:1.2.0")
 
@@ -143,11 +144,10 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
-		implementation 'org.springframework.security:spring-security-saml2-service-provider:6.3.4'
+		implementation 'org.springframework.security:spring-security-saml2-service-provider:6.4.1'
 	    implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
-        //2.2.x requires rebuild of DB file.. need migration path
-        runtimeOnly "com.h2database:h2:2.1.214"
-        // implementation "com.h2database:h2:2.2.224"
+        // Don't upgrade h2database
+        runtimeOnly "com.h2database:h2:2.3.232"
         constraints {
             implementation "org.opensaml:opensaml-core"
             implementation "org.opensaml:opensaml-saml-api"
@@ -186,7 +186,7 @@ dependencies {
     // Image metadata extractor
     implementation "com.drewnoakes:metadata-extractor:2.19.0"
 
-    implementation "commons-io:commons-io:2.17.0"
+    implementation "commons-io:commons-io:2.18.0"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0"
     //general PDF
 
@@ -203,12 +203,19 @@ dependencies {
         exclude group: "commons-logging", module: "commons-logging"
     }
 
+    // https://mvnrepository.com/artifact/technology.tabula/tabula
+    implementation ('technology.tabula:tabula:1.0.5')  {
+        exclude group: "org.slf4j", module: "slf4j-simple"
+        exclude group: "org.bouncycastle", module: "bcprov-jdk15on"
+        exclude group: "com.google.code.gson", module: "gson"
+    }
+
     implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
 
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.13.6"
+    implementation "io.micrometer:micrometer-core:1.14.1"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark:0.24.0"

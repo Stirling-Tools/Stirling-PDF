@@ -452,7 +452,7 @@ public class SecurityConfiguration {
         RelyingPartyRegistration rp =
                 RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())
                         .signingX509Credentials((c) -> c.add(signingCredential))
-                        .assertingPartyDetails(
+                        .assertingPartyMetadata(
                                 (details) ->
                                         details.entityId(samlConf.getIdpIssuer())
                                                 .singleSignOnServiceLocation(
