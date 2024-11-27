@@ -1,3 +1,4 @@
+import { MovePageUpCommand, MovePageDownCommand } from "./commands/move-page.js";
 import { RotateAllCommand, RotateElementCommand } from "./commands/rotate.js";
 
 class PdfContainer {
@@ -70,32 +71,28 @@ class PdfContainer {
     downloadBtn.disabled = true;
   }
 
-  movePageTo(startElement, endElement, scrollTo = false) {
-    const childArray = Array.from(this.pagesContainer.childNodes);
-    const startIndex = childArray.indexOf(startElement);
-    const endIndex = childArray.indexOf(endElement);
-
-    // Check & remove page number elements here too if they exist because Firefox doesn't fire the relevant event on page move.
-    const pageNumberElement = startElement.querySelector(".page-number");
-    if (pageNumberElement) {
-      startElement.removeChild(pageNumberElement);
-    }
-
-    this.pagesContainer.removeChild(startElement);
-    if (!endElement) {
-      this.pagesContainer.append(startElement);
+  movePageTo(startElement, endElement, scrollTo = false, moveUp = false) {
+    let movePageCommand;
+    if (moveUp) {
+      movePageCommand = new MovePageUpCommand(
+        startElement,
+        endElement,
+        this.pagesContainer,
+        this.pagesContainerWrapper,
+        scrollTo
+      );
     } else {
-      this.pagesContainer.insertBefore(startElement, endElement);
+      movePageCommand = new MovePageDownCommand(
+        startElement,
+        endElement,
+        this.pagesContainer,
+        this.pagesContainerWrapper,
+        scrollTo
+      );
     }
 
-    if (scrollTo) {
-      const { width } = startElement.getBoundingClientRect();
-      const vector = endIndex !== -1 && startIndex > endIndex ? 0 - width : width;
-
-      this.pagesContainerWrapper.scroll({
-        left: this.pagesContainerWrapper.scrollLeft + vector,
-      });
-    }
+    movePageCommand.execute();
+    return movePageCommand;
   }
 
   addFiles(nextSiblingElement, blank = false) {

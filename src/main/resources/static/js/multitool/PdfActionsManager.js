@@ -40,7 +40,8 @@ class PdfActionsManager {
 
     const sibling = imgContainer.previousSibling;
     if (sibling) {
-      this.movePageTo(imgContainer, sibling, true);
+      let movePageCommand = this.movePageTo(imgContainer, sibling, true, true);
+      this._pushUndoClearRedo(movePageCommand);
     }
   }
 
@@ -48,7 +49,12 @@ class PdfActionsManager {
     var imgContainer = this.getPageContainer(e.target);
     const sibling = imgContainer.nextSibling;
     if (sibling) {
-      this.movePageTo(imgContainer, sibling.nextSibling, true);
+      let movePageCommand = this.movePageTo(
+        imgContainer,
+        sibling.nextSibling,
+        true
+      );
+      this._pushUndoClearRedo(movePageCommand);
     }
   }
 
