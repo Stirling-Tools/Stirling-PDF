@@ -96,6 +96,11 @@ public class SecurityConfiguration {
     @Qualifier("loginEnabled")
     public boolean loginEnabledValue;
 
+    @Autowired
+    @Qualifier("runningEE")
+    public boolean runningEE;
+
+    
     @Autowired ApplicationProperties applicationProperties;
 
     @Autowired private UserAuthenticationFilter userAuthenticationFilter;
@@ -263,7 +268,7 @@ public class SecurityConfiguration {
             }
 
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Activ()) {
+            if (applicationProperties.getSecurity().isSaml2Activ() && runningEE) {
             	http.authenticationProvider(samlAuthenticationProvider())
                 .saml2Login(saml2 -> {
 					try {
@@ -306,13 +311,17 @@ public class SecurityConfiguration {
     
     
     @Bean
+    @ConditionalOnProperty(
+            value = "security.oauth2.enabled",
+            havingValue = "true",
+            matchIfMissing = false)
     public AuthenticationProvider samlAuthenticationProvider() {
         OpenSaml4AuthenticationProvider provider = new OpenSaml4AuthenticationProvider();
         provider.setResponseAuthenticationConverter(
             new CustomSaml2ResponseAuthenticationConverter(userService));
         return provider;
     }
-    // Client Registration Repository for OAUTH2 OIDC Login
+
     @Bean
     @ConditionalOnProperty(
             value = "security.oauth2.enabled",
