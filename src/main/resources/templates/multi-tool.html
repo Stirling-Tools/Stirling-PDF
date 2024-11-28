@@ -62,7 +62,7 @@
                       undo
                     </span>
                     <span class="btn-tooltip">
-                      <div th:text="'Undo'"></div>
+                      <div th:text="#{multiTool.undo}"></div>
                       <div class="text-uppercase" th:text="'(CTRL + Z)'"></div>
                     </span>
                   </button>
@@ -72,7 +72,7 @@
                       redo
                     </span>
                     <span class="btn-tooltip">
-                      <div th:text="'Redo'"></div>
+                      <div th:text="#{multiTool.redo}"></div>
                       <div class="text-uppercase" th:text="'(CTRL + Y)'"></div>
                     </span>
                   </button>
@@ -160,7 +160,9 @@
         split: '[[#{multiTool.split}]]',
         addFile: '[[#{multiTool.addFile}]]',
         insertPageBreak:'[[#{multiTool.insertPageBreak}]]',
-        dragDropMessage:'[[#{multiTool.dragDropMessage}]]'
+        dragDropMessage:'[[#{multiTool.dragDropMessage}]]',
+        undo: '[[#{multiTool.undo}]]',
+        redo: '[[#{multiTool.redo}]]'
     };
 
 
