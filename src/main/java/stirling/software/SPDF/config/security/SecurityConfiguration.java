@@ -66,7 +66,6 @@ import stirling.software.SPDF.config.security.saml2.CertificateUtils;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationFailureHandler;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2ResponseAuthenticationConverter;
-import stirling.software.SPDF.config.security.saml2.SamlDebugFilter;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
@@ -105,8 +104,7 @@ public class SecurityConfiguration {
 
     @Autowired private FirstLoginFilter firstLoginFilter;
     @Autowired private SessionPersistentRegistry sessionRegistry;
-    @Autowired
-    private SamlDebugFilter samlDebugFilter;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -284,49 +282,12 @@ public class SecurityConfiguration {
 						        new CustomSaml2AuthenticationFailureHandler())
 						    .permitAll();
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-				}).addFilterBefore(samlDebugFilter, SecurityContextHolderFilter.class)
+				})
                 .saml2Logout(logout -> logout
                     .logoutUrl("/logout"))
                     ;
-                
-                http.addFilterBefore(new OncePerRequestFilter() {
-                    @Override
-                    protected void doFilterInternal(HttpServletRequest request, 
-                            HttpServletResponse response, FilterChain chain)
-                            throws ServletException, IOException {
-                            
-                        if (request.getRequestURI().contains("/saml2/authenticate")) {
-                            log.info("SAML Auth Request - URI: " + request.getRequestURI());
-                            log.info("SAML Auth Request - Method: " + request.getMethod());
-                            log.info("SAML Auth Request - Query String: " + request.getQueryString());
-                            
-                            // Log all request parameters
-                            request.getParameterMap().forEach((key, value) -> {
-                                log.info("SAML Auth Request - Parameter - " + key + ": " + Arrays.toString(value));
-                            });
-                            
-                            // Log request content if POST
-                            if ("POST".equalsIgnoreCase(request.getMethod())) {
-                                try {
-                                    BufferedReader reader = request.getReader();
-                                    StringBuilder sb = new StringBuilder();
-                                    String line;
-                                    while ((line = reader.readLine()) != null) {
-                                        sb.append(line);
-                                    }
-                                    log.info("SAML Auth Request - Body: " + sb.toString());
-                                } catch (Exception e) {
-                                    log.info("Could not read request body", e);
-                                }
-                            }
-                        }
-                        chain.doFilter(request, response);
-                    }
-                }, Saml2WebSsoAuthenticationRequestFilter.class);
-                
                   
             }
         } else {
