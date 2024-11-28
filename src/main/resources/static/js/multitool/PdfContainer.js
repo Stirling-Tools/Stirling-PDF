@@ -1,11 +1,18 @@
+import { MovePageUpCommand, MovePageDownCommand } from "./commands/move-page.js";
+import { RemoveSelectedCommand } from "./commands/remove.js";
+import { RotateAllCommand, RotateElementCommand } from "./commands/rotate.js";
+import { SplitAllCommand } from "./commands/split.js";
+import { UndoManager } from "./UndoManager.js";
+
 class PdfContainer {
   fileName;
   pagesContainer;
   pagesContainerWrapper;
   pdfAdapters;
   downloadLink;
+  undoManager;
 
-  constructor(id, wrapperId, pdfAdapters) {
+  constructor(id, wrapperId, pdfAdapters, undoManager) {
     this.pagesContainer = document.getElementById(id);
     this.pagesContainerWrapper = document.getElementById(wrapperId);
     this.downloadLink = null;
@@ -30,6 +37,8 @@ class PdfContainer {
     this.addFilesBlankAll = this.addFilesBlankAll.bind(this)
     this.removeAllElements = this.removeAllElements.bind(this);
     this.resetPages = this.resetPages.bind(this);
+
+    this.undoManager = undoManager || new UndoManager();
 
     this.pdfAdapters = pdfAdapters;
 
@@ -58,6 +67,33 @@ class PdfContainer {
     window.removeAllElements = this.removeAllElements;
     window.resetPages = this.resetPages;
 
+    let undoBtn = document.getElementById('undo-btn');
+    let redoBtn = document.getElementById('redo-btn');
+
+    document.addEventListener('undo-manager-update', (e) => {
+      let canUndo = e.detail.canUndo;
+      let canRedo = e.detail.canRedo;
+
+      undoBtn.disabled = !canUndo;
+      redoBtn.disabled = !canRedo;
+    })
+
+    window.undo = () => {
+      if (undoManager.canUndo()) undoManager.undo();
+      else {
+        undoBtn.disabled = !undoManager.canUndo();
+        redoBtn.disabled = !undoManager.canRedo();
+      }
+    }
+
+    window.redo = () => {
+      if (undoManager.canRedo()) undoManager.redo();
+      else {
+        undoBtn.disabled = !undoManager.canUndo();
+        redoBtn.disabled = !undoManager.canRedo();
+      }
+    }
+
     const filenameInput = document.getElementById("filename-input");
     const downloadBtn = document.getElementById("export-button");
 
@@ -68,32 +104,28 @@ class PdfContainer {
     downloadBtn.disabled = true;
   }
 
-  movePageTo(startElement, endElement, scrollTo = false) {
-    const childArray = Array.from(this.pagesContainer.childNodes);
-    const startIndex = childArray.indexOf(startElement);
-    const endIndex = childArray.indexOf(endElement);
-
-    // Check & remove page number elements here too if they exist because Firefox doesn't fire the relevant event on page move.
-    const pageNumberElement = startElement.querySelector(".page-number");
-    if (pageNumberElement) {
-      startElement.removeChild(pageNumberElement);
-    }
-
-    this.pagesContainer.removeChild(startElement);
-    if (!endElement) {
-      this.pagesContainer.append(startElement);
+  movePageTo(startElement, endElement, scrollTo = false, moveUp = false) {
+    let movePageCommand;
+    if (moveUp) {
+      movePageCommand = new MovePageUpCommand(
+        startElement,
+        endElement,
+        this.pagesContainer,
+        this.pagesContainerWrapper,
+        scrollTo
+      );
     } else {
-      this.pagesContainer.insertBefore(startElement, endElement);
+      movePageCommand = new MovePageDownCommand(
+        startElement,
+        endElement,
+        this.pagesContainer,
+        this.pagesContainerWrapper,
+        scrollTo
+      );
     }
 
-    if (scrollTo) {
-      const { width } = startElement.getBoundingClientRect();
-      const vector = endIndex !== -1 && startIndex > endIndex ? 0 - width : width;
-
-      this.pagesContainerWrapper.scroll({
-        left: this.pagesContainerWrapper.scrollLeft + vector,
-      });
-    }
+    movePageCommand.execute();
+    return movePageCommand;
   }
 
   addFiles(nextSiblingElement, blank = false) {
@@ -177,15 +209,10 @@ class PdfContainer {
 
 
   rotateElement(element, deg) {
-    var lastTransform = element.style.rotate;
-    if (!lastTransform) {
-      lastTransform = "0";
-    }
-    const lastAngle = parseInt(lastTransform.replace(/[^\d-]/g, ""));
-    const newAngle = lastAngle + deg;
+    let rotateCommand = new RotateElementCommand(element, deg);
+    rotateCommand.execute();
 
-    element.style.rotate = newAngle + "deg";
-
+    return rotateCommand;
   }
 
   async addPdfFile(renderer, pdfDocument, nextSiblingElement) {
@@ -280,6 +307,7 @@ class PdfContainer {
   }
 
   rotateAll(deg) {
+    let elementsToRotate = [];
     for (let i = 0; i < this.pagesContainer.childNodes.length; i++) {
       const child = this.pagesContainer.children[i];
       if (!child) continue;
@@ -291,8 +319,13 @@ class PdfContainer {
       const img = child.querySelector("img");
       if (!img) continue;
 
-      this.rotateElement(img, deg);
+      elementsToRotate.push(img);
     }
+
+    let rotateAllCommand = new RotateAllCommand(elementsToRotate, deg);
+    rotateAllCommand.execute();
+
+    this.undoManager.pushUndoClearRedo(rotateAllCommand);
   }
 
   removeAllElements(){
@@ -307,34 +340,13 @@ class PdfContainer {
 
   deleteSelected() {
     window.selectedPages.sort((a, b) => a - b);
-    let deletions = 0;
+    let removeSelectedCommand = new RemoveSelectedCommand(
+      this.pagesContainer,
+      window.selectedPages,
+      this.updatePageNumbersAndCheckboxes
+    );
 
-    window.selectedPages.forEach((pageIndex) => {
-      const adjustedIndex = pageIndex - 1 - deletions;
-      const child = this.pagesContainer.children[adjustedIndex];
-      if (child) {
-        this.pagesContainer.removeChild(child);
-        deletions++;
-      }
-    });
-
-    if (this.pagesContainer.childElementCount === 0) {
-      const filenameInput = document.getElementById("filename-input");
-      const filenameParagraph = document.getElementById("filename");
-      const downloadBtn = document.getElementById("export-button");
-
-      if (filenameInput)
-        filenameInput.disabled = true;
-      filenameInput.value = "";
-      if (filenameParagraph)
-        filenameParagraph.innerText = "";
-
-      downloadBtn.disabled = true;
-    }
-
-    window.selectedPages = [];
-    this.updatePageNumbersAndCheckboxes();
-    document.dispatchEvent(new Event("selectedPagesUpdated"));
+    this.undoManager.pushUndoClearRedo(removeSelectedCommand);
   }
 
   toggleSelectAll() {
@@ -502,33 +514,16 @@ class PdfContainer {
 
   splitAll() {
     const allPages = this.pagesContainer.querySelectorAll(".page-container");
+    let splitAllCommand = new SplitAllCommand(
+      allPages,
+      window.selectPage,
+      window.selectedPages,
+      "split-before"
+    );
+    splitAllCommand.execute();
 
-    if (!window.selectPage) {
-      const hasSplit = this.pagesContainer.querySelectorAll(".split-before").length > 0;
-      if (hasSplit) {
-        allPages.forEach(page => {
-          page.classList.remove("split-before");
-        });
-      } else {
-        allPages.forEach(page => {
-          page.classList.add("split-before");
-        });
-      }
-      return;
-    }
-
-    allPages.forEach((page, index) => {
-      const pageIndex = index;
-      if (window.selectPage && !window.selectedPages.includes(pageIndex)) return;
-
-      if (page.classList.contains("split-before")) {
-        page.classList.remove("split-before");
-      } else {
-        page.classList.add("split-before");
-      }
-    });
+    this.undoManager.pushUndoClearRedo(splitAllCommand);
   }
-
 
   async splitPDF(baseDocBytes, splitters) {
     const baseDocument = await PDFLib.PDFDocument.load(baseDocBytes);

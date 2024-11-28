@@ -1,11 +1,19 @@
+import { DeletePageCommand } from "./commands/delete-page.js";
+import { SelectPageCommand } from "./commands/select.js";
+import { SplitFileCommand } from "./commands/split.js";
+import { UndoManager } from "./UndoManager.js";
+
 class PdfActionsManager {
   pageDirection;
   pagesContainer;
   static selectedPages = []; // Static property shared across all instances
+  undoManager;
 
-  constructor(id) {
+  constructor(id, undoManager) {
     this.pagesContainer = document.getElementById(id);
     this.pageDirection = document.documentElement.getAttribute("dir");
+
+    this.undoManager = undoManager || new UndoManager();
 
     var styleElement = document.createElement("link");
     styleElement.rel = "stylesheet";
@@ -27,7 +35,8 @@ class PdfActionsManager {
 
     const sibling = imgContainer.previousSibling;
     if (sibling) {
-      this.movePageTo(imgContainer, sibling, true);
+      let movePageCommand = this.movePageTo(imgContainer, sibling, true, true);
+      this._pushUndoClearRedo(movePageCommand);
     }
   }
 
@@ -35,7 +44,12 @@ class PdfActionsManager {
     var imgContainer = this.getPageContainer(e.target);
     const sibling = imgContainer.nextSibling;
     if (sibling) {
-      this.movePageTo(imgContainer, sibling.nextSibling, true);
+      let movePageCommand = this.movePageTo(
+        imgContainer,
+        sibling.nextSibling,
+        true
+      );
+      this._pushUndoClearRedo(movePageCommand);
     }
   }
 
@@ -43,30 +57,27 @@ class PdfActionsManager {
     var imgContainer = this.getPageContainer(e.target);
     const img = imgContainer.querySelector("img");
 
-    this.rotateElement(img, -90);
+    let rotateCommand = this.rotateElement(img, -90);
+    this._pushUndoClearRedo(rotateCommand);
   }
 
   rotateCWButtonCallback(e) {
     var imgContainer = this.getPageContainer(e.target);
     const img = imgContainer.querySelector("img");
 
-    this.rotateElement(img, 90);
+    let rotateCommand = this.rotateElement(img, 90);
+    this._pushUndoClearRedo(rotateCommand);
   }
 
   deletePageButtonCallback(e) {
-    var imgContainer = this.getPageContainer(e.target);
-    this.pagesContainer.removeChild(imgContainer);
-    if (this.pagesContainer.childElementCount === 0) {
-      const filenameInput = document.getElementById("filename-input");
-      const filenameParagraph = document.getElementById("filename");
-      const downloadBtn = document.getElementById("export-button");
+    let imgContainer = this.getPageContainer(e.target);
+    let deletePageCommand = new DeletePageCommand(
+      imgContainer,
+      this.pagesContainer
+    );
+    deletePageCommand.execute();
 
-      filenameInput.disabled = true;
-      filenameInput.value = "";
-      filenameParagraph.innerText = "";
-
-      downloadBtn.disabled = true;
-    }
+    this._pushUndoClearRedo(deletePageCommand);
   }
 
   insertFileButtonCallback(e) {
@@ -81,7 +92,15 @@ class PdfActionsManager {
 
   splitFileButtonCallback(e) {
     var imgContainer = this.getPageContainer(e.target);
-    imgContainer.classList.toggle("split-before");
+
+    let splitFileCommand = new SplitFileCommand(imgContainer, "split-before");
+    splitFileCommand.execute();
+
+    this._pushUndoClearRedo(splitFileCommand);
+  }
+
+  _pushUndoClearRedo(command) {
+    this.undoManager.pushUndoClearRedo(command);
   }
 
   setActions({ movePageTo, addFiles, rotateElement }) {
@@ -159,25 +178,10 @@ class PdfActionsManager {
 
     selectCheckbox.onchange = () => {
       const pageNumber = Array.from(div.parentNode.children).indexOf(div) + 1;
-      if (selectCheckbox.checked) {
-        //adds to array of selected pages
-        window.selectedPages.push(pageNumber);
-      } else {
-        //remove page from selected pages array
-        const index = window.selectedPages.indexOf(pageNumber);
-        if (index !== -1) {
-          window.selectedPages.splice(index, 1);
-        }
-      }
+      let selectPageCommand = new SelectPageCommand(pageNumber, selectCheckbox);
+      selectPageCommand.execute();
 
-      if (window.selectedPages.length > 0 && !window.selectPage) {
-        window.toggleSelectPageVisibility();
-      }
-      if (window.selectedPages.length == 0 && window.selectPage) {
-        window.toggleSelectPageVisibility();
-      }
-
-      window.updateSelectedPagesDisplay();
+      this._pushUndoClearRedo(selectPageCommand);
     };
 
     const insertFileButtonContainer = document.createElement("div");
