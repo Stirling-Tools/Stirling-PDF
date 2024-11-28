@@ -107,13 +107,14 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
+    	if (applicationProperties.getSecurity().getCsrfDisabled()) {
+            http.csrf(csrf -> csrf.disable());
+        } 
+    	
         if (loginEnabledValue) {
             http.addFilterBefore(
                     userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            if (applicationProperties.getSecurity().getCsrfDisabled()) {
-                http.csrf(csrf -> csrf.disable());
-            } else {
+            if (!applicationProperties.getSecurity().getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
                         CookieCsrfTokenRepository.withHttpOnlyFalse();
                 CsrfTokenRequestAttributeHandler requestHandler =
@@ -268,11 +269,10 @@ public class SecurityConfiguration {
 					try {
 						saml2
 						    .loginPage("/saml2")
- // Add this
 						    .relyingPartyRegistrationRepository(relyingPartyRegistrations())
-						    .authenticationRequestResolver(new OpenSaml4AuthenticationRequestResolver(
-					                relyingPartyRegistrations()
-					            ))
+						    //.authenticationRequestResolver(new OpenSaml4AuthenticationRequestResolver(
+					         //       relyingPartyRegistrations()
+					         //   ))
 						    .successHandler(
 						        new CustomSaml2AuthenticationSuccessHandler(
 						            loginAttemptService,
@@ -284,16 +284,10 @@ public class SecurityConfiguration {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-				})
-                .saml2Logout(logout -> logout
-                    .logoutUrl("/logout"))
-                    ;
-                  
+				});
             }
         } else {
-            if (applicationProperties.getSecurity().getCsrfDisabled()) {
-                http.csrf(csrf -> csrf.disable());
-            } else {
+            if (!applicationProperties.getSecurity().getCsrfDisabled()) {
                 CookieCsrfTokenRepository cookieRepo =
                         CookieCsrfTokenRepository.withHttpOnlyFalse();
                 CsrfTokenRequestAttributeHandler requestHandler =
@@ -316,19 +310,6 @@ public class SecurityConfiguration {
         OpenSaml4AuthenticationProvider provider = new OpenSaml4AuthenticationProvider();
         provider.setResponseAuthenticationConverter(
             new CustomSaml2ResponseAuthenticationConverter(userService));
-        
-        provider.setAssertionValidator(token -> {
-            try {
-                HashMap<String, Object> params = new HashMap<>();
-                // Add 5 minutes clock skew
-                params.put(Saml2ErrorCodes.INVALID_ASSERTION, Duration.ofMinutes(5));
-                ValidationContext context = new ValidationContext(params);
-                return Saml2ResponseValidatorResult.success();
-            } catch (Exception e) {
-                return Saml2ResponseValidatorResult.failure();
-            }
-        });
-        
         return provider;
     }
     // Client Registration Repository for OAUTH2 OIDC Login
@@ -489,7 +470,7 @@ public class SecurityConfiguration {
                         .entityId(samlConf.getIdpIssuer())
                         .singleSignOnServiceLocation(samlConf.getIdpSingleLoginUrl())
                         .verificationX509Credentials(c -> c.add(verificationCredential))
-                        .singleSignOnServiceBinding(Saml2MessageBinding.POST)  // Add this
+                        .singleSignOnServiceBinding(Saml2MessageBinding.POST) 
                         .wantAuthnRequestsSigned(true)
                 )
                 .build();

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
@@ -30,6 +31,7 @@ public class InitialSecuritySetup {
             initializeAdminUser();
         } else {
             databaseBackupHelper.exportDatabase();
+            userService.migrateOauth2ToSSO();
         }
         initializeInternalApiUser();
     }
@@ -75,4 +77,7 @@ public class InitialSecuritySetup {
             log.info("Internal API user created: " + Role.INTERNAL_API_USER.getRoleId());
         }
     }
+    
+
+    
 }

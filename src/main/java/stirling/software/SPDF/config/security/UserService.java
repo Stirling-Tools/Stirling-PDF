@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
@@ -50,8 +51,17 @@ public class UserService implements UserServiceInterface {
 
     @Autowired ApplicationProperties applicationProperties;
 
+    @Transactional
+    public void migrateOauth2ToSSO() {
+        userRepository.findByAuthenticationTypeIgnoreCase("OAUTH2")
+            .forEach(user -> {
+                user.setAuthenticationType(AuthenticationType.SSO);
+                userRepository.save(user);
+            });
+    }
+    
     // Handle OAUTH2 login and user auto creation.
-    public boolean processOAuth2PostLogin(String username, boolean autoCreateUser)
+    public boolean processSSOPostLogin(String username, boolean autoCreateUser)
             throws IllegalArgumentException, IOException {
         if (!isUsernameValid(username)) {
             return false;
@@ -61,7 +71,7 @@ public class UserService implements UserServiceInterface {
             return true;
         }
         if (autoCreateUser) {
-            saveUser(username, AuthenticationType.OAUTH2);
+            saveUser(username, AuthenticationType.SSO);
             return true;
         }
         return false;

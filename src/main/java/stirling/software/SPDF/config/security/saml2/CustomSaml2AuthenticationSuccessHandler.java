@@ -63,7 +63,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                 if (userService.usernameExistsIgnoreCase(username)
                         && userService.hasPassword(username)
                         && !userService.isAuthenticationTypeByUsername(
-                                username, AuthenticationType.OAUTH2)
+                                username, AuthenticationType.SSO)
                         && saml2.getAutoCreateUser()) {
                     response.sendRedirect(
                             contextPath + "/logout?oauth2AuthenticationErrorWeb=true");
@@ -76,7 +76,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                                 contextPath + "/login?erroroauth=oauth2_admin_blocked_user");
                         return;
                     }
-                    userService.processOAuth2PostLogin(username, saml2.getAutoCreateUser());
+                    userService.processSSOPostLogin(username, saml2.getAutoCreateUser());
                     response.sendRedirect(contextPath + "/");
                     return;
                 } catch (IllegalArgumentException e) {
