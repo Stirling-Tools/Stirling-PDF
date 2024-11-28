@@ -522,6 +522,7 @@ class PdfContainer {
       window.selectedPages,
       "split-before"
     );
+    splitAllCommand.execute();
 
     this.undoManager.pushUndoClearRedo(splitAllCommand);
   }
