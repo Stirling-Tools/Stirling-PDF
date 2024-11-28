@@ -1,8 +1,12 @@
 package stirling.software.SPDF.config.security;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.util.*;
 
+import org.opensaml.saml.common.assertion.ValidationContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -11,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,21 +31,33 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrations;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
+import org.springframework.security.saml2.core.Saml2ErrorCodes;
+import org.springframework.security.saml2.core.Saml2ResponseValidatorResult;
 import org.springframework.security.saml2.core.Saml2X509Credential;
 import org.springframework.security.saml2.core.Saml2X509Credential.Saml2X509CredentialType;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
+import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
+import org.springframework.security.saml2.provider.service.web.HttpSessionSaml2AuthenticationRequestRepository;
+import org.springframework.security.saml2.provider.service.web.Saml2WebSsoAuthenticationRequestFilter;
+import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
 import org.springframework.security.saml2.provider.service.web.authentication.Saml2WebSsoAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
@@ -49,6 +66,7 @@ import stirling.software.SPDF.config.security.saml2.CertificateUtils;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationFailureHandler;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2ResponseAuthenticationConverter;
+import stirling.software.SPDF.config.security.saml2.SamlDebugFilter;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
@@ -87,7 +105,8 @@ public class SecurityConfiguration {
 
     @Autowired private FirstLoginFilter firstLoginFilter;
     @Autowired private SessionPersistentRegistry sessionRegistry;
-
+    @Autowired
+    private SamlDebugFilter samlDebugFilter;
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -245,22 +264,70 @@ public class SecurityConfiguration {
             }
 
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Activ()
-                    && applicationProperties.getSystem().getEnableAlphaFunctionality()) {
-                http.authenticationProvider(samlAuthenticationProvider());
-                http.saml2Login(
-                                saml2 ->
-                                        saml2.loginPage("/saml2")
-                                                .successHandler(
-                                                        new CustomSaml2AuthenticationSuccessHandler(
-                                                                loginAttemptService,
-                                                                applicationProperties,
-                                                                userService))
-                                                .failureHandler(
-                                                        new CustomSaml2AuthenticationFailureHandler())
-                                                .permitAll())
-                        .addFilterBefore(
-                                userAuthenticationFilter, Saml2WebSsoAuthenticationFilter.class);
+            if (applicationProperties.getSecurity().isSaml2Activ()) {
+            	http.authenticationProvider(samlAuthenticationProvider())
+                .saml2Login(saml2 -> {
+					try {
+						saml2
+						    .loginPage("/saml2")
+ // Add this
+						    .relyingPartyRegistrationRepository(relyingPartyRegistrations())
+						    .authenticationRequestResolver(new OpenSaml4AuthenticationRequestResolver(
+					                relyingPartyRegistrations()
+					            ))
+						    .successHandler(
+						        new CustomSaml2AuthenticationSuccessHandler(
+						            loginAttemptService,
+						            applicationProperties,
+						            userService))
+						    .failureHandler(
+						        new CustomSaml2AuthenticationFailureHandler())
+						    .permitAll();
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}).addFilterBefore(samlDebugFilter, SecurityContextHolderFilter.class)
+                .saml2Logout(logout -> logout
+                    .logoutUrl("/logout"))
+                    ;
+                
+                http.addFilterBefore(new OncePerRequestFilter() {
+                    @Override
+                    protected void doFilterInternal(HttpServletRequest request, 
+                            HttpServletResponse response, FilterChain chain)
+                            throws ServletException, IOException {
+                            
+                        if (request.getRequestURI().contains("/saml2/authenticate")) {
+                            log.info("SAML Auth Request - URI: " + request.getRequestURI());
+                            log.info("SAML Auth Request - Method: " + request.getMethod());
+                            log.info("SAML Auth Request - Query String: " + request.getQueryString());
+                            
+                            // Log all request parameters
+                            request.getParameterMap().forEach((key, value) -> {
+                                log.info("SAML Auth Request - Parameter - " + key + ": " + Arrays.toString(value));
+                            });
+                            
+                            // Log request content if POST
+                            if ("POST".equalsIgnoreCase(request.getMethod())) {
+                                try {
+                                    BufferedReader reader = request.getReader();
+                                    StringBuilder sb = new StringBuilder();
+                                    String line;
+                                    while ((line = reader.readLine()) != null) {
+                                        sb.append(line);
+                                    }
+                                    log.info("SAML Auth Request - Body: " + sb.toString());
+                                } catch (Exception e) {
+                                    log.info("Could not read request body", e);
+                                }
+                            }
+                        }
+                        chain.doFilter(request, response);
+                    }
+                }, Saml2WebSsoAuthenticationRequestFilter.class);
+                
+                  
             }
         } else {
             if (applicationProperties.getSecurity().getCsrfDisabled()) {
@@ -281,20 +348,28 @@ public class SecurityConfiguration {
 
         return http.build();
     }
-
+    
+    
     @Bean
-    @ConditionalOnProperty(
-            name = "security.saml2.enabled",
-            havingValue = "true",
-            matchIfMissing = false)
     public AuthenticationProvider samlAuthenticationProvider() {
-        OpenSaml4AuthenticationProvider authenticationProvider =
-                new OpenSaml4AuthenticationProvider();
-        authenticationProvider.setResponseAuthenticationConverter(
-                new CustomSaml2ResponseAuthenticationConverter(userService));
-        return authenticationProvider;
+        OpenSaml4AuthenticationProvider provider = new OpenSaml4AuthenticationProvider();
+        provider.setResponseAuthenticationConverter(
+            new CustomSaml2ResponseAuthenticationConverter(userService));
+        
+        provider.setAssertionValidator(token -> {
+            try {
+                HashMap<String, Object> params = new HashMap<>();
+                // Add 5 minutes clock skew
+                params.put(Saml2ErrorCodes.INVALID_ASSERTION, Duration.ofMinutes(5));
+                ValidationContext context = new ValidationContext(params);
+                return Saml2ResponseValidatorResult.success();
+            } catch (Exception e) {
+                return Saml2ResponseValidatorResult.failure();
+            }
+        });
+        
+        return provider;
     }
-
     // Client Registration Repository for OAUTH2 OIDC Login
     @Bean
     @ConditionalOnProperty(
@@ -432,39 +507,35 @@ public class SecurityConfiguration {
             havingValue = "true",
             matchIfMissing = false)
     public RelyingPartyRegistrationRepository relyingPartyRegistrations() throws Exception {
-
         SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
 
-        Resource privateKeyResource = samlConf.getPrivateKey();
-
-        Resource certificateResource = samlConf.getSpCert();
-
-        Saml2X509Credential signingCredential =
-                new Saml2X509Credential(
-                        CertificateUtils.readPrivateKey(privateKeyResource),
-                        CertificateUtils.readCertificate(certificateResource),
-                        Saml2X509CredentialType.SIGNING);
-
         X509Certificate idpCert = CertificateUtils.readCertificate(samlConf.getidpCert());
-
         Saml2X509Credential verificationCredential = Saml2X509Credential.verification(idpCert);
 
-        RelyingPartyRegistration rp =
-                RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())
-                        .signingX509Credentials((c) -> c.add(signingCredential))
-                        .assertingPartyMetadata(
-                                (details) ->
-                                        details.entityId(samlConf.getIdpIssuer())
-                                                .singleSignOnServiceLocation(
-                                                        samlConf.getIdpSingleLoginUrl())
-                                                .verificationX509Credentials(
-                                                        (c) -> c.add(verificationCredential))
-                                                .wantAuthnRequestsSigned(true))
-                        .build();
+        Resource privateKeyResource = samlConf.getPrivateKey();
+        Resource certificateResource = samlConf.getSpCert();
+        
+        Saml2X509Credential signingCredential = new Saml2X509Credential(
+                CertificateUtils.readPrivateKey(privateKeyResource),
+                CertificateUtils.readCertificate(certificateResource),
+                Saml2X509CredentialType.SIGNING);
+
+        RelyingPartyRegistration rp = RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())
+                .assertionConsumerServiceLocation("{baseUrl}/login/saml2/sso/stirlingpdf-saml")
+                .entityId("http://localhost:8080/saml2/service-provider-metadata/stirlingpdf-saml")
+                .signingX509Credentials(c -> c.add(signingCredential))
+                .assertingPartyDetails(party -> party
+                        .entityId(samlConf.getIdpIssuer())
+                        .singleSignOnServiceLocation(samlConf.getIdpSingleLoginUrl())
+                        .verificationX509Credentials(c -> c.add(verificationCredential))
+                        .singleSignOnServiceBinding(Saml2MessageBinding.POST)  // Add this
+                        .wantAuthnRequestsSigned(true)
+                )
+                .build();
+
         return new InMemoryRelyingPartyRegistrationRepository(rp);
     }
 
-    @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
