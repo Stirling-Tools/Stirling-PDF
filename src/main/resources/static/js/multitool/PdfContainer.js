@@ -67,6 +67,33 @@ class PdfContainer {
     window.removeAllElements = this.removeAllElements;
     window.resetPages = this.resetPages;
 
+    let undoBtn = document.getElementById('undo-btn');
+    let redoBtn = document.getElementById('redo-btn');
+
+    document.addEventListener('undo-manager-update', (e) => {
+      let canUndo = e.detail.canUndo;
+      let canRedo = e.detail.canRedo;
+
+      undoBtn.disabled = !canUndo;
+      redoBtn.disabled = !canRedo;
+    })
+
+    window.undo = () => {
+      if (undoManager.canUndo()) undoManager.undo();
+      else {
+        undoBtn.disabled = !undoManager.canUndo();
+        redoBtn.disabled = !undoManager.canRedo();
+      }
+    }
+
+    window.redo = () => {
+      if (undoManager.canRedo()) undoManager.redo();
+      else {
+        undoBtn.disabled = !undoManager.canUndo();
+        redoBtn.disabled = !undoManager.canRedo();
+      }
+    }
+
     const filenameInput = document.getElementById("filename-input");
     const downloadBtn = document.getElementById("export-button");
 

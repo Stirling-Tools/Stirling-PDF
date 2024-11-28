@@ -9,15 +9,18 @@ export class UndoManager {
 
   pushUndo(command) {
     this._undoStack.push(command);
+    this._dispatchStateChange();
   }
 
   pushRedo(command) {
     this._redoStack.push(command);
+    this._dispatchStateChange();
   }
 
   pushUndoClearRedo(command) {
     this._undoStack.push(command);
     this._redoStack = [];
+    this._dispatchStateChange();
   }
 
   undo() {
@@ -27,6 +30,7 @@ export class UndoManager {
     cmd.undo();
 
     this._redoStack.push(cmd);
+    this._dispatchStateChange();
   }
 
   canUndo() {
@@ -40,9 +44,22 @@ export class UndoManager {
     cmd.redo();
 
     this._undoStack.push(cmd);
+    this._dispatchStateChange();
   }
 
   canRedo() {
     return this._redoStack && this._redoStack.length > 0;
+  }
+
+  _dispatchStateChange() {
+    document.dispatchEvent(
+      new CustomEvent("undo-manager-update", {
+        bubbles: true,
+        detail: {
+          canUndo: this.canUndo(),
+          canRedo: this.canRedo(),
+        },
+      })
+    );
   }
 }

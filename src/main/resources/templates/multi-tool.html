@@ -57,6 +57,27 @@
                     </span>
                     <span class="btn-tooltip" th:text="#{multiTool.insertPageBreak}"></span>
                   </button>
+                  <button id="undo-btn" class="btn btn-secondary" onclick="undo()" disabled>
+                    <span class="material-symbols-rounded">
+                      undo
+                    </span>
+                    <span class="btn-tooltip">
+                      <div th:text="'Undo'"></div>
+                      <div class="text-uppercase" th:text="'(CTRL + Z)'"></div>
+                    </span>
+                  </button>
+
+                  <button id="redo-btn" class="btn btn-secondary" onclick="redo()" disabled>
+                    <span class="material-symbols-rounded">
+                      redo
+                    </span>
+                    <span class="btn-tooltip">
+                      <div th:text="'Redo'"></div>
+                      <div class="text-uppercase" th:text="'(CTRL + Y)'"></div>
+                    </span>
+                  </button>
+                  </button>
+
                   <button id="select-pages-container" class="btn btn-secondary enable-on-file"
                     onclick="toggleSelectPageVisibility()" disabled>
                     <span id="select-pages-button" class="material-symbols-rounded">
