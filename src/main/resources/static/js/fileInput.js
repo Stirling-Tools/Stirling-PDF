@@ -47,14 +47,16 @@ function setupFileInput(chooser) {
     const dt = e.dataTransfer;
     const files = dt.files;
 
-    for (let i = 0; i < files.length; i++) {
-      allFiles.push(files[i]);
+    const fileInput = document.getElementById(elementId);
+    if (fileInput?.hasAttribute("multiple")) {
+      files.forEach(file => allFiles.push(file));
+    } else if (fileInput) {
+      allFiles = [files[0]];
     }
 
     const dataTransfer = new DataTransfer();
     allFiles.forEach((file) => dataTransfer.items.add(file));
 
-    const fileInput = document.getElementById(elementId);
     fileInput.files = dataTransfer.files;
 
     if (overlay) {
