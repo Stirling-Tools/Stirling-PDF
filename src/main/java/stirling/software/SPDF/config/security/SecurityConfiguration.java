@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config.security;
 
+import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.*;
 
@@ -31,23 +32,35 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import org.springframework.security.saml2.core.Saml2X509Credential;
 import org.springframework.security.saml2.core.Saml2X509Credential.Saml2X509CredentialType;
+import org.springframework.security.saml2.provider.service.authentication.AbstractSaml2AuthenticationRequest;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
 import org.springframework.security.saml2.provider.service.web.HttpSessionSaml2AuthenticationRequestRepository;
+import org.springframework.security.saml2.provider.service.web.Saml2AuthenticationRequestRepository;
 import org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.savedrequest.NullRequestCache;
+import org.springframework.security.web.session.ForceEagerSessionCreationFilter;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.security.web.session.SessionManagementFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.session.web.http.CookieSerializer;
+import org.springframework.session.web.http.DefaultCookieSerializer;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.SPDF.config.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
@@ -150,16 +163,31 @@ public class SecurityConfiguration {
             http.sessionManagement(
                     sessionManagement ->
                             sessionManagement
-                                    .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
-                                    .sessionAuthenticationStrategy(
-                                            new RegisterSessionAuthenticationStrategy(
-                                                    sessionRegistry)) // ?
-                                    .sessionFixation().changeSessionId()
                                     .maximumSessions(10)
                                     .maxSessionsPreventsLogin(false)
                                     .sessionRegistry(sessionRegistry)
-                                    .expiredUrl("/login?logout=true"));
 
+                                    .expiredUrl("/login?logout=true"))
+            .addFilterBefore(
+                    new ForceEagerSessionCreationFilter(), 
+                    SecurityContextHolderFilter.class)
+            .addFilterBefore(new ForceEagerSessionCreationFilter(), SecurityContextHolderFilter.class);
+            
+            http.addFilterBefore(new OncePerRequestFilter() {
+                @Override
+                protected void doFilterInternal(HttpServletRequest request, 
+                        HttpServletResponse response, FilterChain filterChain) 
+                        throws ServletException, IOException {
+                    
+                    if (request.getRequestURI().startsWith("/saml2")) {
+                        response.setHeader("Set-Cookie", 
+                            response.getHeader("Set-Cookie")
+                                .concat(";SameSite=None;Secure"));
+                    }
+                    filterChain.doFilter(request, response);
+                }
+            }, SessionManagementFilter.class);
+            
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
@@ -262,7 +290,7 @@ public class SecurityConfiguration {
             }
 
             // Handle SAML
-            if (applicationProperties.getSecurity().isSaml2Activ() && runningEE) {
+            if (applicationProperties.getSecurity().isSaml2Activ()) { // && runningEE
                 // Configure the authentication provider
                 OpenSaml4AuthenticationProvider authenticationProvider =
                         new OpenSaml4AuthenticationProvider();
@@ -278,6 +306,7 @@ public class SecurityConfiguration {
                                                         relyingPartyRegistrations())
                                                 .authenticationManager(
                                                         new ProviderManager(authenticationProvider))
+                                     
                                                 .successHandler(
                                                         new CustomSaml2AuthenticationSuccessHandler(
                                                                 loginAttemptService,
@@ -444,10 +473,18 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public HttpSessionSaml2AuthenticationRequestRepository saml2AuthenticationRequestRepository() {
-        return new HttpSessionSaml2AuthenticationRequestRepository();
+    public CookieSerializer cookieSerializer() {
+        DefaultCookieSerializer serializer = new DefaultCookieSerializer();
+        serializer.setSameSite("None");
+        serializer.setUseSecureCookie(true); // Required when using SameSite=None
+        return serializer;
     }
 
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
+    }
+    
     @Bean
     @ConditionalOnProperty(
             name = "security.saml2.enabled",
@@ -470,10 +507,6 @@ public class SecurityConfiguration {
 
         RelyingPartyRegistration rp =
                 RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())
-                        .assertionConsumerServiceLocation(
-                                "{baseUrl}/login/saml2/sso/stirlingpdf-saml")
-                        .entityId(
-                                "http://localhost:8080/saml2/service-provider-metadata/stirlingpdf-saml")
                         .signingX509Credentials(c -> c.add(signingCredential))
                         .assertingPartyMetadata(
                                 metadata ->
@@ -505,6 +538,11 @@ public class SecurityConfiguration {
 
                     AuthnRequest authnRequest = customizer.getAuthnRequest();
                     log.debug("AuthnRequest ID: {}", authnRequest.getID());
+                    
+                    if (authnRequest.getID() == null) {
+                        authnRequest.setID("ARQ" + UUID.randomUUID().toString());
+                    }
+                    log.debug("AuthnRequest new ID after set: {}", authnRequest.getID());
                     log.debug("AuthnRequest IssueInstant: {}", authnRequest.getIssueInstant());
                     log.debug(
                             "AuthnRequest Issuer: {}",
