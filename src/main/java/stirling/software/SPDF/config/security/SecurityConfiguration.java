@@ -163,31 +163,12 @@ public class SecurityConfiguration {
             http.sessionManagement(
                     sessionManagement ->
                             sessionManagement
+                            .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                                     .maximumSessions(10)
                                     .maxSessionsPreventsLogin(false)
                                     .sessionRegistry(sessionRegistry)
+                                    .expiredUrl("/login?logout=true"));
 
-                                    .expiredUrl("/login?logout=true"))
-            .addFilterBefore(
-                    new ForceEagerSessionCreationFilter(), 
-                    SecurityContextHolderFilter.class)
-            .addFilterBefore(new ForceEagerSessionCreationFilter(), SecurityContextHolderFilter.class);
-            
-            http.addFilterBefore(new OncePerRequestFilter() {
-                @Override
-                protected void doFilterInternal(HttpServletRequest request, 
-                        HttpServletResponse response, FilterChain filterChain) 
-                        throws ServletException, IOException {
-                    
-                    if (request.getRequestURI().startsWith("/saml2")) {
-                        response.setHeader("Set-Cookie", 
-                            response.getHeader("Set-Cookie")
-                                .concat(";SameSite=None;Secure"));
-                    }
-                    filterChain.doFilter(request, response);
-                }
-            }, SessionManagementFilter.class);
-            
             http.authenticationProvider(daoAuthenticationProvider());
             http.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()));
             http.logout(
@@ -470,19 +451,6 @@ public class SecurityConfiguration {
                         .userNameAttributeName(oauth.getUseAsUsername())
                         .clientName("OIDC")
                         .build());
-    }
-
-    @Bean
-    public CookieSerializer cookieSerializer() {
-        DefaultCookieSerializer serializer = new DefaultCookieSerializer();
-        serializer.setSameSite("None");
-        serializer.setUseSecureCookie(true); // Required when using SameSite=None
-        return serializer;
-    }
-
-    @Bean
-    public HttpSessionEventPublisher httpSessionEventPublisher() {
-        return new HttpSessionEventPublisher();
     }
     
     @Bean
