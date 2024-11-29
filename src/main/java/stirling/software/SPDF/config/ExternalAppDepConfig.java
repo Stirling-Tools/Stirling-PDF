@@ -43,7 +43,6 @@ public class ExternalAppDepConfig {
                     put("unoconv", List.of("Unoconv"));
                     put("qpdf", List.of("qpdf"));
                     put("tesseract", List.of("tesseract"));
-                    
                 }
             };
 
@@ -98,7 +97,7 @@ public class ExternalAppDepConfig {
     public void checkDependencies() {
 
         // Check core dependencies
-    	checkDependencyAndDisableGroup("tesseract");
+        checkDependencyAndDisableGroup("tesseract");
         checkDependencyAndDisableGroup("soffice");
         checkDependencyAndDisableGroup("qpdf");
         checkDependencyAndDisableGroup("weasyprint");

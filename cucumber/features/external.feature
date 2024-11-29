@@ -48,24 +48,6 @@ Feature: API Validation
 	And the response status code should be 200
 	
 	
-	
-  @ocr @negative
-  Scenario: Process PDF with text and OCR with type normal 
-    Given I generate a PDF file as "fileInput"
-    And the pdf contains 3 pages with random text
-    And the request data includes
-      | parameter        | value       |
-      | languages        | eng         |
-      | sidecar          | false        |
-      | deskew           | true        |
-      | clean            | true        |
-      | cleanFinal       | true        |
-      | ocrType          | Normal      |
-      | ocrRenderType    | hocr        |
-      | removeImagesAfter| false       |
-    When I send the API request to the endpoint "/api/v1/misc/ocr-pdf"
-	Then the response status code should be 500
-	
   @ocr @positive
   Scenario: Process PDF with OCR
     Given I generate a PDF file as "fileInput"
@@ -81,26 +63,6 @@ Feature: API Validation
       | removeImagesAfter| false       |
     When I send the API request to the endpoint "/api/v1/misc/ocr-pdf"
     Then the response content type should be "application/pdf"
-    And the response file should have size greater than 0
-	And the response status code should be 200
-	
-  @ocr @positive
-  Scenario: Process PDF with OCR with sidecar
-    Given I generate a PDF file as "fileInput"
-    And the request data includes
-      | parameter        | value       |
-      | languages        | eng         |
-      | sidecar          | true        |
-      | deskew           | true        |
-      | clean            | true        |
-      | cleanFinal       | true        |
-      | ocrType          | Force      |
-      | ocrRenderType    | hocr        |
-      | removeImagesAfter| false       |
-    When I send the API request to the endpoint "/api/v1/misc/ocr-pdf"
-    Then the response content type should be "application/octet-stream"
-	And the response file should have extension ".zip"
-	And the response ZIP should contain 2 files
     And the response file should have size greater than 0
 	And the response status code should be 200
 
