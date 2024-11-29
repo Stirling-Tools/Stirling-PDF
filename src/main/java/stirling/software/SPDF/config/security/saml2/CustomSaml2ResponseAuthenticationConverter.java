@@ -3,8 +3,6 @@ package stirling.software.SPDF.config.security.saml2;
 import java.util.*;
 
 import org.opensaml.core.xml.XMLObject;
-import org.opensaml.core.xml.schema.XSBoolean;
-import org.opensaml.core.xml.schema.XSString;
 import org.opensaml.saml.saml2.core.Assertion;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AttributeStatement;
@@ -32,12 +30,12 @@ public class CustomSaml2ResponseAuthenticationConverter
 
     private Map<String, List<Object>> extractAttributes(Assertion assertion) {
         Map<String, List<Object>> attributes = new HashMap<>();
-        
+
         for (AttributeStatement attributeStatement : assertion.getAttributeStatements()) {
             for (Attribute attribute : attributeStatement.getAttributes()) {
                 String attributeName = attribute.getName();
                 List<Object> values = new ArrayList<>();
-                
+
                 for (XMLObject xmlObject : attribute.getAttributeValues()) {
                     // Get the text content directly
                     String value = xmlObject.getDOM().getTextContent();
@@ -45,7 +43,7 @@ public class CustomSaml2ResponseAuthenticationConverter
                         values.add(value);
                     }
                 }
-                
+
                 if (!values.isEmpty()) {
                     // Store with both full URI and last part of the URI
                     attributes.put(attributeName, values);
@@ -54,7 +52,7 @@ public class CustomSaml2ResponseAuthenticationConverter
                 }
             }
         }
-        
+
         return attributes;
     }
 
@@ -62,10 +60,10 @@ public class CustomSaml2ResponseAuthenticationConverter
     public Saml2Authentication convert(ResponseToken responseToken) {
         Assertion assertion = responseToken.getResponse().getAssertions().get(0);
         Map<String, List<Object>> attributes = extractAttributes(assertion);
-        
+
         // Debug log with actual values
         log.debug("Extracted SAML Attributes: " + attributes);
-        
+
         // Try to get username/identifier in order of preference
         String userIdentifier = null;
         if (hasAttribute(attributes, "username")) {
@@ -88,7 +86,8 @@ public class CustomSaml2ResponseAuthenticationConverter
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             if (user != null) {
-                simpleGrantedAuthority = new SimpleGrantedAuthority(userService.findRole(user).getAuthority());
+                simpleGrantedAuthority =
+                        new SimpleGrantedAuthority(userService.findRole(user).getAuthority());
             }
         }
 
@@ -97,11 +96,9 @@ public class CustomSaml2ResponseAuthenticationConverter
             sessionIndexes.add(authnStatement.getSessionIndex());
         }
 
-        CustomSaml2AuthenticatedPrincipal principal = new CustomSaml2AuthenticatedPrincipal(
-                userIdentifier,
-                attributes,
-                userIdentifier,
-                sessionIndexes);
+        CustomSaml2AuthenticatedPrincipal principal =
+                new CustomSaml2AuthenticatedPrincipal(
+                        userIdentifier, attributes, userIdentifier, sessionIndexes);
 
         return new Saml2Authentication(
                 principal,

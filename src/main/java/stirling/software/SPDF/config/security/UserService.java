@@ -53,13 +53,15 @@ public class UserService implements UserServiceInterface {
 
     @Transactional
     public void migrateOauth2ToSSO() {
-        userRepository.findByAuthenticationTypeIgnoreCase("OAUTH2")
-            .forEach(user -> {
-                user.setAuthenticationType(AuthenticationType.SSO);
-                userRepository.save(user);
-            });
+        userRepository
+                .findByAuthenticationTypeIgnoreCase("OAUTH2")
+                .forEach(
+                        user -> {
+                            user.setAuthenticationType(AuthenticationType.SSO);
+                            userRepository.save(user);
+                        });
     }
-    
+
     // Handle OAUTH2 login and user auto creation.
     public boolean processSSOPostLogin(String username, boolean autoCreateUser)
             throws IllegalArgumentException, IOException {

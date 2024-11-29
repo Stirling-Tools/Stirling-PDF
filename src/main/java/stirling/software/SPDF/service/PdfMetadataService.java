@@ -18,7 +18,7 @@ public class PdfMetadataService {
     private final String stirlingPDFLabel;
     private final UserServiceInterface userService;
     private final boolean runningEE;
-    
+
     @Autowired
     public PdfMetadataService(
             ApplicationProperties applicationProperties,
@@ -64,10 +64,8 @@ public class PdfMetadataService {
 
         String creator = stirlingPDFLabel;
 
-        if (applicationProperties
-                .getEnterpriseEdition()
-                .getCustomMetadata()
-                .isAutoUpdateMetadata() && runningEE) {
+        if (applicationProperties.getEnterpriseEdition().getCustomMetadata().isAutoUpdateMetadata()
+                && runningEE) {
 
             creator = applicationProperties.getEnterpriseEdition().getCustomMetadata().getCreator();
             pdf.getDocumentInformation().setProducer(stirlingPDFLabel);
@@ -86,10 +84,8 @@ public class PdfMetadataService {
         pdf.getDocumentInformation().setModificationDate(Calendar.getInstance());
 
         String author = pdfMetadata.getAuthor();
-        if (applicationProperties
-                .getEnterpriseEdition()
-                .getCustomMetadata()
-                .isAutoUpdateMetadata() && runningEE) {
+        if (applicationProperties.getEnterpriseEdition().getCustomMetadata().isAutoUpdateMetadata()
+                && runningEE) {
             author = applicationProperties.getEnterpriseEdition().getCustomMetadata().getAuthor();
 
             if (userService != null) {
