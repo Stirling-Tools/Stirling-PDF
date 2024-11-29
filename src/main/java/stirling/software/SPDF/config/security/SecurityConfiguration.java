@@ -312,31 +312,6 @@ public class SecurityConfiguration {
         return http.build();
     }
 
-    //    @Bean
-    //    public Saml2WebSsoAuthenticationRequestFilter saml2WebSsoAuthenticationRequestFilter(
-    //            RelyingPartyRegistrationRepository relyingPartyRegistrationRepository) {
-    //        OpenSaml4AuthenticationRequestResolver authenticationRequestResolver =
-    //            new OpenSaml4AuthenticationRequestResolver(relyingPartyRegistrationRepository);
-    //
-    //        Saml2WebSsoAuthenticationRequestFilter filter =
-    //            new Saml2WebSsoAuthenticationRequestFilter(
-    //                authenticationRequestResolver
-    //            );
-    //        return filter;
-    //    }
-    //
-    @Bean
-    @ConditionalOnProperty(
-            value = "security.saml2.enabled",
-            havingValue = "true",
-            matchIfMissing = false)
-    public AuthenticationProvider samlAuthenticationProvider() {
-        OpenSaml4AuthenticationProvider provider = new OpenSaml4AuthenticationProvider();
-        provider.setResponseAuthenticationConverter(
-                new CustomSaml2ResponseAuthenticationConverter(userService));
-        return provider;
-    }
-
     @Bean
     @ConditionalOnProperty(
             value = "security.oauth2.enabled",
@@ -525,12 +500,12 @@ public class SecurityConfiguration {
                 new OpenSaml4AuthenticationRequestResolver(relyingPartyRegistrationRepository);
         resolver.setAuthnRequestCustomizer(
                 customizer -> {
-                    log.info("Customizing SAML Authentication request");
+                    log.debug("Customizing SAML Authentication request");
 
                     AuthnRequest authnRequest = customizer.getAuthnRequest();
-                    log.info("AuthnRequest ID: {}", authnRequest.getID());
-                    log.info("AuthnRequest IssueInstant: {}", authnRequest.getIssueInstant());
-                    log.info(
+                    log.debug("AuthnRequest ID: {}", authnRequest.getID());
+                    log.debug("AuthnRequest IssueInstant: {}", authnRequest.getIssueInstant());
+                    log.debug(
                             "AuthnRequest Issuer: {}",
                             authnRequest.getIssuer() != null
                                     ? authnRequest.getIssuer().getValue()
@@ -539,42 +514,42 @@ public class SecurityConfiguration {
                     HttpServletRequest request = customizer.getRequest();
 
                     // Log HTTP request details
-                    log.info("HTTP Request Method: {}", request.getMethod());
-                    log.info("Request URI: {}", request.getRequestURI());
-                    log.info("Request URL: {}", request.getRequestURL().toString());
-                    log.info("Query String: {}", request.getQueryString());
-                    log.info("Remote Address: {}", request.getRemoteAddr());
+                    log.debug("HTTP Request Method: {}", request.getMethod());
+                    log.debug("Request URI: {}", request.getRequestURI());
+                    log.debug("Request URL: {}", request.getRequestURL().toString());
+                    log.debug("Query String: {}", request.getQueryString());
+                    log.debug("Remote Address: {}", request.getRemoteAddr());
 
                     // Log headers
                     Collections.list(request.getHeaderNames())
                             .forEach(
                                     headerName -> {
-                                        log.info(
+                                        log.debug(
                                                 "Header - {}: {}",
                                                 headerName,
                                                 request.getHeader(headerName));
                                     });
 
                     // Log SAML specific parameters
-                    log.info("SAML Request Parameters:");
-                    log.info("SAMLRequest: {}", request.getParameter("SAMLRequest"));
-                    log.info("RelayState: {}", request.getParameter("RelayState"));
+                    log.debug("SAML Request Parameters:");
+                    log.debug("SAMLRequest: {}", request.getParameter("SAMLRequest"));
+                    log.debug("RelayState: {}", request.getParameter("RelayState"));
 
-                    // Log session information if exists
+                    // Log session debugrmation if exists
                     if (request.getSession(false) != null) {
-                        log.info("Session ID: {}", request.getSession().getId());
+                        log.debug("Session ID: {}", request.getSession().getId());
                     }
 
                     // Log any assertions consumer service details if present
                     if (authnRequest.getAssertionConsumerServiceURL() != null) {
-                        log.info(
+                        log.debug(
                                 "AssertionConsumerServiceURL: {}",
                                 authnRequest.getAssertionConsumerServiceURL());
                     }
 
                     // Log NameID policy if present
                     if (authnRequest.getNameIDPolicy() != null) {
-                        log.info(
+                        log.debug(
                                 "NameIDPolicy Format: {}",
                                 authnRequest.getNameIDPolicy().getFormat());
                     }

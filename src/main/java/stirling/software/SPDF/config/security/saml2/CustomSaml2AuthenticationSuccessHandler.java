@@ -35,11 +35,11 @@ public class CustomSaml2AuthenticationSuccessHandler
             throws ServletException, IOException {
 
         Object principal = authentication.getPrincipal();
-        log.info("Starting SAML2 authentication success handling");
+        log.debug("Starting SAML2 authentication success handling");
 
         if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
             String username = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
-            log.info("Authenticated principal found for user: {}", username);
+            log.debug("Authenticated principal found for user: {}", username);
 
             HttpSession session = request.getSession(false);
             String contextPath = request.getContextPath();
@@ -48,7 +48,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                             ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
                             : null;
 
-            log.info(
+            log.debug(
                     "Session exists: {}, Saved request exists: {}",
                     session != null,
                     savedRequest != null);
@@ -56,18 +56,18 @@ public class CustomSaml2AuthenticationSuccessHandler
             if (savedRequest != null
                     && !RequestUriUtils.isStaticResource(
                             contextPath, savedRequest.getRedirectUrl())) {
-                log.info(
+                log.debug(
                         "Valid saved request found, redirecting to original destination: {}",
                         savedRequest.getRedirectUrl());
                 super.onAuthenticationSuccess(request, response, authentication);
             } else {
                 SAML2 saml2 = applicationProperties.getSecurity().getSaml2();
-                log.info(
+                log.debug(
                         "Processing SAML2 authentication with autoCreateUser: {}",
                         saml2.getAutoCreateUser());
 
                 if (loginAttemptService.isBlocked(username)) {
-                    log.info("User {} is blocked due to too many login attempts", username);
+                    log.debug("User {} is blocked due to too many login attempts", username);
                     if (session != null) {
                         session.removeAttribute("SPRING_SECURITY_SAVED_REQUEST");
                     }
@@ -82,14 +82,14 @@ public class CustomSaml2AuthenticationSuccessHandler
                                 && userService.isAuthenticationTypeByUsername(
                                         username, AuthenticationType.SSO);
 
-                log.info(
+                log.debug(
                         "User status - Exists: {}, Has password: {}, Is SSO user: {}",
                         userExists,
                         hasPassword,
                         isSSOUser);
 
                 if (userExists && hasPassword && !isSSOUser && saml2.getAutoCreateUser()) {
-                    log.info(
+                    log.debug(
                             "User {} exists with password but is not SSO user, redirecting to logout",
                             username);
                     response.sendRedirect(
@@ -99,18 +99,18 @@ public class CustomSaml2AuthenticationSuccessHandler
 
                 try {
                     if (saml2.getBlockRegistration() && !userExists) {
-                        log.info("Registration blocked for new user: {}", username);
+                        log.debug("Registration blocked for new user: {}", username);
                         response.sendRedirect(
                                 contextPath + "/login?erroroauth=oauth2_admin_blocked_user");
                         return;
                     }
-                    log.info("Processing SSO post-login for user: {}", username);
+                    log.debug("Processing SSO post-login for user: {}", username);
                     userService.processSSOPostLogin(username, saml2.getAutoCreateUser());
-                    log.info("Successfully processed authentication for user: {}", username);
+                    log.debug("Successfully processed authentication for user: {}", username);
                     response.sendRedirect(contextPath + "/");
                     return;
                 } catch (IllegalArgumentException e) {
-                    log.info(
+                    log.debug(
                             "Invalid username detected for user: {}, redirecting to logout",
                             username);
                     response.sendRedirect(contextPath + "/logout?invalidUsername=true");
@@ -118,7 +118,7 @@ public class CustomSaml2AuthenticationSuccessHandler
                 }
             }
         } else {
-            log.info("Non-SAML2 principal detected, delegating to parent handler");
+            log.debug("Non-SAML2 principal detected, delegating to parent handler");
             super.onAuthenticationSuccess(request, response, authentication);
         }
     }
