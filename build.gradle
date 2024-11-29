@@ -21,6 +21,8 @@ ext {
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.36"
     bouncycastleVersion = "1.79"
+    springSecuritySamlVersion = "6.4.1"
+    openSamlVersion = "4.3.2"  
 }
 
 group = "stirling.software"
@@ -144,17 +146,18 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
-		implementation 'org.springframework.security:spring-security-saml2-service-provider:6.4.1'
+		implementation "org.springframework.session:spring-session-core:$springBootVersion"
+				
 	    implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         // Don't upgrade h2database
         runtimeOnly "com.h2database:h2:2.3.232"
         constraints {
-            implementation "org.opensaml:opensaml-core"
-            implementation "org.opensaml:opensaml-saml-api"
-            implementation "org.opensaml:opensaml-saml-impl"
+            implementation "org.opensaml:opensaml-core:$openSamlVersion"
+            implementation "org.opensaml:opensaml-saml-api:$openSamlVersion"
+            implementation "org.opensaml:opensaml-saml-impl:$openSamlVersion"
         }
-        implementation "org.springframework.security:spring-security-saml2-service-provider"
-
+        implementation "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
+//		implementation 'org.springframework.security:spring-security-core:$springSecuritySamlVersion'
         implementation 'com.coveo:saml-client:5.0.0'
 
 

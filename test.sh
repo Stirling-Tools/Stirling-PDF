@@ -73,8 +73,8 @@ main() {
 
 
     # Building Docker images
-   # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest -f ./Dockerfile .
-  # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
+   # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
+  # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
 	
     # Test each configuration
     #run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
@@ -93,9 +93,9 @@ main() {
 
 
     # Building Docker images with security enabled
-   # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest -f ./Dockerfile .
- #   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
-    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t frooodle/s-pdf:latest-fat -f ./Dockerfile-fat .
+   # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
+ #   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
+    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile-fat .
     
     
     # Test each configuration with security
@@ -103,7 +103,7 @@ main() {
 	#docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite-security.yml" down
   #  run_tests "Stirling-PDF-Security" "./exampleYmlFiles/docker-compose-latest-security.yml"
 #	docker-compose -f "./exampleYmlFiles/docker-compose-latest-security.yml" down
-	
+
 	run_tests "Stirling-PDF-Security-Fat" "./exampleYmlFiles/docker-compose-latest-fat-security.yml"
 	if [ $? -eq 0 ]; then
 		cd cucumber

@@ -50,7 +50,6 @@ public class RepairController {
         MultipartFile inputFile = request.getFileInput();
         // Save the uploaded file to a temporary location
         Path tempInputFile = Files.createTempFile("input_", ".pdf");
-        Path tempOutputFile = Files.createTempFile("output_", ".pdf");
         byte[] pdfBytes = null;
         inputFile.transferTo(tempInputFile.toFile());
         try {
@@ -61,14 +60,13 @@ public class RepairController {
             command.add("--qdf"); // Linearizes and normalizes PDF structure
             command.add("--object-streams=disable"); // Can help with some corruptions
             command.add(tempInputFile.toString());
-            command.add(tempOutputFile.toString());
 
             ProcessExecutorResult returnCode =
                     ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
                             .runCommandWithOutputHandling(command);
 
             // Read the optimized PDF file
-            pdfBytes = pdfDocumentFactory.loadToBytes(tempOutputFile.toFile());
+            pdfBytes = pdfDocumentFactory.loadToBytes(tempInputFile.toFile());
 
             // Return the optimized PDF as a response
             String outputFilename =
@@ -79,7 +77,6 @@ public class RepairController {
         } finally {
             // Clean up the temporary files
             Files.deleteIfExists(tempInputFile);
-            Files.deleteIfExists(tempOutputFile);
         }
     }
 }

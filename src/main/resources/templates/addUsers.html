@@ -189,7 +189,7 @@
                   <label for="authType">Authentication Type</label>
                   <select id="authType" name="authType" class="form-control" required>
                     <option value="web" selected>WEB</option>
-                    <option value="oauth2">OAUTH2</option>
+                    <option value="sso">SSO</option>
                   </select>
                 </div>
                 <div class="form-check mb-3" id="checkboxContainer">
@@ -267,7 +267,7 @@
               var passwordFieldContainer = $('#passwordContainer');
               var checkboxContainer = $('#checkboxContainer');
 
-              if (authType === 'oauth2') {
+              if (authType === 'sso') {
                   passwordField.removeAttr('required');
                   passwordField.prop('disabled', true).val('');
                   passwordFieldContainer.slideUp('fast');

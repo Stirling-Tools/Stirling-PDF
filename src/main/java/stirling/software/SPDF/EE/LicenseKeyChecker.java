@@ -25,9 +25,10 @@ public class LicenseKeyChecker {
             KeygenLicenseVerifier licenseService, ApplicationProperties applicationProperties) {
         this.licenseService = licenseService;
         this.applicationProperties = applicationProperties;
+        this.checkLicense();
     }
 
-    @Scheduled(fixedRate = 604800000, initialDelay = 1000) // 7 days in milliseconds
+    @Scheduled(fixedRate = 604800000) // 7 days in milliseconds
     public void checkLicensePeriodically() {
         checkLicense();
     }

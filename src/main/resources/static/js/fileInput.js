@@ -83,21 +83,22 @@ function setupFileInput(chooser) {
   $("#" + elementId).on("change", function (e) {
     let element = e.target;
     const isDragAndDrop = e.detail?.source == 'drag-drop';
+    
     if (element instanceof HTMLInputElement && element.hasAttribute("multiple")) {
       allFiles = isDragAndDrop ? allFiles : [... allFiles, ... element.files];
-  } else {
-    allFiles = Array.from(isDragAndDrop ? allFiles : [element.files[0]]);
-  }
+    } else {
+      allFiles = Array.from(isDragAndDrop ? allFiles : [element.files[0]]);
+    }
 
     if (!isDragAndDrop) {
-      let dataTransfer = new DataTransfer();
-      allFiles.forEach(file => dataTransfer.items.add(file));
-      element.files = dataTransfer.files;
+        let dataTransfer = new DataTransfer();
+        allFiles.forEach(file => dataTransfer.items.add(file));
+        element.files = dataTransfer.files;
     }
 
     handleFileInputChange(this);
     this.dispatchEvent(new CustomEvent("file-input-change", { bubbles: true }));
-  });
+});
 
   function handleFileInputChange(inputElement) {
     const files = allFiles;
