@@ -241,7 +241,7 @@ public class FileToPdf {
             Files.deleteIfExists(tempOutputFile);
         }
     }
-    
+
     static String sanitizeZipFilename(String entryName) {
         if (entryName == null || entryName.trim().isEmpty()) {
             return entryName;

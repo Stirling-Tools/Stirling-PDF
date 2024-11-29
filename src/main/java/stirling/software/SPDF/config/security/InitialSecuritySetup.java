@@ -30,6 +30,7 @@ public class InitialSecuritySetup {
             initializeAdminUser();
         } else {
             databaseBackupHelper.exportDatabase();
+            userService.migrateOauth2ToSSO();
         }
         initializeInternalApiUser();
     }
