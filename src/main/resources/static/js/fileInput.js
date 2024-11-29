@@ -85,9 +85,9 @@ function setupFileInput(chooser) {
     const isDragAndDrop = e.detail?.source == 'drag-drop';
     
     if (element instanceof HTMLInputElement && element.hasAttribute("multiple")) {
-        allFiles = isDragAndDrop ? allFiles : [...allFiles, ...element.files];
+      allFiles = isDragAndDrop ? allFiles : [... allFiles, ... element.files];
     } else {
-        allFiles = isDragAndDrop ? allFiles : [element.files[0]];
+      allFiles = Array.from(isDragAndDrop ? allFiles : [element.files[0]]);
     }
 
     if (!isDragAndDrop) {
