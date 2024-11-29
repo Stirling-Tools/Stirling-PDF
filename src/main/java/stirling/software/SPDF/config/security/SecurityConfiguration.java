@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config.security;
 
+import io.github.pixee.security.Newlines;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.*;
@@ -181,8 +182,8 @@ public class SecurityConfiguration {
                     
                     if (request.getRequestURI().startsWith("/saml2")) {
                         response.setHeader("Set-Cookie", 
-                            response.getHeader("Set-Cookie")
-                                .concat(";SameSite=None;Secure"));
+                            Newlines.stripAll(response.getHeader("Set-Cookie")
+                                .concat(";SameSite=None;Secure")));
                     }
                     filterChain.doFilter(request, response);
                 }
