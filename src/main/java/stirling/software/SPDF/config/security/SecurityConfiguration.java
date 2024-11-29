@@ -150,10 +150,11 @@ public class SecurityConfiguration {
             http.sessionManagement(
                     sessionManagement ->
                             sessionManagement
-                                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                                    .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
                                     .sessionAuthenticationStrategy(
                                             new RegisterSessionAuthenticationStrategy(
                                                     sessionRegistry)) // ?
+                                    .sessionFixation().changeSessionId()
                                     .maximumSessions(10)
                                     .maxSessionsPreventsLogin(false)
                                     .sessionRegistry(sessionRegistry)
