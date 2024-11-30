@@ -8,3 +8,50 @@
   overflow-y: auto;
   white-space: pre-wrap;
 }
+
+
+.custom-file-chooser {
+  position: relative;
+  --overlay-display: none;
+}
+
+.custom-file-chooser::before {
+  display: var(--overlay-display);
+  position: absolute;
+
+  content: '';
+
+  top: 0;
+  left: 0;
+
+  height: 100%;
+  width: 100%;
+
+  background-color: #181C22;
+  border: 1px dashed rgb(105, 116, 134);
+  z-index: 1;
+
+  white-space: pre;
+  border-radius: 1rem;
+}
+
+.custom-file-chooser::after {
+  display: var(--overlay-display);
+  position: absolute;
+
+  content: 'Drag & Drop file(s) here';
+  font-size: 0.8rem;
+  color: #DFE2EB;
+
+  background-color: transparent;
+
+  min-width: 150px;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translateX(-50%) translateY(-50%);
+  text-align: center;
+
+  z-index: 2;
+}

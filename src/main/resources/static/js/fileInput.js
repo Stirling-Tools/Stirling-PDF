@@ -14,36 +14,34 @@ function setupFileInput(chooser) {
   const dragenterListener = function () {
     dragCounter++;
     if (!overlay) {
-      overlay = document.createElement("div");
-      overlay.style.position = "fixed";
-      overlay.style.top = 0;
-      overlay.style.left = 0;
-      overlay.style.width = "100%";
-      overlay.style.height = "100%";
-      overlay.style.background = "rgba(0, 0, 0, 0.5)";
-      overlay.style.color = "#fff";
-      overlay.style.zIndex = "1000";
-      overlay.style.display = "flex";
-      overlay.style.alignItems = "center";
-      overlay.style.justifyContent = "center";
-      overlay.style.pointerEvents = "none";
-      overlay.innerHTML = "<p>Drop files anywhere to upload</p>";
-      document.getElementById("content-wrap").appendChild(overlay);
+      // Show overlay by removing display: none from pseudo elements (::before and ::after)
+      chooser.style.setProperty('--overlay-display', "''");
+      overlay = true;
     }
   };
 
   const dragleaveListener = function () {
     dragCounter--;
     if (dragCounter === 0) {
-      if (overlay) {
-        overlay.remove();
-        overlay = null;
-      }
+      hideOverlay();
     }
   };
 
+  function hideOverlay() {
+    if (!overlay) return;
+    chooser.style.setProperty('--overlay-display', 'none');
+    overlay = false;
+  }
+
   const dropListener = function (e) {
     e.preventDefault();
+    // Drag and Drop shall only affect the target file chooser
+    if (e.target !== chooser) {
+      hideOverlay();
+      dragCounter = 0;
+      return;
+    }
+
     const dt = e.dataTransfer;
     const files = dt.files;
 
@@ -59,10 +57,7 @@ function setupFileInput(chooser) {
 
     fileInput.files = dataTransfer.files;
 
-    if (overlay) {
-      overlay.remove();
-      overlay = null;
-    }
+    hideOverlay();
 
     dragCounter = 0;
 
