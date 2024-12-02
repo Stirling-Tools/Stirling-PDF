@@ -130,7 +130,7 @@ input[type="file"] {
   font-size: 10px;
 }
 
-.remove-file {
+.remove-selected-file {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -143,7 +143,7 @@ input[type="file"] {
   top: -5px;
 }
 
-.remove-file * {
+.remove-selected-file * {
   overflow: hidden;
   height: inherit;
   width: inherit;
@@ -152,7 +152,7 @@ input[type="file"] {
   user-select: none;
 }
 
-.remove-file:after {
+.remove-selected-file:after {
   content: '';
   position: absolute;
 
@@ -169,7 +169,7 @@ input[type="file"] {
   pointer-events: none;
 }
 
-.remove-file:hover {
+.remove-selected-file:hover {
   cursor: pointer;
 }
 
