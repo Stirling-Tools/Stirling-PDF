@@ -13,12 +13,33 @@
   border-radius: 1rem;
   border: 1px dashed rgb(105, 116, 134);
 
-  column-gap: 10px;
-  row-gap: 10px;
+  column-gap: 7px;
+  row-gap: 7px;
   height: 150px;
   width: 100%;
 
   --overlay-display: none;
+  transition: background-color 0.5s linear;
+}
+
+.input-container:hover {
+  outline: none;
+  border: none;
+  background-color: var(--md-sys-color-surface-container-low);
+
+ -webkit-transition:  box-shadow 1s ease, background-color 2s linear;
+ -moz-transition:  box-shadow 1s ease, background-color 2s linear;
+ -o-transition:  box-shadow 1s ease, background-color 2s linear;
+ -ms-transition: box-shadow 1s ease, background-color 2s linear;
+ transition: box-shadow 1s ease, background-color 2s linear;
+
+ box-shadow: 0 0 10px rgb(105, 116, 134);
+ cursor: pointer;
+}
+
+.input-container * {
+  user-select: none;
+  pointer-events: none;
 }
 
 
@@ -67,11 +88,11 @@ input[type="file"] {
   display: none;
 }
 
-.input-container div:nth-child(2) {
+.input-container div:nth-of-type(2) {
   color: var(--md-sys-color-on-surface);
 }
 
-.input-container div:nth-child(3) {
+.input-container div:nth-of-type(1), .input-container div:nth-of-type(3) {
   color: var(--md-sys-color-on-surface);
   font-size: 16px;
   font-weight: bold;

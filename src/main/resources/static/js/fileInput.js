@@ -17,6 +17,11 @@ function setupFileInput(chooser) {
   let overlay;
   let dragCounter = 0;
 
+  inputContainer.addEventListener('click', (e) => {
+    let inputBtn = document.getElementById(elementId);
+    inputBtn.click();
+  })
+
   const dragenterListener = function () {
     dragCounter++;
     if (!overlay) {
