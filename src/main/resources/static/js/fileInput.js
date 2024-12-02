@@ -1,6 +1,10 @@
-document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll(".custom-file-chooser").forEach(setupFileInput);
-});
+let isScriptExecuted = false;
+if (!isScriptExecuted) {
+  isScriptExecuted = true;
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".custom-file-chooser").forEach(setupFileInput);
+  });
+}
 
 function setupFileInput(chooser) {
   const elementId = chooser.getAttribute("data-bs-element-id");
@@ -85,7 +89,7 @@ function setupFileInput(chooser) {
   $("#" + elementId).on("change", function (e) {
     let element = e.target;
     const isDragAndDrop = e.detail?.source == 'drag-drop';
-    
+
     if (element instanceof HTMLInputElement && element.hasAttribute("multiple")) {
       allFiles = isDragAndDrop ? allFiles : [... allFiles, ... element.files];
     } else {
