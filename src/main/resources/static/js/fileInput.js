@@ -1,5 +1,6 @@
 import FileIconFactory from "./file-icon-factory.js";
 import FileUtils from "./file-utils.js";
+import UUID from './uuid.js';
 
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".custom-file-chooser").forEach(setupFileInput);
@@ -105,7 +106,7 @@ function setupFileInput(chooser) {
     }
 
     allFiles = allFiles.map(file => {
-      if (!file.uniqueId) file.uniqueId = crypto.randomUUID();
+      if (!file.uniqueId) file.uniqueId = UUID.uuidv4();
       return file;
     });
 
