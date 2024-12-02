@@ -171,6 +171,14 @@ function setupFileInput(chooser) {
   function removeFileListener(e) {
     const fileId = (e.target).getAttribute('data-file-id');
 
+    removeFileById(fileId);
+
+    showOrHideSelectedFilesContainer(allFiles);
+
+    inputElement.dispatchEvent(new CustomEvent("file-input-change", { bubbles: true }));
+  }
+
+  function removeFileById(fileId) {
     let fileContainer = document.getElementById(fileId);
     fileContainer.remove();
 
@@ -179,10 +187,6 @@ function setupFileInput(chooser) {
 
     let inputElement = document.getElementById(elementId);
     inputElement.files = dataTransfer.files;
-
-    showOrHideSelectedFilesContainer(allFiles);
-
-    inputElement.dispatchEvent(new CustomEvent("file-input-change", { bubbles: true }));
   }
 
   function createFileIconContainer(info) {
@@ -215,7 +219,8 @@ function setupFileInput(chooser) {
 
   //Listen for event of file being removed and the filter it out of the allFiles array
   document.addEventListener("fileRemoved", function (e) {
-    const fileName = e.detail;
-    allFiles = allFiles.filter(file => file.name !== fileName);
+    const fileId = e.detail;
+    removeFileById(fileId);
+    showOrHideSelectedFilesContainer(allFiles);
   });
 }
