@@ -34,7 +34,7 @@
   height: 100%;
   width: 100%;
 
-  background-color: #181C22;
+  background-color: var(--md-sys-color-surface);
   border: 1px dashed rgb(105, 116, 134);
   z-index: 1;
 
@@ -47,8 +47,9 @@
   position: absolute;
 
   content: 'Drag & Drop file(s) here';
-  font-size: 0.8rem;
-  color: #DFE2EB;
+  font-size: 0.9rem;
+  font-weight: 550;
+  color: var(--md-sys-color-on-surface);
 
   background-color: transparent;
 
@@ -67,7 +68,12 @@ input[type="file"] {
   display: none;
 }
 
+.input-container div:nth-child(2) {
+  color: var(--md-sys-color-on-surface);
+}
+
 .input-container div:nth-child(3) {
+  color: var(--md-sys-color-on-surface);
   font-size: 16px;
   font-weight: bold;
 }
@@ -115,7 +121,7 @@ input[type="file"] {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: white;
+  color: var(--md-sys-color-on-surface);
 
   max-width: 60px;
   font-size: 0.75rem;
