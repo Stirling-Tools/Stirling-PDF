@@ -205,14 +205,14 @@
                 <script th:src="@{'/js/downloader.js'}"></script>
 
                 <div class="custom-file-chooser mb-3" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-element-container-id=${name+'-input-container'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
-                  <div class="mb-3 d-flex flex-row justify-content-center align-items-center flex-wrap input-container" th:name="${name}+'-input'" th:id="${name}+'-input-container'">
+                  <div class="mb-3 d-flex flex-row justify-content-center align-items-center flex-wrap input-container" th:name="${name}+'-input'" th:id="${name}+'-input-container'" th:data-text="#{fileChooser.hoveredDragAndDrop}">
                       <label class="file-input-btn d-none">
                         <input type="file" class="form-control" th:name="${name}" th:id="${name}+'-input'" th:accept="${accept}" th:attr="multiple=${!disableMultipleFiles}" th:required="${notRequired} ? null : 'required'">
                         Browse
                       </label>
-                      <div>Click</div>
-                      <div>or</div>
-                      <div>Drag & Drop</div>
+                      <div th:text="#{fileChooser.click}"></div>
+                      <div th:text="#{fileChooser.or}"></div>
+                      <div th:text="#{fileChooser.dragAndDrop}"></div>
                   </div>
                     <div class="selected-files flex-wrap"></div>
                 </div>

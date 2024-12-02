@@ -66,7 +66,7 @@
   display: var(--overlay-display);
   position: absolute;
 
-  content: 'Drag & Drop file(s) here';
+  content: attr(data-text);
   font-size: 0.9rem;
   font-weight: 550;
   color: var(--md-sys-color-on-surface);
