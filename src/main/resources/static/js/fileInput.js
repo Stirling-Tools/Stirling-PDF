@@ -2,9 +2,14 @@ import FileIconFactory from "./file-icon-factory.js";
 import FileUtils from "./file-utils.js";
 import UUID from './uuid.js';
 
-document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll(".custom-file-chooser").forEach(setupFileInput);
-});
+let isScriptExecuted = false;
+if (!isScriptExecuted) {
+  isScriptExecuted = true;
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".custom-file-chooser").forEach(setupFileInput);
+  });
+}
+
 
 function setupFileInput(chooser) {
   const elementId = chooser.getAttribute("data-bs-element-id");
