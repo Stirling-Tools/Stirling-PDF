@@ -176,7 +176,7 @@ function setupFileInput(chooser) {
 
     showOrHideSelectedFilesContainer(allFiles);
 
-    this.dispatchEvent(new CustomEvent("file-input-change", { bubbles: true }));
+    inputElement.dispatchEvent(new CustomEvent("file-input-change", { bubbles: true }));
   }
 
   function createFileIconContainer(info) {
