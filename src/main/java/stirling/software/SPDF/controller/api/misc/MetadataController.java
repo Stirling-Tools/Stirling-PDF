@@ -14,6 +14,8 @@ import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +28,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import stirling.software.SPDF.model.api.misc.MetadataRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.SPDF.utils.propertyeditor.StringToMapPropertyEditor;
 
 @RestController
 @RequestMapping("/api/v1/misc")
@@ -42,6 +45,11 @@ public class MetadataController {
         }
         // Return the original string if it's not "undefined"
         return entry;
+    }
+
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(Map.class, "allRequestParams", new StringToMapPropertyEditor());
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/update-metadata")

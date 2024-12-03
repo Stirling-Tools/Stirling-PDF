@@ -164,13 +164,13 @@
                     keyInput.type = "text";
                     keyInput.placeholder = 'Key';
                     keyInput.className = "form-control";
-                    keyInput.name = "customKey" + count;
+                    keyInput.name = `allRequestParams[customKey${count}]`;
 
                     const valueInput = document.createElement("input");
                     valueInput.type = "text";
                     valueInput.placeholder = 'Value';
                     valueInput.className = "form-control";
-                    valueInput.name = "customValue" + count;
+                    valueInput.name = `allRequestParams[customValue${count}]`;
                     count = count + 1;
 
                     const formGroup = document.createElement("div");
