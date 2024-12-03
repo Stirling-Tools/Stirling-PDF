@@ -36,6 +36,23 @@ select#font-select option {
   background-color: rgba(13, 110, 253, 0.1);
 }
 
+
+
+.rotation-handle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #3498db;
+  background-color: rgba(52, 152, 219, 0.1);
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 20px;
+  position: absolute;
+  cursor: grab;
+  top:-30px;
+  left: calc(50% - 10px);
+}
+
 .draggable-canvas {
   border: 2px solid #3498db;
   position: absolute;
