@@ -113,17 +113,14 @@ const DraggableUtils = {
         }
         // Get the currently selected element
         const target = this.lastInteracted;
-        const style = window.getComputedStyle(target);
 
         // Step size relatively to the elements size
         const stepX = target.offsetWidth * 0.05;
         const stepY = target.offsetHeight * 0.05;
 
-        const matrix = new DOMMatrixReadOnly(style.transform);
-
-        // Extract the current translation (top-left)
-        const x = matrix.m41 + event.dx;
-        const y = matrix.m42 + event.dy;
+        // Get the current x and y coordinates
+        let x = parseFloat(target.getAttribute("data-bs-x")) || 0;
+        let y = parseFloat(target.getAttribute("data-bs-y")) || 0;
 
         // Check which key was pressed and update the coordinates accordingly
         switch (event.key) {
@@ -162,35 +159,46 @@ const DraggableUtils = {
     interact(rotationHandle).draggable({
       listeners: {
         start(event) {
+          const rotationHandleRect = rotationHandle.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
           const style = window.getComputedStyle(container);
           const matrix = new DOMMatrixReadOnly(style.transform);
           x = matrix.m41;
           y = matrix.m42;
 
-          const rect = container.getBoundingClientRect();
+          // Calculate the center of the container
+          const containerCenterX = containerRect.left + containerRect.width / 2;
+          const containerCenterY = containerRect.top + containerRect.height / 2;
 
-          // Calculate the center of the element in the viewport
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
+          // Calculate the center of the rotation handle
+          const handleCenterX =
+            rotationHandleRect.left + rotationHandleRect.width / 2;
+          const handleCenterY =
+            rotationHandleRect.top + rotationHandleRect.height / 2;
+
+          // Calculate the offset between the container center and the handle
+          const offsetX = containerCenterX - handleCenterX;
+          const offsetY = containerCenterY - handleCenterY;
+
+          // Find the point relative to the current mouse position
+          const centerX = event.clientX + offsetX;
+          const centerY = event.clientY + offsetY;
 
           // Store the initial mouse angle relative to the center
           const initialMouseAngle = Math.atan2(
-            centerY - event.clientY,
-            centerX - event.clientX
+            event.pageY - centerY,
+            event.pageX - centerX
           );
+
           container.setAttribute("data-initial-mouse-angle", initialMouseAngle);
+          container.setAttribute("data-initial-x", centerX);
+          container.setAttribute("data-initial-y", centerY);
         },
         move(event) {
-          const target = event.target;
-          const style = window.getComputedStyle(container);
-          const matrix = new DOMMatrixReadOnly(style.transform);
-          x = matrix.m41;
-          y = matrix.m42;
-          const rect = container.getBoundingClientRect();
-
           // Calculate the center of the element in the viewport
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
+          const centerX = container.getAttribute("data-initial-x");
+
+          const centerY = container.getAttribute("data-initial-y");
 
           const startAngle =
             parseFloat(container.getAttribute("data-angle")) || 0;
@@ -198,8 +206,8 @@ const DraggableUtils = {
             parseFloat(container.getAttribute("data-initial-mouse-angle")) || 0;
           // Calculate the current mouse angle relative to the center
           const currentMouseAngle = Math.atan2(
-            centerY - event.clientY,
-            centerX - event.clientX
+            event.pageY - centerY,
+            event.pageX - centerX
           );
 
           const rawAngleDelta = currentMouseAngle - initialMouseAngle;
@@ -248,8 +256,8 @@ const DraggableUtils = {
       canvasContainer.setAttribute("data-bs-y", y);
       canvasContainer.style.transform = `translate(${x}px, ${y}px) rotate(${0}rad)`;
       //Click element in order to enable arrow keys
-      createdCanvas.addEventListener("click", () => {
-        this.lastInteracted = createdCanvas;
+      canvasContainer.addEventListener("click", () => {
+        this.lastInteracted = canvasContainer;
       });
 
       canvasContainer.onclick = (e) => this.onInteraction(e.target);
