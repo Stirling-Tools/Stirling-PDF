@@ -19,14 +19,13 @@ export class PageBreakCommand extends Command {
     const undoBtn = document.getElementById('undo-btn');
     undoBtn.disabled = true;
     for (const [index, element] of this.elements.entries()) {
-      if (this.isSelectedInWindow && !this.selectedPages.includes(index)) {
-        break;
-      }
-      if (index !== 0) {
-        const newElement = await this.pageBreakCallback(element, this.addedElements);
+      if (!this.isSelectedInWindow || this.selectedPages.includes(index)) {
+        if (index !== 0) {
+          const newElement = await this.pageBreakCallback(element, this.addedElements);
 
-        if (newElement) {
-          this.addedElements = newElement;
+          if (newElement) {
+            this.addedElements = newElement;
+          }
         }
       }
     }
