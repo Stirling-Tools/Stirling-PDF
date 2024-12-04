@@ -4,6 +4,7 @@ import {RotateAllCommand, RotateElementCommand} from './commands/rotate.js';
 import {SplitAllCommand} from './commands/split.js';
 import {UndoManager} from './UndoManager.js';
 import {PageBreakCommand} from './commands/page-break.js';
+import {AddFilesCommand} from './commands/add-page.js';
 
 class PdfContainer {
   fileName;
@@ -129,24 +130,43 @@ class PdfContainer {
     return movePageCommand;
   }
 
-  addFiles(nextSiblingElement) {
-    var input = document.createElement('input');
-    input.type = 'file';
-    input.multiple = true;
-    input.setAttribute('accept', 'application/pdf,image/*');
-    input.onchange = async (e) => {
-      const files = e.target.files;
+  async addFiles(element) {
+    let addFilesCommand = new AddFilesCommand(
+      element,
+      window.selectedPages,
+      this.addFilesAction.bind(this),
+      this.pagesContainer
+    );
 
-      this.addFilesFromFiles(files, nextSiblingElement);
-      this.updateFilename(files ? files[0].name : '');
-      const selectAll = document.getElementById('select-pages-container');
-      selectAll.classList.toggle('hidden', false);
-    };
+    await addFilesCommand.execute();
 
-    input.click();
+    this.undoManager.pushUndoClearRedo(addFilesCommand);
   }
 
-  async addFilesFromFiles(files, nextSiblingElement) {
+  async addFilesAction(nextSiblingElement) {
+    let pages = [];
+    return new Promise((resolve) => {
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.multiple = true;
+      input.setAttribute('accept', 'application/pdf,image/*');
+
+      input.onchange = async (e) => {
+        const files = e.target.files;
+        if (files.length > 0) {
+          pages = await this.addFilesFromFiles(files, nextSiblingElement, pages);
+          this.updateFilename(files[0].name);
+          const selectAll = document.getElementById('select-pages-container');
+          selectAll.classList.toggle('hidden', false);
+        }
+        resolve(pages);
+      };
+
+      input.click();
+    });
+  }
+
+  async addFilesFromFiles(files, nextSiblingElement, pages) {
     this.fileName = files[0].name;
     for (var i = 0; i < files.length; i++) {
       const startTime = Date.now();
@@ -158,9 +178,9 @@ class PdfContainer {
         if (file.type === 'application/pdf') {
           const {renderer, pdfDocument} = await this.loadFile(file);
           pageCount = renderer.pageCount || 0;
-          await this.addPdfFile(renderer, pdfDocument, nextSiblingElement);
+          pages = await this.addPdfFile(renderer, pdfDocument, nextSiblingElement, pages);
         } else if (file.type.startsWith('image/')) {
-          await this.addImageFile(file, nextSiblingElement);
+          pages = await this.addImageFile(file, nextSiblingElement, pages);
         }
         processingTime = Date.now() - startTime;
         this.captureFileProcessingEvent(true, file, processingTime, null, pageCount);
@@ -174,6 +194,7 @@ class PdfContainer {
     document.querySelectorAll('.enable-on-file').forEach((element) => {
       element.disabled = false;
     });
+    return pages;
   }
 
   captureFileProcessingEvent(success, file, processingTime, errorMessage, pageCount) {
@@ -191,15 +212,15 @@ class PdfContainer {
     } catch {}
   }
 
-  async addFilesBlank(nextSiblingElement) {
+  async addFilesBlank(nextSiblingElement, pages) {
     let doc = await PDFLib.PDFDocument.create();
     let docBytes = await doc.save();
 
     const url = URL.createObjectURL(new Blob([docBytes], {type: 'application/pdf'}));
 
     const renderer = await this.toRenderer(url);
-
-    return await this.addPdfFile(renderer, doc, nextSiblingElement);
+    pages = await this.addPdfFile(renderer, doc, nextSiblingElement, pages);
+    return pages;
   }
 
   rotateElement(element, deg) {
@@ -209,9 +230,7 @@ class PdfContainer {
     return rotateCommand;
   }
 
-  async addPdfFile(renderer, pdfDocument, nextSiblingElement) {
-    const createdPages = [];
-
+  async addPdfFile(renderer, pdfDocument, nextSiblingElement, pages) {
     for (var i = 0; i < renderer.pageCount; i++) {
       const div = document.createElement('div');
 
@@ -236,13 +255,13 @@ class PdfContainer {
         this.pagesContainer.appendChild(div);
       }
 
-      createdPages.push(div);
+      pages.push(div);
     }
 
-    return createdPages;
+    return pages;
   }
 
-  async addImageFile(file, nextSiblingElement) {
+  async addImageFile(file, nextSiblingElement, pages) {
     const div = document.createElement('div');
     div.classList.add('page-container');
 
@@ -259,6 +278,8 @@ class PdfContainer {
     } else {
       this.pagesContainer.appendChild(div);
     }
+    pages.push(div);
+    return pages;
   }
 
   async loadFile(file) {
@@ -506,7 +527,7 @@ class PdfContainer {
     return Array.from(pages).sort((a, b) => a - b);
   }
 
-  addFilesBlankAll() {
+  async addFilesBlankAll() {
     const allPages = this.pagesContainer.querySelectorAll('.page-container');
 
     let pageBreakCommand = new PageBreakCommand(
@@ -517,7 +538,7 @@ class PdfContainer {
       this.pagesContainer
     );
 
-    pageBreakCommand.execute();
+    await pageBreakCommand.execute();
 
     this.undoManager.pushUndoClearRedo(pageBreakCommand);
   }

@@ -1,33 +1,27 @@
 import {Command} from './command.js';
 
-export class PageBreakCommand extends Command {
-  constructor(elements, isSelectedInWindow, selectedPages, pageBreakCallback, pagesContainer) {
+export class AddFilesCommand extends Command {
+  constructor(element, selectedPages, addFilesAction, pagesContainer) {
     super();
-    this.elements = elements;
-    this.isSelectedInWindow = isSelectedInWindow;
+    this.element = element;
     this.selectedPages = selectedPages;
-    this.pageBreakCallback = pageBreakCallback;
+    this.addFilesAction = addFilesAction;
     this.pagesContainer = pagesContainer;
     this.addedElements = [];
-    this.originalStates = Array.from(elements, (element) => ({
-      element,
-      hasContent: element.innerHTML.trim() !== '',
-    }));
   }
 
   async execute() {
     const undoBtn = document.getElementById('undo-btn');
     undoBtn.disabled = true;
-    for (const [index, element] of this.elements.entries()) {
-      if (this.isSelectedInWindow && !this.selectedPages.includes(index)) {
-        break;
+    if (this.element) {
+      const newElement = await this.addFilesAction(this.element);
+      if (newElement) {
+        this.addedElements = newElement;
       }
-      if (index !== 0) {
-        const newElement = await this.pageBreakCallback(element, this.addedElements);
-
-        if (newElement) {
-          this.addedElements = newElement;
-        }
+    } else {
+      const newElement = await this.addFilesAction(false);
+      if (newElement) {
+        this.addedElements = newElement;
       }
     }
     undoBtn.disabled = false;
@@ -36,7 +30,6 @@ export class PageBreakCommand extends Command {
   undo() {
     this.addedElements.forEach((element) => {
       const nextSibling = element.nextSibling;
-
       this.pagesContainer.removeChild(element);
 
       if (this.pagesContainer.childElementCount === 0) {
@@ -52,8 +45,8 @@ export class PageBreakCommand extends Command {
 
       element._nextSibling = nextSibling;
     });
+    this.addedElements = [];
   }
-
   redo() {
     this.execute();
   }
