@@ -186,9 +186,31 @@ const DraggableUtils = {
 
           // Store the initial mouse angle relative to the center
           const initialMouseAngle = Math.atan2(
-            event.pageY - centerY,
-            event.pageX - centerX
+            centerY - event.pageY,
+            centerX - event.pageX
           );
+
+          marker = document.createElement("div");
+          marker.id = "marker";
+          marker.style.position = "absolute";
+          marker.style.width = "10px";
+          marker.style.height = "10px";
+          marker.style.backgroundColor = "red";
+          marker.zIndex = 1000;
+          marker.style.left = `${centerX}px`;
+          marker.style.top = `${centerY}px`;
+          container.appendChild(marker);
+
+          marker2 = document.createElement("div");
+          marker2.id = "marker";
+          marker2.style.position = "absolute";
+          marker2.style.width = "10px";
+          marker2.style.height = "10px";
+          marker2.style.backgroundColor = "blue";
+          marker2.zIndex = 1000;
+          marker2.style.left = `${event.pageX}px`;
+          marker2.style.top = `${event.pageY}px`;
+          container.appendChild(marker2);
 
           container.setAttribute("data-initial-mouse-angle", initialMouseAngle);
           container.setAttribute("data-initial-x", centerX);
@@ -206,14 +228,25 @@ const DraggableUtils = {
             parseFloat(container.getAttribute("data-initial-mouse-angle")) || 0;
           // Calculate the current mouse angle relative to the center
           const currentMouseAngle = Math.atan2(
-            event.pageY - centerY,
-            event.pageX - centerX
+            centerY - event.pageY,
+            centerX - event.pageX
           );
 
           const rawAngleDelta = currentMouseAngle - initialMouseAngle;
           const angleDelta = DraggableUtils.normalizeAngle(
-            rawAngleDelta * 0.05
+            rawAngleDelta * 0.02
           ); // Adjust sensitivity here
+
+          marker3 = document.createElement("div");
+          marker3.id = "marker";
+          marker3.style.position = "absolute";
+          marker3.style.width = "10px";
+          marker3.style.height = "10px";
+          marker3.style.backgroundColor = "blue";
+          marker3.zIndex = 1000;
+          marker3.style.left = `${event.pageX}px`;
+          marker3.style.top = `${event.pageY}px`;
+          container.appendChild(marker3);
 
           // Compute the new angle
           let newAngle = startAngle + angleDelta;
@@ -242,89 +275,49 @@ const DraggableUtils = {
   },
   createDraggableCanvasFromUrl(dataUrl) {
     return new Promise((resolve) => {
-      const canvasContainer = document.createElement("div");
+      // Initialize Fabric.js canvas
       const createdCanvas = document.createElement("canvas");
-      const padding = this.padding;
-      canvasContainer.id = `draggable-canvas-${this.nextId++}`;
-      canvasContainer.classList.add("draggable-canvas");
-      createdCanvas.classList.add("display-canvas");
-      canvasContainer.style.padding = padding + "px";
-      const x = 0;
-      const y = 20;
-      canvasContainer.style.transform = `translate(${x}px, ${y}px) rotate(${0}rad)`;
-      canvasContainer.setAttribute("data-bs-x", x);
-      canvasContainer.setAttribute("data-bs-y", y);
-      canvasContainer.style.transform = `translate(${x}px, ${y}px) rotate(${0}rad)`;
-      //Click element in order to enable arrow keys
-      canvasContainer.addEventListener("click", () => {
-        this.lastInteracted = canvasContainer;
-      });
+      const fabricCanvas = new fabric.Canvas(createdCanvas);
 
-      canvasContainer.onclick = (e) => this.onInteraction(e.target);
-      canvasContainer.appendChild(createdCanvas);
-      this.boxDragContainer.appendChild(canvasContainer);
-      // Add a rotation handle
-      const rotationHandle = document.createElement("div");
-      rotationHandle.classList.add("rotation-handle");
-      canvasContainer.appendChild(rotationHandle);
-      this.initializeRotationHandle(rotationHandle, canvasContainer);
-      //Enable Arrow keys directly after the element is created
-      this.lastInteracted = canvasContainer;
-
-      var myImage = new Image();
-      myImage.src = dataUrl;
-      myImage.onload = () => {
-        // Scale the image to fit within the canvas
-        const imgAspect = myImage.width / myImage.height;
-        const canvasAspect =
-          this.boxDragContainer.offsetWidth /
-          this.boxDragContainer.offsetHeight;
+      // Load the image
+      fabric.Image.fromURL(dataUrl, (img) => {
+        // Scale the image to fit within the container
+        const imgAspect = img.width / img.height;
+        const containerAspect =
+          (this.boxDragContainer.offsetWidth - 2 * padding) /
+          (this.boxDragContainer.offsetHeight - 2 * padding);
 
         let scaleMultiplier;
-
-        // Subtract padding from the container's dimensions
-        const availableWidth = this.boxDragContainer.offsetWidth - 2 * padding;
-        const availableHeight =
-          this.boxDragContainer.offsetHeight - 2 * padding;
-
-        // Determine the scale multiplier based on the aspect ratio
-        if (imgAspect > canvasAspect) {
-          scaleMultiplier = availableWidth / myImage.width;
+        if (imgAspect > containerAspect) {
+          scaleMultiplier =
+            (this.boxDragContainer.offsetWidth - 2 * padding) / img.width;
         } else {
-          scaleMultiplier = availableHeight / myImage.height;
+          scaleMultiplier =
+            (this.boxDragContainer.offsetHeight - 2 * padding) / img.height;
         }
 
         // Apply scaling if necessary
-        let newWidth = myImage.width;
-        let newHeight = myImage.height;
-        if (scaleMultiplier < 1) {
-          newWidth = myImage.width * scaleMultiplier;
-          newHeight = myImage.height * scaleMultiplier;
-        }
-        // Subtract padding from the final dimensions
-        newWidth = Math.max(0, newWidth - 2 * padding);
-        newHeight = Math.max(0, newHeight - 2 * padding);
+        img.scale(scaleMultiplier);
 
-        // Resize the canvas to fit the image
-        myImage.width = newWidth;
-        myImage.height = newHeight;
-        createdCanvas.width = newWidth;
-        createdCanvas.height = newHeight;
-        createdCanvas.style.width = `${newWidth}px`;
-        createdCanvas.style.height = `${newHeight}px`;
+        // Add the image to the Fabric.js canvas
+        fabricCanvas.add(img);
 
-        // Update the container dimensions
-        canvasContainer.style.width = `${newWidth + 2 * padding}px`;
-        canvasContainer.style.height = `${newHeight + 2 * padding}px`;
-        canvasContainer.style.width = `${newWidth + 2 * padding}px`;
-        canvasContainer.style.height = `${newHeight + 2 * padding}px`;
+        // Set canvas size to fit the scaled image
+        const newWidth = img.width * img.scaleX;
+        const newHeight = img.height * img.scaleY;
 
-        // Draw the image onto the canvas
-        var context = createdCanvas.getContext("2d");
-        context.drawImage(myImage, 0, 0, myImage.width, myImage.height);
+        fabricCanvas.width = newWidth;
+        fabricCanvas.height = newHeight;
+        fabricCanvas.style.width = `${newWidth}px`;
+        fabricCanvas.style.height = `${newHeight}px`;
+        fabricCanvas.style.width = `${newWidth + 2 * padding}px`;
+        fabricCanvas.style.height = `${newHeight + 2 * padding}px`;
 
-        resolve(canvasContainer);
-      };
+        // Enable arrow key interaction
+        this.lastInteracted = fabricCanvas;
+
+        resolve(fabricCanvas);
+      });
     });
   },
   deleteAllDraggableCanvases() {

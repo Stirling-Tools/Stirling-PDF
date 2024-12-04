@@ -358,6 +358,7 @@
             <div id="box-drag-container" class="show-on-file-selected">
               <canvas id="pdf-canvas"></canvas>
               <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
+              <script src="https://cdn.jsdelivr.net/npm/fabric@latest/dist/index.min.js"></script>
               <script th:src="@{'/js/draggable-utils.js'}"></script>
               <div class="draggable-buttons-box ignore-rtl">
                 <button class="btn btn-outline-secondary"
@@ -447,6 +448,8 @@
   </div>
   <!-- Link the draggable.js file -->
   <script th:src="@{'/js/draggable.js'}"></script>
+</script>
+
 </body>
 
 </html>
