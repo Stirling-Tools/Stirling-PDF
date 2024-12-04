@@ -115,6 +115,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
         return executeDatabaseScript(Paths.get(backupList.get(0).getFilePath()));
     }
 
+    // fixMe: Needs to check the type of DB before executing script
     @Override
     public void exportDatabase() throws IOException {
         // Check if the backup directory exists, and create it if it does not
