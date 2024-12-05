@@ -55,7 +55,8 @@ public class DatabaseController {
         Path tempTemplatePath = Files.createTempFile("backup_", ".sql");
         try (InputStream in = file.getInputStream()) {
             Files.copy(in, tempTemplatePath, StandardCopyOption.REPLACE_EXISTING);
-            boolean importSuccess = databaseBackupHelper.importDatabaseFromUI(tempTemplatePath);
+            boolean importSuccess =
+                    databaseBackupHelper.importDatabaseFromUI(tempTemplatePath.toString());
             if (importSuccess) {
                 redirectAttributes.addAttribute("infoMessage", "importIntoDatabaseSuccessed");
             } else {

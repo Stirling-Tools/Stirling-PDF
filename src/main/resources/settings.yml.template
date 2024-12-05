@@ -86,10 +86,10 @@ system:
   tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: undefined # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
   datasource:
-    url: jdbc:postgresql://localhost:5432/stirling-pdf-DB
+    url: jdbc:postgresql://localhost:5432/postgres
     driver: postgresql
     username: postgres
-    password:
+    password: postgres
 
 ui:
   appName: '' # application's visible name

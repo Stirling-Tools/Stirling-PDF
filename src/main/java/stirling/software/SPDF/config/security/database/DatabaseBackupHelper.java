@@ -19,17 +19,26 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.PathResource;
+import org.springframework.core.io.support.EncodedResource;
+import org.springframework.jdbc.datasource.init.ScriptException;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
+import stirling.software.SPDF.model.exception.BackupNotFoundException;
 import stirling.software.SPDF.utils.FileInfo;
 
 @Slf4j
 @Configuration
 public class DatabaseBackupHelper implements DatabaseBackupInterface {
+
+    public static final String BACKUP_PREFIX = "backup_";
+    public static final String SQL_SUFFIX = ".sql";
 
     @Value("${spring.datasource.url}")
     private String url;
@@ -40,31 +49,84 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     @Value("${spring.datasource.password}")
     private String databasePassword;
 
-    private Path backupPath = Paths.get("configs/db/backup/");
+    @Value("${spring.datasource.stirling.url}")
+    private String stirlingUrl;
+
+    @Value("${spring.datasource.stirling.username}")
+    private String stirlingDatabaseUsername;
+
+    @Value("${spring.datasource.stirling.password}")
+    private String stirlingDatabasePassword;
+
+    private final Path BACKUP_PATH = Paths.get("configs/db/backup/");
 
     // fixMe: should check if backups exist without returning the whole list
     @Override
+    public void initDatabase() {
+        log.info("Creating database stirling-pdf-DB");
+
+        String initDBAndRoleScript =
+                """
+                        CREATE DATABASE "stirling-pdf-DB";
+                        CREATE USER %s WITH ENCRYPTED PASSWORD '%s';
+                        ALTER DATABASE "stirling-pdf-DB" OWNER TO %s;
+                        GRANT ALL PRIVILEGES ON DATABASE "stirling-pdf-DB" TO %s;
+                        """
+                        .formatted(
+                                stirlingDatabaseUsername,
+                                stirlingDatabasePassword,
+                                stirlingDatabaseUsername,
+                                stirlingDatabaseUsername);
+        try (Connection conn =
+                        DriverManager.getConnection(url, databaseUsername, databasePassword);
+                PreparedStatement initStmt = conn.prepareStatement(initDBAndRoleScript)) {
+            initStmt.execute();
+
+            String setRoleScript = "SET ROLE " + stirlingDatabaseUsername + ";";
+
+            try (Connection stirlingDBConn =
+                            DriverManager.getConnection(
+                                    stirlingUrl,
+                                    stirlingDatabaseUsername,
+                                    stirlingDatabasePassword);
+                    PreparedStatement stmt = conn.prepareStatement(setRoleScript)) {
+                stmt.execute();
+
+                log.info("Database stirling-pdf-DB created");
+                log.info("User admin created");
+
+                ensureBackupDirectoryExists();
+            } catch (SQLException e) {
+                log.error("Failed to set admin to stirling-pdf-DB: {}", e.getMessage(), e);
+            }
+        } catch (SQLException e) {
+            log.error("Failed to create stirling-pdf-DB: {}", e.getMessage(), e);
+        }
+    }
+
+    @Override
     public boolean hasBackup() {
         // Check if there is at least one backup
-        return !getBackupList().isEmpty();
+        try (Stream<Path> entries = Files.list(BACKUP_PATH)) {
+            return entries.findFirst().isEmpty();
+        } catch (IOException e) {
+            log.error("Error reading backup directory: {}", e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public List<FileInfo> getBackupList() {
-        // Check if the backup directory exists, and create it if it does not
-        // todo: as this should always exist, can we make this an 'init' method so we do not have to check all the time?
-        ensureBackupDirectoryExists();
-
         List<FileInfo> backupFiles = new ArrayList<>();
 
         // Read the backup directory and filter for files with the prefix "backup_" and suffix
         // ".sql"
         try (DirectoryStream<Path> stream =
                 Files.newDirectoryStream(
-                        backupPath,
+                        BACKUP_PATH,
                         path ->
-                                path.getFileName().toString().startsWith("backup_")
-                                        && path.getFileName().toString().endsWith(".sql"))) {
+                                path.getFileName().toString().startsWith(BACKUP_PREFIX)
+                                        && path.getFileName().toString().endsWith(SQL_SUFFIX))) {
             for (Path entry : stream) {
                 BasicFileAttributes attrs = Files.readAttributes(entry, BasicFileAttributes.class);
                 LocalDateTime modificationDate =
@@ -90,68 +152,84 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
 
     // Imports a database backup from the specified file.
     public boolean importDatabaseFromUI(String fileName) throws IOException {
-        return this.importDatabaseFromUI(getBackupFilePath(fileName));
+        try {
+            importDatabaseFromUI(getBackupFilePath(fileName));
+            return true;
+        } catch (IOException e) {
+            // fixme: do we want to show the filename here?
+            log.error(
+                    "Error importing database from file: {}, message: {}",
+                    fileName,
+                    e.getMessage(),
+                    e.getCause());
+            return false;
+        }
     }
 
     // Imports a database backup from the specified path.
-    // todo: make private?
-    public boolean importDatabaseFromUI(Path tempTemplatePath) throws IOException {
-        boolean success = executeDatabaseScript(tempTemplatePath);
-        if (success) {
-            LocalDateTime dateNow = LocalDateTime.now();
-            DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
-            Path insertOutputFilePath =
-                    this.getBackupFilePath("backup_user_" + dateNow.format(myFormatObj) + ".sql");
-            Files.copy(tempTemplatePath, insertOutputFilePath);
-            Files.deleteIfExists(tempTemplatePath);
-        }
-        return success;
+    private void importDatabaseFromUI(Path tempTemplatePath) throws IOException {
+        executeDatabaseScript(tempTemplatePath);
+        LocalDateTime dateNow = LocalDateTime.now();
+        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+        Path insertOutputFilePath =
+                this.getBackupFilePath(
+                        BACKUP_PREFIX + "user_" + dateNow.format(myFormatObj) + SQL_SUFFIX);
+        Files.copy(tempTemplatePath, insertOutputFilePath);
+        Files.deleteIfExists(tempTemplatePath);
     }
 
     @Override
-    public boolean importDatabase() {
-        if (!this.hasBackup()) return false;
+    public void importDatabase() {
+        if (!hasBackup()) throw new BackupNotFoundException("No backups found");
 
-        List<FileInfo> backupList = this.getBackupList();
+        List<FileInfo> backupList = getBackupList();
         backupList.sort(Comparator.comparing(FileInfo::getModificationDate).reversed());
-
-        return executeDatabaseScript(Paths.get(backupList.get(0).getFilePath()));
+        executeDatabaseScript(Paths.get(backupList.get(0).getFilePath()));
     }
 
-    // fixMe: Needs to check the type of DB before executing script
+    // fixMe: Check the type of DB before executing script
     @Override
-    public void exportDatabase() throws IOException {
-        // Check if the backup directory exists, and create it if it does not
-        ensureBackupDirectoryExists();
-
+    public void exportDatabase() {
         // Filter and delete old backups if there are more than 5
         List<FileInfo> filteredBackupList =
                 this.getBackupList().stream()
-                        .filter(backup -> !backup.getFileName().startsWith("backup_user_"))
+                        .filter(backup -> !backup.getFileName().startsWith(BACKUP_PREFIX + "user_"))
                         .collect(Collectors.toList());
 
         if (filteredBackupList.size() > 5) {
-            filteredBackupList.sort(
-                    Comparator.comparing(
-                            p -> p.getFileName().substring(7, p.getFileName().length() - 4)));
-            Files.deleteIfExists(Paths.get(filteredBackupList.get(0).getFilePath()));
-            log.info("Deleted oldest backup: {}", filteredBackupList.get(0).getFileName());
+            deleteOldestBackup(filteredBackupList);
         }
 
         LocalDateTime dateNow = LocalDateTime.now();
         DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
         Path insertOutputFilePath =
-                this.getBackupFilePath("backup_" + dateNow.format(myFormatObj) + ".sql");
-        String query = "SCRIPT SIMPLE COLUMNS DROP to ?;";
+                this.getBackupFilePath(BACKUP_PREFIX + dateNow.format(myFormatObj) + SQL_SUFFIX);
 
         try (Connection conn =
-                        DriverManager.getConnection(url, databaseUsername, databasePassword);
-                PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, insertOutputFilePath.toString());
-            stmt.execute();
+                DriverManager.getConnection(
+                        stirlingUrl, stirlingDatabaseUsername, stirlingDatabasePassword)) {
+            ScriptUtils.executeSqlScript(
+                    conn, new EncodedResource(new PathResource(insertOutputFilePath)));
+
             log.info("Database export completed: {}", insertOutputFilePath);
         } catch (SQLException e) {
             log.error("Error during database export: {}", e.getMessage(), e);
+        } catch (ScriptException e) {
+            log.error("Error during database export: File {} not found", insertOutputFilePath);
+        }
+    }
+
+    private static void deleteOldestBackup(List<FileInfo> filteredBackupList) {
+        try {
+            filteredBackupList.sort(
+                    Comparator.comparing(
+                            p -> p.getFileName().substring(7, p.getFileName().length() - 4)));
+
+            FileInfo oldestFile = filteredBackupList.get(0);
+            Files.deleteIfExists(Paths.get(oldestFile.getFilePath()));
+            log.info("Deleted oldest backup: {}", oldestFile.getFileName());
+        } catch (IOException e) {
+            log.error("Unable to delete oldest backup, message: {}", e.getMessage(), e);
         }
     }
 
@@ -159,7 +237,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     public String getH2Version() {
         String version = "Unknown";
         try (Connection conn =
-                DriverManager.getConnection(url, databaseUsername, databasePassword)) {
+                DriverManager.getConnection(stirlingUrl, stirlingDatabaseUsername, stirlingDatabasePassword)) {
             try (Statement stmt = conn.createStatement();
                     ResultSet rs = stmt.executeQuery("SELECT H2VERSION() AS version")) {
                 if (rs.next()) {
@@ -191,33 +269,30 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
 
     // Gets the Path object for a given backup file name.
     public Path getBackupFilePath(String fileName) {
-        Path filePath = Paths.get(backupPath.toString(), fileName).normalize();
-        if (!filePath.startsWith(backupPath)) {
+        Path filePath = Paths.get(BACKUP_PATH.toString(), fileName).normalize();
+        if (!filePath.startsWith(BACKUP_PATH)) {
             throw new SecurityException("Path traversal detected");
         }
         return filePath;
     }
 
-    private boolean executeDatabaseScript(Path scriptPath) {
-        String query = "RUNSCRIPT from ?;";
-
+    private void executeDatabaseScript(Path scriptPath) {
         try (Connection conn =
-                        DriverManager.getConnection(url, databaseUsername, databasePassword);
-                PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, scriptPath.toString());
-            stmt.execute();
+                     DriverManager.getConnection(stirlingUrl, stirlingDatabaseUsername, stirlingDatabasePassword)) {
+            ScriptUtils.executeSqlScript(conn, new EncodedResource(new PathResource(scriptPath)));
+
             log.info("Database import completed: {}", scriptPath);
-            return true;
         } catch (SQLException e) {
             log.error("Error during database import: {}", e.getMessage(), e);
-            return false;
+        } catch (ScriptException e) {
+            log.error("Error: File {} not found", scriptPath.toString(), e);
         }
     }
 
     private void ensureBackupDirectoryExists() {
-        if (Files.notExists(backupPath)) {
+        if (Files.notExists(BACKUP_PATH)) {
             try {
-                Files.createDirectories(backupPath);
+                Files.createDirectories(BACKUP_PATH);
             } catch (IOException e) {
                 log.error("Error creating directories: {}", e.getMessage());
             }
