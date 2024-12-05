@@ -154,6 +154,9 @@
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('cert-sign', 'workspace_premium', 'home.certSign.title', 'home.certSign.desc', 'certSign.tags', 'security')}">
                         </div>
+                        <div 
+			              th:replace="~{fragments/navbarEntry :: navbarEntry('validate-signature','verified','home.validateSignature.title','home.validateSignature.desc','validateSignature.tags','security')}">
+			            </div>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-cert-sign', 'remove_moderator', 'home.removeCertSign.title', 'home.removeCertSign.desc', 'removeCertSign.tags', 'security')}">
                         </div>
