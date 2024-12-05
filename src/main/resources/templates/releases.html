@@ -276,7 +276,8 @@ function formatText(text) {
     const container = document.createElement('div');
     
     // Split the text into lines
-    const lines = text.split('\n');
+    const textWithoutComments = text.replace(/<!--[\s\S]*?-->/g, '');
+    const lines = textWithoutComments.split('\n');
     let currentList = null;
     
     lines.forEach(line => {
