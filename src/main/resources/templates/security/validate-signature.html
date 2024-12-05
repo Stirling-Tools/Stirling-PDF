@@ -42,12 +42,54 @@
     </div>
 
 <script th:inline="javascript">
+const translations = {
+    signature: /*[[#{validateSignature.signature}]]*/,
+    signatureInfo: /*[[#{validateSignature.signature.info}]]*/,
+    certInfo: /*[[#{validateSignature.cert.info}]]*/,
+    signer: /*[[#{validateSignature.signer}]]*/,
+    date: /*[[#{validateSignature.date}]]*/,
+    reason: /*[[#{validateSignature.reason}]]*/,
+    location: /*[[#{validateSignature.location}]]*/,
+    noSignatures: /*[[#{validateSignature.noSignatures}]]*/,
+    statusValid: /*[[#{validateSignature.status.valid}]]*/,
+    statusInvalid: /*[[#{validateSignature.status.invalid}]]*/,
+    mathValid: /*[[#{validateSignature.signature.mathValid}]]*/,
+    chainInvalid: /*[[#{validateSignature.chain.invalid}]]*/,
+    trustInvalid: /*[[#{validateSignature.trust.invalid}]]*/,
+    certExpired: /*[[#{validateSignature.cert.expired}]]*/,
+    certRevoked: /*[[#{validateSignature.cert.revoked}]]*/,
+    certIssuer: /*[[#{validateSignature.cert.issuer}]]*/,
+    certSubject: /*[[#{validateSignature.cert.subject}]]*/,
+    certSerialNumber: /*[[#{validateSignature.cert.serialNumber}]]*/,
+    certValidFrom: /*[[#{validateSignature.cert.validFrom}]]*/,
+    certValidUntil: /*[[#{validateSignature.cert.validUntil}]]*/,
+    certAlgorithm: /*[[#{validateSignature.cert.algorithm}]]*/,
+    certKeySize: /*[[#{validateSignature.cert.keySize}]]*/,
+    certBits: /*[[#{validateSignature.cert.bits}]]*/,
+    certVersion: /*[[#{validateSignature.cert.version}]]*/,
+    certKeyUsage: /*[[#{validateSignature.cert.keyUsage}]]*/,
+    certSelfSigned: /*[[#{validateSignature.cert.selfSigned}]]*/,
+    yes: /*[[#{yes}]]*/,
+    no: /*[[#{no}]]*/,
+    selectPDF: /*[[#{validateSignature.selectPDF}]]*/
+};
+
+function escapeHtml(unsafe) {
+    return unsafe
+        ?.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;") || 'N/A';
+}
+
 document.querySelector('#pdfForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const fileInput = document.getElementById('fileInput-input');
     const certInput = document.getElementById('certFile-input');
     if (!fileInput.files.length) {
-        alert(/*[[#{validateSignature.selectPDF}]]*/ 'Please select a file');
+        alert(escapeHtml(translations.selectPDF));
         return;
     }
 
@@ -74,7 +116,7 @@ document.querySelector('#pdfForm').addEventListener('submit', async (e) => {
             results.push({
                 fileName: file.name,
                 valid: false,
-                errorMessage: /*[[#{validateSignature.status.invalid}]]*/ 'Invalid' + ': ' + error.message
+                errorMessage: `${escapeHtml(translations.statusInvalid)}: ${escapeHtml(error.message)}`
             });
         }
     }
@@ -89,7 +131,7 @@ function displayResults(results) {
     resultDiv.style.display = 'block';
     
     if (!results || results.length === 0) {
-        listDiv.innerHTML = `<div class="alert alert-warning">${/*[[#{validateSignature.noSignatures}]]*/ 'No signatures found'}</div>`;
+        listDiv.innerHTML = `<div class="alert alert-warning">${escapeHtml(translations.noSignatures)}</div>`;
         return;
     }
     
@@ -97,14 +139,12 @@ function displayResults(results) {
         const signatureDiv = document.createElement('div');
         signatureDiv.className = 'card mb-3';
         
-        // Determine overall validation status and collect issues
         let validationClass = 'alert-danger';
         let validationIssues = [];
         
         if (!result.valid) {
-            validationIssues.push(`${/*[[#{validateSignature.status.invalid}]]*/ 'Invalid'}: ${result.errorMessage || ''}`);
+            validationIssues.push(`${escapeHtml(translations.statusInvalid)}: ${escapeHtml(result.errorMessage || '')}`);
         } else {
-            // Check if everything is valid
             const isFullyValid = result.valid && 
                                result.chainValid && 
                                result.trustValid && 
@@ -113,27 +153,26 @@ function displayResults(results) {
 
             if (isFullyValid) {
                 validationClass = 'alert-success';
-                validationIssues.push(/*[[#{validateSignature.status.valid}]]*/ 'Valid');
+                validationIssues.push(escapeHtml(translations.statusValid));
             } else {
                 validationClass = 'alert-warning';
-                validationIssues.push(/*[[#{validateSignature.signature.mathValid}]]*/ 'Signature is mathematically valid BUT:');
+                validationIssues.push(escapeHtml(translations.mathValid));
                 
                 if (!result.chainValid) {
-                    validationIssues.push(/*[[#{validateSignature.chain.invalid}]]*/ 'Certificate chain validation failed');
+                    validationIssues.push(escapeHtml(translations.chainInvalid));
                 }
                 if (!result.trustValid) {
-                    validationIssues.push(/*[[#{validateSignature.trust.invalid}]]*/ 'Certificate not in trust store');
+                    validationIssues.push(escapeHtml(translations.trustInvalid));
                 }
                 if (!result.notExpired) {
-                    validationIssues.push(/*[[#{validateSignature.cert.expired}]]*/ 'Certificate has expired');
+                    validationIssues.push(escapeHtml(translations.certExpired));
                 }
                 if (result.trustValid && result.chainValid && !result.notRevoked) {
-                    validationIssues.push(/*[[#{validateSignature.cert.revoked}]]*/ 'Certificate has been revoked');
+                    validationIssues.push(escapeHtml(translations.certRevoked));
                 }
             }
         }
 
-        // Format the validation message
         let statusMessage = validationIssues[0];
         if (validationIssues.length > 1) {
             statusMessage += '<ul class="mb-0 mt-2">';
@@ -145,72 +184,72 @@ function displayResults(results) {
 
         let content = `
     <div class="card-body">
-        ${results.length > 1 ? `<h4 class="mb-3">${/*[[#{validateSignature.signature}]]*/ 'Signature'} ${index + 1}</h4>` : ''}
+        ${results.length > 1 ? `<h4 class="mb-3">${escapeHtml(translations.signature)} ${index + 1}</h4>` : ''}
         <div class="alert ${validationClass}">
             ${statusMessage}
         </div>
         <div class="card-text">
-            <h5>${/*[[#{validateSignature.signature.info}]]*/ 'Signature Information'}</h5>
+            <h5>${escapeHtml(translations.signatureInfo)}</h5>
             <table class="table table-borderless">
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.signer}]]*/ 'Signer'}:</strong></td>
-                    <td>${result.signerName || 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.signer)}:</strong></td>
+                    <td>${escapeHtml(result.signerName)}</td>
                 </tr>
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.date}]]*/ 'Date'}:</strong></td>
-                    <td>${result.signatureDate || 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.date)}:</strong></td>
+                    <td>${escapeHtml(result.signatureDate)}</td>
                 </tr>
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.reason}]]*/ 'Reason'}:</strong></td>
-                    <td>${result.reason || 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.reason)}:</strong></td>
+                    <td>${escapeHtml(result.reason)}</td>
                 </tr>
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.location}]]*/ 'Location'}:</strong></td>
-                    <td>${result.location || 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.location)}:</strong></td>
+                    <td>${escapeHtml(result.location)}</td>
                 </tr>
             </table>
             
-            <h5>${/*[[#{validateSignature.cert.info}]]*/ 'Certificate Details'}</h5>
+            <h5>${escapeHtml(translations.certInfo)}</h5>
             <table class="table table-borderless">
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.cert.issuer}]]*/ 'Issuer'}:</strong></td>
-                    <td>${result.issuerDN || 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.certIssuer)}:</strong></td>
+                    <td>${escapeHtml(result.issuerDN)}</td>
                 </tr>
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.cert.subject}]]*/ 'Subject'}:</strong></td>
-                    <td>${result.subjectDN || 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.certSubject)}:</strong></td>
+                    <td>${escapeHtml(result.subjectDN)}</td>
                 </tr>
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.cert.serialNumber}]]*/ 'Serial Number'}:</strong></td>
-                    <td>${result.serialNumber || 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.certSerialNumber)}:</strong></td>
+                    <td>${escapeHtml(result.serialNumber)}</td>
                 </tr>
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.cert.validFrom}]]*/ 'Valid From'}:</strong></td>
-                    <td>${result.validFrom || 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.certValidFrom)}:</strong></td>
+                    <td>${escapeHtml(result.validFrom)}</td>
                 </tr>
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.cert.validUntil}]]*/ 'Valid Until'}:</strong></td>
-                    <td>${result.validUntil || 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.certValidUntil)}:</strong></td>
+                    <td>${escapeHtml(result.validUntil)}</td>
                 </tr>
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.cert.algorithm}]]*/ 'Algorithm'}:</strong></td>
-                    <td>${result.signatureAlgorithm || 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.certAlgorithm)}:</strong></td>
+                    <td>${escapeHtml(result.signatureAlgorithm)}</td>
                 </tr>
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.cert.keySize}]]*/ 'Key Size'}:</strong></td>
-                    <td>${result.keySize ? result.keySize + ' ' + /*[[#{validateSignature.cert.bits}]]*/ 'bits' : 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.certKeySize)}:</strong></td>
+                    <td>${result.keySize ? escapeHtml(result.keySize) + ' ' + escapeHtml(translations.certBits) : 'N/A'}</td>
                 </tr>
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.cert.version}]]*/ 'Version'}:</strong></td>
-                    <td>${result.version || 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.certVersion)}:</strong></td>
+                    <td>${escapeHtml(result.version)}</td>
                 </tr>
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.cert.keyUsage}]]*/ 'Key Usage'}:</strong></td>
-                    <td>${result.keyUsages ? result.keyUsages.join(', ') : 'N/A'}</td>
+                    <td><strong>${escapeHtml(translations.certKeyUsage)}:</strong></td>
+                    <td>${result.keyUsages ? result.keyUsages.map(usage => escapeHtml(usage)).join(', ') : 'N/A'}</td>
                 </tr>
                 <tr>
-                    <td><strong>${/*[[#{validateSignature.cert.selfSigned}]]*/ 'Self-Signed'}:</strong></td>
-                    <td>${result.selfSigned ? /*[[#{validateSignature.cert.yes}]]*/ 'Yes' : /*[[#{validateSignature.cert.no}]]*/ 'No'}</td>
+                    <td><strong>${escapeHtml(translations.certSelfSigned)}:</strong></td>
+                    <td>${result.selfSigned ? escapeHtml(translations.yes) : escapeHtml(translations.no)}</td>
                 </tr>
             </table>
         </div>
