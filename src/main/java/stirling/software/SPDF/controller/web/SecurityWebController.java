@@ -53,6 +53,13 @@ public class SecurityWebController {
         return "security/cert-sign";
     }
 
+    @GetMapping("/validate-signature")
+    @Hidden
+    public String certSignVerifyForm(Model model) {
+        model.addAttribute("currentPage", "validate-signature");
+        return "security/validate-signature";
+    }
+
     @GetMapping("/remove-cert-sign")
     @Hidden
     public String certUnSignForm(Model model) {

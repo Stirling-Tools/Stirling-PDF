@@ -147,7 +147,7 @@ public class StampController {
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
                 Filenames.toSimpleFileName(pdfFile.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "")
+                                .replaceFirst("[.][^.]+$", "")
                         + "_stamped.pdf");
     }
 
@@ -191,7 +191,7 @@ public class StampController {
             String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
             File tempFile = Files.createTempFile("NotoSansFont", fileExtension).toFile();
             try (InputStream is = classPathResource.getInputStream();
-                 FileOutputStream os = new FileOutputStream(tempFile)) {
+                    FileOutputStream os = new FileOutputStream(tempFile)) {
                 IOUtils.copy(is, os);
                 font = PDType0Font.load(document, tempFile);
             } finally {
