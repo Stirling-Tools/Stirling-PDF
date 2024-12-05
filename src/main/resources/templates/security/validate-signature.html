@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
+  <head>
+    <th:block th:insert="~{fragments/common :: head(title=#{validateSignature.title}, header=#{validateSignature.header})}"></th:block>
+  </head>
+  <body>
+    <div id="page-container">
+      <div id="content-wrap">
+        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+        <br><br>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon security">verified</span>
+                <span class="tool-header-text" th:text="#{validateSignature.header}"></span>
+              </div>
+              <form id="pdfForm" th:action="@{'api/v1/security/validate-signature'}" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <label th:text="#{validateSignature.selectPDF}"></label>
+                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, remoteCall='false', accept='application/pdf')}"></div>
+                </div>
+                <div class="mb-3">
+		          <label th:text="#{validateSignature.selectCustomCert}" ></label>
+		          <div th:replace="~{fragments/common :: fileSelector(name='certFile', multipleInputsForSingleRequest=false, notRequired=true, remoteCall='false', accept='.cer,.crt,.pem')}"></div>
+		        </div>
+                <div class="mb-3 text-left">
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{validateSignature.submit}"></button>
+                </div>
+              </form>
+              
+              <!-- Results section -->
+              <div id="results" style="display: none;">
+                <h4 th:text="#{validateSignature.results}"></h4>
+                <div id="signatures-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+    </div>
+
+<script th:inline="javascript">
+document.querySelector('#pdfForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById('fileInput-input');
+    const certInput = document.getElementById('certFile-input');
+    if (!fileInput.files.length) {
+        alert(/*[[#{validateSignature.selectPDF}]]*/ 'Please select a file');
+        return;
+    }
+
+    const results = [];
+    for (const file of fileInput.files) {
+        const formData = new FormData();
+        formData.append('fileInput', file);
+        
+        if (certInput.files.length > 0) {
+            formData.append('certFile', certInput.files[0]);
+        }
+        try {
+            const response = await fetch(e.target.action, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const fileResults = await response.json();
+            fileResults.forEach(result => {
+                result.fileName = file.name;
+            });
+            results.push(...fileResults);
+        } catch (error) {
+            results.push({
+                fileName: file.name,
+                valid: false,
+                errorMessage: /*[[#{validateSignature.status.invalid}]]*/ 'Invalid' + ': ' + error.message
+            });
+        }
+    }
+    
+    displayResults(results);
+});
+
+function displayResults(results) {
+    const resultDiv = document.getElementById('results');
+    const listDiv = document.getElementById('signatures-list');
+    listDiv.innerHTML = '';
+    resultDiv.style.display = 'block';
+    
+    if (!results || results.length === 0) {
+        listDiv.innerHTML = `<div class="alert alert-warning">${/*[[#{validateSignature.noSignatures}]]*/ 'No signatures found'}</div>`;
+        return;
+    }
+    
+    results.forEach((result) => {
+        const signatureDiv = document.createElement('div');
+        signatureDiv.className = 'card mb-3';
+        
+        // Determine overall validation status and collect issues
+        let validationClass = 'alert-danger';
+        let validationIssues = [];
+        
+        if (!result.valid) {
+            validationIssues.push(`${/*[[#{validateSignature.status.invalid}]]*/ 'Invalid'}: ${result.errorMessage || ''}`);
+        } else {
+            // Check if everything is valid
+            const isFullyValid = result.valid && 
+                               result.chainValid && 
+                               result.trustValid && 
+                               result.notExpired && 
+                               result.notRevoked;
+
+            if (isFullyValid) {
+                validationClass = 'alert-success';
+                validationIssues.push(/*[[#{validateSignature.status.valid}]]*/ 'Valid');
+            } else {
+                validationClass = 'alert-warning';
+                validationIssues.push(/*[[#{validateSignature.signature.mathValid}]]*/ 'Signature is mathematically valid BUT:');
+                
+                if (!result.chainValid) {
+                    validationIssues.push(/*[[#{validateSignature.chain.invalid}]]*/ 'Certificate chain validation failed');
+                }
+                if (!result.trustValid) {
+                    validationIssues.push(/*[[#{validateSignature.trust.invalid}]]*/ 'Certificate not in trust store');
+                }
+                if (!result.notExpired) {
+                    validationIssues.push(/*[[#{validateSignature.cert.expired}]]*/ 'Certificate has expired');
+                }
+                if (result.trustValid && result.chainValid && !result.notRevoked) {
+                    validationIssues.push(/*[[#{validateSignature.cert.revoked}]]*/ 'Certificate has been revoked');
+                }
+            }
+        }
+
+        // Format the validation message
+        let statusMessage = validationIssues[0];
+        if (validationIssues.length > 1) {
+            statusMessage += '<ul class="mb-0 mt-2">';
+            for (let i = 1; i < validationIssues.length; i++) {
+                statusMessage += `<li>${validationIssues[i]}</li>`;
+            }
+            statusMessage += '</ul>';
+        }
+
+        let content = `
+            <div class="card-body">
+                <div class="alert ${validationClass}">
+                    ${statusMessage}
+                </div>
+                <div class="card-text">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>${/*[[#{validateSignature.signer}]]*/ 'Signer'}:</strong></td>
+                            <td>${result.signerName || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>${/*[[#{validateSignature.date}]]*/ 'Date'}:</strong></td>
+                            <td>${result.signatureDate || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>${/*[[#{validateSignature.reason}]]*/ 'Reason'}:</strong></td>
+                            <td>${result.reason || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>${/*[[#{validateSignature.location}]]*/ 'Location'}:</strong></td>
+                            <td>${result.location || 'N/A'}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        signatureDiv.innerHTML = content;
+        listDiv.appendChild(signatureDiv);
+    });
+}
+</script>
+  </body>
+</html>
