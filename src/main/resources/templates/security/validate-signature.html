@@ -93,7 +93,7 @@ function displayResults(results) {
         return;
     }
     
-    results.forEach((result) => {
+    results.forEach((result, index) => {
         const signatureDiv = document.createElement('div');
         signatureDiv.className = 'card mb-3';
         
@@ -144,32 +144,78 @@ function displayResults(results) {
         }
 
         let content = `
-            <div class="card-body">
-                <div class="alert ${validationClass}">
-                    ${statusMessage}
-                </div>
-                <div class="card-text">
-                    <table class="table table-borderless">
-                        <tr>
-                            <td><strong>${/*[[#{validateSignature.signer}]]*/ 'Signer'}:</strong></td>
-                            <td>${result.signerName || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>${/*[[#{validateSignature.date}]]*/ 'Date'}:</strong></td>
-                            <td>${result.signatureDate || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>${/*[[#{validateSignature.reason}]]*/ 'Reason'}:</strong></td>
-                            <td>${result.reason || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>${/*[[#{validateSignature.location}]]*/ 'Location'}:</strong></td>
-                            <td>${result.location || 'N/A'}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        `;
+    <div class="card-body">
+        ${results.length > 1 ? `<h4 class="mb-3">${/*[[#{validateSignature.signature}]]*/ 'Signature'} ${index + 1}</h4>` : ''}
+        <div class="alert ${validationClass}">
+            ${statusMessage}
+        </div>
+        <div class="card-text">
+            <h5>${/*[[#{validateSignature.signature.info}]]*/ 'Signature Information'}</h5>
+            <table class="table table-borderless">
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.signer}]]*/ 'Signer'}:</strong></td>
+                    <td>${result.signerName || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.date}]]*/ 'Date'}:</strong></td>
+                    <td>${result.signatureDate || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.reason}]]*/ 'Reason'}:</strong></td>
+                    <td>${result.reason || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.location}]]*/ 'Location'}:</strong></td>
+                    <td>${result.location || 'N/A'}</td>
+                </tr>
+            </table>
+            
+            <h5>${/*[[#{validateSignature.cert.info}]]*/ 'Certificate Details'}</h5>
+            <table class="table table-borderless">
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.cert.issuer}]]*/ 'Issuer'}:</strong></td>
+                    <td>${result.issuerDN || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.cert.subject}]]*/ 'Subject'}:</strong></td>
+                    <td>${result.subjectDN || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.cert.serialNumber}]]*/ 'Serial Number'}:</strong></td>
+                    <td>${result.serialNumber || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.cert.validFrom}]]*/ 'Valid From'}:</strong></td>
+                    <td>${result.validFrom || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.cert.validUntil}]]*/ 'Valid Until'}:</strong></td>
+                    <td>${result.validUntil || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.cert.algorithm}]]*/ 'Algorithm'}:</strong></td>
+                    <td>${result.signatureAlgorithm || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.cert.keySize}]]*/ 'Key Size'}:</strong></td>
+                    <td>${result.keySize ? result.keySize + ' ' + /*[[#{validateSignature.cert.bits}]]*/ 'bits' : 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.cert.version}]]*/ 'Version'}:</strong></td>
+                    <td>${result.version || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.cert.keyUsage}]]*/ 'Key Usage'}:</strong></td>
+                    <td>${result.keyUsages ? result.keyUsages.join(', ') : 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>${/*[[#{validateSignature.cert.selfSigned}]]*/ 'Self-Signed'}:</strong></td>
+                    <td>${result.selfSigned ? /*[[#{validateSignature.cert.yes}]]*/ 'Yes' : /*[[#{validateSignature.cert.no}]]*/ 'No'}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+`;
         
         signatureDiv.innerHTML = content;
         listDiv.appendChild(signatureDiv);

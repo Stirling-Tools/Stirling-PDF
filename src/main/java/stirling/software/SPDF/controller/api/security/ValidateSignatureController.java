@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -91,37 +92,67 @@ public class ValidateSignatureController {
                     SignerInformationStore signerStore = signedData.getSignerInfos();
 
                     for (SignerInformation signer : signerStore.getSigners()) {
-                        X509CertificateHolder certHolder =
-                                (X509CertificateHolder)
-                                        certStore.getMatches(signer.getSID()).iterator().next();
-                        X509Certificate cert =
-                                new JcaX509CertificateConverter().getCertificate(certHolder);
+                        X509CertificateHolder certHolder = (X509CertificateHolder) certStore.getMatches(signer.getSID()).iterator().next();
+                        X509Certificate cert = new JcaX509CertificateConverter().getCertificate(certHolder);
 
-                        boolean isValid =
-                                signer.verify(new JcaSimpleSignerInfoVerifierBuilder().build(cert));
+                        boolean isValid = signer.verify(new JcaSimpleSignerInfoVerifierBuilder().build(cert));
                         result.setValid(isValid);
 
                         // Additional validations
-                        result.setChainValid(
-                                customCert != null
-                                        ? certValidationService
-                                                .validateCertificateChainWithCustomCert(
-                                                        cert, customCert)
-                                        : certValidationService.validateCertificateChain(cert));
+                        result.setChainValid(customCert != null 
+                            ? certValidationService.validateCertificateChainWithCustomCert(cert, customCert)
+                            : certValidationService.validateCertificateChain(cert));
 
-                        result.setTrustValid(
-                                customCert != null
-                                        ? certValidationService.validateTrustWithCustomCert(
-                                                cert, customCert)
-                                        : certValidationService.validateTrustStore(cert));
+                        result.setTrustValid(customCert != null 
+                            ? certValidationService.validateTrustWithCustomCert(cert, customCert)
+                            : certValidationService.validateTrustStore(cert));
 
                         result.setNotRevoked(!certValidationService.isRevoked(cert));
                         result.setNotExpired(!cert.getNotAfter().before(new Date()));
 
+                        // Set basic signature info
                         result.setSignerName(sig.getName());
                         result.setSignatureDate(sig.getSignDate().getTime().toString());
                         result.setReason(sig.getReason());
                         result.setLocation(sig.getLocation());
+
+                        // Set new certificate details
+                        result.setIssuerDN(cert.getIssuerX500Principal().getName());
+                        result.setSubjectDN(cert.getSubjectX500Principal().getName());
+                        result.setSerialNumber(cert.getSerialNumber().toString(16)); // Hex format
+                        result.setValidFrom(cert.getNotBefore().toString());
+                        result.setValidUntil(cert.getNotAfter().toString());
+                        result.setSignatureAlgorithm(cert.getSigAlgName());
+                        
+                        // Get key size (if possible)
+                        try {
+                            result.setKeySize(((RSAPublicKey) cert.getPublicKey()).getModulus().bitLength());
+                        } catch (Exception e) {
+                            // If not RSA or error, set to 0
+                            result.setKeySize(0);
+                        }
+
+                        result.setVersion(String.valueOf(cert.getVersion()));
+                        
+                        // Set key usage
+                        List<String> keyUsages = new ArrayList<>();
+                        boolean[] keyUsageFlags = cert.getKeyUsage();
+                        if (keyUsageFlags != null) {
+                            String[] keyUsageLabels = {
+                                "Digital Signature", "Non-Repudiation", "Key Encipherment",
+                                "Data Encipherment", "Key Agreement", "Certificate Signing",
+                                "CRL Signing", "Encipher Only", "Decipher Only"
+                            };
+                            for (int i = 0; i < keyUsageFlags.length; i++) {
+                                if (keyUsageFlags[i]) {
+                                    keyUsages.add(keyUsageLabels[i]);
+                                }
+                            }
+                        }
+                        result.setKeyUsages(keyUsages);
+                        
+                        // Check if self-signed
+                        result.setSelfSigned(cert.getSubjectX500Principal().equals(cert.getIssuerX500Principal()));
                     }
                 } catch (Exception e) {
                     result.setValid(false);
