@@ -84,7 +84,7 @@
   z-index: 2;
 }
 
-input[type="file"] {
+.input-container input[type="file"] {
   display: none;
 }
 
