@@ -5,11 +5,6 @@ import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,61 +64,6 @@ public class SPdfApplication {
             return true;
         } catch (IOException e) {
             return false;
-        }
-    }
-
-    @PostConstruct
-    public void initDB() {
-        Connection connection = null;
-        Statement statement = null;
-        try {
-            logger.debug("Creating database...");
-            ApplicationProperties.Datasource datasource =
-                    applicationProperties.getSystem().getDatasource();
-
-            if (datasource != null) {
-                connection =
-                        DriverManager.getConnection(
-                                datasource.getUrl(),
-                                datasource.getUsername(),
-                                datasource.getPassword());
-                statement = connection.createStatement();
-                statement.executeQuery(
-                        "SELECT count(*) FROM pg_database WHERE datname = 'database_name'");
-                ResultSet resultSet = statement.getResultSet();
-                resultSet.next();
-                int count = resultSet.getInt(1);
-
-                if (count <= 0) {
-                    statement.executeUpdate("CREATE DATABASE stirling-pdf-DB");
-                    statement.executeUpdate(
-                            "CREATE ROLE "
-                                    + datasource.getUsername()
-                                    + " ADMIN WITH PASSWORD '"
-                                    + datasource.getPassword()
-                                    + "'");
-                    statement.executeUpdate("SET ROLE " + datasource.getUsername());
-                    logger.debug("Database created.");
-                } else {
-                    logger.debug("Database already exists.");
-                }
-            }
-
-        } catch (SQLException e) {
-            logger.error(e.toString());
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                    logger.debug("Closed Statement.");
-                }
-                if (connection != null) {
-                    logger.debug("Closed Connection.");
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                logger.error(e.toString());
-            }
         }
     }
 

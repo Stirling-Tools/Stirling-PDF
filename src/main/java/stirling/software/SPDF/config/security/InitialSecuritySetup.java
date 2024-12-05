@@ -20,11 +20,12 @@ public class InitialSecuritySetup {
 
     @Autowired private ApplicationProperties applicationProperties;
 
-    // todo: wip add Postgres here
     @Autowired private DatabaseBackupInterface databaseBackupHelper;
 
     @PostConstruct
     public void init() throws IllegalArgumentException, IOException {
+        databaseBackupHelper.initDatabase();
+
         if (databaseBackupHelper.hasBackup() && !userService.hasUsers()) {
             databaseBackupHelper.importDatabase();
         } else if (!userService.hasUsers()) {
