@@ -42,6 +42,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
 
     private Path backupPath = Paths.get("configs/db/backup/");
 
+    // fixMe: should check if backups exist without returning the whole list
     @Override
     public boolean hasBackup() {
         // Check if there is at least one backup
@@ -51,6 +52,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     @Override
     public List<FileInfo> getBackupList() {
         // Check if the backup directory exists, and create it if it does not
+        // todo: as this should always exist, can we make this an 'init' method so we do not have to check all the time?
         ensureBackupDirectoryExists();
 
         List<FileInfo> backupFiles = new ArrayList<>();
@@ -92,6 +94,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     }
 
     // Imports a database backup from the specified path.
+    // todo: make private?
     public boolean importDatabaseFromUI(Path tempTemplatePath) throws IOException {
         boolean success = executeDatabaseScript(tempTemplatePath);
         if (success) {
