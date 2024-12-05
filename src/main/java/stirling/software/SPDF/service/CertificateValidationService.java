@@ -52,7 +52,7 @@ public class CertificateValidationService {
                     continue;
                 }
                 if (inCert) {
-                    if (line.equals("END")) {
+                    if ("END".equals(line)) {
                         inCert = false;
                         byte[] certBytes = parseOctalData(certData.toString());
                         if (certBytes != null) {
