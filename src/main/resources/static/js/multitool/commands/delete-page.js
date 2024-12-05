@@ -10,7 +10,9 @@ export class DeletePageCommand extends Command {
     this.filenameInputValue = document.getElementById("filename-input").value;
 
     const filenameParagraph = document.getElementById("filename");
-    this.filenameParagraphText = filenameParagraph ? filenameParagraph.innerText : "";
+    this.filenameParagraphText = filenameParagraph
+      ? filenameParagraph.innerText
+      : "";
   }
 
   execute() {
