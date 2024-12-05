@@ -82,7 +82,7 @@
           }
         }
 
-        clearFileInput();
+        //clearFileInput();
         clearTimeout(timeoutId);
         if (showGameBtn) {
           showGameBtn.style.display = 'none';
@@ -163,10 +163,10 @@
       success = true;
 
       if (contentType.includes('application/pdf') || contentType.includes('image/')) {
-        clearFileInput();
+        //clearFileInput();
         return handleResponse(blob, filename, !isMulti, isZip);
       } else {
-        clearFileInput();
+        //clearFileInput();
         return handleResponse(blob, filename, false, isZip);
       }
     } catch (error) {
