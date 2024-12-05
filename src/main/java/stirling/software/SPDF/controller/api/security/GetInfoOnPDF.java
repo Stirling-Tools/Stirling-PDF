@@ -322,26 +322,13 @@ public class GetInfoOnPDF {
                 PDEncryption pdfEncryption = pdfBoxDoc.getEncryption();
                 encryption.put("EncryptionAlgorithm", pdfEncryption.getFilter());
                 encryption.put("KeyLength", pdfEncryption.getLength());
-                AccessPermission ap = pdfBoxDoc.getCurrentAccessPermission();
-                if (ap != null) {
-                    ObjectNode permissionsNode = objectMapper.createObjectNode();
-
-                    permissionsNode.put("CanAssembleDocument", ap.canAssembleDocument());
-                    permissionsNode.put("CanExtractContent", ap.canExtractContent());
-                    permissionsNode.put(
-                            "CanExtractForAccessibility", ap.canExtractForAccessibility());
-                    permissionsNode.put("CanFillInForm", ap.canFillInForm());
-                    permissionsNode.put("CanModify", ap.canModify());
-                    permissionsNode.put("CanModifyAnnotations", ap.canModifyAnnotations());
-                    permissionsNode.put("CanPrint", ap.canPrint());
-
-                    encryption.set(
-                            "Permissions", permissionsNode); // set the node under "Permissions"
-                }
                 // Add other encryption-related properties as needed
             } else {
                 encryption.put("IsEncrypted", false);
             }
+
+            ObjectNode permissionsNode = objectMapper.createObjectNode();
+            setNodePermissions(pdfBoxDoc, permissionsNode);
 
             ObjectNode pageInfoParent = objectMapper.createObjectNode();
             for (int pageNum = 0; pageNum < pdfBoxDoc.getNumberOfPages(); pageNum++) {
@@ -584,6 +571,7 @@ public class GetInfoOnPDF {
             jsonOutput.set("DocumentInfo", docInfoNode);
             jsonOutput.set("Compliancy", compliancy);
             jsonOutput.set("Encryption", encryption);
+            jsonOutput.set("Permissions", permissionsNode); // set the node under "Permissions"
             jsonOutput.set("Other", other);
             jsonOutput.set("PerPageInfo", pageInfoParent);
 
@@ -600,6 +588,22 @@ public class GetInfoOnPDF {
             logger.error("exception", e);
         }
         return null;
+    }
+
+    private void setNodePermissions(PDDocument pdfBoxDoc, ObjectNode permissionsNode) {
+        AccessPermission ap = pdfBoxDoc.getCurrentAccessPermission();
+
+        permissionsNode.put("Document Assembly", getPermissionState(ap.canAssembleDocument()));
+        permissionsNode.put("Extracting Content", getPermissionState(ap.canExtractContent()));
+        permissionsNode.put("Extracting for accessibility", getPermissionState(ap.canExtractForAccessibility()));
+        permissionsNode.put("Form Filling", getPermissionState(ap.canFillInForm()));
+        permissionsNode.put("Modifying", getPermissionState(ap.canModify()));
+        permissionsNode.put("Modifying annotations", getPermissionState(ap.canModifyAnnotations()));
+        permissionsNode.put("Printing", getPermissionState(ap.canPrint()));
+    }
+
+    private String getPermissionState(boolean state) {
+        return state ? "Allowed" : "Not Allowed";
     }
 
     private static void addOutlinesToArray(PDOutlineItem outline, ArrayNode arrayNode) {
