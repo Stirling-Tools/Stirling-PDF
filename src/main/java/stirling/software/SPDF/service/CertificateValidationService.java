@@ -1,5 +1,6 @@
 package stirling.software.SPDF.service;
 
+import io.github.pixee.security.BoundedLineReader;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -44,14 +45,14 @@ public class CertificateValidationService {
             boolean inCert = false;
             int certCount = 0;
 
-            while ((line = reader.readLine()) != null) {
+            while ((line = BoundedLineReader.readLine(reader, 5_000_000)) != null) {
                 if (line.startsWith("CKA_VALUE MULTILINE_OCTAL")) {
                     inCert = true;
                     certData = new StringBuilder();
                     continue;
                 }
                 if (inCert) {
-                    if (line.equals("END")) {
+                    if ("END".equals(line)) {
                         inCert = false;
                         byte[] certBytes = parseOctalData(certData.toString());
                         if (certBytes != null) {
