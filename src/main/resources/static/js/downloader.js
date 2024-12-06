@@ -42,7 +42,7 @@
       event.preventDefault();
       firstErrorOccurred = false;
       const url = this.action;
-      const files = $('#fileInput-input')[0].files;
+      let files = $('#fileInput-input')[0].files;
       const formData = new FormData(this);
       const submitButton = document.getElementById('submitBtn');
       const showGameBtn = document.getElementById('show-game-btn');
@@ -73,6 +73,16 @@
       try {
         submitButton.textContent = 'Processing...';
         submitButton.disabled = true;
+
+        if (!url.includes('remove-password')) {
+          // Check if any PDF files are encrypted and handle decryption if necessary
+          const decryptedFiles = await checkAndDecryptFiles(url, files);
+          files = decryptedFiles;
+          // Append decrypted files to formData
+          decryptedFiles.forEach((file, index) => {
+            formData.set(`fileInput`, file);
+          });
+        }
 
         if (remoteCall === true) {
           if (override === 'multi' || (!multipleInputsForSingleRequest && files.length > 1 && override !== 'single')) {
@@ -131,6 +141,92 @@
       console.error('Error getting PDF page count:', error);
       return null;
     }
+  }
+
+  async function checkAndDecryptFiles(url, files) {
+    const decryptedFiles = [];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
+
+    // Extract the base URL
+    const baseUrl = new URL(url);
+    let removePasswordUrl = `${baseUrl.origin}`;
+
+    // Check if there's a path before /api/
+    const apiIndex = baseUrl.pathname.indexOf('/api/');
+    if (apiIndex > 0) {
+      removePasswordUrl += baseUrl.pathname.substring(0, apiIndex);
+    }
+
+    // Append the new endpoint
+    removePasswordUrl += '/api/v1/security/remove-password';
+
+    console.log(`Remove password URL: ${removePasswordUrl}`);
+
+    for (const file of files) {
+      console.log(`Processing file: ${file.name}`);
+      if (file.type !== 'application/pdf') {
+        console.log(`Skipping non-PDF file: ${file.name}`);
+        decryptedFiles.push(file);
+        continue;
+      }
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+
+        console.log(`Attempting to load PDF: ${file.name}`);
+        const pdf = await loadingTask.promise;
+        console.log(`File is not encrypted: ${file.name}`);
+        decryptedFiles.push(file); // If no error, file is not encrypted
+      } catch (error) {
+        if (error.name === 'PasswordException' && error.code === 1) {
+          console.log(`PDF requires password: ${file.name}`, error);
+          console.log(`Attempting to remove password from PDF: ${file.name} with password.`);
+          const password = prompt(`This PDF (${file.name}) is encrypted. Please enter the password:`);
+
+          if (!password) {
+            console.error(`No password provided for encrypted PDF: ${file.name}`);
+            showErrorBanner(`No password provided for encrypted PDF: ${file.name}`, 'Please enter a valid password.');
+            throw error;
+          }
+
+          try {
+            // Prepare FormData for the decryption request
+            const formData = new FormData();
+            formData.append('fileInput', file);
+            formData.append('password', password);
+
+            // Use handleSingleDownload to send the request
+            const decryptionResult = await fetch(removePasswordUrl, {method: 'POST', body: formData});
+
+            if (decryptionResult && decryptionResult.blob) {
+              const decryptedBlob = await decryptionResult.blob();
+              const decryptedFile = new File([decryptedBlob], file.name, {type: 'application/pdf'});
+
+              /*    // Create a link element to download the file
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(decryptedBlob);
+            link.download = 'test.pdf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+*/
+              decryptedFiles.push(decryptedFile);
+              console.log(`Successfully decrypted PDF: ${file.name}`);
+            } else {
+              throw new Error('Decryption failed: No valid response from server');
+            }
+          } catch (decryptError) {
+            console.error(`Failed to decrypt PDF: ${file.name}`, decryptError);
+            showErrorBanner(`Failed to decrypt PDF: ${file.name}`, 'Incorrect password or unsupported encryption.');
+            throw decryptError;
+          }
+        } else {
+          console.log(`Error loading PDF: ${file.name}`, error);
+          throw error;
+        }
+      }
+    }
+    return decryptedFiles;
   }
 
   async function handleSingleDownload(url, formData, isMulti = false, isZip = false) {
