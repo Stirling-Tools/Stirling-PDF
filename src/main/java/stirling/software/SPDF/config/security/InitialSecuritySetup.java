@@ -24,9 +24,7 @@ public class InitialSecuritySetup {
 
     @PostConstruct
     public void init() throws IllegalArgumentException, IOException {
-        databaseBackupHelper.initDatabase();
-
-        if (databaseBackupHelper.hasBackup() && !userService.hasUsers()) {
+        if (databaseBackupHelper.hasBackup() && userService.hasUsers()) {
             databaseBackupHelper.importDatabase();
         } else if (!userService.hasUsers()) {
             initializeAdminUser();

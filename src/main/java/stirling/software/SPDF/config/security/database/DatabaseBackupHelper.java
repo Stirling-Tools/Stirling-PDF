@@ -8,7 +8,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -40,75 +39,25 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     public static final String BACKUP_PREFIX = "backup_";
     public static final String SQL_SUFFIX = ".sql";
 
+    @Value("${dbType:postgresql}")
+    private String dbType;
+
     @Value("${spring.datasource.url}")
     private String url;
 
     @Value("${spring.datasource.username}")
-    private String databaseUsername;
+    private String username;
 
     @Value("${spring.datasource.password}")
-    private String databasePassword;
-
-    @Value("${spring.datasource.stirling.url}")
-    private String stirlingUrl;
-
-    @Value("${spring.datasource.stirling.username}")
-    private String stirlingDatabaseUsername;
-
-    @Value("${spring.datasource.stirling.password}")
-    private String stirlingDatabasePassword;
+    private String password;
 
     private final Path BACKUP_PATH = Paths.get("configs/db/backup/");
-
-    // fixMe: should check if backups exist without returning the whole list
-    @Override
-    public void initDatabase() {
-        log.info("Creating database stirling-pdf-DB");
-
-        String initDBAndRoleScript =
-                """
-                        CREATE DATABASE "stirling-pdf-DB";
-                        CREATE USER %s WITH ENCRYPTED PASSWORD '%s';
-                        ALTER DATABASE "stirling-pdf-DB" OWNER TO %s;
-                        GRANT ALL PRIVILEGES ON DATABASE "stirling-pdf-DB" TO %s;
-                        """
-                        .formatted(
-                                stirlingDatabaseUsername,
-                                stirlingDatabasePassword,
-                                stirlingDatabaseUsername,
-                                stirlingDatabaseUsername);
-        try (Connection conn =
-                        DriverManager.getConnection(url, databaseUsername, databasePassword);
-                PreparedStatement initStmt = conn.prepareStatement(initDBAndRoleScript)) {
-            initStmt.execute();
-
-            String setRoleScript = "SET ROLE " + stirlingDatabaseUsername + ";";
-
-            try (Connection stirlingDBConn =
-                            DriverManager.getConnection(
-                                    stirlingUrl,
-                                    stirlingDatabaseUsername,
-                                    stirlingDatabasePassword);
-                    PreparedStatement stmt = conn.prepareStatement(setRoleScript)) {
-                stmt.execute();
-
-                log.info("Database stirling-pdf-DB created");
-                log.info("User admin created");
-
-                ensureBackupDirectoryExists();
-            } catch (SQLException e) {
-                log.error("Failed to set admin to stirling-pdf-DB: {}", e.getMessage(), e);
-            }
-        } catch (SQLException e) {
-            log.error("Failed to create stirling-pdf-DB: {}", e.getMessage(), e);
-        }
-    }
 
     @Override
     public boolean hasBackup() {
         // Check if there is at least one backup
         try (Stream<Path> entries = Files.list(BACKUP_PATH)) {
-            return entries.findFirst().isEmpty();
+            return entries.findFirst().isPresent();
         } catch (IOException e) {
             log.error("Error reading backup directory: {}", e.getMessage(), e);
             throw new RuntimeException(e);
@@ -147,6 +96,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
         } catch (IOException e) {
             log.error("Error reading backup directory: {}", e.getMessage(), e);
         }
+
         return backupFiles;
     }
 
@@ -156,7 +106,6 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
             importDatabaseFromUI(getBackupFilePath(fileName));
             return true;
         } catch (IOException e) {
-            // fixme: do we want to show the filename here?
             log.error(
                     "Error importing database from file: {}, message: {}",
                     fileName,
@@ -205,9 +154,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
         Path insertOutputFilePath =
                 this.getBackupFilePath(BACKUP_PREFIX + dateNow.format(myFormatObj) + SQL_SUFFIX);
 
-        try (Connection conn =
-                DriverManager.getConnection(
-                        stirlingUrl, stirlingDatabaseUsername, stirlingDatabasePassword)) {
+        try (Connection conn = DriverManager.getConnection(url, username, password)) {
             ScriptUtils.executeSqlScript(
                     conn, new EncodedResource(new PathResource(insertOutputFilePath)));
 
@@ -236,8 +183,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     // Retrieves the H2 database version.
     public String getH2Version() {
         String version = "Unknown";
-        try (Connection conn =
-                DriverManager.getConnection(stirlingUrl, stirlingDatabaseUsername, stirlingDatabasePassword)) {
+        try (Connection conn = DriverManager.getConnection(url, username, password)) {
             try (Statement stmt = conn.createStatement();
                     ResultSet rs = stmt.executeQuery("SELECT H2VERSION() AS version")) {
                 if (rs.next()) {
@@ -277,8 +223,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     }
 
     private void executeDatabaseScript(Path scriptPath) {
-        try (Connection conn =
-                     DriverManager.getConnection(stirlingUrl, stirlingDatabaseUsername, stirlingDatabasePassword)) {
+        try (Connection conn = DriverManager.getConnection(url, username, password)) {
             ScriptUtils.executeSqlScript(conn, new EncodedResource(new PathResource(scriptPath)));
 
             log.info("Database import completed: {}", scriptPath);

@@ -303,9 +303,11 @@ dependencies {
 		implementation "org.springframework.session:spring-session-core:$springBootVersion"
         implementation "org.springframework:spring-jdbc"
 
-        implementation "com.unboundid.product.scim2:scim2-sdk-client:2.3.5"
-        // Don't upgrade h2database
         runtimeOnly "org.postgresql:postgresql:42.7.4"
+//        runtimeOnly 'com.mysql:mysql-connector-j:9.1.0'
+//        runtimeOnly 'com.oracle.database.jdbc:ojdbc11:23.6.0.24.10'
+
+        implementation "com.unboundid.product.scim2:scim2-sdk-client:2.3.5"
         constraints {
             implementation "org.opensaml:opensaml-core:$openSamlVersion"
             implementation "org.opensaml:opensaml-saml-api:$openSamlVersion"
@@ -392,9 +394,31 @@ dependencies {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     dependsOn "spotlessApply"
+    dependsOn "initDB"
 }
+
 compileJava {
     options.compilerArgs << "-parameters"
+}
+
+bootRun {
+    if (project.hasProperty("args")) {
+        args = project.args.split(" ")
+    }
+}
+
+
+tasks.register("initDB", Exec) {
+    description = "Creates a database of the specified type (postgresql, mysql, oracle)."
+    def scriptPath = "$projectDir/scripts/init_db.sh"
+    // Set the database type argument
+    def dbType = project.hasProperty('dbType') ? project.property('dbType') : "postgresql"
+
+    if (!["postgresql", "mysql", "oracle"].contains(dbType)) {
+        throw new GradleException("Invalid database type: $dbType. Valid types are: postgresql, mysql, oracle.")
+    } else {
+        commandLine "bash", scriptPath, dbType
+    }
 }
 
 task writeVersion {
