@@ -5,6 +5,7 @@ import {SplitAllCommand} from './commands/split.js';
 import {UndoManager} from './UndoManager.js';
 import {PageBreakCommand} from './commands/page-break.js';
 import {AddFilesCommand} from './commands/add-page.js';
+import {DecryptFile} from './DecryptFiles.js';
 
 class PdfContainer {
   fileName;
@@ -39,6 +40,8 @@ class PdfContainer {
     this.addFilesBlankAll = this.addFilesBlankAll.bind(this);
     this.removeAllElements = this.removeAllElements.bind(this);
     this.resetPages = this.resetPages.bind(this);
+
+    this.decryptFile = new DecryptFile();
 
     this.undoManager = undoManager || new UndoManager();
 
@@ -165,7 +168,6 @@ class PdfContainer {
       input.click();
     });
   }
-
   async addFilesFromFiles(files, nextSiblingElement, pages) {
     this.fileName = files[0].name;
     for (var i = 0; i < files.length; i++) {
@@ -173,17 +175,27 @@ class PdfContainer {
       let processingTime,
         errorMessage = null,
         pageCount = 0;
+
       try {
-        const file = files[i];
-        if (file.type === 'application/pdf') {
-          const {renderer, pdfDocument} = await this.loadFile(file);
+        let decryptedFile = files[i];
+
+        if (decryptedFile.type === 'application/pdf' && (await this.decryptFile.checkFileEncrypted(decryptedFile))) {
+          decryptedFile = await this.decryptFile.decryptFile(decryptedFile);
+          if (!decryptedFile) {
+            throw new Error('File decryption failed.');
+          }
+        }
+
+        if (decryptedFile.type === 'application/pdf') {
+          const {renderer, pdfDocument} = await this.loadFile(decryptedFile);
           pageCount = renderer.pageCount || 0;
           pages = await this.addPdfFile(renderer, pdfDocument, nextSiblingElement, pages);
-        } else if (file.type.startsWith('image/')) {
-          pages = await this.addImageFile(file, nextSiblingElement, pages);
+        } else if (decryptedFile.type.startsWith('image/')) {
+          pages = await this.addImageFile(decryptedFile, nextSiblingElement, pages);
         }
+
         processingTime = Date.now() - startTime;
-        this.captureFileProcessingEvent(true, file, processingTime, null, pageCount);
+        this.captureFileProcessingEvent(true, decryptedFile, processingTime, null, pageCount);
       } catch (error) {
         processingTime = Date.now() - startTime;
         errorMessage = error.message || 'Unknown error';
@@ -194,6 +206,7 @@ class PdfContainer {
     document.querySelectorAll('.enable-on-file').forEach((element) => {
       element.disabled = false;
     });
+
     return pages;
   }
 
