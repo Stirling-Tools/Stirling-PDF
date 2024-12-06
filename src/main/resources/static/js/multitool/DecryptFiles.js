@@ -6,14 +6,22 @@ export class DecryptFile {
       if (password === null) {
         // User cancelled
         console.error(`Password prompt cancelled for PDF: ${file.name}`);
-        this.showErrorBanner(`Operation cancelled for PDF: ${file.name}`, 'You cancelled the decryption process.');
+        this.showErrorBanner(
+          `${window.translations.cancelled.replace('{0}', file.name)}`,
+          '',
+          `${window.translations.unexpectedError}`
+        );
         return null; // No file to return
       }
 
       if (!password) {
         // No password provided
         console.error(`No password provided for encrypted PDF: ${file.name}`);
-        this.showErrorBanner(`No password provided for encrypted PDF: ${file.name}`, 'Please enter a valid password.');
+        this.showErrorBanner(
+          `${window.translations.noPassword.replace('{0}', file.name)}`,
+          '',
+          `${window.translations.unexpectedError}`
+        );
         return null; // No file to return
       }
 
@@ -33,11 +41,11 @@ export class DecryptFile {
         return new File([decryptedBlob], file.name, {type: 'application/pdf'});
       } else {
         const errorText = await response.text();
-        console.error(`Server error while decrypting: ${errorText}`);
+        console.error(`${window.translations.invalidPassword} ${errorText}`);
         this.showErrorBanner(
-          'Please try again with the correct password.',
+          `${window.translations.invalidPassword}`,
           errorText,
-          `Incorrect password for PDF: ${file.name}`
+          `${window.translations.invalidPasswordHeader.replace('{0}', file.name)}`
         );
         return null; // No file to return
       }
@@ -45,9 +53,9 @@ export class DecryptFile {
       // Handle network or unexpected errors
       console.error(`Failed to decrypt PDF: ${file.name}`, error);
       this.showErrorBanner(
-        `Decryption error for PDF: ${file.name}`,
-        error.message || 'Unexpected error occurred.',
-        'There was an error processing the file. Please try again.'
+        `${window.translations.unexpectedError.replace('{0}', file.name)}`,
+        `${error.message || window.translations.unexpectedError}`,
+        error
       );
       return null; // No file to return
     }
