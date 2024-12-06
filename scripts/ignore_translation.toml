@@ -66,7 +66,6 @@ ignore = [
 [es_ES]
 ignore = [
     'adminUserSettings.roles',
-    'color',
     'error',
     'language.direction',
     'no',
