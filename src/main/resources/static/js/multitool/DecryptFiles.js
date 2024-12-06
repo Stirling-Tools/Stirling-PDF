@@ -1,7 +1,7 @@
 export class DecryptFile {
   async decryptFile(file) {
     try {
-      const password = prompt('This file is password-protected. Please enter the password:');
+      const password = prompt(`${window.translations.passwordPrompt}`);
 
       if (password === null) {
         // User cancelled
