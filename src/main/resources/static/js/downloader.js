@@ -71,9 +71,6 @@
       }, 5000);
 
       try {
-        submitButton.textContent = 'Processing...';
-        submitButton.disabled = true;
-
         if (!url.includes('remove-password')) {
           // Check if any PDF files are encrypted and handle decryption if necessary
           const decryptedFiles = await checkAndDecryptFiles(url, files);
@@ -83,6 +80,9 @@
             formData.set(`fileInput`, file);
           });
         }
+
+        submitButton.textContent = 'Processing...';
+        submitButton.disabled = true;
 
         if (remoteCall === true) {
           if (override === 'multi' || (!multipleInputsForSingleRequest && files.length > 1 && override !== 'single')) {
@@ -181,11 +181,14 @@
         if (error.name === 'PasswordException' && error.code === 1) {
           console.log(`PDF requires password: ${file.name}`, error);
           console.log(`Attempting to remove password from PDF: ${file.name} with password.`);
-          const password = prompt(`This PDF (${file.name}) is encrypted. Please enter the password:`);
+          const password = prompt(`${window.translations.decrypt.passwordPrompt}`);
 
           if (!password) {
             console.error(`No password provided for encrypted PDF: ${file.name}`);
-            showErrorBanner(`No password provided for encrypted PDF: ${file.name}`, 'Please enter a valid password.');
+            showErrorBanner(
+              `${window.translations.decrypt.noPassword.replace('{0}', file.name)}`,
+              `${window.translations.decrypt.unexpectedError}`
+            );
             throw error;
           }
 
@@ -217,7 +220,10 @@
             }
           } catch (decryptError) {
             console.error(`Failed to decrypt PDF: ${file.name}`, decryptError);
-            showErrorBanner(`Failed to decrypt PDF: ${file.name}`, 'Incorrect password or unsupported encryption.');
+            showErrorBanner(
+              `${window.translations.invalidPasswordHeader.replace('{0}', file.name)}`,
+              `${window.translations.invalidPassword}`
+            );
             throw decryptError;
           }
         } else {
