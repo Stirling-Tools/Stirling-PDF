@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
+import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
@@ -47,7 +47,7 @@ public class UserService implements UserServiceInterface {
 
     @Autowired private SessionPersistentRegistry sessionRegistry;
 
-    @Autowired DatabaseBackupInterface databaseBackupHelper;
+    @Autowired DatabaseInterface databaseService;
 
     @Autowired ApplicationProperties applicationProperties;
 
@@ -167,7 +167,7 @@ public class UserService implements UserServiceInterface {
         user.addAuthority(new Authority(role, user));
         user.setAuthenticationType(authenticationType);
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
     public void saveUser(String username, String password)
@@ -181,7 +181,7 @@ public class UserService implements UserServiceInterface {
         user.setEnabled(true);
         user.setAuthenticationType(AuthenticationType.WEB);
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
     public void saveUser(String username, String password, String role, boolean firstLogin)
@@ -197,7 +197,7 @@ public class UserService implements UserServiceInterface {
         user.setAuthenticationType(AuthenticationType.WEB);
         user.setFirstLogin(firstLogin);
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
     public void saveUser(String username, String password, String role)
@@ -249,7 +249,7 @@ public class UserService implements UserServiceInterface {
             user.setSettings(settingsMap);
 
             userRepository.save(user);
-            databaseBackupHelper.exportDatabase();
+            databaseService.exportDatabase();
         }
     }
 
@@ -276,32 +276,32 @@ public class UserService implements UserServiceInterface {
         }
         user.setUsername(newUsername);
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
     public void changePassword(User user, String newPassword) throws IOException {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
     public void changeFirstUse(User user, boolean firstUse) throws IOException {
         user.setFirstLogin(firstUse);
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
     public void changeRole(User user, String newRole) throws IOException {
         Authority userAuthority = this.findRole(user);
         userAuthority.setAuthority(newRole);
         authorityRepository.save(userAuthority);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
     public void changeUserEnabled(User user, Boolean enbeled) throws IOException {
         user.setEnabled(enbeled);
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
     public boolean isPasswordCorrect(User user, String currentPassword) {

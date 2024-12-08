@@ -5,12 +5,8 @@ import java.util.List;
 
 import stirling.software.SPDF.utils.FileInfo;
 
-public interface DatabaseBackupInterface {
+public interface DatabaseInterface {
     void exportDatabase() throws IOException;
-
-    void importDatabase();
-
-    boolean hasBackup();
 
     List<FileInfo> getBackupList();
 }

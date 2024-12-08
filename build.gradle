@@ -394,31 +394,10 @@ dependencies {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     dependsOn "spotlessApply"
-    dependsOn "initDB"
 }
 
 compileJava {
     options.compilerArgs << "-parameters"
-}
-
-bootRun {
-    if (project.hasProperty("args")) {
-        args = project.args.split(" ")
-    }
-}
-
-
-tasks.register("initDB", Exec) {
-    description = "Creates a database of the specified type (postgresql, mysql, oracle)."
-    def scriptPath = "$projectDir/scripts/init_db.sh"
-    // Set the database type argument
-    def dbType = project.hasProperty('dbType') ? project.property('dbType') : "postgresql"
-
-    if (!["postgresql", "mysql", "oracle"].contains(dbType)) {
-        throw new GradleException("Invalid database type: $dbType. Valid types are: postgresql, mysql, oracle.")
-    } else {
-        commandLine "bash", scriptPath, dbType
-    }
 }
 
 task writeVersion {

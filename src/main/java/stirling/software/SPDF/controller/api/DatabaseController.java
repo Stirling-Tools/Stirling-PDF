@@ -28,7 +28,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.config.security.database.DatabaseBackupHelper;
+import stirling.software.SPDF.config.security.database.DatabaseService;
 
 @Slf4j
 @Controller
@@ -37,7 +37,7 @@ import stirling.software.SPDF.config.security.database.DatabaseBackupHelper;
 @Tag(name = "Database", description = "Database APIs")
 public class DatabaseController {
 
-    @Autowired DatabaseBackupHelper databaseBackupHelper;
+    @Autowired DatabaseService databaseService;
 
     @Hidden
     @PostMapping(consumes = "multipart/form-data", value = "import-database")
@@ -56,7 +56,7 @@ public class DatabaseController {
         try (InputStream in = file.getInputStream()) {
             Files.copy(in, tempTemplatePath, StandardCopyOption.REPLACE_EXISTING);
             boolean importSuccess =
-                    databaseBackupHelper.importDatabaseFromUI(tempTemplatePath.toString());
+                    databaseService.importDatabaseFromUI(tempTemplatePath.toString());
             if (importSuccess) {
                 redirectAttributes.addAttribute("infoMessage", "importIntoDatabaseSuccessed");
             } else {
@@ -79,14 +79,14 @@ public class DatabaseController {
 
         // Check if the file exists in the backup list
         boolean fileExists =
-                databaseBackupHelper.getBackupList().stream()
+                databaseService.getBackupList().stream()
                         .anyMatch(backup -> backup.getFileName().equals(fileName));
         if (!fileExists) {
             log.error("File {} not found in backup list", fileName);
             return "redirect:/database?error=fileNotFound";
         }
         log.info("Received file: {}", fileName);
-        if (databaseBackupHelper.importDatabaseFromUI(fileName)) {
+        if (databaseService.importDatabaseFromUI(fileName)) {
             log.info("File {} imported to database", fileName);
             return "redirect:/database?infoMessage=importIntoDatabaseSuccessed";
         }
@@ -104,7 +104,7 @@ public class DatabaseController {
             throw new IllegalArgumentException("File must not be null or empty");
         }
         try {
-            if (databaseBackupHelper.deleteBackupFile(fileName)) {
+            if (databaseService.deleteBackupFile(fileName)) {
                 log.info("Deleted file: {}", fileName);
             } else {
                 log.error("Failed to delete file: {}", fileName);
@@ -128,7 +128,7 @@ public class DatabaseController {
             throw new IllegalArgumentException("File must not be null or empty");
         }
         try {
-            Path filePath = databaseBackupHelper.getBackupFilePath(fileName);
+            Path filePath = databaseService.getBackupFilePath(fileName);
             InputStreamResource resource = new InputStreamResource(Files.newInputStream(filePath));
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + fileName)

@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -18,51 +17,27 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
-import stirling.software.SPDF.model.exception.BackupNotFoundException;
+import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.utils.FileInfo;
 
 @Slf4j
-@Configuration
-public class DatabaseBackupHelper implements DatabaseBackupInterface {
+@Service
+public class DatabaseService implements DatabaseInterface {
 
     public static final String BACKUP_PREFIX = "backup_";
     public static final String SQL_SUFFIX = ".sql";
+    private static final Path BACKUP_PATH = Paths.get("configs/db/backup/");
 
-    @Value("${dbType:postgresql}")
-    private String dbType;
-
-    @Value("${spring.datasource.url}")
-    private String url;
-
-    @Value("${spring.datasource.username}")
-    private String username;
-
-    @Value("${spring.datasource.password}")
-    private String password;
-
-    private final Path BACKUP_PATH = Paths.get("configs/db/backup/");
-
-    @Override
-    public boolean hasBackup() {
-        // Check if there is at least one backup
-        try (Stream<Path> entries = Files.list(BACKUP_PATH)) {
-            return entries.findFirst().isPresent();
-        } catch (IOException e) {
-            log.error("Error reading backup directory: {}", e.getMessage(), e);
-            throw new RuntimeException(e);
-        }
-    }
+    @Autowired private DatabaseConfig databaseConfig;
 
     @Override
     public List<FileInfo> getBackupList() {
@@ -101,7 +76,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     }
 
     // Imports a database backup from the specified file.
-    public boolean importDatabaseFromUI(String fileName) throws IOException {
+    public boolean importDatabaseFromUI(String fileName) {
         try {
             importDatabaseFromUI(getBackupFilePath(fileName));
             return true;
@@ -128,16 +103,6 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     }
 
     @Override
-    public void importDatabase() {
-        if (!hasBackup()) throw new BackupNotFoundException("No backups found");
-
-        List<FileInfo> backupList = getBackupList();
-        backupList.sort(Comparator.comparing(FileInfo::getModificationDate).reversed());
-        executeDatabaseScript(Paths.get(backupList.get(0).getFilePath()));
-    }
-
-    // fixMe: Check the type of DB before executing script
-    @Override
     public void exportDatabase() {
         // Filter and delete old backups if there are more than 5
         List<FileInfo> filteredBackupList =
@@ -154,7 +119,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
         Path insertOutputFilePath =
                 this.getBackupFilePath(BACKUP_PREFIX + dateNow.format(myFormatObj) + SQL_SUFFIX);
 
-        try (Connection conn = DriverManager.getConnection(url, username, password)) {
+        try (Connection conn = databaseConfig.connection()) {
             ScriptUtils.executeSqlScript(
                     conn, new EncodedResource(new PathResource(insertOutputFilePath)));
 
@@ -183,7 +148,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     // Retrieves the H2 database version.
     public String getH2Version() {
         String version = "Unknown";
-        try (Connection conn = DriverManager.getConnection(url, username, password)) {
+        try (Connection conn = databaseConfig.connection()) {
             try (Statement stmt = conn.createStatement();
                     ResultSet rs = stmt.executeQuery("SELECT H2VERSION() AS version")) {
                 if (rs.next()) {
@@ -223,7 +188,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     }
 
     private void executeDatabaseScript(Path scriptPath) {
-        try (Connection conn = DriverManager.getConnection(url, username, password)) {
+        try (Connection conn = databaseConfig.connection()) {
             ScriptUtils.executeSqlScript(conn, new EncodedResource(new PathResource(scriptPath)));
 
             log.info("Database import completed: {}", scriptPath);
@@ -231,16 +196,6 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
             log.error("Error during database import: {}", e.getMessage(), e);
         } catch (ScriptException e) {
             log.error("Error: File {} not found", scriptPath.toString(), e);
-        }
-    }
-
-    private void ensureBackupDirectoryExists() {
-        if (Files.notExists(BACKUP_PATH)) {
-            try {
-                Files.createDirectories(BACKUP_PATH);
-            } catch (IOException e) {
-                log.error("Error creating directories: {}", e.getMessage());
-            }
         }
     }
 

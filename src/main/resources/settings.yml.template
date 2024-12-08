@@ -77,6 +77,7 @@ legal:
   impressum: '' # URL to the impressum of your application (e.g. https://example.com/impressum). Empty string to disable or filename to load from local file in static folder
 
 system:
+  springProfilesActive: postgres # set the default environment (e.g. 'postgres', 'mysql', 'oracle')
   defaultLocale: en-US # set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   enableAlphaFunctionality: false # set to enable functionality which might need more testing before it fully goes live (this feature might make no changes)
@@ -86,10 +87,10 @@ system:
   tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: undefined # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
   datasource:
-    driver: postgresql
-    url: jdbc:postgresql://localhost:5432/stirling_pdf
-    username: admin
-    password: stirling
+    url: jdbc:postgresql://localhost:5432/postgres
+    driverClassName: postgresql
+    username: postgres
+    password: postgres
 
 ui:
   appName: '' # application's visible name
