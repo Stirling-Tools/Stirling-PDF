@@ -5,11 +5,15 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringSubstitutor;
 import org.springframework.core.io.Resource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 
@@ -150,16 +154,19 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
     private void getRedirect_oauth2(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {
+        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
         String param = "logout=true";
         String registrationId = null;
-        String issuer = null;
-        String clientId = null;
-        OAUTH2 oauth = applicationProperties.getSecurity().getOauth2();
+        String issuer = oauth.getIssuer();
+        String clientId = oauth.getClientId();
+        String idToken = null;
 
         if (authentication instanceof OAuth2AuthenticationToken) {
             OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
             registrationId = oauthToken.getAuthorizedClientRegistrationId();
-
+            if (oauthToken.getPrincipal() instanceof OidcUser oidcUser) {
+                idToken = oidcUser.getIdToken().getTokenValue();
+            }
             try {
                 // Get OAuth2 provider details from configuration
                 Provider provider = oauth.getClient().get(registrationId);
@@ -191,8 +198,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             param = "error=badcredentials";
         }
 
-        String redirect_url = UrlUtils.getOrigin(request) + "/login?" + param;
-
+        String defaultRedirectUrl = UrlUtils.getOrigin(request) + "/login?" + param;
         // Redirect based on OAuth2 provider
         switch (registrationId.toLowerCase()) {
             case "keycloak":
@@ -203,7 +209,7 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                                 + "?client_id="
                                 + clientId
                                 + "&post_logout_redirect_uri="
-                                + response.encodeRedirectURL(redirect_url);
+                                + response.encodeRedirectURL(defaultRedirectUrl);
                 log.info("Redirecting to Keycloak logout URL: " + logoutUrl);
                 response.sendRedirect(logoutUrl);
                 break;
@@ -218,14 +224,27 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 // String googleLogoutUrl =
                 // "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?continue="
                 //                 + response.encodeRedirectURL(redirect_url);
-                log.info("Google does not have a specific logout URL");
-                // log.info("Redirecting to Google logout URL: " + googleLogoutUrl);
-                // response.sendRedirect(googleLogoutUrl);
-                // break;
-            default:
-                String defaultRedirectUrl = request.getContextPath() + "/login?" + param;
-                log.info("Redirecting to default logout URL: " + defaultRedirectUrl);
+                log.info(
+                        "Google does not have a specific logout URL, redirecting to default logout URL: "
+                                + defaultRedirectUrl);
                 response.sendRedirect(defaultRedirectUrl);
+                break;
+            default:
+                String customRedirectUrl = defaultRedirectUrl;
+                if (StringUtils.isNotBlank(oauth.getLogoutUrl())) {
+                    customRedirectUrl =
+                            issuer
+                                    + StringSubstitutor.replace(
+                                            oauth.getLogoutUrl(),
+                                            Map.of(
+                                                    "clientId", StringUtils.defaultString(clientId),
+                                                    "tokenId", StringUtils.defaultString(idToken),
+                                                    "redirectUrl", defaultRedirectUrl),
+                                            "{",
+                                            "}");
+                }
+                log.info("Redirecting to logout URL: " + customRedirectUrl);
+                response.sendRedirect(customRedirectUrl);
                 break;
         }
     }
