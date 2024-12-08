@@ -19,7 +19,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 
 ## Features
 
-- Enterprise features like SSO Check [here](https://docs.stirlingpdf.com/Enterprise%20Edition) 
+- Enterprise features like SSO Check [here](https://docs.stirlingpdf.com/Enterprise%20Edition)
 - Dark mode support
 - Custom download options
 - Parallel file processing and downloads
@@ -187,7 +187,7 @@ Certain functionality like `Sign` supports pre-saved files stored at `/customFil
 
 ## Supported Languages
 
-Stirling-PDF currently supports 37 languages!
+Stirling-PDF currently supports 38 languages!
 
 | Language                                     | Progress                               |
 | -------------------------------------------- | -------------------------------------- |
@@ -213,6 +213,7 @@ Stirling-PDF currently supports 37 languages!
 | Japanese (日本語) (ja_JP)                    | ![81%](https://geps.dev/progress/81)   |
 | Korean (한국어) (ko_KR)                      | ![90%](https://geps.dev/progress/90)   |
 | Norwegian (Norsk) (no_NB)                    | ![83%](https://geps.dev/progress/83)   |
+| Persian (فارسی) (fa_IR)                      | ![100%](https://geps.dev/progress/100)   |
 | Polish (Polski) (pl_PL)                      | ![91%](https://geps.dev/progress/91)   |
 | Portuguese (Português) (pt_PT)               | ![91%](https://geps.dev/progress/91)   |
 | Portuguese Brazilian (Português) (pt_BR)     | ![92%](https://geps.dev/progress/92)   |
@@ -240,7 +241,7 @@ Stirling PDF offers a Enterprise edition of its software, This is the same great
 ### Whats included
 
 - Prioritised Support tickets via support@stirlingpdf.com to reach directly to Stirling-PDF team for support and 1:1 meetings where applicable (Provided they come from same email domain registered with us)
-- Prioritised Enhancements to Stirling-PDF where applicable 
+- Prioritised Enhancements to Stirling-PDF where applicable
 - Base SSO support
 - Advanced SSO such as automated login handling (Coming very soon)
 - SAML SSO (Coming very soon)
