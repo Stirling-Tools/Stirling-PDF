@@ -49,5 +49,5 @@
   "editor.indentSize": "tabSize",
   "editor.stickyScroll.enabled": false,
   "editor.minimap.enabled": false,
-  "editor.formatOnSave": true
+  "editor.formatOnSave": false
 }
