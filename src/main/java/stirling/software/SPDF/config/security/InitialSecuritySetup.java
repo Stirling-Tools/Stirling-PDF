@@ -16,22 +16,26 @@ import stirling.software.SPDF.model.Role;
 @Slf4j
 public class InitialSecuritySetup {
 
+    public static final String POSTGRES = "postgres";
+
     @Autowired private UserService userService;
 
     @Autowired private ApplicationProperties applicationProperties;
 
-    @Autowired private DatabaseBackupInterface databaseBackupHelper;
+    @Autowired private DatabaseBackupInterface databaseBackupService;
 
     @PostConstruct
     public void init() throws IllegalArgumentException, IOException {
-        if (databaseBackupHelper.hasBackup() && userService.hasUsers()) {
-            databaseBackupHelper.importDatabase();
-        } else if (!userService.hasUsers()) {
-            initializeAdminUser();
-        } else {
-            databaseBackupHelper.exportDatabase();
-            userService.migrateOauth2ToSSO();
+        if (applicationProperties.getSystem().getEnvironmentName().equals(POSTGRES)) {
+            log.debug("PostgreSQL configuration settings detected. Creating admin user");
+            databaseBackupService.setAdminUser();
         }
+
+        if (!userService.hasUsers()) {
+            initializeAdminUser();
+        }
+
+        userService.migrateOauth2ToSSO();
         initializeInternalApiUser();
     }
 
@@ -73,7 +77,7 @@ public class InitialSecuritySetup {
                     UUID.randomUUID().toString(),
                     Role.INTERNAL_API_USER.getRoleId());
             userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
-            log.info("Internal API user created: " + Role.INTERNAL_API_USER.getRoleId());
+            log.info("Internal API user created: {}", Role.INTERNAL_API_USER.getRoleId());
         }
     }
 }

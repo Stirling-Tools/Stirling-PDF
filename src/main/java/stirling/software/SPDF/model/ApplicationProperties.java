@@ -246,13 +246,13 @@ public class ApplicationProperties {
         private String tessdataDir;
         private Boolean enableAlphaFunctionality;
         private String enableAnalytics;
+        private String environmentName;
         private Datasource datasource;
     }
 
     @Data
     public static class Datasource {
         private String url;
-        private Driver driver;
         private String username;
         private String password;
     }
