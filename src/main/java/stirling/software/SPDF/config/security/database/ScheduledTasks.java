@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ScheduledTasks {
 
-    @Autowired private DatabaseBackupHelper databaseBackupService;
+    @Autowired private DatabaseBackupService databaseBackupService;
 
     @Scheduled(cron = "0 0 0 * * ?")
     public void performBackup() throws IOException {

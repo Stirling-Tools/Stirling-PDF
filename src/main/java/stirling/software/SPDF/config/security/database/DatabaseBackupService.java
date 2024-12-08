@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -20,12 +19,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
@@ -33,25 +32,49 @@ import stirling.software.SPDF.model.exception.BackupNotFoundException;
 import stirling.software.SPDF.utils.FileInfo;
 
 @Slf4j
-@Configuration
-public class DatabaseBackupHelper implements DatabaseBackupInterface {
+@Service
+public class DatabaseBackupService implements DatabaseBackupInterface {
 
     public static final String BACKUP_PREFIX = "backup_";
     public static final String SQL_SUFFIX = ".sql";
+    private static final Path BACKUP_PATH = Paths.get("configs/db/backup/");
 
-    @Value("${dbType:postgresql}")
-    private String dbType;
+    @Autowired private DatabaseConfig databaseConfig;
 
-    @Value("${spring.datasource.url}")
-    private String url;
+    @Override
+    public void setAdminUser() {
+        String adminScript =
+                """
+                        DO
+                        $do$
+                        BEGIN
+                           IF EXISTS (
+                              SELECT FROM pg_catalog.pg_roles
+                              WHERE rolname = 'admin') THEN
 
-    @Value("${spring.datasource.username}")
-    private String username;
+                              RAISE NOTICE 'Role "admin" already exists. Skipping.';
+                           ELSE
+                              CREATE USER admin WITH ENCRYPTED PASSWORD 'stirling';
+                           END IF;
+                        END
+                        $do$;
 
-    @Value("${spring.datasource.password}")
-    private String password;
+                        CREATE SCHEMA IF NOT EXISTS stirling_pdf AUTHORIZATION admin;
+                        GRANT ALL PRIVILEGES ON DATABASE postgres TO admin;
+                        ALTER DATABASE postgres SET search_path TO stirling_pdf;
+                        ALTER USER admin SET search_path TO stirling_pdf;
+                        """
+                        .trim();
 
-    private final Path BACKUP_PATH = Paths.get("configs/db/backup/");
+        try (Connection connection = databaseConfig.connection();
+                Statement statement = connection.createStatement()) {
+            statement.execute(adminScript);
+        } catch (SQLException e) {
+            log.error("Error: Failed to create admin user for database", e);
+        }
+
+        log.info("Created admin user for database");
+    }
 
     @Override
     public boolean hasBackup() {
@@ -154,7 +177,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
         Path insertOutputFilePath =
                 this.getBackupFilePath(BACKUP_PREFIX + dateNow.format(myFormatObj) + SQL_SUFFIX);
 
-        try (Connection conn = DriverManager.getConnection(url, username, password)) {
+        try (Connection conn = databaseConfig.connection()) {
             ScriptUtils.executeSqlScript(
                     conn, new EncodedResource(new PathResource(insertOutputFilePath)));
 
@@ -183,7 +206,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     // Retrieves the H2 database version.
     public String getH2Version() {
         String version = "Unknown";
-        try (Connection conn = DriverManager.getConnection(url, username, password)) {
+        try (Connection conn = databaseConfig.connection()) {
             try (Statement stmt = conn.createStatement();
                     ResultSet rs = stmt.executeQuery("SELECT H2VERSION() AS version")) {
                 if (rs.next()) {
@@ -223,7 +246,7 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
     }
 
     private void executeDatabaseScript(Path scriptPath) {
-        try (Connection conn = DriverManager.getConnection(url, username, password)) {
+        try (Connection conn = databaseConfig.connection()) {
             ScriptUtils.executeSqlScript(conn, new EncodedResource(new PathResource(scriptPath)));
 
             log.info("Database import completed: {}", scriptPath);

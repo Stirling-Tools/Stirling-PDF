@@ -8,7 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "persistent_logins")
+@Table(name = "persistent_logins", schema = "stirling_pdf")
 public class PersistentLogin {
 
     @Id
