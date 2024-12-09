@@ -1,34 +1,30 @@
 export class DecryptFile {
-  async decryptFile(file) {
+  async decryptFile(file, requiresPassword) {
     try {
-      const password = prompt(`${window.translations.passwordPrompt}`);
-
-      if (password === null) {
-        // User cancelled
-        console.error(`Password prompt cancelled for PDF: ${file.name}`);
-        this.showErrorBanner(
-          `${window.translations.cancelled.replace('{0}', file.name)}`,
-          '',
-          `${window.translations.unexpectedError}`
-        );
-        return null; // No file to return
-      }
-
-      if (!password) {
-        // No password provided
-        console.error(`No password provided for encrypted PDF: ${file.name}`);
-        this.showErrorBanner(
-          `${window.translations.noPassword.replace('{0}', file.name)}`,
-          '',
-          `${window.translations.unexpectedError}`
-        );
-        return null; // No file to return
-      }
-
       const formData = new FormData();
       formData.append('fileInput', file);
-      formData.append('password', password);
+      if (requiresPassword) {
+        const password = prompt(`${window.translations.passwordPrompt}`);
 
+        if (password === null) {
+          // User cancelled
+          console.error(`Password prompt cancelled for PDF: ${file.name}`);
+          return null; // No file to return
+        }
+
+        if (!password) {
+          // No password provided
+          console.error(`No password provided for encrypted PDF: ${file.name}`);
+          this.showErrorBanner(
+            `${window.translations.noPassword.replace('{0}', file.name)}`,
+            '',
+            `${window.translations.unexpectedError}`
+          );
+          return null; // No file to return
+        }
+
+        formData.append('password', password);
+      }
       // Send decryption request
       const response = await fetch('/api/v1/security/remove-password', {
         method: 'POST',
@@ -64,17 +60,35 @@ export class DecryptFile {
   async checkFileEncrypted(file) {
     try {
       pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-      const arrayBuffer = await file.arrayBuffer(); // Convert file to ArrayBuffer
-      await pdfjsLib.getDocument({
-        data: arrayBuffer,
-        password: '',
-      }).promise;
+      const arrayBuffer = await file.arrayBuffer();
+      const arrayBufferForPdfLib = arrayBuffer.slice(0);
 
-      return false; // File is not encrypted
+      const loadingTask = pdfjsLib.getDocument({
+        data: arrayBuffer,
+      });
+
+      await loadingTask.promise;
+
+      try {
+        //Uses PDFLib.PDFDocument to check if unpassworded but encrypted
+        const pdfDoc = await PDFLib.PDFDocument.load(arrayBufferForPdfLib);
+        return {isEncrypted: false, requiresPassword: false};
+      } catch (error) {
+        if (error.message.includes('Input document to `PDFDocument.load` is encrypted')) {
+          return {isEncrypted: true, requiresPassword: false};
+        }
+        console.error('Error checking encryption:', error);
+        throw new Error('Failed to determine if the file is encrypted.');
+      }
     } catch (error) {
       if (error.name === 'PasswordException') {
-        return true; // File is encrypted
+        if (error.code === pdfjsLib.PasswordResponses.NEED_PASSWORD) {
+          return {isEncrypted: true, requiresPassword: true};
+        } else if (error.code === pdfjsLib.PasswordResponses.INCORRECT_PASSWORD) {
+          return {isEncrypted: true, requiresPassword: false};
+        }
       }
+
       console.error('Error checking encryption:', error);
       throw new Error('Failed to determine if the file is encrypted.');
     }
