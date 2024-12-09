@@ -1,0 +1,92 @@
+.selectable {
+    border: 1px solid darkblue;
+}
+
+.textLayer span::selection, .textLayer span::-moz-selection {
+    background-color: rgba(0, 100, 0, 0.26);
+}
+
+.redaction-selected {
+    border: 1px solid darkgreen !important;
+}
+
+.selected-wrapper {
+    position: absolute;
+    outline: 2px solid darkgreen;
+    outline-offset: -2px;
+    z-index: 10;
+}
+
+.selected-wrapper:hover:not(:has(svg:hover)) {
+    outline-color: black;
+    background-color: black;
+    z-index: 10;
+    transition: background-color 0.065s linear;
+
+    cursor: pointer;
+}
+
+.redaction-overlay {
+    display: flex;
+    position: absolute;
+
+    left: 40%;
+    top: 100%;
+
+    min-width: 25px;
+    max-width: 90px;
+
+    min-height: 25px;
+
+    flex-wrap: wrap;
+
+    column-gap: 5px;
+    row-gap: 2px;
+
+    border-radius: 2px;
+    padding: 2px;
+
+    box-sizing: border-box;
+
+    background-color: rgb(0 96 170);
+    outline: 1px solid gray;
+}
+
+.redaction-overlay svg {
+    height: 25px;
+    width: 25px;
+
+    max-width: 35px;
+    max-height: 35px;
+
+    fill: rgba(255, 255, 255, 0.904);
+    user-select: none;
+}
+
+.redaction-overlay svg:hover {
+    cursor: pointer;
+    background-color: rgb(3, 63, 109);
+    fill: rgba(226, 226, 226, 0.904);
+}
+
+.redaction-selected:hover {
+    background-color: green;
+    border: 4px solid green !important;
+}
+
+.redaction-selected:hover::after {
+    content: '';
+    width: 100%;
+    height: 100%;
+
+    position: absolute;
+
+    left: 0px;
+    top: 0px;
+    background-color: black;
+    border: 2px solid red;
+}
+
+.selectable:hover {
+    border: 1px solid blue;
+}
