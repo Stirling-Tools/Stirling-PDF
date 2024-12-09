@@ -1,5 +1,5 @@
-import UUID from "./uuid.js";
 import { PDFViewerApplication } from "../pdfjs-legacy/js/viewer.mjs";
+import UUID from "./uuid.js";
 
 let zoomScaleValue = 1.0;
 
@@ -36,7 +36,6 @@ window.addEventListener("load", (e) => {
     hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
   });
 
-  // TODO: Replace ctrl Shift with Ctrl S
   PDFViewerApplication.downloadOrSave = doNothing;
   PDFViewerApplication.triggerPrinting = doNothing;
 
@@ -95,8 +94,8 @@ document.onclick = (e) => {
 };
 
 document.addEventListener("keydown", (e) => {
-  // TODO: change keys
-  const redact = e.ctrlKey && e.shiftKey;
+  const redact =
+    e.ctrlKey && (e.key == "s" || e.key == "S" || e.code == "KeyS");
   if (redact) {
     let selection = window.getSelection();
     if (!selection || selection.rangeCount <= 0) return;
