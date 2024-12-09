@@ -87,7 +87,7 @@ public class OCRController {
 
         Files.createDirectories(tempOutputDir);
         Files.createDirectories(tempImagesDir);
-
+        Process process = null;
         try {
             // Save input file
             inputFile.transferTo(tempInputFile.toFile());
@@ -139,7 +139,7 @@ public class OCRController {
                         command.add("pdf"); // Always output PDF
 
                         ProcessBuilder pb = new ProcessBuilder(command);
-                        Process process = pb.start();
+                        process = pb.start();
 
                         // Capture any error output
                         try (BufferedReader reader =
@@ -188,6 +188,10 @@ public class OCRController {
                     .body(pdfContent);
 
         } finally {
+            if (process != null) {
+                process.destroy();
+            }
+
             // Clean up temporary files
             deleteDirectory(tempDir);
         }
