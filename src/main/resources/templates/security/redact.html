@@ -27,6 +27,11 @@
 <body>
   <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
   <br><br>
+  <div class="tool-header text-center">
+    <span class="material-symbols-rounded tool-header-icon security">ink_eraser</span>
+    <span class="tool-header-text" th:text="#{redact.header}"></span>
+  </div>
+  <br><br>
   <div class="ms-5 me-5">
     <div
       th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
