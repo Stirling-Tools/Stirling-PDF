@@ -90,3 +90,7 @@
 .selectable:hover {
     border: 1px solid blue;
 }
+
+.textLayer div, .textLayer div > * {
+    user-select: none;
+}
