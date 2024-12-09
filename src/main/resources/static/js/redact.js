@@ -121,17 +121,11 @@ document.addEventListener("keydown", (e) => {
 
       let width = rect.width;
       let height = rect.height;
-      if (zoomScaleValue > 1.0) {
-        left = left / zoomScaleValue;
-        top = top / zoomScaleValue;
-        width = width / zoomScaleValue;
-        height = height / zoomScaleValue;
-      } else {
-        left = left * zoomScaleValue;
-        top = top * zoomScaleValue;
-        width = width * zoomScaleValue;
-        height = height * zoomScaleValue;
-      }
+
+      left = left / zoomScaleValue;
+      top = top / zoomScaleValue;
+      width = width / zoomScaleValue;
+      height = height / zoomScaleValue;
 
       let redactionInfo = {
         left,
