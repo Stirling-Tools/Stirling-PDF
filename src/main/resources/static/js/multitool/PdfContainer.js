@@ -178,9 +178,19 @@ class PdfContainer {
 
       try {
         let decryptedFile = files[i];
-
-        if (decryptedFile.type === 'application/pdf' && (await this.decryptFile.checkFileEncrypted(decryptedFile))) {
-          decryptedFile = await this.decryptFile.decryptFile(decryptedFile);
+        let isEncrypted = false;
+        let requiresPassword = false;
+        await this.decryptFile
+          .checkFileEncrypted(decryptedFile)
+          .then((result) => {
+            isEncrypted = result.isEncrypted;
+            requiresPassword = result.requiresPassword;
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+        if (decryptedFile.type === 'application/pdf' && isEncrypted) {
+          decryptedFile = await this.decryptFile.decryptFile(decryptedFile, requiresPassword);
           if (!decryptedFile) {
             throw new Error('File decryption failed.');
           }
