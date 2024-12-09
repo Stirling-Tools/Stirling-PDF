@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.PathResource;
@@ -27,64 +26,32 @@ import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
-import stirling.software.SPDF.model.exception.BackupNotFoundException;
+import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.utils.FileInfo;
 
 @Slf4j
 @Service
-public class DatabaseBackupService implements DatabaseBackupInterface {
+public class DatabaseService implements DatabaseInterface {
 
     public static final String BACKUP_PREFIX = "backup_";
     public static final String SQL_SUFFIX = ".sql";
     private static final Path BACKUP_PATH = Paths.get("configs/db/backup/");
+    private static final Path PG_ADMIN_SCRIPT_PATH =
+            Paths.get("src/main/resources/setup_pg_admin_user.sql");
 
     @Autowired private DatabaseConfig databaseConfig;
 
     @Override
     public void setAdminUser() {
-        String adminScript =
-                """
-                        DO
-                        $do$
-                        BEGIN
-                           IF EXISTS (
-                              SELECT FROM pg_catalog.pg_roles
-                              WHERE rolname = 'admin') THEN
-
-                              RAISE NOTICE 'Role "admin" already exists. Skipping.';
-                           ELSE
-                              CREATE USER admin WITH ENCRYPTED PASSWORD 'stirling';
-                           END IF;
-                        END
-                        $do$;
-
-                        CREATE SCHEMA IF NOT EXISTS stirling_pdf AUTHORIZATION admin;
-                        GRANT ALL PRIVILEGES ON DATABASE postgres TO admin;
-                        ALTER DATABASE postgres SET search_path TO stirling_pdf;
-                        ALTER USER admin SET search_path TO stirling_pdf;
-                        """
-                        .trim();
-
         try (Connection connection = databaseConfig.connection();
                 Statement statement = connection.createStatement()) {
-            statement.execute(adminScript);
-        } catch (SQLException e) {
+            String script = Files.readString(PG_ADMIN_SCRIPT_PATH);
+            statement.execute(script);
+        } catch (SQLException | IOException e) {
             log.error("Error: Failed to create admin user for database", e);
         }
 
         log.info("Created admin user for database");
-    }
-
-    @Override
-    public boolean hasBackup() {
-        // Check if there is at least one backup
-        try (Stream<Path> entries = Files.list(BACKUP_PATH)) {
-            return entries.findFirst().isPresent();
-        } catch (IOException e) {
-            log.error("Error reading backup directory: {}", e.getMessage(), e);
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
@@ -150,16 +117,6 @@ public class DatabaseBackupService implements DatabaseBackupInterface {
         Files.deleteIfExists(tempTemplatePath);
     }
 
-    @Override
-    public void importDatabase() {
-        if (!hasBackup()) throw new BackupNotFoundException("No backups found");
-
-        List<FileInfo> backupList = getBackupList();
-        backupList.sort(Comparator.comparing(FileInfo::getModificationDate).reversed());
-        executeDatabaseScript(Paths.get(backupList.get(0).getFilePath()));
-    }
-
-    // fixMe: Check the type of DB before executing script
     @Override
     public void exportDatabase() {
         // Filter and delete old backups if there are more than 5
