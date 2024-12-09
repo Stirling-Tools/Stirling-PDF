@@ -16,7 +16,7 @@ security:
   csrfDisabled: true # set to 'true' to disable CSRF protection (not recommended for production)
   loginAttemptCount: 5 # lock user account after 5 tries; when using e.g. Fail2Ban you can deactivate the function with -1
   loginResetTimeMinutes: 120 # lock account for 2 hours after x attempts
-  loginMethod: all # 'all' (Login Username/Password and OAuth2[must be enabled and configured]), 'normal'(only Login with Username/Password) or 'oauth2'(only Login with OAuth2)
+  loginMethod: all # Accepts values like 'all' and 'normal'(only Login with Username/Password), 'oauth2'(only Login with OAuth2) or 'saml2'(only Login with SAML2) 
   initialLogin:
     username: '' # initial username for the first login
     password: '' # initial password for the first login
@@ -42,14 +42,14 @@ security:
     issuer: '' # set to any provider that supports OpenID Connect Discovery (/.well-known/openid-configuration) endpoint
     clientId: '' # client ID from your provider
     clientSecret: '' # client secret from your provider
-    autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
+    autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     useAsUsername: email # default is 'email'; custom fields can be used as the username
     scopes: openid, profile, email # specify the scopes for which the application will request permissions
     provider: google # set this to your OAuth provider's name, e.g., 'google' or 'keycloak'
   saml2:
-    enabled: false # currently in alpha, not recommended for use yet, enableAlphaFunctionality must be set to true
-    autoCreateUser: false # set to 'true' to allow auto-creation of non-existing users
+    enabled: false # Only enabled for paid enterprise clients (enterpriseEdition.enabled must be true)
+    autoCreateUser: true # set to 'true' to allow auto-creation of non-existing users
     blockRegistration: false # set to 'true' to deny login with SSO without prior registration by an admin
     registrationId: stirling
     idpMetadataUri: https://dev-XXXXXXXX.okta.com/app/externalKey/sso/saml/metadata
@@ -107,9 +107,9 @@ processExecutor:
   sessionLimit:    # Process executor instances limits
     libreOfficeSessionLimit: 1
     pdfToHtmlSessionLimit: 1
-    ocrMyPdfSessionLimit: 2
+    qpdfSessionLimit: 4
+    tesseractSessionLimit: 1
     pythonOpenCvSessionLimit: 8
-    ghostScriptSessionLimit: 16
     weasyPrintSessionLimit: 16
     installAppSessionLimit: 1
     calibreSessionLimit: 1
@@ -117,7 +117,7 @@ processExecutor:
     libreOfficetimeoutMinutes: 30
     pdfToHtmltimeoutMinutes: 20
     pythonOpenCvtimeoutMinutes: 30
-    ghostScripttimeoutMinutes: 30
     weasyPrinttimeoutMinutes: 30
     installApptimeoutMinutes: 60
     calibretimeoutMinutes: 30
+    tesseractTimeoutMinutes: 30

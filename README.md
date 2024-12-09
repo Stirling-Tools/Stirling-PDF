@@ -6,6 +6,7 @@
 [![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/frooodle/s-pdf/latest)](https://github.com/Stirling-Tools/Stirling-PDF/)
 [![GitHub Repo stars](https://img.shields.io/github/stars/stirling-tools/stirling-pdf?style=social)](https://github.com/Stirling-Tools/stirling-pdf)
 
+<a href="https://www.producthunt.com/posts/stirling-pdf?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-stirling&#0045;pdf" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=641239&theme=light" alt="Stirling&#0032;PDF - Open&#0032;source&#0032;locally&#0032;hosted&#0032;web&#0032;PDF&#0032;editor | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Stirling-Tools/Stirling-PDF/tree/digitalOcean&refcode=c3210994b1af)
 
 [Stirling-PDF](https://www.stirlingpdf.com) is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
@@ -18,7 +19,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 
 ## Features
 
-- Enterprise features like SSO Check [here](https://docs.stirlingpdf.com/Enterprise%20Edition) 
+- Enterprise features like SSO Check [here](https://docs.stirlingpdf.com/Enterprise%20Edition)
 - Dark mode support
 - Custom download options
 - Parallel file processing and downloads
@@ -78,15 +79,15 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Detect and remove blank pages
 - Compare two PDFs and show differences in text
 - Add images to PDFs
-- Compress PDFs to decrease their filesize (using OCRMyPDF)
+- Compress PDFs to decrease their filesize (using qpdf)
 - Extract images from PDF
 - Remove images from PDF
 - Extract images from scans
 - Remove annotations
 - Add page numbers
 - Auto rename file by detecting PDF header text
-- OCR on PDF (using OCRMyPDF)
-- PDF/A conversion (using OCRMyPDF)
+- OCR on PDF (using tesseract)
+- PDF/A conversion (using libreoffice)
 - Edit metadata
 - Flatten PDFs
 - Get all information on a PDF to view or export as JSON
@@ -101,7 +102,7 @@ A demo of the app is available [here](https://stirlingpdf.io).
 - Spring Boot + Thymeleaf
 - [PDFBox](https://github.com/apache/pdfbox/tree/trunk)
 - [LibreOffice](https://www.libreoffice.org/discover/libreoffice/) for advanced conversions
-- [OcrMyPdf](https://github.com/ocrmypdf/OCRmyPDF)
+- [qpdf](https://github.com/qpdf/qpdf)
 - HTML, CSS, JavaScript
 - Docker
 - [PDF.js](https://github.com/mozilla/pdf.js)
@@ -186,45 +187,45 @@ Certain functionality like `Sign` supports pre-saved files stored at `/customFil
 
 ## Supported Languages
 
-Stirling-PDF currently supports 36 languages!
+Stirling-PDF currently supports 38 languages!
 
 | Language                                     | Progress                               |
 | -------------------------------------------- | -------------------------------------- |
-| Arabic (العربية) (ar_AR)                     | ![99%](https://geps.dev/progress/99)   |
+| Arabic (العربية) (ar_AR)                     | ![97%](https://geps.dev/progress/97)   |
 | Basque (Euskara) (eu_ES)                     | ![55%](https://geps.dev/progress/55)   |
 | Bulgarian (Български) (bg_BG)                | ![96%](https://geps.dev/progress/96)   |
-| Catalan (Català) (ca_CA)                     | ![89%](https://geps.dev/progress/89)   |
-| Croatian (Hrvatski) (hr_HR)                  | ![97%](https://geps.dev/progress/97)   |
+| Catalan (Català) (ca_CA)                     | ![90%](https://geps.dev/progress/90)   |
+| Croatian (Hrvatski) (hr_HR)                  | ![98%](https://geps.dev/progress/98)   |
 | Czech (Česky) (cs_CZ)                        | ![97%](https://geps.dev/progress/97)   |
 | Danish (Dansk) (da_DK)                       | ![96%](https://geps.dev/progress/96)   |
-| Dutch (Nederlands) (nl_NL)                   | ![95%](https://geps.dev/progress/95)   |
+| Dutch (Nederlands) (nl_NL)                   | ![96%](https://geps.dev/progress/96)   |
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
-| French (Français) (fr_FR)                    | ![96%](https://geps.dev/progress/96)   |
-| German (Deutsch) (de_DE)                     | ![98%](https://geps.dev/progress/98)   |
-| Greek (Ελληνικά) (el_GR)                     | ![96%](https://geps.dev/progress/96)   |
-| Hindi (हिंदी) (hi_IN)                           | ![94%](https://geps.dev/progress/94)   |
-| Hungarian (Magyar) (hu_HU)                   | ![97%](https://geps.dev/progress/97)   |
+| French (Français) (fr_FR)                    | ![97%](https://geps.dev/progress/97)   |
+| German (Deutsch) (de_DE)                     | ![99%](https://geps.dev/progress/99)   |
+| Greek (Ελληνικά) (el_GR)                     | ![97%](https://geps.dev/progress/97)   |
+| Hindi (हिंदी) (hi_IN)                           | ![95%](https://geps.dev/progress/95)   |
+| Hungarian (Magyar) (hu_HU)                   | ![98%](https://geps.dev/progress/98)   |
 | Indonesian (Bahasa Indonesia) (id_ID)        | ![97%](https://geps.dev/progress/97)   |
-| Irish (Gaeilge) (ga_IE)                      | ![87%](https://geps.dev/progress/87)   |
-| Italian (Italiano) (it_IT)                   | ![98%](https://geps.dev/progress/98)   |
+| Irish (Gaeilge) (ga_IE)                      | ![88%](https://geps.dev/progress/88)   |
+| Italian (Italiano) (it_IT)                   | ![99%](https://geps.dev/progress/99)   |
 | Japanese (日本語) (ja_JP)                    | ![85%](https://geps.dev/progress/85)   |
 | Korean (한국어) (ko_KR)                      | ![95%](https://geps.dev/progress/95)   |
 | Norwegian (Norsk) (no_NB)                    | ![87%](https://geps.dev/progress/87)   |
-| Polish (Polski) (pl_PL)                      | ![96%](https://geps.dev/progress/96)   |
+| Polish (Polski) (pl_PL)                      | ![97%](https://geps.dev/progress/97)   |
 | Portuguese (Português) (pt_PT)               | ![97%](https://geps.dev/progress/97)   |
-| Portuguese Brazilian (Português) (pt_BR)     | ![97%](https://geps.dev/progress/97)   |
-| Romanian (Română) (ro_RO)                    | ![89%](https://geps.dev/progress/89)   |
-| Russian (Русский) (ru_RU)                    | ![96%](https://geps.dev/progress/96)   |
+| Portuguese Brazilian (Português) (pt_BR)     | ![98%](https://geps.dev/progress/98)   |
+| Romanian (Română) (ro_RO)                    | ![90%](https://geps.dev/progress/90)   |
+| Russian (Русский) (ru_RU)                    | ![97%](https://geps.dev/progress/97)   |
 | Serbian Latin alphabet (Srpski) (sr_LATN_RS) | ![70%](https://geps.dev/progress/70)   |
-| Simplified Chinese (简体中文) (zh_CN)        | ![90%](https://geps.dev/progress/90)   |
+| Simplified Chinese (简体中文) (zh_CN)        | ![91%](https://geps.dev/progress/91)   |
 | Slovakian (Slovensky) (sk_SK)                | ![82%](https://geps.dev/progress/82)   |
-| Spanish (Español) (es_ES)                    | ![97%](https://geps.dev/progress/97)   |
-| Swedish (Svenska) (sv_SE)                    | ![96%](https://geps.dev/progress/96)   |
-| Thai (ไทย) (th_TH)                           | ![95%](https://geps.dev/progress/95)   |
-| Traditional Chinese (繁體中文) (zh_TW)       | ![97%](https://geps.dev/progress/97)   |
-| Turkish (Türkçe) (tr_TR)                     | ![91%](https://geps.dev/progress/91)   |
-| Ukrainian (Українська) (uk_UA)               | ![79%](https://geps.dev/progress/79)   |
+| Spanish (Español) (es_ES)                    | ![98%](https://geps.dev/progress/98)   |
+| Swedish (Svenska) (sv_SE)                    | ![97%](https://geps.dev/progress/97)   |
+| Thai (ไทย) (th_TH)                           | ![96%](https://geps.dev/progress/96)   |
+| Traditional Chinese (繁體中文) (zh_TW)       | ![98%](https://geps.dev/progress/98)   |
+| Turkish (Türkçe) (tr_TR)                     | ![92%](https://geps.dev/progress/92)   |
+| Ukrainian (Українська) (uk_UA)               | ![80%](https://geps.dev/progress/80)   |
 | Vietnamese (Tiếng Việt) (vi_VN)              | ![88%](https://geps.dev/progress/88)   |
 
 ## Contributing (Creating Issues, Translations, Fixing Bugs, etc.)
@@ -238,7 +239,7 @@ Stirling PDF offers a Enterprise edition of its software, This is the same great
 ### Whats included
 
 - Prioritised Support tickets via support@stirlingpdf.com to reach directly to Stirling-PDF team for support and 1:1 meetings where applicable (Provided they come from same email domain registered with us)
-- Prioritised Enhancements to Stirling-PDF where applicable 
+- Prioritised Enhancements to Stirling-PDF where applicable
 - Base SSO support
 - Advanced SSO such as automated login handling (Coming very soon)
 - SAML SSO (Coming very soon)

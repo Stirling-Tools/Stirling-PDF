@@ -55,6 +55,11 @@ public class HomeWebController {
         return "licenses";
     }
 
+    @GetMapping("/releases")
+    public String getReleaseNotes(Model model) {
+        return "releases";
+    }
+
     @GetMapping("/")
     public String home(Model model) {
         model.addAttribute("currentPage", "home");

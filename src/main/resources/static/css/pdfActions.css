@@ -138,7 +138,7 @@ html[dir="rtl"] .pdf-actions_container:last-child>.pdf-actions_insert-file-butto
   padding: 6px 8px;
   border-radius: 8px;
   font-size: 16px;
-  z-index: 3;
+  z-index: 10;
 }
 
 .hidden {

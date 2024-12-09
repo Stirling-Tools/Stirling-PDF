@@ -1,5 +1,5 @@
 # Build the application
-FROM gradle:8.7-jdk17 AS build
+FROM gradle:8.11-jdk17 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -55,7 +55,7 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
 # pdftohtml
         poppler-utils \
 # OCR MY PDF (unpaper for descew and other advanced featues)
-        ocrmypdf \
+        qpdf \
         tesseract-ocr-data-eng \
         font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra \
 # CV

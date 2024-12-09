@@ -24,7 +24,7 @@ public class MetricsAggregatorService {
         this.postHogService = postHogService;
     }
 
-    @Scheduled(fixedRate = 900000) // Run every 15 minutes
+    @Scheduled(fixedRate = 7200000) // Run every 2 hours
     public void aggregateAndSendMetrics() {
         Map<String, Object> metrics = new HashMap<>();
         Search.in(meterRegistry)
@@ -34,17 +34,22 @@ public class MetricsAggregatorService {
                         counter -> {
                             String method = counter.getId().getTag("method");
                             String uri = counter.getId().getTag("uri");
-                            
+
                             // Skip if either method or uri is null
                             if (method == null || uri == null) {
                                 return;
                             }
-                
-                            String key = String.format(
-                                "http_requests_%s_%s",
-                                method,
-                                uri.replace("/", "_")
-                            );
+                            if (!method.equals("GET") && !method.equals("POST")) {
+                                return;
+                            }
+                            // Skip URIs that are 2 characters or shorter
+                            if (uri.length() <= 2) {
+                                return;
+                            }
+
+                            String key =
+                                    String.format(
+                                            "http_requests_%s_%s", method, uri.replace("/", "_"));
 
                             double currentCount = counter.count();
                             double lastCount = lastSentMetrics.getOrDefault(key, 0.0);

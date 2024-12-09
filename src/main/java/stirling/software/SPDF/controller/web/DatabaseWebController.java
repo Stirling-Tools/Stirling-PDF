@@ -34,7 +34,9 @@ public class DatabaseWebController {
         }
 
         List<FileInfo> backupList = databaseBackupHelper.getBackupList();
-        model.addAttribute("systemUpdate", backupList);
+        model.addAttribute("backupFiles", backupList);
+
+        model.addAttribute("databaseVersion", databaseBackupHelper.getH2Version());
 
         return "database";
     }
