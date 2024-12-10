@@ -11,6 +11,22 @@ function hideContainer(container) {
   container?.classList.add("d-none");
 }
 
+const RedactionModes = Object.freeze({
+  DRAWING: Symbol("drawing"),
+  TEXT: Symbol("text"),
+  NONE: Symbol("none"),
+});
+
+function removePDFJSButtons() {
+  document.getElementById("print")?.remove();
+  document.getElementById("download")?.remove();
+  document.getElementById("editorStamp")?.remove();
+  document.getElementById("editorFreeText")?.remove();
+  document.getElementById("editorInk")?.remove();
+  document.getElementById("secondaryToolbarToggle")?.remove();
+  document.getElementById("openFile")?.remove();
+}
+
 window.addEventListener("load", (e) => {
   let hiddenInput = document.getElementById("fileInput");
   let outerContainer = document.getElementById("outerContainer");
@@ -19,12 +35,7 @@ window.addEventListener("load", (e) => {
   let viewer = document.getElementById("viewer");
 
   hiddenInput.files = undefined;
-  let redactionMode = "none";
-
-  // document.documentElement.style.setProperty(
-  //   "--textLayer-pointer-events",
-  //   "none"
-  // );
+  let redactionMode = RedactionModes.NONE;
 
   let redactions = [];
 
@@ -52,69 +63,18 @@ window.addEventListener("load", (e) => {
   PDFViewerApplication.triggerPrinting = doNothing;
 
   PDFViewerApplication.eventBus.on("pagerendered", (e) => {
-    document.getElementById("print")?.remove();
-    document.getElementById("download")?.remove();
-    document.getElementById("editorStamp")?.remove();
-    document.getElementById("editorFreeText")?.remove();
-    document.getElementById("editorInk")?.remove();
-    document.getElementById("secondaryToolbarToggle")?.remove();
-    document.getElementById("openFile")?.remove();
+    removePDFJSButtons();
 
     let textSelectionRedactionBtn = document.getElementById(
       "man-text-select-redact"
     );
     let drawRedactionBtn = document.getElementById("man-shape-redact");
 
-    textSelectionRedactionBtn.onclick = (e) => {
-      if (textSelectionRedactionBtn.classList.contains("toggled")) {
-        resetTextSelection();
-      } else {
-        textSelectionRedactionBtn.classList.add("toggled");
-        redactionMode = "text";
-      }
-    };
-
-    function resetTextSelection() {
-      if (window.getSelection) {
-        if (window.getSelection().empty) {
-          // Chrome
-          window.getSelection().empty();
-        } else if (window.getSelection().removeAllRanges) {
-          // Firefox
-          window.getSelection().removeAllRanges();
-        }
-      } else if (document.selection) {
-        // IE?
-        document.selection.empty();
-      }
-    }
-
-    drawRedactionBtn.onclick = (e) => {
-      if (drawRedactionBtn.classList.contains("toggled")) {
-        resetDrawRedactions();
-      } else {
-        drawRedactionBtn.classList.add("toggled");
-        document.documentElement.style.setProperty(
-          "--textLayer-pointer-events",
-          "none"
-        );
-        redactionMode = "drawing";
-      }
-    };
-
-    function resetDrawRedactions() {
-      redactionMode = "none";
-      drawRedactionBtn.classList.remove("toggled");
-      document.documentElement.style.setProperty(
-        "--textLayer-pointer-events",
-        "auto"
-      );
-      window.dispatchEvent(new CustomEvent("reset-drawing", { bubbles: true }));
-    }
+    textSelectionRedactionBtn.onclick = _handleTextSelectionRedactionBtnClick;
+    drawRedactionBtn.onclick = _handleDrawRedactionBtnClick;
 
     let layer = e.source.textLayer.div;
     layer.setAttribute("data-page", e.pageNumber);
-    console.log("e.source: ", e.source);
     zoomScaleValue = e.source.scale ? e.source.scale : e.source.pageScale;
     document.documentElement.style.setProperty("--zoom-scale", zoomScaleValue);
 
@@ -134,16 +94,56 @@ window.addEventListener("load", (e) => {
 
     initDraw(layer, redactionsContainer);
 
-    function initDraw(canvas, redactionsContainer) {
-      function setMousePosition(e) {
-        let ev = e || window.event; //Moz || IE
-        if (ev.pageX) {
-          //Moz
-          mouse.x = e.layerX;
-          mouse.y = e.layerY;
-        }
+    function _handleTextSelectionRedactionBtnClick(e) {
+      if (textSelectionRedactionBtn.classList.contains("toggled")) {
+        textSelectionRedactionBtn.classList.remove("toggled");
+        resetTextSelection();
+        redactionMode = RedactionModes.NONE;
+      } else {
+        textSelectionRedactionBtn.classList.add("toggled");
+        redactionMode = RedactionModes.TEXT;
       }
+    }
 
+    function resetTextSelection() {
+      if (window.getSelection) {
+        if (window.getSelection().empty) {
+          // Chrome
+          window.getSelection().empty();
+        } else if (window.getSelection().removeAllRanges) {
+          // Firefox
+          window.getSelection().removeAllRanges();
+        }
+      } else if (document.selection) {
+        // IE?
+        document.selection.empty();
+      }
+    }
+
+    function _handleDrawRedactionBtnClick(e) {
+      if (drawRedactionBtn.classList.contains("toggled")) {
+        resetDrawRedactions();
+      } else {
+        drawRedactionBtn.classList.add("toggled");
+        document.documentElement.style.setProperty(
+          "--textLayer-pointer-events",
+          "none"
+        );
+        redactionMode = RedactionModes.DRAWING;
+      }
+    }
+
+    function resetDrawRedactions() {
+      redactionMode = RedactionModes.NONE;
+      drawRedactionBtn.classList.remove("toggled");
+      document.documentElement.style.setProperty(
+        "--textLayer-pointer-events",
+        "auto"
+      );
+      window.dispatchEvent(new CustomEvent("reset-drawing", { bubbles: true }));
+    }
+
+    function initDraw(canvas, redactionsContainer) {
       let mouse = {
         x: 0,
         y: 0,
@@ -154,10 +154,7 @@ window.addEventListener("load", (e) => {
       let drawnRedaction = null;
 
       window.addEventListener("reset-drawing", (e) => {
-        console.log("reset-drawing: ", e);
-        if (element) element.remove();
-        element = null;
-        drawnRedaction = null;
+        _clearDrawing();
         canvas.style.cursor = "default";
         document.documentElement.style.setProperty(
           "--textLayer-pointer-events",
@@ -165,33 +162,48 @@ window.addEventListener("load", (e) => {
         );
       });
 
+      window.addEventListener("drawing-entered", (e) => {
+        let target = e.detail?.target;
+        if (canvas === target) return;
+        _clearDrawing();
+      });
+
+      function setMousePosition(e) {
+        let ev = e || window.event; //Moz || IE
+        if (ev.pageX) {
+          //Moz
+          mouse.x = e.layerX;
+          mouse.y = e.layerY;
+        }
+      }
+
+      canvas.onpointerenter = (e) => {
+        window.dispatchEvent(
+          new CustomEvent("drawing-entered", {
+            bubbles: true,
+            detail: { target: canvas },
+          })
+        );
+      };
+
       canvas.onpointermove = function (e) {
         setMousePosition(e);
         if (element !== null) {
-          let scaleFactor = parseFloat(
-            viewer.style.getPropertyValue("--scale-factor")
-          );
+          let scaleFactor = _getScaleFactor();
 
-          // let mouseX = mouse.x;
-          // let mouseY = mouse.y;
-          // console.log("rect: ", canvas.getBoundingClientRect());
           let width = Math.abs(mouse.x - mouse.startX);
-          element.style.width = _toCalcZoomPx(width / zoomScaleValue);
+          element.style.width = _toCalcZoomPx(_scaleToDisplay(width));
 
           let height = Math.abs(mouse.y - mouse.startY);
-          element.style.height = _toCalcZoomPx(height / zoomScaleValue);
+          element.style.height = _toCalcZoomPx(_scaleToDisplay(height));
 
           let left = mouse.x - mouse.startX < 0 ? mouse.x : mouse.startX;
-          element.style.left = _toCalcZoomPx(left / zoomScaleValue);
+          element.style.left = _toCalcZoomPx(_scaleToDisplay(left));
 
           let top = mouse.y - mouse.startY < 0 ? mouse.y : mouse.startY;
-          element.style.top = _toCalcZoomPx(top / zoomScaleValue);
+          element.style.top = _toCalcZoomPx(_scaleToDisplay(top));
 
           if (drawnRedaction) {
-            // console.log({ left, top, height, width, scaleFactor });
-            // let scaleFactor = parseFloat(
-            //   viewer.style.getPropertyValue("--scale-factor")
-            // );
             drawnRedaction.left = _scaleToPDF(left, scaleFactor);
             drawnRedaction.top = _scaleToPDF(top, scaleFactor);
             drawnRedaction.width = _scaleToPDF(width, scaleFactor);
@@ -201,61 +213,75 @@ window.addEventListener("load", (e) => {
       };
 
       canvas.onclick = function (e) {
-        console.log("rect: ", canvas.getBoundingClientRect());
         if (element !== null) {
-          element.classList.add("selected-wrapper");
-          element.classList.remove("rectangle");
-
-          addRedactionOverlay(element, drawnRedaction, redactions);
-          redactions.push(drawnRedaction);
-          _setRedactionsInput(redactions);
-
-          console.log("after redaction: ", drawnRedaction);
-          element = null;
-          drawnRedaction = null;
-          canvas.style.cursor = "default";
+          _saveAndResetDrawnRedaction();
           console.log("finished.");
         } else {
-          if (redactionMode !== "drawing") {
+          if (redactionMode !== RedactionModes.DRAWING) {
             console.warn(
-              "Drawing attempt when redaction mode is ",
-              redactionMode
+              "Drawing attempt when redaction mode is",
+              redactionMode.description
             );
             return;
           }
           console.log("begun.");
-          mouse.startX = mouse.x;
-          mouse.startY = mouse.y;
-
-          element = document.createElement("div");
-          element.className = "rectangle";
-
-          let left = mouse.x;
-          let top = mouse.y;
-
-          element.style.left = _toCalcZoomPx(left / zoomScaleValue);
-          element.style.top = _toCalcZoomPx(top / zoomScaleValue);
-
-          let scaleFactor = parseFloat(
-            viewer.style.getPropertyValue("--scale-factor")
-          );
-          drawnRedaction = {
-            left: _scaleToPDF(left, scaleFactor),
-            top: _scaleToPDF(top, scaleFactor),
-            width: 0.0,
-            height: 0.0,
-            pageNumber: parseInt(canvas.getAttribute("data-page")),
-            element: element,
-            id: UUID.uuidv4(),
-          };
-          console.log("before redaction: ", drawnRedaction);
-
-          redactionsContainer.appendChild(element);
-          canvas.style.cursor = "crosshair";
+          _captureAndDrawStartingPointOfDrawnRedaction();
         }
       };
+
+      function _clearDrawing() {
+        if (element) element.remove();
+        element = null;
+        drawnRedaction = null;
+      }
+
+      function _saveAndResetDrawnRedaction() {
+        element.classList.add("selected-wrapper");
+        element.classList.remove("rectangle");
+
+        addRedactionOverlay(element, drawnRedaction, redactions);
+        redactions.push(drawnRedaction);
+        _setRedactionsInput(redactions);
+
+        element = null;
+        drawnRedaction = null;
+        canvas.style.cursor = "default";
+      }
+
+      function _captureAndDrawStartingPointOfDrawnRedaction() {
+        mouse.startX = mouse.x;
+        mouse.startY = mouse.y;
+
+        element = document.createElement("div");
+        element.className = "rectangle";
+
+        let left = mouse.x;
+        let top = mouse.y;
+
+        element.style.left = _toCalcZoomPx(_scaleToDisplay(left));
+        element.style.top = _toCalcZoomPx(_scaleToDisplay(top));
+
+        let scaleFactor = _getScaleFactor();
+
+        drawnRedaction = {
+          left: _scaleToPDF(left, scaleFactor),
+          top: _scaleToPDF(top, scaleFactor),
+          width: 0.0,
+          height: 0.0,
+          pageNumber: parseInt(canvas.getAttribute("data-page")),
+          element: element,
+          id: UUID.uuidv4(),
+        };
+
+        redactionsContainer.appendChild(element);
+        canvas.style.cursor = "crosshair";
+      }
     }
   });
+
+  function _getScaleFactor() {
+    return parseFloat(viewer.style.getPropertyValue("--scale-factor"));
+  }
 
   function getTextLayer(element) {
     let current = element;
@@ -288,7 +314,7 @@ window.addEventListener("load", (e) => {
   document.addEventListener("keydown", (e) => {
     const isRedactionShortcut =
       e.ctrlKey && (e.key == "s" || e.key == "S" || e.code == "KeyS");
-    if (!isRedactionShortcut || redactionMode !== "text") return;
+    if (!isRedactionShortcut || redactionMode !== RedactionModes.TEXT) return;
 
     let selection = window.getSelection();
     if (!selection || selection.rangeCount <= 0) return;
@@ -304,9 +330,7 @@ window.addEventListener("load", (e) => {
     let textLayerRect = textLayer.getBoundingClientRect();
 
     let rects = range.getClientRects();
-    let scaleFactor = parseFloat(
-      viewer.style.getPropertyValue("--scale-factor")
-    );
+    let scaleFactor = _getScaleFactor();
     for (const rect of rects) {
       if (!rect || !rect.width || !rect.height) continue;
       let redactionElement = document.createElement("div");
@@ -318,10 +342,10 @@ window.addEventListener("load", (e) => {
       let width = rect.width;
       let height = rect.height;
 
-      left = left / zoomScaleValue;
-      top = top / zoomScaleValue;
-      width = width / zoomScaleValue;
-      height = height / zoomScaleValue;
+      left = _scaleToDisplay(left);
+      top = _scaleToDisplay(top);
+      width = _scaleToDisplay(width);
+      height = _scaleToDisplay(height);
 
       let redactionInfo = {
         left: _scaleToPDF(rect.left - textLayerRect.left, scaleFactor),
@@ -349,9 +373,13 @@ window.addEventListener("load", (e) => {
     _setRedactionsInput(redactions);
   });
 
+  function _scaleToDisplay(value) {
+    return value / zoomScaleValue;
+  }
+
   function _scaleToPDF(value, scaleFactor) {
     if (!scaleFactor)
-      document.documentElement.getPropertyValue("--scale-factor");
+      scaleFactor = document.documentElement.getPropertyValue("--scale-factor");
     return value / scaleFactor;
   }
 
