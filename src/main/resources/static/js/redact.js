@@ -19,12 +19,12 @@ window.addEventListener("load", (e) => {
   let viewer = document.getElementById("viewer");
 
   hiddenInput.files = undefined;
-  let redactionMode = "drawing";
+  let redactionMode = "none";
 
-  document.documentElement.style.setProperty(
-    "--textLayer-pointer-events",
-    "none"
-  );
+  // document.documentElement.style.setProperty(
+  //   "--textLayer-pointer-events",
+  //   "none"
+  // );
 
   let redactions = [];
 
@@ -58,9 +58,63 @@ window.addEventListener("load", (e) => {
     document.getElementById("editorFreeText")?.remove();
     document.getElementById("editorInk")?.remove();
     document.getElementById("secondaryToolbarToggle")?.remove();
+    document.getElementById("openFile")?.remove();
+
+    let textSelectionRedactionBtn = document.getElementById(
+      "man-text-select-redact"
+    );
+    let drawRedactionBtn = document.getElementById("man-shape-redact");
+
+    textSelectionRedactionBtn.onclick = (e) => {
+      if (textSelectionRedactionBtn.classList.contains("toggled")) {
+        resetTextSelection();
+      } else {
+        textSelectionRedactionBtn.classList.add("toggled");
+        redactionMode = "text";
+      }
+    };
+
+    function resetTextSelection() {
+      if (window.getSelection) {
+        if (window.getSelection().empty) {
+          // Chrome
+          window.getSelection().empty();
+        } else if (window.getSelection().removeAllRanges) {
+          // Firefox
+          window.getSelection().removeAllRanges();
+        }
+      } else if (document.selection) {
+        // IE?
+        document.selection.empty();
+      }
+    }
+
+    drawRedactionBtn.onclick = (e) => {
+      if (drawRedactionBtn.classList.contains("toggled")) {
+        resetDrawRedactions();
+      } else {
+        drawRedactionBtn.classList.add("toggled");
+        document.documentElement.style.setProperty(
+          "--textLayer-pointer-events",
+          "none"
+        );
+        redactionMode = "drawing";
+      }
+    };
+
+    function resetDrawRedactions() {
+      redactionMode = "none";
+      drawRedactionBtn.classList.remove("toggled");
+      document.documentElement.style.setProperty(
+        "--textLayer-pointer-events",
+        "auto"
+      );
+      window.dispatchEvent(new CustomEvent("reset-drawing", { bubbles: true }));
+    }
 
     let layer = e.source.textLayer.div;
     layer.setAttribute("data-page", e.pageNumber);
+    console.log("e.source: ", e.source);
     zoomScaleValue = e.source.scale ? e.source.scale : e.source.pageScale;
     document.documentElement.style.setProperty("--zoom-scale", zoomScaleValue);
 
@@ -98,6 +152,18 @@ window.addEventListener("load", (e) => {
       };
       let element = null;
       let drawnRedaction = null;
+
+      window.addEventListener("reset-drawing", (e) => {
+        console.log("reset-drawing: ", e);
+        if (element) element.remove();
+        element = null;
+        drawnRedaction = null;
+        canvas.style.cursor = "default";
+        document.documentElement.style.setProperty(
+          "--textLayer-pointer-events",
+          "auto"
+        );
+      });
 
       canvas.onpointermove = function (e) {
         setMousePosition(e);
