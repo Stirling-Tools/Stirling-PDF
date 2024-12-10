@@ -240,17 +240,10 @@ dependencies {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     dependsOn "spotlessApply"
-//    dependsOn "initDB"
 }
 
 compileJava {
     options.compilerArgs << "-parameters"
-}
-
-bootRun {
-    if (project.hasProperty("args")) {
-        args = project.args.split(" ")
-    }
 }
 
 task writeVersion {
