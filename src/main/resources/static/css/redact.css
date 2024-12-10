@@ -116,7 +116,7 @@ html {
   border: none;
 
   background-color: var(--toolbar-bg-color);
-  color: var(--md-sys-color-on-surface);
+  color: rgb(223 226 235);
 }
 
 #man-text-select-redact:is(:hover, :focus-within) {
@@ -142,7 +142,7 @@ html {
   border: none;
 
   background-color: var(--toolbar-bg-color);
-  color: var(--md-sys-color-on-surface);
+  color: rgb(223 226 235);
 }
 
 #man-shape-redact:is(:hover, :focus-within) {
