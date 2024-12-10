@@ -16,6 +16,8 @@ window.addEventListener("load", (e) => {
   let outerContainer = document.getElementById("outerContainer");
   let printContainer = document.getElementById("printContainer");
 
+  let viewer = document.getElementById("viewer");
+
   hiddenInput.files = undefined;
 
   let redactions = [];
@@ -113,6 +115,9 @@ window.addEventListener("load", (e) => {
     let textLayerRect = textLayer.getBoundingClientRect();
 
     let rects = range.getClientRects();
+    let scaleFactor = parseFloat(
+      viewer.style.getPropertyValue("--scale-factor")
+    );
     for (const rect of rects) {
       if (!rect || !rect.width || !rect.height) continue;
       let redactionElement = document.createElement("div");
@@ -130,10 +135,10 @@ window.addEventListener("load", (e) => {
       height = height / zoomScaleValue;
 
       let redactionInfo = {
-        left,
-        top,
-        width,
-        height,
+        left: left / scaleFactor,
+        top: top / scaleFactor,
+        width: width / scaleFactor,
+        height: height / scaleFactor,
         pageNumber: parseInt(pageNumber),
         element: redactionElement,
         id: UUID.uuidv4(),
@@ -183,14 +188,15 @@ window.addEventListener("load", (e) => {
       redactionElement.appendChild(redactionOverlay);
     }
 
-    redactionsInput.value = redactions.map((red) =>
-      JSON.stringify({
+    let stringifiedRedactions = JSON.stringify(
+      redactions.map((red) => ({
         x: red.left,
         y: red.top,
         width: red.width,
         height: red.height,
         page: red.pageNumber,
-      })
+      }))
     );
+    redactionsInput.value = stringifiedRedactions;
   });
 });
