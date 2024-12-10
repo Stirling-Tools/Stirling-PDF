@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "users", schema = "stirling_pdf")
+@Table(name = "users")
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;

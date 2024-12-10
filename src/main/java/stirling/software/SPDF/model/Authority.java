@@ -12,7 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "authorities", schema = "stirling_pdf")
+@Table(name = "authorities")
 public class Authority implements Serializable {
 
     private static final long serialVersionUID = 1L;
