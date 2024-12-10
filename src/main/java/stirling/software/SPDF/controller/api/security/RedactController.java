@@ -82,11 +82,9 @@ public class RedactController {
             float width = redactionArea.getWidth().floatValue();
             float height = redactionArea.getHeight().floatValue();
 
-            float bottomY = y - height;
-
             PDRectangle box = page.getBBox();
 
-            contentStream.addRect(x, box.getHeight() - bottomY, width, height);
+            contentStream.addRect(x, box.getHeight() - y - height, width, height);
             contentStream.fill();
             contentStream.close();
         }
