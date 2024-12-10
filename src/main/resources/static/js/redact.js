@@ -18,6 +18,10 @@ window.addEventListener("load", (e) => {
 
   hiddenInput.files = undefined;
 
+  let redactions = [];
+
+  let redactionsInput = document.getElementById("redactions-input");
+
   document.addEventListener("file-input-change", (e) => {
     let fileChooser = document.getElementsByClassName("custom-file-chooser")[0];
     let fileChooserInput = fileChooser.querySelector(
@@ -61,42 +65,40 @@ window.addEventListener("load", (e) => {
 
     layer.appendChild(redactionsContainer);
   });
-});
 
-function getTextLayer(element) {
-  let current = element;
-  while (current) {
+  function getTextLayer(element) {
+    let current = element;
+    while (current) {
+      if (
+        current instanceof HTMLDivElement &&
+        current.classList.contains("textLayer")
+      )
+        return current;
+      current = current.parentElement;
+    }
+
+    return current;
+  }
+
+  document.onclick = (e) => {
     if (
-      current instanceof HTMLDivElement &&
-      current.classList.contains("textLayer")
+      (e.target &&
+        e.target.classList.contains("selected-wrapper") &&
+        e.target.firstChild == activeOverlay) ||
+      e.target == activeOverlay
     )
-      return current;
-    current = current.parentElement;
-  }
+      return;
+    if (activeOverlay) {
+      activeOverlay.style.display = "none";
+      activeOverlay = null;
+    }
+  };
 
-  return current;
-}
+  document.addEventListener("keydown", (e) => {
+    const isRedactionShortcut =
+      e.ctrlKey && (e.key == "s" || e.key == "S" || e.code == "KeyS");
+    if (!isRedactionShortcut) return;
 
-let redactions = [];
-
-document.onclick = (e) => {
-  if (
-    (e.target &&
-      e.target.classList.contains("selected-wrapper") &&
-      e.target.firstChild == activeOverlay) ||
-    e.target == activeOverlay
-  )
-    return;
-  if (activeOverlay) {
-    activeOverlay.style.display = "none";
-    activeOverlay = null;
-  }
-};
-
-document.addEventListener("keydown", (e) => {
-  const redact =
-    e.ctrlKey && (e.key == "s" || e.key == "S" || e.code == "KeyS");
-  if (redact) {
     let selection = window.getSelection();
     if (!selection || selection.rangeCount <= 0) return;
     let range = selection.getRangeAt(0);
@@ -104,8 +106,9 @@ document.addEventListener("keydown", (e) => {
     let textLayer = getTextLayer(range.startContainer);
     if (!textLayer) return;
 
+    const pageNumber = textLayer.getAttribute("data-page");
     let redactionsArea = textLayer.querySelector(
-      `#redactions-container-${textLayer.getAttribute("data-page")}`
+      `#redactions-container-${pageNumber}`
     );
     let textLayerRect = textLayer.getBoundingClientRect();
 
@@ -131,6 +134,7 @@ document.addEventListener("keydown", (e) => {
         top,
         width,
         height,
+        pageNumber: parseInt(pageNumber),
         element: redactionElement,
         id: UUID.uuidv4(),
       };
@@ -154,6 +158,15 @@ document.addEventListener("keydown", (e) => {
       deleteBtn.onclick = (e) => {
         redactions = redactions.filter((red) => redactionInfo.id != red.id);
         redactionElement.remove();
+        redactionsInput.value = redactions
+          .filter((red) => redactionInfo.id != red.id)
+          .map((red) => ({
+            x: red.left,
+            y: red.top,
+            width: red.width,
+            height: red.height,
+            page: pageNumber,
+          }));
         activeOverlay = null;
       };
       redactionOverlay.appendChild(deleteBtn);
@@ -169,5 +182,15 @@ document.addEventListener("keydown", (e) => {
 
       redactionElement.appendChild(redactionOverlay);
     }
-  }
+
+    redactionsInput.value = redactions.map((red) =>
+      JSON.stringify({
+        x: red.left,
+        y: red.top,
+        width: red.width,
+        height: red.height,
+        page: red.pageNumber,
+      })
+    );
+  });
 });
