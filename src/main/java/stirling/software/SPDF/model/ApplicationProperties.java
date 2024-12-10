@@ -255,7 +255,7 @@ public class ApplicationProperties {
     @Data
     public static class Datasource {
         private String url;
-        private Driver driverClassName;
+        private Driver driver;
         private String username;
         private String password;
     }

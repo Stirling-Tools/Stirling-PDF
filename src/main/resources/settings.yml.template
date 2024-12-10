@@ -77,7 +77,7 @@ legal:
   impressum: '' # URL to the impressum of your application (e.g. https://example.com/impressum). Empty string to disable or filename to load from local file in static folder
 
 system:
-  springProfilesActive: postgres # set the default environment (e.g. 'postgres', 'mysql', 'oracle')
+  springProfilesActive: '' # set the default environment (e.g. 'mysql', 'oracle')
   defaultLocale: en-US # set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   enableAlphaFunctionality: false # set to enable functionality which might need more testing before it fully goes live (this feature might make no changes)
@@ -88,7 +88,7 @@ system:
   enableAnalytics: undefined # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
-    driverClassName: postgresql
+    driver: postgresql
     username: postgres
     password: postgres
 
