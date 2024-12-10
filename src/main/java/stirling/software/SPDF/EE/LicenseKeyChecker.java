@@ -28,7 +28,7 @@ public class LicenseKeyChecker {
         this.checkLicense();
     }
 
-    @Scheduled(initialDelay = 604800000,fixedRate = 604800000) // 7 days in milliseconds
+    @Scheduled(initialDelay = 604800000, fixedRate = 604800000) // 7 days in milliseconds
     public void checkLicensePeriodically() {
         checkLicense();
     }

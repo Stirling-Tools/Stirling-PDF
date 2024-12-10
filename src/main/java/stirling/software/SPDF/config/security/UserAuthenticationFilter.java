@@ -71,7 +71,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         // Check for API key in the request headers if no authentication exists
         if (authentication == null || !authentication.isAuthenticated()) {
-            String apiKey = request.getHeader("X-API-Key");
+            String apiKey = request.getHeader("X-API-KEY");
             if (apiKey != null && !apiKey.trim().isEmpty()) {
                 try {
                     // Use API key to authenticate. This requires you to have an authentication

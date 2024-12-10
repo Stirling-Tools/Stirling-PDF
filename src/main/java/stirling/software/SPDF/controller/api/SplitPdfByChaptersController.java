@@ -59,70 +59,86 @@ public class SplitPdfByChaptersController {
     public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfByChaptersRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
-        boolean includeMetadata = request.getIncludeMetadata();
-        Integer bookmarkLevel =
-                request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
-        if (bookmarkLevel < 0) {
-            return ResponseEntity.badRequest().body("Invalid bookmark level".getBytes());
-        }
-        PDDocument sourceDocument = Loader.loadPDF(file.getBytes());
+        PDDocument sourceDocument = null;
+        Path zipFile = null;
 
-        PDDocumentOutline outline = sourceDocument.getDocumentCatalog().getDocumentOutline();
-
-        if (outline == null) {
-            logger.warn("No outline found for {}", file.getOriginalFilename());
-            return ResponseEntity.badRequest().body("No outline found".getBytes());
-        }
-        List<Bookmark> bookmarks = new ArrayList<>();
         try {
-            bookmarks =
-                    extractOutlineItems(
-                            sourceDocument,
-                            outline.getFirstChild(),
-                            bookmarks,
-                            outline.getFirstChild().getNextSibling(),
-                            0,
-                            bookmarkLevel);
-            // to handle last page edge case
-            bookmarks.get(bookmarks.size() - 1).setEndPage(sourceDocument.getNumberOfPages());
-            Bookmark lastBookmark = bookmarks.get(bookmarks.size() - 1);
+            boolean includeMetadata = request.getIncludeMetadata();
+            Integer bookmarkLevel =
+                    request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
+            if (bookmarkLevel < 0) {
+                return ResponseEntity.badRequest().body("Invalid bookmark level".getBytes());
+            }
+            sourceDocument = Loader.loadPDF(file.getBytes());
 
-        } catch (Exception e) {
-            logger.error("Unable to extract outline items", e);
-            return ResponseEntity.internalServerError()
-                    .body("Unable to extract outline items".getBytes());
+            PDDocumentOutline outline = sourceDocument.getDocumentCatalog().getDocumentOutline();
+
+            if (outline == null) {
+                logger.warn("No outline found for {}", file.getOriginalFilename());
+                return ResponseEntity.badRequest().body("No outline found".getBytes());
+            }
+            List<Bookmark> bookmarks = new ArrayList<>();
+            try {
+                bookmarks =
+                        extractOutlineItems(
+                                sourceDocument,
+                                outline.getFirstChild(),
+                                bookmarks,
+                                outline.getFirstChild().getNextSibling(),
+                                0,
+                                bookmarkLevel);
+                // to handle last page edge case
+                bookmarks.get(bookmarks.size() - 1).setEndPage(sourceDocument.getNumberOfPages());
+                Bookmark lastBookmark = bookmarks.get(bookmarks.size() - 1);
+
+            } catch (Exception e) {
+                logger.error("Unable to extract outline items", e);
+                return ResponseEntity.internalServerError()
+                        .body("Unable to extract outline items".getBytes());
+            }
+
+            boolean allowDuplicates = request.getAllowDuplicates();
+            if (!allowDuplicates) {
+                /*
+                duplicates are generated when multiple bookmarks correspond to the same page,
+                if the user doesn't want duplicates mergeBookmarksThatCorrespondToSamePage() method will merge the titles of all
+                the bookmarks that correspond to the same page, and treat them as a single bookmark
+                */
+                bookmarks = mergeBookmarksThatCorrespondToSamePage(bookmarks);
+            }
+            for (Bookmark bookmark : bookmarks) {
+                logger.info(
+                        "{}::::{} to {}",
+                        bookmark.getTitle(),
+                        bookmark.getStartPage(),
+                        bookmark.getEndPage());
+            }
+            List<ByteArrayOutputStream> splitDocumentsBoas =
+                    getSplitDocumentsBoas(sourceDocument, bookmarks, includeMetadata);
+
+            zipFile = createZipFile(bookmarks, splitDocumentsBoas);
+
+            byte[] data = Files.readAllBytes(zipFile);
+            Files.deleteIfExists(zipFile);
+
+            String filename =
+                    Filenames.toSimpleFileName(file.getOriginalFilename())
+                            .replaceFirst("[.][^.]+$", "");
+            sourceDocument.close();
+            return WebResponseUtils.bytesToWebResponse(
+                    data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
+        } finally {
+            try {
+                if (sourceDocument != null) {
+                    sourceDocument.close();
+                }
+                if (zipFile != null) {
+                    Files.deleteIfExists(zipFile);
+                }
+            } catch (Exception e) {
+                logger.error("Error while cleaning up resources", e);
+            }
         }
-
-        boolean allowDuplicates = request.getAllowDuplicates();
-        if (!allowDuplicates) {
-            /*
-            duplicates are generated when multiple bookmarks correspond to the same page,
-            if the user doesn't want duplicates mergeBookmarksThatCorrespondToSamePage() method will merge the titles of all
-            the bookmarks that correspond to the same page, and treat them as a single bookmark
-            */
-            bookmarks = mergeBookmarksThatCorrespondToSamePage(bookmarks);
-        }
-        for (Bookmark bookmark : bookmarks) {
-            logger.info(
-                    "{}::::{} to {}",
-                    bookmark.getTitle(),
-                    bookmark.getStartPage(),
-                    bookmark.getEndPage());
-        }
-        List<ByteArrayOutputStream> splitDocumentsBoas =
-                getSplitDocumentsBoas(sourceDocument, bookmarks, includeMetadata);
-
-        Path zipFile = createZipFile(bookmarks, splitDocumentsBoas);
-
-        byte[] data = Files.readAllBytes(zipFile);
-        Files.deleteIfExists(zipFile);
-
-        String filename =
-                Filenames.toSimpleFileName(file.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "");
-        sourceDocument.close();
-        return WebResponseUtils.bytesToWebResponse(
-                data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 
     private List<Bookmark> mergeBookmarksThatCorrespondToSamePage(List<Bookmark> bookmarks) {

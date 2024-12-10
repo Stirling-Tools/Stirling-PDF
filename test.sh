@@ -104,7 +104,7 @@ main() {
   #  run_tests "Stirling-PDF-Security" "./exampleYmlFiles/docker-compose-latest-security.yml"
 #	docker-compose -f "./exampleYmlFiles/docker-compose-latest-security.yml" down
 
-	run_tests "Stirling-PDF-Security-Fat" "./exampleYmlFiles/docker-compose-latest-fat-security.yml"
+	run_tests "Stirling-PDF-Security-Fat" "./exampleYmlFiles/test_cicd.yml"
 	if [ $? -eq 0 ]; then
 		cd cucumber
 		if python -m behave; then
