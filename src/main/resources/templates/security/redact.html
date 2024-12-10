@@ -32,11 +32,17 @@
     <span class="tool-header-text" th:text="#{redact.header}"></span>
   </div>
   <br><br>
-  <div class="ms-5 me-5">
-    <div
-      th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
+  <form th:action="@{'api/v1/security/redact'}" method="post" enctype="multipart/form-data">
+    <div class="ms-5 me-5">
+      <div
+        th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
+      </div>
     </div>
-  </div>
+    <input type="hidden" name="redactions" id="redactions-input">
+    <div class="mb-3 text-center">
+      <button type="submit" id="submitBtn" class="btn btn-primary w-25" th:text="#{redact.submit}"></button>
+    </div>
+    </form>
   <div id="outerContainer" class="d-none">
     <div id="sidebarContainer">
       <div id="toolbarSidebar">
