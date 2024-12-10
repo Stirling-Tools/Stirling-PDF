@@ -1,109 +1,169 @@
 .selectable {
-    border: 1px solid darkblue;
+  border: 1px solid darkblue;
 }
 
-.textLayer span::selection, .textLayer span::-moz-selection {
-    background-color: rgba(0, 100, 0, 0.26);
+.textLayer span::selection,
+.textLayer span::-moz-selection {
+  background-color: rgba(0, 100, 0, 0.26);
 }
 
 .redaction-selected {
-    border: 1px solid darkgreen !important;
+  border: 1px solid darkgreen !important;
 }
 
 .selected-wrapper {
-    position: absolute;
-    outline: 2px solid darkgreen;
-    outline-offset: -2px;
-    z-index: 10;
+  position: absolute;
+  outline: 2px solid darkgreen;
+  outline-offset: -2px;
+  z-index: 10;
 }
 
 .selected-wrapper:hover:not(:has(svg:hover)) {
-    outline-color: black;
-    background-color: black;
-    z-index: 10;
-    transition: background-color 0.065s linear;
+  outline-color: black;
+  background-color: black;
+  z-index: 10;
+  transition: background-color 0.065s linear;
 
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .redaction-overlay {
-    display: flex;
-    position: absolute;
+  display: flex;
+  position: absolute;
 
-    left: 40%;
-    top: 100%;
+  left: 40%;
+  top: 100%;
 
-    min-width: 25px;
-    max-width: 90px;
+  min-width: 25px;
+  max-width: 90px;
 
-    min-height: 25px;
+  min-height: 25px;
 
-    flex-wrap: wrap;
+  flex-wrap: wrap;
 
-    column-gap: 5px;
-    row-gap: 2px;
+  column-gap: 5px;
+  row-gap: 2px;
 
-    border-radius: 2px;
-    padding: 2px;
+  border-radius: 2px;
+  padding: 2px;
 
-    box-sizing: border-box;
+  box-sizing: border-box;
 
-    background-color: rgb(0 96 170);
-    outline: 1px solid gray;
+  background-color: rgb(0 96 170);
+  outline: 1px solid gray;
 }
 
 .redaction-overlay svg {
-    height: 25px;
-    width: 25px;
+  height: 25px;
+  width: 25px;
 
-    max-width: 35px;
-    max-height: 35px;
+  max-width: 35px;
+  max-height: 35px;
 
-    fill: rgba(255, 255, 255, 0.904);
-    user-select: none;
+  fill: rgba(255, 255, 255, 0.904);
+  user-select: none;
 }
 
 .redaction-overlay svg:hover {
-    cursor: pointer;
-    background-color: rgb(3, 63, 109);
-    fill: rgba(226, 226, 226, 0.904);
+  cursor: pointer;
+  background-color: rgb(3, 63, 109);
+  fill: rgba(226, 226, 226, 0.904);
 }
 
 .redaction-selected:hover {
-    background-color: green;
-    border: 4px solid green !important;
+  background-color: green;
+  border: 4px solid green !important;
 }
 
 .redaction-selected:hover::after {
-    content: '';
-    width: 100%;
-    height: 100%;
+  content: "";
+  width: 100%;
+  height: 100%;
 
-    position: absolute;
+  position: absolute;
 
-    left: 0px;
-    top: 0px;
-    background-color: black;
-    border: 2px solid red;
+  left: 0px;
+  top: 0px;
+  background-color: black;
+  border: 2px solid red;
 }
 
 .selectable:hover {
-    border: 1px solid blue;
+  border: 1px solid blue;
 }
 
-.textLayer div, .textLayer div > * {
-    user-select: none;
+.textLayer div,
+.textLayer div > * {
+  user-select: none;
 }
 
 .rectangle {
-    border: 2px solid #FF0000;
-    position: absolute;
+  border: 2px solid #ff0000;
+  position: absolute;
 }
 
 html {
-    --textLayer-pointer-events: auto;
+  --textLayer-pointer-events: auto;
 }
 
 .textLayer * {
-    pointer-events: var(--textLayer-pointer-events);
+  pointer-events: var(--textLayer-pointer-events);
+}
+
+#man-text-select-redact {
+  height: 28px;
+  width: 28px;
+  border: none;
+
+  background-color: var(--toolbar-bg-color);
+  color: var(--md-sys-color-on-surface);
+}
+
+#man-text-select-redact:is(:hover, :focus-within) {
+  background-color: var(--button-hover-color);
+}
+
+#text-selection {
+  position: relative;
+  font-size: 22px;
+}
+
+#text-selection-eraser {
+  position: absolute;
+  left: 7px;
+  top: 5px;
+
+  font-size: 14px;
+}
+
+#man-shape-redact {
+  height: 28px;
+  width: 28px;
+  border: none;
+
+  background-color: var(--toolbar-bg-color);
+  color: var(--md-sys-color-on-surface);
+}
+
+#man-shape-redact:is(:hover, :focus-within) {
+  background-color: var(--button-hover-color);
+}
+
+#shape-selection {
+  position: relative;
+  font-size: 22px;
+}
+
+#shape-selection-eraser {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  font-size: 14px;
+}
+
+:is(#man-shape-redact, #man-text-select-redact).toggled {
+  background-color: var(--toggled-btn-bg-color);
+  color: var(--toggled-btn-color);
+  outline:var(--toggled-hover-btn-outline) !important;
 }
