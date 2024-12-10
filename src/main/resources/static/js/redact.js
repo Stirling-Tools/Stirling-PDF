@@ -239,7 +239,7 @@ window.addEventListener("load", (e) => {
         element.classList.add("selected-wrapper");
         element.classList.remove("rectangle");
 
-        addRedactionOverlay(element, drawnRedaction, redactions);
+        addRedactionOverlay(element, drawnRedaction);
         redactions.push(drawnRedaction);
         _setRedactionsInput(redactions);
 
@@ -367,7 +367,7 @@ window.addEventListener("load", (e) => {
 
       redactionsArea.appendChild(redactionElement);
 
-      addRedactionOverlay(redactionElement, redactionInfo, redactions);
+      addRedactionOverlay(redactionElement, redactionInfo);
     }
 
     _setRedactionsInput(redactions);
@@ -389,7 +389,7 @@ window.addEventListener("load", (e) => {
 
   function _setRedactionsInput(redactions) {
     let stringifiedRedactions = JSON.stringify(
-      redactions.map((red) => ({
+      redactions.filter(_nonEmptyRedaction).map((red) => ({
         x: red.left,
         y: red.top,
         width: red.width,
@@ -400,7 +400,7 @@ window.addEventListener("load", (e) => {
     redactionsInput.value = stringifiedRedactions;
   }
 
-  function addRedactionOverlay(redactionElement, redactionInfo, redactions) {
+  function addRedactionOverlay(redactionElement, redactionInfo) {
     let redactionOverlay = document.createElement("div");
 
     let deleteBtn = $(
@@ -410,17 +410,7 @@ window.addEventListener("load", (e) => {
     deleteBtn.onclick = (e) => {
       redactions = redactions.filter((red) => redactionInfo.id != red.id);
       redactionElement.remove();
-      _setRedactionsInput(
-        redactions
-          .filter((red) => redactionInfo.id != red.id)
-          .map((red) => ({
-            x: red.left,
-            y: red.top,
-            width: red.width,
-            height: red.height,
-            page: pageNumber,
-          }))
-      );
+      _setRedactionsInput(redactions);
       activeOverlay = null;
     };
     redactionOverlay.appendChild(deleteBtn);
@@ -437,3 +427,17 @@ window.addEventListener("load", (e) => {
     redactionElement.appendChild(redactionOverlay);
   }
 });
+
+function _isEmptyRedaction(redaction) {
+  return (
+    redaction.left == null ||
+    redaction.top == null ||
+    redaction.width == null ||
+    redaction.height == null ||
+    redaction.pageNumber == null
+  );
+}
+
+function _nonEmptyRedaction(redaction) {
+  return !_isEmptyRedaction(redaction);
+}
