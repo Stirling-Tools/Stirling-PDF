@@ -10,13 +10,16 @@ import org.springframework.context.annotation.Configuration;
 
 import lombok.Getter;
 import stirling.software.SPDF.model.ApplicationProperties;
-import stirling.software.SPDF.model.exception.UnsupportedDriverException;
 
 @Getter
 @Configuration
 public class DatabaseConfig {
 
-    @Autowired private ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
+
+    public DatabaseConfig(@Autowired ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     @Bean
     public Connection connection() throws SQLException {
@@ -24,7 +27,7 @@ public class DatabaseConfig {
                 applicationProperties.getSystem().getDatasource();
 
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
-        dataSourceBuilder.driverClassName(getDriverClassName(datasource.getDriverClassName()));
+        dataSourceBuilder.driverClassName(getDriverClassName(datasource.getDriver()));
         dataSourceBuilder.url(datasource.getUrl());
         dataSourceBuilder.username(datasource.getUsername());
         dataSourceBuilder.password(datasource.getPassword());
@@ -34,18 +37,15 @@ public class DatabaseConfig {
 
     private String getDriverClassName(ApplicationProperties.Driver driverName) {
         switch (driverName) {
-            case POSTGRESQL -> {
-                return "org.postgresql.Driver";
-            }
             case ORACLE -> {
                 return "oracle.jdbc.OracleDriver";
             }
             case MY_SQL -> {
                 return "com.mysql.cj.jdbc.Driver";
             }
-            default ->
-                    throw new UnsupportedDriverException(
-                            "The database driver " + driverName + " is not supported.");
+            default -> {
+                return "org.postgresql.Driver";
+            }
         }
     }
 }
