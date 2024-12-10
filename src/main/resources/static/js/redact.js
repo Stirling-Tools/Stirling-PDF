@@ -135,10 +135,10 @@ window.addEventListener("load", (e) => {
       height = height / zoomScaleValue;
 
       let redactionInfo = {
-        left: left / scaleFactor,
-        top: top / scaleFactor,
-        width: width / scaleFactor,
-        height: height / scaleFactor,
+        left: (rect.left - textLayerRect.left) / scaleFactor,
+        top: (rect.top - textLayerRect.top) / scaleFactor,
+        width: rect.width / scaleFactor,
+        height: rect.height / scaleFactor,
         pageNumber: parseInt(pageNumber),
         element: redactionElement,
         id: UUID.uuidv4(),
