@@ -4,7 +4,7 @@ export class DecryptFile {
       const formData = new FormData();
       formData.append('fileInput', file);
       if (requiresPassword) {
-        const password = prompt(`${window.translations.passwordPrompt}`);
+        const password = prompt(`${window.decrypt.passwordPrompt}`);
 
         if (password === null) {
           // User cancelled
@@ -16,9 +16,9 @@ export class DecryptFile {
           // No password provided
           console.error(`No password provided for encrypted PDF: ${file.name}`);
           this.showErrorBanner(
-            `${window.translations.noPassword.replace('{0}', file.name)}`,
+            `${window.decrypt.noPassword.replace('{0}', file.name)}`,
             '',
-            `${window.translations.unexpectedError}`
+            `${window.decrypt.unexpectedError}`
           );
           return null; // No file to return
         }
@@ -37,11 +37,11 @@ export class DecryptFile {
         return new File([decryptedBlob], file.name, {type: 'application/pdf'});
       } else {
         const errorText = await response.text();
-        console.error(`${window.translations.invalidPassword} ${errorText}`);
+        console.error(`${window.decrypt.invalidPassword} ${errorText}`);
         this.showErrorBanner(
-          `${window.translations.invalidPassword}`,
+          `${window.decrypt.invalidPassword}`,
           errorText,
-          `${window.translations.invalidPasswordHeader.replace('{0}', file.name)}`
+          `${window.decrypt.invalidPasswordHeader.replace('{0}', file.name)}`
         );
         return null; // No file to return
       }
@@ -49,8 +49,8 @@ export class DecryptFile {
       // Handle network or unexpected errors
       console.error(`Failed to decrypt PDF: ${file.name}`, error);
       this.showErrorBanner(
-        `${window.translations.unexpectedError.replace('{0}', file.name)}`,
-        `${error.message || window.translations.unexpectedError}`,
+        `${window.decrypt.unexpectedError.replace('{0}', file.name)}`,
+        `${error.message || window.decrypt.unexpectedError}`,
         error
       );
       return null; // No file to return
@@ -59,6 +59,10 @@ export class DecryptFile {
 
   async checkFileEncrypted(file) {
     try {
+      if (file.type !== 'application/pdf') {
+        return {isEncrypted: false, requiresPassword: false};
+      }
+
       pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
       const arrayBuffer = await file.arrayBuffer();
       const arrayBufferForPdfLib = arrayBuffer.slice(0);

@@ -163,17 +163,18 @@
         dragDropMessage:'[[#{multiTool.dragDropMessage}]]',
         undo: '[[#{multiTool.undo}]]',
         redo: '[[#{multiTool.redo}]]',
-        passwordPrompt: '[[#{decrypt.passwordPrompt}]]',
-        cancelled: '[[#{decrypt.cancelled}]]',
-        noPassword: '[[#{decrypt.noPassword}]]',
-        invalidPassword: '[[#{decrypt.invalidPassword}]]',
-        invalidPasswordHeader: '[[#{decrypt.invalidPasswordHeader}]]',
-        unexpectedError: '[[#{decrypt.unexpectedError}]]',
-        serverError: '[[#{decrypt.serverError}]]',
-        success: '[[#{decrypt.success}]]',
     };
 
-
+    window.decrypt = {
+                    passwordPrompt: '[[#{decrypt.passwordPrompt}]]',
+                    cancelled: '[[#{decrypt.cancelled}]]',
+                    noPassword: '[[#{decrypt.noPassword}]]',
+                    invalidPassword: '[[#{decrypt.invalidPassword}]]',
+                    invalidPasswordHeader: '[[#{decrypt.invalidPasswordHeader}]]',
+                    unexpectedError: '[[#{decrypt.unexpectedError}]]',
+                    serverError: '[[#{decrypt.serverError}]]',
+                    success: '[[#{decrypt.success}]]',
+              }
 
     const csvInput = document.getElementById("csv-input");
     csvInput.addEventListener("keydown", function (event) {
