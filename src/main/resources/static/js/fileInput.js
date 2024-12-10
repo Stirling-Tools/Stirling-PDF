@@ -2,7 +2,6 @@ import FileIconFactory from './file-icon-factory.js';
 import FileUtils from './file-utils.js';
 import UUID from './uuid.js';
 import {DecryptFile} from './DecryptFiles.js';
-const decryptFile = new DecryptFile();
 let isScriptExecuted = false;
 if (!isScriptExecuted) {
   isScriptExecuted = true;
@@ -123,6 +122,7 @@ function setupFileInput(chooser) {
           return decryptedFile;
         } catch (error) {
           console.error(`Error decrypting file: ${file.name}`, error);
+          if (!file.uniqueId) file.uniqueId = UUID.uuidv4();
           return file;
         }
       })

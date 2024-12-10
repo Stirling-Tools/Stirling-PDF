@@ -52,8 +52,6 @@ function addSignatureFromPreview() {
 let originalFileName = '';
 document.querySelector('input[name=pdf-upload]').addEventListener('change', async (event) => {
   const fileInput = event.target;
-
-  // Wait for the second function to complete
   fileInput.addEventListener('file-input-change', async (e) => {
     const {allFiles} = e.detail;
     if (allFiles && allFiles.length > 0) {
