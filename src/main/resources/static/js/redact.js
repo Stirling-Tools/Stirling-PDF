@@ -139,8 +139,8 @@ window.addEventListener("load", (e) => {
         let ev = e || window.event; //Moz || IE
         if (ev.pageX) {
           //Moz
-          mouse.x = e.layerX / zoomScaleValue;
-          mouse.y = e.layerY / zoomScaleValue;
+          mouse.x = e.layerX;
+          mouse.y = e.layerY;
         }
       }
 
@@ -168,49 +168,52 @@ window.addEventListener("load", (e) => {
       canvas.onpointermove = function (e) {
         setMousePosition(e);
         if (element !== null) {
+          let scaleFactor = parseFloat(
+            viewer.style.getPropertyValue("--scale-factor")
+          );
+
+          // let mouseX = mouse.x;
+          // let mouseY = mouse.y;
+          // console.log("rect: ", canvas.getBoundingClientRect());
           let width = Math.abs(mouse.x - mouse.startX);
-          element.style.width = `calc(${width}px * var(--zoom-scale))`;
+          element.style.width = _toCalcZoomPx(width / zoomScaleValue);
 
           let height = Math.abs(mouse.y - mouse.startY);
-          element.style.height = `calc(${height}px * var(--zoom-scale))`;
+          element.style.height = _toCalcZoomPx(height / zoomScaleValue);
 
           let left = mouse.x - mouse.startX < 0 ? mouse.x : mouse.startX;
-          element.style.left = `calc(${left}px * var(--zoom-scale))`;
+          element.style.left = _toCalcZoomPx(left / zoomScaleValue);
 
           let top = mouse.y - mouse.startY < 0 ? mouse.y : mouse.startY;
-          element.style.top = `calc(${top}px * var(--zoom-scale))`;
+          element.style.top = _toCalcZoomPx(top / zoomScaleValue);
 
           if (drawnRedaction) {
-            let scaleFactor = parseFloat(
-              viewer.style.getPropertyValue("--scale-factor")
-            );
-            drawnRedaction.width = width / scaleFactor;
-            drawnRedaction.height = height / scaleFactor;
+            // console.log({ left, top, height, width, scaleFactor });
+            // let scaleFactor = parseFloat(
+            //   viewer.style.getPropertyValue("--scale-factor")
+            // );
+            drawnRedaction.left = _scaleToPDF(left, scaleFactor);
+            drawnRedaction.top = _scaleToPDF(top, scaleFactor);
+            drawnRedaction.width = _scaleToPDF(width, scaleFactor);
+            drawnRedaction.height = _scaleToPDF(height, scaleFactor);
           }
         }
       };
 
       canvas.onclick = function (e) {
+        console.log("rect: ", canvas.getBoundingClientRect());
         if (element !== null) {
           element.classList.add("selected-wrapper");
           element.classList.remove("rectangle");
 
+          addRedactionOverlay(element, drawnRedaction, redactions);
           redactions.push(drawnRedaction);
-          let stringifiedRedactions = JSON.stringify(
-            redactions.map((red) => ({
-              x: red.left,
-              y: red.top,
-              width: red.width,
-              height: red.height,
-              page: red.pageNumber,
-            }))
-          );
-          redactionsInput.value = stringifiedRedactions;
+          _setRedactionsInput(redactions);
 
+          console.log("after redaction: ", drawnRedaction);
           element = null;
           drawnRedaction = null;
           canvas.style.cursor = "default";
-
           console.log("finished.");
         } else {
           if (redactionMode !== "drawing") {
@@ -230,21 +233,22 @@ window.addEventListener("load", (e) => {
           let left = mouse.x;
           let top = mouse.y;
 
-          element.style.left = `calc(${left}px * var(--zoom-scale))`;
-          element.style.top = `calc(${top}px * var(--zoom-scale))`;
+          element.style.left = _toCalcZoomPx(left / zoomScaleValue);
+          element.style.top = _toCalcZoomPx(top / zoomScaleValue);
 
           let scaleFactor = parseFloat(
             viewer.style.getPropertyValue("--scale-factor")
           );
           drawnRedaction = {
-            left: left / scaleFactor,
-            top: top / scaleFactor,
+            left: _scaleToPDF(left, scaleFactor),
+            top: _scaleToPDF(top, scaleFactor),
             width: 0.0,
             height: 0.0,
             pageNumber: parseInt(canvas.getAttribute("data-page")),
             element: element,
             id: UUID.uuidv4(),
           };
+          console.log("before redaction: ", drawnRedaction);
 
           redactionsContainer.appendChild(element);
           canvas.style.cursor = "crosshair";
@@ -320,10 +324,10 @@ window.addEventListener("load", (e) => {
       height = height / zoomScaleValue;
 
       let redactionInfo = {
-        left: (rect.left - textLayerRect.left) / scaleFactor,
-        top: (rect.top - textLayerRect.top) / scaleFactor,
-        width: rect.width / scaleFactor,
-        height: rect.height / scaleFactor,
+        left: _scaleToPDF(rect.left - textLayerRect.left, scaleFactor),
+        top: _scaleToPDF(rect.top - textLayerRect.top, scaleFactor),
+        width: _scaleToPDF(rect.width, scaleFactor),
+        height: _scaleToPDF(rect.height, scaleFactor),
         pageNumber: parseInt(pageNumber),
         element: redactionElement,
         id: UUID.uuidv4(),
@@ -331,48 +335,31 @@ window.addEventListener("load", (e) => {
 
       redactions.push(redactionInfo);
 
-      redactionElement.style.left = `calc(${left}px * var(--zoom-scale))`;
-      redactionElement.style.top = `calc(${top}px * var(--zoom-scale))`;
+      redactionElement.style.left = _toCalcZoomPx(left);
+      redactionElement.style.top = _toCalcZoomPx(top);
 
-      redactionElement.style.width = `calc(${width}px * var(--zoom-scale))`;
-      redactionElement.style.height = `calc(${height}px * var(--zoom-scale))`;
+      redactionElement.style.width = _toCalcZoomPx(width);
+      redactionElement.style.height = _toCalcZoomPx(height);
 
       redactionsArea.appendChild(redactionElement);
 
-      let redactionOverlay = document.createElement("div");
-
-      let deleteBtn = $(
-        `<svg class="delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>`
-      )[0];
-
-      deleteBtn.onclick = (e) => {
-        redactions = redactions.filter((red) => redactionInfo.id != red.id);
-        redactionElement.remove();
-        redactionsInput.value = redactions
-          .filter((red) => redactionInfo.id != red.id)
-          .map((red) => ({
-            x: red.left,
-            y: red.top,
-            width: red.width,
-            height: red.height,
-            page: pageNumber,
-          }));
-        activeOverlay = null;
-      };
-      redactionOverlay.appendChild(deleteBtn);
-
-      redactionOverlay.classList.add("redaction-overlay");
-      redactionOverlay.style.display = "none";
-
-      redactionElement.onclick = (e) => {
-        if (e.target != redactionElement) return;
-        activeOverlay = redactionOverlay;
-        activeOverlay.style.display = "flex";
-      };
-
-      redactionElement.appendChild(redactionOverlay);
+      addRedactionOverlay(redactionElement, redactionInfo, redactions);
     }
 
+    _setRedactionsInput(redactions);
+  });
+
+  function _scaleToPDF(value, scaleFactor) {
+    if (!scaleFactor)
+      document.documentElement.getPropertyValue("--scale-factor");
+    return value / scaleFactor;
+  }
+
+  function _toCalcZoomPx(val) {
+    return `calc(${val}px * var(--zoom-scale))`;
+  }
+
+  function _setRedactionsInput(redactions) {
     let stringifiedRedactions = JSON.stringify(
       redactions.map((red) => ({
         x: red.left,
@@ -383,5 +370,42 @@ window.addEventListener("load", (e) => {
       }))
     );
     redactionsInput.value = stringifiedRedactions;
-  });
+  }
+
+  function addRedactionOverlay(redactionElement, redactionInfo, redactions) {
+    let redactionOverlay = document.createElement("div");
+
+    let deleteBtn = $(
+      `<svg class="delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="#e8eaed"><path d="M312-144q-29.7 0-50.85-21.15Q240-186.3 240-216v-480h-48v-72h192v-48h192v48h192v72h-48v479.57Q720-186 698.85-165T648-144H312Zm336-552H312v480h336v-480ZM384-288h72v-336h-72v336Zm120 0h72v-336h-72v336ZM312-696v480-480Z"/></svg>`
+    )[0];
+
+    deleteBtn.onclick = (e) => {
+      redactions = redactions.filter((red) => redactionInfo.id != red.id);
+      redactionElement.remove();
+      _setRedactionsInput(
+        redactions
+          .filter((red) => redactionInfo.id != red.id)
+          .map((red) => ({
+            x: red.left,
+            y: red.top,
+            width: red.width,
+            height: red.height,
+            page: pageNumber,
+          }))
+      );
+      activeOverlay = null;
+    };
+    redactionOverlay.appendChild(deleteBtn);
+
+    redactionOverlay.classList.add("redaction-overlay");
+    redactionOverlay.style.display = "none";
+
+    redactionElement.onclick = (e) => {
+      if (e.target != redactionElement) return;
+      activeOverlay = redactionOverlay;
+      activeOverlay.style.display = "flex";
+    };
+
+    redactionElement.appendChild(redactionOverlay);
+  }
 });
