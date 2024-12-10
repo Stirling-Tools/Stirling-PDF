@@ -136,6 +136,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "remove-cert-sign");
         addEndpointToGroup("Security", "sanitize-pdf");
         addEndpointToGroup("Security", "auto-redact");
+        addEndpointToGroup("Security", "redact");
 
         // Adding endpoints to "Other" group
         addEndpointToGroup("Other", "ocr-pdf");
@@ -235,6 +236,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "markdown-to-pdf");
         addEndpointToGroup("Java", "show-javascript");
         addEndpointToGroup("Java", "auto-redact");
+        addEndpointToGroup("Java", "redact");
         addEndpointToGroup("Java", "pdf-to-csv");
         addEndpointToGroup("Java", "split-by-size-or-count");
         addEndpointToGroup("Java", "overlay-pdf");

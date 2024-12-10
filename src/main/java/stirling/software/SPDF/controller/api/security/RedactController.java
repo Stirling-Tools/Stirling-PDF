@@ -5,13 +5,18 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,13 +26,15 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 import stirling.software.SPDF.model.PDFText;
+import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
+import stirling.software.SPDF.model.api.security.RedactionArea;
 import stirling.software.SPDF.pdf.TextFinder;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
+import stirling.software.SPDF.utils.propertyeditor.StringToArrayListPropertyEditor;
 
 @RestController
 @RequestMapping("/api/v1/security")
@@ -43,11 +50,60 @@ public class RedactController {
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(List.class, "redactions", new StringToArrayListPropertyEditor());
+    }
+
+    @PostMapping(value = "/redact", consumes = "multipart/form-data")
+    public ResponseEntity<byte[]> redactPDF(@ModelAttribute ManualRedactPdfRequest request) throws IOException {
+        MultipartFile file = request.getFileInput();
+        List<RedactionArea> redactionAreas = request.getRedactions();
+
+        PDDocument document = pdfDocumentFactory.load(file);
+
+        PDPageTree allPages = document.getDocumentCatalog().getPages();
+
+        // TODO: make the redaction color customizable
+        Color redactColor = Color.BLACK;
+        for (RedactionArea redactionArea : redactionAreas) {
+            if (redactionArea.getPage() == null || redactionArea.getPage() <= 0
+                    || redactionArea.getHeight() == null || redactionArea.getHeight() <= 0.0D
+                    || redactionArea.getWidth() == null || redactionArea.getWidth() <= 0.0D)
+                continue;
+            PDPage page = allPages.get(redactionArea.getPage() - 1);
+
+            PDPageContentStream contentStream = new PDPageContentStream(
+                    document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+            contentStream.setNonStrokingColor(redactColor);
+
+            float x = redactionArea.getX().floatValue();
+            float y = redactionArea.getY().floatValue();
+            float width = redactionArea.getWidth().floatValue();
+            float height = redactionArea.getHeight().floatValue();
+
+            float bottomY = y - height;
+
+            PDRectangle box = page.getBBox();
+
+            contentStream.addRect(x, box.getHeight() - bottomY, width, height);
+            contentStream.fill();
+            contentStream.close();
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        document.save(baos);
+        document.close();
+
+        byte[] pdfContent = baos.toByteArray();
+        return WebResponseUtils.bytesToWebResponse(
+                pdfContent,
+                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                        + "_redacted.pdf");
+    }
+
     @PostMapping(value = "/auto-redact", consumes = "multipart/form-data")
-    @Operation(
-            summary = "Redacts listOfText in a PDF document",
-            description =
-                    "This operation takes an input PDF file and redacts the provided listOfText. Input:PDF, Output:PDF, Type:SISO")
+    @Operation(summary = "Redacts listOfText in a PDF document", description = "This operation takes an input PDF file and redacts the provided listOfText. Input:PDF, Output:PDF, Type:SISO")
     public ResponseEntity<byte[]> redactPdf(@ModelAttribute RedactPdfRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
