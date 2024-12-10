@@ -405,7 +405,7 @@ To access your account settings, go to Account Settings in the settings cog menu
 
 To add new users, go to the bottom of Account Settings and hit 'Admin Settings'. Here you can add new users. The different roles mentioned within this are for rate limiting. This is a work in progress and will be expanded on more in the future.
 
-For API usage, you must provide a header with `X-API-Key` and the associated API key for that user.
+For API usage, you must provide a header with `X-API-KEY` and the associated API key for that user.
 
 ## FAQ
 
