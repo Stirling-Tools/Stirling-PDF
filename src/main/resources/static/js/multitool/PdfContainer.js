@@ -5,7 +5,7 @@ import {SplitAllCommand} from './commands/split.js';
 import {UndoManager} from './UndoManager.js';
 import {PageBreakCommand} from './commands/page-break.js';
 import {AddFilesCommand} from './commands/add-page.js';
-import {DecryptFile} from './DecryptFiles.js';
+import {DecryptFile} from '../DecryptFiles.js';
 
 class PdfContainer {
   fileName;
