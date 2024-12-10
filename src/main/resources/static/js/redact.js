@@ -96,16 +96,21 @@ window.addEventListener("load", (e) => {
 
     function _handleTextSelectionRedactionBtnClick(e) {
       if (textSelectionRedactionBtn.classList.contains("toggled")) {
-        textSelectionRedactionBtn.classList.remove("toggled");
         resetTextSelection();
-        redactionMode = RedactionModes.NONE;
       } else {
+        resetDrawRedactions();
         textSelectionRedactionBtn.classList.add("toggled");
         redactionMode = RedactionModes.TEXT;
       }
     }
 
     function resetTextSelection() {
+      textSelectionRedactionBtn.classList.remove("toggled");
+      redactionMode = RedactionModes.NONE;
+      clearSelection();
+    }
+
+    function clearSelection() {
       if (window.getSelection) {
         if (window.getSelection().empty) {
           // Chrome
@@ -124,6 +129,7 @@ window.addEventListener("load", (e) => {
       if (drawRedactionBtn.classList.contains("toggled")) {
         resetDrawRedactions();
       } else {
+        resetTextSelection();
         drawRedactionBtn.classList.add("toggled");
         document.documentElement.style.setProperty(
           "--textLayer-pointer-events",
