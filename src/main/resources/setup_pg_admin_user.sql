@@ -16,6 +16,7 @@ CREATE SCHEMA IF NOT EXISTS stirling_pdf AUTHORIZATION admin;
 GRANT ALL PRIVILEGES ON DATABASE postgres TO admin;
 GRANT ALL PRIVILEGES ON SCHEMA stirling_pdf TO admin;
 ALTER DATABASE postgres SET search_path TO stirling_pdf;
+ALTER DATABASE postgres OWNER TO admin;
 ALTER TABLE authorities OWNER TO admin;
 ALTER TABLE persistent_logins OWNER TO admin;
 ALTER TABLE sessions OWNER TO admin;
