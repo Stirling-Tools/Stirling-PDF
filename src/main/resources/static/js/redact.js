@@ -19,6 +19,12 @@ window.addEventListener("load", (e) => {
   let viewer = document.getElementById("viewer");
 
   hiddenInput.files = undefined;
+  let redactionMode = "drawing";
+
+  document.documentElement.style.setProperty(
+    "--textLayer-pointer-events",
+    "none"
+  );
 
   let redactions = [];
 
@@ -58,14 +64,127 @@ window.addEventListener("load", (e) => {
     zoomScaleValue = e.source.scale ? e.source.scale : e.source.pageScale;
     document.documentElement.style.setProperty("--zoom-scale", zoomScaleValue);
 
-    let redactionsContainer = document.createElement("div");
-    redactionsContainer.style.position = "relative";
-    redactionsContainer.style.height = "100%";
-    redactionsContainer.style.width = "100%";
-    redactionsContainer.id = `redactions-container-${e.pageNumber}`;
-    redactionsContainer.style.setProperty("z-index", "unset");
+    let redactionsContainer = document.getElementById(
+      `redactions-container-${e.pageNumber}`
+    );
+    if (!redactionsContainer) {
+      redactionsContainer = document.createElement("div");
+      redactionsContainer.style.position = "relative";
+      redactionsContainer.style.height = "100%";
+      redactionsContainer.style.width = "100%";
+      redactionsContainer.id = `redactions-container-${e.pageNumber}`;
+      redactionsContainer.style.setProperty("z-index", "unset");
 
-    layer.appendChild(redactionsContainer);
+      layer.appendChild(redactionsContainer);
+    }
+
+    initDraw(layer, redactionsContainer);
+
+    function initDraw(canvas, redactionsContainer) {
+      function setMousePosition(e) {
+        let ev = e || window.event; //Moz || IE
+        if (ev.pageX) {
+          //Moz
+          mouse.x = e.layerX / zoomScaleValue;
+          mouse.y = e.layerY / zoomScaleValue;
+        }
+      }
+
+      let mouse = {
+        x: 0,
+        y: 0,
+        startX: 0,
+        startY: 0,
+      };
+      let element = null;
+      let drawnRedaction = null;
+
+      canvas.onpointermove = function (e) {
+        setMousePosition(e);
+        if (element !== null) {
+          let width = Math.abs(mouse.x - mouse.startX);
+          element.style.width = `calc(${width}px * var(--zoom-scale))`;
+
+          let height = Math.abs(mouse.y - mouse.startY);
+          element.style.height = `calc(${height}px * var(--zoom-scale))`;
+
+          let left = mouse.x - mouse.startX < 0 ? mouse.x : mouse.startX;
+          element.style.left = `calc(${left}px * var(--zoom-scale))`;
+
+          let top = mouse.y - mouse.startY < 0 ? mouse.y : mouse.startY;
+          element.style.top = `calc(${top}px * var(--zoom-scale))`;
+
+          if (drawnRedaction) {
+            let scaleFactor = parseFloat(
+              viewer.style.getPropertyValue("--scale-factor")
+            );
+            drawnRedaction.width = width / scaleFactor;
+            drawnRedaction.height = height / scaleFactor;
+          }
+        }
+      };
+
+      canvas.onclick = function (e) {
+        if (element !== null) {
+          element.classList.add("selected-wrapper");
+          element.classList.remove("rectangle");
+
+          redactions.push(drawnRedaction);
+          let stringifiedRedactions = JSON.stringify(
+            redactions.map((red) => ({
+              x: red.left,
+              y: red.top,
+              width: red.width,
+              height: red.height,
+              page: red.pageNumber,
+            }))
+          );
+          redactionsInput.value = stringifiedRedactions;
+
+          element = null;
+          drawnRedaction = null;
+          canvas.style.cursor = "default";
+
+          console.log("finished.");
+        } else {
+          if (redactionMode !== "drawing") {
+            console.warn(
+              "Drawing attempt when redaction mode is ",
+              redactionMode
+            );
+            return;
+          }
+          console.log("begun.");
+          mouse.startX = mouse.x;
+          mouse.startY = mouse.y;
+
+          element = document.createElement("div");
+          element.className = "rectangle";
+
+          let left = mouse.x;
+          let top = mouse.y;
+
+          element.style.left = `calc(${left}px * var(--zoom-scale))`;
+          element.style.top = `calc(${top}px * var(--zoom-scale))`;
+
+          let scaleFactor = parseFloat(
+            viewer.style.getPropertyValue("--scale-factor")
+          );
+          drawnRedaction = {
+            left: left / scaleFactor,
+            top: top / scaleFactor,
+            width: 0.0,
+            height: 0.0,
+            pageNumber: parseInt(canvas.getAttribute("data-page")),
+            element: element,
+            id: UUID.uuidv4(),
+          };
+
+          redactionsContainer.appendChild(element);
+          canvas.style.cursor = "crosshair";
+        }
+      };
+    }
   });
 
   function getTextLayer(element) {
@@ -99,7 +218,7 @@ window.addEventListener("load", (e) => {
   document.addEventListener("keydown", (e) => {
     const isRedactionShortcut =
       e.ctrlKey && (e.key == "s" || e.key == "S" || e.code == "KeyS");
-    if (!isRedactionShortcut) return;
+    if (!isRedactionShortcut || redactionMode !== "text") return;
 
     let selection = window.getSelection();
     if (!selection || selection.rangeCount <= 0) return;

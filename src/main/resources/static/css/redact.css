@@ -94,3 +94,16 @@
 .textLayer div, .textLayer div > * {
     user-select: none;
 }
+
+.rectangle {
+    border: 2px solid #FF0000;
+    position: absolute;
+}
+
+html {
+    --textLayer-pointer-events: auto;
+}
+
+.textLayer * {
+    pointer-events: var(--textLayer-pointer-events);
+}
