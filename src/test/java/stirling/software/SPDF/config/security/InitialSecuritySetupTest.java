@@ -1,7 +1,7 @@
 package stirling.software.SPDF.config.security;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import java.io.IOException;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,12 +10,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import stirling.software.SPDF.config.security.database.DatabaseService;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.User;
-
-import java.io.IOException;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class InitialSecuritySetupTest {
@@ -36,14 +34,10 @@ class InitialSecuritySetupTest {
     void testInit() throws IOException {
         String username = "admin";
         String password = "stirling";
-        ApplicationProperties.System system = mock(ApplicationProperties.System.class);
         ApplicationProperties.Security security = mock(ApplicationProperties.Security.class);
         ApplicationProperties.Security.InitialLogin initialLogin = mock(ApplicationProperties.Security.InitialLogin.class);
         Optional<User> user = Optional.of(mock(User.class));
 
-        when(applicationProperties.getSystem()).thenReturn(system);
-        when(system.getSpringProfilesActive()).thenReturn("postgres");
-        doNothing().when(databaseService).setAdminUser();
         when(userService.hasUsers()).thenReturn(false);
         when(applicationProperties.getSecurity()).thenReturn(security);
         when(security.getInitialLogin()).thenReturn(initialLogin);

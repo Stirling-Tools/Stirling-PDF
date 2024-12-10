@@ -36,23 +36,8 @@ public class DatabaseService implements DatabaseInterface {
     public static final String BACKUP_PREFIX = "backup_";
     public static final String SQL_SUFFIX = ".sql";
     private static final Path BACKUP_PATH = Paths.get("configs/db/backup/");
-    private static final Path PG_ADMIN_SCRIPT_PATH =
-            Paths.get("src/main/resources/setup_pg_admin_user.sql");
 
     @Autowired private DatabaseConfig databaseConfig;
-
-    @Override
-    public void setAdminUser() {
-        try (Connection connection = databaseConfig.connection();
-                Statement statement = connection.createStatement()) {
-            String script = Files.readString(PG_ADMIN_SCRIPT_PATH);
-            statement.execute(script);
-        } catch (SQLException | IOException e) {
-            log.error("Error: Failed to create admin user for database", e);
-        }
-
-        log.info("Created admin user for database");
-    }
 
     @Override
     public List<FileInfo> getBackupList() {
@@ -91,7 +76,7 @@ public class DatabaseService implements DatabaseInterface {
     }
 
     // Imports a database backup from the specified file.
-    public boolean importDatabaseFromUI(String fileName) throws IOException {
+    public boolean importDatabaseFromUI(String fileName) {
         try {
             importDatabaseFromUI(getBackupFilePath(fileName));
             return true;
@@ -211,16 +196,6 @@ public class DatabaseService implements DatabaseInterface {
             log.error("Error during database import: {}", e.getMessage(), e);
         } catch (ScriptException e) {
             log.error("Error: File {} not found", scriptPath.toString(), e);
-        }
-    }
-
-    private void ensureBackupDirectoryExists() {
-        if (Files.notExists(BACKUP_PATH)) {
-            try {
-                Files.createDirectories(BACKUP_PATH);
-            } catch (IOException e) {
-                log.error("Error creating directories: {}", e.getMessage());
-            }
         }
     }
 

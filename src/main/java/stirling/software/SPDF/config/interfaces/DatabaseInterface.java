@@ -6,8 +6,6 @@ import java.util.List;
 import stirling.software.SPDF.utils.FileInfo;
 
 public interface DatabaseInterface {
-    void setAdminUser();
-
     void exportDatabase() throws IOException;
 
     List<FileInfo> getBackupList();

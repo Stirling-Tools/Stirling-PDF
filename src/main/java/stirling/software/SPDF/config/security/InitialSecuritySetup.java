@@ -16,8 +16,6 @@ import stirling.software.SPDF.model.Role;
 @Component
 public class InitialSecuritySetup {
 
-    public static final String POSTGRES_ENV = "postgres";
-
     @Autowired private UserService userService;
 
     @Autowired private ApplicationProperties applicationProperties;
@@ -26,11 +24,6 @@ public class InitialSecuritySetup {
 
     @PostConstruct
     public void init() {
-        if (applicationProperties.getSystem().getSpringProfilesActive().equals(POSTGRES_ENV)) {
-            log.debug("Postgres configuration settings detected. Creating admin user");
-            databaseService.setAdminUser();
-        }
-
         try {
             if (!userService.hasUsers()) {
                 initializeAdminUser();
