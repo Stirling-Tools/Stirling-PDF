@@ -28,16 +28,16 @@ public class InitialSetup {
     @PostConstruct
     public void init() throws IOException {
         initUUIDKey();
-        
+
         initSecretKey();
-        
+
         initEnableCSRFSecurity();
-        
+
         initLegalUrls();
-        
+
         initSetAppVersion();
     }
-    
+
     public void initUUIDKey() throws IOException {
         String uuid = applicationProperties.getAutomaticallyGenerated().getUUID();
         if (!GeneralUtils.isValidUUID(uuid)) {
@@ -57,17 +57,17 @@ public class InitialSetup {
     }
 
     public void initEnableCSRFSecurity() throws IOException {
-    	if(GeneralUtils.isVersionHigher("0.36.0", applicationProperties.getAutomaticallyGenerated().getAppVersion())) {
-	        Boolean csrf = applicationProperties.getSecurity().getCsrfDisabled();
-			if (!csrf) {
-	            GeneralUtils.saveKeyToConfig("security.csrfDisabled", false, false);
-	            GeneralUtils.saveKeyToConfig("system.enableAnalytics", "true", false);
-	            applicationProperties.getSecurity().setCsrfDisabled(false);
-	            
-	        }
-    	}
+        if (GeneralUtils.isVersionHigher(
+                "0.36.0", applicationProperties.getAutomaticallyGenerated().getAppVersion())) {
+            Boolean csrf = applicationProperties.getSecurity().getCsrfDisabled();
+            if (!csrf) {
+                GeneralUtils.saveKeyToConfig("security.csrfDisabled", false, false);
+                GeneralUtils.saveKeyToConfig("system.enableAnalytics", "true", false);
+                applicationProperties.getSecurity().setCsrfDisabled(false);
+            }
+        }
     }
-    
+
     public void initLegalUrls() throws IOException {
         // Initialize Terms and Conditions
         String termsUrl = applicationProperties.getLegal().getTermsAndConditions();
@@ -85,20 +85,19 @@ public class InitialSetup {
             applicationProperties.getLegal().setPrivacyPolicy(defaultPrivacyUrl);
         }
     }
-    
+
     public void initSetAppVersion() throws IOException {
-    	
-    	String appVersion = "0.0.0";
-    	Resource resource = new ClassPathResource("version.properties");
+
+        String appVersion = "0.0.0";
+        Resource resource = new ClassPathResource("version.properties");
         Properties props = new Properties();
         try {
             props.load(resource.getInputStream());
-            appVersion =props.getProperty("version");
-        } catch(Exception e) {
-        	
+            appVersion = props.getProperty("version");
+        } catch (Exception e) {
+
         }
         applicationProperties.getAutomaticallyGenerated().setAppVersion(appVersion);
-        GeneralUtils.saveKeyToConfig("AutomaticallyGenerated.appVersion", appVersion,false);
-    	}
-    
+        GeneralUtils.saveKeyToConfig("AutomaticallyGenerated.appVersion", appVersion, false);
+    }
 }
