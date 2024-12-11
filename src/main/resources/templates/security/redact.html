@@ -47,6 +47,10 @@
       <input type="text" class="form-control" id="pageNumbers" name="pageNumbers"
         th:placeholder="#{redact.pageRedactionNumbers.placeholder}">
     </div>
+    <div class="mb-3 w-25 m-auto d-flex align-items-center">
+      <label for="pageRedactColor">Page Redaction Color:</label>
+      <input id="pageRedactColor" name="pageRedactionColor" type="color" class="ms-3" value="#000000">
+    </div>
     <input type="hidden" name="redactions" id="redactions-input">
     <div class="mb-3 text-center">
       <button type="submit" id="submitBtn" class="btn btn-primary w-25" th:text="#{redact.submit}"></button>

@@ -66,7 +66,7 @@ public class RedactController {
         PDPageTree allPages = document.getDocumentCatalog().getPages();
 
         // TODO: make the redaction color customizable
-        Color redactColor = Color.BLACK;
+        Color redactColor = decodeOrDefault(request.getPageRedactionColor(), Color.BLACK);
         redactPages(request, document, allPages, redactColor);
         redactAreas(redactionAreas, document, allPages, redactColor);
 
@@ -129,6 +129,17 @@ public class RedactController {
             contentStream.fill();
             contentStream.close();
         }
+    }
+
+    private Color decodeOrDefault(String hex, Color defaultColor) {
+        Color color = null;
+        try {
+            color = Color.decode(hex);
+        } catch (Exception e) {
+            color = Color.BLACK;
+        }
+
+        return color;
     }
 
     private List<Integer> getPageNumbers(ManualRedactPdfRequest request, int pagesCount) {

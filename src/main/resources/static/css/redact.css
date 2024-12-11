@@ -167,3 +167,12 @@ html {
   color: var(--toggled-btn-color);
   outline:var(--toggled-hover-btn-outline) !important;
 }
+
+#pageRedactColor {
+  flex: 1;
+  padding: 1px;
+}
+
+#pageRedactColor:is(:hover, :focus-within) {
+  cursor: pointer;
+}

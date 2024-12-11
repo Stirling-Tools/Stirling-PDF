@@ -14,4 +14,6 @@ public class ManualRedactPdfRequest extends PDFWithPageNums {
 
     @Schema(description = "Convert the redacted PDF to an image", defaultValue = "false")
     private boolean convertPDFToImage;
+
+    private String pageRedactionColor;
 }
