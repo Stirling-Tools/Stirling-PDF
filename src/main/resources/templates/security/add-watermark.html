@@ -92,26 +92,48 @@
                   appendPercentageSymbol();
                 </script>
 
-                <div class="mb-3">
-                  <label for="rotation" th:text="#{watermark.selectText.4}"></label>
-                  <input type="text" id="rotation" name="rotation" class="form-control" value="45">
-                </div>
-                <div class="mb-3">
-                  <label for="widthSpacer" th:text="#{watermark.selectText.5}"></label>
-                  <input type="text" id="widthSpacer" name="widthSpacer" class="form-control" value="50">
-                </div>
-                <div class="mb-3">
-                  <label for="heightSpacer" th:text="#{watermark.selectText.6}"></label>
-                  <input type="text" id="heightSpacer" name="heightSpacer" class="form-control" value="50">
-                </div>
-                <div class="mb-3 form-check">
-                  <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage">
-                  <label for="convertPDFToImage" th:text="#{watermark.selectText.10}"></label>
-                </div>
-                <div class="mb-3 text-left">
-                  <input type="submit" id="submitBtn" th:value="#{watermark.submit}" class="btn btn-primary">
-                </div>
-              </form>
+                        <div class="mb-3">
+                            <label for="rotation" th:text="#{watermark.selectText.4}"></label>
+                            <input type="text" id="rotation" name="rotation" class="form-control" value="45">
+                        </div>
+                        <div class="mb-3">
+                            <label for="widthSpacer" th:text="#{watermark.selectText.5}"></label>
+                            <input type="text" id="widthSpacer" name="widthSpacer" class="form-control" value="50">
+                        </div>
+                        <div class="mb-3">
+                            <label for="heightSpacer" th:text="#{watermark.selectText.6}"></label>
+                            <input type="text" id="heightSpacer" name="heightSpacer" class="form-control" value="50">
+                        </div>
+                        <div class="mb-3">
+                            <label for="customColor" class="form-label" th:text="#{watermark.customColor}">Custom
+                                Color</label>
+                            <div class="form-control form-control-color" style="background-color: #d3d3d3;">
+                                <input type="color" id="customColor" name="customColor" value="#d3d3d3">
+                            </div>
+                            <script>
+                                let colorInput = document.getElementById("customColor");
+                                if (colorInput) {
+                                  let colorInputContainer = colorInput.parentElement;
+                                  if (colorInputContainer) {
+                                    colorInput.onchange = function() {
+                                      colorInputContainer.style.backgroundColor = colorInput.value;
+                                    }
+                                    colorInputContainer.style.backgroundColor = colorInput.value;
+                                  }
+                                }
+
+                            </script>
+                        </div>
+
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage">
+                            <label for="convertPDFToImage" th:text="#{watermark.selectText.10}"></label>
+                        </div>
+                        <div class="mb-3 text-left">
+                            <input type="submit" id="submitBtn" th:value="#{watermark.submit}" class="btn btn-primary">
+                        </div>
+                    </form>
 
               <script>
                 function toggleFileOption() {
