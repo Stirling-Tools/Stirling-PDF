@@ -92,20 +92,29 @@ public class ValidateSignatureController {
                     SignerInformationStore signerStore = signedData.getSignerInfos();
 
                     for (SignerInformation signer : signerStore.getSigners()) {
-                        X509CertificateHolder certHolder = (X509CertificateHolder) certStore.getMatches(signer.getSID()).iterator().next();
-                        X509Certificate cert = new JcaX509CertificateConverter().getCertificate(certHolder);
+                        X509CertificateHolder certHolder =
+                                (X509CertificateHolder)
+                                        certStore.getMatches(signer.getSID()).iterator().next();
+                        X509Certificate cert =
+                                new JcaX509CertificateConverter().getCertificate(certHolder);
 
-                        boolean isValid = signer.verify(new JcaSimpleSignerInfoVerifierBuilder().build(cert));
+                        boolean isValid =
+                                signer.verify(new JcaSimpleSignerInfoVerifierBuilder().build(cert));
                         result.setValid(isValid);
 
                         // Additional validations
-                        result.setChainValid(customCert != null 
-                            ? certValidationService.validateCertificateChainWithCustomCert(cert, customCert)
-                            : certValidationService.validateCertificateChain(cert));
+                        result.setChainValid(
+                                customCert != null
+                                        ? certValidationService
+                                                .validateCertificateChainWithCustomCert(
+                                                        cert, customCert)
+                                        : certValidationService.validateCertificateChain(cert));
 
-                        result.setTrustValid(customCert != null 
-                            ? certValidationService.validateTrustWithCustomCert(cert, customCert)
-                            : certValidationService.validateTrustStore(cert));
+                        result.setTrustValid(
+                                customCert != null
+                                        ? certValidationService.validateTrustWithCustomCert(
+                                                cert, customCert)
+                                        : certValidationService.validateTrustStore(cert));
 
                         result.setNotRevoked(!certValidationService.isRevoked(cert));
                         result.setNotExpired(!cert.getNotAfter().before(new Date()));
@@ -123,17 +132,18 @@ public class ValidateSignatureController {
                         result.setValidFrom(cert.getNotBefore().toString());
                         result.setValidUntil(cert.getNotAfter().toString());
                         result.setSignatureAlgorithm(cert.getSigAlgName());
-                        
+
                         // Get key size (if possible)
                         try {
-                            result.setKeySize(((RSAPublicKey) cert.getPublicKey()).getModulus().bitLength());
+                            result.setKeySize(
+                                    ((RSAPublicKey) cert.getPublicKey()).getModulus().bitLength());
                         } catch (Exception e) {
                             // If not RSA or error, set to 0
                             result.setKeySize(0);
                         }
 
                         result.setVersion(String.valueOf(cert.getVersion()));
-                        
+
                         // Set key usage
                         List<String> keyUsages = new ArrayList<>();
                         boolean[] keyUsageFlags = cert.getKeyUsage();
@@ -150,9 +160,11 @@ public class ValidateSignatureController {
                             }
                         }
                         result.setKeyUsages(keyUsages);
-                        
+
                         // Check if self-signed
-                        result.setSelfSigned(cert.getSubjectX500Principal().equals(cert.getIssuerX500Principal()));
+                        result.setSelfSigned(
+                                cert.getSubjectX500Principal()
+                                        .equals(cert.getIssuerX500Principal()));
                     }
                 } catch (Exception e) {
                     result.setValid(false);
