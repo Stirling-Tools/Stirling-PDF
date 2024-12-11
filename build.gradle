@@ -101,7 +101,15 @@ launch4j {
 
     errTitle="Encountered error, Do you have Java 21?"
     downloadUrl="https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
-    variables=["BROWSER_OPEN=true", "STIRLING_PDF_DESKTOP_UI=true"]
+    
+    if(System.getenv("STIRLING_PDF_DESKTOP_UI") == 'true') {
+    	variables=["BROWSER_OPEN=true", "STIRLING_PDF_DESKTOP_UI=true"]
+    } else {
+    	variables=["BROWSER_OPEN=true"]
+    }
+    
+    
+    
     jreMinVersion="17"
 
     mutexName="Stirling-PDF"
