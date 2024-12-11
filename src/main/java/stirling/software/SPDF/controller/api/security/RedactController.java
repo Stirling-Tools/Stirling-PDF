@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.security;
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -31,6 +32,7 @@ import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactionArea;
 import stirling.software.SPDF.pdf.TextFinder;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
+import stirling.software.SPDF.utils.GeneralUtils;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 import stirling.software.SPDF.utils.propertyeditor.StringToArrayListPropertyEditor;
@@ -65,6 +67,28 @@ public class RedactController {
 
         // TODO: make the redaction color customizable
         Color redactColor = Color.BLACK;
+        redactPages(request, document, allPages, redactColor);
+        redactAreas(redactionAreas, document, allPages, redactColor);
+
+        if (request.isConvertPDFToImage()) {
+            PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document);
+            document.close();
+            document = convertedPdf;
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        document.save(baos);
+        document.close();
+
+        byte[] pdfContent = baos.toByteArray();
+        return WebResponseUtils.bytesToWebResponse(
+                pdfContent,
+                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                        + "_redacted.pdf");
+    }
+
+    private void redactAreas(List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages,
+            Color redactColor) throws IOException {
         for (RedactionArea redactionArea : redactionAreas) {
             if (redactionArea.getPage() == null || redactionArea.getPage() <= 0
                     || redactionArea.getHeight() == null || redactionArea.getHeight() <= 0.0D
@@ -87,22 +111,32 @@ public class RedactController {
             contentStream.fill();
             contentStream.close();
         }
+    }
 
-        if (request.isConvertPDFToImage()) {
-            PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document);
-            document.close();
-            document = convertedPdf;
+    private void redactPages(ManualRedactPdfRequest request, PDDocument document, PDPageTree allPages,
+            Color redactColor) throws IOException {
+        List<Integer> pageNumbers = getPageNumbers(request, allPages.getCount());
+        for (Integer pageNumber : pageNumbers) {
+            PDPage page = allPages.get(pageNumber);
+
+            PDPageContentStream contentStream = new PDPageContentStream(
+                    document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+            contentStream.setNonStrokingColor(redactColor);
+
+            PDRectangle box = page.getBBox();
+
+            contentStream.addRect(0, 0, box.getWidth(), box.getHeight());
+            contentStream.fill();
+            contentStream.close();
         }
+    }
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        document.save(baos);
-        document.close();
-
-        byte[] pdfContent = baos.toByteArray();
-        return WebResponseUtils.bytesToWebResponse(
-                pdfContent,
-                Filenames.toSimpleFileName(file.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
-                        + "_redacted.pdf");
+    private List<Integer> getPageNumbers(ManualRedactPdfRequest request, int pagesCount) {
+        String pageNumbersInput = request.getPageNumbers();
+        String[] parsedPageNumbers = pageNumbersInput != null ? pageNumbersInput.split(",") : new String[0];
+        List<Integer> pageNumbers = GeneralUtils.parsePageList(parsedPageNumbers, pagesCount, false);
+        Collections.sort(pageNumbers);
+        return pageNumbers;
     }
 
     @PostMapping(value = "/auto-redact", consumes = "multipart/form-data")

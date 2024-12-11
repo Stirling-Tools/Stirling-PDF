@@ -18,6 +18,10 @@ public class StringToArrayListPropertyEditor extends PropertyEditorSupport {
 
     @Override
     public void setAsText(String text) throws IllegalArgumentException {
+        if (text == null || text.trim().isEmpty()) {
+            setValue(new ArrayList<>());
+            return;
+        }
         try {
             objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
             TypeReference<ArrayList<RedactionArea>> typeRef = new TypeReference<ArrayList<RedactionArea>>() {

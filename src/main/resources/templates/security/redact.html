@@ -42,6 +42,11 @@
       <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage" checked>
       <label for="convertPDFToImage" th:text="#{redact.convertPDFToImageLabel}"></label>
     </div>
+    <div class="mb-3 w-25 m-auto">
+      <label for="pageOrder" th:text="#{redact.pageRedactionNumbers.title} + ':'" class="mb-2"></label>
+      <input type="text" class="form-control" id="pageOrder" name="pageNumbers"
+        th:placeholder="#{redact.pageRedactionNumbers.placeholder}" required>
+    </div>
     <input type="hidden" name="redactions" id="redactions-input">
     <div class="mb-3 text-center">
       <button type="submit" id="submitBtn" class="btn btn-primary w-25" th:text="#{redact.submit}"></button>
