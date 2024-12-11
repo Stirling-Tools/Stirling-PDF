@@ -331,6 +331,12 @@ window.addEventListener("load", (e) => {
   };
 
   document.addEventListener("keydown", (e) => {
+    if (e.key === "Delete" && activeOverlay) {
+      activeOverlay
+        .querySelector(".delete-icon")
+        ?.dispatchEvent(new Event("click", { bubbles: true }));
+      return;
+    }
     const isRedactionShortcut =
       e.ctrlKey && (e.key == "s" || e.key == "S" || e.code == "KeyS");
     if (!isRedactionShortcut || redactionMode !== RedactionModes.TEXT) return;
