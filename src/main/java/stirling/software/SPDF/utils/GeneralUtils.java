@@ -121,10 +121,15 @@ public class GeneralUtils {
             InetAddress address = InetAddress.getByName(host);
 
             // Check for local addresses
-            return address.isAnyLocalAddress() ||  // Matches 0.0.0.0 or similar
-                   address.isLoopbackAddress() || // Matches 127.0.0.1 or ::1
-                   address.isSiteLocalAddress() || // Matches private IPv4 ranges: 192.168.x.x, 10.x.x.x, 172.16.x.x to 172.31.x.x
-                   address.getHostAddress().startsWith("fe80:"); // Matches link-local IPv6 addresses
+            return address.isAnyLocalAddress()
+                    || // Matches 0.0.0.0 or similar
+                    address.isLoopbackAddress()
+                    || // Matches 127.0.0.1 or ::1
+                    address.isSiteLocalAddress()
+                    || // Matches private IPv4 ranges: 192.168.x.x, 10.x.x.x, 172.16.x.x to
+                    // 172.31.x.x
+                    address.getHostAddress()
+                            .startsWith("fe80:"); // Matches link-local IPv6 addresses
         } catch (Exception e) {
             return false; // Return false for invalid or unresolved addresses
         }

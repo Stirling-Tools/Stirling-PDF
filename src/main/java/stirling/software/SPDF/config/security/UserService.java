@@ -409,14 +409,14 @@ public class UserService implements UserServiceInterface {
             user.setApiKey(customApiKey);
             user.addAuthority(new Authority(Role.INTERNAL_API_USER.getRoleId(), user));
             userRepository.save(user);
-            databaseBackupHelper.exportDatabase();
+            databaseService.exportDatabase();
         } else {
             // Update API key if it has changed
             User user = existingUser.get();
             if (!customApiKey.equals(user.getApiKey())) {
                 user.setApiKey(customApiKey);
                 userRepository.save(user);
-                databaseBackupHelper.exportDatabase();
+                databaseService.exportDatabase();
             }
         }
     }

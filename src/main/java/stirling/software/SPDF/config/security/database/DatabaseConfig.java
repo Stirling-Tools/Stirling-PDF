@@ -27,7 +27,8 @@ public class DatabaseConfig {
                 applicationProperties.getSystem().getDatasource();
 
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
-        dataSourceBuilder.driverClassName(getDriverClassName(datasource.getDriver()));
+        dataSourceBuilder.driverClassName("org.postgresql.Driver");
+        // todo: revert back to -> dataSourceBuilder.driverClassName(getDriverClassName(datasource.getDriver()));
         dataSourceBuilder.url(datasource.getUrl());
         dataSourceBuilder.username(datasource.getUsername());
         dataSourceBuilder.password(datasource.getPassword());
