@@ -73,6 +73,7 @@ public class ApplicationProperties {
         private int loginAttemptCount;
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
+        private String customGlobalAPIKey;
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -285,6 +286,7 @@ public class ApplicationProperties {
     public static class AutomaticallyGenerated {
         @ToString.Exclude private String key;
         private String UUID;
+        private String appVersion;
     }
 
     @Data

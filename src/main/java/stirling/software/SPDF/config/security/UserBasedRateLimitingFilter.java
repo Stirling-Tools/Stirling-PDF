@@ -59,7 +59,7 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
         String identifier = null;
 
         // Check for API key in the request headers
-        String apiKey = request.getHeader("X-API-Key");
+        String apiKey = request.getHeader("X-API-KEY");
         if (apiKey != null && !apiKey.trim().isEmpty()) {
             identifier =
                     "API_KEY_" + apiKey; // Prefix to distinguish between API keys and usernames
@@ -79,7 +79,7 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
         Role userRole =
                 getRoleFromAuthentication(SecurityContextHolder.getContext().getAuthentication());
 
-        if (request.getHeader("X-API-Key") != null) {
+        if (request.getHeader("X-API-KEY") != null) {
             // It's an API call
             processRequest(
                     userRole.getApiCallsPerDay(),
