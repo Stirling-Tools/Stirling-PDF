@@ -57,6 +57,7 @@ public class RedactController {
     }
 
     @PostMapping(value = "/redact", consumes = "multipart/form-data")
+    @Operation(summary = "Redacts areas and pages in a PDF document", description = "This operation takes an input PDF file with a list of areas, page number(s)/range(s)/function(s) to redact. Input:PDF, Output:PDF, Type:SISO")
     public ResponseEntity<byte[]> redactPDF(@ModelAttribute ManualRedactPdfRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
         List<RedactionArea> redactionAreas = request.getRedactions();
