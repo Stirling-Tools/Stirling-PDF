@@ -75,10 +75,14 @@ public class SPdfApplication {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
-        System.setProperty("java.awt.headless", "false");
+        
 
         SpringApplication app = new SpringApplication(SPdfApplication.class);
-        app.setHeadless(false);
+        
+        if("true".equals(System.getenv("STIRLING_PDF_DESKTOP_UI"))) {
+	        System.setProperty("java.awt.headless", "false");
+	        app.setHeadless(false);
+        }
         app.setAdditionalProfiles("default");
         app.addInitializers(new ConfigInitializer());
         Map<String, String> propertyFiles = new HashMap<>();
