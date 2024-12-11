@@ -161,3 +161,4 @@ out/
 .pytest_cache
 .ipynb_checkpoints
 
+**/jcef-bundle/
