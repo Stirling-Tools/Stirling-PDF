@@ -19,8 +19,8 @@
 }
 
 .selected-wrapper:hover:not(:has(svg:hover)) {
-  outline-color: var(--palette-color, black);
-  background-color: var(--palette-color, black);
+  outline-color: var(--palette-color, #000000);
+  background-color: var(--palette-color, #000000);
   z-index: 10;
   transition: background-color 0.065s linear;
 
