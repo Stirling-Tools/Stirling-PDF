@@ -106,8 +106,8 @@ public class GeneralUtils {
             // Check if the URL is reachable
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("HEAD");
-            connection.setConnectTimeout(5000); // Set connection timeout
-            connection.setReadTimeout(5000);    // Set read timeout
+            // connection.setConnectTimeout(5000); // Set connection timeout
+            // connection.setReadTimeout(5000);    // Set read timeout
             int responseCode = connection.getResponseCode();
             return (200 <= responseCode && responseCode <= 399);
         } catch (Exception e) {
