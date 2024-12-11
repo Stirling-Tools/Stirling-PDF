@@ -90,7 +90,6 @@ public class LoadingWindow extends JDialog {
                     try {
                         progressBar.setValue(Math.min(Math.max(progress, 0), 100));
                         progressBar.setString(progress + "%");
-                        log.info(progress + "%");
                         mainPanel.revalidate();
                         mainPanel.repaint();
                     } catch (Exception e) {
