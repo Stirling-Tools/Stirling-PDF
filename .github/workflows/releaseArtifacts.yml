@@ -42,7 +42,6 @@ jobs:
         run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
 
       - name: Rename binarie
-        if: matrix.file_suffix != ''
         run: cp ./build/launch4j/Stirling-PDF.exe ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
 
       - name: Upload Assets binarie
@@ -100,9 +99,6 @@ jobs:
       - name: Get version number
         id: versionNumber
         run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
-
-      - name: Rename binarie
-        run: cp ./build/launch4j/Stirling-PDF.exe ./build/launch4j/Stirling-PDF.exe
 
       - name: Upload Assets binarie
         uses: actions/upload-artifact@v4
