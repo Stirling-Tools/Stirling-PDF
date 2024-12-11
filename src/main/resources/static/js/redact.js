@@ -44,6 +44,24 @@ window.addEventListener("load", (e) => {
   let redactionsPalette = document.getElementById("redactions-palette");
   let redactionsPaletteInput = redactionsPalette.querySelector("input");
 
+  let applyRedactionBtn = document.getElementById("apply-redaction");
+
+  viewer.onmouseup = (e) => {
+    if (redactionMode !== RedactionModes.TEXT) return;
+    const containsText =
+      window.getSelection() && window.getSelection().toString() != "";
+    applyRedactionBtn.disabled = !containsText;
+  };
+
+  applyRedactionBtn.onclick = (e) => {
+    if (redactionMode !== RedactionModes.TEXT) {
+      applyRedactionBtn.disabled = true;
+      return;
+    }
+    redactTextSelection();
+    applyRedactionBtn.disabled = true;
+  };
+
   redactionsPaletteInput.onchange = (e) => {
     let color = e.target.value;
     redactionsPalette.style.setProperty("--palette-color", color);
@@ -109,6 +127,9 @@ window.addEventListener("load", (e) => {
         resetDrawRedactions();
         textSelectionRedactionBtn.classList.add("toggled");
         redactionMode = RedactionModes.TEXT;
+        const containsText =
+          window.getSelection() && window.getSelection().toString() != "";
+        applyRedactionBtn.disabled = !containsText;
       }
     }
 
@@ -353,6 +374,10 @@ window.addEventListener("load", (e) => {
       e.ctrlKey && (e.key == "s" || e.key == "S" || e.code == "KeyS");
     if (!isRedactionShortcut || redactionMode !== RedactionModes.TEXT) return;
 
+    redactTextSelection();
+  });
+
+  function redactTextSelection() {
     let selection = window.getSelection();
     if (!selection || selection.rangeCount <= 0) return;
     let range = selection.getRangeAt(0);
@@ -413,7 +438,7 @@ window.addEventListener("load", (e) => {
     }
 
     _setRedactionsInput(redactions);
-  });
+  }
 
   function _scaleToDisplay(value) {
     return value / zoomScaleValue;

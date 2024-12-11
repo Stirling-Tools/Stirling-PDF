@@ -168,6 +168,29 @@ html {
   outline:var(--toggled-hover-btn-outline) !important;
 }
 
+#apply-redaction {
+  height: 28px;
+  width: 28px;
+  border: none;
+
+  background-color: var(--toolbar-bg-color);
+  color: rgb(223 226 235);
+}
+
+#apply-redaction[disabled=true], #apply-redaction:disabled:not([disabled=false]) {
+  color: rgb(147, 149, 153);
+}
+
+#apply-redaction:is(:hover):not([disabled=true], :disabled:not([disabled=false])) {
+  cursor: pointer;
+  background-color: var(--button-hover-color);
+}
+
+#apply-redaction > span {
+  user-select: none;
+  pointer-events: none;
+}
+
 #pageRedactColor {
   flex: 1;
   padding: 1px;
