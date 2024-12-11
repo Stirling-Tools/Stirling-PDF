@@ -88,6 +88,12 @@ public class RedactController {
             contentStream.close();
         }
 
+        if (request.isConvertPDFToImage()) {
+            PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document);
+            document.close();
+            document = convertedPdf;
+        }
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         document.save(baos);
         document.close();
