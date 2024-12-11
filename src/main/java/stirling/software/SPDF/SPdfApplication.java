@@ -79,10 +79,15 @@ public class SPdfApplication {
 
         SpringApplication app = new SpringApplication(SPdfApplication.class);
         
+        Properties props = new Properties();
+        
         if("true".equals(System.getenv("STIRLING_PDF_DESKTOP_UI"))) {
 	        System.setProperty("java.awt.headless", "false");
 	        app.setHeadless(false);
+	        props.put("java.awt.headless", "false");
+	        props.put("spring.main.web-application-type", "servlet");
         }
+        
         app.setAdditionalProfiles("default");
         app.addInitializers(new ConfigInitializer());
         Map<String, String> propertyFiles = new HashMap<>();
@@ -106,18 +111,12 @@ public class SPdfApplication {
         } else {
             logger.warn("Custom configuration file 'configs/custom_settings.yml' does not exist.");
         }
-
-        if (!propertyFiles.isEmpty()) {
-            app.setDefaultProperties(
-                    Collections.singletonMap(
-                            "spring.config.additional-location",
-                            propertyFiles.get("spring.config.additional-location")));
-        }
-
-        Properties props = new Properties();
-        props.put("java.awt.headless", "false");
-        props.put("spring.main.web-application-type", "servlet");
-        app.setDefaultProperties(props);
+        Properties finalProps = new Properties();
+        finalProps.putAll(Collections.singletonMap(
+                "spring.config.additional-location",
+                propertyFiles.get("spring.config.additional-location")));
+        finalProps.putAll(props);
+        app.setDefaultProperties(finalProps);
 
         app.run(args);
 
