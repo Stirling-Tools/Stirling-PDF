@@ -215,7 +215,7 @@
               <div
                 th:replace="~{fragments/card :: card(id='cert-sign', cardTitle=#{home.certSign.title}, cardText=#{home.certSign.desc}, cardLink='cert-sign', toolIcon='workspace_premium', tags=#{certSign.tags}, toolGroup='security')}">
               </div>
-			  <div 
+        <div
 			    th:replace="~{fragments/card :: card(id='validate-signature', cardTitle=#{home.validateSignature.title}, cardText=#{home.validateSignature.desc}, cardLink='validate-signature', toolIcon='verified', tags=#{validateSignature.tags}, toolGroup='security')}">
 			  </div>
               <div
@@ -226,6 +226,9 @@
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='auto-redact', cardTitle=#{home.autoRedact.title}, cardText=#{home.autoRedact.desc}, cardLink='auto-redact', toolIcon='ink_eraser', tags=#{autoRedact.tags}, toolGroup='security')}">
+              </div>
+              <div
+                th:replace="~{fragments/card :: card(id='redact', cardTitle=#{home.redact.title}, cardText=#{home.redact.desc}, cardLink='redact', toolIcon='ink_eraser', tags=#{redact.tags}, toolGroup='security')}">
               </div>
               <div
                 th:replace="~{fragments/card :: card(id='stamp', cardTitle=#{home.AddStampRequest.title}, cardText=#{home.AddStampRequest.desc}, cardLink='stamp', toolIcon='approval', tags=#{AddStampRequest.tags}, toolGroup='security')}">
