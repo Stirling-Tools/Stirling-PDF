@@ -14,6 +14,7 @@
       th:href="@{'/css/pipeline.css'}"
       th:if="${currentPage == 'pipeline'}"
     />
+    <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
     <script th:inline="javascript">
       const saveSettings = /*[[#{pipelineOptions.saveSettings}]]*/ "";
       const deletePipelineText = /*[[#{pipeline.deletePrompt}]]*/ "Are you sure you want to delete pipeline";
