@@ -456,17 +456,22 @@
                     400%</option>
                 </select>
               </span>
-              <div class="splitToolbarButtonSeparator"></div>
-              <button id="man-text-select-redact" title="Text-based selection redaction" tabindex="22">
-                <span id="text-selection" class="material-symbols-rounded user-select-none pe-none">text_select_start
-                  <span id="text-selection-eraser" class="material-symbols-rounded user-select-none pe-none">ink_eraser</span>
-                </span>
-              </button>
-              <button id="man-shape-redact" title="Shape drawing redaction" tabindex="22">
-                <span id="shape-selection" class="material-symbols-rounded user-select-none pe-none">square
-                  <span id="shape-selection-eraser" class="material-symbols-rounded user-select-none pe-none">ink_eraser</span>
-                </span>
-              </button>
+              <div class="splitToolbarButton">
+                <button id="man-text-select-redact" title="Text-based selection redaction" tabindex="22">
+                  <span id="text-selection" class="material-symbols-rounded user-select-none pe-none">text_select_start
+                    <span id="text-selection-eraser" class="material-symbols-rounded user-select-none pe-none">ink_eraser</span>
+                    </span>
+                    </button>
+                    <button id="man-shape-redact" title="Shape drawing redaction" tabindex="22">
+                      <span id="shape-selection" class="material-symbols-rounded user-select-none pe-none">square
+                    <span id="shape-selection-eraser" class="material-symbols-rounded user-select-none pe-none">ink_eraser</span>
+                    </span>
+                    </button>
+                <label id="redactions-palette" class="material-symbols-rounded palette-color" style="--palette-color: #f06d06;">
+                  palette
+                  <input type="color" name="color-picker" class="d-none">
+                </label>
+                </div>
             </div>
           </div>
           <div id="loadingBar">

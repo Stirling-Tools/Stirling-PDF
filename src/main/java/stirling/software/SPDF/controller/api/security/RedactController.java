@@ -65,10 +65,8 @@ public class RedactController {
 
         PDPageTree allPages = document.getDocumentCatalog().getPages();
 
-        // TODO: make the redaction color customizable
-        Color redactColor = decodeOrDefault(request.getPageRedactionColor(), Color.BLACK);
-        redactPages(request, document, allPages, redactColor);
-        redactAreas(redactionAreas, document, allPages, redactColor);
+        redactPages(request, document, allPages);
+        redactAreas(redactionAreas, document, allPages);
 
         if (request.isConvertPDFToImage()) {
             PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document);
@@ -87,8 +85,9 @@ public class RedactController {
                         + "_redacted.pdf");
     }
 
-    private void redactAreas(List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages,
-            Color redactColor) throws IOException {
+    private void redactAreas(List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages)
+            throws IOException {
+        Color redactColor = null;
         for (RedactionArea redactionArea : redactionAreas) {
             if (redactionArea.getPage() == null || redactionArea.getPage() <= 0
                     || redactionArea.getHeight() == null || redactionArea.getHeight() <= 0.0D
@@ -98,6 +97,7 @@ public class RedactController {
 
             PDPageContentStream contentStream = new PDPageContentStream(
                     document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+            redactColor = decodeOrDefault(redactionArea.getColor(), Color.BLACK);
             contentStream.setNonStrokingColor(redactColor);
 
             float x = redactionArea.getX().floatValue();
@@ -113,8 +113,9 @@ public class RedactController {
         }
     }
 
-    private void redactPages(ManualRedactPdfRequest request, PDDocument document, PDPageTree allPages,
-            Color redactColor) throws IOException {
+    private void redactPages(ManualRedactPdfRequest request, PDDocument document, PDPageTree allPages)
+            throws IOException {
+        Color redactColor = decodeOrDefault(request.getPageRedactionColor(), Color.BLACK);
         List<Integer> pageNumbers = getPageNumbers(request, allPages.getCount());
         for (Integer pageNumber : pageNumbers) {
             PDPage page = allPages.get(pageNumber);

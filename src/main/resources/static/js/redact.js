@@ -41,6 +41,14 @@ window.addEventListener("load", (e) => {
 
   let redactionsInput = document.getElementById("redactions-input");
 
+  let redactionsPalette = document.getElementById("redactions-palette");
+  let redactionsPaletteInput = redactionsPalette.querySelector("input");
+
+  redactionsPaletteInput.onchange = (e) => {
+    let color = e.target.value;
+    redactionsPalette.style.setProperty("--palette-color", color);
+  };
+
   document.addEventListener("file-input-change", (e) => {
     let fileChooser = document.getElementsByClassName("custom-file-chooser")[0];
     let fileChooserInput = fileChooser.querySelector(
@@ -281,12 +289,16 @@ window.addEventListener("load", (e) => {
         element.style.top = _toCalcZoomPx(_scaleToDisplay(top));
 
         let scaleFactor = _getScaleFactor();
+        let color = redactionsPalette.style.getPropertyValue("--palette-color");
+
+        element.style.setProperty("--palette-color", color);
 
         drawnRedaction = {
           left: _scaleToPDF(left, scaleFactor),
           top: _scaleToPDF(top, scaleFactor),
           width: 0.0,
           height: 0.0,
+          color: color,
           pageNumber: parseInt(canvas.getAttribute("data-page")),
           element: element,
           id: UUID.uuidv4(),
@@ -356,6 +368,9 @@ window.addEventListener("load", (e) => {
 
     let rects = range.getClientRects();
     let scaleFactor = _getScaleFactor();
+
+    let color = redactionsPalette.style.getPropertyValue("--palette-color");
+
     for (const rect of rects) {
       if (!rect || !rect.width || !rect.height) continue;
       let redactionElement = document.createElement("div");
@@ -378,6 +393,7 @@ window.addEventListener("load", (e) => {
         width: _scaleToPDF(rect.width, scaleFactor),
         height: _scaleToPDF(rect.height, scaleFactor),
         pageNumber: parseInt(pageNumber),
+        color: color,
         element: redactionElement,
         id: UUID.uuidv4(),
       };
@@ -389,6 +405,7 @@ window.addEventListener("load", (e) => {
 
       redactionElement.style.width = _toCalcZoomPx(width);
       redactionElement.style.height = _toCalcZoomPx(height);
+      redactionElement.style.setProperty("--palette-color", color);
 
       redactionsArea.appendChild(redactionElement);
 
@@ -419,6 +436,7 @@ window.addEventListener("load", (e) => {
         y: red.top,
         width: red.width,
         height: red.height,
+        color: red.color,
         page: red.pageNumber,
       }))
     );
@@ -438,7 +456,33 @@ window.addEventListener("load", (e) => {
       _setRedactionsInput(redactions);
       activeOverlay = null;
     };
+
+    let colorPaletteLabel = $(
+      `<label class="material-symbols-rounded palette-color">
+         palette
+       </label>`
+    )[0];
+
+    let colorPaletteInput = $(`
+         <input type="color" name="color-picker" class="d-none">
+      `)[0];
+
+    colorPaletteLabel.appendChild(colorPaletteInput);
+
+    colorPaletteInput.onchange = (e) => {
+      console.log("e: ", e);
+      let color = e.target.value;
+      redactionElement.style.setProperty("--palette-color", color);
+      let redactionIdx = redactions.findIndex(
+        (red) => redactionInfo.id === red.id
+      );
+      if (redactionIdx < 0) return;
+      redactions[redactionIdx].color = color;
+      _setRedactionsInput(redactions);
+    };
+
     redactionOverlay.appendChild(deleteBtn);
+    redactionOverlay.appendChild(colorPaletteLabel);
 
     redactionOverlay.classList.add("redaction-overlay");
     redactionOverlay.style.display = "none";

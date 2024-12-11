@@ -11,4 +11,5 @@ public class RedactionArea {
     private Double width;
 
     private Integer page;
+    private String color;
 }

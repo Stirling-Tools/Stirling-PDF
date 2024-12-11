@@ -19,8 +19,8 @@
 }
 
 .selected-wrapper:hover:not(:has(svg:hover)) {
-  outline-color: black;
-  background-color: black;
+  outline-color: var(--palette-color, black);
+  background-color: var(--palette-color, black);
   z-index: 10;
   transition: background-color 0.065s linear;
 
@@ -175,4 +175,13 @@ html {
 
 #pageRedactColor:is(:hover, :focus-within) {
   cursor: pointer;
+}
+
+.palette-color {
+  border-bottom: 3px solid var(--palette-color);
+}
+
+.palette-color:is(:hover, :focus-within) {
+  cursor: pointer;
+  background-color: var(--button-hover-color);
 }
