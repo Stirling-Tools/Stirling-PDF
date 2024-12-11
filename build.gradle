@@ -32,6 +32,9 @@ version = "0.36.0"
 java {
     // 17 is lowest but we support and recommend 21
     sourceCompatibility = JavaVersion.VERSION_17
+     toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 repositories {
@@ -41,6 +44,10 @@ repositories {
     maven {
         url 'https://build.shibboleth.net/maven/releases'
     }
+    maven { url "https://build.shibboleth.net/maven/releases" }
+    // Add Maven repository for JCEF
+    maven { url "https://maven.pkg.github.com/jcefmaven/jcefmaven" }
+    
 }
 
 licenseReport {
@@ -64,6 +71,12 @@ sourceSets {
                 exclude "stirling/software/SPDF/model/User.java"
                 exclude "stirling/software/SPDF/repository/**"
             }
+            
+            if (System.getenv("STIRLING_PDF_DESKTOP_UI") == "false") {
+            	exclude "stirling/software/SPDF/UI/impl/**"
+            }
+            
+            
         }
     }
 }
@@ -78,12 +91,16 @@ launch4j {
     icon = "${projectDir}/src/main/resources/static/favicon.ico"
 
     outfile="Stirling-PDF.exe"
-    headerType="console"
+    if(System.getenv("STIRLING_PDF_DESKTOP_UI") == 'true') {
+    	headerType = "gui"
+    } else {
+    	headerType = "console"
+    }
     jarTask = tasks.bootJar
 
     errTitle="Encountered error, Do you have Java 21?"
     downloadUrl="https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
-    variables=["BROWSER_OPEN=true"]
+    variables=["BROWSER_OPEN=true", "STIRLING_PDF_DESKTOP_UI=true"]
     jreMinVersion="17"
 
     mutexName="Stirling-PDF"
@@ -123,6 +140,13 @@ configurations.all {
     exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
 }
 dependencies {
+
+	if (System.getenv("STIRLING_PDF_DESKTOP_UI") != "false") {
+		implementation "me.friwi:jcefmaven:127.3.1"
+	    implementation "org.openjfx:javafx-controls:21"
+	    implementation "org.openjfx:javafx-swing:21"
+    }
+    
     //security updates
     implementation "org.springframework:spring-webmvc:6.2.0"
 
