@@ -45,7 +45,7 @@
     <div class="mb-3 w-25 m-auto">
       <label for="pageOrder" th:text="#{redact.pageRedactionNumbers.title} + ':'" class="mb-2"></label>
       <input type="text" class="form-control" id="pageOrder" name="pageNumbers"
-        th:placeholder="#{redact.pageRedactionNumbers.placeholder}" required>
+        th:placeholder="#{redact.pageRedactionNumbers.placeholder}">
     </div>
     <input type="hidden" name="redactions" id="redactions-input">
     <div class="mb-3 text-center">
@@ -420,17 +420,6 @@
                   data-l10n-id="pdfjs-zoom-in-button">
                   <span data-l10n-id="pdfjs-zoom-in-button-label">Zoom In</span>
                 </button>
-                <div class="splitToolbarButtonSeparator"></div>
-                <button id="man-text-select-redact" title="Text-based selection redaction" tabindex="22">
-                  <span id="text-selection" class="material-symbols-rounded user-select-none pe-none">text_select_start
-                    <span id="text-selection-eraser" class="material-symbols-rounded user-select-none pe-none">ink_eraser</span>
-                    </span>
-                    </button>
-                    <button id="man-shape-redact" title="Shape drawing redaction" tabindex="22">
-                      <span id="shape-selection" class="material-symbols-rounded user-select-none pe-none">square
-                    <span id="shape-selection-eraser" class="material-symbols-rounded user-select-none pe-none">ink_eraser</span>
-                    </span>
-                    </button>
               </div>
               <span id="scaleSelectContainer" class="dropdownToolbarButton">
                 <select id="scaleSelect" title="Zoom" tabindex="23" data-l10n-id="pdfjs-zoom-select">
@@ -463,6 +452,17 @@
                     400%</option>
                 </select>
               </span>
+              <div class="splitToolbarButtonSeparator"></div>
+              <button id="man-text-select-redact" title="Text-based selection redaction" tabindex="22">
+                <span id="text-selection" class="material-symbols-rounded user-select-none pe-none">text_select_start
+                  <span id="text-selection-eraser" class="material-symbols-rounded user-select-none pe-none">ink_eraser</span>
+                </span>
+              </button>
+              <button id="man-shape-redact" title="Shape drawing redaction" tabindex="22">
+                <span id="shape-selection" class="material-symbols-rounded user-select-none pe-none">square
+                  <span id="shape-selection-eraser" class="material-symbols-rounded user-select-none pe-none">ink_eraser</span>
+                </span>
+              </button>
             </div>
           </div>
           <div id="loadingBar">
