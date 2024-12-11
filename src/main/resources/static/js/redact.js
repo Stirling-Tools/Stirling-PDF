@@ -174,6 +174,11 @@ window.addEventListener("load", (e) => {
         _clearDrawing();
       });
 
+      window.addEventListener("cancel-drawing", (e) => {
+        _clearDrawing();
+        canvas.style.cursor = "default";
+      });
+
       function setMousePosition(e) {
         let ev = e || window.event; //Moz || IE
         if (ev.pageX) {
@@ -182,6 +187,14 @@ window.addEventListener("load", (e) => {
           mouse.y = e.layerY;
         }
       }
+
+      window.onkeydown = (e) => {
+        if (e.key === "Escape" && redactionMode === RedactionModes.DRAWING) {
+          window.dispatchEvent(
+            new CustomEvent("cancel-drawing", { bubbles: true })
+          );
+        }
+      };
 
       canvas.onpointerenter = (e) => {
         window.dispatchEvent(
