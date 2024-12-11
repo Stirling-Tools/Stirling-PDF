@@ -137,7 +137,7 @@ public class RedactController {
         try {
             color = Color.decode(hex);
         } catch (Exception e) {
-            color = Color.BLACK;
+            color = defaultColor;
         }
 
         return color;
