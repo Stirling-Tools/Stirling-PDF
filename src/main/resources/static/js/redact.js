@@ -470,7 +470,6 @@ window.addEventListener("load", (e) => {
     colorPaletteLabel.appendChild(colorPaletteInput);
 
     colorPaletteInput.onchange = (e) => {
-      console.log("e: ", e);
       let color = e.target.value;
       redactionElement.style.setProperty("--palette-color", color);
       let redactionIdx = redactions.findIndex(

@@ -27,9 +27,6 @@ public class StringToArrayListPropertyEditor extends PropertyEditorSupport {
             TypeReference<ArrayList<RedactionArea>> typeRef = new TypeReference<ArrayList<RedactionArea>>() {
             };
             List<RedactionArea> list = objectMapper.readValue(text, typeRef);
-            for (RedactionArea r : list) {
-                log.info("R: {}", objectMapper.writeValueAsString(r));
-            }
             setValue(list);
         } catch (Exception e) {
             log.error("Exception while converting {}", e);
