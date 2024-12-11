@@ -91,6 +91,7 @@ launch4j {
     icon = "${projectDir}/src/main/resources/static/favicon.ico"
 
     outfile="Stirling-PDF.exe"
+    
     if(System.getenv("STIRLING_PDF_DESKTOP_UI") == 'true') {
     	headerType = "gui"
     } else {
