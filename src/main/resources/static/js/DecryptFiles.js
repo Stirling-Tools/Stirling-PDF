@@ -1,6 +1,20 @@
 export class DecryptFile {
   async decryptFile(file, requiresPassword) {
     try {
+      async function getCsrfToken() {
+        const cookieValue = document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('XSRF-TOKEN='))
+          ?.split('=')[1];
+
+        if (cookieValue) {
+          return cookieValue;
+        }
+
+        const csrfElement = document.querySelector('input[name="_csrf"]');
+        return csrfElement ? csrfElement.value : null;
+      }
+      const csrfToken = await getCsrfToken();
       const formData = new FormData();
       formData.append('fileInput', file);
       if (requiresPassword) {
@@ -29,6 +43,7 @@ export class DecryptFile {
       const response = await fetch('/api/v1/security/remove-password', {
         method: 'POST',
         body: formData,
+        headers: csrfToken ? {'X-XSRF-TOKEN': csrfToken} : undefined,
       });
 
       if (response.ok) {
