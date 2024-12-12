@@ -165,8 +165,8 @@ jpackage {
         type = "deb" // Can also use "rpm" for Red Hat-based systems
         
         // Debian package configuration
-        linuxPackageName = "stirling-pdf"
-        linuxDebMaintainer = "support@stirling-software.com"
+        linuxPackageName = "stirlingpdf"
+        linuxDebMaintainer = "support@stirlingpdf.com"
         linuxMenuGroup = "Office;PDF;Productivity"
         linuxAppCategory = "Office"
         linuxAppRelease = "1"
