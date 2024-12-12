@@ -88,13 +88,20 @@ openApi {
     outputFileName = "SwaggerDoc.json"
 }
 
+def getMacVersion(String version) {
+    def currentYear = java.time.Year.now().getValue()
+    // Extract everything after the first dot (or the whole string if no dot)
+    def versionParts = version.split("\\.", 2)
+    return "${currentYear}.${versionParts.length > 1 ? versionParts[1] : versionParts[0]}"
+}
+
 jpackage {
     // Input directory containing the jar
     input = "build/libs"
 
     // Application details
     appName = "Stirling-PDF"
-    appVersion = "0.36.3"
+    appVersion = project.version
     vendor = "Stirling-Software"
 
     // Main application configuration
@@ -132,6 +139,7 @@ jpackage {
 
     // macOS-specific configuration
     mac {
+    	appVersion = getMacVersion(project.version.toString())
         icon = "src/main/resources/static/favicon.icns"
         type = "dmg"
         macPackageIdentifier = "com.stirling.software.pdf"
