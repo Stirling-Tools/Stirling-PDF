@@ -61,7 +61,7 @@ jobs:
 
       # Build installer
       - name: Build Installer
-        run: ./gradlew jpackage
+        run: ./gradlew build jpackage
 
       # Rename and collect artifacts based on OS
       - name: Prepare artifacts
