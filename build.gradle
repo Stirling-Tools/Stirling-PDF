@@ -141,11 +141,11 @@ jpackage {
         macAppStore = false // Not targeting App Store initially
         
         // Add license and other documentation to DMG
-        macDmgContent = [
+        /*macDmgContent = [
             "README.md",
             "LICENSE",
             "CHANGELOG.md"
-        ]
+        ]*/
         
         // Enable Mac-specific entitlements
         //macEntitlements = "entitlements.plist" // You'll need to create this file
