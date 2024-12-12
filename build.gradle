@@ -8,6 +8,7 @@ plugins {
     id "com.diffplug.spotless" version "6.25.0"
     id "com.github.jk1.dependency-license-report" version "2.9"
 	//id "nebula.lint" version "19.0.3"
+	id("org.panteleyev.jpackageplugin") version "1.6.0"
 }
 
 
@@ -86,6 +87,114 @@ openApi {
     outputDir = file("$projectDir")
     outputFileName = "SwaggerDoc.json"
 }
+
+jpackage {
+    // Input directory containing the jar
+    input = "build/libs"
+
+    // Application details
+    appName = "Stirling-PDF"
+    appVersion = "0.36.3"
+    vendor = "Stirling-Software"
+
+    // Main application configuration
+    mainJar = "Stirling-PDF-${project.version}.jar"
+    mainClass = "stirling.software.SPDF.StirlingPdfApplication"
+
+    // Default icon configuration
+    icon = "src/main/resources/static/favicon.ico"
+
+    // Application description
+    appDescription = "Stirling PDF - Your Local PDF Editor"
+
+    // JVM Options
+    javaOptions = [
+        "-DBROWSER_OPEN=true",
+        "-DSTIRLING_PDF_DESKTOP_UI=true"
+    ]
+
+    // Enable verbose output
+    verbose = true
+
+    // Windows-specific configuration
+    windows {
+        winConsole = false
+        winDirChooser = true
+        winMenu = true
+        winShortcut = true
+        winPerUserInstall = true
+        winMenuGroup = "Stirling Software"
+        winUpgradeUuid = "2a43ed0c-b8c2-40cf-89e1-751129b87641" // Unique identifier for updates
+        winHelpUrl = "https://github.com/Stirling-Tools/Stirling-PDF"
+        winUpdateUrl = "https://github.com/Stirling-Tools/Stirling-PDF/releases"
+        type = "exe"
+    }
+
+    // macOS-specific configuration
+    mac {
+        icon = "src/main/resources/static/favicon.icns"
+        type = "dmg"
+        macPackageIdentifier = "com.stirling.software.pdf"
+        macPackageName = "Stirling-PDF"
+        macAppCategory = "public.app-category.productivity"
+        macSign = false // Enable signing
+        macAppStore = false // Not targeting App Store initially
+        
+        // Add license and other documentation to DMG
+        macDmgContent = [
+            "README.md",
+            "LICENSE",
+            "CHANGELOG.md"
+        ]
+        
+        // Enable Mac-specific entitlements
+        //macEntitlements = "entitlements.plist" // You'll need to create this file
+    }
+
+    // Linux-specific configuration
+    linux {
+        icon = "src/main/resources/static/favicon.png"
+        type = "deb" // Can also use "rpm" for Red Hat-based systems
+        
+        // Debian package configuration
+        linuxPackageName = "stirling-pdf"
+        linuxDebMaintainer = "support@stirling-software.com"
+        linuxMenuGroup = "Office;PDF;Productivity"
+        linuxAppCategory = "Office"
+        linuxAppRelease = "1"
+        linuxPackageDeps = true
+        linuxShortcut = true
+        
+        // RPM-specific settings
+        linuxRpmLicenseType = "MIT"
+    }
+
+    // Common additional options
+    //jLinkOptions = [
+    //    "--strip-debug",
+    //    "--compress=2",
+    //    "--no-header-files",
+    //    "--no-man-pages"
+    //]
+
+    // Add any additional modules required
+    /*addModules = [
+        "java.base",
+        "java.desktop",
+        "java.logging",
+        "java.sql",
+        "java.xml",
+        "jdk.crypto.ec"
+    ]*/
+
+    // Add copyright and license information
+    copyright = "Copyright © 2024 Stirling Software"
+    licenseFile = "LICENSE"
+
+    // Set installation directory
+    installDir = "Stirling-PDF"
+}
+
 
 launch4j {
     icon = "${projectDir}/src/main/resources/static/favicon.ico"
