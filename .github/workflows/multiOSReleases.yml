@@ -54,14 +54,16 @@ jobs:
           sudo apt-get install -y fakeroot rpm
 
       # Get version number
-      - name: Get version numbers
-        id: versions
-        run: |
-          echo "version=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
-          echo "macversion=$(./gradlew printMacVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+      - name: Get version number
+        id: versionNumber
+        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
         shell: bash
 
-
+      - name: Get version number
+        id: versionNumberMac
+        run: echo "versionNumberMac=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+        shell: bash
+        
       # Build installer
       - name: Build Installer
         run: ./gradlew build jpackage --info
@@ -72,11 +74,11 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            mv "Stirling-PDF-${{ steps.versions.outputs.version }}.exe" "Stirling-PDF-${{ steps.versions.outputs.version }}-${{ matrix.platform }}.${{ matrix.ext }}"
+            mv "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.exe" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
           elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            mv "Stirling-PDF-${{ steps.versions.outputs.macversion }}.dmg" "Stirling-PDF-${{ steps.versions.outputs.version }}-${{ matrix.platform }}.${{ matrix.ext }}"
+            mv "Stirling-PDF-${{ steps.versionNumberMac.outputs.versionNumberMac }}.dmg" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
           else
-            mv "stirlingpdf_${{ steps.versions.outputs.version }}-1_amd64.deb" "Stirling-PDF-${{ steps.versions.outputs.version }}-${{ matrix.platform }}.${{ matrix.ext }}"
+            mv "stirlingpdf_${{ steps.versionNumber.outputs.versionNumber }}-1_amd64.deb" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
           fi
 
       # Upload installer as artifact for testing
