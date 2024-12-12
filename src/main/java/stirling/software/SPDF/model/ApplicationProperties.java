@@ -239,7 +239,7 @@ public class ApplicationProperties {
 
     @Data
     public static class System {
-        private String springProfilesActive;
+        private String profilesActive;
         private String defaultLocale;
         private Boolean googlevisibility;
         private boolean showUpdate;

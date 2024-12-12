@@ -304,8 +304,6 @@ dependencies {
         implementation "org.springframework:spring-jdbc"
 
         runtimeOnly "org.postgresql:postgresql:42.7.4"
-//        runtimeOnly 'com.mysql:mysql-connector-j:9.1.0'
-//        runtimeOnly 'com.oracle.database.jdbc:ojdbc11:23.6.0.24.10'
 
         implementation "com.unboundid.product.scim2:scim2-sdk-client:2.3.5"
         constraints {

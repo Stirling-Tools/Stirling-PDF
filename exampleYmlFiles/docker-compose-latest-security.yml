@@ -20,6 +20,7 @@ services:
       - /Users/darioghunneyware/stirling/latest/config:/configs:rw
       - /Users/darioghunneyware/stirling/latest/logs:/logs:rw
     environment:
+      SYSTEM_PROFILES_ACTIVE: docker
       DOCKER_ENABLE_SECURITY: "true"
       SECURITY_ENABLELOGIN: "true"
       PUID: 1002
@@ -36,6 +37,10 @@ services:
       SYSTEM_DATASOURCE_USERNAME: "admin"
       SYSTEM_DATASOURCE_PASSWORD: "stirling"
       SYSTEM_DATASOURCE_DRIVER: "postgresql"
+#      SPRING_DATASOURCE_URL: "jdbc:postgresql://db:5432/stirling_pdf"
+#      SPRING_DATASOURCE_USERNAME: "admin"
+#      SPRING_DATASOURCE_PASSWORD: "stirling"
+#      SPRING_DATASOURCE_DRIVER: "postgresql"
       SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: "org.hibernate.dialect.PostgreSQLDialect"
     restart: on-failure:5
