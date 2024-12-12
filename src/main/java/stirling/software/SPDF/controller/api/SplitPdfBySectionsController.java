@@ -105,15 +105,13 @@ public class SplitPdfBySectionsController {
 
                 if (sectionNum == horiz * verti) pageNum++;
             }
-        } catch (Exception e) {
-            logger.error("exception", e);
-        } finally {
             data = Files.readAllBytes(zipFile);
+            return WebResponseUtils.bytesToWebResponse(
+                    data, filename + "_split.zip", MediaType.APPLICATION_OCTET_STREAM);
+
+        } finally {
             Files.deleteIfExists(zipFile);
         }
-
-        return WebResponseUtils.bytesToWebResponse(
-                data, filename + "_split.zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 
     public List<PDDocument> splitPdfPages(

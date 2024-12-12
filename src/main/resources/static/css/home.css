@@ -65,6 +65,7 @@
   overflow: hidden;
   margin: -20px;
   padding: 20px;
+  box-sizing:content-box;
 }
 
 .feature-group-container.animated-group {

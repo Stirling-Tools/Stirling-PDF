@@ -390,6 +390,37 @@ public class UserService implements UserServiceInterface {
         }
     }
 
+    @Transactional
+    public void syncCustomApiUser(String customApiKey) throws IOException {
+        if (customApiKey == null || customApiKey.trim().length() == 0) {
+            return;
+        }
+        String username = "CUSTOM_API_USER";
+        Optional<User> existingUser = findByUsernameIgnoreCase(username);
+
+        if (!existingUser.isPresent()) {
+            // Create new user with API role
+            User user = new User();
+            user.setUsername(username);
+            user.setPassword(UUID.randomUUID().toString());
+            user.setEnabled(true);
+            user.setFirstLogin(false);
+            user.setAuthenticationType(AuthenticationType.WEB);
+            user.setApiKey(customApiKey);
+            user.addAuthority(new Authority(Role.INTERNAL_API_USER.getRoleId(), user));
+            userRepository.save(user);
+            databaseBackupHelper.exportDatabase();
+        } else {
+            // Update API key if it has changed
+            User user = existingUser.get();
+            if (!customApiKey.equals(user.getApiKey())) {
+                user.setApiKey(customApiKey);
+                userRepository.save(user);
+                databaseBackupHelper.exportDatabase();
+            }
+        }
+    }
+
     @Override
     public long getTotalUsersCount() {
         return userRepository.count();
