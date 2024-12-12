@@ -425,3 +425,6 @@ tasks.named("test") {
 task printVersion {
     println project.version
 }
+task printMacVersion {
+    println getMacVersion(project.version.toString())
+}
