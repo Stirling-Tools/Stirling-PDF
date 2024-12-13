@@ -76,6 +76,5 @@ public class InitialSecuritySetup {
             log.info("Internal API user created: " + Role.INTERNAL_API_USER.getRoleId());
         }
         userService.syncCustomApiUser(applicationProperties.getSecurity().getCustomGlobalAPIKey());
-        System.out.println(applicationProperties.getSecurity().getCustomGlobalAPIKey());
     }
 }
