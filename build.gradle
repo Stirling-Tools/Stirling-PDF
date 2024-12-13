@@ -135,6 +135,7 @@ jpackage {
         winHelpUrl = "https://github.com/Stirling-Tools/Stirling-PDF"
         winUpdateUrl = "https://github.com/Stirling-Tools/Stirling-PDF/releases"
         type = "exe"
+        installDir = "C:/Program Files/Stirling-PDF"
     }
 
     // macOS-specific configuration
@@ -147,6 +148,8 @@ jpackage {
         macAppCategory = "public.app-category.productivity"
         macSign = false // Enable signing
         macAppStore = false // Not targeting App Store initially
+        
+        installDir = "/Applications/Stirling-PDF.app"
         
         // Add license and other documentation to DMG
         /*macDmgContent = [
@@ -173,6 +176,8 @@ jpackage {
         linuxPackageDeps = true
         linuxShortcut = true
         
+        installDir = "/opt/Stirling-PDF"
+        
         // RPM-specific settings
         //linuxRpmLicenseType = "MIT"
     }
@@ -198,9 +203,6 @@ jpackage {
     // Add copyright and license information
     copyright = "Copyright © 2024 Stirling Software"
     licenseFile = "LICENSE"
-
-    // Set installation directory
-    installDir = "Stirling-PDF"
 }
 
 
