@@ -27,7 +27,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.36.0"
+version = "0.36.1"
 
 
 java {
@@ -117,7 +117,11 @@ jpackage {
     // JVM Options
     javaOptions = [
         "-DBROWSER_OPEN=true",
-        "-DSTIRLING_PDF_DESKTOP_UI=true"
+        "-DSTIRLING_PDF_DESKTOP_UI=true",
+        "-Djava.awt.headless=false",
+        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+        "--add-opens", "java.desktop/java.awt.event=ALL-UNNAMED",
+        "--add-opens", "java.desktop/sun.awt=ALL-UNNAMED"
     ]
 
     // Enable verbose output
@@ -127,8 +131,9 @@ jpackage {
 
     // Windows-specific configuration
     windows {
+    	launcherAsService = false
     	appVersion = project.version
-        winConsole = true
+        winConsole = false
         winDirChooser = true
         winMenu = true
         winShortcut = true

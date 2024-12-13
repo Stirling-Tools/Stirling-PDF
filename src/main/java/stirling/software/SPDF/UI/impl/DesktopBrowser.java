@@ -58,10 +58,12 @@ public class DesktopBrowser implements WebBrowser {
     private static SystemTray systemTray;
 
     public DesktopBrowser() {
+        log.info("DesktopBrowser 1");
         SwingUtilities.invokeLater(
                 () -> {
                     loadingWindow = new LoadingWindow(null, "Initializing...");
                     loadingWindow.setVisible(true);
+                    log.info("DesktopBrowser 2");
                 });
     }
 
@@ -69,6 +71,7 @@ public class DesktopBrowser implements WebBrowser {
         CompletableFuture.runAsync(
                 () -> {
                     try {
+                        log.info("DesktopBrowser 4");
                         CefAppBuilder builder = new CefAppBuilder();
                         configureCefSettings(builder);
 
@@ -91,7 +94,7 @@ public class DesktopBrowser implements WebBrowser {
                                     // Show the frame immediately but transparent
                                     frame.setVisible(true);
                                 });
-
+                        log.info("DesktopBrowser 5");
                     } catch (Exception e) {
                         log.error("Error initializing JCEF browser: ", e);
                         cleanup();
@@ -153,27 +156,28 @@ public class DesktopBrowser implements WebBrowser {
                 Objects.requireNonNull(state, "state cannot be null");
                 SwingUtilities.invokeLater(
                         () -> {
+                            log.info("state {}", state.name());
                             if (loadingWindow != null) {
                                 switch (state) {
                                     case LOCATING:
-                                        loadingWindow.setStatus("Locating Chromium...");
+                                        loadingWindow.setStatus("Locating Files...");
                                         loadingWindow.setProgress(0);
                                         break;
                                     case DOWNLOADING:
                                         if (percent >= 0) {
                                             loadingWindow.setStatus(
                                                     String.format(
-                                                            "Downloading Chromium: %.0f%%",
+                                                            "Downloading additional files: %.0f%%",
                                                             percent));
                                             loadingWindow.setProgress((int) percent);
                                         }
                                         break;
                                     case EXTRACTING:
-                                        loadingWindow.setStatus("Extracting Chromium...");
+                                        loadingWindow.setStatus("Extracting files...");
                                         loadingWindow.setProgress(60);
                                         break;
                                     case INITIALIZING:
-                                        loadingWindow.setStatus("Initializing browser...");
+                                        loadingWindow.setStatus("Initializing UI...");
                                         loadingWindow.setProgress(80);
                                         break;
                                     case INITIALIZED:
