@@ -43,7 +43,6 @@ repositories {
         url 'https://build.shibboleth.net/maven/releases'
     }
     maven { url "https://build.shibboleth.net/maven/releases" }
-    // Add Maven repository for JCEF
     maven { url "https://maven.pkg.github.com/jcefmaven/jcefmaven" }
     
 }
@@ -93,23 +92,19 @@ def getMacVersion(String version) {
 }
 
 jpackage {
-    // Input directory containing the jar
     input = "build/libs"
 
-    // Application details
     appName = "Stirling-PDF"
     appVersion = project.version
     vendor = "Stirling-Software"
+	appDescription = "Stirling PDF - Your Local PDF Editor"
 
-    // Main application configuration
     mainJar = "Stirling-PDF-${project.version}.jar"
     mainClass = "org.springframework.boot.loader.launch.JarLauncher"
 
-    // Default icon configuration
     icon = "src/main/resources/static/favicon.ico"
 
-    // Application description
-    appDescription = "Stirling PDF - Your Local PDF Editor"
+    
 
     // JVM Options
     javaOptions = [
@@ -123,7 +118,7 @@ jpackage {
         
     ]
 
-    // Enable verbose output
+
     verbose = true
     
     destination = "${projectDir}/build/jpackage"

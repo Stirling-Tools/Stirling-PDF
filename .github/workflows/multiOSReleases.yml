@@ -1,15 +1,12 @@
 name: Test Installers Build
 
 on:
-  push:
-    branches:
-      - testStuff
   workflow_dispatch:
-
+  release:
+    types: [created]
 permissions:
   contents: write
   packages: write
-
 jobs:
   build-installers:
     strategy:
@@ -87,8 +84,8 @@ jobs:
       # Upload installer as artifact for testing
       - name: Upload Installer Artifact
         uses: actions/upload-artifact@v4
-        with:
-          name: Stirling-PDF-${{ matrix.platform }}.${{ matrix.ext }}
+        with:    
+          name: Stirling-PDF-${{ matrix.platform }}-installer.{{ matrix.ext }}
           path: Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}
           retention-days: 1
           if-no-files-found: error
