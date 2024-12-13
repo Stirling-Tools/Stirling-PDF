@@ -174,7 +174,6 @@ jpackage {
         linuxAppCategory = "Office"
         linuxAppRelease = "1"
         linuxPackageDeps = true
-		linuxPackageName = "stirlingpdf"
         
         installDir = "/opt/Stirling-PDF"
         
