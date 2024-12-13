@@ -1,6 +1,5 @@
 package stirling.software.SPDF.service;
 
-import io.github.pixee.security.BoundedLineReader;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -23,6 +22,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
+
+import io.github.pixee.security.BoundedLineReader;
 
 import jakarta.annotation.PostConstruct;
 

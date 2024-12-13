@@ -1,5 +1,6 @@
 package stirling.software.SPDF;
 
+import java.awt.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.file.Files;
@@ -8,6 +9,9 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+
+import javax.swing.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +23,16 @@ import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import io.github.pixee.security.SystemCommand;
-
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.UI.WebBrowser;
 import stirling.software.SPDF.config.ConfigInitializer;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @SpringBootApplication
 @EnableScheduling
+@Slf4j
 public class SPdfApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(SPdfApplication.class);
@@ -67,36 +74,19 @@ public class SPdfApplication {
         }
     }
 
-    @PostConstruct
-    public void init() {
-        baseUrlStatic = this.baseUrl;
-        // Check if the BROWSER_OPEN environment variable is set to true
-        String browserOpenEnv = env.getProperty("BROWSER_OPEN");
-        boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
-        if (browserOpen) {
-            try {
-                String url = baseUrl + ":" + getStaticPort();
-
-                String os = System.getProperty("os.name").toLowerCase();
-                Runtime rt = Runtime.getRuntime();
-                if (os.contains("win")) {
-                    // For Windows
-                    SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
-                } else if (os.contains("mac")) {
-                    SystemCommand.runCommand(rt, "open " + url);
-                } else if (os.contains("nix") || os.contains("nux")) {
-                    SystemCommand.runCommand(rt, "xdg-open " + url);
-                }
-            } catch (Exception e) {
-                logger.error("Error opening browser: {}", e.getMessage());
-            }
-        }
-        logger.info("Running configs {}", applicationProperties.toString());
-    }
-
     public static void main(String[] args) throws IOException, InterruptedException {
 
         SpringApplication app = new SpringApplication(SPdfApplication.class);
+
+        Properties props = new Properties();
+
+        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
+            System.setProperty("java.awt.headless", "false");
+            app.setHeadless(false);
+            props.put("java.awt.headless", "false");
+            props.put("spring.main.web-application-type", "servlet");
+        }
+
         app.setAdditionalProfiles("default");
         app.addInitializers(new ConfigInitializer());
         Map<String, String> propertyFiles = new HashMap<>();
@@ -120,13 +110,19 @@ public class SPdfApplication {
         } else {
             logger.warn("Custom configuration file 'configs/custom_settings.yml' does not exist.");
         }
+        Properties finalProps = new Properties();
 
         if (!propertyFiles.isEmpty()) {
-            app.setDefaultProperties(
+            finalProps.putAll(
                     Collections.singletonMap(
                             "spring.config.additional-location",
                             propertyFiles.get("spring.config.additional-location")));
         }
+
+        if (!props.isEmpty()) {
+            finalProps.putAll(props);
+        }
+        app.setDefaultProperties(finalProps);
 
         app.run(args);
 
@@ -145,6 +141,46 @@ public class SPdfApplication {
         logger.info("Stirling-PDF Started.");
         String url = baseUrlStatic + ":" + getStaticPort();
         logger.info("Navigate to {}", url);
+    }
+
+    @Autowired(required = false)
+    private WebBrowser webBrowser;
+
+    @PostConstruct
+    public void init() {
+        baseUrlStatic = this.baseUrl;
+        String url = baseUrl + ":" + getStaticPort();
+        if (webBrowser != null
+                && Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
+            webBrowser.initWebUI(url);
+        } else {
+        	String browserOpenEnv = env.getProperty("BROWSER_OPEN");
+            boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
+            if (browserOpen) {
+                try {
+                    String os = System.getProperty("os.name").toLowerCase();
+                    Runtime rt = Runtime.getRuntime();
+                    if (os.contains("win")) {
+                        // For Windows
+                        SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
+                    } else if (os.contains("mac")) {
+                        SystemCommand.runCommand(rt, "open " + url);
+                    } else if (os.contains("nix") || os.contains("nux")) {
+                        SystemCommand.runCommand(rt, "xdg-open " + url);
+                    }
+                } catch (Exception e) {
+                    logger.error("Error opening browser: {}", e.getMessage());
+                }
+            }
+        }
+        logger.info("Running configs {}", applicationProperties.toString()); 
+    }
+
+    @PreDestroy
+    public void cleanup() {
+        if (webBrowser != null) {
+            webBrowser.cleanup();
+        }
     }
 
     public static String getStaticBaseUrl() {

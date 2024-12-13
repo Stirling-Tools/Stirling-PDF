@@ -77,6 +77,11 @@ ignore = [
     'language.direction',
 ]
 
+[fa_IR]
+ignore = [
+    'language.direction',
+]
+
 [fr_FR]
 ignore = [
     'AddStampRequest.alphabet',

@@ -99,7 +99,7 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        if (applicationProperties.getSecurity().getCsrfDisabled()) {
+        if (applicationProperties.getSecurity().getCsrfDisabled() || !loginEnabledValue) {
             http.csrf(csrf -> csrf.disable());
         }
 
@@ -116,7 +116,7 @@ public class SecurityConfiguration {
                         csrf ->
                                 csrf.ignoringRequestMatchers(
                                                 request -> {
-                                                    String apiKey = request.getHeader("X-API-Key");
+                                                    String apiKey = request.getHeader("X-API-KEY");
 
                                                     // If there's no API key, don't ignore CSRF
                                                     // (return false)
@@ -289,17 +289,17 @@ public class SecurityConfiguration {
             }
 
         } else {
-            if (!applicationProperties.getSecurity().getCsrfDisabled()) {
-                CookieCsrfTokenRepository cookieRepo =
-                        CookieCsrfTokenRepository.withHttpOnlyFalse();
-                CsrfTokenRequestAttributeHandler requestHandler =
-                        new CsrfTokenRequestAttributeHandler();
-                requestHandler.setCsrfRequestAttributeName(null);
-                http.csrf(
-                        csrf ->
-                                csrf.csrfTokenRepository(cookieRepo)
-                                        .csrfTokenRequestHandler(requestHandler));
-            }
+            //            if (!applicationProperties.getSecurity().getCsrfDisabled()) {
+            //                CookieCsrfTokenRepository cookieRepo =
+            //                        CookieCsrfTokenRepository.withHttpOnlyFalse();
+            //                CsrfTokenRequestAttributeHandler requestHandler =
+            //                        new CsrfTokenRequestAttributeHandler();
+            //                requestHandler.setCsrfRequestAttributeName(null);
+            //                http.csrf(
+            //                        csrf ->
+            //                                csrf.csrfTokenRepository(cookieRepo)
+            //                                        .csrfTokenRequestHandler(requestHandler));
+            //            }
             http.authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
         }
 
