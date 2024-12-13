@@ -127,6 +127,7 @@ jpackage {
 
     // Windows-specific configuration
     windows {
+    	appVersion = project.version
         winConsole = false
         winDirChooser = true
         winMenu = true
@@ -166,6 +167,7 @@ jpackage {
 
     // Linux-specific configuration
     linux {
+    	appVersion = project.version
         icon = "src/main/resources/static/favicon.png"
         type = "deb" // Can also use "rpm" for Red Hat-based systems
         
