@@ -119,9 +119,11 @@ jpackage {
         "-DBROWSER_OPEN=true",
         "-DSTIRLING_PDF_DESKTOP_UI=true",
         "-Djava.awt.headless=false",
+        "-Dapple.awt.UIElement=true",
         "--add-opens", "java.base/java.lang=ALL-UNNAMED",
         "--add-opens", "java.desktop/java.awt.event=ALL-UNNAMED",
         "--add-opens", "java.desktop/sun.awt=ALL-UNNAMED"
+        
     ]
 
     // Enable verbose output
@@ -157,7 +159,7 @@ jpackage {
         macSign = false // Enable signing
         macAppStore = false // Not targeting App Store initially
         
-        installDir = "/Applications/Stirling-PDF.app"
+        //installDir = "Applications"
         
         // Add license and other documentation to DMG
         /*macDmgContent = [
