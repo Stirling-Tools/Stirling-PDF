@@ -221,7 +221,7 @@ public class PipelineProcessor {
 
         HttpHeaders headers = new HttpHeaders();
         String apiKey = getApiKeyForUser();
-        headers.add("X-API-Key", apiKey);
+        headers.add("X-API-KEY", apiKey);
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         // Create HttpEntity with the body and headers

@@ -75,5 +75,6 @@ public class InitialSecuritySetup {
             userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
             log.info("Internal API user created: " + Role.INTERNAL_API_USER.getRoleId());
         }
+        userService.syncCustomApiUser(applicationProperties.getSecurity().getCustomGlobalAPIKey());
     }
 }
