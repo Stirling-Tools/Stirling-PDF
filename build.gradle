@@ -106,7 +106,7 @@ jpackage {
 
     // Main application configuration
     mainJar = "Stirling-PDF-${project.version}.jar"
-    mainClass = "stirling.software.SPDF.StirlingPdfApplication"
+    mainClass = "stirling.software.SPDF.SPdfApplication"
 
     // Default icon configuration
     icon = "src/main/resources/static/favicon.ico"
