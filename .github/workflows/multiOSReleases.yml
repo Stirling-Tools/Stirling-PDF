@@ -59,9 +59,9 @@ jobs:
         run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Get version number
+      - name: Get version number mac
         id: versionNumberMac
-        run: echo "versionNumberMac=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+        run: echo "versionNumberMac=$(./gradlew printMacVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
         shell: bash
         
       # Build installer
@@ -77,11 +77,11 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            mv "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.exe" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
+            mv "build/jpackage/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.exe" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
           elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            mv "Stirling-PDF-${{ steps.versionNumberMac.outputs.versionNumberMac }}.dmg" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
+            mv "build/jpackage/Stirling-PDF-${{ steps.versionNumberMac.outputs.versionNumberMac }}.dmg" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
           else
-            mv "stirlingpdf_${{ steps.versionNumber.outputs.versionNumber }}-1_amd64.deb" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
+            mv "build/jpackage/stirling-pdf_${{ steps.versionNumber.outputs.versionNumber }}-1_amd64.deb" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
           fi
 
       # Upload installer as artifact for testing
