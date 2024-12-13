@@ -106,7 +106,7 @@ jpackage {
 
     // Main application configuration
     mainJar = "Stirling-PDF-${project.version}.jar"
-    mainClass = "stirling.software.SPDF.SPdfApplication"
+    mainClass = "org.springframework.boot.loader.launch.JarLauncher"
 
     // Default icon configuration
     icon = "src/main/resources/static/favicon.ico"
@@ -128,7 +128,7 @@ jpackage {
     // Windows-specific configuration
     windows {
     	appVersion = project.version
-        winConsole = false
+        winConsole = true
         winDirChooser = true
         winMenu = true
         winShortcut = true
