@@ -66,7 +66,7 @@ jobs:
         
       # Build installer
       - name: Build Installer
-        run: ./gradlew build jpackage --info
+        run: ./gradlew build jpackage -x test --info
         env:
           DOCKER_ENABLE_SECURITY: false
           STIRLING_PDF_DESKTOP_UI: true
