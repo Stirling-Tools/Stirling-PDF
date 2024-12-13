@@ -1,6 +1,6 @@
 const DraggableUtils = {
-  boxDragContainer: document.getElementById("box-drag-container"),
-  pdfCanvas: document.getElementById("pdf-canvas"),
+  boxDragContainer: document.getElementById('box-drag-container'),
+  pdfCanvas: document.getElementById('pdf-canvas'),
   nextId: 0,
   pdfDoc: null,
   pageIndex: 0,
@@ -9,19 +9,17 @@ const DraggableUtils = {
   lastInteracted: null,
 
   init() {
-    interact(".draggable-canvas")
+    interact('.draggable-canvas')
       .draggable({
         listeners: {
           move: (event) => {
             const target = event.target;
-            const x = (parseFloat(target.getAttribute("data-bs-x")) || 0)
-              + event.dx;
-            const y = (parseFloat(target.getAttribute("data-bs-y")) || 0)
-              + event.dy;
+            const x = (parseFloat(target.getAttribute('data-bs-x')) || 0) + event.dx;
+            const y = (parseFloat(target.getAttribute('data-bs-y')) || 0) + event.dy;
 
             target.style.transform = `translate(${x}px, ${y}px)`;
-            target.setAttribute("data-bs-x", x);
-            target.setAttribute("data-bs-y", y);
+            target.setAttribute('data-bs-x', x);
+            target.setAttribute('data-bs-y', y);
 
             this.onInteraction(target);
             //update the last interacted element
@@ -30,12 +28,12 @@ const DraggableUtils = {
         },
       })
       .resizable({
-        edges: { left: true, right: true, bottom: true, top: true },
+        edges: {left: true, right: true, bottom: true, top: true},
         listeners: {
           move: (event) => {
             var target = event.target;
-            var x = parseFloat(target.getAttribute("data-bs-x")) || 0;
-            var y = parseFloat(target.getAttribute("data-bs-y")) || 0;
+            var x = parseFloat(target.getAttribute('data-bs-x')) || 0;
+            var y = parseFloat(target.getAttribute('data-bs-y')) || 0;
 
             // check if control key is pressed
             if (event.ctrlKey) {
@@ -44,8 +42,7 @@ const DraggableUtils = {
               let width = event.rect.width;
               let height = event.rect.height;
 
-              if (Math.abs(event.deltaRect.width) >= Math.abs(
-                event.deltaRect.height)) {
+              if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
                 height = width / aspectRatio;
               } else {
                 width = height * aspectRatio;
@@ -55,19 +52,18 @@ const DraggableUtils = {
               event.rect.height = height;
             }
 
-            target.style.width = event.rect.width + "px";
-            target.style.height = event.rect.height + "px";
+            target.style.width = event.rect.width + 'px';
+            target.style.height = event.rect.height + 'px';
 
             // translate when resizing from top or left edges
             x += event.deltaRect.left;
             y += event.deltaRect.top;
 
-            target.style.transform = "translate(" + x + "px," + y + "px)";
+            target.style.transform = 'translate(' + x + 'px,' + y + 'px)';
 
-            target.setAttribute("data-bs-x", x);
-            target.setAttribute("data-bs-y", y);
-            target.textContent = Math.round(event.rect.width) + "\u00D7"
-              + Math.round(event.rect.height);
+            target.setAttribute('data-bs-x', x);
+            target.setAttribute('data-bs-y', y);
+            target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height);
 
             this.onInteraction(target);
           },
@@ -75,7 +71,7 @@ const DraggableUtils = {
 
         modifiers: [
           interact.modifiers.restrictSize({
-            min: { width: 5, height: 5 },
+            min: {width: 5, height: 5},
           }),
         ],
         inertia: true,
@@ -95,8 +91,8 @@ const DraggableUtils = {
         const stepY = target.offsetHeight * 0.05;
 
         // Get the current x and y coordinates
-        let x = (parseFloat(target.getAttribute('data-bs-x')) || 0);
-        let y = (parseFloat(target.getAttribute('data-bs-y')) || 0);
+        let x = parseFloat(target.getAttribute('data-bs-x')) || 0;
+        let y = parseFloat(target.getAttribute('data-bs-y')) || 0;
 
         // Check which key was pressed and update the coordinates accordingly
         switch (event.key) {
@@ -135,15 +131,15 @@ const DraggableUtils = {
   },
 
   createDraggableCanvas() {
-    const createdCanvas = document.createElement("canvas");
+    const createdCanvas = document.createElement('canvas');
     createdCanvas.id = `draggable-canvas-${this.nextId++}`;
-    createdCanvas.classList.add("draggable-canvas");
+    createdCanvas.classList.add('draggable-canvas');
 
     const x = 0;
     const y = 20;
     createdCanvas.style.transform = `translate(${x}px, ${y}px)`;
-    createdCanvas.setAttribute("data-bs-x", x);
-    createdCanvas.setAttribute("data-bs-y", y);
+    createdCanvas.setAttribute('data-bs-x', x);
+    createdCanvas.setAttribute('data-bs-y', y);
 
     //Click element in order to enable arrow keys
     createdCanvas.addEventListener('click', () => {
@@ -186,29 +182,29 @@ const DraggableUtils = {
           newHeight = newHeight * scaleMultiplier;
         }
 
-        createdCanvas.style.width = newWidth + "px";
-        createdCanvas.style.height = newHeight + "px";
+        createdCanvas.style.width = newWidth + 'px';
+        createdCanvas.style.height = newHeight + 'px';
 
-        var myContext = createdCanvas.getContext("2d");
+        var myContext = createdCanvas.getContext('2d');
         myContext.drawImage(myImage, 0, 0);
         resolve(createdCanvas);
       };
     });
   },
   deleteAllDraggableCanvases() {
-    this.boxDragContainer.querySelectorAll(".draggable-canvas").forEach((el) => el.remove());
+    this.boxDragContainer.querySelectorAll('.draggable-canvas').forEach((el) => el.remove());
   },
   async addAllPagesDraggableCanvas(element) {
     if (element) {
-      let currentPage = this.pageIndex
+      let currentPage = this.pageIndex;
       if (!this.elementAllPages.includes(element)) {
-        this.elementAllPages.push(element)
+        this.elementAllPages.push(element);
         element.style.filter = 'sepia(1) hue-rotate(90deg) brightness(1.2)';
         let newElement = {
-          "element": element,
-          "offsetWidth": element.width,
-          "offsetHeight": element.height
-        }
+          element: element,
+          offsetWidth: element.width,
+          offsetHeight: element.height,
+        };
 
         let pagesMap = this.documentsMap.get(this.pdfDoc);
 
@@ -216,21 +212,20 @@ const DraggableUtils = {
           pagesMap = {};
           this.documentsMap.set(this.pdfDoc, pagesMap);
         }
-        let page = this.pageIndex
+        let page = this.pageIndex;
 
         for (let pageIndex = 0; pageIndex < this.pdfDoc.numPages; pageIndex++) {
-
           if (pagesMap[`${pageIndex}-offsetWidth`]) {
             if (!pagesMap[pageIndex].includes(newElement)) {
               pagesMap[pageIndex].push(newElement);
             }
           } else {
-            pagesMap[pageIndex] = []
-            pagesMap[pageIndex].push(newElement)
+            pagesMap[pageIndex] = [];
+            pagesMap[pageIndex].push(newElement);
             pagesMap[`${pageIndex}-offsetWidth`] = pagesMap[`${page}-offsetWidth`];
             pagesMap[`${pageIndex}-offsetHeight`] = pagesMap[`${page}-offsetHeight`];
           }
-          await this.goToPage(pageIndex)
+          await this.goToPage(pageIndex);
         }
       } else {
         const index = this.elementAllPages.indexOf(element);
@@ -247,17 +242,17 @@ const DraggableUtils = {
         for (let pageIndex = 0; pageIndex < this.pdfDoc.numPages; pageIndex++) {
           if (pagesMap[`${pageIndex}-offsetWidth`] && pageIndex != currentPage) {
             const pageElements = pagesMap[pageIndex];
-            pageElements.forEach(elementPage => {
-              const elementIndex = pageElements.findIndex(elementPage => elementPage['element'].id === element.id);
+            pageElements.forEach((elementPage) => {
+              const elementIndex = pageElements.findIndex((elementPage) => elementPage['element'].id === element.id);
               if (elementIndex !== -1) {
                 pageElements.splice(elementIndex, 1);
               }
             });
           }
-          await this.goToPage(pageIndex)
+          await this.goToPage(pageIndex);
         }
       }
-      await this.goToPage(currentPage)
+      await this.goToPage(currentPage);
     }
   },
   deleteDraggableCanvas(element) {
@@ -271,7 +266,7 @@ const DraggableUtils = {
     }
   },
   getLastInteracted() {
-    return this.boxDragContainer.querySelector(".draggable-canvas:last-of-type");
+    return this.boxDragContainer.querySelector('.draggable-canvas:last-of-type');
   },
 
   storePageContents() {
@@ -280,7 +275,7 @@ const DraggableUtils = {
       pagesMap = {};
     }
 
-    const elements = [...this.boxDragContainer.querySelectorAll(".draggable-canvas")];
+    const elements = [...this.boxDragContainer.querySelectorAll('.draggable-canvas')];
     const draggablesData = elements.map((el) => {
       return {
         element: el,
@@ -291,8 +286,8 @@ const DraggableUtils = {
     elements.forEach((el) => this.boxDragContainer.removeChild(el));
 
     pagesMap[this.pageIndex] = draggablesData;
-    pagesMap[this.pageIndex + "-offsetWidth"] = this.pdfCanvas.offsetWidth;
-    pagesMap[this.pageIndex + "-offsetHeight"] = this.pdfCanvas.offsetHeight;
+    pagesMap[this.pageIndex + '-offsetWidth'] = this.pdfCanvas.offsetWidth;
+    pagesMap[this.pageIndex + '-offsetHeight'] = this.pdfCanvas.offsetHeight;
 
     this.documentsMap.set(this.pdfDoc, pagesMap);
   },
@@ -329,8 +324,8 @@ const DraggableUtils = {
 
     // render the page onto the canvas
     var renderContext = {
-      canvasContext: this.pdfCanvas.getContext("2d"),
-      viewport: page.getViewport({ scale: 1 }),
+      canvasContext: this.pdfCanvas.getContext('2d'),
+      viewport: page.getViewport({scale: 1}),
     };
     await page.render(renderContext).promise;
 
@@ -358,7 +353,7 @@ const DraggableUtils = {
     }
   },
 
-  parseTransform(element) { },
+  parseTransform(element) {},
   async getOverlayedPdfDocument() {
     const pdfBytes = await this.pdfDoc.getData();
     const pdfDocModified = await PDFLib.PDFDocument.load(pdfBytes, {
@@ -369,7 +364,7 @@ const DraggableUtils = {
     const pagesMap = this.documentsMap.get(this.pdfDoc);
 
     for (let pageIdx in pagesMap) {
-      if (pageIdx.includes("offset")) {
+      if (pageIdx.includes('offset')) {
         continue;
       }
       console.log(typeof pageIdx);
@@ -377,9 +372,8 @@ const DraggableUtils = {
       const page = pdfDocModified.getPage(parseInt(pageIdx));
       let draggablesData = pagesMap[pageIdx];
 
-      const offsetWidth = pagesMap[pageIdx + "-offsetWidth"];
-      const offsetHeight = pagesMap[pageIdx + "-offsetHeight"];
-
+      const offsetWidth = pagesMap[pageIdx + '-offsetWidth'];
+      const offsetHeight = pagesMap[pageIdx + '-offsetHeight'];
 
       for (const draggableData of draggablesData) {
         // embed the draggable canvas
@@ -389,8 +383,8 @@ const DraggableUtils = {
         const pdfImageObject = await pdfDocModified.embedPng(draggableImgBytes);
 
         // calculate the position in the pdf document
-        const tansform = draggableElement.style.transform.replace(/[^.,-\d]/g, "");
-        const transformComponents = tansform.split(",");
+        const tansform = draggableElement.style.transform.replace(/[^.,-\d]/g, '');
+        const transformComponents = tansform.split(',');
         const draggablePositionPixels = {
           x: parseFloat(transformComponents[0]),
           y: parseFloat(transformComponents[1]),
@@ -429,9 +423,8 @@ const DraggableUtils = {
         };
 
         //Defining the image if the page has a 0-degree angle
-        let x = draggablePositionPdf.x
-        let y = heightAdjusted - draggablePositionPdf.y - draggablePositionPdf.height
-
+        let x = draggablePositionPdf.x;
+        let y = heightAdjusted - draggablePositionPdf.y - draggablePositionPdf.height;
 
         //Defining the image position if it is at other angles
         if (normalizedAngle === 90) {
@@ -451,7 +444,7 @@ const DraggableUtils = {
           y: y,
           width: draggablePositionPdf.width,
           height: draggablePositionPdf.height,
-          rotate: rotation
+          rotate: rotation,
         });
       }
     }
@@ -460,6 +453,6 @@ const DraggableUtils = {
   },
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
   DraggableUtils.init();
 });

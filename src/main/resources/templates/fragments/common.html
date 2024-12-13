@@ -203,7 +203,17 @@
                 </script>
                 <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
                 <script th:src="@{'/js/downloader.js'}"></script>
-
+                <script>
+                  window.decrypt = {
+                    passwordPrompt: '[[#{decrypt.passwordPrompt}]]',
+                    cancelled: '[[#{decrypt.cancelled}]]',
+                    noPassword: '[[#{decrypt.noPassword}]]',
+                    invalidPassword: '[[#{decrypt.invalidPassword}]]',
+                    invalidPasswordHeader: '[[#{decrypt.invalidPasswordHeader}]]',
+                    unexpectedError: '[[#{decrypt.unexpectedError}]]',
+                    serverError: '[[#{decrypt.serverError}]]',
+                    success: '[[#{decrypt.success}]]',
+              };</script>
                 <div class="custom-file-chooser mb-3" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-element-container-id=${name+'-input-container'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
                   <div class="mb-3 d-flex flex-row justify-content-center align-items-center flex-wrap input-container" th:name="${name}+'-input'" th:id="${name}+'-input-container'" th:data-text="#{fileChooser.hoveredDragAndDrop}">
                       <label class="file-input-btn d-none">
