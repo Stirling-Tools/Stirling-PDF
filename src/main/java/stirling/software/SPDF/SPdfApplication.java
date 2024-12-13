@@ -79,11 +79,11 @@ public class SPdfApplication {
 
         Properties props = new Properties();
 
-        if ("true".equals(System.getenv("STIRLING_PDF_DESKTOP_UI"))) {
+        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
             System.setProperty("java.awt.headless", "false");
             app.setHeadless(false);
-            //            props.put("java.awt.headless", "false");
-            //            props.put("spring.main.web-application-type", "servlet");
+            props.put("java.awt.headless", "false");
+            props.put("spring.main.web-application-type", "servlet");
         }
 
         app.setAdditionalProfiles("default");
@@ -118,7 +118,7 @@ public class SPdfApplication {
                             propertyFiles.get("spring.config.additional-location")));
         }
 
-        if (props.isEmpty()) {
+        if (!props.isEmpty()) {
             finalProps.putAll(props);
         }
         app.setDefaultProperties(finalProps);
@@ -147,9 +147,13 @@ public class SPdfApplication {
 
     @PostConstruct
     public void init() {
+        log.info(
+                "1 STIRLING_PDF_DESKTOP_UI={}",
+                Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false")));
         baseUrlStatic = this.baseUrl;
         String url = baseUrl + ":" + getStaticPort();
-        if (webBrowser != null && "true".equals(System.getenv("STIRLING_PDF_DESKTOP_UI"))) {
+        if (webBrowser != null
+                && Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
 
             webBrowser.initWebUI(url);
         }
