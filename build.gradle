@@ -174,7 +174,7 @@ jpackage {
         linuxShortcut = true
         
         // RPM-specific settings
-        linuxRpmLicenseType = "MIT"
+        //linuxRpmLicenseType = "MIT"
     }
 
     // Common additional options
