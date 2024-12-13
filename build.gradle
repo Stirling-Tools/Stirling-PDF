@@ -426,10 +426,14 @@ jar {
 tasks.named("test") {
     useJUnitPlatform()
 }
-
 task printVersion {
-    println project.version
+    doLast {
+        println project.version
+    }
 }
+
 task printMacVersion {
-    println getMacVersion(project.version.toString())
+    doLast {
+        println getMacVersion(project.version.toString())
+    }
 }
