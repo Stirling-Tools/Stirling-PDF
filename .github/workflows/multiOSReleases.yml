@@ -18,12 +18,12 @@ jobs:
           - os: windows-latest
             platform: win
             ext: exe
-          - os: macos-latest
-            platform: mac
-            ext: dmg
-          - os: ubuntu-latest
-            platform: linux
-            ext: deb
+         #- os: macos-latest
+         #  platform: mac
+         # ext: dmg
+         #- os: ubuntu-latest
+         #  platform: linux
+         #  ext: deb
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -63,7 +63,7 @@ jobs:
         id: versionNumberMac
         run: echo "versionNumberMac=$(./gradlew printMacVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
         shell: bash
-        
+
       # Build installer
       - name: Build Installer
         run: ./gradlew build jpackage -x test --info
