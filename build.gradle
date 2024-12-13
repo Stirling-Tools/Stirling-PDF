@@ -123,7 +123,7 @@ jpackage {
     // Enable verbose output
     verbose = true
     
-    destinationDir = file("${projectDir}/build/jpackage")
+    destination = "${projectDir}/build/jpackage"
 
     // Windows-specific configuration
     windows {
