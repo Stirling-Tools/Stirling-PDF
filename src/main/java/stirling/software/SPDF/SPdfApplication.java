@@ -22,6 +22,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import io.github.pixee.security.SystemCommand;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -147,16 +148,32 @@ public class SPdfApplication {
 
     @PostConstruct
     public void init() {
-        log.info(
-                "1 STIRLING_PDF_DESKTOP_UI={}",
-                Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false")));
         baseUrlStatic = this.baseUrl;
         String url = baseUrl + ":" + getStaticPort();
         if (webBrowser != null
                 && Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
-
             webBrowser.initWebUI(url);
+        } else {
+        	String browserOpenEnv = env.getProperty("BROWSER_OPEN");
+            boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
+            if (browserOpen) {
+                try {
+                    String os = System.getProperty("os.name").toLowerCase();
+                    Runtime rt = Runtime.getRuntime();
+                    if (os.contains("win")) {
+                        // For Windows
+                        SystemCommand.runCommand(rt, "rundll32 url.dll,FileProtocolHandler " + url);
+                    } else if (os.contains("mac")) {
+                        SystemCommand.runCommand(rt, "open " + url);
+                    } else if (os.contains("nix") || os.contains("nux")) {
+                        SystemCommand.runCommand(rt, "xdg-open " + url);
+                    }
+                } catch (Exception e) {
+                    logger.error("Error opening browser: {}", e.getMessage());
+                }
+            }
         }
+        logger.info("Running configs {}", applicationProperties.toString()); 
     }
 
     @PreDestroy
