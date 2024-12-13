@@ -58,12 +58,10 @@ public class DesktopBrowser implements WebBrowser {
     private static SystemTray systemTray;
 
     public DesktopBrowser() {
-        log.info("DesktopBrowser 1");
         SwingUtilities.invokeLater(
                 () -> {
                     loadingWindow = new LoadingWindow(null, "Initializing...");
                     loadingWindow.setVisible(true);
-                    log.info("DesktopBrowser 2");
                 });
     }
 
@@ -71,10 +69,8 @@ public class DesktopBrowser implements WebBrowser {
         CompletableFuture.runAsync(
                 () -> {
                     try {
-                        log.info("DesktopBrowser 4");
                         CefAppBuilder builder = new CefAppBuilder();
                         configureCefSettings(builder);
-
                         builder.setProgressHandler(createProgressHandler());
 
                         // Build and initialize CEF
@@ -94,7 +90,6 @@ public class DesktopBrowser implements WebBrowser {
                                     // Show the frame immediately but transparent
                                     frame.setVisible(true);
                                 });
-                        log.info("DesktopBrowser 5");
                     } catch (Exception e) {
                         log.error("Error initializing JCEF browser: ", e);
                         cleanup();
@@ -156,7 +151,6 @@ public class DesktopBrowser implements WebBrowser {
                 Objects.requireNonNull(state, "state cannot be null");
                 SwingUtilities.invokeLater(
                         () -> {
-                            log.info("state {}", state.name());
                             if (loadingWindow != null) {
                                 switch (state) {
                                     case LOCATING:
@@ -226,7 +220,6 @@ public class DesktopBrowser implements WebBrowser {
                             boolean isLoading,
                             boolean canGoBack,
                             boolean canGoForward) {
-                        log.info("Loading state changed: " + isLoading);
                         if (!isLoading && !browserInitialized) {
                             browserInitialized = true;
                             SwingUtilities.invokeLater(
@@ -343,7 +336,6 @@ public class DesktopBrowser implements WebBrowser {
             if (icon != null) {
                 frame.setIconImage(icon);
                 setupTrayIcon(icon);
-                log.info("Successfully set frame icon");
             } else {
                 log.warn("Could not load icon from any source");
             }

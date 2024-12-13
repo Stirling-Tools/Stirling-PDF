@@ -33,9 +33,6 @@ version = "0.36.1"
 java {
     // 17 is lowest but we support and recommend 21
     sourceCompatibility = JavaVersion.VERSION_17
-     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
 }
 
 repositories {
@@ -88,9 +85,9 @@ openApi {
     outputFileName = "SwaggerDoc.json"
 }
 
+//0.11.5 to 2024.11.5
 def getMacVersion(String version) {
     def currentYear = java.time.Year.now().getValue()
-    // Extract everything after the first dot (or the whole string if no dot)
     def versionParts = version.split("\\.", 2)
     return "${currentYear}.${versionParts.length > 1 ? versionParts[1] : versionParts[0]}"
 }
