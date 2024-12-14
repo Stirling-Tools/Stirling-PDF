@@ -1,20 +1,19 @@
-import FileIconFactory from "./file-icon-factory.js";
-import FileUtils from "./file-utils.js";
+import FileIconFactory from './file-icon-factory.js';
+import FileUtils from './file-utils.js';
 import UUID from './uuid.js';
-
+import {DecryptFile} from './DecryptFiles.js';
 let isScriptExecuted = false;
 if (!isScriptExecuted) {
   isScriptExecuted = true;
-  document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".custom-file-chooser").forEach(setupFileInput);
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.custom-file-chooser').forEach(setupFileInput);
   });
 }
 
-
 function setupFileInput(chooser) {
-  const elementId = chooser.getAttribute("data-bs-element-id");
-  const filesSelected = chooser.getAttribute("data-bs-files-selected");
-  const pdfPrompt = chooser.getAttribute("data-bs-pdf-prompt");
+  const elementId = chooser.getAttribute('data-bs-element-id');
+  const filesSelected = chooser.getAttribute('data-bs-files-selected');
+  const pdfPrompt = chooser.getAttribute('data-bs-pdf-prompt');
   const inputContainerId = chooser.getAttribute('data-bs-element-container-id');
 
   let inputContainer = document.getElementById(inputContainerId);
@@ -26,7 +25,7 @@ function setupFileInput(chooser) {
   inputContainer.addEventListener('click', (e) => {
     let inputBtn = document.getElementById(elementId);
     inputBtn.click();
-  })
+  });
 
   const dragenterListener = function () {
     dragCounter++;
@@ -63,7 +62,7 @@ function setupFileInput(chooser) {
     const files = dt.files;
 
     const fileInput = document.getElementById(elementId);
-    if (fileInput?.hasAttribute("multiple")) {
+    if (fileInput?.hasAttribute('multiple')) {
       pushFileListTo(files, allFiles);
     } else if (fileInput) {
       allFiles = [files[0]];
@@ -78,7 +77,7 @@ function setupFileInput(chooser) {
 
     dragCounter = 0;
 
-    fileInput.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: {source: 'drag-drop'} }));
+    fileInput.dispatchEvent(new CustomEvent('change', {bubbles: true, detail: {source: 'drag-drop'}}));
   };
 
   function pushFileListTo(fileList, container) {
@@ -87,7 +86,7 @@ function setupFileInput(chooser) {
     }
   }
 
-  ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
     document.body.addEventListener(eventName, preventDefaults, false);
   });
 
@@ -96,37 +95,50 @@ function setupFileInput(chooser) {
     e.stopPropagation();
   }
 
-  document.body.addEventListener("dragenter", dragenterListener);
-  document.body.addEventListener("dragleave", dragleaveListener);
-  document.body.addEventListener("drop", dropListener);
+  document.body.addEventListener('dragenter', dragenterListener);
+  document.body.addEventListener('dragleave', dragleaveListener);
+  document.body.addEventListener('drop', dropListener);
 
-  $("#" + elementId).on("change", function (e) {
+  $('#' + elementId).on('change', async function (e) {
     let element = e.target;
     const isDragAndDrop = e.detail?.source == 'drag-drop';
 
-    if (element instanceof HTMLInputElement && element.hasAttribute("multiple")) {
-      allFiles = isDragAndDrop ? allFiles : [... allFiles, ... element.files];
+    if (element instanceof HTMLInputElement && element.hasAttribute('multiple')) {
+      allFiles = isDragAndDrop ? allFiles : [...allFiles, ...element.files];
     } else {
       allFiles = Array.from(isDragAndDrop ? allFiles : [element.files[0]]);
     }
-
-    allFiles = allFiles.map(file => {
-      if (!file.uniqueId) file.uniqueId = UUID.uuidv4();
-      return file;
-    });
-
+    allFiles = await Promise.all(
+      allFiles.map(async (file) => {
+        let decryptedFile = file;
+        try {
+          const decryptFile = new DecryptFile();
+          const {isEncrypted, requiresPassword} = await decryptFile.checkFileEncrypted(file);
+          if (file.type === 'application/pdf' && isEncrypted) {
+            decryptedFile = await decryptFile.decryptFile(file, requiresPassword);
+            if (!decryptedFile) throw new Error('File decryption failed.');
+          }
+          decryptedFile.uniqueId = UUID.uuidv4();
+          return decryptedFile;
+        } catch (error) {
+          console.error(`Error decrypting file: ${file.name}`, error);
+          if (!file.uniqueId) file.uniqueId = UUID.uuidv4();
+          return file;
+        }
+      })
+    );
     if (!isDragAndDrop) {
-        let dataTransfer = toDataTransfer(allFiles);
-        element.files = dataTransfer.files;
+      let dataTransfer = toDataTransfer(allFiles);
+      element.files = dataTransfer.files;
     }
 
     handleFileInputChange(this);
-    this.dispatchEvent(new CustomEvent("file-input-change", { bubbles: true }));
-});
+    this.dispatchEvent(new CustomEvent('file-input-change', {bubbles: true, detail: {elementId, allFiles}}));
+  });
 
   function toDataTransfer(files) {
     let dataTransfer = new DataTransfer();
-    files.forEach(file => dataTransfer.items.add(file));
+    files.forEach((file) => dataTransfer.items.add(file));
     return dataTransfer;
   }
 
@@ -136,7 +148,7 @@ function setupFileInput(chooser) {
 
     const filesInfo = files.map((f) => ({name: f.name, size: f.size, uniqueId: f.uniqueId}));
 
-    const selectedFilesContainer = $(inputContainer).siblings(".selected-files");
+    const selectedFilesContainer = $(inputContainer).siblings('.selected-files');
     selectedFilesContainer.empty();
     filesInfo.forEach((info) => {
       let fileContainerClasses = 'small-file-container d-flex flex-column justify-content-center align-items-center';
@@ -167,28 +179,26 @@ function setupFileInput(chooser) {
   }
 
   function showOrHideSelectedFilesContainer(files) {
-    if (files && files.length > 0)
-      chooser.style.setProperty('--selected-files-display', 'flex');
-    else
-    chooser.style.setProperty('--selected-files-display', 'none');
+    if (files && files.length > 0) chooser.style.setProperty('--selected-files-display', 'flex');
+    else chooser.style.setProperty('--selected-files-display', 'none');
   }
 
   function removeFileListener(e) {
-    const fileId = (e.target).getAttribute('data-file-id');
+    const fileId = e.target.getAttribute('data-file-id');
 
     let inputElement = document.getElementById(elementId);
     removeFileById(fileId, inputElement);
 
     showOrHideSelectedFilesContainer(allFiles);
 
-    inputElement.dispatchEvent(new CustomEvent("file-input-change", { bubbles: true }));
+    inputElement.dispatchEvent(new CustomEvent('file-input-change', {bubbles: true}));
   }
 
   function removeFileById(fileId, inputElement) {
     let fileContainer = document.getElementById(fileId);
     fileContainer.remove();
 
-    allFiles = allFiles.filter(v => v.uniqueId != fileId);
+    allFiles = allFiles.filter((v) => v.uniqueId != fileId);
     let dataTransfer = toDataTransfer(allFiles);
 
     if (inputElement) inputElement.files = dataTransfer.files;
@@ -207,23 +217,19 @@ function setupFileInput(chooser) {
   }
 
   function createFileInfoContainer(info) {
-    let fileInfoContainer = document.createElement("div");
+    let fileInfoContainer = document.createElement('div');
     let fileInfoContainerClasses = 'file-info d-flex flex-column align-items-center justify-content-center';
 
     $(fileInfoContainer).addClass(fileInfoContainerClasses);
 
-    $(fileInfoContainer).append(
-      `<div title="${info.name}">${info.name}</div>`
-    );
+    $(fileInfoContainer).append(`<div title="${info.name}">${info.name}</div>`);
     let fileSizeWithUnits = FileUtils.transformFileSize(info.size);
-    $(fileInfoContainer).append(
-      `<div title="${info.size}">${fileSizeWithUnits}</div>`
-    );
+    $(fileInfoContainer).append(`<div title="${info.size}">${fileSizeWithUnits}</div>`);
     return fileInfoContainer;
   }
 
   //Listen for event of file being removed and the filter it out of the allFiles array
-  document.addEventListener("fileRemoved", function (e) {
+  document.addEventListener('fileRemoved', function (e) {
     const fileId = e.detail;
     let inputElement = document.getElementById(elementId);
     removeFileById(fileId, inputElement);
