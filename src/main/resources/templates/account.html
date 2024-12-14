@@ -196,7 +196,7 @@
                     /*<![CDATA[*/
                     const urlGetApiKey = /*[[@{/api/v1/user/get-api-key}]]*/ "/api/v1/user/get-api-key";
                     /*]]>*/
-                    let response = await fetch(urlGetApiKey, { method: 'POST' });
+                    let response = await window.fetchWithCsrf(urlGetApiKey, { method: 'POST' });
                     if (response.status === 200) {
                       let apiKey = await response.text();
                       manageUIState(apiKey);
@@ -213,7 +213,7 @@
                     /*<![CDATA[*/
                     const urlUpdateApiKey = /*[[@{/api/v1/user/update-api-key}]]*/ "/api/v1/user/update-api-key";
                     /*]]>*/
-                    let response = await fetch(urlUpdateApiKey, { method: 'POST' });
+                    let response = await window.fetchWithCsrf(urlUpdateApiKey, { method: 'POST' });
                     if (response.status === 200) {
                       let apiKey = await response.text();
                       manageUIState(apiKey);
