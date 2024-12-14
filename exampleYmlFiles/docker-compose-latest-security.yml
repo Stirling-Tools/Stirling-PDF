@@ -1,7 +1,7 @@
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Security
-    image: stirlingtools/stirling-pdf:test
+    image: stirlingtools/stirling-pdf:latest
     deploy:
       resources:
         limits:
@@ -20,7 +20,6 @@ services:
       - /stirling/latest/config:/configs:rw
       - /stirling/latest/logs:/logs:rw
     environment:
-      SYSTEM_PROFILES_ACTIVE: docker
       DOCKER_ENABLE_SECURITY: "true"
       SECURITY_ENABLELOGIN: "true"
       PUID: 1002
@@ -33,6 +32,7 @@ services:
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
+      SYSTEM_PROFILES_ACTIVE: docker
       SYSTEM_DATASOURCE_URL: "jdbc:postgresql://db:5432/stirling_pdf"
       SYSTEM_DATASOURCE_USERNAME: "admin"
       SYSTEM_DATASOURCE_PASSWORD: "stirling"
