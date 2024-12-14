@@ -38,7 +38,7 @@
 
         const processFile = async (file) => {
           const origFileUrl = URL.createObjectURL(file);
-          const formPdfBytes = await fetch(origFileUrl).then(res => res.arrayBuffer());
+          const formPdfBytes = await window.fetchWithCsrf(origFileUrl).then(res => res.arrayBuffer());
           const pdfDoc = await PDFDocument.load(formPdfBytes, { ignoreEncryption: true });
 
           const pages = pdfDoc.getPages();

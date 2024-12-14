@@ -140,7 +140,7 @@
     let errorMessage = null;
 
     try {
-      const response = await fetch(url, {method: 'POST', body: formData});
+      const response = await window.fetchWithCsrf(url, {method: 'POST', body: formData});
       const contentType = response.headers.get('content-type');
 
       if (!response.ok) {
