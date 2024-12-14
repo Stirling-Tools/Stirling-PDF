@@ -2768,6 +2768,14 @@
   border:2px solid transparent;
 }
 
+html[data-toolbar-density="compact"] {
+  --toolbar-height: 30px;
+}
+
+html[data-toolbar-density="touch"] {
+  --toolbar-height: 44px;
+}
+
 :root{
   --dir-factor:1;
   --inline-start:left;
@@ -2776,6 +2784,8 @@
   --sidebar-width:200px;
   --sidebar-transition-duration:200ms;
   --sidebar-transition-timing-function:ease;
+
+  --toolbar-height: 50px;
 
   --toolbar-icon-opacity:0.7;
   --doorhanger-icon-opacity:0.9;
@@ -3044,7 +3054,7 @@ body{
 
 #sidebarContainer{
   position:absolute;
-  inset-block:32px 0;
+  inset-block:var(--toolbar-height) 0;
   inset-inline-start:calc(-1 * var(--sidebar-width));
   width:var(--sidebar-width);
   visibility:hidden;
@@ -3071,7 +3081,7 @@ body{
 }
 
 #sidebarContent{
-  inset-block:32px 0;
+  inset-block:var(--toolbar-height) 0;
   inset-inline-start:0;
   overflow:auto;
   position:absolute;
@@ -3082,7 +3092,7 @@ body{
 #viewerContainer{
   overflow:auto;
   position:absolute;
-  inset:32px 0 0;
+  inset:var(--toolbar-height) 0 0;
   outline:none;
 }
 #viewerContainer:not(.pdfPresentationMode){
@@ -3116,7 +3126,7 @@ body{
 
 #toolbarSidebar{
   width:100%;
-  height:32px;
+  height:var(--toolbar-height);
   background-color:var(--sidebar-toolbar-bg-color);
   box-shadow:var(--toolbarSidebar-box-shadow);
   border-bottom:var(--toolbarSidebar-border-bottom);
@@ -3136,14 +3146,14 @@ body{
 .secondaryToolbar,
 .editorParamsToolbar{
   position:relative;
-  height:32px;
+  height:var(--toolbar-height);
   background-color:var(--toolbar-bg-color);
   box-shadow:var(--toolbar-box-shadow);
   border-bottom:var(--toolbar-border-bottom);
 }
 
 #toolbarViewer{
-  height:32px;
+  height: var(--toolbar-height);
 }
 
 #loadingBar{
@@ -3237,7 +3247,8 @@ body{
   background-color:var(--toolbar-bg-color);
 }
 .findbar > div{
-  height:32px;
+  /* height:32px; */
+  height: var(--toolbar-height);
 }
 .findbar > div#findbarInputContainer{
   margin-inline-end:4px;
@@ -3439,6 +3450,7 @@ body{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
+  height: calc(var(--toolbar-height) - 6px);
 }
 
 #toolbarViewerLeft,
@@ -3473,6 +3485,8 @@ body{
 .splitToolbarButton{
   margin:2px;
   display:inline-block;
+  height: calc(var(--toolbar-height) - 6px);
+  overflow: hidden;
 }
 .splitToolbarButton > .toolbarButton{
   float:var(--inline-start);
@@ -3486,6 +3500,11 @@ body{
   width:28px;
   height:28px;
   outline:none;
+}
+
+.toolbarButton {
+  height: calc(var(--toolbar-height) - 6px);
+  width: calc(var(--toolbar-height) - 6px);
 }
 
 .dialogButton:is(:hover, :focus-visible){
@@ -3514,6 +3533,8 @@ body{
 .splitToolbarButton > .toolbarButton{
   position:relative;
   margin:0;
+  height: calc(var(--toolbar-height) - 6px);
+  width: calc(var(--toolbar-height) - 6px);
 }
 #toolbarSidebar .splitToolbarButton > .toolbarButton{
   margin-inline-end:2px;
@@ -3525,6 +3546,22 @@ body{
   width:1px;
   height:20px;
   background-color:var(--separator-color);
+  height: calc(var(--toolbar-height) - 6px);
+}
+
+#scaleSelectContainer {
+  height: calc(var(--toolbar-height) - 10px);
+  inset: 4px 0 0 0;
+}
+
+#scaleSelectContainer::after {
+  width: calc(var(--toolbar-height) - 25px);
+  height: calc(var(--toolbar-height) - 25px);
+}
+
+#scaleSelect {
+  font-size: calc(var(--toolbar-height) - 25px) !important;
+  height: 100%;
 }
 
 .toolbarButton,
@@ -3642,6 +3679,8 @@ body{
   opacity:var(--toolbar-icon-opacity);
   top:6px;
   left:6px;
+  height: calc(var(--toolbar-height) - 25px);
+  width: calc(var(--toolbar-height) - 25px);
 }
 
 .toolbarButton:is(:hover, :focus-visible)::before,
@@ -3655,10 +3694,18 @@ body{
   inset-inline-start:12px;
 }
 
+#sidebarToggle {
+  height: calc(var(--toolbar-height) - 6px);
+  width: calc(var(--toolbar-height) - 6px);
+}
+
 #sidebarToggle::before{
   -webkit-mask-image:var(--toolbarButton-sidebarToggle-icon);
           mask-image:var(--toolbarButton-sidebarToggle-icon);
   transform:scaleX(var(--dir-factor));
+
+  height: calc(var(--toolbar-height) - 25px);
+  width: calc(var(--toolbar-height) - 25px);
 }
 
 #secondaryToolbarToggle::before{
@@ -3930,7 +3977,9 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
 #pageNumber{
   -moz-appearance:textfield;
   text-align:end;
-  width:40px;
+  width: 40px;
+  height: calc(var(--toolbar-height) - 6px);
+  font-size: calc(var(--toolbar-height) - 25px) !important;
   background-size:0 0;
   transition-property:none;
 }
@@ -3963,6 +4012,11 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
             mask-image:var(--loading-icon);
   }
 
+.loadingInput.start {
+  height: calc(var(--toolbar-height) - 6px);
+  width: calc(var(--toolbar-height) - 6px);
+}
+
 .loadingInput.start::after{
     inset-inline-start:4px;
   }
@@ -3988,6 +4042,12 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
      -moz-user-select:none;
           user-select:none;
   cursor:default;
+}
+
+#numPages {
+  height: calc(var(--toolbar-height) - 6px);
+  font-size: calc(var(--toolbar-height) - 25px);
+  line-height: calc(var(--toolbar-height) - 22px);
 }
 
 #numPages.toolbarLabel{

@@ -27,35 +27,37 @@
 <body>
   <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
   <br><br>
-  <div class="tool-header text-center">
-    <span class="material-symbols-rounded tool-header-icon security">ink_eraser</span>
-    <span class="tool-header-text" th:text="#{redact.header}"></span>
-  </div>
-  <br><br>
-  <form th:action="@{'api/v1/security/redact'}" method="post" enctype="multipart/form-data">
-    <div class="ms-5 me-5">
-      <div
-        th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
+  <div class="container mb-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6 bg-card">
+        <div class="tool-header">
+          <span class="material-symbols-rounded tool-header-icon security">ink_eraser</span>
+          <span class="tool-header-text" th:text="#{redact.header}"></span>
+        </div>
+        <form th:action="@{'api/v1/security/redact'}" method="post" enctype="multipart/form-data">
+            <div
+              th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
+            </div>
+          <div class="mb-3 form-check">
+            <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage" checked>
+            <label for="convertPDFToImage" th:text="#{redact.convertPDFToImageLabel}"></label>
+          </div>
+          <div class="mb-3">
+            <label for="pageNumbers" th:text="#{redact.pageRedactionNumbers.title} + ':'" class="mb-2"></label>
+            <input type="text" class="form-control" id="pageNumbers" name="pageNumbers"
+              th:placeholder="#{redact.pageRedactionNumbers.placeholder}">
+          </div>
+          <div class="mb-3 d-flex">
+            <label for="pageRedactColor">Page Redaction Color:</label>
+            <input id="pageRedactColor" name="pageRedactionColor" type="color" class="ms-3" value="#000000">
+          </div>
+          <input type="hidden" name="redactions" id="redactions-input">
+          <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{redact.submit}"></button>
+          </form>
       </div>
-    </div>
-    <div class="mb-3 form-check text-center">
-      <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage" checked>
-      <label for="convertPDFToImage" th:text="#{redact.convertPDFToImageLabel}"></label>
-    </div>
-    <div class="mb-3 w-25 m-auto">
-      <label for="pageNumbers" th:text="#{redact.pageRedactionNumbers.title} + ':'" class="mb-2"></label>
-      <input type="text" class="form-control" id="pageNumbers" name="pageNumbers"
-        th:placeholder="#{redact.pageRedactionNumbers.placeholder}">
-    </div>
-    <div class="mb-3 w-25 m-auto d-flex align-items-center">
-      <label for="pageRedactColor">Page Redaction Color:</label>
-      <input id="pageRedactColor" name="pageRedactionColor" type="color" class="ms-3" value="#000000">
-    </div>
-    <input type="hidden" name="redactions" id="redactions-input">
-    <div class="mb-3 text-center">
-      <button type="submit" id="submitBtn" class="btn btn-primary w-25" th:text="#{redact.submit}"></button>
-    </div>
-  </form>
+      </div>
+      </div>
+
   <div id="outerContainer" class="d-none">
     <div id="sidebarContainer">
       <div id="toolbarSidebar">
@@ -467,7 +469,8 @@
                     <span id="shape-selection-eraser" class="material-symbols-rounded user-select-none pe-none">ink_eraser</span>
                     </span>
                     </button>
-                <label id="redactions-palette" class="material-symbols-rounded palette-color" style="--palette-color: #000000;">
+                <label id="redactions-palette" class="material-symbols-rounded palette-color text-center"
+                  style="--palette-color: #000000;">
                   palette
                   <input type="color" name="color-picker" class="d-none">
                 </label>
