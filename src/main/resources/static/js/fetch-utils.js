@@ -8,7 +8,6 @@ window.fetchWithCsrf = async function(url, options = {}) {
         if (cookieValue) {
             return cookieValue;
         }
-        
         const csrfElement = document.querySelector('input[name="_csrf"]');
         return csrfElement ? csrfElement.value : null;
     }
