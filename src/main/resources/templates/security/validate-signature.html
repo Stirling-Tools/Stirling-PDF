@@ -102,7 +102,7 @@ document.querySelector('#pdfForm').addEventListener('submit', async (e) => {
             formData.append('certFile', certInput.files[0]);
         }
         try {
-            const response = await fetch(e.target.action, {
+            const response = await window.fetchWithCsrf(e.target.action, {
                 method: 'POST',
                 body: formData
             });

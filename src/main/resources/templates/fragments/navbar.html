@@ -14,6 +14,7 @@
   </script>
   <script th:src="@{'/js/homecard.js'}"></script>
   <script th:src="@{'/js/githubVersion.js'}"></script>
+  <form th:action="@{'/dummyFormToPopulateCSRF'}" method="post" enctype="multipart/form-data"></form>
   <nav class="navbar navbar-expand-xl">
     <div class="container ">
       <a class="navbar-brand" th:href="@{'/'}" style="display: flex;">
@@ -376,7 +377,6 @@
               <span class="go-pro-badge" th:text="#{enterpriseEdition.button}"></span>
             </a>
           </li>
-
           <li class="nav-item">
             <!-- Settings Button -->
             <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#settingsModal" th:title="#{navbar.settings}">
