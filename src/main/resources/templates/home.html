@@ -215,7 +215,7 @@
               <div
                 th:replace="~{fragments/card :: card(id='cert-sign', cardTitle=#{home.certSign.title}, cardText=#{home.certSign.desc}, cardLink='cert-sign', toolIcon='workspace_premium', tags=#{certSign.tags}, toolGroup='security')}">
               </div>
-			  <div 
+			  <div
 			    th:replace="~{fragments/card :: card(id='validate-signature', cardTitle=#{home.validateSignature.title}, cardText=#{home.validateSignature.desc}, cardLink='validate-signature', toolIcon='verified', tags=#{validateSignature.tags}, toolGroup='security')}">
 			  </div>
               <div
@@ -481,8 +481,12 @@ document.addEventListener("DOMContentLoaded", function() {
         localStorage.setItem('surveyTaken', 'true');
         localStorage.setItem('surveyVersion', surveyVersion);
         modal.hide();
+      });
+
+      if (localStorage.getItem('dontShowSurvey')) {
+        modal.hide();
+      }
     });
-});
   </script>
 
 

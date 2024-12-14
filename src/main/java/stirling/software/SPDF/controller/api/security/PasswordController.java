@@ -39,10 +39,7 @@ public class PasswordController {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/remove-password")
-    @Operation(
-            summary = "Remove password from a PDF file",
-            description =
-                    "This endpoint removes the password from a protected PDF file. Users need to provide the existing password. Input:PDF Output:PDF Type:SISO")
+    @Operation(summary = "Remove password from a PDF file", description = "This endpoint removes the password from a protected PDF file. Users need to provide the existing password. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> removePassword(@ModelAttribute PDFPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
@@ -52,15 +49,12 @@ public class PasswordController {
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
                 Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
+                        .replaceFirst("[.][^.]+$", "")
                         + "_password_removed.pdf");
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-password")
-    @Operation(
-            summary = "Add password to a PDF file",
-            description =
-                    "This endpoint adds password protection to a PDF file. Users can specify a set of permissions that should be applied to the file. Input:PDF Output:PDF")
+    @Operation(summary = "Add password to a PDF file", description = "This endpoint adds password protection to a PDF file. Users can specify a set of permissions that should be applied to the file. Input:PDF Output:PDF")
     public ResponseEntity<byte[]> addPassword(@ModelAttribute AddPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
@@ -98,12 +92,12 @@ public class PasswordController {
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                                    .replaceFirst("[.][^.]+$", "")
+                            .replaceFirst("[.][^.]+$", "")
                             + "_permissions.pdf");
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
                 Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                                .replaceFirst("[.][^.]+$", "")
+                        .replaceFirst("[.][^.]+$", "")
                         + "_passworded.pdf");
     }
 }

@@ -88,15 +88,45 @@ public class GeneralUtils {
 
     public static boolean isURLReachable(String urlStr) {
         try {
+            // Parse the URL
             URL url = URI.create(urlStr).toURL();
+
+            // Allow only http and https protocols
+            String protocol = url.getProtocol();
+            if (!protocol.equals("http") && !protocol.equals("https")) {
+                return false; // Disallow other protocols
+            }
+
+            // Check if the host is a local address
+            String host = url.getHost();
+            if (isLocalAddress(host)) {
+                return false; // Exclude local addresses
+            }
+
+            // Check if the URL is reachable
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("HEAD");
+            // connection.setConnectTimeout(5000); // Set connection timeout
+            // connection.setReadTimeout(5000);    // Set read timeout
             int responseCode = connection.getResponseCode();
             return (200 <= responseCode && responseCode <= 399);
-        } catch (MalformedURLException e) {
-            return false;
-        } catch (IOException e) {
-            return false;
+        } catch (Exception e) {
+            return false; // Return false in case of any exception
+        }
+    }
+
+    private static boolean isLocalAddress(String host) {
+        try {
+            // Resolve DNS to IP address
+            InetAddress address = InetAddress.getByName(host);
+
+            // Check for local addresses
+            return address.isAnyLocalAddress() ||  // Matches 0.0.0.0 or similar
+                   address.isLoopbackAddress() || // Matches 127.0.0.1 or ::1
+                   address.isSiteLocalAddress() || // Matches private IPv4 ranges: 192.168.x.x, 10.x.x.x, 172.16.x.x to 172.31.x.x
+                   address.getHostAddress().startsWith("fe80:"); // Matches link-local IPv6 addresses
+        } catch (Exception e) {
+            return false; // Return false for invalid or unresolved addresses
         }
     }
 
