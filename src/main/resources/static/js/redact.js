@@ -129,6 +129,7 @@ window.addEventListener("load", (e) => {
     function _handleTextSelectionRedactionBtnClick(e) {
       if (textSelectionRedactionBtn.classList.contains("toggled")) {
         resetTextSelection();
+        applyRedactionBtn.classList.add("d-none");
       } else {
         resetDrawRedactions();
         textSelectionRedactionBtn.classList.add("toggled");
@@ -136,6 +137,7 @@ window.addEventListener("load", (e) => {
         const containsText =
           window.getSelection() && window.getSelection().toString() != "";
         applyRedactionBtn.disabled = !containsText;
+        applyRedactionBtn.classList.remove("d-none");
       }
     }
 
