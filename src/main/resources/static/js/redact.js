@@ -44,7 +44,13 @@ window.addEventListener("load", (e) => {
   let redactionsPalette = document.getElementById("redactions-palette");
   let redactionsPaletteInput = redactionsPalette.querySelector("input");
 
+  let redactionsPaletteContainer = document.getElementById(
+    "redactionsPaletteContainer"
+  );
+
   let applyRedactionBtn = document.getElementById("apply-redaction");
+
+  redactionsPaletteContainer.onclick = (e) => redactionsPalette.click();
 
   viewer.onmouseup = (e) => {
     if (redactionMode !== RedactionModes.TEXT) return;
@@ -137,6 +143,7 @@ window.addEventListener("load", (e) => {
       textSelectionRedactionBtn.classList.remove("toggled");
       redactionMode = RedactionModes.NONE;
       clearSelection();
+      applyRedactionBtn.disabled = true;
     }
 
     function clearSelection() {

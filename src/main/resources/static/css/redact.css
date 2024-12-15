@@ -122,7 +122,7 @@ html {
   border-radius: 15px;
 }
 
-#man-text-select-redact:is(:hover, :focus-within) {
+#man-text-select-redact:is(:hover) {
   background-color: var(--button-hover-color);
 }
 
@@ -152,7 +152,7 @@ html {
   border-radius: 15px;
 }
 
-#man-shape-redact:is(:hover, :focus-within) {
+#man-shape-redact:is(:hover) {
   background-color: var(--button-hover-color);
 }
 
@@ -176,21 +176,48 @@ html {
   outline:var(--toggled-hover-btn-outline) !important;
 }
 
-#redactions-palette {
-  position: relative;
+#redactionsPaletteContainer {
   height: calc(var(--toolbar-height) - 12px);
   width: calc(var(--toolbar-height) - 12px);
+  outline: none;
+
+  background-color: var(--md-sys-color-secondary);
+  color: var(--md-sys-color-on-secondary);
+  border-color: var(--md-sys-color-secondary);
+	box-shadow: var(--md-sys-elevation-3) !important;
+  border-radius: 15px;
+  overflow: hidden;
+  border:none;
+}
+
+#redactionsPaletteContainer * {
+  user-select: none;
+  pointer-events: none;
+}
+
+#redactionsPaletteContainer:is(:hover) {
+  cursor: pointer;
+  background-color: var(--button-hover-color);
+}
+
+#redactions-palette {
+  display: inline;
+  position: relative;
+
+  border-bottom: 8px solid var(--palette-color);
+  border-radius: inherit;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
   font-size: calc(var(--toolbar-height) - 20px);
-  border-bottom: none;
 }
 
 #redactions-palette::before {
   position: absolute;
   content: '';
-  height: 5px;
+  height: 6px;
   width: 100%;
   left: 0;
-  bottom: 7px;
+  bottom: 0px;
   background-color: var(--palette-color);
 }
 
