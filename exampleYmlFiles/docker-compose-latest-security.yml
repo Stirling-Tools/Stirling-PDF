@@ -43,6 +43,7 @@ services:
 
   db:
     image: 'postgres:17.2-alpine'
+    restart: on-failure:5
     container_name: db
     ports:
       - "5432:5432"
