@@ -2769,11 +2769,11 @@
 }
 
 html[data-toolbar-density="compact"] {
-  --toolbar-height: 30px;
+  --toolbar-height: 1.875rem;
 }
 
 html[data-toolbar-density="touch"] {
-  --toolbar-height: 44px;
+  --toolbar-height: 2.75rem;
 }
 
 :root{
@@ -2785,7 +2785,7 @@ html[data-toolbar-density="touch"] {
   --sidebar-transition-duration:200ms;
   --sidebar-transition-timing-function:ease;
 
-  --toolbar-height: 60px;
+  --toolbar-height: 3.75rem;
 
   --toolbar-icon-opacity:0.7;
   --doorhanger-icon-opacity:0.9;
@@ -3122,6 +3122,7 @@ body{
 
 #toolbarContainer{
   width:100%;
+  border-radius: 5px;
 }
 
 #toolbarSidebar{
@@ -3451,7 +3452,7 @@ body{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  height: calc(var(--toolbar-height) - 12px);
+  height: calc(var(--toolbar-height) - 0.75rem);
 }
 
 #toolbarViewerLeft,
@@ -3486,8 +3487,7 @@ body{
 .splitToolbarButton{
   margin:2px;
   display:inline-block;
-  height: calc(var(--toolbar-height) - 6px);
-  overflow: hidden;
+  height: calc(var(--toolbar-height) - 0.375rem);
   padding-top: 5px;
 }
 .splitToolbarButton > .toolbarButton{
@@ -3510,8 +3510,8 @@ body{
 }
 
 .toolbarButton {
-  height: calc(var(--toolbar-height) - 12px);
-  width: calc(var(--toolbar-height) - 12px);
+  height: calc(var(--toolbar-height) - 0.75rem);
+  width: calc(var(--toolbar-height) - 0.75rem);
   border-radius: 15px !important;
 }
 
@@ -3541,8 +3541,8 @@ body{
 .splitToolbarButton > .toolbarButton{
   position:relative;
   margin:0;
-  height: calc(var(--toolbar-height) - 12px);
-  width: calc(var(--toolbar-height) - 12px);
+  height: calc(var(--toolbar-height) - 0.75rem);
+  width: calc(var(--toolbar-height) - 0.75rem);
 }
 #toolbarSidebar .splitToolbarButton > .toolbarButton{
   margin-inline-end:2px;
@@ -3550,7 +3550,7 @@ body{
 
 .splitToolbarButtonSeparator{
   float:var(--inline-start);
-  margin:4px 0;
+  margin:4px 3px;
   width:1px;
   height:20px;
   background-color:var(--separator-color);
@@ -3558,18 +3558,20 @@ body{
 }
 
 #scaleSelectContainer {
-  height: calc(var(--toolbar-height) - 10px);
+  height: calc(var(--toolbar-height) - 0.625rem);
   inset: 4px 0 0 0;
+  border-radius: 15px;
 }
 
 #scaleSelectContainer::after {
-  width: calc(var(--toolbar-height) - 30px);
-  height: calc(var(--toolbar-height) - 30px);
+  width: calc(var(--toolbar-height) - 1.875rem);
+  height: calc(var(--toolbar-height) - 1.875rem);
 }
 
 #scaleSelect {
-  font-size: calc(var(--toolbar-height) - 30px) !important;
+  font-size: calc(var(--toolbar-height) - 2.5rem) !important;
   height: 100%;
+  border-radius: inherit;
 }
 
 .toolbarButton,
@@ -3577,7 +3579,7 @@ body{
 .secondaryToolbarButton,
 .dialogButton{
   min-width:16px;
-  margin:2px 1px;
+  margin:2px 3px;
   padding:2px 6px 0;
   border:none;
   border-radius:2px;
@@ -3629,7 +3631,7 @@ body{
   border:var(--dropdown-btn-border);
 }
 .dropdownToolbarButton::after{
-  top:6px;
+  top:10px;
   inset-inline-end:6px;
   pointer-events:none;
   -webkit-mask-image:var(--toolbarButton-menuArrow-icon);
@@ -3685,10 +3687,10 @@ body{
 
 .toolbarButton::before{
   opacity:var(--toolbar-icon-opacity);
-  top:6px;
-  left:6px;
-  height: calc(var(--toolbar-height) - 30px);
-  width: calc(var(--toolbar-height) - 30px);
+  top:8px;
+  left:10px;
+  height: calc(var(--toolbar-height) - 1.875rem);
+  width: calc(var(--toolbar-height) - 1.875rem);
   background-color: var(--md-sys-color-on-secondary);
 }
 
@@ -3704,8 +3706,8 @@ body{
 }
 
 #sidebarToggle {
-  height: calc(var(--toolbar-height) - 12px);
-  width: calc(var(--toolbar-height) - 12px);
+  height: calc(var(--toolbar-height) - 0.75rem);
+  width: calc(var(--toolbar-height) - 0.75rem);
 }
 
 #sidebarToggle::before{
@@ -3713,8 +3715,8 @@ body{
           mask-image:var(--toolbarButton-sidebarToggle-icon);
   transform:scaleX(var(--dir-factor));
 
-  height: calc(var(--toolbar-height) - 30px);
-  width: calc(var(--toolbar-height) - 30px);
+  height: calc(var(--toolbar-height) - 1.875rem);
+  width: calc(var(--toolbar-height) - 1.875rem);
 }
 
 #secondaryToolbarToggle::before{
@@ -3986,11 +3988,12 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
 #pageNumber{
   -moz-appearance:textfield;
   text-align:end;
-  width: 40px;
-  height: calc(var(--toolbar-height) - 12px);
-  font-size: calc(var(--toolbar-height) - 30px) !important;
+  width: calc(var(--toolbar-height) - 0.75rem);
+  height: calc(var(--toolbar-height) - 0.75rem);
+  font-size: calc(var(--toolbar-height) - 2.5rem) !important;
   background-size:0 0;
   transition-property:none;
+  border-radius: 10px;
 }
 
 #pageNumber::-webkit-inner-spin-button{
@@ -4022,8 +4025,8 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
   }
 
 .loadingInput.start {
-  height: calc(var(--toolbar-height) - 12px);
-  width: calc(var(--toolbar-height) - 12px);
+  height: calc(var(--toolbar-height) - 0.75rem);
+  width: calc(var(--toolbar-height) - 0.75rem);
   padding-top: 5px;
 }
 
@@ -4044,7 +4047,7 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
   padding:7px;
   margin:2px;
   border-radius:2px;
-  color:var(--main-color);
+  color: var(--md-sys-color-on-surface);
   font-size:12px;
   line-height:14px;
   text-align:left;
@@ -4055,9 +4058,9 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
 }
 
 #numPages {
-  height: calc(var(--toolbar-height) - 12px);
-  font-size: calc(var(--toolbar-height) - 30px);
-  line-height: calc(var(--toolbar-height) - 15px);
+  height: calc(var(--toolbar-height) - 0.75rem);
+  font-size: calc(var(--toolbar-height) - 2.5rem);
+  line-height: calc(var(--toolbar-height) - 0.938rem);
 }
 
 #numPages.toolbarLabel{

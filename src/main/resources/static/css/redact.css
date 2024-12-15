@@ -113,17 +113,10 @@ html {
 #man-text-select-redact {
   height: calc(var(--toolbar-height) - 12px);
   width: calc(var(--toolbar-height) - 12px);
-  border: none;
 
-  background-color: var(--md-sys-color-secondary);
-  color: var(--md-sys-color-on-secondary);
-  border-color: var(--md-sys-color-secondary);
-	box-shadow: var(--md-sys-elevation-3) !important;
   border-radius: 15px;
-}
-
-#man-text-select-redact:is(:hover) {
-  background-color: var(--button-hover-color);
+  transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  user-select: none;
 }
 
 #text-selection {
@@ -136,24 +129,16 @@ html {
   left: 7px;
   top: 5px;
 
-  /* font-size: 14px; */
   font-size: 24px;
 }
 
 #man-shape-redact {
   height: calc(var(--toolbar-height) - 12px);
   width: calc(var(--toolbar-height) - 12px);
-  border: none;
 
-  background-color: var(--md-sys-color-secondary);
-  color: var(--md-sys-color-on-secondary);
-  border-color: var(--md-sys-color-secondary);
-	box-shadow: var(--md-sys-elevation-3) !important;
   border-radius: 15px;
-}
-
-#man-shape-redact:is(:hover) {
-  background-color: var(--button-hover-color);
+  transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  user-select: none;
 }
 
 #shape-selection {
@@ -166,38 +151,34 @@ html {
   left: 50%;
   top: 50%;
 
-  /* font-size: 14px; */
   font-size: 24px;
 }
 
-:is(#man-shape-redact, #man-text-select-redact).toggled {
-  background-color: var(--toggled-btn-bg-color);
-  color: var(--toggled-btn-color);
-  outline:var(--toggled-hover-btn-outline) !important;
+:is(#man-shape-redact, #man-text-select-redact, #sidebarToggle, #viewThumbnail, #viewOutline).toggled {
+  background-color: rgb(50, 159, 243);
+  color: rgb(255 255 255);
+  outline:rgb(50, 159, 243) !important;
+  border-color: rgb(50, 159, 243) !important;
+}
+
+:is(#man-shape-redact, #man-text-select-redact, #redactionsPaletteContainer):hover {
+  background-color: rgba(6, 114, 197, 0.82);
+  color: rgb(255 255 255);
+  outline:rgba(6, 114, 197, 0.82) !important;
+  border-color: rgba(6, 114, 197, 0.82) !important;
 }
 
 #redactionsPaletteContainer {
   height: calc(var(--toolbar-height) - 12px);
   width: calc(var(--toolbar-height) - 12px);
-  outline: none;
 
-  background-color: var(--md-sys-color-secondary);
-  color: var(--md-sys-color-on-secondary);
-  border-color: var(--md-sys-color-secondary);
-	box-shadow: var(--md-sys-elevation-3) !important;
   border-radius: 15px;
   overflow: hidden;
-  border:none;
 }
 
 #redactionsPaletteContainer * {
   user-select: none;
   pointer-events: none;
-}
-
-#redactionsPaletteContainer:is(:hover) {
-  cursor: pointer;
-  background-color: var(--button-hover-color);
 }
 
 #redactions-palette {
@@ -225,22 +206,28 @@ html {
   height: calc(var(--toolbar-height) - 12px);
   width: calc(var(--toolbar-height) - 12px);
 
-  border: none;
-
-  background-color: var(--md-sys-color-secondary);
-  color: var(--md-sys-color-on-secondary);
-  border-color: var(--md-sys-color-secondary);
-	box-shadow: var(--md-sys-elevation-3) !important;
   border-radius: 15px;
 }
 
 #apply-redaction[disabled=true], #apply-redaction:disabled:not([disabled=false]) {
   color: rgb(147, 149, 153);
+  box-shadow: none !important;
 }
 
 #apply-redaction:is(:hover):not([disabled=true], :disabled:not([disabled=false])) {
   cursor: pointer;
-  background-color: var(--button-hover-color);
+  background-color: rgba(6, 114, 197, 0.82);
+  color: rgb(255 255 255);
+  outline:rgba(6, 114, 197, 0.82) !important;
+  border-color: rgba(6, 114, 197, 0.82) !important;
+}
+
+.toolbar-btn-hover:hover {
+  cursor: pointer;
+  background-color: rgba(6, 114, 197, 0.82) !important;
+  color: rgb(255 255 255) !important;
+  outline:rgba(6, 114, 197, 0.82) !important;
+  border-color: rgba(6, 114, 197, 0.82) !important;
 }
 
 #apply-redaction-icon {
@@ -268,4 +255,9 @@ html {
 .palette-color:is(:hover, :focus-within) {
   cursor: pointer;
   background-color: var(--button-hover-color);
+}
+
+.splitToolbarButton > .btn-primary, .splitToolbarButton > .btn-secondary, .splitToolbarButton > .toolbarButton {
+  margin-left: 3px;
+  margin-right: 3px;
 }

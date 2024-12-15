@@ -63,11 +63,11 @@
       <div id="toolbarSidebar">
         <div id="toolbarSidebarLeft">
           <div id="sidebarViewButtons" class="splitToolbarButton toggled" role="radiogroup">
-            <button id="viewThumbnail" class="toolbarButton toggled" title="Show Thumbnails" tabindex="2"
+            <button id="viewThumbnail" class="toolbarButton toggled toolbar-btn-hover" title="Show Thumbnails" tabindex="2"
               data-l10n-id="pdfjs-thumbs-button" role="radio" aria-checked="true" aria-controls="thumbnailView">
               <span data-l10n-id="pdfjs-thumbs-button-label">Thumbnails</span>
             </button>
-            <button id="viewOutline" class="toolbarButton ms-1"
+            <button id="viewOutline" class="toolbarButton toolbar-btn-hover"
               title="Show Document Outline (double-click to expand/collapse all items)" tabindex="3"
               data-l10n-id="pdfjs-document-outline-button" role="radio" aria-checked="false"
               aria-controls="outlineView">
@@ -344,7 +344,7 @@
         <div id="toolbarContainer">
           <div id="toolbarViewer">
             <div id="toolbarViewerLeft">
-              <button id="sidebarToggle" class="toolbarButton" title="Toggle Sidebar" tabindex="11"
+              <button id="sidebarToggle" class="toolbarButton mt-2" title="Toggle Sidebar" tabindex="11"
                 data-l10n-id="pdfjs-toggle-sidebar-button" aria-expanded="false" aria-controls="sidebarContainer">
                 <span data-l10n-id="pdfjs-toggle-sidebar-button-label">Toggle Sidebar</span>
               </button>
@@ -354,12 +354,12 @@
                 <span data-l10n-id="pdfjs-findbar-button-label">Find</span>
               </button>
               <div class="splitToolbarButton hiddenSmallView me-3 ms-3">
-                <button class="toolbarButton" title="Previous Page" id="previous" tabindex="13"
+                <button class="toolbarButton btn-secondary toolbar-btn-hover" title="Previous Page" id="previous" tabindex="13"
                   data-l10n-id="pdfjs-previous-button">
                   <span data-l10n-id="pdfjs-previous-button-label">Previous</span>
                 </button>
                 <div class="splitToolbarButtonSeparator"></div>
-                <button class="toolbarButton ms-1" title="Next Page" id="next" tabindex="14"
+                <button class="toolbarButton btn-secondary toolbar-btn-hover" title="Next Page" id="next" tabindex="14"
                   data-l10n-id="pdfjs-next-button">
                   <span data-l10n-id="pdfjs-next-button-label">Next</span>
                 </button>
@@ -370,9 +370,9 @@
               </span>
               <span id="numPages" class="toolbarLabel"></span>
               <img class="main-icon" th:src="@{'/favicon.svg'}" alt="icon"
-                style="height: calc(var(--toolbar-height) - 6px); width: calc(var(--toolbar-height) - 6px);inset: 5px;">
+                style="height: calc(var(--toolbar-height) - 0.375rem); width: calc(var(--toolbar-height) - 0.375rem);inset: 5px;">
             </div>
-            <div id="toolbarViewerRight">
+            <div id="toolbarViewerRight" class="d-none">
               <div id="editorModeButtons" class="splitToolbarButton toggled" role="radiogroup">
                 <button id="editorHighlight" class="toolbarButton" hidden="true" disabled="disabled" title="Highlight"
                   role="radio" aria-checked="false" aria-controls="editorHighlightParamsToolbar" tabindex="31"
@@ -419,12 +419,12 @@
             </div>
             <div id="toolbarViewerMiddle">
               <div class="splitToolbarButton me-3 ms-3">
-                <button id="zoomOut" class="toolbarButton ms-1" title="Zoom Out" tabindex="21"
+                <button id="zoomOut" class="toolbarButton btn-primary toolbar-btn-hover" title="Zoom Out" tabindex="21"
                   data-l10n-id="pdfjs-zoom-out-button">
                   <span data-l10n-id="pdfjs-zoom-out-button-label">Zoom Out</span>
                 </button>
                 <div class="splitToolbarButtonSeparator"></div>
-                <button id="zoomIn" class="toolbarButton ms-1" title="Zoom In" tabindex="22"
+                <button id="zoomIn" class="toolbarButton btn-primary toolbar-btn-hover" title="Zoom In" tabindex="22"
                   data-l10n-id="pdfjs-zoom-in-button">
                   <span data-l10n-id="pdfjs-zoom-in-button-label">Zoom In</span>
                 </button>
@@ -461,24 +461,24 @@
                 </select>
               </span>
               <div class="splitToolbarButton ms-3">
-                <button id="man-text-select-redact" title="Text-based selection redaction" tabindex="22">
+                <button id="man-text-select-redact" class="btn-primary" title="Text-based selection redaction" tabindex="22">
                   <span id="text-selection" class="material-symbols-rounded user-select-none pe-none">text_select_start
                     <span id="text-selection-eraser" class="material-symbols-rounded user-select-none pe-none">ink_eraser</span>
                     </span>
                     </button>
-                    <button id="man-shape-redact" title="Shape drawing redaction" tabindex="22">
+                    <button id="man-shape-redact" class="btn-primary" title="Shape drawing redaction" tabindex="22">
                       <span id="shape-selection" class="material-symbols-rounded user-select-none pe-none">square
                     <span id="shape-selection-eraser" class="material-symbols-rounded user-select-none pe-none">ink_eraser</span>
                     </span>
                     </button>
-                    <button id="redactionsPaletteContainer">
+                    <button id="redactionsPaletteContainer" class="btn-primary">
                       <label id="redactions-palette" class="material-symbols-rounded palette-color text-center"
                         style="--palette-color: #000000;">
                         palette
                         <input type="color" name="color-picker" class="d-none">
                       </label>
                   </button>
-                <button id="apply-redaction" title="Apply changes" disabled>
+                <button id="apply-redaction" title="Apply changes" class="btn-primary" disabled>
                   <span id="apply-redaction-icon" class="material-symbols-rounded">
                     save
                   </span>
