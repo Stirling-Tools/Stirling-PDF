@@ -2785,7 +2785,7 @@ html[data-toolbar-density="touch"] {
   --sidebar-transition-duration:200ms;
   --sidebar-transition-timing-function:ease;
 
-  --toolbar-height: 50px;
+  --toolbar-height: 60px;
 
   --toolbar-icon-opacity:0.7;
   --doorhanger-icon-opacity:0.9;
@@ -3147,7 +3147,8 @@ body{
 .editorParamsToolbar{
   position:relative;
   height:var(--toolbar-height);
-  background-color:var(--toolbar-bg-color);
+  /* background-color:var(--toolbar-bg-color); */
+  background-color:var(--md-sys-color-surface-5);
   box-shadow:var(--toolbar-box-shadow);
   border-bottom:var(--toolbar-border-bottom);
 }
@@ -3450,7 +3451,7 @@ body{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  height: calc(var(--toolbar-height) - 6px);
+  height: calc(var(--toolbar-height) - 12px);
 }
 
 #toolbarViewerLeft,
@@ -3487,6 +3488,7 @@ body{
   display:inline-block;
   height: calc(var(--toolbar-height) - 6px);
   overflow: hidden;
+  padding-top: 5px;
 }
 .splitToolbarButton > .toolbarButton{
   float:var(--inline-start);
@@ -3500,11 +3502,17 @@ body{
   width:28px;
   height:28px;
   outline:none;
+
+  background-color: var(--md-sys-color-secondary);
+  color: var(--md-sys-color-on-secondary);
+  border-color: var(--md-sys-color-secondary);
+	box-shadow: var(--md-sys-elevation-3) !important;
 }
 
 .toolbarButton {
-  height: calc(var(--toolbar-height) - 6px);
-  width: calc(var(--toolbar-height) - 6px);
+  height: calc(var(--toolbar-height) - 12px);
+  width: calc(var(--toolbar-height) - 12px);
+  border-radius: 15px !important;
 }
 
 .dialogButton:is(:hover, :focus-visible){
@@ -3533,8 +3541,8 @@ body{
 .splitToolbarButton > .toolbarButton{
   position:relative;
   margin:0;
-  height: calc(var(--toolbar-height) - 6px);
-  width: calc(var(--toolbar-height) - 6px);
+  height: calc(var(--toolbar-height) - 12px);
+  width: calc(var(--toolbar-height) - 12px);
 }
 #toolbarSidebar .splitToolbarButton > .toolbarButton{
   margin-inline-end:2px;
@@ -3546,7 +3554,7 @@ body{
   width:1px;
   height:20px;
   background-color:var(--separator-color);
-  height: calc(var(--toolbar-height) - 6px);
+  height: calc(var(--toolbar-height) - 12px);
 }
 
 #scaleSelectContainer {
@@ -3555,12 +3563,12 @@ body{
 }
 
 #scaleSelectContainer::after {
-  width: calc(var(--toolbar-height) - 25px);
-  height: calc(var(--toolbar-height) - 25px);
+  width: calc(var(--toolbar-height) - 30px);
+  height: calc(var(--toolbar-height) - 30px);
 }
 
 #scaleSelect {
-  font-size: calc(var(--toolbar-height) - 25px) !important;
+  font-size: calc(var(--toolbar-height) - 30px) !important;
   height: 100%;
 }
 
@@ -3679,8 +3687,9 @@ body{
   opacity:var(--toolbar-icon-opacity);
   top:6px;
   left:6px;
-  height: calc(var(--toolbar-height) - 25px);
-  width: calc(var(--toolbar-height) - 25px);
+  height: calc(var(--toolbar-height) - 30px);
+  width: calc(var(--toolbar-height) - 30px);
+  background-color: var(--md-sys-color-on-secondary);
 }
 
 .toolbarButton:is(:hover, :focus-visible)::before,
@@ -3695,8 +3704,8 @@ body{
 }
 
 #sidebarToggle {
-  height: calc(var(--toolbar-height) - 6px);
-  width: calc(var(--toolbar-height) - 6px);
+  height: calc(var(--toolbar-height) - 12px);
+  width: calc(var(--toolbar-height) - 12px);
 }
 
 #sidebarToggle::before{
@@ -3704,8 +3713,8 @@ body{
           mask-image:var(--toolbarButton-sidebarToggle-icon);
   transform:scaleX(var(--dir-factor));
 
-  height: calc(var(--toolbar-height) - 25px);
-  width: calc(var(--toolbar-height) - 25px);
+  height: calc(var(--toolbar-height) - 30px);
+  width: calc(var(--toolbar-height) - 30px);
 }
 
 #secondaryToolbarToggle::before{
@@ -3978,8 +3987,8 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
   -moz-appearance:textfield;
   text-align:end;
   width: 40px;
-  height: calc(var(--toolbar-height) - 6px);
-  font-size: calc(var(--toolbar-height) - 25px) !important;
+  height: calc(var(--toolbar-height) - 12px);
+  font-size: calc(var(--toolbar-height) - 30px) !important;
   background-size:0 0;
   transition-property:none;
 }
@@ -4000,7 +4009,7 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
     position:absolute;
     visibility:hidden;
     display:none;
-    top:calc(50% - 8px);
+    top:calc(50% - 12px);
     width:16px;
     height:16px;
 
@@ -4013,8 +4022,9 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
   }
 
 .loadingInput.start {
-  height: calc(var(--toolbar-height) - 6px);
-  width: calc(var(--toolbar-height) - 6px);
+  height: calc(var(--toolbar-height) - 12px);
+  width: calc(var(--toolbar-height) - 12px);
+  padding-top: 5px;
 }
 
 .loadingInput.start::after{
@@ -4045,9 +4055,9 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
 }
 
 #numPages {
-  height: calc(var(--toolbar-height) - 6px);
-  font-size: calc(var(--toolbar-height) - 25px);
-  line-height: calc(var(--toolbar-height) - 22px);
+  height: calc(var(--toolbar-height) - 12px);
+  font-size: calc(var(--toolbar-height) - 30px);
+  line-height: calc(var(--toolbar-height) - 15px);
 }
 
 #numPages.toolbarLabel{
@@ -4059,7 +4069,7 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
 #attachmentsView,
 #layersView{
   position:absolute;
-  width:calc(100% - 8px);
+  width:calc(100% - 12px);
   inset-block:0;
   padding:4px 4px 0;
   overflow:auto;

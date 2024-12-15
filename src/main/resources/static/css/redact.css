@@ -111,12 +111,15 @@ html {
 }
 
 #man-text-select-redact {
-  height: calc(var(--toolbar-height) - 6px);
-  width: calc(var(--toolbar-height) - 6px);
+  height: calc(var(--toolbar-height) - 12px);
+  width: calc(var(--toolbar-height) - 12px);
   border: none;
 
-  background-color: var(--toolbar-bg-color);
-  color: rgb(223 226 235);
+  background-color: var(--md-sys-color-secondary);
+  color: var(--md-sys-color-on-secondary);
+  border-color: var(--md-sys-color-secondary);
+	box-shadow: var(--md-sys-elevation-3) !important;
+  border-radius: 15px;
 }
 
 #man-text-select-redact:is(:hover, :focus-within) {
@@ -134,16 +137,19 @@ html {
   top: 5px;
 
   /* font-size: 14px; */
-  font-size: 19px;
+  font-size: 24px;
 }
 
 #man-shape-redact {
-  height: calc(var(--toolbar-height) - 6px);
-  width: calc(var(--toolbar-height) - 6px);
+  height: calc(var(--toolbar-height) - 12px);
+  width: calc(var(--toolbar-height) - 12px);
   border: none;
 
-  background-color: var(--toolbar-bg-color);
-  color: rgb(223 226 235);
+  background-color: var(--md-sys-color-secondary);
+  color: var(--md-sys-color-on-secondary);
+  border-color: var(--md-sys-color-secondary);
+	box-shadow: var(--md-sys-elevation-3) !important;
+  border-radius: 15px;
 }
 
 #man-shape-redact:is(:hover, :focus-within) {
@@ -161,7 +167,7 @@ html {
   top: 50%;
 
   /* font-size: 14px; */
-  font-size: 19px;
+  font-size: 24px;
 }
 
 :is(#man-shape-redact, #man-text-select-redact).toggled {
@@ -172,8 +178,8 @@ html {
 
 #redactions-palette {
   position: relative;
-  height: calc(var(--toolbar-height) - 6px);
-  width: calc(var(--toolbar-height) - 6px);
+  height: calc(var(--toolbar-height) - 12px);
+  width: calc(var(--toolbar-height) - 12px);
   font-size: calc(var(--toolbar-height) - 20px);
   border-bottom: none;
 }
@@ -189,13 +195,16 @@ html {
 }
 
 #apply-redaction {
-  height: calc(var(--toolbar-height) - 6px);
-  width: calc(var(--toolbar-height) - 6px);
+  height: calc(var(--toolbar-height) - 12px);
+  width: calc(var(--toolbar-height) - 12px);
 
   border: none;
 
-  background-color: var(--toolbar-bg-color);
-  color: rgb(223 226 235);
+  background-color: var(--md-sys-color-secondary);
+  color: var(--md-sys-color-on-secondary);
+  border-color: var(--md-sys-color-secondary);
+	box-shadow: var(--md-sys-elevation-3) !important;
+  border-radius: 15px;
 }
 
 #apply-redaction[disabled=true], #apply-redaction:disabled:not([disabled=false]) {
