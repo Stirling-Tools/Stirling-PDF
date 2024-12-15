@@ -1,14 +1,6 @@
-.selectable {
-  border: 1px solid darkblue;
-}
-
 .textLayer span::selection,
 .textLayer span::-moz-selection {
   background-color: rgba(0, 100, 0, 0.26);
-}
-
-.redaction-selected {
-  border: 1px solid darkgreen !important;
 }
 
 .selected-wrapper {
@@ -68,28 +60,6 @@
   cursor: pointer;
   background-color: rgb(3, 63, 109);
   fill: rgba(226, 226, 226, 0.904);
-}
-
-.redaction-selected:hover {
-  background-color: green;
-  border: 4px solid green !important;
-}
-
-.redaction-selected:hover::after {
-  content: "";
-  width: 100%;
-  height: 100%;
-
-  position: absolute;
-
-  left: 0px;
-  top: 0px;
-  background-color: black;
-  border: 2px solid red;
-}
-
-.selectable:hover {
-  border: 1px solid blue;
 }
 
 .textLayer div,
