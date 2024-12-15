@@ -12,14 +12,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
-import stirling.software.SPDF.config.security.database.DatabaseBackupHelper;
+import stirling.software.SPDF.config.security.database.DatabaseService;
 import stirling.software.SPDF.utils.FileInfo;
 
 @Controller
 @Tag(name = "Database Management", description = "Database management and security APIs")
 public class DatabaseWebController {
 
-    @Autowired private DatabaseBackupHelper databaseBackupHelper;
+    @Autowired private DatabaseService databaseService;
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/database")
@@ -33,10 +33,10 @@ public class DatabaseWebController {
             model.addAttribute("infoMessage", confirmed);
         }
 
-        List<FileInfo> backupList = databaseBackupHelper.getBackupList();
+        List<FileInfo> backupList = databaseService.getBackupList();
         model.addAttribute("backupFiles", backupList);
 
-        model.addAttribute("databaseVersion", databaseBackupHelper.getH2Version());
+        model.addAttribute("databaseVersion", databaseService.getH2Version());
 
         return "database";
     }

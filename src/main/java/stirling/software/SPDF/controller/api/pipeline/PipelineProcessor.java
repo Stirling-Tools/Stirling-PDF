@@ -40,7 +40,7 @@ import io.github.pixee.security.Filenames;
 import io.github.pixee.security.ZipSecurity;
 
 import jakarta.servlet.ServletContext;
-import stirling.software.SPDF.SPdfApplication;
+import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.Role;
@@ -64,7 +64,7 @@ public class PipelineProcessor {
 
     private String getBaseUrl() {
         String contextPath = servletContext.getContextPath();
-        String port = SPdfApplication.getStaticPort();
+        String port = SPDFApplication.getStaticPort();
 
         return "http://localhost:" + port + contextPath + "/";
     }

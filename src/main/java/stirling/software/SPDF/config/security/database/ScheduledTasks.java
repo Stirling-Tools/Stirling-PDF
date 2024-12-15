@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class ScheduledTasks {
 
-    @Autowired private DatabaseBackupHelper databaseBackupService;
+    @Autowired private DatabaseService databaseService;
 
     @Scheduled(cron = "0 0 0 * * ?")
     public void performBackup() throws IOException {
-        databaseBackupService.exportDatabase();
+        databaseService.exportDatabase();
     }
 }
