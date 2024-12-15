@@ -52,7 +52,7 @@
             <input id="pageRedactColor" name="pageRedactionColor" type="color" class="ms-3" value="#000000">
           </div>
           <input type="hidden" name="redactions" id="redactions-input">
-          <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{redact.submit}"></button>
+          <button type="submit" id="submitBtn" class="btn btn-primary d-none" th:text="#{redact.submit}"></button>
           </form>
       </div>
       </div>
@@ -372,7 +372,14 @@
               <img class="main-icon" th:src="@{'/favicon.svg'}" alt="icon"
                 style="height: calc(var(--toolbar-height) - 0.375rem); width: calc(var(--toolbar-height) - 0.375rem);inset: 5px;">
             </div>
-            <div id="toolbarViewerRight" class="d-none">
+            <div id="toolbarViewerRight">
+              <div class="splitToolbarButton">
+                <button id="downloadBtn" title="Submit" class="btn-primary">
+                  <span id="downloadBtnIcon" class="material-symbols-rounded">
+                    download
+                  </span>
+                </button>
+              </div>
               <div id="editorModeButtons" class="splitToolbarButton toggled" role="radiogroup">
                 <button id="editorHighlight" class="toolbarButton" hidden="true" disabled="disabled" title="Highlight"
                   role="radio" aria-checked="false" aria-controls="editorHighlightParamsToolbar" tabindex="31"

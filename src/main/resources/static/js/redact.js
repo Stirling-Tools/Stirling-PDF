@@ -50,6 +50,28 @@ window.addEventListener("load", (e) => {
 
   let applyRedactionBtn = document.getElementById("apply-redaction");
 
+  let submitBtn = document.getElementById("submitBtn");
+
+  let downloadBtn = document.getElementById("downloadBtn");
+  let downloadBtnIcon = document.getElementById("downloadBtnIcon");
+
+  downloadBtn.onclick = (e) => {
+    submitBtn.click();
+    setTimeout(_showOrHideLoadingSpinner, 100); // wait 100 milliseconds so that submitBtn would be disabled
+  };
+
+  function _showOrHideLoadingSpinner() {
+    if (!submitBtn.disabled) {
+      downloadBtnIcon.innerHTML = "download";
+      downloadBtnIcon.classList.remove("spin-animation");
+      return;
+    }
+
+    downloadBtnIcon.innerHTML = "progress_activity";
+    downloadBtnIcon.classList.add("spin-animation");
+    setTimeout(_showOrHideLoadingSpinner, 500);
+  }
+
   redactionsPaletteContainer.onclick = (e) => redactionsPalette.click();
 
   viewer.onmouseup = (e) => {
