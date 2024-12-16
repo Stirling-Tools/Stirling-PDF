@@ -27,6 +27,22 @@ function removePDFJSButtons() {
   document.getElementById("openFile")?.remove();
 }
 
+function hideInitialPage() {
+  document.getElementsByTagName("nav")[0].classList.add("d-none");
+  let redactionsFormContainer = document.getElementById(
+    "redactionFormContainer"
+  );
+  for (
+    let el = redactionsFormContainer.previousElementSibling;
+    el && el instanceof HTMLBRElement;
+    el = el.previousElementSibling
+  ) {
+    el.classList.add("d-none");
+  }
+  redactionsFormContainer.classList.add("d-none");
+  document.getElementsByTagName("footer")[0].classList.add("d-none");
+}
+
 window.addEventListener("load", (e) => {
   let hiddenInput = document.getElementById("fileInput");
   let outerContainer = document.getElementById("outerContainer");
@@ -49,6 +65,31 @@ window.addEventListener("load", (e) => {
   );
 
   let applyRedactionBtn = document.getElementById("apply-redaction");
+
+  let propertiesBtn = document.getElementById("propertiesBtn");
+  let propertiesOverlay = document.getElementById("propertiesOverlay");
+  propertiesBtn.onclick = (e) => propertiesOverlay.classList.remove("d-none");
+
+  propertiesOverlay.querySelector("button").onclick = (e) =>
+    propertiesOverlay.classList.add("d-none");
+
+  propertiesOverlay.querySelectorAll("input").forEach(
+    (input) =>
+      (input.onchange = (e) => {
+        const id = input.getAttribute("data-for");
+        let formInput = document.getElementById(id);
+        if (formInput.type === "checkbox") formInput.checked = input.checked;
+        else formInput.value = input.value;
+      })
+  );
+
+  let fileChooser = document.getElementsByClassName("custom-file-chooser")[0];
+  let fileChooserInput = fileChooser.querySelector(
+    `#${fileChooser.getAttribute("data-bs-element-id")}`
+  );
+
+  let uploadButton = document.getElementById("uploadBtn");
+  uploadButton.onclick = (e) => fileChooserInput.click();
 
   let submitBtn = document.getElementById("submitBtn");
 
@@ -95,6 +136,8 @@ window.addEventListener("load", (e) => {
     redactionsPalette.style.setProperty("--palette-color", color);
   };
 
+  _initProperties();
+
   document.addEventListener("file-input-change", (e) => {
     let fileChooser = document.getElementsByClassName("custom-file-chooser")[0];
     let fileChooserInput = fileChooser.querySelector(
@@ -108,10 +151,28 @@ window.addEventListener("load", (e) => {
     } else {
       outerContainer?.classList.remove("d-none");
       printContainer?.classList.remove("d-none");
+      hideInitialPage();
     }
 
     hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
   });
+
+  function _initProperties() {
+    let redactionsFormContainer = document.getElementById(
+      "redactionFormContainer"
+    );
+    redactionsFormContainer.querySelectorAll("input").forEach((input) => {
+      input.onchange = (e) => {
+        let overlayInput = propertiesOverlay.querySelector(
+          `input[data-for=${input.id}`
+        );
+        if (!overlayInput) return;
+        if (overlayInput.type === "checkbox")
+          overlayInput.checked = input.checked;
+        else overlayInput.value = input.value;
+      };
+    });
+  }
 
   PDFViewerApplication.downloadOrSave = doNothing;
   PDFViewerApplication.triggerPrinting = doNothing;
@@ -466,6 +527,7 @@ window.addEventListener("load", (e) => {
     }
 
     _setRedactionsInput(redactions);
+    applyRedactionBtn.disabled = true;
   }
 
   function _scaleToDisplay(value) {
