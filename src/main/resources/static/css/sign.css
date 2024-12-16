@@ -130,3 +130,20 @@ select#font-select option {
   text-align: right;
   padding: 0.5rem 1rem;
 }
+
+.input-with-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.input-with-icon .icon {
+  position: absolute;
+  left: 0.5rem;
+  pointer-events: none;
+  color: #aaa;
+}
+
+.input-with-icon input {
+  padding-left: 2.2rem;
+}

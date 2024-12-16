@@ -379,6 +379,20 @@
                   </span>
                   <span class="btn-tooltip" th:text="#{sign.addToAll}"></span>
                 </button>
+                <div id="rotation-controls" class="align-items-center" style="display: none;">
+                  <div class="input-with-icon">
+                    <span class="material-symbols-rounded icon" style="margin-right: 3px;">
+                      screen_rotation
+                     </span>
+                    <input
+                      type="number"
+                      id="rotation-input"
+                      class="form-control form-control-sm me-2"
+                      value="0"
+                      step="10"
+                      style="width: 6rem" />
+                  </div>
+                </div>
                 <button class="btn btn-outline-secondary" onclick="goToFirstOrLastPage(false)" style="margin-left:auto">
                   <span class="material-symbols-rounded">
                     keyboard_double_arrow_left
