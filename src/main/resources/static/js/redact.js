@@ -151,7 +151,6 @@ window.addEventListener("load", (e) => {
     function _handleTextSelectionRedactionBtnClick(e) {
       if (textSelectionRedactionBtn.classList.contains("toggled")) {
         resetTextSelection();
-        applyRedactionBtn.classList.add("d-none");
       } else {
         resetDrawRedactions();
         textSelectionRedactionBtn.classList.add("toggled");
@@ -168,6 +167,7 @@ window.addEventListener("load", (e) => {
       redactionMode = RedactionModes.NONE;
       clearSelection();
       applyRedactionBtn.disabled = true;
+      applyRedactionBtn.classList.add("d-none");
     }
 
     function clearSelection() {
@@ -388,10 +388,7 @@ window.addEventListener("load", (e) => {
       e.target == activeOverlay
     )
       return;
-    if (activeOverlay) {
-      activeOverlay.style.display = "none";
-      activeOverlay = null;
-    }
+    if (activeOverlay) hideOverlay();
   };
 
   document.addEventListener("keydown", (e) => {
@@ -544,6 +541,8 @@ window.addEventListener("load", (e) => {
 
     redactionElement.onclick = (e) => {
       if (e.target != redactionElement) return;
+      if (activeOverlay) hideOverlay();
+      redactionElement.classList.add("active-redaction");
       activeOverlay = redactionOverlay;
       activeOverlay.style.display = "flex";
     };
@@ -551,6 +550,12 @@ window.addEventListener("load", (e) => {
     redactionElement.appendChild(redactionOverlay);
   }
 });
+
+function hideOverlay() {
+  activeOverlay.style.display = "none";
+  activeOverlay.parentElement.classList.remove("active-redaction");
+  activeOverlay = null;
+}
 
 function _isEmptyRedaction(redaction) {
   return (

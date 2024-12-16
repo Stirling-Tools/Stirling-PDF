@@ -228,3 +228,7 @@ html {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.active-redaction {
+  z-index: 30 !important;
+}
