@@ -41,6 +41,7 @@ class DragDropManager {
           const pageEl = document.getElementById(`page-container-${index}`);
           if (pageEl) {
             pageEl.initialTransform = pageEl.style.transform || 'translate(0px, 0px)';
+            pageEl.classList.add('drag-manager_dragging');
           }
           return pageEl;
         })
