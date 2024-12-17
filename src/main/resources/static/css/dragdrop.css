@@ -85,12 +85,12 @@ html[dir="rtl"] .drag-manager_draghover img {
     width: 80px;
   }
 }
-.moved-element {
-  background-color: darkgreen;
-  border-radius: 8px;
-  transition: background-color  0.5s ease-out;
+.moved-element img {
+  border: 8px solid #198754;
+  border-radius: 3px;
+  transition: border  0.5s ease-out;
 }
 
-.moved-element.remove {
-  background-color: transparent;
+.moved-element.remove img{
+  border: 8px solid transparent;
 }
