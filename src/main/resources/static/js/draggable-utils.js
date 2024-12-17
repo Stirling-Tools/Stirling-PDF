@@ -147,19 +147,23 @@ const DraggableUtils = {
   createDraggableCanvasFromUrl(dataUrl) {
     return new Promise((resolve) => {
       const canvasContainer = document.createElement('div');
-      const createdCanvas = document.createElement('canvas');
+      const createdCanvas = document.createElement('canvas'); // Keep this canvas
       const padding = this.padding;
+
       canvasContainer.id = `draggable-canvas-${this.nextId++}`;
       canvasContainer.classList.add('draggable-canvas');
       createdCanvas.classList.add('display-canvas');
+
       canvasContainer.style.padding = padding + 'px';
-      const x = 0;
-      const y = 20;
-      canvasContainer.style.transform = `translate(${x}px, ${y}px) rotate(${0}rad)`;
+      let x = 0,
+        y = 30,
+        angle = 0;
+      canvasContainer.style.transform = `translate(${x}px, ${y}px) rotate(${angle}rad)`;
       canvasContainer.setAttribute('data-bs-x', x);
       canvasContainer.setAttribute('data-bs-y', y);
+      canvasContainer.setAttribute('data-angle', angle);
 
-      //Click element in order to enable arrow keys
+      // Enable rotation controls on click
       canvasContainer.addEventListener('click', () => {
         this.lastInteracted = canvasContainer;
         this.showRotationControls(canvasContainer);
@@ -169,86 +173,46 @@ const DraggableUtils = {
       canvasContainer.appendChild(createdCanvas);
       this.boxDragContainer.appendChild(canvasContainer);
 
-      //Enable Arrow keys directly after the element is created
+      // Enable Arrow keys directly after the element is created
       this.lastInteracted = canvasContainer;
 
-      var myImage = new Image();
+      // Load the image and draw it on the canvas
+      const myImage = new Image();
       myImage.src = dataUrl;
       myImage.onload = () => {
-        // Scale the image to fit within the canvas
+        const context = createdCanvas.getContext('2d');
+
+        createdCanvas.width = myImage.width;
+        createdCanvas.height = myImage.height;
+
         const imgAspect = myImage.width / myImage.height;
-        const canvasAspect = this.boxDragContainer.offsetWidth / this.boxDragContainer.offsetHeight;
+        const containerWidth = this.boxDragContainer.offsetWidth;
+        const containerHeight = this.boxDragContainer.offsetHeight;
 
         let scaleMultiplier;
-
-        // Subtract padding from the container's dimensions
-        const availableWidth = this.boxDragContainer.offsetWidth - 2 * padding;
-        const availableHeight = this.boxDragContainer.offsetHeight - 2 * padding;
-
-        // Determine the scale multiplier based on the aspect ratio
-        if (imgAspect > canvasAspect) {
-          scaleMultiplier = availableWidth / myImage.width;
+        if (imgAspect > containerWidth / containerHeight) {
+          scaleMultiplier = containerWidth / myImage.width;
         } else {
-          scaleMultiplier = availableHeight / myImage.height;
+          scaleMultiplier = containerHeight / myImage.height;
         }
+        const scaleFactor = 0.5;
 
-        // Apply scaling if necessary
-        let newWidth = myImage.width;
-        let newHeight = myImage.height;
-        if (scaleMultiplier < 1) {
-          newWidth = myImage.width * scaleMultiplier;
-          newHeight = myImage.height * scaleMultiplier;
-        }
-        // Subtract padding from the final dimensions
-        newWidth = Math.max(0, newWidth - 2 * padding);
-        newHeight = Math.max(0, newHeight - 2 * padding);
+        const newWidth = myImage.width * scaleMultiplier * scaleFactor;
+        const newHeight = myImage.height * scaleMultiplier * scaleFactor;
 
-        // Resize the canvas to fit the image
-        myImage.width = newWidth;
-        myImage.height = newHeight;
-        createdCanvas.width = newWidth;
-        createdCanvas.height = newHeight;
         createdCanvas.style.width = `${newWidth}px`;
         createdCanvas.style.height = `${newHeight}px`;
 
-        const x = 0;
-        const y = 20;
-        const angle = 0;
-        canvasContainer.style.transform = `translate(${x}px, ${y}px) rotate(${angle}rad)`;
-
-        // Update the container dimensions
-        canvasContainer.style.width = `${newWidth + 2 * padding}px`;
-        canvasContainer.style.height = `${newHeight + 2 * padding}px`;
-        canvasContainer.style.width = `${newWidth + 2 * padding}px`;
-        canvasContainer.style.height = `${newHeight + 2 * padding}px`;
-        canvasContainer.setAttribute('data-bs-x', x); // X position
-        canvasContainer.setAttribute('data-bs-y', y); // Y position
-        canvasContainer.setAttribute('data-angle', angle); // Rotation angle
-
-        // Draw the image onto the canvas
-        var context = createdCanvas.getContext('2d');
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = 'high';
         context.drawImage(myImage, 0, 0, myImage.width, myImage.height);
 
-        const rotationInput = document.getElementById('rotation-input');
-
-        this.showRotationControls(canvasContainer);
-
-        // Function to adjust rotation by a delta (for +/- buttons)
-        window.adjustRotation = (delta) => {
-          const degrees = parseFloat(rotationInput.value) || 0;
-          const newDegrees = degrees + delta;
-          rotationInput.value = newDegrees;
-          this.applyRotationToElement(DraggableUtils.lastInteracted, newDegrees);
-        };
-
-        // Attach click listeners to draggable elements
-        document.querySelectorAll('.draggable-canvas').forEach((element) => {
-          element.addEventListener('click', () => {
-            DraggableUtils.lastInteracted = element;
-            this.showRotationControls(element);
-          });
-        });
         resolve(canvasContainer);
+      };
+
+      myImage.onerror = () => {
+        console.error('Failed to load the image.');
+        resolve(null);
       };
     });
   },
