@@ -42,6 +42,7 @@
                   </tbody>
                 </table>
                 <h6 class="text-end"><span class="badge bg-dark" th:text="${databaseVersion}">DB-Version</span></h6>
+                <a th:title="#{database.createBackupFile}" th:text="#{database.createBackupFile}" th:href="@{'/api/v1/database/createDatabaseBackup'}" class="btn btn-outline-primary">Create Backup File</a>
               </div>
               <hr>
               <form th:action="@{'/api/v1/database/import-database'}" method="post" enctype="multipart/form-data" class="bg-card mt-3 mb-3">
