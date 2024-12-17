@@ -17,8 +17,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,6 +29,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
 import stirling.software.SPDF.utils.CheckProgramInstall;
 import stirling.software.SPDF.utils.ProcessExecutor;
@@ -39,10 +38,9 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
+@Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class ExtractImageScansController {
-
-    private static final Logger logger = LoggerFactory.getLogger(ExtractImageScansController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
     @Operation(
@@ -201,7 +199,7 @@ public class ExtractImageScansController {
                         try {
                             Files.deleteIfExists(path);
                         } catch (IOException e) {
-                            logger.error("Failed to delete temporary image file: " + path, e);
+                            log.error("Failed to delete temporary image file: " + path, e);
                         }
                     });
 
@@ -209,7 +207,7 @@ public class ExtractImageScansController {
                 try {
                     Files.deleteIfExists(tempZipFile);
                 } catch (IOException e) {
-                    logger.error("Failed to delete temporary zip file: " + tempZipFile, e);
+                    log.error("Failed to delete temporary zip file: " + tempZipFile, e);
                 }
             }
 
@@ -218,7 +216,7 @@ public class ExtractImageScansController {
                         try {
                             FileUtils.deleteDirectory(dir.toFile());
                         } catch (IOException e) {
-                            logger.error("Failed to delete temporary directory: " + dir, e);
+                            log.error("Failed to delete temporary directory: " + dir, e);
                         }
                     });
         }

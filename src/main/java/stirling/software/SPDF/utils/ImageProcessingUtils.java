@@ -12,8 +12,6 @@ import java.nio.ByteBuffer;
 
 import javax.imageio.ImageIO;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.drew.imaging.ImageMetadataReader;
@@ -22,9 +20,10 @@ import com.drew.metadata.Metadata;
 import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 
-public class ImageProcessingUtils {
+import lombok.extern.slf4j.Slf4j;
 
-    private static final Logger logger = LoggerFactory.getLogger(PdfUtils.class);
+@Slf4j
+public class ImageProcessingUtils {
 
     static BufferedImage convertColorType(BufferedImage sourceImage, String colorType) {
         BufferedImage convertedImage;
@@ -97,7 +96,7 @@ public class ImageProcessingUtils {
                 case 8:
                     return 270;
                 default:
-                    logger.warn("Unknown orientation tag: {}", orientationTag);
+                    log.warn("Unknown orientation tag: {}", orientationTag);
                     return 0;
             }
         } catch (ImageProcessingException | MetadataException e) {

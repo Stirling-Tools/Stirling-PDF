@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -26,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.api.HandleDataRequest;
@@ -33,10 +32,9 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/pipeline")
+@Slf4j
 @Tag(name = "Pipeline", description = "Pipeline APIs")
 public class PipelineController {
-
-    private static final Logger logger = LoggerFactory.getLogger(PipelineController.class);
 
     final String watchedFoldersDir = "./pipeline/watchedFolders/";
     final String finishedFoldersDir = "./pipeline/finishedFolders/";
@@ -56,7 +54,7 @@ public class PipelineController {
             return null;
         }
         PipelineConfig config = objectMapper.readValue(jsonString, PipelineConfig.class);
-        logger.info("Received POST request to /handleData with {} files", files.length);
+        log.info("Received POST request to /handleData with {} files", files.length);
         try {
             List<Resource> inputFiles = processor.generateInputFiles(files);
             if (inputFiles == null || inputFiles.size() == 0) {
@@ -71,7 +69,7 @@ public class PipelineController {
                 is.read(bytes);
                 is.close();
 
-                logger.info("Returning single file response...");
+                log.info("Returning single file response...");
                 return WebResponseUtils.bytesToWebResponse(
                         bytes, singleFile.getFilename(), MediaType.APPLICATION_OCTET_STREAM);
             } else if (outputFiles == null) {
@@ -118,11 +116,11 @@ public class PipelineController {
 
             zipOut.close();
 
-            logger.info("Returning zipped file response...");
+            log.info("Returning zipped file response...");
             return WebResponseUtils.boasToWebResponse(
                     baos, "output.zip", MediaType.APPLICATION_OCTET_STREAM);
         } catch (Exception e) {
-            logger.error("Error handling data: ", e);
+            log.error("Error handling data: ", e);
             return null;
         }
     }

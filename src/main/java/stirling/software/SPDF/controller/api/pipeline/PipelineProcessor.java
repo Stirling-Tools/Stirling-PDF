@@ -19,8 +19,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -40,15 +38,15 @@ import io.github.pixee.security.Filenames;
 import io.github.pixee.security.ZipSecurity;
 
 import jakarta.servlet.ServletContext;
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.SPdfApplication;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.Role;
 
 @Service
+@Slf4j
 public class PipelineProcessor {
-
-    private static final Logger logger = LoggerFactory.getLogger(PipelineProcessor.class);
 
     @Autowired private ApiDocService apiDocService;
 
@@ -81,7 +79,7 @@ public class PipelineProcessor {
             String operation = pipelineOperation.getOperation();
             boolean isMultiInputOperation = apiDocService.isMultiInput(operation);
 
-            logger.info(
+            log.info(
                     "Running operation: {} isMultiInputOperation {}",
                     operation,
                     isMultiInputOperation);
@@ -124,7 +122,7 @@ public class PipelineProcessor {
                             if (operation.startsWith("filter-")
                                     && (response.getBody() == null
                                             || response.getBody().length == 0)) {
-                                logger.info("Skipping file due to failing {}", operation);
+                                log.info("Skipping file due to failing {}", operation);
                                 continue;
                             }
 
@@ -208,7 +206,7 @@ public class PipelineProcessor {
             outputFiles = newOutputFiles;
         }
         if (hasErrors) {
-            logger.error("Errors occurred during processing. Log: {}", logStream.toString());
+            log.error("Errors occurred during processing. Log: {}", logStream.toString());
         }
 
         return outputFiles;
@@ -310,7 +308,7 @@ public class PipelineProcessor {
 
     List<Resource> generateInputFiles(File[] files) throws Exception {
         if (files == null || files.length == 0) {
-            logger.info("No files");
+            log.info("No files");
             return null;
         }
 
@@ -318,7 +316,7 @@ public class PipelineProcessor {
 
         for (File file : files) {
             Path path = Paths.get(file.getAbsolutePath());
-            logger.info("Reading file: " + path); // debug statement
+            log.info("Reading file: " + path); // debug statement
 
             if (Files.exists(path)) {
                 Resource fileResource =
@@ -330,16 +328,16 @@ public class PipelineProcessor {
                         };
                 outputFiles.add(fileResource);
             } else {
-                logger.info("File not found: " + path);
+                log.info("File not found: " + path);
             }
         }
-        logger.info("Files successfully loaded. Starting processing...");
+        log.info("Files successfully loaded. Starting processing...");
         return outputFiles;
     }
 
     List<Resource> generateInputFiles(MultipartFile[] files) throws Exception {
         if (files == null || files.length == 0) {
-            logger.info("No files");
+            log.info("No files");
             return null;
         }
 
@@ -355,7 +353,7 @@ public class PipelineProcessor {
                     };
             outputFiles.add(fileResource);
         }
-        logger.info("Files successfully loaded. Starting processing...");
+        log.info("Files successfully loaded. Starting processing...");
         return outputFiles;
     }
 
@@ -369,7 +367,7 @@ public class PipelineProcessor {
     }
 
     private List<Resource> unzip(byte[] data) throws IOException {
-        logger.info("Unzipping data of length: {}", data.length);
+        log.info("Unzipping data of length: {}", data.length);
         List<Resource> unzippedFiles = new ArrayList<>();
 
         try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
@@ -396,7 +394,7 @@ public class PipelineProcessor {
 
                 // If the unzipped file is a zip file, unzip it
                 if (isZip(baos.toByteArray())) {
-                    logger.info("File {} is a zip file. Unzipping...", filename);
+                    log.info("File {} is a zip file. Unzipping...", filename);
                     unzippedFiles.addAll(unzip(baos.toByteArray()));
                 } else {
                     unzippedFiles.add(fileResource);
@@ -404,7 +402,7 @@ public class PipelineProcessor {
             }
         }
 
-        logger.info("Unzipping completed. {} files were unzipped.", unzippedFiles.size());
+        log.info("Unzipping completed. {} files were unzipped.", unzippedFiles.size());
         return unzippedFiles;
     }
 }
