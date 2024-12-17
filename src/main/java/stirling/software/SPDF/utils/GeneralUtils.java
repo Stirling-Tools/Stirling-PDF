@@ -27,8 +27,6 @@ import org.simpleyaml.configuration.file.YamlFile;
 import org.simpleyaml.configuration.file.YamlFileWrapper;
 import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
 import org.simpleyaml.configuration.implementation.snakeyaml.lib.DumperOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fathzer.soft.javaluator.DoubleEvaluator;
@@ -36,9 +34,10 @@ import com.fathzer.soft.javaluator.DoubleEvaluator;
 import io.github.pixee.security.HostValidator;
 import io.github.pixee.security.Urls;
 
-public class GeneralUtils {
+import lombok.extern.slf4j.Slf4j;
 
-    private static final Logger logger = LoggerFactory.getLogger(GeneralUtils.class);
+@Slf4j
+public class GeneralUtils {
 
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
         File tempFile = Files.createTempFile("temp", null).toFile();
@@ -121,10 +120,15 @@ public class GeneralUtils {
             InetAddress address = InetAddress.getByName(host);
 
             // Check for local addresses
-            return address.isAnyLocalAddress() ||  // Matches 0.0.0.0 or similar
-                   address.isLoopbackAddress() || // Matches 127.0.0.1 or ::1
-                   address.isSiteLocalAddress() || // Matches private IPv4 ranges: 192.168.x.x, 10.x.x.x, 172.16.x.x to 172.31.x.x
-                   address.getHostAddress().startsWith("fe80:"); // Matches link-local IPv6 addresses
+            return address.isAnyLocalAddress()
+                    || // Matches 0.0.0.0 or similar
+                    address.isLoopbackAddress()
+                    || // Matches 127.0.0.1 or ::1
+                    address.isSiteLocalAddress()
+                    || // Matches private IPv4 ranges: 192.168.x.x, 10.x.x.x, 172.16.x.x to
+                    // 172.31.x.x
+                    address.getHostAddress()
+                            .startsWith("fe80:"); // Matches link-local IPv6 addresses
         } catch (Exception e) {
             return false; // Return false for invalid or unresolved addresses
         }
@@ -296,7 +300,7 @@ public class GeneralUtils {
             try {
                 Files.createDirectories(folder);
             } catch (IOException e) {
-                logger.error("exception", e);
+                log.error("exception", e);
                 return false;
             }
         }
