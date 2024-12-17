@@ -280,7 +280,7 @@ dependencies {
     //security updates
     implementation "org.springframework:spring-webmvc:6.2.0"
 
-    implementation("io.github.pixee:java-security-toolkit:1.2.0")
+    implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
     // implementation "org.yaml:snakeyaml:2.2"
     implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
