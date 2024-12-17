@@ -8,8 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -22,6 +20,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.SPDF.utils.ProcessExecutor;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
@@ -29,10 +28,9 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/convert")
+@Slf4j
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertPDFToPDFA {
-
-    private static final Logger logger = LoggerFactory.getLogger(ConvertPDFToPDFA.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/pdf/pdfa")
     @Operation(
@@ -46,7 +44,7 @@ public class ConvertPDFToPDFA {
 
         // Validate input file type
         if (!"application/pdf".equals(inputFile.getContentType())) {
-            logger.error("Invalid input file type: {}", inputFile.getContentType());
+            log.error("Invalid input file type: {}", inputFile.getContentType());
             throw new IllegalArgumentException("Input file must be a PDF");
         }
 
@@ -96,7 +94,7 @@ public class ConvertPDFToPDFA {
                             .runCommandWithOutputHandling(command);
 
             if (returnCode.getRc() != 0) {
-                logger.error("PDF/A conversion failed with return code: {}", returnCode.getRc());
+                log.error("PDF/A conversion failed with return code: {}", returnCode.getRc());
                 throw new RuntimeException("PDF/A conversion failed");
             }
 
