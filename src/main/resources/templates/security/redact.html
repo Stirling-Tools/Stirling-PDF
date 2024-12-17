@@ -61,8 +61,8 @@
       <div id="propertiesOverlay" class="d-none col-md-4 row justify-content-center align-content-center">
         <div class="bg-card">
           <div class="tool-header">
-            <span class="material-symbols-rounded tool-header-icon security">ink_eraser</span>
-            <span class="tool-header-text" th:text="#{redact.header}"></span>
+            <span class="material-symbols-rounded tool-header-icon security">tune</span>
+            <span class="tool-header-text" th:text="#{redact.properties}"></span>
           </div>
           <div class="mb-3 form-check">
             <input type="checkbox" data-for="convertPDFToImage" id="convertPDFToImageOverlay" checked>
@@ -74,10 +74,10 @@
               th:placeholder="#{redact.pageRedactionNumbers.placeholder}">
           </div>
           <div class="mb-3 d-flex">
-            <label for="pageRedactColor">Page Redaction Color:</label>
+            <label for="pageRedactColor" th:text="#{redact.pageRedactionColor.title}"></label>
             <input data-for="pageRedactColor" type="color" class="ms-3" value="#000000">
           </div>
-          <button class="btn btn-danger">Close</button>
+          <button class="btn btn-danger" th:text="#{close}"></button>
         </div>
       </div>
   <div id="outerContainer" class="d-none">

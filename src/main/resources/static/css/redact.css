@@ -179,12 +179,12 @@ html {
   pointer-events: none;
 }
 
-#pageRedactColor {
+#pageRedactColor, input[data-for=pageRedactColor] {
   flex: 1;
   padding: 1px;
 }
 
-#pageRedactColor:is(:hover, :focus-within) {
+#pageRedactColor:is(:hover, :focus-within), input[data-for=pageRedactColor]:is(:hover, :focus-within) {
   cursor: pointer;
 }
 
