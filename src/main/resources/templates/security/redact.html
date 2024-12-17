@@ -38,16 +38,16 @@
             <div
               th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
             </div>
-          <div class="mb-3 form-check">
+          <div class="mb-3 form-check d-none">
             <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage" checked>
             <label for="convertPDFToImage" th:text="#{redact.convertPDFToImageLabel}"></label>
           </div>
-          <div class="mb-3">
+          <div class="mb-3 d-none">
             <label for="pageNumbers" th:text="#{redact.pageRedactionNumbers.title} + ':'" class="mb-2"></label>
             <input type="text" class="form-control" id="pageNumbers" name="pageNumbers"
               th:placeholder="#{redact.pageRedactionNumbers.placeholder}">
           </div>
-          <div class="mb-3 d-flex">
+          <div class="mb-3 d-none">
             <label for="pageRedactColor">Page Redaction Color:</label>
             <input id="pageRedactColor" name="pageRedactionColor" type="color" class="ms-3" value="#000000">
           </div>

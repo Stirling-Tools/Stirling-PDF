@@ -136,8 +136,6 @@ window.addEventListener("load", (e) => {
     redactionsPalette.style.setProperty("--palette-color", color);
   };
 
-  _initProperties();
-
   document.addEventListener("file-input-change", (e) => {
     let fileChooser = document.getElementsByClassName("custom-file-chooser")[0];
     let fileChooserInput = fileChooser.querySelector(
@@ -156,23 +154,6 @@ window.addEventListener("load", (e) => {
 
     hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
   });
-
-  function _initProperties() {
-    let redactionsFormContainer = document.getElementById(
-      "redactionFormContainer"
-    );
-    redactionsFormContainer.querySelectorAll("input").forEach((input) => {
-      input.onchange = (e) => {
-        let overlayInput = propertiesOverlay.querySelector(
-          `input[data-for=${input.id}`
-        );
-        if (!overlayInput) return;
-        if (overlayInput.type === "checkbox")
-          overlayInput.checked = input.checked;
-        else overlayInput.value = input.value;
-      };
-    });
-  }
 
   PDFViewerApplication.downloadOrSave = doNothing;
   PDFViewerApplication.triggerPrinting = doNothing;
