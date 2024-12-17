@@ -25,8 +25,6 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -39,16 +37,16 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
 import stirling.software.SPDF.utils.ImageProcessingUtils;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
+@Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class ExtractImagesController {
-
-    private static final Logger logger = LoggerFactory.getLogger(ExtractImagesController.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-images")
     @Operation(
@@ -107,7 +105,7 @@ public class ExtractImagesController {
                                                 allowDuplicates);
                                     } catch (IOException e) {
                                         // Log the error and continue processing other pages
-                                        logger.error(
+                                        log.error(
                                                 "Error extracting images from page {}: {}",
                                                 pageNum,
                                                 e.getMessage());
@@ -167,7 +165,7 @@ public class ExtractImagesController {
         try {
             md = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
-            logger.error("MD5 algorithm not available for extractImages hash.", e);
+            log.error("MD5 algorithm not available for extractImages hash.", e);
             return;
         }
         if (page.getResources() == null || page.getResources().getXObjectNames() == null) {

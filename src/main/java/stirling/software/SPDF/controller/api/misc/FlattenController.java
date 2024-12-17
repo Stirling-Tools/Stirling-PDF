@@ -12,8 +12,6 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -26,16 +24,16 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
+@Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class FlattenController {
-
-    private static final Logger logger = LoggerFactory.getLogger(FlattenController.class);
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
@@ -84,7 +82,7 @@ public class FlattenController {
                         contentStream.drawImage(pdImage, 0, 0, pageWidth, pageHeight);
                     }
                 } catch (IOException e) {
-                    logger.error("exception", e);
+                    log.error("exception", e);
                 }
             }
             return WebResponseUtils.pdfDocToWebResponse(

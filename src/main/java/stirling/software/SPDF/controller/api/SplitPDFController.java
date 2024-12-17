@@ -13,8 +13,6 @@ import java.util.zip.ZipOutputStream;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,16 +26,17 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
+@Slf4j
 @Tag(name = "General", description = "General APIs")
 public class SplitPDFController {
 
-    private static final Logger logger = LoggerFactory.getLogger(SplitPDFController.class);
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
     @Autowired
@@ -73,7 +72,7 @@ public class SplitPDFController {
                 pageNumbers.add(totalPages - 1);
             }
 
-            logger.info(
+            log.info(
                     "Splitting PDF into pages: {}",
                     pageNumbers.stream().map(String::valueOf).collect(Collectors.joining(",")));
 
@@ -86,7 +85,7 @@ public class SplitPDFController {
                     for (int i = previousPageNumber; i <= splitPoint; i++) {
                         PDPage page = document.getPage(i);
                         splitDocument.addPage(page);
-                        logger.info("Adding page {} to split document", i);
+                        log.info("Adding page {} to split document", i);
                     }
                     previousPageNumber = splitPoint + 1;
 
@@ -98,7 +97,7 @@ public class SplitPDFController {
 
                     splitDocumentsBoas.add(baos);
                 } catch (Exception e) {
-                    logger.error("Failed splitting documents and saving them", e);
+                    log.error("Failed splitting documents and saving them", e);
                     throw e;
                 }
             }
@@ -124,15 +123,14 @@ public class SplitPDFController {
                     zipOut.write(pdf);
                     zipOut.closeEntry();
 
-                    logger.info("Wrote split document {} to zip file", fileName);
+                    log.info("Wrote split document {} to zip file", fileName);
                 }
             } catch (Exception e) {
-                logger.error("Failed writing to zip", e);
+                log.error("Failed writing to zip", e);
                 throw e;
             }
 
-            logger.info(
-                    "Successfully created zip file with split documents: {}", zipFile.toString());
+            log.info("Successfully created zip file with split documents: {}", zipFile.toString());
             byte[] data = Files.readAllBytes(zipFile);
             Files.deleteIfExists(zipFile);
 
@@ -159,7 +157,7 @@ public class SplitPDFController {
                     Files.deleteIfExists(zipFile);
                 }
             } catch (Exception e) {
-                logger.error("Error while cleaning up resources", e);
+                log.error("Error while cleaning up resources", e);
             }
         }
     }
