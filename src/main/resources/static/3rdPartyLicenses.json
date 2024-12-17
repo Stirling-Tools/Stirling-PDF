@@ -434,7 +434,7 @@
         {
             "moduleName": "io.github.pixee:java-security-toolkit",
             "moduleUrl": "https://github.com/pixee/java-security-toolkit",
-            "moduleVersion": "1.2.0",
+            "moduleVersion": "1.2.1",
             "moduleLicense": "MIT License",
             "moduleLicenseUrl": "http://www.opensource.org/licenses/mit-license.php"
         },
@@ -448,7 +448,7 @@
         {
             "moduleName": "io.micrometer:micrometer-core",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.14.1",
+            "moduleVersion": "1.14.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -1441,7 +1441,7 @@
         {
             "moduleName": "org.springframework.security:spring-security-saml2-service-provider",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "6.4.1",
+            "moduleVersion": "6.4.2",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -1539,7 +1539,7 @@
         {
             "moduleName": "org.springframework:spring-webmvc",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "6.2.0",
+            "moduleVersion": "6.2.1",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },

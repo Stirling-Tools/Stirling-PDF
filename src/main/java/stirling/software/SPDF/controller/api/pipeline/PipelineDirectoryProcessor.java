@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ByteArrayResource;
@@ -27,14 +25,15 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.utils.FileMonitor;
 
 @Service
+@Slf4j
 public class PipelineDirectoryProcessor {
 
-    private static final Logger logger = LoggerFactory.getLogger(PipelineDirectoryProcessor.class);
     @Autowired private ObjectMapper objectMapper;
     @Autowired private ApiDocService apiDocService;
     @Autowired PipelineProcessor processor;
@@ -56,9 +55,9 @@ public class PipelineDirectoryProcessor {
         if (!Files.exists(watchedFolderPath)) {
             try {
                 Files.createDirectories(watchedFolderPath);
-                logger.info("Created directory: {}", watchedFolderPath);
+                log.info("Created directory: {}", watchedFolderPath);
             } catch (IOException e) {
-                logger.error("Error creating directory: {}", watchedFolderPath, e);
+                log.error("Error creating directory: {}", watchedFolderPath, e);
                 return;
             }
         }
@@ -71,21 +70,21 @@ public class PipelineDirectoryProcessor {
                                         handleDirectory(t);
                                     }
                                 } catch (Exception e) {
-                                    logger.error("Error handling directory: {}", t, e);
+                                    log.error("Error handling directory: {}", t, e);
                                 }
                             });
         } catch (Exception e) {
-            logger.error("Error walking through directory: {}", watchedFolderPath, e);
+            log.error("Error walking through directory: {}", watchedFolderPath, e);
         }
     }
 
     public void handleDirectory(Path dir) throws IOException {
-        logger.info("Handling directory: {}", dir);
+        log.info("Handling directory: {}", dir);
         Path processingDir = createProcessingDirectory(dir);
 
         Optional<Path> jsonFileOptional = findJsonFile(dir);
         if (!jsonFileOptional.isPresent()) {
-            logger.warn("No .JSON settings file found. No processing will happen for dir {}.", dir);
+            log.warn("No .JSON settings file found. No processing will happen for dir {}.", dir);
             return;
         }
 
@@ -98,7 +97,7 @@ public class PipelineDirectoryProcessor {
         Path processingDir = dir.resolve("processing");
         if (!Files.exists(processingDir)) {
             Files.createDirectory(processingDir);
-            logger.info("Created processing directory: {}", processingDir);
+            log.info("Created processing directory: {}", processingDir);
         }
         return processingDir;
     }
@@ -111,7 +110,7 @@ public class PipelineDirectoryProcessor {
 
     private PipelineConfig readAndParseJson(Path jsonFile) throws IOException {
         String jsonString = new String(Files.readAllBytes(jsonFile), StandardCharsets.UTF_8);
-        logger.debug("Reading JSON file: {}", jsonFile);
+        log.debug("Reading JSON file: {}", jsonFile);
         return objectMapper.readValue(jsonString, PipelineConfig.class);
     }
 
@@ -121,7 +120,7 @@ public class PipelineDirectoryProcessor {
             validateOperation(operation);
             File[] files = collectFilesForProcessing(dir, jsonFile, operation);
             if (files == null || files.length == 0) {
-                logger.debug("No files detected for {} ", dir);
+                log.debug("No files detected for {} ", dir);
                 return;
             }
             List<File> filesToProcess = prepareFilesForProcessing(files, processingDir);
@@ -202,7 +201,7 @@ public class PipelineDirectoryProcessor {
             moveAndRenameFiles(outputFiles, config, dir);
             deleteOriginalFiles(filesToProcess, processingDir);
         } catch (Exception e) {
-            logger.error("error during processing", e);
+            log.error("error during processing", e);
             moveFilesBack(filesToProcess, processingDir);
         }
     }
@@ -215,7 +214,7 @@ public class PipelineDirectoryProcessor {
 
             if (!Files.exists(outputPath)) {
                 Files.createDirectories(outputPath);
-                logger.info("Created directory: {}", outputPath);
+                log.info("Created directory: {}", outputPath);
             }
 
             Path outputFile = outputPath.resolve(outputFileName);
@@ -223,7 +222,7 @@ public class PipelineDirectoryProcessor {
                 os.write(((ByteArrayResource) resource).getByteArray());
             }
 
-            logger.info("File moved and renamed to {}", outputFile);
+            log.info("File moved and renamed to {}", outputFile);
         }
     }
 
@@ -264,7 +263,7 @@ public class PipelineDirectoryProcessor {
             throws IOException {
         for (File file : filesToProcess) {
             Files.deleteIfExists(processingDir.resolve(file.getName()));
-            logger.info("Deleted original file: {}", file.getName());
+            log.info("Deleted original file: {}", file.getName());
         }
     }
 
@@ -272,12 +271,12 @@ public class PipelineDirectoryProcessor {
         for (File file : filesToProcess) {
             try {
                 Files.move(processingDir.resolve(file.getName()), file.toPath());
-                logger.info(
+                log.info(
                         "Moved file back to original location: {} , {}",
                         file.toPath(),
                         file.getName());
             } catch (IOException e) {
-                logger.error("Error moving file back to original location: {}", file.getName(), e);
+                log.error("Error moving file back to original location: {}", file.getName(), e);
             }
         }
     }

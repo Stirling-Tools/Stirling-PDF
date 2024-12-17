@@ -22,7 +22,7 @@ ext {
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.36"
     bouncycastleVersion = "1.79"
-    springSecuritySamlVersion = "6.4.1"
+    springSecuritySamlVersion = "6.4.2"
     openSamlVersion = "4.3.2"
 }
 
@@ -247,7 +247,7 @@ spotless {
     java {
         target project.fileTree('src/main/java')
 
-        googleJavaFormat("1.22.0").aosp().reorderImports(false)
+        googleJavaFormat("1.25.2").aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io")
         toggleOffOn()
@@ -278,9 +278,9 @@ dependencies {
     }
 
     //security updates
-    implementation "org.springframework:spring-webmvc:6.2.0"
+    implementation "org.springframework:spring-webmvc:6.2.1"
 
-    implementation("io.github.pixee:java-security-toolkit:1.2.0")
+    implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
     // implementation "org.yaml:snakeyaml:2.2"
     implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
@@ -372,7 +372,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.14.1"
+    implementation "io.micrometer:micrometer-core:1.14.2"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark:0.24.0"
