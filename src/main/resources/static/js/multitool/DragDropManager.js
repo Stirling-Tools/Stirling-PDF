@@ -8,6 +8,7 @@ class DragDropManager {
     this.draggedImageEl = undefined;
     this.draggedEl = undefined;
     this.selectedPageElements = []; // Store selected pages for multi-page mode
+    this.elementTimeouts = new Map();
 
     // Add CSS dynamically
     const styleElement = document.createElement('link');
@@ -101,53 +102,76 @@ class DragDropManager {
 
     if (window.selectPage) {
       // Multi-page drop logic
-      if (!this.hoveredEl || !this.hoveredEl.classList.contains('page-container')) {
+      if (
+        !this.hoveredEl ||
+        !this.hoveredEl.classList.contains('page-container') ||
+        this.selectedPageElements.includes(this.hoveredEl)
+      ) {
         this.selectedPageElements.forEach((pageEl) => {
           pageEl.style.transform = pageEl.initialTransform || 'translate(0px, 0px)';
           pageEl.classList.remove('drag-manager_dragging');
-          this.pageDragging = false;
-          return;
         });
       } else {
         this.selectedPageElements.forEach((pageEl) => {
           pageEl.classList.remove('drag-manager_dragging');
+
           if (this.hoveredEl === this.endInsertionElement) {
             this.movePageTo(pageEl);
           } else {
             this.movePageTo(pageEl, this.hoveredEl);
           }
-          pageEl.classList.remove('moved-element', 'remove');
-          pageEl.classList.add('moved-element');
-          setTimeout(() => {
-            pageEl.classList.add('remove');
-          }, 2000);
+
+          // Handle timeout for the current element
+          this.handleTimeoutForElement(pageEl);
         });
       }
       this.selectedPageElements = [];
       window.resetPages();
     } else {
       // Single-page drop logic
-      if (!this.hoveredEl || !this.hoveredEl.classList.contains('page-container')) {
+      if (
+        !this.hoveredEl ||
+        !this.hoveredEl.classList.contains('page-container') ||
+        this.hoveredEl === this.draggedEl
+      ) {
         this.draggedEl.style.transform = this.draggedEl.initialTransform || 'translate(0px, 0px)';
         this.draggedEl.classList.remove('drag-manager_dragging');
-        this.pageDragging = false;
         return;
       }
-      if (!this.hoveredEl) return;
+
       this.draggedEl.classList.remove('drag-manager_dragging');
+
       if (this.hoveredEl === this.endInsertionElement) {
         this.movePageTo(this.draggedEl);
       } else {
         this.movePageTo(this.draggedEl, this.hoveredEl);
       }
-      this.draggedEl.classList.remove('moved-element', 'remove');
-      this.draggedEl.classList.add('moved-element');
-      setTimeout(() => {
-        this.draggedEl.classList.add('remove');
-      }, 2000);
+
+      // Handle timeout for the current element
+      this.handleTimeoutForElement(this.draggedEl);
     }
 
     this.pageDragging = false;
+  }
+
+  // Helper function to manage independent timeouts
+  handleTimeoutForElement(element) {
+    // Clear existing timeout if present
+    if (this.elementTimeouts.has(element)) {
+      clearTimeout(this.elementTimeouts.get(element));
+    }
+
+    // Add the moved-element class and set a new timeout
+    element.classList.remove('remove');
+    element.classList.add('moved-element');
+
+    const timeoutId = setTimeout(() => {
+      element.classList.add('remove');
+      this.elementTimeouts.delete(element); // Cleanup the timeout map
+    }, 2000);
+
+    // Store the timeout ID for this element
+    this.elementTimeouts.set(element, timeoutId);
   }
 
   setActions({movePageTo}) {
