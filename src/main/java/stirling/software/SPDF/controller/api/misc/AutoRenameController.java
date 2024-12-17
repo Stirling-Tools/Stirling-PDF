@@ -9,8 +9,6 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,15 +20,15 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
+@Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class AutoRenameController {
-
-    private static final Logger logger = LoggerFactory.getLogger(AutoRenameController.class);
 
     private static final float TITLE_FONT_SIZE_THRESHOLD = 20.0f;
     private static final int LINE_LIMIT = 200;
@@ -133,7 +131,7 @@ public class AutoRenameController {
             header = header.replaceAll("[/\\\\?%*:|\"<>]", "").trim();
             return WebResponseUtils.pdfDocToWebResponse(document, header + ".pdf");
         } else {
-            logger.info("File has no good title to be found");
+            log.info("File has no good title to be found");
             return WebResponseUtils.pdfDocToWebResponse(
                     document, Filenames.toSimpleFileName(file.getOriginalFilename()));
         }
