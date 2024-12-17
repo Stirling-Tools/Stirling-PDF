@@ -87,7 +87,7 @@
 
         if (remoteCall === true) {
           if (override === 'multi' || (!multipleInputsForSingleRequest && files.length > 1 && override !== 'single')) {
-            await submitMultiPdfForm(url, files);
+            await submitMultiPdfForm(url, files, this);
           } else {
             await handleSingleDownload(url, formData);
           }
@@ -367,7 +367,7 @@
     return {filename, blob};
   }
 
-  async function submitMultiPdfForm(url, files) {
+  async function submitMultiPdfForm(url, files, form) {
     const zipThreshold = parseInt(localStorage.getItem('zipThreshold'), 10) || 4;
     const zipFiles = files.length > zipThreshold;
     let jszip = null;
@@ -390,7 +390,9 @@
 
     // Get existing form data
     let formData;
-    if (postForm) {
+    if (form) {
+      formData = new FormData(form);
+    } else if (postForm) {
       formData = new FormData($(postForm)[0]); // Convert the form to a jQuery object and get the raw DOM element
     } else {
       console.log('No form with POST method found.');
