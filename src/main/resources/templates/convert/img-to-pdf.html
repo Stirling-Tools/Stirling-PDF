@@ -51,15 +51,11 @@
                 <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
                 <script>
-                  $('#fileInput-input').on('change', function() {
+                    $('#fileInput-input').on('file-input-change', () => {
                     var files = document.getElementById("fileInput-input").files;
                     var conversionType = document.getElementById("conversionType");
                     console.log("files.length=" + files.length)
-                    if (files.length > 1) {
-                      conversionType.disabled = false;
-                    } else {
-                      conversionType.disabled = true;
-                    }
+                    conversionType.disabled = files.length <= 1;
                   });
 
                   $('#conversionType').change(function() {
