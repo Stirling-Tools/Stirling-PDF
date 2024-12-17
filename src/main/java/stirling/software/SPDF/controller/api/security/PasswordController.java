@@ -5,8 +5,6 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -29,8 +27,6 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Security", description = "Security APIs")
 public class PasswordController {
 
-    private static final Logger logger = LoggerFactory.getLogger(PasswordController.class);
-
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
     @Autowired
@@ -39,7 +35,11 @@ public class PasswordController {
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/remove-password")
-    @Operation(summary = "Remove password from a PDF file", description = "This endpoint removes the password from a protected PDF file. Users need to provide the existing password. Input:PDF Output:PDF Type:SISO")
+    @Operation(
+            summary = "Remove password from a PDF file",
+            description =
+                    "This endpoint removes the password from a protected PDF file. Users need to provide the"
+                            + " existing password. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> removePassword(@ModelAttribute PDFPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
@@ -49,12 +49,16 @@ public class PasswordController {
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
                 Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "")
+                                .replaceFirst("[.][^.]+$", "")
                         + "_password_removed.pdf");
     }
 
     @PostMapping(consumes = "multipart/form-data", value = "/add-password")
-    @Operation(summary = "Add password to a PDF file", description = "This endpoint adds password protection to a PDF file. Users can specify a set of permissions that should be applied to the file. Input:PDF Output:PDF")
+    @Operation(
+            summary = "Add password to a PDF file",
+            description =
+                    "This endpoint adds password protection to a PDF file. Users can specify a set of"
+                            + " permissions that should be applied to the file. Input:PDF Output:PDF")
     public ResponseEntity<byte[]> addPassword(@ModelAttribute AddPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
@@ -92,12 +96,12 @@ public class PasswordController {
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                            .replaceFirst("[.][^.]+$", "")
+                                    .replaceFirst("[.][^.]+$", "")
                             + "_permissions.pdf");
         return WebResponseUtils.pdfDocToWebResponse(
                 document,
                 Filenames.toSimpleFileName(fileInput.getOriginalFilename())
-                        .replaceFirst("[.][^.]+$", "")
+                                .replaceFirst("[.][^.]+$", "")
                         + "_passworded.pdf");
     }
 }

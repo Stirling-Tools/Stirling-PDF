@@ -8,8 +8,6 @@ import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -31,8 +29,6 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Security", description = "Security APIs")
 public class RemoveCertSignController {
 
-    private static final Logger logger = LoggerFactory.getLogger(RemoveCertSignController.class);
-
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
     @Autowired
@@ -44,7 +40,8 @@ public class RemoveCertSignController {
     @Operation(
             summary = "Remove digital signature from PDF",
             description =
-                    "This endpoint accepts a PDF file and returns the PDF file without the digital signature. Input: PDF, Output: PDF")
+                    "This endpoint accepts a PDF file and returns the PDF file without the digital signature."
+                            + " Input: PDF, Output: PDF")
     public ResponseEntity<byte[]> removeCertSignPDF(@ModelAttribute PDFFile request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();

@@ -17,8 +17,6 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -31,6 +29,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.OptimizePdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
@@ -40,10 +39,9 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
+@Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class CompressController {
-
-    private static final Logger logger = LoggerFactory.getLogger(CompressController.class);
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
@@ -191,7 +189,7 @@ public class CompressController {
                             incrementOptimizeLevel(
                                     optimizeLevel, outputFileSize, expectedOutputSize);
                     if (autoMode && optimizeLevel > 9) {
-                        logger.info("Maximum compression level reached in auto mode");
+                        log.info("Maximum compression level reached in auto mode");
                         sizeMet = true;
                     }
                 }
@@ -203,7 +201,7 @@ public class CompressController {
 
             // Check if optimized file is larger than the original
             if (pdfBytes.length > inputFileSize) {
-                logger.warn(
+                log.warn(
                         "Optimized file is larger than the original. Returning the original file instead.");
                 finalFile = tempInputFile;
             }
@@ -234,7 +232,7 @@ public class CompressController {
 
     private int incrementOptimizeLevel(int currentLevel, long currentSize, long targetSize) {
         double currentRatio = currentSize / (double) targetSize;
-        logger.info("Current compression ratio: {}", String.format("%.2f", currentRatio));
+        log.info("Current compression ratio: {}", String.format("%.2f", currentRatio));
 
         if (currentRatio > 2.0) {
             return Math.min(9, currentLevel + 3);

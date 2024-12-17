@@ -7,8 +7,6 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -28,8 +26,6 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/misc")
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class ShowJavascript {
-
-    private static final Logger logger = LoggerFactory.getLogger(ShowJavascript.class);
 
     @PostMapping(consumes = "multipart/form-data", value = "/show-javascript")
     @Operation(
