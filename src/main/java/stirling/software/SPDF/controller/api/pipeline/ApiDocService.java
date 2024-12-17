@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -21,16 +19,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.ServletContext;
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.SPdfApplication;
 import stirling.software.SPDF.model.ApiEndpoint;
 import stirling.software.SPDF.model.Role;
 
 @Service
+@Slf4j
 public class ApiDocService {
 
     private final Map<String, ApiEndpoint> apiDocumentation = new HashMap<>();
-
-    private static final Logger logger = LoggerFactory.getLogger(ApiDocService.class);
 
     @Autowired private ServletContext servletContext;
 
@@ -135,7 +133,7 @@ public class ApiDocService {
                             });
         } catch (Exception e) {
             // Handle exceptions
-            logger.error("Error grabbing swagger doc, body result {}", apiDocsJson);
+            log.error("Error grabbing swagger doc, body result {}", apiDocsJson);
         }
     }
 

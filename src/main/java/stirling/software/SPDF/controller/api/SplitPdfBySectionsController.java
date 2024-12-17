@@ -18,8 +18,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,9 +39,6 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class SplitPdfBySectionsController {
-
-    private static final Logger logger =
-            LoggerFactory.getLogger(SplitPdfBySectionsController.class);
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
