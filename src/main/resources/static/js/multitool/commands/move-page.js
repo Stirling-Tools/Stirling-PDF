@@ -1,13 +1,7 @@
-import { Command } from "./command.js";
+import {Command} from './command.js';
 
 export class AbstractMovePageCommand extends Command {
-  constructor(
-    startElement,
-    endElement,
-    pagesContainer,
-    pagesContainerWrapper,
-    scrollTo = false
-  ) {
+  constructor(startElement, endElement, pagesContainer, pagesContainerWrapper, scrollTo = false) {
     super();
 
     this.pagesContainer = pagesContainer;
@@ -25,7 +19,7 @@ export class AbstractMovePageCommand extends Command {
 
   execute() {
     // Check & remove page number elements here too if they exist because Firefox doesn't fire the relevant event on page move.
-    const pageNumberElement = this.startElement.querySelector(".page-number");
+    const pageNumberElement = this.startElement.querySelector('.page-number');
     if (pageNumberElement) {
       this.startElement.removeChild(pageNumberElement);
     }
@@ -38,11 +32,8 @@ export class AbstractMovePageCommand extends Command {
     }
 
     if (this.scrollTo) {
-      const { width } = this.startElement.getBoundingClientRect();
-      const vector =
-        this.endIndex !== -1 && this.startIndex > this.endIndex
-          ? 0 - width
-          : width;
+      const {width} = this.startElement.getBoundingClientRect();
+      const vector = this.endIndex !== -1 && this.startIndex > this.endIndex ? 0 - width : width;
 
       this.pagesContainerWrapper.scroll({
         left: this.pagesContainerWrapper.scrollLeft + vector,
@@ -52,7 +43,6 @@ export class AbstractMovePageCommand extends Command {
 
   undo() {
     // Requires overriding in child classes
-
   }
 
   redo() {
@@ -61,28 +51,19 @@ export class AbstractMovePageCommand extends Command {
 }
 
 export class MovePageUpCommand extends AbstractMovePageCommand {
-  constructor(
-    startElement,
-    endElement,
-    pagesContainer,
-    pagesContainerWrapper,
-    scrollTo = false
-  ) {
+  constructor(startElement, endElement, pagesContainer, pagesContainerWrapper, scrollTo = false) {
     super(startElement, endElement, pagesContainer, pagesContainerWrapper, scrollTo);
   }
 
   undo() {
     if (this.endElement) {
       this.pagesContainer.removeChild(this.endElement);
-      this.startElement.insertAdjacentElement("beforebegin", this.endElement);
+      this.startElement.insertAdjacentElement('beforebegin', this.endElement);
     }
 
     if (this.scrollTo) {
-      const { width } = this.startElement.getBoundingClientRect();
-      const vector =
-        this.endIndex === -1 || this.startIndex <= this.endIndex
-          ? 0 - width
-          : width;
+      const {width} = this.startElement.getBoundingClientRect();
+      const vector = this.endIndex === -1 || this.startIndex <= this.endIndex ? 0 - width : width;
 
       this.pagesContainerWrapper.scroll({
         left: this.pagesContainerWrapper.scrollLeft - vector,
@@ -96,13 +77,7 @@ export class MovePageUpCommand extends AbstractMovePageCommand {
 }
 
 export class MovePageDownCommand extends AbstractMovePageCommand {
-  constructor(
-    startElement,
-    endElement,
-    pagesContainer,
-    pagesContainerWrapper,
-    scrollTo = false
-  ) {
+  constructor(startElement, endElement, pagesContainer, pagesContainerWrapper, scrollTo = false) {
     super(startElement, endElement, pagesContainer, pagesContainerWrapper, scrollTo);
   }
 
@@ -111,15 +86,12 @@ export class MovePageDownCommand extends AbstractMovePageCommand {
 
     if (this.startElement) {
       this.pagesContainer.removeChild(this.startElement);
-      previousElement.insertAdjacentElement("beforebegin", this.startElement);
+      previousElement.insertAdjacentElement('beforebegin', this.startElement);
     }
 
     if (this.scrollTo) {
-      const { width } = this.startElement.getBoundingClientRect();
-      const vector =
-        this.endIndex === -1 || this.startIndex <= this.endIndex
-          ? 0 - width
-          : width;
+      const {width} = this.startElement.getBoundingClientRect();
+      const vector = this.endIndex === -1 || this.startIndex <= this.endIndex ? 0 - width : width;
 
       this.pagesContainerWrapper.scroll({
         left: this.pagesContainerWrapper.scrollLeft - vector,

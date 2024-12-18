@@ -14,8 +14,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,16 +35,17 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/misc")
+@Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class AutoSplitPdfController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AutoSplitPdfController.class);
     private static final String QR_CONTENT = "https://github.com/Stirling-Tools/Stirling-PDF";
     private static final String QR_CONTENT_OLD = "https://github.com/Frooodle/Stirling-PDF";
 
@@ -134,7 +133,7 @@ public class AutoSplitPdfController {
                 try {
                     document.close();
                 } catch (IOException e) {
-                    logger.error("Error closing main PDDocument", e);
+                    log.error("Error closing main PDDocument", e);
                 }
             }
 
@@ -142,7 +141,7 @@ public class AutoSplitPdfController {
                 try {
                     splitDoc.close();
                 } catch (IOException e) {
-                    logger.error("Error closing split PDDocument", e);
+                    log.error("Error closing split PDDocument", e);
                 }
             }
 
@@ -150,7 +149,7 @@ public class AutoSplitPdfController {
                 try {
                     Files.deleteIfExists(zipFile);
                 } catch (IOException e) {
-                    logger.error("Error deleting temporary zip file", e);
+                    log.error("Error deleting temporary zip file", e);
                 }
             }
         }
