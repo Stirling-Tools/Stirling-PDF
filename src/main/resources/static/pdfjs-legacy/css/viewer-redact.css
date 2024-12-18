@@ -1361,6 +1361,7 @@
   }
 
 :root{
+  --navbar-height: 64px;
   --outline-width:2px;
   --outline-color:#0060df;
   --outline-around-width:1px;
@@ -3048,7 +3049,7 @@ body{
 
 #outerContainer{
   width:100%;
-  height:100%;
+  height: calc(100% - var(--navbar-height));
   position:relative;
 }
 
