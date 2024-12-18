@@ -222,7 +222,7 @@ async function downloadPDF() {
 
 // Event listeners
 document.getElementById('fileInput-input').addEventListener('change', function (e) {
-  const fileInput = event.target;
+  const fileInput = e.target;
   fileInput.addEventListener('file-input-change', async (e) => {
     const {allFiles} = e.detail;
     if (allFiles && allFiles.length > 0) {

@@ -59,13 +59,13 @@ jobs:
           files: ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
 
       - name: Rename jar binaries
-        run: cp ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Stirling-PDF-Server${{ matrix.file_suffix }}.jar
+        run: cp ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
 
       - name: Upload Assets jar binaries
         uses: actions/upload-artifact@v4
         with:
-          path: ./build/libs/Stirling-PDF-Server${{ matrix.file_suffix }}.jar
-          name: Stirling-PDF-Server${{ matrix.file_suffix }}.jar
+          path: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+          name: Stirling-PDF${{ matrix.file_suffix }}.jar
           overwrite: true
           retention-days: 1
           if-no-files-found: error
@@ -73,7 +73,7 @@ jobs:
       - name: Upload jar binaries to release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./build/libs/Stirling-PDF-Server${{ matrix.file_suffix }}.jar
+          files: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
 
 
   push-ui:

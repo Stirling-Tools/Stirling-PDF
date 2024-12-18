@@ -63,8 +63,6 @@ import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.bouncycastle.pkcs.PKCSException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
@@ -78,16 +76,16 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/security")
+@Slf4j
 @Tag(name = "Security", description = "Security APIs")
 public class CertSignController {
-
-    private static final Logger logger = LoggerFactory.getLogger(CertSignController.class);
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -108,7 +106,7 @@ public class CertSignController {
                 logoFile = Files.createTempFile("signature", ".png").toFile();
                 FileUtils.copyInputStreamToFile(is, logoFile);
             } catch (IOException e) {
-                logger.error("Failed to load image signature file");
+                log.error("Failed to load image signature file");
                 throw e;
             }
         }
@@ -212,7 +210,9 @@ public class CertSignController {
     @Operation(
             summary = "Sign PDF with a Digital Certificate",
             description =
-                    "This endpoint accepts a PDF file, a digital certificate and related information to sign the PDF. It then returns the digitally signed PDF file. Input:PDF Output:PDF Type:SISO")
+                    "This endpoint accepts a PDF file, a digital certificate and related information to sign"
+                            + " the PDF. It then returns the digitally signed PDF file. Input:PDF Output:PDF"
+                            + " Type:SISO")
     public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();
@@ -308,7 +308,7 @@ public class CertSignController {
             }
             doc.saveIncremental(output);
         } catch (Exception e) {
-            logger.error("exception", e);
+            log.error("exception", e);
         }
     }
 

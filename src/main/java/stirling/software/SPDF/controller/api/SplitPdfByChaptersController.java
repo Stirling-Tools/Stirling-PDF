@@ -13,8 +13,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +30,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.PdfMetadata;
 import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
 import stirling.software.SPDF.service.PdfMetadataService;
@@ -39,11 +38,9 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
+@Slf4j
 @Tag(name = "General", description = "General APIs")
 public class SplitPdfByChaptersController {
-
-    private static final Logger logger =
-            LoggerFactory.getLogger(SplitPdfByChaptersController.class);
 
     private final PdfMetadataService pdfMetadataService;
 
@@ -74,7 +71,7 @@ public class SplitPdfByChaptersController {
             PDDocumentOutline outline = sourceDocument.getDocumentCatalog().getDocumentOutline();
 
             if (outline == null) {
-                logger.warn("No outline found for {}", file.getOriginalFilename());
+                log.warn("No outline found for {}", file.getOriginalFilename());
                 return ResponseEntity.badRequest().body("No outline found".getBytes());
             }
             List<Bookmark> bookmarks = new ArrayList<>();
@@ -92,7 +89,7 @@ public class SplitPdfByChaptersController {
                 Bookmark lastBookmark = bookmarks.get(bookmarks.size() - 1);
 
             } catch (Exception e) {
-                logger.error("Unable to extract outline items", e);
+                log.error("Unable to extract outline items", e);
                 return ResponseEntity.internalServerError()
                         .body("Unable to extract outline items".getBytes());
             }
@@ -107,7 +104,7 @@ public class SplitPdfByChaptersController {
                 bookmarks = mergeBookmarksThatCorrespondToSamePage(bookmarks);
             }
             for (Bookmark bookmark : bookmarks) {
-                logger.info(
+                log.info(
                         "{}::::{} to {}",
                         bookmark.getTitle(),
                         bookmark.getStartPage(),
@@ -136,7 +133,7 @@ public class SplitPdfByChaptersController {
                     Files.deleteIfExists(zipFile);
                 }
             } catch (Exception e) {
-                logger.error("Error while cleaning up resources", e);
+                log.error("Error while cleaning up resources", e);
             }
         }
     }
@@ -256,14 +253,14 @@ public class SplitPdfByChaptersController {
                 zipOut.write(pdf);
                 zipOut.closeEntry();
 
-                logger.info("Wrote split document {} to zip file", fileName);
+                log.info("Wrote split document {} to zip file", fileName);
             }
         } catch (Exception e) {
-            logger.error("Failed writing to zip", e);
+            log.error("Failed writing to zip", e);
             throw e;
         }
 
-        logger.info("Successfully created zip file with split documents: {}", zipFile);
+        log.info("Successfully created zip file with split documents: {}", zipFile);
         return zipFile;
     }
 
@@ -284,7 +281,7 @@ public class SplitPdfByChaptersController {
                         i++) {
                     PDPage page = sourceDocument.getPage(i);
                     splitDocument.addPage(page);
-                    logger.info("Adding page {} to split document", i);
+                    log.info("Adding page {} to split document", i);
                 }
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 if (includeMetadata) {
@@ -295,7 +292,7 @@ public class SplitPdfByChaptersController {
 
                 splitDocumentsBoas.add(baos);
             } catch (Exception e) {
-                logger.error("Failed splitting documents and saving them", e);
+                log.error("Failed splitting documents and saving them", e);
                 throw e;
             }
         }

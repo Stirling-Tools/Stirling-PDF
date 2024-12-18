@@ -74,7 +74,7 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            mv "build/jpackage/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.exe" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
+            mv "build/jpackage/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.exe" "Stirling-PDF-${{ matrix.platform }}-installer.${{ matrix.ext }}"
           elif [ "${{ matrix.os }}" = "macos-latest" ]; then
             mv "build/jpackage/Stirling-PDF-${{ steps.versionNumberMac.outputs.versionNumberMac }}.dmg" "Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}"
           else
@@ -85,7 +85,12 @@ jobs:
       - name: Upload Installer Artifact
         uses: actions/upload-artifact@v4
         with:    
-          name: Stirling-PDF-${{ matrix.platform }}-installer.{{ matrix.ext }}
-          path: Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}-${{ matrix.platform }}.${{ matrix.ext }}
+          name: Stirling-PDF-${{ matrix.platform }}-installer.${{ matrix.ext }}
+          path: Stirling-PDF-${{ matrix.platform }}-installer.${{ matrix.ext }}
           retention-days: 1
           if-no-files-found: error
+
+      - name: Upload binaries to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./Stirling-PDF-${{ matrix.platform }}-installer.${{ matrix.ext }}

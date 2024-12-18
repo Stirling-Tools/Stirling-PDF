@@ -7,19 +7,17 @@ import java.io.InputStream;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.PdfMetadata;
 import stirling.software.SPDF.model.api.PDFFile;
 
 @Component
+@Slf4j
 public class CustomPDDocumentFactory {
-
-    private static final Logger logger = LoggerFactory.getLogger(CustomPDDocumentFactory.class);
 
     private final PdfMetadataService pdfMetadataService;
 
@@ -133,10 +131,10 @@ public class CustomPDDocumentFactory {
     private PDDocument removezeropassword(PDDocument document) throws IOException {
         if (document.isEncrypted()) {
             try {
-                logger.info("Removing security from the source document");
+                log.info("Removing security from the source document");
                 document.setAllSecurityToBeRemoved(true);
             } catch (Exception e) {
-                logger.warn("Cannot decrypt the pdf");
+                log.warn("Cannot decrypt the pdf");
             }
         }
         return document;

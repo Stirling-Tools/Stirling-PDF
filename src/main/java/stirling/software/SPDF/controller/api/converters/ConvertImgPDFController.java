@@ -14,8 +14,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.rendering.ImageType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +27,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
@@ -40,10 +39,9 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/convert")
+@Slf4j
 @Tag(name = "Convert", description = "Convert APIs")
 public class ConvertImgPDFController {
-
-    private static final Logger logger = LoggerFactory.getLogger(ConvertImgPDFController.class);
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
@@ -95,7 +93,7 @@ public class ConvertImgPDFController {
                             Integer.valueOf(dpi),
                             filename);
             if (result == null || result.length == 0) {
-                logger.error("resultant bytes for {} is null, error converting ", filename);
+                log.error("resultant bytes for {} is null, error converting ", filename);
             }
             if ("webp".equalsIgnoreCase(imageFormat) && !CheckProgramInstall.isPythonAvailable()) {
                 throw new IOException("Python is not installed. Required for WebP conversion.");
@@ -142,7 +140,7 @@ public class ConvertImgPDFController {
                                 .collect(Collectors.toList());
 
                 if (webpFiles.isEmpty()) {
-                    logger.error("No WebP files were created in: {}", tempOutputDir.toString());
+                    log.error("No WebP files were created in: {}", tempOutputDir.toString());
                     throw new IOException(
                             "No WebP files were created. " + resultProcess.getMessages());
                 }
@@ -194,7 +192,7 @@ public class ConvertImgPDFController {
                     FileUtils.deleteDirectory(tempOutputDir.toFile());
                 }
             } catch (Exception e) {
-                logger.error("Error cleaning up temporary files", e);
+                log.error("Error cleaning up temporary files", e);
             }
         }
     }
@@ -210,7 +208,13 @@ public class ConvertImgPDFController {
         String fitOption = request.getFitOption();
         String colorType = request.getColorType();
         boolean autoRotate = request.isAutoRotate();
-
+        // Handle Null entries for formdata
+        if (colorType == null || colorType.isBlank()) {
+            colorType = "color";
+        }
+        if (fitOption == null || fitOption.isEmpty()) {
+            fitOption = "fillPage";
+        }
         // Convert the file to PDF and get the resulting bytes
         byte[] bytes =
                 PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);

@@ -6,9 +6,6 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.github.pixee.security.SystemCommand;
 
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LibreOfficeListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(LibreOfficeListener.class);
     private static final long ACTIVITY_TIMEOUT = 20L * 60 * 1000; // 20 minutes
 
     private static final LibreOfficeListener INSTANCE = new LibreOfficeListener();
@@ -87,7 +83,7 @@ public class LibreOfficeListener {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                logger.error("exception", e);
+                log.error("exception", e);
             } // Check every 1 second
         }
     }

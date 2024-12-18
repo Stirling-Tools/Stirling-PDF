@@ -12,8 +12,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -34,8 +32,6 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
 public class MultiPageLayoutController {
-
-    private static final Logger logger = LoggerFactory.getLogger(MultiPageLayoutController.class);
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
