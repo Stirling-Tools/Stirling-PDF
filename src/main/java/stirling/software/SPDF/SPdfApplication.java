@@ -13,8 +13,6 @@ import java.util.Properties;
 
 import javax.swing.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -23,6 +21,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import io.github.pixee.security.SystemCommand;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -34,8 +33,6 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @EnableScheduling
 @Slf4j
 public class SPdfApplication {
-
-    private static final Logger logger = LoggerFactory.getLogger(SPdfApplication.class);
 
     @Autowired private Environment env;
     @Autowired ApplicationProperties applicationProperties;
@@ -95,7 +92,7 @@ public class SPdfApplication {
         if (Files.exists(Paths.get("configs/settings.yml"))) {
             propertyFiles.put("spring.config.additional-location", "file:configs/settings.yml");
         } else {
-            logger.warn("External configuration file 'configs/settings.yml' does not exist.");
+            log.warn("External configuration file 'configs/settings.yml' does not exist.");
         }
 
         if (Files.exists(Paths.get("configs/custom_settings.yml"))) {
@@ -108,7 +105,7 @@ public class SPdfApplication {
                     "spring.config.additional-location",
                     existingLocation + "file:configs/custom_settings.yml");
         } else {
-            logger.warn("Custom configuration file 'configs/custom_settings.yml' does not exist.");
+            log.warn("Custom configuration file 'configs/custom_settings.yml' does not exist.");
         }
         Properties finalProps = new Properties();
 
@@ -131,16 +128,16 @@ public class SPdfApplication {
             Files.createDirectories(Path.of("customFiles/static/"));
             Files.createDirectories(Path.of("customFiles/templates/"));
         } catch (Exception e) {
-            logger.error("Error creating directories: {}", e.getMessage());
+            log.error("Error creating directories: {}", e.getMessage());
         }
 
         printStartupLogs();
     }
 
     private static void printStartupLogs() {
-        logger.info("Stirling-PDF Started.");
+        log.info("Stirling-PDF Started.");
         String url = baseUrlStatic + ":" + getStaticPort();
-        logger.info("Navigate to {}", url);
+        log.info("Navigate to {}", url);
     }
 
     @Autowired(required = false)
@@ -154,7 +151,7 @@ public class SPdfApplication {
                 && Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
             webBrowser.initWebUI(url);
         } else {
-        	String browserOpenEnv = env.getProperty("BROWSER_OPEN");
+            String browserOpenEnv = env.getProperty("BROWSER_OPEN");
             boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
             if (browserOpen) {
                 try {
@@ -169,11 +166,11 @@ public class SPdfApplication {
                         SystemCommand.runCommand(rt, "xdg-open " + url);
                     }
                 } catch (Exception e) {
-                    logger.error("Error opening browser: {}", e.getMessage());
+                    log.error("Error opening browser: {}", e.getMessage());
                 }
             }
         }
-        logger.info("Running configs {}", applicationProperties.toString()); 
+        log.info("Running configs {}", applicationProperties.toString());
     }
 
     @PreDestroy
