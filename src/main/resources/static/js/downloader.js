@@ -75,10 +75,6 @@
           // Check if any PDF files are encrypted and handle decryption if necessary
           const decryptedFiles = await checkAndDecryptFiles(url, files);
           files = decryptedFiles;
-          // Append decrypted files to formData
-          decryptedFiles.forEach((file, index) => {
-            formData.append(`fileInput`, file);
-          });
         }
 
         submitButton.textContent = 'Processing...';
