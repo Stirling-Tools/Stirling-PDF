@@ -24,7 +24,8 @@
     <script>
       window.stirlingPDF = window.stirlingPDF || {};
     </script>
-	<script th:src="@{'/js/fetch-utils.js'}"></script>
+    <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
+    <script th:src="@{'/js/fetch-utils.js'}"></script>
     <!-- jQuery -->
     <script th:src="@{'/js/thirdParty/jquery.min.js'}"></script>
     <script th:src="@{'/js/thirdParty/jquery.validate.min.js'}"></script>
@@ -60,7 +61,6 @@
     <link rel="stylesheet" th:href="@{'/css/footer.css'}">
 
     <link rel="preload" th:href="@{'/fonts/google-symbol.woff2'}" as="font" type="font/woff2" crossorigin="anonymous">
-
 
     <script th:src="@{'/js/thirdParty/fontfaceobserver.standalone.js'}"></script>
 
