@@ -23,6 +23,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import io.github.pixee.security.SystemCommand;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -154,7 +155,7 @@ public class SPdfApplication {
                 && Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
             webBrowser.initWebUI(url);
         } else {
-        	String browserOpenEnv = env.getProperty("BROWSER_OPEN");
+            String browserOpenEnv = env.getProperty("BROWSER_OPEN");
             boolean browserOpen = browserOpenEnv != null && "true".equalsIgnoreCase(browserOpenEnv);
             if (browserOpen) {
                 try {
@@ -173,7 +174,7 @@ public class SPdfApplication {
                 }
             }
         }
-        logger.info("Running configs {}", applicationProperties.toString()); 
+        logger.info("Running configs {}", applicationProperties.toString());
     }
 
     @PreDestroy
