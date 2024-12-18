@@ -99,6 +99,27 @@ public class AppConfig {
         return Files.exists(Paths.get("/.dockerenv"));
     }
 
+    @Bean(name = "configDirMounted")
+    public boolean isRunningInDockerWithConfig() {
+        Path dockerEnv = Paths.get("/.dockerenv");
+        // default to true if not docker
+        if (!Files.exists(dockerEnv)) {
+            return true;
+        }
+
+        Path mountInfo = Paths.get("/proc/1/mountinfo");
+        // this should always exist, if not some unknown usecase
+        if (!Files.exists(mountInfo)) {
+            return true;
+        }
+
+        try {
+            return Files.lines(mountInfo).anyMatch(line -> line.contains(" /configs "));
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     @Bean(name = "bookAndHtmlFormatsInstalled")
     public boolean bookAndHtmlFormatsInstalled() {
         String installOps = System.getProperty("INSTALL_BOOK_AND_ADVANCED_HTML_OPS");
