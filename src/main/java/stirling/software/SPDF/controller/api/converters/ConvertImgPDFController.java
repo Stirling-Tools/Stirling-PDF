@@ -215,7 +215,7 @@ public class ConvertImgPDFController {
             colorType = "color";
         }
         if (fitOption == null || fitOption.isEmpty()) {
-            fitOption = "fitDocumentToImage";
+            fitOption = "fillPage";
         }
         // Convert the file to PDF and get the resulting bytes
         byte[] bytes =
