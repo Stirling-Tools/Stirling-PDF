@@ -208,7 +208,13 @@ public class ConvertImgPDFController {
         String fitOption = request.getFitOption();
         String colorType = request.getColorType();
         boolean autoRotate = request.isAutoRotate();
-
+        // Handle Null entries for formdata
+        if (colorType == null || colorType.isBlank()) {
+            colorType = "color";
+        }
+        if (fitOption == null || fitOption.isEmpty()) {
+            fitOption = "fillPage";
+        }
         // Convert the file to PDF and get the resulting bytes
         byte[] bytes =
                 PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);

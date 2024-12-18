@@ -415,8 +415,9 @@
       const promises = chunk.map(async (file) => {
         let fileFormData = new FormData();
         fileFormData.append('fileInput', file);
-        console.log(fileFormData);
-        // Add other form data
+        for (let [key, value] of fileFormData.entries()) {
+          console.log(key, value);
+        } // Add other form data
         for (let pair of formData.entries()) {
           fileFormData.append(pair[0], pair[1]);
           console.log(pair[0] + ', ' + pair[1]);
