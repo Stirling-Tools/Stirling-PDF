@@ -28,7 +28,6 @@ function removePDFJSButtons() {
 }
 
 function hideInitialPage() {
-  document.getElementsByTagName("nav")[0].classList.add("d-none");
   let redactionsFormContainer = document.getElementById(
     "redactionFormContainer"
   );
