@@ -28,6 +28,7 @@ function removePDFJSButtons() {
 }
 
 function hideInitialPage() {
+  document.body.style.overflowY = "hidden";
   let redactionsFormContainer = document.getElementById(
     "redactionFormContainer"
   );
