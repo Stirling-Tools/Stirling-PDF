@@ -22,12 +22,12 @@ ext {
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.36"
     bouncycastleVersion = "1.79"
-    springSecuritySamlVersion = "6.4.1"
-    openSamlVersion = "4.3.2"  
+    springSecuritySamlVersion = "6.4.2"
+    openSamlVersion = "4.3.2"
 }
 
 group = "stirling.software"
-version = "0.36.1"
+version = "0.36.4"
 
 
 java {
@@ -44,7 +44,7 @@ repositories {
     }
     maven { url "https://build.shibboleth.net/maven/releases" }
     maven { url "https://maven.pkg.github.com/jcefmaven/jcefmaven" }
-    
+
 }
 
 licenseReport {
@@ -68,12 +68,12 @@ sourceSets {
                 exclude "stirling/software/SPDF/model/User.java"
                 exclude "stirling/software/SPDF/repository/**"
             }
-            
+
             if (System.getenv("STIRLING_PDF_DESKTOP_UI") == "false") {
             	exclude "stirling/software/SPDF/UI/impl/**"
             }
-            
-            
+
+
         }
     }
 }
@@ -104,7 +104,7 @@ jpackage {
 
     icon = "src/main/resources/static/favicon.ico"
 
-    
+
 
     // JVM Options
     javaOptions = [
@@ -115,12 +115,12 @@ jpackage {
         "--add-opens", "java.base/java.lang=ALL-UNNAMED",
         "--add-opens", "java.desktop/java.awt.event=ALL-UNNAMED",
         "--add-opens", "java.desktop/sun.awt=ALL-UNNAMED"
-        
+
     ]
 
 
     verbose = true
-    
+
     destination = "${projectDir}/build/jpackage"
 
     // Windows-specific configuration
@@ -150,16 +150,16 @@ jpackage {
         macAppCategory = "public.app-category.productivity"
         macSign = false // Enable signing
         macAppStore = false // Not targeting App Store initially
-        
+
         //installDir = "Applications"
-        
+
         // Add license and other documentation to DMG
         /*macDmgContent = [
             "README.md",
             "LICENSE",
             "CHANGELOG.md"
         ]*/
-        
+
         // Enable Mac-specific entitlements
         //macEntitlements = "entitlements.plist" // You'll need to create this file
     }
@@ -169,7 +169,7 @@ jpackage {
     	appVersion = project.version
         icon = "src/main/resources/static/favicon.png"
         type = "deb" // Can also use "rpm" for Red Hat-based systems
-        
+
         // Debian package configuration
         //linuxPackageName = "stirlingpdf"
         linuxDebMaintainer = "support@stirlingpdf.com"
@@ -177,9 +177,9 @@ jpackage {
         linuxAppCategory = "Office"
         linuxAppRelease = "1"
         linuxPackageDeps = true
-        
+
         installDir = "/opt/Stirling-PDF"
-        
+
         // RPM-specific settings
         //linuxRpmLicenseType = "MIT"
     }
@@ -212,7 +212,7 @@ launch4j {
     icon = "${projectDir}/src/main/resources/static/favicon.ico"
 
     outfile="Stirling-PDF.exe"
-    
+
     if(System.getenv("STIRLING_PDF_DESKTOP_UI") == 'true') {
     	headerType = "gui"
     } else {
@@ -222,15 +222,15 @@ launch4j {
 
     errTitle="Encountered error, Do you have Java 21?"
     downloadUrl="https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
-    
+
     if(System.getenv("STIRLING_PDF_DESKTOP_UI") == 'true') {
     	variables=["BROWSER_OPEN=true", "STIRLING_PDF_DESKTOP_UI=true"]
     } else {
     	variables=["BROWSER_OPEN=true"]
     }
-    
-    
-    
+
+
+
     jreMinVersion="17"
 
     mutexName="Stirling-PDF"
@@ -247,7 +247,7 @@ spotless {
     java {
         target project.fileTree('src/main/java')
 
-        googleJavaFormat("1.22.0").aosp().reorderImports(false)
+        googleJavaFormat("1.25.2").aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io")
         toggleOffOn()
@@ -276,11 +276,11 @@ dependencies {
 	    implementation "org.openjfx:javafx-controls:21"
 	    implementation "org.openjfx:javafx-swing:21"
     }
-    
-    //security updates
-    implementation "org.springframework:spring-webmvc:6.2.0"
 
-    implementation("io.github.pixee:java-security-toolkit:1.2.0")
+    //security updates
+    implementation "org.springframework:spring-webmvc:6.2.1"
+
+    implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
     // implementation "org.yaml:snakeyaml:2.2"
     implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
@@ -301,7 +301,7 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
 		implementation "org.springframework.session:spring-session-core:$springBootVersion"
-				
+
 	    implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         // Don't upgrade h2database
         runtimeOnly "com.h2database:h2:2.3.232"
@@ -372,7 +372,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.14.1"
+    implementation "io.micrometer:micrometer-core:1.14.2"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark:0.24.0"

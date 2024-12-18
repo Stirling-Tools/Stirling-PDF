@@ -13,16 +13,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.github.pixee.security.BoundedLineReader;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.ApplicationProperties;
 
+@Slf4j
 public class ProcessExecutor {
-
-    private static final Logger logger = LoggerFactory.getLogger(ProcessExecutor.class);
 
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
 
@@ -160,7 +157,7 @@ public class ProcessExecutor {
         semaphore.acquire();
         try {
 
-            logger.info("Running command: " + String.join(" ", command));
+            log.info("Running command: " + String.join(" ", command));
             ProcessBuilder processBuilder = new ProcessBuilder(command);
 
             // Use the working directory if it's set
@@ -187,13 +184,12 @@ public class ProcessExecutor {
                                                             errorReader, 5_000_000))
                                             != null) {
                                         errorLines.add(line);
-                                        if (liveUpdates) logger.info(line);
+                                        if (liveUpdates) log.info(line);
                                     }
                                 } catch (InterruptedIOException e) {
-                                    logger.warn(
-                                            "Error reader thread was interrupted due to timeout.");
+                                    log.warn("Error reader thread was interrupted due to timeout.");
                                 } catch (IOException e) {
-                                    logger.error("exception", e);
+                                    log.error("exception", e);
                                 }
                             });
 
@@ -211,13 +207,12 @@ public class ProcessExecutor {
                                                             outputReader, 5_000_000))
                                             != null) {
                                         outputLines.add(line);
-                                        if (liveUpdates) logger.info(line);
+                                        if (liveUpdates) log.info(line);
                                     }
                                 } catch (InterruptedIOException e) {
-                                    logger.warn(
-                                            "Error reader thread was interrupted due to timeout.");
+                                    log.warn("Error reader thread was interrupted due to timeout.");
                                 } catch (IOException e) {
-                                    logger.error("exception", e);
+                                    log.error("exception", e);
                                 }
                             });
 
@@ -244,7 +239,7 @@ public class ProcessExecutor {
                 String outputMessage = String.join("\n", outputLines);
                 messages += outputMessage;
                 if (!liveUpdates) {
-                    logger.info("Command output:\n" + outputMessage);
+                    log.info("Command output:\n" + outputMessage);
                 }
             }
 
@@ -252,7 +247,7 @@ public class ProcessExecutor {
                 String errorMessage = String.join("\n", errorLines);
                 messages += errorMessage;
                 if (!liveUpdates) {
-                    logger.warn("Command error output:\n" + errorMessage);
+                    log.warn("Command error output:\n" + errorMessage);
                 }
                 if (exitCode != 0) {
                     throw new IOException(
