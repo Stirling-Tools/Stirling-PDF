@@ -31,11 +31,13 @@ public class PostHogService {
     private final ApplicationProperties applicationProperties;
     private final UserServiceInterface userService;
     private final Environment env;
+    private boolean configDirMounted;
 
     @Autowired
     public PostHogService(
             PostHog postHog,
             @Qualifier("UUID") String uuid,
+            @Qualifier("configDirMounted") boolean configDirMounted,
             @Qualifier("appVersion") String appVersion,
             ApplicationProperties applicationProperties,
             @Autowired(required = false) UserServiceInterface userService,
@@ -46,6 +48,7 @@ public class PostHogService {
         this.applicationProperties = applicationProperties;
         this.userService = userService;
         this.env = env;
+        this.configDirMounted = configDirMounted;
         captureSystemInfo();
     }
 
@@ -80,6 +83,7 @@ public class PostHogService {
                 deploymentType = "DOCKER";
             }
             metrics.put("deployment_type", deploymentType);
+            metrics.put("mounted_config_dir", configDirMounted);
 
             // System info
             metrics.put("os_name", System.getProperty("os.name"));

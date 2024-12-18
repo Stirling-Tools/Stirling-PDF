@@ -49,5 +49,7 @@
   "editor.indentSize": "tabSize",
   "editor.stickyScroll.enabled": false,
   "editor.minimap.enabled": false,
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "java.format.settings.google.mode": "jar-file",
+  "java.format.settings.google.extra": "--aosp --skip-sorting-imports"
 }

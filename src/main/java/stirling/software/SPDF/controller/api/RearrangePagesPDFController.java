@@ -8,8 +8,6 @@ import java.util.List;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -22,6 +20,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.SortTypes;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
@@ -31,10 +30,9 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
+@Slf4j
 @Tag(name = "General", description = "General APIs")
 public class RearrangePagesPDFController {
-
-    private static final Logger logger = LoggerFactory.getLogger(RearrangePagesPDFController.class);
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
@@ -202,7 +200,7 @@ public class RearrangePagesPDFController {
                     throw new IllegalArgumentException("Unsupported custom mode");
             }
         } catch (IllegalArgumentException e) {
-            logger.error("Unsupported custom mode", e);
+            log.error("Unsupported custom mode", e);
             return null;
         }
     }
@@ -230,8 +228,8 @@ public class RearrangePagesPDFController {
             } else {
                 newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
             }
-            logger.info("newPageOrder = " + newPageOrder);
-            logger.info("totalPages = " + totalPages);
+            log.info("newPageOrder = " + newPageOrder);
+            log.info("totalPages = " + totalPages);
             // Create a new list to hold the pages in the new order
             List<PDPage> newPages = new ArrayList<>();
             for (int i = 0; i < newPageOrder.size(); i++) {
@@ -254,7 +252,7 @@ public class RearrangePagesPDFController {
                                     .replaceFirst("[.][^.]+$", "")
                             + "_rearranged.pdf");
         } catch (IOException e) {
-            logger.error("Failed rearranging documents", e);
+            log.error("Failed rearranging documents", e);
             return null;
         }
     }

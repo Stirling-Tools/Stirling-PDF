@@ -7,8 +7,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.QuoteMode;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -33,8 +31,6 @@ import technology.tabula.writers.Writer;
 @RequestMapping("/api/v1/convert")
 @Tag(name = "Convert", description = "Convert APIs")
 public class ExtractCSVController {
-
-    private static final Logger logger = LoggerFactory.getLogger(ExtractCSVController.class);
 
     @PostMapping(value = "/pdf/csv", consumes = "multipart/form-data")
     @Operation(

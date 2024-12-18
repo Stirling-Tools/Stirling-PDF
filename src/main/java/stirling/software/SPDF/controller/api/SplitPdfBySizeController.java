@@ -10,8 +10,6 @@ import java.util.zip.ZipOutputStream;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +23,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.general.SplitPdfBySizeOrCountRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
@@ -32,10 +31,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/general")
+@Slf4j
 @Tag(name = "General", description = "General APIs")
 public class SplitPdfBySizeController {
 
-    private static final Logger logger = LoggerFactory.getLogger(SplitPdfBySizeController.class);
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
     @Autowired
@@ -78,7 +77,7 @@ public class SplitPdfBySizeController {
             }
 
         } catch (Exception e) {
-            logger.error("exception", e);
+            log.error("exception", e);
         } finally {
             data = Files.readAllBytes(zipFile);
             Files.deleteIfExists(zipFile);
