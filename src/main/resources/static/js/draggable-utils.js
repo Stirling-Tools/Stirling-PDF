@@ -22,8 +22,13 @@ const DraggableUtils = {
             const angle = parseFloat(target.getAttribute('data-angle')) || 0;
             x += event.dx;
             y += event.dy;
-            target.style.transform = `translate(${x}px, ${y}px) rotate(${angle}rad)`;
+            target.style.transform = `translate(${x}px, ${y}px)`;
 
+            const canvas = target.querySelector('.display-canvas');
+            if (canvas) {
+              const angle = parseFloat(target.getAttribute('data-angle')) || 0;
+              canvas.style.transform = `rotate(${angle}rad)`;
+            }
             target.setAttribute('data-bs-x', x);
             target.setAttribute('data-bs-y', y);
             this.onInteraction(target);
@@ -37,22 +42,17 @@ const DraggableUtils = {
         listeners: {
           start: (event) => {
             const target = event.target;
-            x = parseFloat(target.getAttribute('data-bs-x'));
-            y = parseFloat(target.getAttribute('data-bs-y'));
+            x = parseFloat(target.getAttribute('data-bs-x')) || 0;
+            y = parseFloat(target.getAttribute('data-bs-y')) || 0;
           },
           move: (event) => {
             const target = event.target;
 
-            x += event.deltaRect.left;
-            y += event.deltaRect.top;
-            const angle = parseFloat(target.getAttribute('data-angle')) || 0;
-            const cosAngle = Math.cos(angle);
-            const sinAngle = Math.sin(angle);
+            let width = event.rect.width - 2 * this.padding; // Account for padding
+            let height = event.rect.height - 2 * this.padding; // Account for padding
 
-            const aspectRatio = (target.offsetWidth - 2 * this.padding) / (target.offsetHeight - 2 * this.padding);
-
-            let width = event.rect.width - 2 * this.padding; // Adjust width for padding
-            let height = event.rect.height - 2 * this.padding; // Adjust height for padding
+            const canvas = target.querySelector('.display-canvas');
+            const aspectRatio = canvas ? canvas.width / canvas.height : 1;
 
             if (!event.ctrlKey) {
               // Preserve aspect ratio unless Ctrl is pressed
@@ -63,29 +63,28 @@ const DraggableUtils = {
               }
             }
 
-            // Rotate deltas to account for rotation
-            const deltaLeft = event.deltaRect.left;
-            const deltaTop = event.deltaRect.top;
-
-            const rotatedDeltaX = cosAngle * deltaLeft - sinAngle * deltaTop;
-            const rotatedDeltaY = sinAngle * deltaLeft + cosAngle * deltaTop;
+            // Update position based on resizing
+            x += event.deltaRect.left;
+            y += event.deltaRect.top;
 
             target.style.width = `${width + 2 * this.padding}px`;
             target.style.height = `${height + 2 * this.padding}px`;
-            x += rotatedDeltaX;
-            y += rotatedDeltaY;
-            // Apply transform
-            target.style.transform = `translate(${x}px, ${y}px) rotate(${angle}rad)`;
-            const canvas = target.querySelector('.display-canvas');
+
             if (canvas) {
               canvas.style.width = `${width}px`;
               canvas.style.height = `${height}px`;
             }
+
+            target.style.transform = `translate(${x}px, ${y}px)`;
+
+            // Update attributes for persistence
+            target.setAttribute('data-bs-x', x);
+            target.setAttribute('data-bs-y', y);
           },
         },
         modifiers: [
           interact.modifiers.restrictSize({
-            min: {width: 50, height: 50},
+            min: {width: 50, height: 50}, // Minimum size for the container
           }),
         ],
         inertia: true,
@@ -311,7 +310,11 @@ const DraggableUtils = {
     const x = parseFloat(element.getAttribute('data-bs-x')) || 0;
     const y = parseFloat(element.getAttribute('data-bs-y')) || 0;
 
-    element.style.transform = `translate(${x}px, ${y}px) rotate(${radians}rad)`;
+    element.style.transform = `translate(${x}px, ${y}px)`;
+    const canvas = element.querySelector('.display-canvas');
+    if (canvas) {
+      canvas.style.transform = `rotate(${radians}rad)`;
+    }
     element.setAttribute('data-angle', radians);
   },
   handleRotationInputChange() {
@@ -425,24 +428,19 @@ const DraggableUtils = {
       for (const draggableData of draggablesData) {
         // Embed the draggable canvas
         const draggableElement = draggableData.element.querySelector('.display-canvas');
-        draggableElement.style.transform = draggableData.element.style.transform;
         const response = await fetch(draggableElement.toDataURL());
         const draggableImgBytes = await response.arrayBuffer();
         const pdfImageObject = await pdfDocModified.embedPng(draggableImgBytes);
 
         // Extract transformation data
-        const transform = draggableElement.style.transform || '';
+        const transform = draggableData.element.style.transform || '';
         const translateRegex = /translate\((-?\d+(?:\.\d+)?)px,\s*(-?\d+(?:\.\d+)?)px\)/;
-        const rotateRegex = /rotate\((-?\d+(?:\.\d+)?)rad\)/;
 
         const translateMatch = transform.match(translateRegex);
-        const rotateMatch = transform.match(rotateRegex);
 
         const translateX = translateMatch ? parseFloat(translateMatch[1]) : 0;
         const translateY = translateMatch ? parseFloat(translateMatch[2]) : 0;
-        const rotateAngle = rotateMatch
-          ? parseFloat(rotateMatch[1])
-          : parseFloat(draggableElement.getAttribute('data-angle')) || 0; // Fallback to data-angle
+        const rotateAngle = parseFloat(draggableData.element.getAttribute('data-angle')) || 0;
 
         const draggablePositionPixels = {
           x: translateX + this.padding,
@@ -523,7 +521,6 @@ const DraggableUtils = {
           height: draggablePositionPdf.height,
         });
         page.pushOperators(PDFLib.popGraphicsState());
-        draggableElement.style.transform = '';
       }
     }
 
