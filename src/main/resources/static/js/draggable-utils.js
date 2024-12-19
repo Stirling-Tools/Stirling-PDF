@@ -146,36 +146,32 @@ const DraggableUtils = {
   createDraggableCanvasFromUrl(dataUrl) {
     return new Promise((resolve) => {
       const canvasContainer = document.createElement('div');
-      const createdCanvas = document.createElement('canvas'); // Keep this canvas
+      const createdCanvas = document.createElement('canvas'); // Inner canvas
       const padding = this.padding;
 
       canvasContainer.id = `draggable-canvas-${this.nextId++}`;
       canvasContainer.classList.add('draggable-canvas');
       createdCanvas.classList.add('display-canvas');
 
-      canvasContainer.style.padding = padding + 'px';
+      canvasContainer.style.position = 'absolute';
+      canvasContainer.style.padding = `${padding}px`;
+      canvasContainer.style.overflow = 'hidden';
+
       let x = 0,
         y = 30,
         angle = 0;
-      canvasContainer.style.transform = `translate(${x}px, ${y}px) rotate(${angle}rad)`;
+      canvasContainer.style.transform = `translate(${x}px, ${y}px)`;
       canvasContainer.setAttribute('data-bs-x', x);
       canvasContainer.setAttribute('data-bs-y', y);
       canvasContainer.setAttribute('data-angle', angle);
 
-      // Enable rotation controls on click
       canvasContainer.addEventListener('click', () => {
         this.lastInteracted = canvasContainer;
         this.showRotationControls(canvasContainer);
       });
-
-      canvasContainer.onclick = (e) => this.onInteraction(e.target);
       canvasContainer.appendChild(createdCanvas);
       this.boxDragContainer.appendChild(canvasContainer);
 
-      // Enable Arrow keys directly after the element is created
-      this.lastInteracted = canvasContainer;
-
-      // Load the image and draw it on the canvas
       const myImage = new Image();
       myImage.src = dataUrl;
       myImage.onload = () => {
@@ -188,19 +184,23 @@ const DraggableUtils = {
         const containerWidth = this.boxDragContainer.offsetWidth;
         const containerHeight = this.boxDragContainer.offsetHeight;
 
-        let scaleMultiplier;
-        if (imgAspect > containerWidth / containerHeight) {
-          scaleMultiplier = containerWidth / myImage.width;
-        } else {
-          scaleMultiplier = containerHeight / myImage.height;
-        }
+        let scaleMultiplier = Math.min(containerWidth / myImage.width, containerHeight / myImage.height);
         const scaleFactor = 0.5;
 
         const newWidth = myImage.width * scaleMultiplier * scaleFactor;
         const newHeight = myImage.height * scaleMultiplier * scaleFactor;
 
+        // Calculate initial bounding box size
+        const cosAngle = Math.abs(Math.cos(angle));
+        const sinAngle = Math.abs(Math.sin(angle));
+        const boundingWidth = newWidth * cosAngle + newHeight * sinAngle;
+        const boundingHeight = newWidth * sinAngle + newHeight * cosAngle;
+
         createdCanvas.style.width = `${newWidth}px`;
         createdCanvas.style.height = `${newHeight}px`;
+
+        canvasContainer.style.width = `${boundingWidth + 2 * padding}px`;
+        canvasContainer.style.height = `${boundingHeight + 2 * padding}px`;
 
         context.imageSmoothingEnabled = true;
         context.imageSmoothingQuality = 'high';
