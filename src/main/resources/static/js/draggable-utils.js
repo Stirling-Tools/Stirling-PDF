@@ -19,21 +19,42 @@ const DraggableUtils = {
           },
           move: (event) => {
             const target = event.target;
+
+            // Retrieve position attributes
+            let x = parseFloat(target.getAttribute('data-bs-x')) || 0;
+            let y = parseFloat(target.getAttribute('data-bs-y')) || 0;
             const angle = parseFloat(target.getAttribute('data-angle')) || 0;
+
+            // Update position based on drag movement
             x += event.dx;
             y += event.dy;
+
+            // Apply translation to the parent container (bounding box)
             target.style.transform = `translate(${x}px, ${y}px)`;
 
+            // Preserve rotation on the inner canvas
             const canvas = target.querySelector('.display-canvas');
-            if (canvas) {
-              const angle = parseFloat(target.getAttribute('data-angle')) || 0;
-              canvas.style.transform = `rotate(${angle}rad)`;
-            }
+
+            const canvasWidth = parseFloat(canvas.style.width);
+            const canvasHeight = parseFloat(canvas.style.height);
+
+            const cosAngle = Math.abs(Math.cos(angle));
+            const sinAngle = Math.abs(Math.sin(angle));
+
+            const rotatedWidth = canvasWidth * cosAngle + canvasHeight * sinAngle;
+            const rotatedHeight = canvasWidth * sinAngle + canvasHeight * cosAngle;
+
+            const offsetX = (rotatedWidth - canvasWidth) / 2;
+            const offsetY = (rotatedHeight - canvasHeight) / 2;
+
+            canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) rotate(${angle}rad)`;
+
+            // Update attributes for persistence
             target.setAttribute('data-bs-x', x);
             target.setAttribute('data-bs-y', y);
-            this.onInteraction(target);
-            //update the last interacted element
-            this.lastInteracted = event.target;
+
+            // Set the last interacted element
+            this.lastInteracted = target;
           },
         },
       })
@@ -48,47 +69,51 @@ const DraggableUtils = {
           move: (event) => {
             const target = event.target;
 
-            let width = event.rect.width - 2 * this.padding; // Account for padding
-            let height = event.rect.height - 2 * this.padding; // Account for padding
+            let width = event.rect.width - 2 * this.padding;
+            let height = event.rect.height - 2 * this.padding;
 
             const canvas = target.querySelector('.display-canvas');
-            const aspectRatio = canvas ? canvas.width / canvas.height : 1;
-
-            if (!event.ctrlKey) {
-              // Preserve aspect ratio unless Ctrl is pressed
-              if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
-                height = width / aspectRatio;
-              } else {
-                width = height * aspectRatio;
-              }
-            }
-
-            // Update position based on resizing
-            x += event.deltaRect.left;
-            y += event.deltaRect.top;
-
-            target.style.width = `${width + 2 * this.padding}px`;
-            target.style.height = `${height + 2 * this.padding}px`;
-
             if (canvas) {
+              const originalWidth = parseFloat(canvas.style.width) || canvas.width;
+              const originalHeight = parseFloat(canvas.style.height) || canvas.height;
+              const angle = parseFloat(target.getAttribute('data-angle')) || 0;
+
+              const aspectRatio = originalWidth / originalHeight;
+
+              if (!event.ctrlKey) {
+                if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
+                  height = width / aspectRatio;
+                } else {
+                  width = height * aspectRatio;
+                }
+              }
+
+              const cosAngle = Math.abs(Math.cos(angle));
+              const sinAngle = Math.abs(Math.sin(angle));
+              const boundingWidth = width * cosAngle + height * sinAngle;
+              const boundingHeight = width * sinAngle + height * cosAngle;
+
+              target.style.width = `${boundingWidth + 2 * this.padding}px`;
+              target.style.height = `${boundingHeight + 2 * this.padding}px`;
+
               canvas.style.width = `${width}px`;
               canvas.style.height = `${height}px`;
+
+              const translateX = (boundingWidth - width) / 2;
+              const translateY = (boundingHeight - height) / 2;
+
+              canvas.style.transform = `translate(${translateX}px, ${translateY}px) rotate(${angle}rad)`;
             }
-
-            target.style.transform = `translate(${x}px, ${y}px)`;
-
-            // Update attributes for persistence
-            target.setAttribute('data-bs-x', x);
-            target.setAttribute('data-bs-y', y);
           },
         },
         modifiers: [
           interact.modifiers.restrictSize({
-            min: {width: 50, height: 50}, // Minimum size for the container
+            min: {width: 50, height: 50},
           }),
         ],
         inertia: true,
       });
+
     //Arrow key Support for Add-Image and Sign pages
     if (window.location.pathname.endsWith('sign') || window.location.pathname.endsWith('add-image')) {
       window.addEventListener('keydown', (event) => {
@@ -306,15 +331,38 @@ const DraggableUtils = {
     rotationInput.addEventListener('input', this.handleRotationInputChange);
   },
   applyRotationToElement(element, degrees) {
-    const radians = (degrees * Math.PI) / 180;
+    const radians = degrees * (Math.PI / 180); // Convert degrees to radians
+
+    // Get current position
     const x = parseFloat(element.getAttribute('data-bs-x')) || 0;
     const y = parseFloat(element.getAttribute('data-bs-y')) || 0;
 
-    element.style.transform = `translate(${x}px, ${y}px)`;
+    // Get the inner canvas (image)
     const canvas = element.querySelector('.display-canvas');
     if (canvas) {
-      canvas.style.transform = `rotate(${radians}rad)`;
+      const originalWidth = parseFloat(canvas.style.width);
+      const originalHeight = parseFloat(canvas.style.height);
+      const padding = this.padding; // Access the padding value
+
+      // Calculate rotated bounding box dimensions
+      const cosAngle = Math.abs(Math.cos(radians));
+      const sinAngle = Math.abs(Math.sin(radians));
+      const boundingWidth = originalWidth * cosAngle + originalHeight * sinAngle + 2 * padding;
+      const boundingHeight = originalWidth * sinAngle + originalHeight * cosAngle + 2 * padding;
+
+      // Update parent container to fit the rotated bounding box
+      element.style.width = `${boundingWidth}px`;
+      element.style.height = `${boundingHeight}px`;
+
+      // Center the canvas within the bounding box, accounting for padding
+      const offsetX = (boundingWidth - originalWidth) / 2 - padding;
+      const offsetY = (boundingHeight - originalHeight) / 2 - padding;
+
+      canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) rotate(${radians}rad)`;
     }
+
+    // Keep the bounding box positioned properly
+    element.style.transform = `translate(${x}px, ${y}px)`;
     element.setAttribute('data-angle', radians);
   },
   handleRotationInputChange() {
@@ -440,13 +488,20 @@ const DraggableUtils = {
 
         const translateX = translateMatch ? parseFloat(translateMatch[1]) : 0;
         const translateY = translateMatch ? parseFloat(translateMatch[2]) : 0;
+
+        const childTransform = draggableElement.style.transform || '';
+        const childTranslateMatch = childTransform.match(translateRegex);
+
+        const childOffsetX = childTranslateMatch ? parseFloat(childTranslateMatch[1]) : 0;
+        const childOffsetY = childTranslateMatch ? parseFloat(childTranslateMatch[2]) : 0;
+
         const rotateAngle = parseFloat(draggableData.element.getAttribute('data-angle')) || 0;
 
         const draggablePositionPixels = {
-          x: translateX + this.padding,
-          y: translateY + this.padding,
-          width: draggableData.offsetWidth - 2 * this.padding,
-          height: draggableData.offsetHeight - 2 * this.padding,
+          x: translateX + childOffsetX + this.padding + 2,
+          y: translateY + childOffsetY + this.padding + 2,
+          width: parseFloat(draggableElement.style.width),
+          height: parseFloat(draggableElement.style.height),
           angle: rotateAngle, // Store rotation
         };
 
