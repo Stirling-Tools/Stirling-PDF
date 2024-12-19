@@ -3109,7 +3109,7 @@ body{
 .toolbar{
   position:relative;
   inset-inline:0;
-  z-index:9999;
+  z-index:20;
   cursor:default;
   font:message-box;
 }
