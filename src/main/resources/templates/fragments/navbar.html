@@ -5,7 +5,7 @@
   <script th:inline="javascript">
     // Initializing the scripts
     initLanguageSettings();
-    removeElements();
+    toolsManager();
   </script>
   <script th:inline="javascript">
     const currentVersion = /*[[${@appVersion}]]*/ '';
@@ -82,9 +82,9 @@
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-single-page', 'looks_one', 'home.PdfToSinglePage.title', 'home.PdfToSinglePage.desc', 'PdfToSinglePage.tags', 'organize')}">
                         </div>
                       </div>
-                      <div class="navbar-item col-lg-2 col-sm-6 py px-xl-1 px-2"style="display:flex; flex-direction: column;">
+                      <div id="stacked" class="navbar-item col-lg-2 col-sm-6 py px-xl-1 px-2"style="display:flex; flex-direction: column;">
                       <!-- Convert to PDF menu items -->
-                      <div class="navbar-item py px-xl-1 px-2">
+                      <div class="navbar-item py px-xl-1 px-2" style="margin-bottom: 1rem;">
                         <h6 class="menu-title" th:text="#{navbar.sections.convertTo}"></h6>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('img-to-pdf', 'image', 'home.imageToPdf.title', 'home.imageToPdf.desc', 'imageToPdf.tags', 'image')}">
@@ -106,7 +106,7 @@
                         </div>
                       </div>
                       <!-- Convert from PDF menu items -->
-                      <div class="navbar-item py px-xl-1" style="margin-top: 1rem;">
+                      <div class="navbar-item py px-xl-1">
                         <h6 class="menu-title" th:text="#{navbar.sections.convertFrom}"></h6>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-img', 'image', 'home.pdfToImage.title', 'home.pdfToImage.desc', 'pdfToImage.tags', 'image')}">
