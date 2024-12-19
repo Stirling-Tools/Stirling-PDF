@@ -352,12 +352,17 @@ public class PdfUtils {
         pdfRenderer.setSubsamplingAllowed(true);
         for (int page = 0; page < document.getNumberOfPages(); ++page) {
             BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
-            PDPage newPage = new PDPage(new PDRectangle(bim.getWidth(), bim.getHeight()));
+            PDPage originalPage = document.getPage(page);
+
+            float width = originalPage.getMediaBox().getWidth();
+            float height = originalPage.getMediaBox().getHeight();
+
+            PDPage newPage = new PDPage(new PDRectangle(width, height));
             imageDocument.addPage(newPage);
             PDImageXObject pdImage = LosslessFactory.createFromImage(imageDocument, bim);
             PDPageContentStream contentStream =
                     new PDPageContentStream(imageDocument, newPage, AppendMode.APPEND, true, true);
-            contentStream.drawImage(pdImage, 0, 0);
+            contentStream.drawImage(pdImage, 0, 0, width, height);
             contentStream.close();
         }
         return imageDocument;
