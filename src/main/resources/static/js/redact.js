@@ -66,22 +66,30 @@ window.addEventListener("load", (e) => {
 
   let applyRedactionBtn = document.getElementById("apply-redaction");
 
-  let propertiesBtn = document.getElementById("propertiesBtn");
-  let propertiesOverlay = document.getElementById("propertiesOverlay");
-  propertiesBtn.onclick = (e) => propertiesOverlay.classList.remove("d-none");
+  let pageBasedRedactionBtn = document.getElementById("pageBasedRedactionBtn");
+  let pageBasedRedactionOverlay = document.getElementById("pageBasedRedactionOverlay");
+  pageBasedRedactionBtn.onclick = (e) => pageBasedRedactionOverlay.classList.remove("d-none");
 
-  propertiesOverlay.querySelector("button").onclick = (e) =>
-    propertiesOverlay.classList.add("d-none");
+  pageBasedRedactionOverlay.querySelector("button").onclick = (e) =>
+    pageBasedRedactionOverlay.classList.add("d-none");
 
-  propertiesOverlay.querySelectorAll("input").forEach(
+  pageBasedRedactionOverlay.querySelectorAll("input").forEach(
     (input) =>
       (input.onchange = (e) => {
         const id = input.getAttribute("data-for");
         let formInput = document.getElementById(id);
-        if (formInput.type === "checkbox") formInput.checked = input.checked;
-        else formInput.value = input.value;
+        if (formInput) formInput.value = input.value;
       })
   );
+
+  let pdfToImageCheckbox = document.getElementById('convertPDFToImage');
+
+  let pdfToImageBtn = document.getElementById('pdfToImageBtn');
+  pdfToImageBtn.onclick = (e) => {
+    pdfToImageBtn.classList.toggle('btn-success');
+    pdfToImageBtn.classList.toggle('btn-danger');
+    pdfToImageCheckbox.checked = !pdfToImageCheckbox.checked;
+  }
 
   let fileChooser = document.getElementsByClassName("custom-file-chooser")[0];
   let fileChooserInput = fileChooser.querySelector(

@@ -58,15 +58,11 @@
       </div>
       </div>
 
-      <div id="propertiesOverlay" class="d-none col-md-4 row justify-content-center align-content-center">
+      <div id="pageBasedRedactionOverlay" class="d-none col-md-4 row justify-content-center align-content-center">
         <div class="bg-card">
           <div class="tool-header">
             <span class="material-symbols-rounded tool-header-icon security">tune</span>
-            <span class="tool-header-text" th:text="#{redact.properties}"></span>
-          </div>
-          <div class="mb-3 form-check">
-            <input type="checkbox" data-for="convertPDFToImage" id="convertPDFToImageOverlay" checked>
-            <label for="convertPDFToImageOverlay" th:text="#{redact.convertPDFToImageLabel}"></label>
+            <span class="tool-header-text" th:text="#{redact.pageBasedRedaction}"></span>
           </div>
           <div class="mb-3">
             <label for="pageNumbers" th:text="#{redact.pageRedactionNumbers.title} + ':'" class="mb-2"></label>
@@ -396,8 +392,13 @@
             </div>
             <div id="toolbarViewerRight">
               <div class="splitToolbarButton">
-                <button id="propertiesBtn" title="Properties" class="btn-primary">
-                  <span id="propertiesBtnIcon" class="material-symbols-rounded">
+                <button id="pdfToImageBtn" th:title="#{redact.convertPDFToImageLabel}" class="btn-success">
+                  <span id="pdfToImageBtnIcon" class="material-symbols-rounded">
+                    image
+                  </span>
+                </button>
+                <button id="pageBasedRedactionBtn" th:title="#{redact.pageBasedRedaction}" class="btn-primary">
+                  <span id="pageBasedRedactionBtnIcon" class="material-symbols-rounded">
                     tune
                   </span>
                 </button>
