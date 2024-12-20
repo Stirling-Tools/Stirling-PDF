@@ -18,15 +18,15 @@
                 <span class="tool-header-text" th:text="#{flatten.header}"></span>
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/flatten'}" id="pdfForm" class="mb-3">
-                <div class="custom-file">
-                  <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
+                <div id="elementsContainer" style="display: none;">
+                  <div class="form-check ms-3">
+                    <input type="checkbox" id="flattenOnlyForms" name="flattenOnlyForms">
+                    <label for="flattenOnlyForms" th:text="#{flatten.flattenOnlyForms}" ></label>
+                  </div>
+                  <br>
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{flatten.submit}"></button>
                 </div>
-                <div class="form-check ms-3">
-                  <input type="checkbox" id="flattenOnlyForms" name="flattenOnlyForms">
-                  <label for="flattenOnlyForms" th:text="#{flatten.flattenOnlyForms}" ></label>
-                </div>         
-                <br>
-                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{flatten.submit}"></button>
               </form>
             </div>
           </div>

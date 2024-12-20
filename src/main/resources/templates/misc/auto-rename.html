@@ -19,8 +19,10 @@
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/auto-rename'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
-                <br>
-                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{auto-rename.submit}"></button>
+                <div id="elementsContainer" style="display: none;">
+                  <br>
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{auto-rename.submit}"></button>
+                </div>
               </form>
             </div>
           </div>

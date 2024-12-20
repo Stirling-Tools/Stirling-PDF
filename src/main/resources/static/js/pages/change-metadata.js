@@ -33,47 +33,49 @@ var lastPDFFile = null;
 
 fileInput.addEventListener('change', async function () {
   fileInput.addEventListener('file-input-change', async (e) => {
-    const {allFiles} = e.detail;
-    if (allFiles && allFiles.length > 0) {
-      const file = allFiles[0];
-      while (otherMetadataEntriesDiv.firstChild) {
-        otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
-      }
-      while (customMetadataFormContainer.firstChild) {
-        customMetadataFormContainer.removeChild(customMetadataFormContainer.firstChild);
-      }
-      var url = URL.createObjectURL(file);
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-      const pdf = await pdfjsLib.getDocument(url).promise;
-      const pdfMetadata = await pdf.getMetadata();
-      lastPDFFile = pdfMetadata?.info;
-      console.log(pdfMetadata);
-      if (!pdfMetadata?.info?.Custom || pdfMetadata?.info?.Custom.size == 0) {
-        customModeCheckbox.disabled = true;
-        customModeCheckbox.checked = false;
-      } else {
-        customModeCheckbox.disabled = false;
-      }
-      authorInput.value = pdfMetadata?.info?.Author;
-      creationDateInput.value = convertDateFormat(pdfMetadata?.info?.CreationDate);
-      creatorInput.value = pdfMetadata?.info?.Creator;
-      keywordsInput.value = pdfMetadata?.info?.Keywords;
-      modificationDateInput.value = convertDateFormat(pdfMetadata?.info?.ModDate);
-      producerInput.value = pdfMetadata?.info?.Producer;
-      subjectInput.value = pdfMetadata?.info?.Subject;
-      titleInput.value = pdfMetadata?.info?.Title;
-      console.log(pdfMetadata?.info);
-      const trappedValue = pdfMetadata?.info?.Trapped;
-      // Get all options in the select element
-      const options = trappedInput.options;
-      // Loop through all options to find the one with a matching value
-      for (let i = 0; i < options.length; i++) {
-        if (options[i].value === trappedValue) {
-          options[i].selected = true;
-          break;
+    if (e.detail) {
+      const {allFiles} = e.detail;
+      if (allFiles && allFiles.length > 0) {
+        const file = allFiles[0];
+        while (otherMetadataEntriesDiv.firstChild) {
+          otherMetadataEntriesDiv.removeChild(otherMetadataEntriesDiv.firstChild);
         }
+        while (customMetadataFormContainer.firstChild) {
+          customMetadataFormContainer.removeChild(customMetadataFormContainer.firstChild);
+        }
+        var url = URL.createObjectURL(file);
+        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
+        const pdf = await pdfjsLib.getDocument(url).promise;
+        const pdfMetadata = await pdf.getMetadata();
+        lastPDFFile = pdfMetadata?.info;
+        console.log(pdfMetadata);
+        if (!pdfMetadata?.info?.Custom || pdfMetadata?.info?.Custom.size == 0) {
+          customModeCheckbox.disabled = true;
+          customModeCheckbox.checked = false;
+        } else {
+          customModeCheckbox.disabled = false;
+        }
+        authorInput.value = pdfMetadata?.info?.Author;
+        creationDateInput.value = convertDateFormat(pdfMetadata?.info?.CreationDate);
+        creatorInput.value = pdfMetadata?.info?.Creator;
+        keywordsInput.value = pdfMetadata?.info?.Keywords;
+        modificationDateInput.value = convertDateFormat(pdfMetadata?.info?.ModDate);
+        producerInput.value = pdfMetadata?.info?.Producer;
+        subjectInput.value = pdfMetadata?.info?.Subject;
+        titleInput.value = pdfMetadata?.info?.Title;
+        console.log(pdfMetadata?.info);
+        const trappedValue = pdfMetadata?.info?.Trapped;
+        // Get all options in the select element
+        const options = trappedInput.options;
+        // Loop through all options to find the one with a matching value
+        for (let i = 0; i < options.length; i++) {
+          if (options[i].value === trappedValue) {
+            options[i].selected = true;
+            break;
+          }
+        }
+        addExtra();
       }
-      addExtra();
     }
   });
 });

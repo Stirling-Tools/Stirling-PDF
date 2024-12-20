@@ -44,10 +44,12 @@
                   <div class="col-md-8">
                     <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}"></div>
                   </div>
-                  <br>
-                  <canvas id="contrast-pdf-canvas"></canvas>
-                  <div class="mb-3 text-left">
-                  <button id="download-button" class="btn btn-primary" th:text="#{adjustContrast.download}"></button>
+                  <div id="elementsContainer" style="display: none;">
+                    <br>
+                    <canvas id="contrast-pdf-canvas"></canvas>
+                    <div class="mb-3 text-left">
+                      <button id="download-button" class="btn btn-primary" th:text="#{adjustContrast.download}"></button>
+                    </div>
                   </div>
                 </div>
 

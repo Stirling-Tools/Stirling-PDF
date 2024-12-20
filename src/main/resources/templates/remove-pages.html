@@ -22,15 +22,16 @@
             </div>
 
             <form th:action="@{'/api/v1/general/remove-pages'}" method="post" enctype="multipart/form-data">
-              <div
-                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
               </div>
-              <div class="mb-3">
-                <label for="fileInput" th:text="#{pageRemover.pagesToDelete}"></label>
-                <input type="text" class="form-control" id="fileInput" name="pageNumbers"
-                  th:placeholder="#{pageRemover.placeholder}" required>
+              <div id="elementsContainer" style="display: none;">
+                <div class="mb-3">
+                  <label for="fileInput" th:text="#{pageRemover.pagesToDelete}"></label>
+                  <input type="text" class="form-control" id="fileInput" name="pageNumbers"
+                    th:placeholder="#{pageRemover.placeholder}" required>
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pageRemover.submit}"></button>
               </div>
-              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pageRemover.submit}"></button>
             </form>
           </div>
         </div>

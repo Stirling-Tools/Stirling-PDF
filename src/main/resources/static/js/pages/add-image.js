@@ -8,24 +8,27 @@ document.getElementById('download-pdf').addEventListener('click', async () => {
   link.click();
 });
 let originalFileName = '';
-document.querySelector('input[name=pdf-upload]').addEventListener('change', async (event) => {
+document.querySelector('input[name=fileInput]').addEventListener('change', async (event) => {
   const fileInput = event.target;
   fileInput.addEventListener('file-input-change', async (e) => {
-    const {allFiles} = e.detail;
-    if (allFiles && allFiles.length > 0) {
-      const file = allFiles[0];
-      originalFileName = file.name.replace(/\.[^/.]+$/, '');
-      const pdfData = await file.arrayBuffer();
-      pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-      const pdfDoc = await pdfjsLib.getDocument({data: pdfData}).promise;
-      await DraggableUtils.renderPage(pdfDoc, 0);
+    if (e.detail) {
+      const {allFiles} = e.detail;
+      if (allFiles && allFiles.length > 0) {
+        const file = allFiles[0];
+        originalFileName = file.name.replace(/\.[^/.]+$/, '');
+        const pdfData = await file.arrayBuffer();
+        pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
+        const pdfDoc = await pdfjsLib.getDocument({data: pdfData}).promise;
+        await DraggableUtils.renderPage(pdfDoc, 0);
 
-      document.querySelectorAll('.show-on-file-selected').forEach((el) => {
-        el.style.cssText = '';
-      });
+        document.querySelectorAll('.show-on-file-selected').forEach((el) => {
+          el.style.cssText = '';
+        });
+      }
     }
   });
 });
+
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.show-on-file-selected').forEach((el) => {
     el.style.cssText = 'display:none !important';
@@ -34,9 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const imageUpload = document.querySelector('input[name=image-upload]');
 imageUpload.addEventListener('change', (e) => {
-  if (!e.target.files) {
-    return;
-  }
+  if (!e.target.files) return;
   for (const imageFile of e.target.files) {
     var reader = new FileReader();
     reader.readAsDataURL(imageFile);

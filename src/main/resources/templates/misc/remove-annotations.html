@@ -20,7 +20,9 @@
                 <div class="custom-file">
                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}"></div>
                 </div>
-                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{removeAnnotations.submit}"></button>
+                <div id="elementsContainer" style="display: none;">
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{removeAnnotations.submit}"></button>
+                </div>
               </form>
             </div>
           </div>

@@ -26,13 +26,8 @@
               <div
                 th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
               </div>
-              <div class="form-check ms-3">
-                <input type="checkbox" name="duplexMode" id="duplexMode">
-                <label for="duplexMode" th:text=#{autoSplitPDF.duplexMode}></label>
-              </div>
               <p>
-                <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#info" role="button"
-                  aria-expanded="false" aria-controls="info" th:text="#{info}"></a>
+                <a class="btn btn-outline-primary" data-bs-toggle="collapse" href="#info" role="button" aria-expanded="false" aria-controls="info" th:text="#{info}"></a>
               </p>
               <div class="collapse" id="info">
                 <!-- Added a brief description -->
@@ -48,8 +43,14 @@
                 <p><a th:href="@{'/files/Auto%20Splitter%20Divider%20(with%20instructions).pdf'}" download
                     th:text="#{autoSplitPDF.dividerDownload2}"></a></p>
               </div>
+              <div id="elementsContainer" style="display: none;">
+                <div class="form-check ms-3">
+                  <input type="checkbox" name="duplexMode" id="duplexMode">
+                  <label for="duplexMode" th:text=#{autoSplitPDF.duplexMode}></label>
+                </div>
 
-              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{autoSplitPDF.submit}"></button>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{autoSplitPDF.submit}"></button>
+              </div>
             </form>
           </div>
         </div>

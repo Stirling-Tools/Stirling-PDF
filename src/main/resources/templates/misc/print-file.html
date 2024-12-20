@@ -12,18 +12,23 @@
         <br><br>
         <div class="container">
           <div class="row justify-content-center">
-            <div class="col-md-6">
-              <h2 th:text="#{printFile.header}"></h2>
+            <div class="col-md-6 bg-card">
+              <div class="tool-header">
+                <span class="material-symbols-rounded tool-header-icon convert">print</span>
+                <span class="tool-header-text" th:text="#{printFile.header}"></span>
+              </div>
               <form action="#" th:action="@{'/api/v1/misc/print-file'}" method="post" enctype="multipart/form-data">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf,image/*')}"></div>
-                <div class="card mb-3">
-                  <div class="card-body">
-                    <h4 th:text="#{printFile.selectText.1}">Select Printer</h4> <!-- Assuming the message code printFile.selectText.3 corresponds to "Select Printer" -->
-                    <label for="printerName" th:text="#{printFile.selectText.2}">Printer Name:</label> <!-- Assuming the message code printFile.selectText.4 corresponds to "Printer Name:" -->
-                    <input type="text" name="printerName" id="printerName" class="form-control">
+                <div id="elementsContainer" style="display: none;">
+                  <div class="card mb-3">
+                    <div class="card-body">
+                      <h4 th:text="#{printFile.selectText.1}">Select Printer</h4> <!-- Assuming the message code printFile.selectText.3 corresponds to "Select Printer" -->
+                      <label for="printerName" th:text="#{printFile.selectText.2}">Printer Name:</label> <!-- Assuming the message code printFile.selectText.4 corresponds to "Printer Name:" -->
+                      <input type="text" name="printerName" id="printerName" class="form-control">
+                    </div>
                   </div>
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{printFile.submit}"></button>
                 </div>
-                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{printFile.submit}"></button>
               </form>
             </div>
           </div>

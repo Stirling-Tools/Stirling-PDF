@@ -19,16 +19,18 @@
               </div>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/word'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
-                <div class="mb-3">
-                  <label th:text="#{PDFToWord.selectText.1}"></label>
-                  <select class="form-control" name="outputFormat">
-                    <option value="docx">DocX</option>
-                    <option value="doc">Doc</option>
-                    <option value="odt">Odt</option>
-                  </select>
+                <div id="elementsContainer" style="display: none;">
+                  <div class="mb-3">
+                    <label th:text="#{PDFToWord.selectText.1}"></label>
+                    <select class="form-control" name="outputFormat">
+                      <option value="docx">DocX</option>
+                      <option value="doc">Doc</option>
+                      <option value="odt">Odt</option>
+                    </select>
+                  </div>
+                  <br>
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{PDFToWord.submit}"></button>
                 </div>
-                <br>
-                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{PDFToWord.submit}"></button>
               </form>
               <p class="mt-3" th:text="#{PDFToWord.credit}"></p>
             </div>

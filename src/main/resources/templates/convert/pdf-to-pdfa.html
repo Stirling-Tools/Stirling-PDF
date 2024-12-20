@@ -20,15 +20,17 @@
               <p th:text="#{pdfToPDFA.tip}"></p>
               <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/pdf/pdfa'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
-                <div class="mb-3">
-                  <label for="outputFormat" th:text="#{pdfToPDFA.outputFormat}"></label>
-                  <select class="form-control" name="outputFormat" id="outputFormat">
-                    <option value="pdfa-1">PDF/A-1b</option>
-                    <option value="pdfa">PDF/A-2b</option>
-                  </select>
+                  <div id="elementsContainer" style="display: none;">
+                  <div class="mb-3">
+                    <label for="outputFormat" th:text="#{pdfToPDFA.outputFormat}"></label>
+                    <select class="form-control" name="outputFormat" id="outputFormat">
+                      <option value="pdfa-1">PDF/A-1b</option>
+                      <option value="pdfa">PDF/A-2b</option>
+                    </select>
+                  </div>
+                  <div id="result" class="alert-warning"></div>
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfToPDFA.submit}"></button>
                 </div>
-                <div id="result" class="alert-warning"></div>
-                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfToPDFA.submit}"></button>
               </form>
               <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
               <script th:inline="javascript">

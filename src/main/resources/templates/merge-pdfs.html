@@ -21,26 +21,23 @@
               <span class="tool-header-text" th:text="#{merge.header}"></span>
             </div>
             <form th:action="@{'api/v1/general/merge-pdfs'}" method="post" enctype="multipart/form-data">
-              <div class="mb-3">
-                <label th:text="#{multiPdfDropPrompt}" for="fileInput-input"></label>
-                <div
-                  th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=true, accept='application/pdf')}">
+              <label th:text="#{multiPdfDropPrompt}" for="fileInput-input"></label>
+              <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=true, accept='application/pdf')}">
+              </div>
+              <div id="elementsContainer" style="display: none;">
+                <div class="mb-3" id="removeCertSignContainer">
+                  <input type="checkbox" name="removeCertSign" id="removeCertSign">
+                  <label for="removeCertSign" th:text="#{merge.removeCertSign}">Remove digital signature in the merged
+                    file?</label>
                 </div>
-              </div>
-              <div class="mb-3">
-                <input type="checkbox" name="removeCertSign" id="removeCertSign">
-                <label for="removeCertSign" th:text="#{merge.removeCertSign}">Remove digital signature in the merged
-                  file?</label>
-              </div>
-              <div class="mb-3">
-                <ul id="selectedFiles" class="list-group"></ul>
-              </div>
-              <div class="mb-3">
-                <button type="button" id="sortByNameBtn" class="btn btn-info" th:text="#{merge.sortByName}"></button>
-                <button type="button" id="sortByDateBtn" class="btn btn-info" th:text="#{merge.sortByDate}"></button>
-                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{merge.submit}"></button>
-              </div>
-              <div class="mb-3">
+                <div class="mb-3">
+                  <ul id="selectedFiles" class="list-group"></ul>
+                </div>
+                <div class="mb-3" id="sortBy">
+                  <button type="button" id="sortByNameBtn" class="btn btn-info" th:text="#{merge.sortByName}"></button>
+                  <button type="button" id="sortByDateBtn" class="btn btn-info" th:text="#{merge.sortByDate}"></button>
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{merge.submit}"></button>
+                </div>
                 <button type="button" id="resetFileInputBtn" class="btn btn-danger" th:text="#{reset}">Reset</button>
               </div>
             </form>

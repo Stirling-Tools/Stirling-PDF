@@ -62,56 +62,57 @@
           </div>
           <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/misc/add-page-numbers'}">
             <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
-            <br>
-            <div class="mb-3">
-              <label for="customMargin" th:text="#{addPageNumbers.selectText.2}"></label>
-              <select class="form-control" id="customMargin" name="customMargin">
-                <option value="small" th:text="#{sizes.small}"></option>
-                <option value="medium" selected th:text="#{sizes.medium}"></option>
-                <option value="large" th:text="#{sizes.large}"></option>
-                <option value="x-large" th:text="#{sizes.x-large}"></option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label th:text="#{addPageNumbers.selectText.3}"></label>
-              <div class="a4container">
-                <div class="pageNumber" id="1" style="top: 10%; left: 10%;">1</div>
-                <div class="pageNumber" id="2" style="top: 10%; left: 50%;">2</div>
-                <div class="pageNumber" id="3" style="top: 10%; left: 90%;">3</div>
-                <div class="pageNumber" id="4" style="top: 50%; left: 10%;">4</div>
-                <div class="pageNumber" id="5" style="top: 50%; left: 50%;">5</div>
-                <div class="pageNumber" id="6" style="top: 50%; left: 90%;">6</div>
-                <div class="pageNumber" id="7" style="top: 90%; left: 10%;">7</div>
-                <div class="pageNumber selectedPosition" id="8" style="top: 90%; left: 50%;">8</div>
-                <div class="pageNumber" id="9" style="top: 90%; left: 90%;">9</div>
+            <div id="elementsContainer" style="display: none;">
+              <div class="mb-3">
+                <label for="customMargin" th:text="#{addPageNumbers.selectText.2}"></label>
+                <select class="form-control" id="customMargin" name="customMargin">
+                  <option value="small" th:text="#{sizes.small}"></option>
+                  <option value="medium" selected th:text="#{sizes.medium}"></option>
+                  <option value="large" th:text="#{sizes.large}"></option>
+                  <option value="x-large" th:text="#{sizes.x-large}"></option>
+                </select>
               </div>
+              <div class="mb-3">
+                <label th:text="#{addPageNumbers.selectText.3}"></label>
+                <div class="a4container">
+                  <div class="pageNumber" id="1" style="top: 10%; left: 10%;">1</div>
+                  <div class="pageNumber" id="2" style="top: 10%; left: 50%;">2</div>
+                  <div class="pageNumber" id="3" style="top: 10%; left: 90%;">3</div>
+                  <div class="pageNumber" id="4" style="top: 50%; left: 10%;">4</div>
+                  <div class="pageNumber" id="5" style="top: 50%; left: 50%;">5</div>
+                  <div class="pageNumber" id="6" style="top: 50%; left: 90%;">6</div>
+                  <div class="pageNumber" id="7" style="top: 90%; left: 10%;">7</div>
+                  <div class="pageNumber selectedPosition" id="8" style="top: 90%; left: 50%;">8</div>
+                  <div class="pageNumber" id="9" style="top: 90%; left: 90%;">9</div>
+                </div>
+              </div>
+              <input type="hidden" id="numberInput" name="position" value="8">
+              <div class="mb-3">
+                <label for="fontSize" th:text="#{addPageNumbers.fontSize}"></label>
+                <input type="number" class="form-control" id="fontSize" name="fontSize" min="1" value="12" required>
+              </div>
+              <div class="mb-3">
+                <label for="fontType" th:text="#{addPageNumbers.fontName}"></label>
+                <select class="form-control" id="fontType" name="fontType">
+                  <option value="Times">Times Roman</option>
+                  <option value="Helvetica">Helvetica</option>
+                  <option value="Courier">Courier New</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="startingNumber" th:text="#{addPageNumbers.selectText.4}"></label>
+                <input type="number" class="form-control" id="startingNumber" name="startingNumber" min="1" required value="1">
+              </div>
+              <div class="mb-3">
+                <label for="pagesToNumber" th:text="#{addPageNumbers.selectText.5}"></label>
+                <input type="text" class="form-control" id="pagesToNumber" name="pagesToNumber" th:placeholder="#{addPageNumbers.numberPagesDesc}">
+              </div>
+              <div class="mb-3">
+                <label for="customText" th:text="#{addPageNumbers.selectText.6}"></label>
+                <input type="text" class="form-control" id="customText" name="customText" th:placeholder="#{addPageNumbers.customNumberDesc}">
+              </div>
+              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{addPageNumbers.submit}"></button>
             </div>
-            <input type="hidden" id="numberInput" name="position" value="8">
-            <div class="mb-3">
-              <label for="fontSize" th:text="#{addPageNumbers.fontSize}"></label>
-              <input type="number" class="form-control" id="fontSize" name="fontSize" min="1" value="12" required>
-            </div>
-            <div class="mb-3">
-              <label for="fontType" th:text="#{addPageNumbers.fontName}"></label>
-              <select class="form-control" id="fontType" name="fontType">
-                <option value="Times">Times Roman</option>
-                <option value="Helvetica">Helvetica</option>
-                <option value="Courier">Courier New</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="startingNumber" th:text="#{addPageNumbers.selectText.4}"></label>
-              <input type="number" class="form-control" id="startingNumber" name="startingNumber" min="1" required value="1">
-            </div>
-            <div class="mb-3">
-              <label for="pagesToNumber" th:text="#{addPageNumbers.selectText.5}"></label>
-              <input type="text" class="form-control" id="pagesToNumber" name="pagesToNumber" th:placeholder="#{addPageNumbers.numberPagesDesc}">
-            </div>
-            <div class="mb-3">
-              <label for="customText" th:text="#{addPageNumbers.selectText.6}"></label>
-              <input type="text" class="form-control" id="customText" name="customText" th:placeholder="#{addPageNumbers.customNumberDesc}">
-            </div>
-            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{addPageNumbers.submit}"></button>
           </form>
         </div>
       </div>

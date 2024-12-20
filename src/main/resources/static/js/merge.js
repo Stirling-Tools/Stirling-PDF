@@ -179,15 +179,14 @@ function updateFiles() {
 
 document.querySelector("#resetFileInputBtn").addEventListener("click", ()=>{
   let formElement = document.querySelector("#fileInput-input");
-    formElement.value = '';
-    clearLiElements();
-    updateFiles();
-
+  formElement.value = '';
+  clearLiElements();
+  updateFiles();
 });
 
 function clearLiElements(){
   let listGroupItemNodeList = document.querySelectorAll(".list-group-item");
   for (let i = 0; i < listGroupItemNodeList.length; i++) {
     listGroupItemNodeList[i].remove();
-    };
-  }
+  };
+}
