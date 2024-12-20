@@ -80,6 +80,7 @@ const DraggableUtils = {
 
               const aspectRatio = originalWidth / originalHeight;
 
+              // Maintain aspect ratio if Ctrl key is not pressed
               if (!event.ctrlKey) {
                 if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
                   height = width / aspectRatio;
@@ -92,6 +93,23 @@ const DraggableUtils = {
               const sinAngle = Math.abs(Math.sin(angle));
               const boundingWidth = width * cosAngle + height * sinAngle;
               const boundingHeight = width * sinAngle + height * cosAngle;
+
+              // Adjust x and y only for specific edges to prevent conflicts
+              if (event.edges.left) {
+                const dx = event.deltaRect.left;
+                x += dx; // Move the element left when resizing from the left
+              }
+              if (event.edges.top) {
+                const dy = event.deltaRect.top;
+                y += dy; // Move the element up when resizing from the top
+              }
+
+              // Only update x or y if the corresponding edge is being resized
+              if (event.edges.left || event.edges.top) {
+                target.style.transform = `translate(${x}px, ${y}px)`;
+                target.setAttribute('data-bs-x', x);
+                target.setAttribute('data-bs-y', y);
+              }
 
               target.style.width = `${boundingWidth + 2 * this.padding}px`;
               target.style.height = `${boundingHeight + 2 * this.padding}px`;
