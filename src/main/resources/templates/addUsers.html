@@ -89,10 +89,10 @@
                       <td style="align-content: center;">
                         <form th:action="@{'/api/v1/user/admin/changeUserEnabled/' + ${user.username}}" method="post" onsubmit="return confirmChangeUserStatus()">
                           <input type="hidden" name="enabled" th:value="!${user.enabled}" />
-                          <button th:if="${user.enabled}" th:title="#{adminUserSettings.enabledUser}" type="submit" class="btn btn-success btn-sm">
+                          <button type="submit" th:if="${user.enabled}" th:title="#{adminUserSettings.enabledUser}" class="btn btn-success btn-sm">
                             <span class="material-symbols-rounded">person</span>
                           </button>
-                          <button th:unless="${user.enabled}" th:title="#{adminUserSettings.disabledUser}" type="submit" class="btn btn-danger btn-sm">
+                          <button type="submit" th:unless="${user.enabled}" th:title="#{adminUserSettings.disabledUser}" class="btn btn-danger btn-sm">
                             <span class="material-symbols-rounded">person_off</span>
                           </button>
                         </form>
