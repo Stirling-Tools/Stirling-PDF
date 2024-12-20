@@ -22,19 +22,25 @@ select#font-select option {
 }
 
 .draggable-buttons-box {
-  position: absolute;
+  position: relative;
   top: 0;
   padding: 10px;
   width: 100%;
   display: flex;
   gap: 5px;
   z-index: 5;
+  overflow: hidden;
+
 }
 
 .draggable-buttons-box>button {
   z-index: 4;
   background-color: rgba(13, 110, 253, 0.1);
+  flex: 1 1 auto;
+  min-width: 0;
 }
+
+
 
 
 

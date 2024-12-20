@@ -31,7 +31,7 @@
       <br><br>
       <div class="container">
         <div class="row justify-content-center">
-          <div class="col-md-6 bg-card">
+          <div class="col-md-8 bg-card">
             <div class="tool-header">
               <span class="material-symbols-rounded tool-header-icon sign">signature</span>
               <span class="tool-header-text" th:text="#{sign.header}"></span>
@@ -285,10 +285,6 @@
             <script th:src="@{'/js/sign/signature-canvas.js'}"></script>
   <!-- draggables box -->
             <div id="box-drag-container" class="show-on-file-selected">
-              <canvas id="pdf-canvas"></canvas>
-              <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
-              <script src="https://cdn.jsdelivr.net/npm/fabric@latest/dist/index.min.js"></script>
-              <script th:src="@{'/js/draggable-utils.js'}"></script>
               <div class="draggable-buttons-box ignore-rtl">
                 <button class="btn btn-outline-secondary"
                   onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())">
@@ -353,6 +349,10 @@
                   <span class="btn-tooltip" th:text="#{sign.last}"></span>
                 </button>
               </div>
+              <canvas id="pdf-canvas"></canvas>
+              <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
+              <script src="https://cdn.jsdelivr.net/npm/fabric@latest/dist/index.min.js"></script>
+              <script th:src="@{'/js/draggable-utils.js'}"></script>
             </div>
 
             <!-- download button -->
