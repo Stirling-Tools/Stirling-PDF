@@ -15,3 +15,13 @@ updates:
     directory: "/" # Location of Dockerfile
     schedule:
       interval: "weekly"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: pip
+    directory: /cucumber
+    schedule:
+      interval: daily
