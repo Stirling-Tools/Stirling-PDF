@@ -170,6 +170,7 @@ window.addEventListener("load", (e) => {
 
   PDFViewerApplication.downloadOrSave = doNothing;
   PDFViewerApplication.triggerPrinting = doNothing;
+  PDFViewerApplication.rotatePages = doNothing;
 
   PDFViewerApplication.eventBus.on("pagerendered", (e) => {
     removePDFJSButtons();
