@@ -13,7 +13,7 @@ You could theoretically use a Distrobox/Toolbox if your distribution has old or 
 Install the following software, if not already installed:
 
 - Java 17 or later (21 recommended)
-- Gradle 7.0 or later (included within repo so not needed on server)
+- Gradle 7.0 or later (included within the repo, so not needed on the server)
 - Git
 - Python 3.8 (with pip)
 - Make
@@ -32,7 +32,7 @@ sudo apt-get update
 sudo apt-get install -y git automake autoconf libtool libleptonica-dev pkg-config zlib1g-dev make g++ openjdk-21-jdk python3 python3-pip
 ```
 
-For Fedora-based systems use this command:
+For Fedora-based systems, use this command:
 
 ```bash
 sudo dnf install -y git automake autoconf libtool leptonica-devel pkg-config zlib-devel make gcc-c++ java-21-openjdk python3 python3-pip
@@ -68,7 +68,7 @@ nix-env -iA nixpkgs.jbig2enc
 
 ### Step 3: Install Additional Software
 
-Next we need to install LibreOffice for conversions, qpdf for OCR, and OpenCV for pattern recognition functionality.
+Next, we need to install LibreOffice for conversions, qpdf for OCR, and OpenCV for pattern recognition functionality.
 
 Install the following software:
 
@@ -232,7 +232,7 @@ Terminal=true;
 EOF
 ```
 
-Note: Currently the app will run in the background until manually closed.
+Note: Currently, the app will run in the background until it is manually closed.
 
 ### Optional: Changing the Host and Port of the Application
 
@@ -251,7 +251,7 @@ server:
 
 ### Optional: Run Stirling-PDF as a Service (requires root)
 
-First create a `.env` file, where you can store environment variables:
+First, create a `.env` file, where you can store environment variables:
 
 ```bash
 touch /opt/Stirling-PDF/.env
@@ -265,7 +265,7 @@ Create a new file where we store our service settings and open it with the nano 
 nano /etc/systemd/system/stirlingpdf.service
 ```
 
-Paste this content, make sure to update the filename of the jar file. Press `Ctrl+S` and `Ctrl+X` to save and exit the nano editor:
+Paste this content, and make sure to update the filename of the jar file. Press `Ctrl+S` and `Ctrl+X` to save and exit the nano editor:
 
 ```ini
 [Unit]
