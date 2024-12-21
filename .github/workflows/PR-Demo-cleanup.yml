@@ -4,9 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: read-all
 
 env:
   SERVER_IP: ${{ secrets.VPS_IP }}  # Add this to your GitHub secrets
@@ -15,6 +13,9 @@ env:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     if: github.event.action == 'closed'
 
     steps:
