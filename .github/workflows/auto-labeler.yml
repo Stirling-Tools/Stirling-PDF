@@ -5,12 +5,10 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   labeler:
-    permissions:
-      contents: read
-      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
