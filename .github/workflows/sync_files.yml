@@ -42,7 +42,7 @@ jobs:
           git diff --staged --quiet || git commit -m ":memo: Sync README
           > Made via sync_files.yml" || echo "no changes"
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6.1.0
+        uses: peter-evans/create-pull-request@5e914681df9dc83aa4e4905692ca88beb2f9e91f # v7.0.5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Update files
