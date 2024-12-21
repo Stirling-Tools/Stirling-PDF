@@ -99,6 +99,11 @@ window.addEventListener("load", (e) => {
   let uploadButton = document.getElementById("uploadBtn");
   uploadButton.onclick = (e) => fileChooserInput.click();
 
+  document.addEventListener("file-input-change", (e) => {
+    redactions = [];
+    _setRedactionsInput(redactions);
+  });
+
   let submitBtn = document.getElementById("submitBtn");
 
   let downloadBtn = document.getElementById("downloadBtn");
