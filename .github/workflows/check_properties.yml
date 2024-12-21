@@ -31,9 +31,11 @@ jobs:
 
       - name: Checkout PR branch
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        env:
+          PULL_REQUEST_REF: ${{ github.event.pull_request.head.ref }}
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: "${{ github.event.pull_request.merge_commit_sha }}"
+          ref: $PULL_REQUEST_REF
           path: pr-branch
           fetch-depth: 0
 
