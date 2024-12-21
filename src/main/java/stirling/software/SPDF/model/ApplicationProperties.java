@@ -6,6 +6,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -247,6 +248,28 @@ public class ApplicationProperties {
         private String tessdataDir;
         private Boolean enableAlphaFunctionality;
         private String enableAnalytics;
+        private Datasource datasource;
+    }
+
+    @Data
+    public static class Datasource {
+        private String url;
+        private Driver driver;
+        private String username;
+        private String password;
+    }
+
+    public enum Driver {
+        H2("h2"),
+        POSTGRESQL("postgresql"),
+        ORACLE("oracle"),
+        MY_SQL("mysql");
+
+        private final String driverName;
+
+        Driver(String driverName) {
+            this.driverName = driverName;
+        }
     }
 
     @Data

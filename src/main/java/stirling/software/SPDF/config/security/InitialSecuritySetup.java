@@ -20,6 +20,7 @@ public class InitialSecuritySetup {
 
     @Autowired private ApplicationProperties applicationProperties;
 
+    // todo: wip add Postgres here
     @Autowired private DatabaseBackupInterface databaseBackupHelper;
 
     @PostConstruct
