@@ -225,7 +225,7 @@ Stirling-PDF currently supports 38 languages!
 | Spanish (Español) (es_ES)                    | ![91%](https://geps.dev/progress/91)   |
 | Swedish (Svenska) (sv_SE)                    | ![90%](https://geps.dev/progress/90)   |
 | Thai (ไทย) (th_TH)                           | ![90%](https://geps.dev/progress/90)   |
-| Traditional Chinese (繁體中文) (zh_TW)        | ![91%](https://geps.dev/progress/91)   |
+| Traditional Chinese (繁體中文) (zh_TW)        | ![99%](https://geps.dev/progress/99)   |
 | Turkish (Türkçe) (tr_TR)                     | ![86%](https://geps.dev/progress/86)   |
 | Ukrainian (Українська) (uk_UA)               | ![76%](https://geps.dev/progress/76)   |
 | Vietnamese (Tiếng Việt) (vi_VN)              | ![83%](https://geps.dev/progress/83)   |
