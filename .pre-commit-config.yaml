@@ -48,7 +48,7 @@ repos:
   - repo: https://github.com/jumanjihouse/pre-commit-hooks
     rev: 3.0.0
     hooks:
-#      - id: shellcheck
+      - id: shellcheck
 #  - repo: https://github.com/pre-commit/mirrors-eslint
 #    rev: v8.38.0
 #    hooks:
