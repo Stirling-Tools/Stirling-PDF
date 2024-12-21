@@ -11,6 +11,7 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 10
     rebase-strategy: "auto"
+    
   - package-ecosystem: "docker"
     directory: "/" # Location of Dockerfile
     schedule:
@@ -19,9 +20,4 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: daily
-
-  - package-ecosystem: pip
-    directory: /cucumber
-    schedule:
-      interval: daily
+      interval: weekly
