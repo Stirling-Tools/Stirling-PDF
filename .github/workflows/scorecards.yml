@@ -13,17 +13,7 @@ on:
     - cron: '20 7 * * 2'
   push:
     branches: ["main"]
-
-# Declare default permissions as read only.
-permissions:
-  # Needs to be read-all for general access
-  contents: read
-  security-events: write  # For uploading security results
-  id-token: write        # For publishing results
-  actions: read
-  issues: read
-  pull-requests: read
-  checks: read
+permissions: read-all
 
 jobs:
   analysis:
