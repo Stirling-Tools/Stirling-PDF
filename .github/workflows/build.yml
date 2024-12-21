@@ -6,14 +6,15 @@ on:
   pull_request:
     branches: ["main"]
 
-permissions:
-  actions: read
-  contents: read
-  security-events: write
+permissions: read-all
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    permissions:
+      security-events: write
+
     strategy:
       fail-fast: false
       matrix:
