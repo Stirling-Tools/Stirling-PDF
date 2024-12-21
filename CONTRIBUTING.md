@@ -18,9 +18,9 @@ For a detailed pull request tutorial, see [this guide](https://www.digitalocean.
 Please make sure your Pull Request adheres to the following guidelines:
 
 - Use the PR template provided.
-- Keep your Pull Request title succinct, detailed and to the point.
+- Keep your Pull Request title succinct, detailed, and to the point.
 - Keep commits atomic. One commit should contain one change. If you want to make multiple changes, submit multiple Pull Requests.
-- Commits should be clear, concise and easy to understand.
+- Commits should be clear, concise, and easy to understand.
 - References to the Issue number in the Pull Request and/or Commit message.
 
 ## Translations
@@ -29,15 +29,15 @@ If you would like to add or modify a translation, please see [How to add new lan
 
 ## Docs
 
-Documentation for Stirling-PDF is handled in a separate repository. Please see [Docs repository](https://github.com/Stirling-Tools/Stirling-Tools.github.io) or use "edit this page"-button at the bottom of each page at [https://docs.stirlingpdf.com/](https://docs.stirlingpdf.com/).
+Documentation for Stirling-PDF is handled in a separate repository. Please see [Docs repository](https://github.com/Stirling-Tools/Stirling-Tools.github.io) or use the "edit this page"-button at the bottom of each page at [https://docs.stirlingpdf.com/](https://docs.stirlingpdf.com/).
 
 ## Fixing Bugs or Adding a New Feature
 
 First, make sure you've read the section [Pull Requests](#pull-requests).
 
-To build from source, please follow this [Guide](LocalRunGuide.md).
+To build from the source, please follow this [Guide](LocalRunGuide.md).
 
-If, at any point of time, you have a question, please feel free to ask in the same issue thread or in our [Discord](https://discord.gg/FJUSXUSYec).
+If, at any point in time, you have a question, please feel free to ask in the same issue thread or in our [Discord](https://discord.gg/FJUSXUSYec).
 
 ## License
 

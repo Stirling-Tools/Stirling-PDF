@@ -8,7 +8,7 @@ The Stirling-PDF team takes security vulnerabilities seriously. We appreciate yo
 
 You can report security vulnerabilities through two channels:
 
-1. **GitHub Security Advisory**: 
+1. **GitHub Security Advisory**:
    - Navigate to the [Security tab](https://github.com/Stirling-Tools/Stirling-PDF/security) in our repository
    - Click on "Report a vulnerability"
    - Provide a detailed description of the vulnerability
