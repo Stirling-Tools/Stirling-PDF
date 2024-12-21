@@ -96,6 +96,6 @@ jobs:
           if-no-files-found: error
 
       - name: Upload binaries to release
-        uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v2.0.9
+        uses: softprops/action-gh-release@7b4da11513bf3f43f9999e90eabced41ab8bb048 # v2.2.0
         with:
           files: ./Stirling-PDF-${{ matrix.platform }}-installer.${{ matrix.ext }}
