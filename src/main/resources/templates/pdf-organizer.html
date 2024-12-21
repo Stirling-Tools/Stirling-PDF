@@ -25,28 +25,30 @@
               <div
                 th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
               </div>
-              <div class="mb-3">
-                <label for="customMode" th:text="#{pdfOrganiser.mode}">Mode</label>
-                <select class="form-control" id="customMode" name="customMode">
-                  <option value="" th:text="#{pdfOrganiser.mode.1}">Custom Page Order</option>
-                  <option value="REVERSE_ORDER" th:text="#{pdfOrganiser.mode.2}">Reverse Order</option>
-                  <option value="DUPLEX_SORT" th:text="#{pdfOrganiser.mode.3}">Duplex Sort</option>
-                  <option value="BOOKLET_SORT" th:text="#{pdfOrganiser.mode.4}">Booklet Sort</option>
-                  <option value="SIDE_STITCH_BOOKLET_SORT" th:text="#{pdfOrganiser.mode.5}">Side Stitch Booklet Sort
-                  </option>
-                  <option value="ODD_EVEN_SPLIT" th:text="#{pdfOrganiser.mode.6}">Odd-Even Split</option>
-                  <option value="ODD_EVEN_MERGE" th:text="#{pdfOrganiser.mode.10}">Odd-Even Merge</option>
-                  <option value="REMOVE_FIRST" th:text="#{pdfOrganiser.mode.7}">Remove First</option>
-                  <option value="REMOVE_LAST" th:text="#{pdfOrganiser.mode.8}">Remove Last</option>
-                  <option value="REMOVE_FIRST_AND_LAST" th:text="#{pdfOrganiser.mode.9}">Remove First and Last</option>
-                </select>
+              <div id="elementsContainer" style="display: none;">
+                <div class="mb-3">
+                  <label for="customMode" th:text="#{pdfOrganiser.mode}">Mode</label>
+                  <select class="form-control" id="customMode" name="customMode">
+                    <option value="" th:text="#{pdfOrganiser.mode.1}">Custom Page Order</option>
+                    <option value="REVERSE_ORDER" th:text="#{pdfOrganiser.mode.2}">Reverse Order</option>
+                    <option value="DUPLEX_SORT" th:text="#{pdfOrganiser.mode.3}">Duplex Sort</option>
+                    <option value="BOOKLET_SORT" th:text="#{pdfOrganiser.mode.4}">Booklet Sort</option>
+                    <option value="SIDE_STITCH_BOOKLET_SORT" th:text="#{pdfOrganiser.mode.5}">Side Stitch Booklet Sort
+                    </option>
+                    <option value="ODD_EVEN_SPLIT" th:text="#{pdfOrganiser.mode.6}">Odd-Even Split</option>
+                    <option value="ODD_EVEN_MERGE" th:text="#{pdfOrganiser.mode.10}">Odd-Even Merge</option>
+                    <option value="REMOVE_FIRST" th:text="#{pdfOrganiser.mode.7}">Remove First</option>
+                    <option value="REMOVE_LAST" th:text="#{pdfOrganiser.mode.8}">Remove Last</option>
+                    <option value="REMOVE_FIRST_AND_LAST" th:text="#{pdfOrganiser.mode.9}">Remove First and Last</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="pageOrder" th:text="#{pageOrderPrompt}"></label>
+                  <input type="text" class="form-control" id="pageOrder" name="pageNumbers"
+                    th:placeholder="#{pdfOrganiser.placeholder}" required>
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfOrganiser.submit}"></button>
               </div>
-              <div class="mb-3">
-                <label for="pageOrder" th:text="#{pageOrderPrompt}"></label>
-                <input type="text" class="form-control" id="pageOrder" name="pageNumbers"
-                  th:placeholder="#{pdfOrganiser.placeholder}" required>
-              </div>
-              <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{pdfOrganiser.submit}"></button>
             </form>
             <script>
               document.getElementById('customMode').addEventListener('change', function () {

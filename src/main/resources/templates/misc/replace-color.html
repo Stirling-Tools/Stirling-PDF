@@ -20,44 +20,45 @@
                         <span class="tool-header-text" th:text="#{replace-color.header}"></span>
                     </div>
                     <form action="#" th:action="@{'/api/v1/misc/replace-invert-pdf'}" method="post" enctype="multipart/form-data">
-                        <div
-                                th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
+                        <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}">
                         </div>
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <h4 th:text="#{replace-color.selectText.1}"></h4>
-                                <select name="replaceAndInvertOption" id="replace-invert" class="form-control">
-                                    <option value="HIGH_CONTRAST_COLOR" th:text="#{replace-color.selectText.2}" ></option>
-                                    <option value="CUSTOM_COLOR" th:text="#{replace-color.selectText.3}"></option>
-                                    <option value="FULL_INVERSION" th:text="#{replace-color.selectText.4}" selected></option>
-                                </select>
+                        <div id="elementsContainer" style="display: none;">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h4 th:text="#{replace-color.selectText.1}"></h4>
+                                    <select name="replaceAndInvertOption" id="replace-invert" class="form-control">
+                                        <option value="HIGH_CONTRAST_COLOR" th:text="#{replace-color.selectText.2}" ></option>
+                                        <option value="CUSTOM_COLOR" th:text="#{replace-color.selectText.3}"></option>
+                                        <option value="FULL_INVERSION" th:text="#{replace-color.selectText.4}" selected></option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                        <div class="card mb-3" id="high-contrast-options" style="display: none">
-                            <div class="card-body">
-                                <h4 th:text="#{replace-color.selectText.5}"></h4>
-                                <select name="highContrastColorCombination" id="high-contrast" class="form-control">
-                                    <option value="WHITE_TEXT_ON_BLACK" th:text="#{replace-color.selectText.6}" selected></option>
-                                    <option value="BLACK_TEXT_ON_WHITE" th:text="#{replace-color.selectText.7}"></option>
-                                    <option value="YELLOW_TEXT_ON_BLACK" th:text="#{replace-color.selectText.8}"></option>
-                                    <option value="GREEN_TEXT_ON_BLACK" th:text="#{replace-color.selectText.9}"></option>
-                                </select>
+                            <div class="card mb-3" id="high-contrast-options" style="display: none">
+                                <div class="card-body">
+                                    <h4 th:text="#{replace-color.selectText.5}"></h4>
+                                    <select name="highContrastColorCombination" id="high-contrast" class="form-control">
+                                        <option value="WHITE_TEXT_ON_BLACK" th:text="#{replace-color.selectText.6}" selected></option>
+                                        <option value="BLACK_TEXT_ON_WHITE" th:text="#{replace-color.selectText.7}"></option>
+                                        <option value="YELLOW_TEXT_ON_BLACK" th:text="#{replace-color.selectText.8}"></option>
+                                        <option value="GREEN_TEXT_ON_BLACK" th:text="#{replace-color.selectText.9}"></option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                        <div class="card mb-3" id = "custom-color-1" style="display: none">
-                            <div class="card-body">
-                                <h4 th:text="#{replace-color.selectText.10}"></h4>
-                                <input type="color" name="textColor" id="text-color" class="form-control">
+                            <div class="card mb-3" id = "custom-color-1" style="display: none">
+                                <div class="card-body">
+                                    <h4 th:text="#{replace-color.selectText.10}"></h4>
+                                    <input type="color" name="textColor" id="text-color" class="form-control">
+                                </div>
                             </div>
-                        </div>
-                        <div class="card mb-3" id = "custom-color-2" style="display: none">
-                            <div class="card-body">
-                                <h4 th:text="#{replace-color.selectText.11}"></h4>
-                                <input type="color" name="backGroundColor" id="bg-color" class="form-control">
+                            <div class="card mb-3" id = "custom-color-2" style="display: none">
+                                <div class="card-body">
+                                    <h4 th:text="#{replace-color.selectText.11}"></h4>
+                                    <input type="color" name="backGroundColor" id="bg-color" class="form-control">
+                                </div>
                             </div>
-                        </div>
 
-                        <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{replace-color.submit}"></button>
+                            <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{replace-color.submit}"></button>
+                        </div>
                     </form>
                 </div>
             </div>

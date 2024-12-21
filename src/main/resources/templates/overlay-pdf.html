@@ -21,24 +21,26 @@
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
                 <div th:replace="~{fragments/common :: fileSelector(name='overlayFiles', multipleInputsForSingleRequest=true, accept='application/pdf')}"></div>
 
-                <label for="overlayMode" th:text="#{overlay-pdfs.mode.label}">Overlay Mode</label>
-                <select id="overlayMode" name="overlayMode" class="form-control">
-                  <option value="SequentialOverlay" th:text="#{overlay-pdfs.mode.sequential}">Sequential Overlay</option>
-                  <option value="InterleavedOverlay" th:text="#{overlay-pdfs.mode.interleaved}">Interleaved Overlay</option>
-                  <option value="FixedRepeatOverlay" th:text="#{overlay-pdfs.mode.fixedRepeat}">Fixed Repeat Overlay</option>
-                </select>
-                <br>
-                <label for="overlayPosition" th:text="#{overlay-pdfs.position.label}">Overlay Position</label>
-                <select id="overlayPosition" name="overlayPosition" class="form-control">
-                  <option value="0" th:text="#{overlay-pdfs.position.foreground}">Foreground</option>
-                  <option value="1" th:text="#{overlay-pdfs.position.background}">Background</option>
-                </select>
-                <div id="countsContainer" style="display: none;">
-                  <label th:text="#{overlay-pdfs.counts.label}">Overlay Counts</label>
-                  <!-- Inputs for counts will be dynamically added here -->
+                <div id="elementsContainer" style="display: none;">
+                  <label for="overlayMode" th:text="#{overlay-pdfs.mode.label}">Overlay Mode</label>
+                  <select id="overlayMode" name="overlayMode" class="form-control">
+                    <option value="SequentialOverlay" th:text="#{overlay-pdfs.mode.sequential}">Sequential Overlay</option>
+                    <option value="InterleavedOverlay" th:text="#{overlay-pdfs.mode.interleaved}">Interleaved Overlay</option>
+                    <option value="FixedRepeatOverlay" th:text="#{overlay-pdfs.mode.fixedRepeat}">Fixed Repeat Overlay</option>
+                  </select>
+                  <br>
+                  <label for="overlayPosition" th:text="#{overlay-pdfs.position.label}">Overlay Position</label>
+                  <select id="overlayPosition" name="overlayPosition" class="form-control">
+                    <option value="0" th:text="#{overlay-pdfs.position.foreground}">Foreground</option>
+                    <option value="1" th:text="#{overlay-pdfs.position.background}">Background</option>
+                  </select>
+                  <div id="countsContainer" style="display: none;">
+                    <label th:text="#{overlay-pdfs.counts.label}">Overlay Counts</label>
+                    <!-- Inputs for counts will be dynamically added here -->
+                  </div>
+                  <br>
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{overlay-pdfs.submit}">Submit</button>
                 </div>
-
-                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{overlay-pdfs.submit}">Submit</button>
               </form>
               <script>
                 function updateCountsInputs() {
