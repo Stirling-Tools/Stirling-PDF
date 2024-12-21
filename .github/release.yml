@@ -9,7 +9,7 @@ changelog:
     - title: Bug Fixes
       labels:
         - Bug
-    
+
     - title: Enhancements
       labels:
         - enhancement
@@ -26,7 +26,7 @@ changelog:
     - title: Translation Changes
       labels:
         - Translation
-    
+
     - title: Other Changes
       labels:
         - "*"
