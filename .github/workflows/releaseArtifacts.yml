@@ -4,12 +4,15 @@ on:
   workflow_dispatch:
   release:
     types: [created]
-permissions:
-  contents: write
-  packages: write
+
+permissions: read-all
+
 jobs:
   push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     strategy:
       matrix:
         enable_security: [true, false]

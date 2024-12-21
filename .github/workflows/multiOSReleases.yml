@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
   release:
     types: [created]
-permissions:
-  contents: write
-  packages: write
+
+permissions: read-all
+
 jobs:
   build-installers:
     strategy:
@@ -22,6 +22,9 @@ jobs:
          #  platform: linux
          #  ext: deb
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+      packages: write
 
     steps:
       - name: Harden Runner
