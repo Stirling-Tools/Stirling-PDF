@@ -3,13 +3,13 @@ on:
   pull_request_target:
     types: [opened, synchronize]
 
-permissions:
-  contents: read
-  pull-requests: write
+permissions: read-all
 
 jobs:
   labeler:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
