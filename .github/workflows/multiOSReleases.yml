@@ -22,7 +22,7 @@ jobs:
          #  platform: linux
          #  ext: deb
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
@@ -47,7 +47,7 @@ jobs:
         run: |
           curl -L -o wix.exe https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314.exe
           .\wix.exe /install /quiet
-          
+
       # Install Linux dependencies
       - name: Install Linux Dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -89,7 +89,7 @@ jobs:
       # Upload installer as artifact for testing
       - name: Upload Installer Artifact
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
-        with:    
+        with:
           name: Stirling-PDF-${{ matrix.platform }}-installer.${{ matrix.ext }}
           path: Stirling-PDF-${{ matrix.platform }}-installer.${{ matrix.ext }}
           retention-days: 1

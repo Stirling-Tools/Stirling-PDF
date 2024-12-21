@@ -8,14 +8,14 @@ jobs:
   check-comment:
     runs-on: ubuntu-latest
     if: |
-      github.event.issue.pull_request && 
+      github.event.issue.pull_request &&
       (
       contains(github.event.comment.body, 'prdeploy') ||
       contains(github.event.comment.body, 'deploypr')
       )
-      && 
+      &&
       (
-        github.event.comment.user.login == 'frooodle' || 
+        github.event.comment.user.login == 'frooodle' ||
         github.event.comment.user.login == 'sf298' ||
         github.event.comment.user.login == 'Ludy87' ||
         github.event.comment.user.login == 'LaserKaspar' ||
@@ -49,26 +49,26 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const prNumber = context.payload.issue.number;
-            
+
             const { data: pr } = await github.rest.pulls.get({
               owner,
               repo,
               pull_number: prNumber,
             });
-            
+
             // For forks, use the full repository name, for internal PRs use the current repo
             const repository = pr.head.repo.fork ? pr.head.repo.full_name : `${owner}/${repo}`;
-            
+
             console.log(`PR Repository: ${repository}`);
             console.log(`PR Branch: ${pr.head.ref}`);
-            
+
             core.setOutput('repository', repository);
             core.setOutput('ref', pr.head.ref);
 
   deploy-pr:
     needs: check-comment
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
@@ -81,7 +81,7 @@ jobs:
           repository: ${{ needs.check-comment.outputs.pr_repository }}
           ref: ${{ needs.check-comment.outputs.pr_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Set up JDK
         uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
         with:
@@ -156,10 +156,10 @@ jobs:
           ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
             # Create PR-specific directories
             mkdir -p /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/{data,config,logs}
-            
+
             # Move docker-compose file to correct location
             mv /tmp/docker-compose.yml /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/docker-compose.yml
-            
+
             # Start or restart the container
             cd /stirling/PR-${{ needs.check-comment.outputs.pr_number }}
             docker-compose pull
