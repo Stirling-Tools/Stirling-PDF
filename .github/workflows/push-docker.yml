@@ -102,12 +102,12 @@ jobs:
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }}-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
 
-      - name: Build and push Dockerfile-ultra-lite
+      - name: Build and push Dockerfile ultra-lite
         uses: docker/build-push-action@v6
         if: github.ref != 'refs/heads/main'
         with:
           context: .
-          file: ./Dockerfile-ultra-lite
+          file: ./Dockerfile.ultra-lite
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -136,7 +136,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./Dockerfile-fat
+          file: ./Dockerfile.fat
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
