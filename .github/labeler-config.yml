@@ -30,6 +30,8 @@ Security:
     - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/model/provider/**/*'
     - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/model/AuthenticationType.java'
     - any-glob-to-any-file: 'scripts/download-security-jar.sh'
+    - any-glob-to-any-file: '.github/workflows/dependency-review.yml'
+    - any-glob-to-any-file: '.github/workflows/scorecards.yml'
 
 API:
   - changed-files:
@@ -60,11 +62,6 @@ Test:
     - any-glob-to-any-file: 'src/test**/*'
     - any-glob-to-any-file: '.pre-commit-config'
     - any-glob-to-any-file: '.github/workflows/pre_commit.yml'
-    - any-glob-to-any-file: '.github/workflows/scorecards.yml'
-
-Security:
-  - changed-files:
-    - any-glob-to-any-file: '.github/workflows/dependency-review.yml'
     - any-glob-to-any-file: '.github/workflows/scorecards.yml'
 
 Github:
