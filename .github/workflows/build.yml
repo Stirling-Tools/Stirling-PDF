@@ -6,13 +6,13 @@ on:
   pull_request:
     branches: ["main"]
 
+permissions: read-all
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     permissions:
-      actions: read
-      contents: read
       security-events: write
 
     strategy:
@@ -21,17 +21,22 @@ jobs:
         jdk-version: [17, 21]
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK ${{ matrix.jdk-version }}
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
         with:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
         with:
           gradle-version: 8.7
 
@@ -56,17 +61,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
         with:
           java-version: "17"
           distribution: "adopt"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5 # v3.8.0
 
       - name: Install Docker Compose
         run: |
@@ -74,7 +84,7 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: "3.12"
 

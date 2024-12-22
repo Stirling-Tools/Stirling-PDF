@@ -1,12 +1,5 @@
-# Main stage
+# use alpine
 FROM alpine:3.21.0@sha256:21dc6063fd678b478f57c0e13f47560d0ea4eeba26dfc947b2a4f81f686b9f45
-
-# Copy necessary files
-COPY scripts /scripts
-COPY pipeline /pipeline
-COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-#COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
-COPY build/libs/*.jar app.jar
 
 ARG VERSION_TAG
 
@@ -24,15 +17,21 @@ LABEL org.opencontainers.image.keywords="PDF, manipulation, merge, split, conver
 
 # Set Environment Variables
 ENV DOCKER_ENABLE_SECURITY=false \
+    HOME=/home/stirlingpdfuser \
     VERSION_TAG=$VERSION_TAG \
     JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS -XX:MaxRAMPercentage=75" \
-    HOME=/home/stirlingpdfuser \
     PUID=1000 \
     PGID=1000 \
     UMASK=022
 
+# Copy necessary files
+COPY scripts/download-security-jar.sh /scripts/download-security-jar.sh
+COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
+COPY scripts/installFonts.sh /scripts/installFonts.sh
+COPY pipeline /pipeline
+COPY build/libs/*.jar app.jar
 
-# JDK for app
+# Set up necessary directories and permissions
 RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
@@ -43,38 +42,21 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         tini \
         bash \
         curl \
-        qpdf \
         shadow \
         su-exec \
-        openssl \
-        openssl-dev \
-        openjdk21-jre \
-# Doc conversion
-        libreoffice \
-# pdftohtml
-        poppler-utils \
-# OCR MY PDF (unpaper for descew and other advanced features)
-        tesseract-ocr-data-eng \
-# CV
-        py3-opencv \
-# python3/pip
-        python3 \
-        py3-pip && \
-# uno unoconv and HTML
-    pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint pdf2image pillow && \
-    mv /usr/share/tessdata /usr/share/tessdata-original && \
-    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders && \
-    fc-cache -f -v && \
-    chmod +x /scripts/* && \
-    chmod +x /scripts/init.sh && \
-# User permissions
+        openjdk21-jre && \
+    # User permissions
+    mkdir -p /configs /logs /customFiles /usr/share/fonts/opentype/noto && \
+    chmod +x /scripts/*.sh && \
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /usr/share/fonts/opentype/noto /configs /customFiles /pipeline && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar && \
-    tesseract --list-langs
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts  /configs /customFiles /pipeline && \
+    chown stirlingpdfuser:stirlingpdfgroup /app.jar
+
+# Set environment variables
+ENV ENDPOINTS_GROUPS_TO_REMOVE=CLI
 
 EXPOSE 8080/tcp
 
-# Set user and run command
-ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
+# Run the application
+ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
 CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/app.jar"]

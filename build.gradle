@@ -1,7 +1,7 @@
 plugins {
     id "java"
-    id "org.springframework.boot" version "3.4.0"
-    id "io.spring.dependency-management" version "1.1.6"
+    id "org.springframework.boot" version "3.4.1"
+    id "io.spring.dependency-management" version "1.1.7"
     id "org.springdoc.openapi-gradle-plugin" version "1.8.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "edu.sc.seis.launch4j" version "3.0.6"
@@ -16,7 +16,7 @@ plugins {
 import com.github.jk1.license.render.*
 
 ext {
-    springBootVersion = "3.4.0"
+    springBootVersion = "3.4.1"
     pdfboxVersion = "3.0.3"
     logbackVersion = "1.5.7"
     imageioVersion = "3.12.0"

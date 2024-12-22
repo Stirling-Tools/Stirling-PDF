@@ -1,3 +1,16 @@
+# Build the application
+FROM gradle:8.12-jdk17 AS build
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the entire project to the working directory
+COPY . .
+
+# Build the application with DOCKER_ENABLE_SECURITY=false
+RUN DOCKER_ENABLE_SECURITY=true \
+./gradlew clean build
+
 # Main stage
 FROM alpine:3.21.0@sha256:21dc6063fd678b478f57c0e13f47560d0ea4eeba26dfc947b2a4f81f686b9f45
 
@@ -5,8 +18,7 @@ FROM alpine:3.21.0@sha256:21dc6063fd678b478f57c0e13f47560d0ea4eeba26dfc947b2a4f8
 COPY scripts /scripts
 COPY pipeline /pipeline
 COPY src/main/resources/static/fonts/*.ttf /usr/share/fonts/opentype/noto/
-#COPY src/main/resources/static/fonts/*.otf /usr/share/fonts/opentype/noto/
-COPY build/libs/*.jar app.jar
+COPY --from=build /app/build/libs/*.jar app.jar
 
 ARG VERSION_TAG
 
@@ -29,7 +41,9 @@ ENV DOCKER_ENABLE_SECURITY=false \
     HOME=/home/stirlingpdfuser \
     PUID=1000 \
     PGID=1000 \
-    UMASK=022
+    UMASK=022 \
+    FAT_DOCKER=true \
+    INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
 
 
 # JDK for app
@@ -43,7 +57,6 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         tini \
         bash \
         curl \
-        qpdf \
         shadow \
         su-exec \
         openssl \
@@ -53,13 +66,15 @@ RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /et
         libreoffice \
 # pdftohtml
         poppler-utils \
-# OCR MY PDF (unpaper for descew and other advanced features)
+# OCR MY PDF (unpaper for descew and other advanced featues)
+        qpdf \
         tesseract-ocr-data-eng \
+        font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra \
 # CV
         py3-opencv \
 # python3/pip
         python3 \
-        py3-pip && \
+    py3-pip && \
 # uno unoconv and HTML
     pip install --break-system-packages --no-cache-dir --upgrade unoconv WeasyPrint pdf2image pillow && \
     mv /usr/share/tessdata /usr/share/tessdata-original && \

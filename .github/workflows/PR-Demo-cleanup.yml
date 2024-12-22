@@ -4,9 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: read-all
 
 env:
   SERVER_IP: ${{ secrets.VPS_IP }}  # Add this to your GitHub secrets
@@ -15,9 +13,17 @@ env:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     if: github.event.action == 'closed'
-    
+
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
@@ -30,20 +36,20 @@ jobs:
           CLEANUP_STATUS=$(ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
             if [ -d "/stirling/PR-${{ github.event.pull_request.number }}" ]; then
               echo "Found PR directory, proceeding with cleanup..."
-              
+
               # Stop and remove containers
               cd /stirling/PR-${{ github.event.pull_request.number }}
               docker-compose down || true
-              
+
               # Go back to root before removal
               cd /
-              
+
               # Remove PR-specific directories
               rm -rf /stirling/PR-${{ github.event.pull_request.number }}
-              
+
               # Remove the Docker image
               docker rmi --no-prune ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }} || true
-              
+
               echo "PERFORMED_CLEANUP"
             else
               echo "PR directory not found, nothing to clean up"
@@ -51,7 +57,7 @@ jobs:
             fi
           ENDSSH
           )
-          
+
           if [[ $CLEANUP_STATUS == *"PERFORMED_CLEANUP"* ]]; then
             echo "cleanup_performed=true" >> $GITHUB_OUTPUT
           else
@@ -60,7 +66,7 @@ jobs:
 
       - name: Post cleanup notice to PR
         if: steps.cleanup.outputs.cleanup_performed == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const { GITHUB_REPOSITORY } = process.env;

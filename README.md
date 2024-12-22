@@ -11,8 +11,6 @@
 
 [Stirling-PDF](https://www.stirlingpdf.com) is a robust, locally hosted web-based PDF manipulation tool using Docker. It enables you to carry out various operations on PDF files, including splitting, merging, converting, reorganizing, adding images, rotating, compressing, and more. This locally hosted web application has evolved to encompass a comprehensive set of features, addressing all your PDF requirements.
 
-Stirling-PDF does not initiate any outbound calls for record-keeping or tracking purposes.
-
 All files and PDFs exist either exclusively on the client side, reside in server memory only during task execution, or temporarily reside in a file solely for the execution of the task. Any file downloaded by the user will have been deleted from the server by that point.
 
 ![stirling-home](images/stirling-home.jpg)
@@ -28,12 +26,11 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Optional Login and Authentication support (see [here](https://github.com/Stirling-Tools/Stirling-PDF/tree/main#login-authentication) for documentation)
 - Database Backup and Import (see [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/DATABASE.md) for documentation)
 
-
 ## PDF Features
 
 ### Page Operations
 
-- View and modify PDFs - View multi-page PDFs with custom viewing, sorting, and searching. Plus on-page edit features like annotate, draw, and adding text and images. (Using PDF.js with Joxit and Liberation fonts)
+- View and modify PDFs - View multi-page PDFs with custom viewing, sorting, and searching. Plus, on-page edit features like annotating, drawing, and adding text and images. (Using PDF.js with Joxit and Liberation fonts)
 - Full interactive GUI for merging/splitting/rotating/moving PDFs and their pages
 - Merge multiple PDFs into a single resultant file
 - Split PDFs into multiple files at specified page numbers or extract all pages as individual files
@@ -44,11 +41,11 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Scale page contents size by set percentage
 - Adjust contrast
 - Crop PDF
-- Auto split PDF (with physically scanned page dividers)
+- Auto-split PDF (with physically scanned page dividers)
 - Extract page(s)
 - Convert PDF to a single page
 - Overlay PDFs on top of each other
-- PDF to single page
+- PDF to a single page
 - Split PDF by sections
 
 ### Conversion Operations
@@ -57,7 +54,7 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Convert any common file to PDF (using LibreOffice)
 - Convert PDF to Word/PowerPoint/others (using LibreOffice)
 - Convert HTML to PDF
-- Convert PDF to xml
+- Convert PDF to XML
 - Convert PDF to CSV
 - URL to PDF
 - Markdown to PDF
@@ -85,9 +82,9 @@ All files and PDFs exist either exclusively on the client side, reside in server
 - Extract images from scans
 - Remove annotations
 - Add page numbers
-- Auto rename file by detecting PDF header text
-- OCR on PDF (using tesseract)
-- PDF/A conversion (using libreoffice)
+- Auto-rename files by detecting PDF header text
+- OCR on PDF (using Tesseract OCR)
+- PDF/A conversion (using LibreOffice)
 - Edit metadata
 - Flatten PDFs
 - Get all information on a PDF to view or export as JSON
@@ -123,7 +120,7 @@ Please view the [LocalRunGuide](https://github.com/Stirling-Tools/Stirling-PDF/b
 > [!NOTE]
 > <https://hub.docker.com/r/stirlingtools/stirling-pdf>
 
-Stirling-PDF has three different versions: a full version, an ultra-lite version, and a 'fat' version. Depending on the types of features you use, you may want a smaller image to save on space. To see what the different versions offer, please look at our [version mapping](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Version-groups.md). For people that don't mind space optimization, just use the latest tag.
+Stirling-PDF has three different versions: a full version, an ultra-lite version, and a 'fat' version. Depending on the types of features you use, you may want a smaller image to save on space. To see what the different versions offer, please look at our [version mapping](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Version-groups.md). For people who don't mind space optimization, just use the latest tag.
 
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/stirlingtools/stirling-pdf/latest?label=Stirling-PDF%20Full)
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/stirlingtools/stirling-pdf/latest-ultra-lite?label=Stirling-PDF%20Ultra-Lite)
@@ -180,7 +177,7 @@ Please view the [HowToUseOCR.md](https://github.com/Stirling-Tools/Stirling-PDF/
 
 ## Reuse Stored Files
 
-Certain functionality like `Sign` supports pre-saved files stored at `/customFiles/signatures/`. Image files placed within here will be accessible to be used via the web UI. Currently, this supports two folder types:
+Certain functionality like `Sign` supports pre-saved files stored at `/customFiles/signatures/`. Image files placed here will be accessible via the web UI. Currently, this supports two folder types:
 
 - `/customFiles/signatures/ALL_USERS`: Accessible to all users, useful for organizations where many users use the same files or for users not using authentication
 - `/customFiles/signatures/{username}`: Such as `/customFiles/signatures/froodle`, accessible only to the `froodle` username, private for all others
@@ -225,7 +222,7 @@ Stirling-PDF currently supports 38 languages!
 | Spanish (Español) (es_ES)                    | ![91%](https://geps.dev/progress/91)   |
 | Swedish (Svenska) (sv_SE)                    | ![90%](https://geps.dev/progress/90)   |
 | Thai (ไทย) (th_TH)                           | ![90%](https://geps.dev/progress/90)   |
-| Traditional Chinese (繁體中文) (zh_TW)        | ![91%](https://geps.dev/progress/91)   |
+| Traditional Chinese (繁體中文) (zh_TW)        | ![99%](https://geps.dev/progress/99)   |
 | Turkish (Türkçe) (tr_TR)                     | ![86%](https://geps.dev/progress/86)   |
 | Ukrainian (Українська) (uk_UA)               | ![76%](https://geps.dev/progress/76)   |
 | Vietnamese (Tiếng Việt) (vi_VN)              | ![83%](https://geps.dev/progress/83)   |
@@ -236,11 +233,11 @@ Please see our [Contributing Guide](CONTRIBUTING.md).
 
 ## Stirling PDF Enterprise
 
-Stirling PDF offers a Enterprise edition of its software, This is the same great software but with added features and comforts
+Stirling PDF offers an Enterprise edition of its software. This is the same great software but with added features and comforts.
 
-### Whats included
+### What's included
 
-- Prioritised Support tickets via support@stirlingpdf.com to reach directly to Stirling-PDF team for support and 1:1 meetings where applicable (Provided they come from same email domain registered with us)
+- Prioritized Support tickets via support@stirlingpdf.com to reach directly to Stirling-PDF team for support and 1:1 meetings where applicable (Provided they come from the same email domain registered with us)
 - Prioritised Enhancements to Stirling-PDF where applicable
 - Base SSO support
 - Advanced SSO such as automated login handling (Coming very soon)
@@ -249,7 +246,7 @@ Stirling PDF offers a Enterprise edition of its software, This is the same great
 - Advanced user configurations (Coming soon)
 - Plus other exciting features to come
 
-Check out of [docs](https://docs.stirlingpdf.com/Enterprise%20Edition) on it or our official [website](https://www.stirlingpdf.com)
+Check out our [docs](https://docs.stirlingpdf.com/Enterprise%20Edition) on it or our official [website](https://www.stirlingpdf.com)
 
 ## Customization
 
@@ -367,8 +364,6 @@ AutomaticallyGenerated:
 
 There is an additional config file `/configs/custom_settings.yml` where users familiar with Java and Spring `application.properties` can input their own settings on top of Stirling-PDF's existing ones.
 
-
-
 ### Extra Notes
 
 - **Endpoints**: Currently, the `ENDPOINTS_TO_REMOVE` and `GROUPS_TO_REMOVE` endpoints can include comma-separated lists of endpoints and groups to disable. For example, `ENDPOINTS_TO_REMOVE=img-to-pdf,remove-pages` would disable both image-to-pdf and remove pages, while `GROUPS_TO_REMOVE=LibreOffice` would disable all things that use LibreOffice. You can see a list of all endpoints and groups [here](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/Endpoint-groups.md).
@@ -403,7 +398,7 @@ When you log in to Stirling-PDF, you will be redirected to the `/login` page to 
 
 To access your account settings, go to Account Settings in the settings cog menu (top right in the navbar). This Account Settings menu is also where you find your API key.
 
-To add new users, go to the bottom of Account Settings and hit 'Admin Settings'. Here you can add new users. The different roles mentioned within this are for rate limiting. This is a work in progress and will be expanded on more in the future.
+To add new users, go to the bottom of Account Settings and hit 'Admin Settings'. Here, you can add new users. The different roles mentioned within this are for rate limiting. This is a work in progress and will be expanded on more in the future.
 
 For API usage, you must provide a header with `X-API-KEY` and the associated API key for that user.
 
@@ -419,9 +414,9 @@ For API usage, you must provide a header with `X-API-KEY` and the associated API
 - Multi-page layout (stitch PDF pages together) support x rows y columns and custom page sizing
 - Fill forms manually or automatically
 
-### Q2: Why is my application downloading .htm files? Why am i getting HTTP error 413?
+### Q2: Why is my application downloading .htm files? Why am I getting HTTP error 413?
 
-This is an issue commonly caused by your NGINX configuration. The default file upload size for NGINX is 1MB. You need to add the following in your Nginx sites-available file: `client_max_body_size SIZE;` (where "SIZE" is 50M for example for 50MB files).
+This is an issue commonly caused by your NGINX configuration. The default file upload size for NGINX is 1MB. You need to add the following in your Nginx sites-available file: `client_max_body_size SIZE;` (where "SIZE" is 50M, for example, for 50MB files).
 
 ### Q3: Why is my download timing out?
 

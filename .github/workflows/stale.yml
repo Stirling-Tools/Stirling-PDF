@@ -5,6 +5,8 @@ on:
     - cron: "30 0 * * *"
   workflow_dispatch:
 
+permissions: read-all
+
 jobs:
   stale:
     runs-on: ubuntu-latest
@@ -12,8 +14,13 @@ jobs:
       issues: write
       pull-requests: write
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
       - name: 30 days stale issues
-        uses: actions/stale@v9
+        uses: actions/stale@28ca1036281a5e5922ead5184a1bbf96e5fc984e # v9.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 30

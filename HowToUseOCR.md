@@ -92,6 +92,7 @@ Verify installation:
 ``tesseract --list-langs``
 
 You must then edit your ``/configs/settings.yml`` and change the system.tessdataDir to match the directory containing lang files
+
 ```
 system:
  tessdataDir: C:/Program Files/Tesseract-OCR/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
