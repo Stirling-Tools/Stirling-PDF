@@ -86,8 +86,8 @@ Stirling-PDF/
 │                   └── SPDF/
 ├── build.gradle           # Gradle build configuration
 ├── Dockerfile             # Main Dockerfile
-├── Dockerfile-ultra-lite  # Dockerfile for ultra-lite version
-├── Dockerfile-fat         # Dockerfile for fat version
+├── Dockerfile.ultra-lite  # Dockerfile for ultra-lite version
+├── Dockerfile.fat         # Dockerfile for fat version
 ├── docker-compose.yml     # Docker Compose configuration
 └── test.sh                # Test script to deploy all docker versions and run cuke tests
 ```
@@ -179,14 +179,14 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    For the ultra-lite version:
 
    ```bash
-   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
+   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
    ```
 
    For the fat version (with security enabled):
 
    ```bash
    export DOCKER_ENABLE_SECURITY=true
-   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile-fat .
+   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
    ```
 
 Note: The `--no-cache` and `--pull` flags ensure that the build process uses the latest base images and doesn't use cached layers, which is useful for testing and ensuring reproducible builds. however to improve build times these can often be removed depending on your usecase

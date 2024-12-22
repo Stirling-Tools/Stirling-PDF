@@ -65,7 +65,7 @@ build_and_test() {
             dockerfile_name="./Dockerfile"
             ;;
         ultra-lite)
-            dockerfile_name="./Dockerfile-ultra-lite"
+            dockerfile_name="./Dockerfile.ultra-lite"
             ;;
     esac
 

@@ -219,9 +219,9 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                 // "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?continue="
                 //                 + response.encodeRedirectURL(redirect_url);
                 log.info("Google does not have a specific logout URL");
-                // log.info("Redirecting to Google logout URL: " + googleLogoutUrl);
-                // response.sendRedirect(googleLogoutUrl);
-                // break;
+            // log.info("Redirecting to Google logout URL: " + googleLogoutUrl);
+            // response.sendRedirect(googleLogoutUrl);
+            // break;
             default:
                 String defaultRedirectUrl = request.getContextPath() + "/login?" + param;
                 log.info("Redirecting to default logout URL: " + defaultRedirectUrl);

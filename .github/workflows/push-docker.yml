@@ -108,21 +108,28 @@ jobs:
         env:
           DIGEST: ${{ steps.build-push-regular.outputs.digest }}
           TAGS: ${{ steps.meta.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           # Always sign images regardless of branch
           echo "$TAGS" | tr ',' '\n' | while read -r tag; do
-            cosign sign --yes "${tag}@${DIGEST}"
+            cosign sign --yes \
+              --key env://COSIGN_PRIVATE_KEY \
+              "${tag}@${DIGEST}"
           done
-
+          
           # For alpha builds specifically, we want to ensure they're marked as development builds
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "Signing alpha build with development attestation"
             echo "$TAGS" | tr ',' '\n' | while read -r tag; do
               if [[ $tag == *":alpha" ]]; then
-                cosign attest --predicate <(echo '{"type":"development"}') --yes "${tag}@${DIGEST}"
+                cosign attest --key env://COSIGN_PRIVATE_KEY \
+                  --predicate <(echo '{"type":"development"}') \
+                  --yes "${tag}@${DIGEST}"
               fi
             done
           fi
+
 
       - name: Generate tags ultra-lite
         id: meta2
@@ -144,7 +151,7 @@ jobs:
         if: github.ref != 'refs/heads/main'
         with:
           context: .
-          file: ./Dockerfile-ultra-lite
+          file: ./Dockerfile.ultra-lite
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -160,9 +167,11 @@ jobs:
         env:
           DIGEST: ${{ steps.build-push-lite.outputs.digest }}
           TAGS: ${{ steps.meta2.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           echo "$TAGS" | tr ',' '\n' | while read -r tag; do
-            cosign sign --yes "${tag}@${DIGEST}"
+            cosign sign --key env://COSIGN_PRIVATE_KEY --yes "${tag}@${DIGEST}"
           done
 
       - name: Generate tags fat
@@ -186,7 +195,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./Dockerfile-fat
+          file: ./Dockerfile.fat
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -202,7 +211,9 @@ jobs:
         env:
           DIGEST: ${{ steps.build-push-fat.outputs.digest }}
           TAGS: ${{ steps.meta3.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           echo "$TAGS" | tr ',' '\n' | while read -r tag; do
-            cosign sign --yes "${tag}@${DIGEST}"
+            cosign sign --key env://COSIGN_PRIVATE_KEY --yes "${tag}@${DIGEST}"
           done
