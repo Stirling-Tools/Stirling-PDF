@@ -6,7 +6,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -15,49 +18,58 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.PathResource;
+import org.springframework.core.io.support.EncodedResource;
+import org.springframework.jdbc.datasource.init.ScriptException;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
+import stirling.software.SPDF.config.interfaces.DatabaseInterface;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.exception.BackupNotFoundException;
+import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 import stirling.software.SPDF.utils.FileInfo;
 
 @Slf4j
-@Configuration
-public class DatabaseBackupHelper implements DatabaseBackupInterface {
+@Service
+public class DatabaseService implements DatabaseInterface {
 
-    @Value("${spring.datasource.url}")
-    private String url;
+    public static final String BACKUP_PREFIX = "backup_";
+    public static final String SQL_SUFFIX = ".sql";
+    private static final String BACKUP_DIR = "configs/db/backup/";
 
-    @Value("${spring.datasource.username}")
-    private String databaseUsername;
+    @Autowired private DatabaseConfig databaseConfig;
 
-    @Value("${spring.datasource.password}")
-    private String databasePassword;
-
-    private Path backupPath = Paths.get("configs/db/backup/");
-
+    /**
+     * Checks if there is at least one backup
+     *
+     * @return true if there are backup scripts, false if there are not
+     */
     @Override
     public boolean hasBackup() {
-        // Check if there is at least one backup
-        return !getBackupList().isEmpty();
+        Path filePath = Paths.get(BACKUP_DIR + "*");
+
+        return Files.exists(filePath);
     }
 
+    /**
+     * Read the backup directory and filter for files with the prefix "backup_" and suffix ".sql"
+     *
+     * @return a <code>List</code> of backup files
+     */
     @Override
     public List<FileInfo> getBackupList() {
-        // Check if the backup directory exists, and create it if it does not
-        ensureBackupDirectoryExists();
-
         List<FileInfo> backupFiles = new ArrayList<>();
+        Path backupPath = Paths.get(BACKUP_DIR);
 
-        // Read the backup directory and filter for files with the prefix "backup_" and suffix
-        // ".sql"
         try (DirectoryStream<Path> stream =
                 Files.newDirectoryStream(
                         backupPath,
                         path ->
-                                path.getFileName().toString().startsWith("backup_")
-                                        && path.getFileName().toString().endsWith(".sql"))) {
+                                path.getFileName().toString().startsWith(BACKUP_PREFIX)
+                                        && path.getFileName().toString().endsWith(SQL_SUFFIX))) {
             for (Path entry : stream) {
                 BasicFileAttributes attrs = Files.readAttributes(entry, BasicFileAttributes.class);
                 LocalDateTime modificationDate =
@@ -78,94 +90,127 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
         } catch (IOException e) {
             log.error("Error reading backup directory: {}", e.getMessage(), e);
         }
+
         return backupFiles;
     }
 
-    // Imports a database backup from the specified file.
-    public boolean importDatabaseFromUI(String fileName) throws IOException {
-        return this.importDatabaseFromUI(getBackupFilePath(fileName));
-    }
-
-    // Imports a database backup from the specified path.
-    public boolean importDatabaseFromUI(Path tempTemplatePath) throws IOException {
-        boolean success = executeDatabaseScript(tempTemplatePath);
-        if (success) {
-            LocalDateTime dateNow = LocalDateTime.now();
-            DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
-            Path insertOutputFilePath =
-                    this.getBackupFilePath("backup_user_" + dateNow.format(myFormatObj) + ".sql");
-            Files.copy(tempTemplatePath, insertOutputFilePath);
-            Files.deleteIfExists(tempTemplatePath);
-        }
-        return success;
-    }
-
     @Override
-    public boolean importDatabase() {
-        if (!this.hasBackup()) return false;
+    public void importDatabase() {
+        if (!hasBackup()) throw new BackupNotFoundException("No backup scripts were found.");
 
         List<FileInfo> backupList = this.getBackupList();
         backupList.sort(Comparator.comparing(FileInfo::getModificationDate).reversed());
 
-        return executeDatabaseScript(Paths.get(backupList.get(0).getFilePath()));
+        executeDatabaseScript(Paths.get(backupList.get(0).getFilePath()));
     }
 
-    // fixMe: Needs to check the type of DB before executing script
-    @Override
-    public void exportDatabase() throws IOException {
-        // Check if the backup directory exists, and create it if it does not
-        ensureBackupDirectoryExists();
+    /** Imports a database backup from the specified file. */
+    public boolean importDatabaseFromUI(String fileName) {
+        try {
+            importDatabaseFromUI(getBackupFilePath(fileName));
+            return true;
+        } catch (IOException e) {
+            log.error(
+                    "Error importing database from file: {}, message: {}",
+                    fileName,
+                    e.getMessage(),
+                    e.getCause());
+            return false;
+        }
+    }
 
-        // Filter and delete old backups if there are more than 5
+    /** Imports a database backup from the specified path. */
+    private void importDatabaseFromUI(Path tempTemplatePath) throws IOException {
+        executeDatabaseScript(tempTemplatePath);
+        LocalDateTime dateNow = LocalDateTime.now();
+        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+        Path insertOutputFilePath =
+                this.getBackupFilePath(
+                        BACKUP_PREFIX + "user_" + dateNow.format(myFormatObj) + SQL_SUFFIX);
+        Files.copy(tempTemplatePath, insertOutputFilePath);
+        Files.deleteIfExists(tempTemplatePath);
+    }
+
+    /** Filter and delete old backups if there are more than 5 */
+    @Override
+    public void exportDatabase() throws SQLException, UnsupportedProviderException {
         List<FileInfo> filteredBackupList =
                 this.getBackupList().stream()
-                        .filter(backup -> !backup.getFileName().startsWith("backup_user_"))
+                        .filter(backup -> !backup.getFileName().startsWith(BACKUP_PREFIX + "user_"))
                         .collect(Collectors.toList());
 
         if (filteredBackupList.size() > 5) {
-            filteredBackupList.sort(
-                    Comparator.comparing(
-                            p -> p.getFileName().substring(7, p.getFileName().length() - 4)));
-            Files.deleteIfExists(Paths.get(filteredBackupList.get(0).getFilePath()));
-            log.info("Deleted oldest backup: {}", filteredBackupList.get(0).getFileName());
+            deleteOldestBackup(filteredBackupList);
         }
 
         LocalDateTime dateNow = LocalDateTime.now();
         DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
         Path insertOutputFilePath =
-                this.getBackupFilePath("backup_" + dateNow.format(myFormatObj) + ".sql");
-        String query = "SCRIPT SIMPLE COLUMNS DROP to ?;";
+                this.getBackupFilePath(BACKUP_PREFIX + dateNow.format(myFormatObj) + SQL_SUFFIX);
 
-        try (Connection conn =
-                        DriverManager.getConnection(url, databaseUsername, databasePassword);
-                PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, insertOutputFilePath.toString());
-            stmt.execute();
+        try (Connection conn = databaseConfig.connection()) {
+            ScriptUtils.executeSqlScript(
+                    conn, new EncodedResource(new PathResource(insertOutputFilePath)));
+
             log.info("Database export completed: {}", insertOutputFilePath);
-        } catch (SQLException e) {
+        } catch (SQLException | UnsupportedProviderException e) {
             log.error("Error during database export: {}", e.getMessage(), e);
+            throw e;
+        } catch (ScriptException e) {
+            log.error("Error during database export: File {} not found", insertOutputFilePath);
+            throw e;
         }
     }
 
-    // Retrieves the H2 database version.
+    private static void deleteOldestBackup(List<FileInfo> filteredBackupList) {
+        try {
+            filteredBackupList.sort(
+                    Comparator.comparing(
+                            p -> p.getFileName().substring(7, p.getFileName().length() - 4)));
+
+            FileInfo oldestFile = filteredBackupList.get(0);
+            Files.deleteIfExists(Paths.get(oldestFile.getFilePath()));
+            log.info("Deleted oldest backup: {}", oldestFile.getFileName());
+        } catch (IOException e) {
+            log.error("Unable to delete oldest backup, message: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Retrieves the H2 database version.
+     *
+     * @return <code>String</code> of the H2 version
+     */
     public String getH2Version() {
         String version = "Unknown";
-        try (Connection conn =
-                DriverManager.getConnection(url, databaseUsername, databasePassword)) {
-            try (Statement stmt = conn.createStatement();
-                    ResultSet rs = stmt.executeQuery("SELECT H2VERSION() AS version")) {
-                if (rs.next()) {
-                    version = rs.getString("version");
-                    log.info("H2 Database Version: {}", version);
+
+        if (databaseConfig
+                .getApplicationProperties()
+                .getSystem()
+                .getDatasource()
+                .getType()
+                .equals(ApplicationProperties.Driver.H2.name())) {
+            try (Connection conn = databaseConfig.connection()) {
+                try (Statement stmt = conn.createStatement();
+                        ResultSet rs = stmt.executeQuery("SELECT H2VERSION() AS version")) {
+                    if (rs.next()) {
+                        version = rs.getString("version");
+                        log.info("H2 Database Version: {}", version);
+                    }
                 }
+            } catch (SQLException | UnsupportedProviderException e) {
+                log.error("Error retrieving H2 version: {}", e.getMessage(), e);
             }
-        } catch (SQLException e) {
-            log.error("Error retrieving H2 version: {}", e.getMessage(), e);
         }
+
         return version;
     }
 
-    // Deletes a backup file.
+    /**
+     * Deletes a backup file.
+     *
+     * @return true if successful, false if not
+     */
     public boolean deleteBackupFile(String fileName) throws IOException {
         if (!isValidFileName(fileName)) {
             log.error("Invalid file name: {}", fileName);
@@ -181,43 +226,37 @@ public class DatabaseBackupHelper implements DatabaseBackupInterface {
         }
     }
 
-    // Gets the Path object for a given backup file name.
+    /**
+     * Gets the Path for a given backup file name.
+     *
+     * @return the <code>Path</code> object for the given file name
+     */
     public Path getBackupFilePath(String fileName) {
-        Path filePath = Paths.get(backupPath.toString(), fileName).normalize();
-        if (!filePath.startsWith(backupPath)) {
+        Path filePath = Paths.get(BACKUP_DIR, fileName).normalize();
+        if (!filePath.startsWith(BACKUP_DIR)) {
             throw new SecurityException("Path traversal detected");
         }
         return filePath;
     }
 
-    private boolean executeDatabaseScript(Path scriptPath) {
-        String query = "RUNSCRIPT from ?;";
+    private void executeDatabaseScript(Path scriptPath) {
+        try (Connection conn = databaseConfig.connection()) {
+            ScriptUtils.executeSqlScript(conn, new EncodedResource(new PathResource(scriptPath)));
 
-        try (Connection conn =
-                        DriverManager.getConnection(url, databaseUsername, databasePassword);
-                PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, scriptPath.toString());
-            stmt.execute();
             log.info("Database import completed: {}", scriptPath);
-            return true;
-        } catch (SQLException e) {
+        } catch (SQLException | UnsupportedProviderException e) {
             log.error("Error during database import: {}", e.getMessage(), e);
-            return false;
+        } catch (ScriptException e) {
+            log.error("Error: File {} not found", scriptPath.toString(), e);
         }
     }
 
-    private void ensureBackupDirectoryExists() {
-        if (Files.notExists(backupPath)) {
-            try {
-                Files.createDirectories(backupPath);
-            } catch (IOException e) {
-                log.error("Error creating directories: {}", e.getMessage());
-            }
-        }
-    }
-
+    /**
+     * Checks for invalid characters or sequences
+     *
+     * @return true if it contains no invalid characters, false if it does
+     */
     private boolean isValidFileName(String fileName) {
-        // Check for invalid characters or sequences
         return fileName != null
                 && !fileName.contains("..")
                 && !fileName.contains("/")
