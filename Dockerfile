@@ -11,7 +11,7 @@ COPY build/libs/*.jar app.jar
 ARG VERSION_TAG
 
 LABEL org.opencontainers.image.title="Stirling-PDF"
-LABEL org.opencontainers.image.description="A powerful locally hosted web-based PDF manipulation tool supporting 35+ operations including merging, splitting, conversion, OCR, watermarking, and more."
+LABEL org.opencontainers.image.description="A powerful locally hosted web-based PDF manipulation tool supporting 50+ operations including merging, splitting, conversion, OCR, watermarking, and more."
 LABEL org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.vendor="Stirling-Tools"
