@@ -72,6 +72,29 @@ sourceSets {
 
         }
     }
+
+    test {
+        java {
+            if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
+                exclude "stirling/software/SPDF/config/security/**"
+                exclude "stirling/software/SPDF/controller/api/UserControllerTest.java"
+                exclude "stirling/software/SPDF/controller/api/DatabaseControllerTest.java"
+                exclude "stirling/software/SPDF/controller/web/AccountWebControllerTest.java"
+                exclude "stirling/software/SPDF/controller/web/DatabaseWebControllerTest.java"
+                exclude "stirling/software/SPDF/model/ApiKeyAuthenticationTokenTest.java"
+                exclude "stirling/software/SPDF/model/AttemptCounterTest.java"
+                exclude "stirling/software/SPDF/model/AuthorityTest.java"
+                exclude "stirling/software/SPDF/model/PersistentLoginTest.java"
+                exclude "stirling/software/SPDF/model/SessionEntityTest.java"
+                exclude "stirling/software/SPDF/model/UserTest.java"
+                exclude "stirling/software/SPDF/repository/**"
+            }
+
+            if (System.getenv("STIRLING_PDF_DESKTOP_UI") == "false") {
+                exclude "stirling/software/SPDF/UI/impl/**"
+            }
+        }
+    }
 }
 
 openApi {
