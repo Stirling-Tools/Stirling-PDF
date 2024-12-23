@@ -67,8 +67,11 @@ window.addEventListener("load", (e) => {
   let applyRedactionBtn = document.getElementById("apply-redaction");
 
   let pageBasedRedactionBtn = document.getElementById("pageBasedRedactionBtn");
-  let pageBasedRedactionOverlay = document.getElementById("pageBasedRedactionOverlay");
-  pageBasedRedactionBtn.onclick = (e) => pageBasedRedactionOverlay.classList.remove("d-none");
+  let pageBasedRedactionOverlay = document.getElementById(
+    "pageBasedRedactionOverlay"
+  );
+  pageBasedRedactionBtn.onclick = (e) =>
+    pageBasedRedactionOverlay.classList.remove("d-none");
 
   pageBasedRedactionOverlay.querySelector("button").onclick = (e) =>
     pageBasedRedactionOverlay.classList.add("d-none");
@@ -82,14 +85,14 @@ window.addEventListener("load", (e) => {
       })
   );
 
-  let pdfToImageCheckbox = document.getElementById('convertPDFToImage');
+  let pdfToImageCheckbox = document.getElementById("convertPDFToImage");
 
-  let pdfToImageBtn = document.getElementById('pdfToImageBtn');
+  let pdfToImageBtn = document.getElementById("pdfToImageBtn");
   pdfToImageBtn.onclick = (e) => {
-    pdfToImageBtn.classList.toggle('btn-success');
-    pdfToImageBtn.classList.toggle('btn-danger');
+    pdfToImageBtn.classList.toggle("btn-success");
+    pdfToImageBtn.classList.toggle("btn-danger");
     pdfToImageCheckbox.checked = !pdfToImageCheckbox.checked;
-  }
+  };
 
   let fileChooser = document.getElementsByClassName("custom-file-chooser")[0];
   let fileChooserInput = fileChooser.querySelector(
@@ -170,7 +173,6 @@ window.addEventListener("load", (e) => {
 
   PDFViewerApplication.downloadOrSave = doNothing;
   PDFViewerApplication.triggerPrinting = doNothing;
-  PDFViewerApplication.rotatePages = doNothing;
 
   PDFViewerApplication.eventBus.on("pagerendered", (e) => {
     removePDFJSButtons();
@@ -480,27 +482,45 @@ window.addEventListener("load", (e) => {
 
     let color = redactionsPalette.style.getPropertyValue("--palette-color");
 
+    let angle = textLayer.getAttribute("data-main-rotation");
     for (const rect of rects) {
       if (!rect || !rect.width || !rect.height) continue;
       let redactionElement = document.createElement("div");
       redactionElement.classList.add("selected-wrapper");
 
-      let left = rect.left - textLayerRect.left;
-      let top = rect.top - textLayerRect.top;
+      let left, top, width, height;
+      if (!angle || angle == 0) {
+        left = rect.left - textLayerRect.left;
+        top = rect.top - textLayerRect.top;
+        width = rect.width;
+        height = rect.height;
+      } else if (angle == 90) {
+        left = rect.top - textLayerRect.top;
+        top = textLayerRect.right - rect.right;
+        width = rect.height;
+        height = rect.width;
+      } else if (angle == 180) {
+        left = textLayerRect.right - rect.right;
+        top = textLayerRect.bottom - rect.bottom;
+        width = rect.width;
+        height = rect.height;
+      } else if (angle == 270) {
+        left = textLayerRect.bottom - rect.bottom;
+        top = rect.left - textLayerRect.left;
+        width = rect.height;
+        height = rect.width;
+      }
 
-      let width = rect.width;
-      let height = rect.height;
-
-      left = _scaleToDisplay(left);
-      top = _scaleToDisplay(top);
-      width = _scaleToDisplay(width);
-      height = _scaleToDisplay(height);
+      let leftDisplayScaled = _scaleToDisplay(left);
+      let topDisplayScaled = _scaleToDisplay(top);
+      let widthDisplayScaled = _scaleToDisplay(width);
+      let heightDisplayScaled = _scaleToDisplay(height);
 
       let redactionInfo = {
-        left: _scaleToPDF(rect.left - textLayerRect.left, scaleFactor),
-        top: _scaleToPDF(rect.top - textLayerRect.top, scaleFactor),
-        width: _scaleToPDF(rect.width, scaleFactor),
-        height: _scaleToPDF(rect.height, scaleFactor),
+        left: _scaleToPDF(left, scaleFactor),
+        top: _scaleToPDF(top, scaleFactor),
+        width: _scaleToPDF(width, scaleFactor),
+        height: _scaleToPDF(height, scaleFactor),
         pageNumber: parseInt(pageNumber),
         color: color,
         element: redactionElement,
@@ -509,11 +529,11 @@ window.addEventListener("load", (e) => {
 
       redactions.push(redactionInfo);
 
-      redactionElement.style.left = _toCalcZoomPx(left);
-      redactionElement.style.top = _toCalcZoomPx(top);
+      redactionElement.style.left = _toCalcZoomPx(leftDisplayScaled);
+      redactionElement.style.top = _toCalcZoomPx(topDisplayScaled);
 
-      redactionElement.style.width = _toCalcZoomPx(width);
-      redactionElement.style.height = _toCalcZoomPx(height);
+      redactionElement.style.width = _toCalcZoomPx(widthDisplayScaled);
+      redactionElement.style.height = _toCalcZoomPx(heightDisplayScaled);
       redactionElement.style.setProperty("--palette-color", color);
 
       redactionsArea.appendChild(redactionElement);
