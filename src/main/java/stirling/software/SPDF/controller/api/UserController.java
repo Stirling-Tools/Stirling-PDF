@@ -244,8 +244,8 @@ public class UserController {
             return new RedirectView("/addUsers?messageType=invalidRole", true);
         }
 
-        if (authType.equalsIgnoreCase(AuthenticationType.OAUTH2.toString())) {
-            userService.saveUser(username, AuthenticationType.OAUTH2, role);
+        if (authType.equalsIgnoreCase(AuthenticationType.SSO.toString())) {
+            userService.saveUser(username, AuthenticationType.SSO, role);
         } else {
             if (password.isBlank()) {
                 return new RedirectView("/addUsers?messageType=invalidPassword", true);

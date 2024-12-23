@@ -10,20 +10,28 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write
 
 jobs:
   push:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
         with:
           java-version: "17"
           distribution: "temurin"
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
         with:
           gradle-version: 8.7
 
@@ -32,29 +40,34 @@ jobs:
         env:
           DOCKER_ENABLE_SECURITY: false
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.7.0
+        with:
+          cosign-release: 'v2.4.1'
+
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5 # v3.8.0
 
       - name: Get version number
         id: versionNumber
         run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
 
       - name: Convert repository owner to lowercase
         id: repoowner
@@ -62,7 +75,7 @@ jobs:
 
       - name: Generate tags
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
         with:
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/s-pdf
@@ -75,7 +88,8 @@ jobs:
             type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push main Dockerfile
-        uses: docker/build-push-action@v6
+        id: build-push-regular
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -87,10 +101,39 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8
+          provenance: true
+          sbom: true
+
+      - name: Sign regular images
+        env:
+          DIGEST: ${{ steps.build-push-regular.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          # Always sign images regardless of branch
+          echo "$TAGS" | tr ',' '\n' | while read -r tag; do
+            cosign sign --yes \
+              --key env://COSIGN_PRIVATE_KEY \
+              "${tag}@${DIGEST}"
+          done
+          
+          # For alpha builds specifically, we want to ensure they're marked as development builds
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "Signing alpha build with development attestation"
+            echo "$TAGS" | tr ',' '\n' | while read -r tag; do
+              if [[ $tag == *":alpha" ]]; then
+                cosign attest --key env://COSIGN_PRIVATE_KEY \
+                  --predicate <(echo '{"type":"development"}') \
+                  --yes "${tag}@${DIGEST}"
+              fi
+            done
+          fi
+
 
       - name: Generate tags ultra-lite
         id: meta2
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
         if: github.ref != 'refs/heads/main'
         with:
           images: |
@@ -103,11 +146,12 @@ jobs:
             type=raw,value=latest-ultra-lite,enable=${{ github.ref == 'refs/heads/master' }}
 
       - name: Build and push Dockerfile-ultra-lite
-        uses: docker/build-push-action@v6
+        id: build-push-lite
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
         if: github.ref != 'refs/heads/main'
         with:
           context: .
-          file: ./Dockerfile-ultra-lite
+          file: ./Dockerfile.ultra-lite
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -115,10 +159,24 @@ jobs:
           labels: ${{ steps.meta2.outputs.labels }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8
+          provenance: true
+          sbom: true
+
+      - name: Sign ultra-lite images
+        if: github.ref != 'refs/heads/main'
+        env:
+          DIGEST: ${{ steps.build-push-lite.outputs.digest }}
+          TAGS: ${{ steps.meta2.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          echo "$TAGS" | tr ',' '\n' | while read -r tag; do
+            cosign sign --key env://COSIGN_PRIVATE_KEY --yes "${tag}@${DIGEST}"
+          done
 
       - name: Generate tags fat
         id: meta3
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
         if: github.ref != 'refs/heads/main'
         with:
           images: |
@@ -131,12 +189,13 @@ jobs:
             type=raw,value=latest-fat,enable=${{ github.ref == 'refs/heads/master' }}
 
       - name: Build and push main Dockerfile fat
-        uses: docker/build-push-action@v6
+        id: build-push-fat
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
         if: github.ref != 'refs/heads/main'
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./Dockerfile-fat
+          file: ./Dockerfile.fat
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -144,3 +203,17 @@ jobs:
           labels: ${{ steps.meta3.outputs.labels }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8
+          provenance: true
+          sbom: true
+
+      - name: Sign fat images
+        if: github.ref != 'refs/heads/main'
+        env:
+          DIGEST: ${{ steps.build-push-fat.outputs.digest }}
+          TAGS: ${{ steps.meta3.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          echo "$TAGS" | tr ',' '\n' | while read -r tag; do
+            cosign sign --key env://COSIGN_PRIVATE_KEY --yes "${tag}@${DIGEST}"
+          done

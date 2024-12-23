@@ -56,8 +56,6 @@ import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpParsingException;
 import org.apache.xmpbox.xml.XmpSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -73,15 +71,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.PDFFile;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/security")
+@Slf4j
 @Tag(name = "Security", description = "Security APIs")
 public class GetInfoOnPDF {
-
-    private static final Logger logger = LoggerFactory.getLogger(GetInfoOnPDF.class);
 
     static ObjectMapper objectMapper = new ObjectMapper();
 
@@ -224,7 +222,7 @@ public class GetInfoOnPDF {
                             javascriptArray.add(jsNode);
                         }
                     } catch (IOException e) {
-                        logger.error("exception", e);
+                        log.error("exception", e);
                     }
                 }
             }
@@ -257,7 +255,7 @@ public class GetInfoOnPDF {
                 }
             } catch (Exception e) {
                 // TODO Auto-generated catch block
-                logger.error("exception", e);
+                log.error("exception", e);
             }
 
             boolean isPdfACompliant = checkForStandard(pdfBoxDoc, "PDF/A");
@@ -309,7 +307,7 @@ public class GetInfoOnPDF {
                     new XmpSerializer().serialize(xmpMeta, os, true);
                     xmpString = new String(os.toByteArray(), StandardCharsets.UTF_8);
                 } catch (XmpParsingException | IOException e) {
-                    logger.error("exception", e);
+                    log.error("exception", e);
                 }
             }
 
@@ -322,26 +320,13 @@ public class GetInfoOnPDF {
                 PDEncryption pdfEncryption = pdfBoxDoc.getEncryption();
                 encryption.put("EncryptionAlgorithm", pdfEncryption.getFilter());
                 encryption.put("KeyLength", pdfEncryption.getLength());
-                AccessPermission ap = pdfBoxDoc.getCurrentAccessPermission();
-                if (ap != null) {
-                    ObjectNode permissionsNode = objectMapper.createObjectNode();
-
-                    permissionsNode.put("CanAssembleDocument", ap.canAssembleDocument());
-                    permissionsNode.put("CanExtractContent", ap.canExtractContent());
-                    permissionsNode.put(
-                            "CanExtractForAccessibility", ap.canExtractForAccessibility());
-                    permissionsNode.put("CanFillInForm", ap.canFillInForm());
-                    permissionsNode.put("CanModify", ap.canModify());
-                    permissionsNode.put("CanModifyAnnotations", ap.canModifyAnnotations());
-                    permissionsNode.put("CanPrint", ap.canPrint());
-
-                    encryption.set(
-                            "Permissions", permissionsNode); // set the node under "Permissions"
-                }
                 // Add other encryption-related properties as needed
             } else {
                 encryption.put("IsEncrypted", false);
             }
+
+            ObjectNode permissionsNode = objectMapper.createObjectNode();
+            setNodePermissions(pdfBoxDoc, permissionsNode);
 
             ObjectNode pageInfoParent = objectMapper.createObjectNode();
             for (int pageNum = 0; pageNum < pdfBoxDoc.getNumberOfPages(); pageNum++) {
@@ -584,6 +569,7 @@ public class GetInfoOnPDF {
             jsonOutput.set("DocumentInfo", docInfoNode);
             jsonOutput.set("Compliancy", compliancy);
             jsonOutput.set("Encryption", encryption);
+            jsonOutput.set("Permissions", permissionsNode); // set the node under "Permissions"
             jsonOutput.set("Other", other);
             jsonOutput.set("PerPageInfo", pageInfoParent);
 
@@ -597,9 +583,27 @@ public class GetInfoOnPDF {
                     MediaType.APPLICATION_JSON);
 
         } catch (Exception e) {
-            logger.error("exception", e);
+            log.error("exception", e);
         }
         return null;
+    }
+
+    private void setNodePermissions(PDDocument pdfBoxDoc, ObjectNode permissionsNode) {
+        AccessPermission ap = pdfBoxDoc.getCurrentAccessPermission();
+
+        permissionsNode.put("Document Assembly", getPermissionState(ap.canAssembleDocument()));
+        permissionsNode.put("Extracting Content", getPermissionState(ap.canExtractContent()));
+        permissionsNode.put(
+                "Extracting for accessibility",
+                getPermissionState(ap.canExtractForAccessibility()));
+        permissionsNode.put("Form Filling", getPermissionState(ap.canFillInForm()));
+        permissionsNode.put("Modifying", getPermissionState(ap.canModify()));
+        permissionsNode.put("Modifying annotations", getPermissionState(ap.canModifyAnnotations()));
+        permissionsNode.put("Printing", getPermissionState(ap.canPrint()));
+    }
+
+    private String getPermissionState(boolean state) {
+        return state ? "Allowed" : "Not Allowed";
     }
 
     private static void addOutlinesToArray(PDOutlineItem outline, ArrayNode arrayNode) {
@@ -695,7 +699,7 @@ public class GetInfoOnPDF {
                 Exception
                         e) { // Catching general exception for brevity, ideally you'd catch specific
             // exceptions.
-            logger.error("exception", e);
+            log.error("exception", e);
         }
 
         return false;

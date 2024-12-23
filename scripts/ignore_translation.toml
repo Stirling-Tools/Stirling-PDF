@@ -42,14 +42,19 @@ ignore = [
     'addPageNumbers.selectText.3',
     'alphabet',
     'certSign.name',
+    'fileChooser.dragAndDrop',
     'home.pipeline.title',
     'language.direction',
+    'legal.impressum',
     'licenses.version',
     'pipeline.title',
     'pipelineOptions.pipelineHeader',
     'pro',
     'sponsor',
     'text',
+    'validateSignature.cert.bits',
+    'validateSignature.cert.version',
+    'validateSignature.status',
     'watermark.type.1',
 ]
 
@@ -61,7 +66,6 @@ ignore = [
 [es_ES]
 ignore = [
     'adminUserSettings.roles',
-    'color',
     'error',
     'language.direction',
     'no',
@@ -69,6 +73,11 @@ ignore = [
 ]
 
 [eu_ES]
+ignore = [
+    'language.direction',
+]
+
+[fa_IR]
 ignore = [
     'language.direction',
 ]

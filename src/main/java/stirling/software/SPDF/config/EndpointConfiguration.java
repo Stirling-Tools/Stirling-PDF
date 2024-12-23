@@ -7,19 +7,19 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Service
+@Slf4j
 @DependsOn({"bookAndHtmlFormatsInstalled"})
 public class EndpointConfiguration {
-    private static final Logger logger = LoggerFactory.getLogger(EndpointConfiguration.class);
+
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
 
@@ -43,7 +43,7 @@ public class EndpointConfiguration {
 
     public void disableEndpoint(String endpoint) {
         if (!endpointStatuses.containsKey(endpoint) || endpointStatuses.get(endpoint) != false) {
-            logger.debug("Disabling {}", endpoint);
+            log.debug("Disabling {}", endpoint);
             endpointStatuses.put(endpoint, false);
         }
     }
@@ -87,7 +87,7 @@ public class EndpointConfiguration {
                         .collect(Collectors.toList());
 
         if (!disabledList.isEmpty()) {
-            logger.info(
+            log.info(
                     "Total disabled endpoints: {}. Disabled endpoints: {}",
                     disabledList.size(),
                     String.join(", ", disabledList));
@@ -260,6 +260,9 @@ public class EndpointConfiguration {
 
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
+
+        // disabled for now while we resolve issues
+        disableEndpoint("pdf-to-pdfa");
     }
 
     private void processEnvironmentConfigs() {

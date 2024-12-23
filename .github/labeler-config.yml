@@ -30,6 +30,8 @@ Security:
     - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/model/provider/**/*'
     - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/model/AuthenticationType.java'
     - any-glob-to-any-file: 'scripts/download-security-jar.sh'
+    - any-glob-to-any-file: '.github/workflows/dependency-review.yml'
+    - any-glob-to-any-file: '.github/workflows/scorecards.yml'
 
 API:
   - changed-files:
@@ -37,6 +39,7 @@ API:
     - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/controller/api/**/*'
     - any-glob-to-any-file: 'scripts/png_to_webp.py'
     - any-glob-to-any-file: 'split_photos.py'
+    - any-glob-to-any-file: '.github/workflows/swagger.yml'
 
 Documentation:
   - changed-files:
@@ -57,6 +60,9 @@ Test:
   - changed-files:
     - any-glob-to-any-file: 'cucumber/**/*'
     - any-glob-to-any-file: 'src/test**/*'
+    - any-glob-to-any-file: '.pre-commit-config'
+    - any-glob-to-any-file: '.github/workflows/pre_commit.yml'
+    - any-glob-to-any-file: '.github/workflows/scorecards.yml'
 
 Github:
   - changed-files:

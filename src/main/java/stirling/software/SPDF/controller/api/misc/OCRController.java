@@ -1,7 +1,5 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import io.github.pixee.security.BoundedLineReader;
-import io.github.pixee.security.Filenames;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -35,6 +33,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.github.pixee.security.BoundedLineReader;
+import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
@@ -87,7 +87,7 @@ public class OCRController {
 
         Files.createDirectories(tempOutputDir);
         Files.createDirectories(tempImagesDir);
-
+        Process process = null;
         try {
             // Save input file
             inputFile.transferTo(tempInputFile.toFile());
@@ -139,7 +139,7 @@ public class OCRController {
                         command.add("pdf"); // Always output PDF
 
                         ProcessBuilder pb = new ProcessBuilder(command);
-                        Process process = pb.start();
+                        process = pb.start();
 
                         // Capture any error output
                         try (BufferedReader reader =
@@ -176,7 +176,9 @@ public class OCRController {
             // Read the final PDF file
             byte[] pdfContent = Files.readAllBytes(finalOutputFile);
             String outputFilename =
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_OCR.pdf";
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename())
+                                    .replaceFirst("[.][^.]+$", "")
+                            + "_OCR.pdf";
 
             return ResponseEntity.ok()
                     .header(
@@ -186,6 +188,10 @@ public class OCRController {
                     .body(pdfContent);
 
         } finally {
+            if (process != null) {
+                process.destroy();
+            }
+
             // Clean up temporary files
             deleteDirectory(tempDir);
         }

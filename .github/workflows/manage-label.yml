@@ -4,20 +4,25 @@ on:
   schedule:
     - cron: "30 20 * * *"
 
-permissions:
-  contents: read
-  issues: write
+permissions: read-all
 
 jobs:
   labeler:
     name: Labeler
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
       - name: Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run Labeler
-        uses: crazy-max/ghaction-github-labeler@v5
+        uses: crazy-max/ghaction-github-labeler@b54af0c25861143e7c8813d7cbbf46d2c341680c # v5.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           yaml-file: .github/labels.yml

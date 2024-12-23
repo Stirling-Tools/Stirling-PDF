@@ -8,8 +8,6 @@ import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -22,6 +20,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.pdf.TextFinder;
@@ -31,10 +30,9 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/security")
+@Slf4j
 @Tag(name = "Security", description = "Security APIs")
 public class RedactController {
-
-    private static final Logger logger = LoggerFactory.getLogger(RedactController.class);
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
@@ -47,7 +45,8 @@ public class RedactController {
     @Operation(
             summary = "Redacts listOfText in a PDF document",
             description =
-                    "This operation takes an input PDF file and redacts the provided listOfText. Input:PDF, Output:PDF, Type:SISO")
+                    "This operation takes an input PDF file and redacts the provided listOfText. Input:PDF,"
+                            + " Output:PDF, Type:SISO")
     public ResponseEntity<byte[]> redactPdf(@ModelAttribute RedactPdfRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
@@ -68,7 +67,7 @@ public class RedactController {
             }
             redactColor = Color.decode(colorString);
         } catch (NumberFormatException e) {
-            logger.warn("Invalid color string provided. Using default color BLACK for redaction.");
+            log.warn("Invalid color string provided. Using default color BLACK for redaction.");
             redactColor = Color.BLACK;
         }
 

@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-Stirling-PDF is a robust, locally hosted web-based PDF manipulation tool. This guide focuses on Docker-based development and testing, which is the recommended approach for working with the full version of Stirling-PDF.
+Stirling-PDF is a robust, locally hosted, web-based PDF manipulation tool. This guide focuses on Docker-based development and testing, which is the recommended approach for working with the full version of Stirling-PDF.
 
 ## 2. Project Overview
 
@@ -25,7 +25,7 @@ Stirling-PDF is built using:
 - Docker
 - Git
 - Java JDK 17 or later
-- Gradle 7.0 or later (Included within repo)
+- Gradle 7.0 or later (Included within the repo)
 
 ### Setup Steps
 
@@ -38,14 +38,14 @@ Stirling-PDF is built using:
 
 2. Install Docker and JDK17 if not already installed.
 
-3. Install a recommended Java IDE such as Eclipse, IntelliJ or VSCode
+3. Install a recommended Java IDE such as Eclipse, IntelliJ, or VSCode
 
 4. Lombok Setup
 Stirling-PDF uses Lombok to reduce boilerplate code. Some IDEs, like Eclipse, don't support Lombok out of the box. To set up Lombok in your development environment:
 Visit the [Lombok website](https://projectlombok.org/setup/) for installation instructions specific to your IDE.
 
 5. Add environment variable
-For local testing you should generally be testing the full 'Security' version of Stirling-PDF to do this you must add the environment flag DOCKER_ENABLE_SECURITY=true to your system and/or IDE build/run step
+For local testing, you should generally be testing the full 'Security' version of Stirling-PDF. To do this, you must add the environment flag DOCKER_ENABLE_SECURITY=true to your system and/or IDE build/run step.
 
 ## 4. Project Structure
 
@@ -86,8 +86,8 @@ Stirling-PDF/
 │                   └── SPDF/
 ├── build.gradle           # Gradle build configuration
 ├── Dockerfile             # Main Dockerfile
-├── Dockerfile-ultra-lite  # Dockerfile for ultra-lite version
-├── Dockerfile-fat         # Dockerfile for fat version
+├── Dockerfile.ultra-lite  # Dockerfile for ultra-lite version
+├── Dockerfile.fat         # Dockerfile for fat version
 ├── docker-compose.yml     # Docker Compose configuration
 └── test.sh                # Test script to deploy all docker versions and run cuke tests
 ```
@@ -102,7 +102,7 @@ Stirling-PDF offers several Docker versions:
 
 ### Example Docker Compose Files
 
-Stirling-PDF provides several example Docker Compose files in the `exampleYmlFiles` directory such as :
+Stirling-PDF provides several example Docker Compose files in the `exampleYmlFiles` directory, such as:
 
 - `docker-compose-latest.yml`: Latest version without security features
 - `docker-compose-latest-security.yml`: Latest version with security features enabled
@@ -179,14 +179,14 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    For the ultra-lite version:
 
    ```bash
-   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile-ultra-lite .
+   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
    ```
 
    For the fat version (with security enabled):
 
    ```bash
    export DOCKER_ENABLE_SECURITY=true
-   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile-fat .
+   docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
    ```
 
 Note: The `--no-cache` and `--pull` flags ensure that the build process uses the latest base images and doesn't use cached layers, which is useful for testing and ensuring reproducible builds. however to improve build times these can often be removed depending on your usecase
@@ -205,9 +205,9 @@ To run the test script:
 
 This script performs the following actions:
 
-1. Builds all Docker images (full, ultra-lite, fat)
-2. Runs each version to ensure it starts correctly
-3. Executes Cucumber tests against main version and ensures feature compatibility, in the event these tests fail your PR will not be merged
+1. Builds all Docker images (full, ultra-lite, fat).
+2. Runs each version to ensure it starts correctly.
+3. Executes Cucumber tests against the main version and ensures feature compatibility. In the event these tests fail, your PR will not be merged.
 
 Note: The `test.sh` script will run automatically when you raise a PR. However, it's recommended to run it locally first to save resources and catch any issues early.
 
@@ -229,7 +229,7 @@ For quick iterations and development of Java backend, JavaScript, and UI compone
 
 To run Stirling-PDF locally:
 
-1. Compile and run the project using built in IDE methods or by running:
+1. Compile and run the project using built-in IDE methods or by running:
 
    ```bash
    ./gradlew bootRun
@@ -261,7 +261,7 @@ Important notes:
 
 6. Push your changes to your fork.
 7. Submit a pull request to the main repository.
-8. See additional [contributing guidelines](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/CONTRIBUTING.md)
+8. See additional [contributing guidelines](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/CONTRIBUTING.md).
 
 When you raise a PR:
 
@@ -317,7 +317,7 @@ Remember to test your changes thoroughly to ensure they don't break any existing
 
 ### Overview of Thymeleaf
 
-Thymeleaf is a  server-side Java HTML template engine. It is used in Stirling-PDF to render dynamic web pages. Thymeleaf integrates heavily with Spring Boot
+Thymeleaf is a server-side Java HTML template engine. It is used in Stirling-PDF to render dynamic web pages. Thymeleaf integrates heavily with Spring Boot.
 
 ### Thymeleaf overview
 
@@ -327,22 +327,24 @@ Some examples of this are:
 
 ```html
 <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+```
 or
+```html
 <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
 ```
 
-Where it uses the th:block, th: indicating its a special thymeleaf element to be used serverside in generating the html, and block being the actual element type.
-In this case we are inserting the ``navbar`` entry within the ``fragments/navbar.html`` fragment into the ``th:block`` element.
+Where it uses the `th:block`, `th:` indicating it's a special Thymeleaf element to be used server-side in generating the HTML, and block being the actual element type.
+In this case, we are inserting the `navbar` entry within the `fragments/navbar.html` fragment into the `th:block` element.
 
-They can be more complex such as:
+They can be more complex, such as:
 
 ```html
 <th:block th:insert="~{fragments/common :: head(title=#{pageExtracter.title}, header=#{pageExtracter.header})}"></th:block>
 ```
 
-Which is the same as above but passes the parameters title and header into the fragment common.html to be used in its HTML generation
+Which is the same as above but passes the parameters title and header into the fragment `common.html` to be used in its HTML generation.
 
-Thymeleaf can also be used to loop through objects or pass things from java side into html side.
+Thymeleaf can also be used to loop through objects or pass things from the Java side into the HTML side.
 
 ```java
  @GetMapping
@@ -352,7 +354,7 @@ Thymeleaf can also be used to loop through objects or pass things from java side
        }
 ```
 
-in above example if exampleData is a list of  plain java objects of class Person and within it you had id, name, age etc. You can reference it like so
+In the above example, if exampleData is a list of plain java objects of class Person and within it, you had id, name, age, etc. You can reference it like so
 
 ```html
 <tbody>
@@ -452,7 +454,7 @@ This would generate n entries of tr for each person in exampleData
 1. **Create a New Thymeleaf Template:**
    - Create a new HTML file in the `src/main/resources/templates` directory.
    - Use Thymeleaf attributes to dynamically generate content.
-   - Use `extract-page.html` as a base example for the HTML template, useful to ensure importing of the general layout, navbar and footer.
+   - Use `extract-page.html` as a base example for the HTML template, which is useful to ensure importing of the general layout, navbar, and footer.
 
    ```html
    <!DOCTYPE html>

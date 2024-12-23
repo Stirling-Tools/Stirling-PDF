@@ -1,13 +1,14 @@
 plugins {
     id "java"
-    id "org.springframework.boot" version "3.4.0"
-    id "io.spring.dependency-management" version "1.1.6"
+    id "org.springframework.boot" version "3.4.1"
+    id "io.spring.dependency-management" version "1.1.7"
     id "org.springdoc.openapi-gradle-plugin" version "1.8.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "edu.sc.seis.launch4j" version "3.0.6"
     id "com.diffplug.spotless" version "6.25.0"
     id "com.github.jk1.dependency-license-report" version "2.9"
 	//id "nebula.lint" version "19.0.3"
+	id("org.panteleyev.jpackageplugin") version "1.6.0"
 }
 
 
@@ -15,16 +16,18 @@ plugins {
 import com.github.jk1.license.render.*
 
 ext {
-    springBootVersion = "3.4.0"
+    springBootVersion = "3.4.1"
     pdfboxVersion = "3.0.3"
     logbackVersion = "1.5.7"
     imageioVersion = "3.12.0"
     lombokVersion = "1.18.36"
     bouncycastleVersion = "1.79"
+    springSecuritySamlVersion = "6.4.2"
+    openSamlVersion = "4.3.2"
 }
 
 group = "stirling.software"
-version = "0.35.0"
+version = "0.36.5"
 
 
 java {
@@ -35,10 +38,9 @@ java {
 repositories {
     mavenCentral()
     maven { url "https://jitpack.io" }
-    maven { url "https://build.shibboleth.net/nexus/content/repositories/releases/" }
-    maven {
-        url 'https://build.shibboleth.net/maven/releases'
-    }
+    maven { url "https://build.shibboleth.net/maven/releases" }
+    maven { url "https://maven.pkg.github.com/jcefmaven/jcefmaven" }
+
 }
 
 licenseReport {
@@ -62,6 +64,12 @@ sourceSets {
                 exclude "stirling/software/SPDF/model/User.java"
                 exclude "stirling/software/SPDF/repository/**"
             }
+
+            if (System.getenv("STIRLING_PDF_DESKTOP_UI") == "false") {
+            	exclude "stirling/software/SPDF/UI/impl/**"
+            }
+
+
         }
     }
 }
@@ -72,16 +80,153 @@ openApi {
     outputFileName = "SwaggerDoc.json"
 }
 
+//0.11.5 to 2024.11.5
+def getMacVersion(String version) {
+    def currentYear = java.time.Year.now().getValue()
+    def versionParts = version.split("\\.", 2)
+    return "${currentYear}.${versionParts.length > 1 ? versionParts[1] : versionParts[0]}"
+}
+
+jpackage {
+    input = "build/libs"
+
+    appName = "Stirling-PDF"
+    appVersion = project.version
+    vendor = "Stirling-Software"
+	appDescription = "Stirling PDF - Your Local PDF Editor"
+
+    mainJar = "Stirling-PDF-${project.version}.jar"
+    mainClass = "org.springframework.boot.loader.launch.JarLauncher"
+
+    icon = "src/main/resources/static/favicon.ico"
+
+
+
+    // JVM Options
+    javaOptions = [
+        "-DBROWSER_OPEN=true",
+        "-DSTIRLING_PDF_DESKTOP_UI=true",
+        "-Djava.awt.headless=false",
+        "-Dapple.awt.UIElement=true",
+        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+        "--add-opens", "java.desktop/java.awt.event=ALL-UNNAMED",
+        "--add-opens", "java.desktop/sun.awt=ALL-UNNAMED"
+
+    ]
+
+
+    verbose = true
+
+    destination = "${projectDir}/build/jpackage"
+
+    // Windows-specific configuration
+    windows {
+    	launcherAsService = false
+    	appVersion = project.version
+        winConsole = false
+        winDirChooser = true
+        winMenu = true
+        winShortcut = true
+        winPerUserInstall = true
+        winMenuGroup = "Stirling Software"
+        winUpgradeUuid = "2a43ed0c-b8c2-40cf-89e1-751129b87641" // Unique identifier for updates
+        winHelpUrl = "https://github.com/Stirling-Tools/Stirling-PDF"
+        winUpdateUrl = "https://github.com/Stirling-Tools/Stirling-PDF/releases"
+        type = "exe"
+        installDir = "C:/Program Files/Stirling-PDF"
+    }
+
+    // macOS-specific configuration
+    mac {
+    	appVersion = getMacVersion(project.version.toString())
+        icon = "src/main/resources/static/favicon.icns"
+        type = "dmg"
+        macPackageIdentifier = "com.stirling.software.pdf"
+        macPackageName = "Stirling-PDF"
+        macAppCategory = "public.app-category.productivity"
+        macSign = false // Enable signing
+        macAppStore = false // Not targeting App Store initially
+
+        //installDir = "Applications"
+
+        // Add license and other documentation to DMG
+        /*macDmgContent = [
+            "README.md",
+            "LICENSE",
+            "CHANGELOG.md"
+        ]*/
+
+        // Enable Mac-specific entitlements
+        //macEntitlements = "entitlements.plist" // You'll need to create this file
+    }
+
+    // Linux-specific configuration
+    linux {
+    	appVersion = project.version
+        icon = "src/main/resources/static/favicon.png"
+        type = "deb" // Can also use "rpm" for Red Hat-based systems
+
+        // Debian package configuration
+        //linuxPackageName = "stirlingpdf"
+        linuxDebMaintainer = "support@stirlingpdf.com"
+        linuxMenuGroup = "Office;PDF;Productivity"
+        linuxAppCategory = "Office"
+        linuxAppRelease = "1"
+        linuxPackageDeps = true
+
+        installDir = "/opt/Stirling-PDF"
+
+        // RPM-specific settings
+        //linuxRpmLicenseType = "MIT"
+    }
+
+    // Common additional options
+    //jLinkOptions = [
+    //    "--strip-debug",
+    //    "--compress=2",
+    //    "--no-header-files",
+    //    "--no-man-pages"
+    //]
+
+    // Add any additional modules required
+    /*addModules = [
+        "java.base",
+        "java.desktop",
+        "java.logging",
+        "java.sql",
+        "java.xml",
+        "jdk.crypto.ec"
+    ]*/
+
+    // Add copyright and license information
+    copyright = "Copyright © 2024 Stirling Software"
+    licenseFile = "LICENSE"
+}
+
+
 launch4j {
     icon = "${projectDir}/src/main/resources/static/favicon.ico"
 
     outfile="Stirling-PDF.exe"
-    headerType="console"
+
+    if(System.getenv("STIRLING_PDF_DESKTOP_UI") == 'true') {
+    	headerType = "gui"
+    } else {
+    	headerType = "console"
+    }
     jarTask = tasks.bootJar
 
     errTitle="Encountered error, Do you have Java 21?"
     downloadUrl="https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe"
-    variables=["BROWSER_OPEN=true"]
+
+    if(System.getenv("STIRLING_PDF_DESKTOP_UI") == 'true') {
+    	variables=["BROWSER_OPEN=true", "STIRLING_PDF_DESKTOP_UI=true"]
+    } else {
+    	variables=["BROWSER_OPEN=true"]
+    }
+
+
+
     jreMinVersion="17"
 
     mutexName="Stirling-PDF"
@@ -98,7 +243,7 @@ spotless {
     java {
         target project.fileTree('src/main/java')
 
-        googleJavaFormat("1.22.0").aosp().reorderImports(false)
+        googleJavaFormat("1.25.2").aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io")
         toggleOffOn()
@@ -121,10 +266,17 @@ configurations.all {
     exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
 }
 dependencies {
-    //security updates
-    implementation "org.springframework:spring-webmvc:6.2.0"
 
-    implementation("io.github.pixee:java-security-toolkit:1.2.0")
+	if (System.getenv("STIRLING_PDF_DESKTOP_UI") != "false") {
+		implementation "me.friwi:jcefmaven:127.3.1"
+	    implementation "org.openjfx:javafx-controls:21"
+	    implementation "org.openjfx:javafx-swing:21"
+    }
+
+    //security updates
+    implementation "org.springframework:spring-webmvc:6.2.1"
+
+    implementation("io.github.pixee:java-security-toolkit:1.2.1")
 
     // implementation "org.yaml:snakeyaml:2.2"
     implementation 'com.github.Carleslc.Simple-YAML:Simple-Yaml:1.8.4'
@@ -140,21 +292,22 @@ dependencies {
 
     if (System.getenv("DOCKER_ENABLE_SECURITY") != "false") {
         implementation "org.springframework.boot:spring-boot-starter-security:$springBootVersion"
-        implementation "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.2.RELEASE"
+        implementation "org.thymeleaf.extras:thymeleaf-extras-springsecurity5:3.1.3.RELEASE"
         implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
-		implementation 'org.springframework.security:spring-security-saml2-service-provider:6.4.1'
+		implementation "org.springframework.session:spring-session-core:$springBootVersion"
+
 	    implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         // Don't upgrade h2database
         runtimeOnly "com.h2database:h2:2.3.232"
         constraints {
-            implementation "org.opensaml:opensaml-core"
-            implementation "org.opensaml:opensaml-saml-api"
-            implementation "org.opensaml:opensaml-saml-impl"
+            implementation "org.opensaml:opensaml-core:$openSamlVersion"
+            implementation "org.opensaml:opensaml-saml-api:$openSamlVersion"
+            implementation "org.opensaml:opensaml-saml-impl:$openSamlVersion"
         }
-        implementation "org.springframework.security:spring-security-saml2-service-provider"
-
+        implementation "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
+//		implementation 'org.springframework.security:spring-security-core:$springSecuritySamlVersion'
         implementation 'com.coveo:saml-client:5.0.0'
 
 
@@ -215,7 +368,7 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    implementation "io.micrometer:micrometer-core:1.14.1"
+    implementation "io.micrometer:micrometer-core:1.14.2"
     implementation group: "com.google.zxing", name: "core", version: "3.5.3"
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark:0.24.0"
@@ -268,7 +421,14 @@ jar {
 tasks.named("test") {
     useJUnitPlatform()
 }
-
 task printVersion {
-    println project.version
+    doLast {
+        println project.version
+    }
+}
+
+task printMacVersion {
+    doLast {
+        println getMacVersion(project.version.toString())
+    }
 }

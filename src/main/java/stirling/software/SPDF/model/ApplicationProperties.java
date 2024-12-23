@@ -73,6 +73,7 @@ public class ApplicationProperties {
         private int loginAttemptCount;
         private long loginResetTimeMinutes;
         private String loginMethod = "all";
+        private String customGlobalAPIKey;
 
         public Boolean isAltLogin() {
             return saml2.getEnabled() || oauth2.getEnabled();
@@ -121,18 +122,19 @@ public class ApplicationProperties {
 
         @Getter
         @Setter
+        @ToString
         public static class SAML2 {
             private Boolean enabled = false;
             private Boolean autoCreateUser = false;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
-            private String idpMetadataUri;
+            @ToString.Exclude private String idpMetadataUri;
             private String idpSingleLogoutUrl;
             private String idpSingleLoginUrl;
             private String idpIssuer;
             private String idpCert;
-            private String privateKey;
-            private String spCert;
+            @ToString.Exclude private String privateKey;
+            @ToString.Exclude private String spCert;
 
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
@@ -285,6 +287,7 @@ public class ApplicationProperties {
     public static class AutomaticallyGenerated {
         @ToString.Exclude private String key;
         private String UUID;
+        private String appVersion;
     }
 
     @Data

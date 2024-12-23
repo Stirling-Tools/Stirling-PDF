@@ -229,10 +229,22 @@ public class StampController {
                     calculatePositionY(
                             pageSize, position, calculateTextCapHeight(font, fontSize), margin);
         }
+        // Split the stampText into multiple lines
+        String[] lines = stampText.split("\\\\n");
+
+        // Calculate dynamic line height based on font ascent and descent
+        float ascent = font.getFontDescriptor().getAscent();
+        float descent = font.getFontDescriptor().getDescent();
+        float lineHeight = ((ascent - descent) / 1000) * fontSize;
 
         contentStream.beginText();
-        contentStream.setTextMatrix(Matrix.getRotateInstance(Math.toRadians(rotation), x, y));
-        contentStream.showText(stampText);
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i];
+            // Set the text matrix for each line with rotation
+            contentStream.setTextMatrix(
+                    Matrix.getRotateInstance(Math.toRadians(rotation), x, y - (i * lineHeight)));
+            contentStream.showText(line);
+        }
         contentStream.endText();
     }
 

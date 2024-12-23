@@ -28,7 +28,6 @@
       </div>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-    <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
     <script th:src="@{'/js/local-pdf-input-download.js'}"></script>
     <script>
       document.getElementById('pdfForm').addEventListener('submit', async (e) => {
@@ -38,7 +37,7 @@
 
         const processFile = async (file) => {
           const origFileUrl = URL.createObjectURL(file);
-          const formPdfBytes = await fetch(origFileUrl).then(res => res.arrayBuffer());
+          const formPdfBytes = await window.fetchWithCsrf(origFileUrl).then(res => res.arrayBuffer());
           const pdfDoc = await PDFDocument.load(formPdfBytes, { ignoreEncryption: true });
 
           const pages = pdfDoc.getPages();

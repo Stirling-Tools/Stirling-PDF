@@ -167,8 +167,8 @@ public class AccountWebController {
                 case "invalid_destination":
                     erroroauth = "login.invalid_destination";
                     break;
-                    // Valid InResponseTo was not available from the validation context, unable to
-                    // evaluate
+                // Valid InResponseTo was not available from the validation context, unable to
+                // evaluate
                 case "invalid_in_response_to":
                     erroroauth = "login.invalid_in_response_to";
                     break;

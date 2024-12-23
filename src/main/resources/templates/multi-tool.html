@@ -57,6 +57,27 @@
                     </span>
                     <span class="btn-tooltip" th:text="#{multiTool.insertPageBreak}"></span>
                   </button>
+                  <button id="undo-btn" class="btn btn-secondary" onclick="undo()" disabled>
+                    <span class="material-symbols-rounded">
+                      undo
+                    </span>
+                    <span class="btn-tooltip">
+                      <div th:text="#{multiTool.undo}"></div>
+                      <div class="text-uppercase" th:text="'(CTRL + Z)'"></div>
+                    </span>
+                  </button>
+
+                  <button id="redo-btn" class="btn btn-secondary" onclick="redo()" disabled>
+                    <span class="material-symbols-rounded">
+                      redo
+                    </span>
+                    <span class="btn-tooltip">
+                      <div th:text="#{multiTool.redo}"></div>
+                      <div class="text-uppercase" th:text="'(CTRL + Y)'"></div>
+                    </span>
+                  </button>
+                  </button>
+
                   <button id="select-pages-container" class="btn btn-secondary enable-on-file"
                     onclick="toggleSelectPageVisibility()" disabled>
                     <span id="select-pages-button" class="material-symbols-rounded">
@@ -124,7 +145,6 @@
     <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
   </div>
   <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
-  <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
   <script>
     window.selectedPages = [];
     window.selectPage = false;
@@ -139,10 +159,21 @@
         split: '[[#{multiTool.split}]]',
         addFile: '[[#{multiTool.addFile}]]',
         insertPageBreak:'[[#{multiTool.insertPageBreak}]]',
-        dragDropMessage:'[[#{multiTool.dragDropMessage}]]'
+        dragDropMessage:'[[#{multiTool.dragDropMessage}]]',
+        undo: '[[#{multiTool.undo}]]',
+        redo: '[[#{multiTool.redo}]]',
     };
 
-
+    window.decrypt = {
+                    passwordPrompt: '[[#{decrypt.passwordPrompt}]]',
+                    cancelled: '[[#{decrypt.cancelled}]]',
+                    noPassword: '[[#{decrypt.noPassword}]]',
+                    invalidPassword: '[[#{decrypt.invalidPassword}]]',
+                    invalidPasswordHeader: '[[#{decrypt.invalidPasswordHeader}]]',
+                    unexpectedError: '[[#{decrypt.unexpectedError}]]',
+                    serverError: '[[#{decrypt.serverError}]]',
+                    success: '[[#{decrypt.success}]]',
+              }
 
     const csvInput = document.getElementById("csv-input");
     csvInput.addEventListener("keydown", function (event) {
@@ -155,17 +186,20 @@
     });
   </script>
   <script type="module">
+    import { UndoManager } from './js/multitool/UndoManager.js';
     import PdfContainer from './js/multitool/PdfContainer.js';
     import DragDropManager from "./js/multitool/DragDropManager.js";
     import ImageHighlighter from "./js/multitool/ImageHighlighter.js";
     import PdfActionsManager from './js/multitool/PdfActionsManager.js';
     import FileDragManager from './js/multitool/fileInput.js';
     // enables drag and drop
+
+    var undoManager = new UndoManager();
     const dragDropManager = new DragDropManager('drag-container', 'pages-container');
     // enables image highlight on click
     const imageHighlighter = new ImageHighlighter('image-highlighter');
     // enables the default action buttons on each file
-    const pdfActionsManager = new PdfActionsManager('pages-container');
+    const pdfActionsManager = new PdfActionsManager('pages-container', undoManager);
     const fileDragManager = new FileDragManager();
     // Scroll the wrapper horizontally
 
@@ -178,10 +212,23 @@
         imageHighlighter,
         pdfActionsManager,
         fileDragManager
-      ]
+      ],
+      undoManager
     )
 
     fileDragManager.setCallback(async (files) => pdfContainer.addFilesFromFiles(files));
+    document.addEventListener('keydown', function(event) {
+    let targetElementId = event.target.id;
+
+    // To avoid undoing/redoing the page when the user is simply undoing/redoing text
+    const isFilenameInputField = (targetElementId === 'filename-input') && (event.target === document.activeElement);
+
+    const isUndo = (event.ctrlKey && event.key === 'z');
+    const isRedo = (event.ctrlKey && event.key == 'y');
+    if (isUndo && !isFilenameInputField)
+      undoManager.undo();
+    else if (isRedo && !isFilenameInputField) undoManager.redo();
+});
   </script>
 </body>
 
