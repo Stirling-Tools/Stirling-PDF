@@ -6,7 +6,6 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -80,23 +79,6 @@ public class ApplicationProperties {
             return saml2.getEnabled() || oauth2.getEnabled();
         }
 
-        public boolean isUserPass() {
-            return (loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString())
-                    || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
-        }
-
-        public boolean isOauth2Activ() {
-            return (oauth2 != null
-                    && oauth2.getEnabled()
-                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
-        }
-
-        public boolean isSaml2Activ() {
-            return (saml2 != null
-                    && saml2.getEnabled()
-                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
-        }
-
         public enum LoginMethods {
             ALL("all"),
             NORMAL("normal"),
@@ -113,6 +95,23 @@ public class ApplicationProperties {
             public String toString() {
                 return method;
             }
+        }
+
+        public boolean isUserPass() {
+            return (loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString())
+                    || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
+        }
+
+        public boolean isOauth2Activ() {
+            return (oauth2 != null
+                    && oauth2.getEnabled()
+                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
+        }
+
+        public boolean isSaml2Activ() {
+            return (saml2 != null
+                    && saml2.getEnabled()
+                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
         }
 
         @Data
@@ -253,22 +252,35 @@ public class ApplicationProperties {
 
     @Data
     public static class Datasource {
-        private String url;
-        private Driver driver;
+        private boolean enableCustomDatabase;
+        private String type;
+        private String hostName;
+        private Integer port;
+        private String name;
         private String username;
-        private String password;
+        @ToString.Exclude private String password;
     }
 
     public enum Driver {
         H2("h2"),
         POSTGRESQL("postgresql"),
         ORACLE("oracle"),
-        MY_SQL("mysql");
+        MYSQL("mysql");
 
         private final String driverName;
 
         Driver(String driverName) {
             this.driverName = driverName;
+        }
+
+        @Override
+        public String toString() {
+            return """
+                    Driver {
+                      driverName='%s'
+                    }
+                    """
+                    .formatted(driverName);
         }
     }
 

@@ -18,6 +18,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.sql.DataSource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.support.EncodedResource;
@@ -29,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.exception.BackupNotFoundException;
-import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 import stirling.software.SPDF.utils.FileInfo;
 
 @Slf4j
@@ -40,7 +41,14 @@ public class DatabaseService implements DatabaseInterface {
     public static final String SQL_SUFFIX = ".sql";
     private static final String BACKUP_DIR = "configs/db/backup/";
 
-    @Autowired private DatabaseConfig databaseConfig;
+    private final ApplicationProperties applicationProperties;
+    private final DataSource dataSource;
+
+    @Autowired
+    public DatabaseService(ApplicationProperties applicationProperties, DataSource dataSource) {
+        this.applicationProperties = applicationProperties;
+        this.dataSource = dataSource;
+    }
 
     /**
      * Checks if there is at least one backup
@@ -133,7 +141,7 @@ public class DatabaseService implements DatabaseInterface {
 
     /** Filter and delete old backups if there are more than 5 */
     @Override
-    public void exportDatabase() throws SQLException, UnsupportedProviderException {
+    public void exportDatabase() throws SQLException {
         List<FileInfo> filteredBackupList =
                 this.getBackupList().stream()
                         .filter(backup -> !backup.getFileName().startsWith(BACKUP_PREFIX + "user_"))
@@ -148,12 +156,12 @@ public class DatabaseService implements DatabaseInterface {
         Path insertOutputFilePath =
                 this.getBackupFilePath(BACKUP_PREFIX + dateNow.format(myFormatObj) + SQL_SUFFIX);
 
-        try (Connection conn = databaseConfig.connection()) {
+        try (Connection conn = dataSource.getConnection()) {
             ScriptUtils.executeSqlScript(
                     conn, new EncodedResource(new PathResource(insertOutputFilePath)));
 
             log.info("Database export completed: {}", insertOutputFilePath);
-        } catch (SQLException | UnsupportedProviderException e) {
+        } catch (SQLException e) {
             log.error("Error during database export: {}", e.getMessage(), e);
             throw e;
         } catch (ScriptException e) {
@@ -184,13 +192,12 @@ public class DatabaseService implements DatabaseInterface {
     public String getH2Version() {
         String version = "Unknown";
 
-        if (databaseConfig
-                .getApplicationProperties()
+        if (applicationProperties
                 .getSystem()
                 .getDatasource()
                 .getType()
                 .equals(ApplicationProperties.Driver.H2.name())) {
-            try (Connection conn = databaseConfig.connection()) {
+            try (Connection conn = dataSource.getConnection()) {
                 try (Statement stmt = conn.createStatement();
                         ResultSet rs = stmt.executeQuery("SELECT H2VERSION() AS version")) {
                     if (rs.next()) {
@@ -198,7 +205,7 @@ public class DatabaseService implements DatabaseInterface {
                         log.info("H2 Database Version: {}", version);
                     }
                 }
-            } catch (SQLException | UnsupportedProviderException e) {
+            } catch (SQLException e) {
                 log.error("Error retrieving H2 version: {}", e.getMessage(), e);
             }
         }
@@ -240,14 +247,21 @@ public class DatabaseService implements DatabaseInterface {
     }
 
     private void executeDatabaseScript(Path scriptPath) {
-        try (Connection conn = databaseConfig.connection()) {
-            ScriptUtils.executeSqlScript(conn, new EncodedResource(new PathResource(scriptPath)));
+        if (applicationProperties
+                .getSystem()
+                .getDatasource()
+                .getType()
+                .equals(ApplicationProperties.Driver.H2.name())) {
+            try (Connection conn = dataSource.getConnection()) {
+                ScriptUtils.executeSqlScript(
+                        conn, new EncodedResource(new PathResource(scriptPath)));
 
-            log.info("Database import completed: {}", scriptPath);
-        } catch (SQLException | UnsupportedProviderException e) {
-            log.error("Error during database import: {}", e.getMessage(), e);
-        } catch (ScriptException e) {
-            log.error("Error: File {} not found", scriptPath.toString(), e);
+                log.info("Database import completed: {}", scriptPath);
+            } catch (SQLException e) {
+                log.error("Error during database import: {}", e.getMessage(), e);
+            } catch (ScriptException e) {
+                log.error("Error: File {} not found", scriptPath.toString(), e);
+            }
         }
     }
 
