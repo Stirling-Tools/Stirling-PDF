@@ -37,12 +37,12 @@ public class GeneralWebController {
     private static final String SIGNATURE_BASE_PATH = "customFiles/static/signatures/";
     private static final String ALL_USERS_FOLDER = "ALL_USERS";
     private final SignatureService signatureService;
-    private final @Autowired(required = false) UserServiceInterface userService;
+    private final UserServiceInterface userService;
     private final ResourceLoader resourceLoader;
 
     public GeneralWebController(
             SignatureService signatureService,
-            UserServiceInterface userService,
+            @Autowired(required = false) UserServiceInterface userService,
             ResourceLoader resourceLoader) {
         this.signatureService = signatureService;
         this.userService = userService;

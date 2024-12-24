@@ -20,10 +20,11 @@ public class SignatureController {
 
     private final SignatureService signatureService;
 
-    private final @Autowired(required = false) UserServiceInterface userService;
+    private final UserServiceInterface userService;
 
     public SignatureController(
-            SignatureService signatureService, UserServiceInterface userService) {
+            SignatureService signatureService,
+            @Autowired(required = false) UserServiceInterface userService) {
         this.signatureService = signatureService;
         this.userService = userService;
     }

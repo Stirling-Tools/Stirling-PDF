@@ -41,7 +41,9 @@ public class SPdfApplication {
     private String baseUrl;
 
     public SPdfApplication(
-            Environment env, ApplicationProperties applicationProperties, @Autowired(required = false) WebBrowser webBrowser) {
+            Environment env,
+            ApplicationProperties applicationProperties,
+            @Autowired(required = false) WebBrowser webBrowser) {
         this.env = env;
         this.applicationProperties = applicationProperties;
         this.webBrowser = webBrowser;
