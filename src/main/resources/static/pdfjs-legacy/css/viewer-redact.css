@@ -2787,6 +2787,10 @@ html[data-toolbar-density="touch"] {
   --sidebar-transition-timing-function:ease;
 
   --toolbar-height: 3.75rem;
+  --toolButton-height: 3.0rem;
+  --toolButton-width: 3.0rem;
+  --toolButton-icon-font-size: 2.5rem;
+  --toolButton-border-radius: 15px;
 
   --toolbar-icon-opacity:0.7;
   --doorhanger-icon-opacity:0.9;
@@ -3157,6 +3161,9 @@ body{
 
 #toolbarViewer{
   height: var(--toolbar-height);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 #loadingBar{
@@ -3450,10 +3457,12 @@ body{
 }
 
 #toolbarViewerMiddle{
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-  height: calc(var(--toolbar-height) - 0.75rem);
+  /* position:absolute; */
+  /* left:50%; */
+  /* transform:translateX(-50%); */
+  /* height: 100%; */
+  display: flex;
+  flex-direction: row;
 }
 
 #toolbarViewerLeft,
@@ -3475,10 +3484,16 @@ body{
   float:var(--inline-start);
 }
 
+#toolbarViewerMiddleContainer {
+  order: 2;
+}
+
 #toolbarViewerLeft{
+  order: 1;
   padding-inline-start:1px;
 }
 #toolbarViewerRight{
+  order: 3;
   padding-inline-end:1px;
 }
 #toolbarSidebarRight{
@@ -3488,7 +3503,6 @@ body{
 .splitToolbarButton{
   margin:2px;
   display:inline-block;
-  height: calc(var(--toolbar-height) - 0.375rem);
   padding-top: 5px;
 }
 .splitToolbarButton > .toolbarButton{
@@ -3511,9 +3525,9 @@ body{
 }
 
 .toolbarButton {
-  height: calc(var(--toolbar-height) - 0.75rem);
-  width: calc(var(--toolbar-height) - 0.75rem);
-  border-radius: 15px !important;
+  height: var(--toolButton-height);
+  width: var(--toolButton-width);
+  border-radius: var(--toolButton-border-radius) !important;
 }
 
 .dialogButton:is(:hover, :focus-visible){
@@ -3542,8 +3556,8 @@ body{
 .splitToolbarButton > .toolbarButton{
   position:relative;
   margin:0;
-  height: calc(var(--toolbar-height) - 0.75rem);
-  width: calc(var(--toolbar-height) - 0.75rem);
+  height: var(--toolButton-height);
+  width: var(--toolButton-width);
 }
 #toolbarSidebar .splitToolbarButton > .toolbarButton{
   margin-inline-end:2px;
@@ -3555,22 +3569,22 @@ body{
   width:1px;
   height:20px;
   background-color:var(--separator-color);
-  height: calc(var(--toolbar-height) - 12px);
+  height: var(--toolButton-height);
 }
 
 #scaleSelectContainer {
-  height: calc(var(--toolbar-height) - 0.625rem);
+  height: 3.125rem;
   inset: 4px 0 0 0;
-  border-radius: 15px;
+  border-radius: var(--toolButton-border-radius);
 }
 
 #scaleSelectContainer::after {
-  width: calc(var(--toolbar-height) - 1.875rem);
-  height: calc(var(--toolbar-height) - 1.875rem);
+  width: 1.875rem;
+  height: 1.875rem;
 }
 
 #scaleSelect {
-  font-size: calc(var(--toolbar-height) - 2.5rem) !important;
+  font-size: 1.25rem !important;
   height: 100%;
   border-radius: inherit;
 }
@@ -3690,8 +3704,8 @@ body{
   opacity:var(--toolbar-icon-opacity);
   top:8px;
   left:10px;
-  height: calc(var(--toolbar-height) - 1.875rem);
-  width: calc(var(--toolbar-height) - 1.875rem);
+  height: 1.875rem;
+  width: 1.875rem;
   background-color: var(--md-sys-color-on-secondary);
 }
 
@@ -3707,8 +3721,8 @@ body{
 }
 
 #sidebarToggle {
-  height: calc(var(--toolbar-height) - 0.75rem);
-  width: calc(var(--toolbar-height) - 0.75rem);
+  height: var(--toolButton-height);
+  width: var(--toolButton-width);
 }
 
 #sidebarToggle::before{
@@ -3716,8 +3730,8 @@ body{
           mask-image:var(--toolbarButton-sidebarToggle-icon);
   transform:scaleX(var(--dir-factor));
 
-  height: calc(var(--toolbar-height) - 1.875rem);
-  width: calc(var(--toolbar-height) - 1.875rem);
+  height: 1.875rem;
+  width: 1.875rem;
 }
 
 #secondaryToolbarToggle::before{
@@ -3989,9 +4003,9 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
 #pageNumber{
   -moz-appearance:textfield;
   text-align:end;
-  width: calc(var(--toolbar-height) - 0.75rem);
-  height: calc(var(--toolbar-height) - 0.75rem);
-  font-size: calc(var(--toolbar-height) - 2.5rem) !important;
+  width: var(--toolButton-width);
+  height: var(--toolButton-height);
+  font-size: 1.25rem !important;
   background-size:0 0;
   transition-property:none;
   border-radius: 10px;
@@ -4026,8 +4040,8 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
   }
 
 .loadingInput.start {
-  height: calc(var(--toolbar-height) - 0.75rem);
-  width: calc(var(--toolbar-height) - 0.75rem);
+  height: var(--toolButton-height);
+  width: var(--toolButton-width);
   padding-top: 5px;
 }
 
@@ -4059,9 +4073,8 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
 }
 
 #numPages {
-  height: calc(var(--toolbar-height) - 0.75rem);
-  font-size: calc(var(--toolbar-height) - 2.5rem);
-  line-height: calc(var(--toolbar-height) - 0.938rem);
+  font-size: 1.25rem;
+  line-height: 2.812rem;
 }
 
 #numPages.toolbarLabel{
@@ -4371,7 +4384,7 @@ dialog :link{
 .visibleMediumView{
   display:none;
 }
-
+/*
 @media all and (max-width: 900px){
   #toolbarViewerMiddle{
     display:table;
@@ -4380,7 +4393,7 @@ dialog :link{
     position:inherit;
     transform:none;
   }
-}
+} */
 
 @media all and (max-width: 840px){
   #sidebarContainer{
@@ -4415,9 +4428,9 @@ dialog :link{
     inset-inline-start:34px;
   }
 }
-
+/*
 @media all and (max-width: 560px){
   #scaleSelectContainer{
     display:none;
   }
-}
+} */

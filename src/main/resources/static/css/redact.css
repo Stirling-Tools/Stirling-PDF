@@ -81,17 +81,17 @@ html {
 }
 
 #man-text-select-redact, #man-shape-redact, #downloadBtn, #uploadBtn, #pageBasedRedactionBtn, #pdfToImageBtn {
-  height: calc(var(--toolbar-height) - 12px);
-  width: calc(var(--toolbar-height) - 12px);
+  height: var(--toolButton-height);
+  width: var(--toolButton-width);
 
-  border-radius: 15px;
+  border-radius: var(--toolButton-border-radius);
   transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
   user-select: none;
 }
 
 #text-selection, #shape-selection, #downloadBtnIcon, #uploadBtnIcon, #pageBasedRedactionBtnIcon, #pdfToImageBtnIcon {
   position: relative;
-  font-size: calc(var(--toolbar-height) - 20px);
+  font-size: var(--toolButton-icon-font-size);
 }
 
 :is(#man-shape-redact, #man-text-select-redact, #sidebarToggle, #viewThumbnail, #viewOutline).toggled {
@@ -109,10 +109,10 @@ html {
 }
 
 #redactionsPaletteContainer {
-  height: calc(var(--toolbar-height) - 12px);
-  width: calc(var(--toolbar-height) - 12px);
+  height: var(--toolButton-height);
+  width: var(--toolButton-width);
 
-  border-radius: 15px;
+  border-radius: var(--toolButton-border-radius);
   overflow: hidden;
 }
 
@@ -129,7 +129,7 @@ html {
   border-radius: inherit;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
-  font-size: calc(var(--toolbar-height) - 20px);
+  font-size: var(--toolButton-icon-font-size);
 }
 
 #redactions-palette::before {
@@ -143,10 +143,10 @@ html {
 }
 
 #apply-redaction {
-  height: calc(var(--toolbar-height) - 12px);
-  width: calc(var(--toolbar-height) - 12px);
+  height: var(--toolButton-height);
+  width: var(--toolButton-width);
 
-  border-radius: 15px;
+  border-radius: var(--toolButton-border-radius);
 }
 
 #apply-redaction[disabled=true], #apply-redaction:disabled:not([disabled=false]) {
@@ -171,7 +171,7 @@ html {
 }
 
 #apply-redaction-icon {
-  font-size: calc(var(--toolbar-height) - 20px);
+  font-size: var(--toolButton-icon-font-size);
 }
 
 #apply-redaction > span {
