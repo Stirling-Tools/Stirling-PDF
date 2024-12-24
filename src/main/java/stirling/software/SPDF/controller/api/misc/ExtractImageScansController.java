@@ -42,6 +42,8 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Misc", description = "Miscellaneous APIs")
 public class ExtractImageScansController {
 
+    private static final String REPLACEFIRST = "[.][^.]+$";
+
     @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
     @Operation(
             summary = "Extract image scans from an input file",
@@ -221,6 +223,4 @@ public class ExtractImageScansController {
                     });
         }
     }
-
-    private static final String REPLACEFIRST = "[.][^.]+$";
 }

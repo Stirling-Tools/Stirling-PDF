@@ -17,17 +17,15 @@ public class LibreOfficeListener {
 
     private static final LibreOfficeListener INSTANCE = new LibreOfficeListener();
     private static final int LISTENER_PORT = 2002;
+    private ExecutorService executorService;
+    private long lastActivityTime;
+    private Process process;
+
+    private LibreOfficeListener() {}
 
     public static LibreOfficeListener getInstance() {
         return INSTANCE;
     }
-
-    private ExecutorService executorService;
-    private long lastActivityTime;
-
-    private Process process;
-
-    private LibreOfficeListener() {}
 
     private boolean isListenerRunning() {
         log.info("waiting for listener to start");

@@ -1,6 +1,5 @@
 package stirling.software.SPDF.EE;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -14,8 +13,15 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Slf4j
 public class EEAppConfig {
 
-    @Autowired ApplicationProperties applicationProperties;
-    @Autowired private LicenseKeyChecker licenseKeyChecker;
+    private final ApplicationProperties applicationProperties;
+
+    private final LicenseKeyChecker licenseKeyChecker;
+
+    public EEAppConfig(
+            ApplicationProperties applicationProperties, LicenseKeyChecker licenseKeyChecker) {
+        this.applicationProperties = applicationProperties;
+        this.licenseKeyChecker = licenseKeyChecker;
+    }
 
     @Bean(name = "runningEE")
     public boolean runningEnterpriseEdition() {

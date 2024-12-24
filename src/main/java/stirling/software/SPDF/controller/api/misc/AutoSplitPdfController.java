@@ -23,12 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.google.zxing.BinaryBitmap;
-import com.google.zxing.LuminanceSource;
-import com.google.zxing.MultiFormatReader;
-import com.google.zxing.NotFoundException;
-import com.google.zxing.PlanarYUVLuminanceSource;
-import com.google.zxing.Result;
+import com.google.zxing.*;
 import com.google.zxing.common.HybridBinarizer;
 
 import io.github.pixee.security.Filenames;
@@ -54,6 +49,52 @@ public class AutoSplitPdfController {
     @Autowired
     public AutoSplitPdfController(CustomPDDocumentFactory pdfDocumentFactory) {
         this.pdfDocumentFactory = pdfDocumentFactory;
+    }
+
+    private static String decodeQRCode(BufferedImage bufferedImage) {
+        LuminanceSource source;
+
+        if (bufferedImage.getRaster().getDataBuffer() instanceof DataBufferByte) {
+            byte[] pixels = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
+            source =
+                    new PlanarYUVLuminanceSource(
+                            pixels,
+                            bufferedImage.getWidth(),
+                            bufferedImage.getHeight(),
+                            0,
+                            0,
+                            bufferedImage.getWidth(),
+                            bufferedImage.getHeight(),
+                            false);
+        } else if (bufferedImage.getRaster().getDataBuffer() instanceof DataBufferInt) {
+            int[] pixels = ((DataBufferInt) bufferedImage.getRaster().getDataBuffer()).getData();
+            byte[] newPixels = new byte[pixels.length];
+            for (int i = 0; i < pixels.length; i++) {
+                newPixels[i] = (byte) (pixels[i] & 0xff);
+            }
+            source =
+                    new PlanarYUVLuminanceSource(
+                            newPixels,
+                            bufferedImage.getWidth(),
+                            bufferedImage.getHeight(),
+                            0,
+                            0,
+                            bufferedImage.getWidth(),
+                            bufferedImage.getHeight(),
+                            false);
+        } else {
+            throw new IllegalArgumentException(
+                    "BufferedImage must have 8-bit gray scale, 24-bit RGB, 32-bit ARGB (packed int), byte gray, or 3-byte/4-byte RGB image data");
+        }
+
+        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+
+        try {
+            Result result = new MultiFormatReader().decode(bitmap);
+            return result.getText();
+        } catch (NotFoundException e) {
+            return null; // there is no QR code in the image
+        }
     }
 
     @PostMapping(value = "/auto-split-pdf", consumes = "multipart/form-data")
@@ -152,52 +193,6 @@ public class AutoSplitPdfController {
                     log.error("Error deleting temporary zip file", e);
                 }
             }
-        }
-    }
-
-    private static String decodeQRCode(BufferedImage bufferedImage) {
-        LuminanceSource source;
-
-        if (bufferedImage.getRaster().getDataBuffer() instanceof DataBufferByte) {
-            byte[] pixels = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
-            source =
-                    new PlanarYUVLuminanceSource(
-                            pixels,
-                            bufferedImage.getWidth(),
-                            bufferedImage.getHeight(),
-                            0,
-                            0,
-                            bufferedImage.getWidth(),
-                            bufferedImage.getHeight(),
-                            false);
-        } else if (bufferedImage.getRaster().getDataBuffer() instanceof DataBufferInt) {
-            int[] pixels = ((DataBufferInt) bufferedImage.getRaster().getDataBuffer()).getData();
-            byte[] newPixels = new byte[pixels.length];
-            for (int i = 0; i < pixels.length; i++) {
-                newPixels[i] = (byte) (pixels[i] & 0xff);
-            }
-            source =
-                    new PlanarYUVLuminanceSource(
-                            newPixels,
-                            bufferedImage.getWidth(),
-                            bufferedImage.getHeight(),
-                            0,
-                            0,
-                            bufferedImage.getWidth(),
-                            bufferedImage.getHeight(),
-                            false);
-        } else {
-            throw new IllegalArgumentException(
-                    "BufferedImage must have 8-bit gray scale, 24-bit RGB, 32-bit ARGB (packed int), byte gray, or 3-byte/4-byte RGB image data");
-        }
-
-        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-
-        try {
-            Result result = new MultiFormatReader().decode(bitmap);
-            return result.getText();
-        } catch (NotFoundException e) {
-            return null; // there is no QR code in the image
         }
     }
 }
