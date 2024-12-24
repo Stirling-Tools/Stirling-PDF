@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -27,6 +26,12 @@ import stirling.software.SPDF.model.Dependency;
 @Controller
 @Slf4j
 public class HomeWebController {
+
+    private final ApplicationProperties applicationProperties;
+
+    public HomeWebController(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     @GetMapping("/about")
     @Hidden
@@ -68,8 +73,6 @@ public class HomeWebController {
     public String root(Model model) {
         return "redirect:/";
     }
-
-    @Autowired ApplicationProperties applicationProperties;
 
     @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
     @ResponseBody

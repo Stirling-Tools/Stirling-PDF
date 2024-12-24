@@ -4,13 +4,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.ResponseEntity;
-
-import stirling.software.SPDF.controller.api.RearrangePagesPDFController;
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ConvertWebsiteToPdfTest {
 

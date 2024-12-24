@@ -11,10 +11,16 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Service
 class AppUpdateService {
 
-    @Autowired private ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
 
-    @Autowired(required = false)
-    ShowAdminInterface showAdmin;
+    private final ShowAdminInterface showAdmin;
+
+    public AppUpdateService(
+            ApplicationProperties applicationProperties,
+            @Autowired(required = false) ShowAdminInterface showAdmin) {
+        this.applicationProperties = applicationProperties;
+        this.showAdmin = showAdmin;
+    }
 
     @Bean(name = "shouldShow")
     @Scope("request")

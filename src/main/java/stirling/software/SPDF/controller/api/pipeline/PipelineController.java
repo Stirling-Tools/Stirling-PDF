@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,17 +36,27 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class PipelineController {
 
     final String watchedFoldersDir = "./pipeline/watchedFolders/";
+
     final String finishedFoldersDir = "./pipeline/finishedFolders/";
-    @Autowired PipelineProcessor processor;
 
-    @Autowired ApplicationProperties applicationProperties;
+    private final PipelineProcessor processor;
 
-    @Autowired private ObjectMapper objectMapper;
+    private final ApplicationProperties applicationProperties;
+
+    private final ObjectMapper objectMapper;
+
+    public PipelineController(
+            PipelineProcessor processor,
+            ApplicationProperties applicationProperties,
+            ObjectMapper objectMapper) {
+        this.processor = processor;
+        this.applicationProperties = applicationProperties;
+        this.objectMapper = objectMapper;
+    }
 
     @PostMapping("/handleData")
     public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request)
             throws JsonMappingException, JsonProcessingException {
-
         MultipartFile[] files = request.getFileInput();
         String jsonString = request.getJson();
         if (files == null) {
@@ -68,26 +77,21 @@ public class PipelineController {
                 byte[] bytes = new byte[(int) singleFile.contentLength()];
                 is.read(bytes);
                 is.close();
-
                 log.info("Returning single file response...");
                 return WebResponseUtils.bytesToWebResponse(
                         bytes, singleFile.getFilename(), MediaType.APPLICATION_OCTET_STREAM);
             } else if (outputFiles == null) {
                 return null;
             }
-
             // Create a ByteArrayOutputStream to hold the zip
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ZipOutputStream zipOut = new ZipOutputStream(baos);
-
             // A map to keep track of filenames and their counts
             Map<String, Integer> filenameCount = new HashMap<>();
-
             // Loop through each file and add it to the zip
             for (Resource file : outputFiles) {
                 String originalFilename = file.getFilename();
                 String filename = originalFilename;
-
                 // Check if the filename already exists, and modify it if necessary
                 if (filenameCount.containsKey(originalFilename)) {
                     int count = filenameCount.get(originalFilename);
@@ -98,24 +102,18 @@ public class PipelineController {
                 } else {
                     filenameCount.put(originalFilename, 1);
                 }
-
                 ZipEntry zipEntry = new ZipEntry(filename);
                 zipOut.putNextEntry(zipEntry);
-
                 // Read the file into a byte array
                 InputStream is = file.getInputStream();
                 byte[] bytes = new byte[(int) file.contentLength()];
                 is.read(bytes);
-
                 // Write the bytes of the file to the zip
                 zipOut.write(bytes, 0, bytes.length);
                 zipOut.closeEntry();
-
                 is.close();
             }
-
             zipOut.close();
-
             log.info("Returning zipped file response...");
             return WebResponseUtils.boasToWebResponse(
                     baos, "output.zip", MediaType.APPLICATION_OCTET_STREAM);

@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
@@ -16,7 +17,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;import org.junit.jupiter.api.BeforeEach;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import org.junit.jupiter.api.BeforeEach;
+
 class RearrangePagesPDFControllerTest {
 
     @Mock
@@ -53,7 +57,7 @@ class RearrangePagesPDFControllerTest {
         List<Integer> newPageOrder = sut.oddEvenMerge(totalNumberOfPages);
 
         assertNotNull(newPageOrder, "Returning null instead of page order list");
-        assertEquals(Arrays.asList(0,3,1,4,2), newPageOrder, "Page order doesn't match");
+        assertEquals(Arrays.asList(0, 3, 1, 4, 2), newPageOrder, "Page order doesn't match");
     }
 
     /**
@@ -66,13 +70,14 @@ class RearrangePagesPDFControllerTest {
         List<Integer> newPageOrder = sut.oddEvenMerge(totalNumberOfPages);
 
         assertNotNull(newPageOrder, "Returning null instead of page order list");
-        assertEquals(Arrays.asList(0,3,1,4,2,5), newPageOrder, "Page order doesn't match");
+        assertEquals(Arrays.asList(0, 3, 1, 4, 2, 5), newPageOrder, "Page order doesn't match");
     }
 
     /**
      * Tests the behavior of the oddEvenMerge method with multiple test cases of multiple pages.
+     *
      * @param totalNumberOfPages The total number of pages in the document.
-     * @param expectedPageOrder The expected order of the pages after rearranging.
+     * @param expectedPageOrder  The expected order of the pages after rearranging.
      */
     @ParameterizedTest
     @CsvSource({

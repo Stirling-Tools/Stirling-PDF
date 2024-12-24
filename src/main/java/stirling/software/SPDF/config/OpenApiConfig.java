@@ -1,6 +1,5 @@
 package stirling.software.SPDF.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,15 +14,19 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Configuration
 public class OpenApiConfig {
 
-    @Autowired ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
+
+    public OpenApiConfig(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     @Bean
     public OpenAPI customOpenAPI() {
         String version = getClass().getPackage().getImplementationVersion();
         if (version == null) {
-            version = "1.0.0"; // default version if all else fails
+            // default version if all else fails
+            version = "1.0.0";
         }
-
         SecurityScheme apiKeyScheme =
                 new SecurityScheme()
                         .type(SecurityScheme.Type.APIKEY)

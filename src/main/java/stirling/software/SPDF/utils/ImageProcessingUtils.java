@@ -1,11 +1,7 @@
 package stirling.software.SPDF.utils;
 
 import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferByte;
-import java.awt.image.DataBufferInt;
+import java.awt.image.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;

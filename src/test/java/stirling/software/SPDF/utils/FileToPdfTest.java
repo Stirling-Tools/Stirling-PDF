@@ -1,12 +1,11 @@
 package stirling.software.SPDF.utils;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
 
 import java.io.IOException;
 
-import org.junit.jupiter.api.Test;
-
-import stirling.software.SPDF.model.api.converters.HTMLToPdfRequest;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FileToPdfTest {
 

@@ -8,18 +8,13 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 import org.eclipse.jetty.http.HttpStatus;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -38,7 +33,11 @@ import stirling.software.SPDF.config.security.database.DatabaseBackupHelper;
 @Tag(name = "Database", description = "Database APIs for backup, import, and management")
 public class DatabaseController {
 
-    @Autowired DatabaseBackupHelper databaseBackupHelper;
+    private final DatabaseBackupHelper databaseBackupHelper;
+
+    public DatabaseController(DatabaseBackupHelper databaseBackupHelper) {
+        this.databaseBackupHelper = databaseBackupHelper;
+    }
 
     @Operation(
             summary = "Import a database backup file",
@@ -50,13 +49,11 @@ public class DatabaseController {
                     MultipartFile file,
             RedirectAttributes redirectAttributes)
             throws IOException {
-
         if (file == null || file.isEmpty()) {
             redirectAttributes.addAttribute("error", "fileNullOrEmpty");
             return "redirect:/database";
         }
         log.info("Received file: {}", file.getOriginalFilename());
-
         Path tempTemplatePath = Files.createTempFile("backup_", ".sql");
         try (InputStream in = file.getInputStream()) {
             Files.copy(in, tempTemplatePath, StandardCopyOption.REPLACE_EXISTING);
@@ -82,11 +79,9 @@ public class DatabaseController {
             @Parameter(description = "Name of the file to import", required = true) @PathVariable
                     String fileName)
             throws IOException {
-
         if (fileName == null || fileName.isEmpty()) {
             return "redirect:/database?error=fileNullOrEmpty";
         }
-
         // Check if the file exists in the backup list
         boolean fileExists =
                 databaseBackupHelper.getBackupList().stream()
@@ -96,7 +91,6 @@ public class DatabaseController {
             return "redirect:/database?error=fileNotFound";
         }
         log.info("Received file: {}", fileName);
-
         if (databaseBackupHelper.importDatabaseFromUI(fileName)) {
             log.info("File {} imported to database", fileName);
             return "redirect:/database?infoMessage=importIntoDatabaseSuccessed";
@@ -112,7 +106,6 @@ public class DatabaseController {
     public String deleteFile(
             @Parameter(description = "Name of the file to delete", required = true) @PathVariable
                     String fileName) {
-
         if (fileName == null || fileName.isEmpty()) {
             throw new IllegalArgumentException("File must not be null or empty");
         }

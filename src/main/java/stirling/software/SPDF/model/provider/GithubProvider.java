@@ -12,6 +12,10 @@ public class GithubProvider extends Provider {
     private static final String authorizationUri = "https://github.com/login/oauth/authorize";
     private static final String tokenUri = "https://github.com/login/oauth/access_token";
     private static final String userInfoUri = "https://api.github.com/user";
+    private String clientId;
+    private String clientSecret;
+    private Collection<String> scopes = new ArrayList<>();
+    private String useAsUsername = "login";
 
     public String getAuthorizationuri() {
         return authorizationUri;
@@ -24,11 +28,6 @@ public class GithubProvider extends Provider {
     public String getUserinfouri() {
         return userInfoUri;
     }
-
-    private String clientId;
-    private String clientSecret;
-    private Collection<String> scopes = new ArrayList<>();
-    private String useAsUsername = "login";
 
     @Override
     public String getIssuer() {

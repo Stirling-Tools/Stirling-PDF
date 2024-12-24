@@ -51,14 +51,12 @@ public class TSAClient {
 
     private static final DigestAlgorithmIdentifierFinder ALGORITHM_OID_FINDER =
             new DefaultDigestAlgorithmIdentifierFinder();
-
+    // SecureRandom.getInstanceStrong() would be better, but sometimes blocks on Linux
+    private static final Random RANDOM = new SecureRandom();
     private final URL url;
     private final String username;
     private final String password;
     private final MessageDigest digest;
-
-    // SecureRandom.getInstanceStrong() would be better, but sometimes blocks on Linux
-    private static final Random RANDOM = new SecureRandom();
 
     /**
      * @param url the URL of the TSA service

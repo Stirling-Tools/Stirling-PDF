@@ -126,82 +126,6 @@ public class PdfUtils {
         return pageText.contains(phrase);
     }
 
-    public boolean containsTextInFile(PDDocument pdfDocument, String text, String pagesToCheck)
-            throws IOException {
-        PDFTextStripper textStripper = new PDFTextStripper();
-        String pdfText = "";
-
-        if (pagesToCheck == null || "all".equals(pagesToCheck)) {
-            pdfText = textStripper.getText(pdfDocument);
-        } else {
-            // remove whitespaces
-            pagesToCheck = pagesToCheck.replaceAll("\\s+", "");
-
-            String[] splitPoints = pagesToCheck.split(",");
-            for (String splitPoint : splitPoints) {
-                if (splitPoint.contains("-")) {
-                    // Handle page ranges
-                    String[] range = splitPoint.split("-");
-                    int startPage = Integer.parseInt(range[0]);
-                    int endPage = Integer.parseInt(range[1]);
-
-                    for (int i = startPage; i <= endPage; i++) {
-                        textStripper.setStartPage(i);
-                        textStripper.setEndPage(i);
-                        pdfText += textStripper.getText(pdfDocument);
-                    }
-                } else {
-                    // Handle individual page
-                    int page = Integer.parseInt(splitPoint);
-                    textStripper.setStartPage(page);
-                    textStripper.setEndPage(page);
-                    pdfText += textStripper.getText(pdfDocument);
-                }
-            }
-        }
-
-        pdfDocument.close();
-
-        return pdfText.contains(text);
-    }
-
-    public boolean pageCount(PDDocument pdfDocument, int pageCount, String comparator)
-            throws IOException {
-        int actualPageCount = pdfDocument.getNumberOfPages();
-        pdfDocument.close();
-
-        switch (comparator.toLowerCase()) {
-            case "greater":
-                return actualPageCount > pageCount;
-            case "equal":
-                return actualPageCount == pageCount;
-            case "less":
-                return actualPageCount < pageCount;
-            default:
-                throw new IllegalArgumentException(
-                        "Invalid comparator. Only 'greater', 'equal', and 'less' are supported.");
-        }
-    }
-
-    public boolean pageSize(PDDocument pdfDocument, String expectedPageSize) throws IOException {
-        PDPage firstPage = pdfDocument.getPage(0);
-        PDRectangle mediaBox = firstPage.getMediaBox();
-
-        float actualPageWidth = mediaBox.getWidth();
-        float actualPageHeight = mediaBox.getHeight();
-
-        pdfDocument.close();
-
-        // Assumes the expectedPageSize is in the format "widthxheight", e.g. "595x842"
-        // for A4
-        String[] dimensions = expectedPageSize.split("x");
-        float expectedPageWidth = Float.parseFloat(dimensions[0]);
-        float expectedPageHeight = Float.parseFloat(dimensions[1]);
-
-        // Checks if the actual page size matches the expected page size
-        return actualPageWidth == expectedPageWidth && actualPageHeight == expectedPageHeight;
-    }
-
     public static byte[] convertFromPdf(
             byte[] inputStream,
             String imageType,
@@ -516,6 +440,82 @@ public class PdfUtils {
         document.save(baos);
         log.info("PDF successfully saved to byte array");
         return baos.toByteArray();
+    }
+
+    public boolean containsTextInFile(PDDocument pdfDocument, String text, String pagesToCheck)
+            throws IOException {
+        PDFTextStripper textStripper = new PDFTextStripper();
+        String pdfText = "";
+
+        if (pagesToCheck == null || "all".equals(pagesToCheck)) {
+            pdfText = textStripper.getText(pdfDocument);
+        } else {
+            // remove whitespaces
+            pagesToCheck = pagesToCheck.replaceAll("\\s+", "");
+
+            String[] splitPoints = pagesToCheck.split(",");
+            for (String splitPoint : splitPoints) {
+                if (splitPoint.contains("-")) {
+                    // Handle page ranges
+                    String[] range = splitPoint.split("-");
+                    int startPage = Integer.parseInt(range[0]);
+                    int endPage = Integer.parseInt(range[1]);
+
+                    for (int i = startPage; i <= endPage; i++) {
+                        textStripper.setStartPage(i);
+                        textStripper.setEndPage(i);
+                        pdfText += textStripper.getText(pdfDocument);
+                    }
+                } else {
+                    // Handle individual page
+                    int page = Integer.parseInt(splitPoint);
+                    textStripper.setStartPage(page);
+                    textStripper.setEndPage(page);
+                    pdfText += textStripper.getText(pdfDocument);
+                }
+            }
+        }
+
+        pdfDocument.close();
+
+        return pdfText.contains(text);
+    }
+
+    public boolean pageCount(PDDocument pdfDocument, int pageCount, String comparator)
+            throws IOException {
+        int actualPageCount = pdfDocument.getNumberOfPages();
+        pdfDocument.close();
+
+        switch (comparator.toLowerCase()) {
+            case "greater":
+                return actualPageCount > pageCount;
+            case "equal":
+                return actualPageCount == pageCount;
+            case "less":
+                return actualPageCount < pageCount;
+            default:
+                throw new IllegalArgumentException(
+                        "Invalid comparator. Only 'greater', 'equal', and 'less' are supported.");
+        }
+    }
+
+    public boolean pageSize(PDDocument pdfDocument, String expectedPageSize) throws IOException {
+        PDPage firstPage = pdfDocument.getPage(0);
+        PDRectangle mediaBox = firstPage.getMediaBox();
+
+        float actualPageWidth = mediaBox.getWidth();
+        float actualPageHeight = mediaBox.getHeight();
+
+        pdfDocument.close();
+
+        // Assumes the expectedPageSize is in the format "widthxheight", e.g. "595x842"
+        // for A4
+        String[] dimensions = expectedPageSize.split("x");
+        float expectedPageWidth = Float.parseFloat(dimensions[0]);
+        float expectedPageHeight = Float.parseFloat(dimensions[1]);
+
+        // Checks if the actual page size matches the expected page size
+        return actualPageWidth == expectedPageWidth && actualPageHeight == expectedPageHeight;
     }
 
     /** Key for storing the dimensions of a rendered image in a map. */

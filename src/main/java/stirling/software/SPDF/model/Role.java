@@ -40,22 +40,6 @@ public enum Role {
         this.roleName = roleName;
     }
 
-    public String getRoleId() {
-        return roleId;
-    }
-
-    public int getApiCallsPerDay() {
-        return apiCallsPerDay;
-    }
-
-    public int getWebCallsPerDay() {
-        return webCallsPerDay;
-    }
-
-    public String getRoleName() {
-        return roleName;
-    }
-
     public static String getRoleNameByRoleId(String roleId) {
         // Using the fromString method to get the Role enum based on the roleId
         Role role = fromString(roleId);
@@ -80,5 +64,21 @@ public enum Role {
             }
         }
         throw new IllegalArgumentException("No Role defined for id: " + roleId);
+    }
+
+    public String getRoleId() {
+        return roleId;
+    }
+
+    public int getApiCallsPerDay() {
+        return apiCallsPerDay;
+    }
+
+    public int getWebCallsPerDay() {
+        return webCallsPerDay;
+    }
+
+    public String getRoleName() {
+        return roleName;
     }
 }

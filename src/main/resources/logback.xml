@@ -11,8 +11,8 @@
     <appender name="AUTHLOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/invalid-auths.log</file>
         <encoder>
-		    <pattern>%d %p %c{1} [%thread] %m%n</pattern>
-		</encoder>
+            <pattern>%d %p %c{1} [%thread] %m%n</pattern>
+        </encoder>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover and keep 7 days' worth of history -->
@@ -21,12 +21,12 @@
         </rollingPolicy>
     </appender>
 
-	<!-- Rolling File Appender -->
+    <!-- Rolling File Appender -->
     <appender name="GENERAL" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/info.log</file>
         <encoder>
-		    <pattern>%d %p %c{1} [%thread] %m%n</pattern>
-		</encoder>
+            <pattern>%d %p %c{1} [%thread] %m%n</pattern>
+        </encoder>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover and keep 7 days' worth of history -->
@@ -43,7 +43,8 @@
     </root>
 
     <!-- Specific Logger -->
-    <logger name="stirling.software.SPDF.config.security.CustomAuthenticationFailureHandler" level="ERROR" additivity="false">
+    <logger name="stirling.software.SPDF.config.security.CustomAuthenticationFailureHandler" level="ERROR"
+            additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="AUTHLOG"/>
     </logger>

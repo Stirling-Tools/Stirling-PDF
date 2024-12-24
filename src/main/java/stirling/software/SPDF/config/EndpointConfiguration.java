@@ -20,11 +20,10 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @DependsOn({"bookAndHtmlFormatsInstalled"})
 public class EndpointConfiguration {
 
+    private static final String REMOVE_BLANKS = "remove-blanks";
+    private final ApplicationProperties applicationProperties;
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
-
-    private final ApplicationProperties applicationProperties;
-
     private boolean bookAndHtmlFormatsInstalled;
 
     @Autowired
@@ -287,6 +286,4 @@ public class EndpointConfiguration {
     public Set<String> getEndpointsForGroup(String group) {
         return endpointGroups.getOrDefault(group, new HashSet<>());
     }
-
-    private static final String REMOVE_BLANKS = "remove-blanks";
 }

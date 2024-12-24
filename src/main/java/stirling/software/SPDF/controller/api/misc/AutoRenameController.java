@@ -46,16 +46,6 @@ public class AutoRenameController {
         PDDocument document = Loader.loadPDF(file.getBytes());
         PDFTextStripper reader =
                 new PDFTextStripper() {
-                    class LineInfo {
-                        String text;
-                        float fontSize;
-
-                        LineInfo(String text, float fontSize) {
-                            this.text = text;
-                            this.fontSize = fontSize;
-                        }
-                    }
-
                     List<LineInfo> lineInfos = new ArrayList<>();
                     StringBuilder lineBuilder = new StringBuilder();
                     float lastY = -1;
@@ -121,6 +111,16 @@ public class AutoRenameController {
                                                 : mergedLineInfos.get(mergedLineInfos.size() - 1)
                                                         .text)
                                         : null);
+                    }
+
+                    class LineInfo {
+                        String text;
+                        float fontSize;
+
+                        LineInfo(String text, float fontSize) {
+                            this.text = text;
+                            this.fontSize = fontSize;
+                        }
                     }
                 };
 

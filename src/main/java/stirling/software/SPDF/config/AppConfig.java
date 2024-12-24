@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.function.Predicate;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +26,11 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Slf4j
 public class AppConfig {
 
-    @Autowired ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
+
+    public AppConfig(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     @Bean
     @ConditionalOnProperty(
@@ -106,13 +109,11 @@ public class AppConfig {
         if (!Files.exists(dockerEnv)) {
             return true;
         }
-
         Path mountInfo = Paths.get("/proc/1/mountinfo");
         // this should always exist, if not some unknown usecase
         if (!Files.exists(mountInfo)) {
             return true;
         }
-
         try {
             return Files.lines(mountInfo).anyMatch(line -> line.contains(" /configs "));
         } catch (IOException e) {

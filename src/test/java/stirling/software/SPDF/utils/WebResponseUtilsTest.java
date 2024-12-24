@@ -1,10 +1,5 @@
 package stirling.software.SPDF.utils;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -12,6 +7,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class WebResponseUtilsTest {
 
@@ -55,7 +55,7 @@ public class WebResponseUtilsTest {
             assertNotNull(headers);
             assertEquals(MediaType.TEXT_PLAIN, headers.getContentType());
             assertNotNull(headers.getContentDisposition());
-        
+
         } catch (IOException e) {
             fail("Exception thrown: " + e.getMessage());
         }
@@ -78,7 +78,7 @@ public class WebResponseUtilsTest {
             assertNotNull(headers);
             assertEquals(MediaType.TEXT_PLAIN, headers.getContentType());
             assertNotNull(headers.getContentDisposition());
-            
+
 
         } catch (IOException e) {
             fail("Exception thrown: " + e.getMessage());
@@ -102,7 +102,7 @@ public class WebResponseUtilsTest {
             assertNotNull(headers);
             assertEquals(MediaType.APPLICATION_PDF, headers.getContentType());
             assertNotNull(headers.getContentDisposition());
-            
+
 
         } catch (IOException e) {
             fail("Exception thrown: " + e.getMessage());

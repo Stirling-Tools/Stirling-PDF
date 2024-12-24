@@ -30,16 +30,23 @@ public class ApiDocService {
 
     private final Map<String, ApiEndpoint> apiDocumentation = new HashMap<>();
 
-    @Autowired private ServletContext servletContext;
+    private final ServletContext servletContext;
+    private final UserServiceInterface userService;
+    Map<String, List<String>> outputToFileTypes = new HashMap<>();
+    JsonNode apiDocsJsonRootNode;
+
+    public ApiDocService(
+            ServletContext servletContext,
+            @Autowired(required = false) UserServiceInterface userService) {
+        this.servletContext = servletContext;
+        this.userService = userService;
+    }
 
     private String getApiDocsUrl() {
         String contextPath = servletContext.getContextPath();
         String port = SPdfApplication.getStaticPort();
-
         return "http://localhost:" + port + contextPath + "/v1/api-docs";
     }
-
-    Map<String, List<String>> outputToFileTypes = new HashMap<>();
 
     public List<String> getExtensionTypes(boolean output, String operationName) {
         if (outputToFileTypes.size() == 0) {
@@ -64,14 +71,12 @@ public class ApiDocService {
                     "BOOK", Arrays.asList("epub", "mobi", "azw3", "fb2", "txt", "docx"));
             // type.
         }
-
         if (apiDocsJsonRootNode == null || apiDocumentation.size() == 0) {
             loadApiDocumentation();
         }
         if (!apiDocumentation.containsKey(operationName)) {
             return null;
         }
-
         ApiEndpoint endpoint = apiDocumentation.get(operationName);
         String description = endpoint.getDescription();
         Pattern pattern = null;
@@ -90,15 +95,10 @@ public class ApiDocService {
         return null;
     }
 
-    @Autowired(required = false)
-    private UserServiceInterface userService;
-
     private String getApiKeyForUser() {
         if (userService == null) return "";
         return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
     }
-
-    JsonNode apiDocsJsonRootNode;
 
     // @EventListener(ApplicationReadyEvent.class)
     private synchronized void loadApiDocumentation() {
@@ -110,15 +110,12 @@ public class ApiDocService {
                 headers.set("X-API-KEY", apiKey);
             }
             HttpEntity<String> entity = new HttpEntity<>(headers);
-
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<String> response =
                     restTemplate.exchange(getApiDocsUrl(), HttpMethod.GET, entity, String.class);
             apiDocsJson = response.getBody();
-
             ObjectMapper mapper = new ObjectMapper();
             apiDocsJsonRootNode = mapper.readTree(apiDocsJson);
-
             JsonNode paths = apiDocsJsonRootNode.path("paths");
             paths.fields()
                     .forEachRemaining(
@@ -155,19 +152,15 @@ public class ApiDocService {
         if (!apiDocumentation.containsKey(operationName)) {
             return false;
         }
-
         ApiEndpoint endpoint = apiDocumentation.get(operationName);
         String description = endpoint.getDescription();
-
         Pattern pattern = Pattern.compile("Type:(\\w+)");
         Matcher matcher = pattern.matcher(description);
         if (matcher.find()) {
             String type = matcher.group(1);
             return type.startsWith("MI");
         }
-
         return false;
     }
 }
-
 // Model class for API Endpoint

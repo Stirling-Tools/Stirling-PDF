@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.Image;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;

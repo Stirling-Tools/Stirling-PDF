@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
