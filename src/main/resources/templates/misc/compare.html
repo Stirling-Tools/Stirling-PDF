@@ -65,32 +65,36 @@
             <div
               th:replace="~{fragments/common :: fileSelector(name='fileInput2', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf', remoteCall='false')}">
             </div>
+              <div id="elementsContainer" style="display: none;">
 
-            <div class="row">
-              <div class="flex-container">
-                <div class="color-selector spacer1">
-                  <label th:text="#{compare.highlightColor.1}"></label>
-                  <label for="color-box1"></label><input type="color" id="color-box1" value="#ff0000">
+                <div class="row">
+                  <div class="flex-container">
+                    <div class="color-selector spacer1">
+                      <label th:text="#{compare.highlightColor.1}"></label>
+                      <label for="color-box1"></label>
+                      <input type="color" id="color-box1" value="#ff0000">
+                    </div>
+                    <div class="color-selector spacer2">
+                      <label th:text="#{compare.highlightColor.2}"></label>
+                      <label for="color-box2"></label>
+                      <input type="color" id="color-box2" value="#008000">
+                    </div>
+                  </div>
                 </div>
-                <div class="color-selector spacer2">
-                  <label th:text="#{compare.highlightColor.2}"></label>
-                  <label for="color-box2"></label><input type="color" id="color-box2" value="#008000">
+
+                <button class="btn btn-primary" onclick="comparePDFs()" th:text="#{compare.submit}"></button>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <h3 th:text="#{compare.document.1}"></h3>
+                    <div id="result1" class="result-column"></div>
+                  </div>
+                  <div class="col-md-6">
+                    <h3 th:text="#{compare.document.2}"></h3>
+                    <div id="result2" class="result-column"></div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <button class="btn btn-primary" onclick="comparePDFs()" th:text="#{compare.submit}"></button>
-
-            <div class="row">
-              <div class="col-md-6">
-                <h3 th:text="#{compare.document.1}"></h3>
-                <div id="result1" class="result-column"></div>
-              </div>
-              <div class="col-md-6">
-                <h3 th:text="#{compare.document.2}"></h3>
-                <div id="result2" class="result-column"></div>
-              </div>
-            </div>
             <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
             <script th:inline="javascript">
               // get the elements
@@ -242,8 +246,6 @@
                   });
                 };
               }
-
-
             </script>
           </div>
         </div>

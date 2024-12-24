@@ -40,194 +40,193 @@
 
             <!-- pdf selector -->
             <div
-              th:replace="~{fragments/common :: fileSelector(name='pdf-upload', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
+              th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
             </div>
             <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
-            <div class="tab-group show-on-file-selected">
-              <div class="tab-container" th:title="#{sign.upload}">
-                <div
-                  th:replace="~{fragments/common :: fileSelector(name='image-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}">
+            <div id="elementsContainer" style="display: none;">
+              <div class="tab-group show-on-file-selected">
+                <div class="tab-container" th:title="#{sign.upload}">
+                  <div
+                    th:replace="~{fragments/common :: fileSelector(name='image-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}">
+                  </div>
                 </div>
-              </div>
 
-              <div class="tab-container drawing-pad-container" th:title="#{sign.draw}">
-                <canvas id="drawing-pad-canvas"></canvas>
-                <br>
-                <button id="clear-signature" class="btn btn-outline-danger mt-2" onclick="signaturePad.clear()"
-                  th:text="#{sign.clear}"></button>
-                <button id="save-signature" class="btn btn-outline-success mt-2" onclick="addDraggableFromPad()"
-                  th:text="#{sign.add}"></button>
-              </div>
+                <div class="tab-container drawing-pad-container" th:title="#{sign.draw}">
+                  <canvas id="drawing-pad-canvas"></canvas>
+                  <br>
+                  <button id="clear-signature" class="btn btn-outline-danger mt-2" onclick="signaturePad.clear()"
+                    th:text="#{sign.clear}"></button>
+                  <button id="save-signature" class="btn btn-outline-success mt-2" onclick="addDraggableFromPad()"
+                    th:text="#{sign.add}"></button>
+                </div>
 
-              <div class="tab-container" th:title="#{sign.saved}">
-                <div class="saved-signatures-section" th:if="${not #lists.isEmpty(signatures)}">
-                  <!-- View Toggle Button -->
-                  <div class="view-toggle mb-3">
-                    <button class="btn btn-outline-secondary btn-sm" onclick="toggleSignatureView()">
-                      <span class="material-symbols-rounded grid-view-text">view_list</span>
-                      <span class="material-symbols-rounded list-view-text" style="display: none;">grid_view</span>
-                    </button>
-                  </div>
-
-                  <!-- Preview Modal -->
-                  <div class="modal fade" id="signaturePreview" tabindex="-1">
-                    <div class="modal-dialog modal-dialog-centered">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title"><span id="previewFileName"></span></h5>
-                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body text-center">
-                          <img id="previewImage" src="" alt="Signature Preview" style="max-width: 100%;">
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                            th:text="#{close}"></button>
-                          <button type="button" class="btn btn-primary" onclick="addSignatureFromPreview()"
-                            th:text="#{addToDoc}">Add to Document</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Grid View -->
-                  <div id="gridView">
-                    <!-- Personal Signatures -->
-                    <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Personal'])}">
-                      <h5 th:text="#{sign.personalSigs}"></h5>
-                      <div class="signature-grid">
-                        <div th:each="sig : ${signatures}" th:if="${sig.category == 'Personal'}" class="signature-item">
-                          <img th:src="@{'/api/v1/general/sign/' + ${sig.fileName}}" th:alt="${sig.fileName}"
-                            th:data-filename="${sig.fileName}" style="max-width: 200px; cursor: pointer;"
-                            onclick="DraggableUtils.createDraggableCanvasFromUrl(this.src)" />
-                          <div class="signature-name" th:text="${sig.fileName}"></div>
-                        </div>
-                      </div>
+                <div class="tab-container" th:title="#{sign.saved}">
+                  <div class="saved-signatures-section" th:if="${not #lists.isEmpty(signatures)}">
+                    <!-- View Toggle Button -->
+                    <div class="view-toggle mb-3">
+                      <button class="btn btn-outline-secondary btn-sm" onclick="toggleSignatureView()">
+                        <span class="material-symbols-rounded grid-view-text">view_list</span>
+                        <span class="material-symbols-rounded list-view-text" style="display: none;">grid_view</span>
+                      </button>
                     </div>
 
-                    <!-- Shared Signatures -->
-                    <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Shared'])}">
-                      <h5 th:text="#{sign.sharedSigs}"></h5>
-                      <div class="signature-grid">
-                        <div th:each="sig : ${signatures}" th:if="${sig.category == 'Shared'}" class="signature-item">
-                          <img th:src="@{'/api/v1/general/sign/' + ${sig.fileName}}" th:alt="${sig.fileName}"
-                            th:data-filename="${sig.fileName}" style="max-width: 200px; cursor: pointer;"
-                            onclick="DraggableUtils.createDraggableCanvasFromUrl(this.src)" />
-                          <div class="signature-name" th:text="${sig.fileName}"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- List View (Initially Hidden) -->
-                  <div id="listView" style="display: none;">
-                    <!-- Personal Signatures -->
-                    <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Personal'])}">
-                      <h5 th:text="#{sign.personalSigs}"></h5>
-                      <div class="signature-list">
-                        <div th:each="sig : ${signatures}" th:if="${sig.category == 'Personal'}"
-                          class="signature-list-item" th:data-src="@{'/api/v1/general/sign/' + ${sig.fileName}}"
-                          onclick="previewSignature(this)">
-                          <div class="signature-list-info">
-                            <span th:text="${sig.fileName}" class="signature-list-name"></span>
+                    <!-- Preview Modal -->
+                    <div class="modal fade" id="signaturePreview" tabindex="-1">
+                      <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title"><span id="previewFileName"></span></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                          </div>
+                          <div class="modal-body text-center">
+                            <img id="previewImage" src="" alt="Signature Preview" style="max-width: 100%;">
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                              th:text="#{close}"></button>
+                            <button type="button" class="btn btn-primary" onclick="addSignatureFromPreview()"
+                              th:text="#{addToDoc}">Add to Document</button>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <!-- Shared Signatures -->
-                    <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Shared'])}">
-                      <h5 th:text="#{sign.sharedSigs}"></h5>
-                      <div class="signature-list">
-                        <div th:each="sig : ${signatures}" th:if="${sig.category == 'Shared'}"
-                          class="signature-list-item" th:data-src="@{'/api/v1/general/sign/' + ${sig.fileName}}"
-                          onclick="previewSignature(this)">
-                          <div class="signature-list-info">
-                            <span th:text="${sig.fileName}" class="signature-list-name"></span>
+                    <!-- Grid View -->
+                    <div id="gridView">
+                      <!-- Personal Signatures -->
+                      <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Personal'])}">
+                        <h5 th:text="#{sign.personalSigs}"></h5>
+                        <div class="signature-grid">
+                          <div th:each="sig : ${signatures}" th:if="${sig.category == 'Personal'}" class="signature-item">
+                            <img th:src="@{'/api/v1/general/sign/' + ${sig.fileName}}" th:alt="${sig.fileName}"
+                              th:data-filename="${sig.fileName}" style="max-width: 200px; cursor: pointer;"
+                              onclick="DraggableUtils.createDraggableCanvasFromUrl(this.src)" />
+                            <div class="signature-name" th:text="${sig.fileName}"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Shared Signatures -->
+                      <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Shared'])}">
+                        <h5 th:text="#{sign.sharedSigs}"></h5>
+                        <div class="signature-grid">
+                          <div th:each="sig : ${signatures}" th:if="${sig.category == 'Shared'}" class="signature-item">
+                            <img th:src="@{'/api/v1/general/sign/' + ${sig.fileName}}" th:alt="${sig.fileName}"
+                              th:data-filename="${sig.fileName}" style="max-width: 200px; cursor: pointer;"
+                              onclick="DraggableUtils.createDraggableCanvasFromUrl(this.src)" />
+                            <div class="signature-name" th:text="${sig.fileName}"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- List View (Initially Hidden) -->
+                    <div id="listView" style="display: none;">
+                      <!-- Personal Signatures -->
+                      <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Personal'])}">
+                        <h5 th:text="#{sign.personalSigs}"></h5>
+                        <div class="signature-list">
+                          <div th:each="sig : ${signatures}" th:if="${sig.category == 'Personal'}"
+                            class="signature-list-item" th:data-src="@{'/api/v1/general/sign/' + ${sig.fileName}}"
+                            onclick="previewSignature(this)">
+                            <div class="signature-list-info">
+                              <span th:text="${sig.fileName}" class="signature-list-name"></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Shared Signatures -->
+                      <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Shared'])}">
+                        <h5 th:text="#{sign.sharedSigs}"></h5>
+                        <div class="signature-list">
+                          <div th:each="sig : ${signatures}" th:if="${sig.category == 'Shared'}"
+                            class="signature-list-item" th:data-src="@{'/api/v1/general/sign/' + ${sig.fileName}}"
+                            onclick="previewSignature(this)">
+                            <div class="signature-list-info">
+                              <span th:text="${sig.fileName}" class="signature-list-name"></span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
+                  <div th:if="${#lists.isEmpty(signatures)}" class="text-center p-3">
+                    <p th:text="#{sign.noSavedSigs}">No saved signatures found</p>
+                  </div>
                 </div>
-                <div th:if="${#lists.isEmpty(signatures)}" class="text-center p-3">
-                  <p th:text="#{sign.noSavedSigs}">No saved signatures found</p>
-                </div>
-              </div>
 
-              <div class="tab-container" th:title="#{sign.text}">
-                <label class="form-check-label" for="sigText" th:text="#{text}"></label>
-                <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
-                <label th:text="#{font}"></label>
-                <select class="form-control" name="font" id="font-select">
-                  <option th:each="font : ${fonts}" th:value="${font.name}" th:text="${font.name}"
-                    th:class="${font.name.toLowerCase()+'-font'}"></option>
-                </select>
-                <div class="margin-auto-parent">
-                  <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center"
-                    onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
+                <div class="tab-container" th:title="#{sign.text}">
+                  <label class="form-check-label" for="sigText" th:text="#{text}"></label>
+                  <textarea class="form-control" id="sigText" name="sigText" rows="3"></textarea>
+                  <label th:text="#{font}"></label>
+                  <select class="form-control" name="font" id="font-select">
+                    <option th:each="font : ${fonts}" th:value="${font.name}" th:text="${font.name}"
+                      th:class="${font.name.toLowerCase()+'-font'}"></option>
+                  </select>
+                  <div class="margin-auto-parent">
+                    <button id="save-text-signature" class="btn btn-outline-success mt-2 margin-center"
+                      onclick="addDraggableFromText()" th:text="#{sign.add}"></button>
+                  </div>
                 </div>
               </div>
-            </div>
-            <!-- draggables box -->
-            <div id="box-drag-container" class="show-on-file-selected">
-              <canvas id="pdf-canvas"></canvas>
-              <script th:src="@{'/js/draggable-utils.js'}"></script>
-              <div class="draggable-buttons-box ignore-rtl">
-                <button class="btn btn-outline-secondary"
-                  onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash"
-                    viewBox="0 0 16 16">
-                    <path
-                      d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z" />
-                    <path
-                      d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z" />
-                  </svg>
-                  <span class="btn-tooltip" th:text="#{sign.delete}"></span>
-                </button>
-                <button class="btn btn-outline-secondary"
-                  onclick="DraggableUtils.addAllPagesDraggableCanvas(DraggableUtils.getLastInteracted())">
-                  <span class="material-symbols-rounded">
-                    content_copy
-                  </span>
-                  <span class="btn-tooltip" th:text="#{sign.addToAll}"></span>
-                </button>
-                <button class="btn btn-outline-secondary" onclick="goToFirstOrLastPage(false)" style="margin-left:auto">
-                  <span class="material-symbols-rounded">
-                    keyboard_double_arrow_left
-                  </span>
-                  <span class="btn-tooltip" th:text="#{sign.first}"></span>
-                </button>
-                <button class="btn btn-outline-secondary" id="incrementPage"
-                  onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.incrementPage() : DraggableUtils.decrementPage()">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-chevron-left" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                      d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z" />
-                  </svg>
-                  <span class="btn-tooltip" th:text="#{sign.previous}"></span>
-                </button>
-                <button class="btn btn-outline-secondary" id="decrementPage"
-                  onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.decrementPage() : DraggableUtils.incrementPage()">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    class="bi bi-chevron-right" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                      d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
-                  </svg>
-                  <span class="btn-tooltip" th:text="#{sign.next}"></span>
-                </button>
-                <button class="btn btn-outline-secondary" onclick="goToFirstOrLastPage(true)">
-                  <span class="material-symbols-rounded">
-                    keyboard_double_arrow_right
-                  </span>
-                  <span class="btn-tooltip" th:text="#{sign.last}"></span>
-                </button>
+              <!-- draggables box -->
+              <div id="box-drag-container" class="show-on-file-selected">
+                <canvas id="pdf-canvas"></canvas>
+                <script th:src="@{'/js/draggable-utils.js'}"></script>
+                <div class="draggable-buttons-box ignore-rtl">
+                  <button class="btn btn-outline-secondary"
+                    onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash"
+                      viewBox="0 0 16 16">
+                      <path
+                        d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z" />
+                      <path
+                        d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z" />
+                    </svg>
+                    <span class="btn-tooltip" th:text="#{sign.delete}"></span>
+                  </button>
+                  <button class="btn btn-outline-secondary"
+                    onclick="DraggableUtils.addAllPagesDraggableCanvas(DraggableUtils.getLastInteracted())">
+                    <span class="material-symbols-rounded">
+                      content_copy
+                    </span>
+                    <span class="btn-tooltip" th:text="#{sign.addToAll}"></span>
+                  </button>
+                  <button class="btn btn-outline-secondary" onclick="goToFirstOrLastPage(false)" style="margin-left:auto">
+                    <span class="material-symbols-rounded">
+                      keyboard_double_arrow_left
+                    </span>
+                    <span class="btn-tooltip" th:text="#{sign.first}"></span>
+                  </button>
+                  <button class="btn btn-outline-secondary" id="incrementPage"
+                    onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.incrementPage() : DraggableUtils.decrementPage()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                      class="bi bi-chevron-left" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd"
+                        d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z" />
+                    </svg>
+                    <span class="btn-tooltip" th:text="#{sign.previous}"></span>
+                  </button>
+                  <button class="btn btn-outline-secondary" id="decrementPage"
+                    onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.decrementPage() : DraggableUtils.incrementPage()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                      class="bi bi-chevron-right" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd"
+                        d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                    </svg>
+                    <span class="btn-tooltip" th:text="#{sign.next}"></span>
+                  </button>
+                  <button class="btn btn-outline-secondary" onclick="goToFirstOrLastPage(true)">
+                    <span class="material-symbols-rounded">
+                      keyboard_double_arrow_right
+                    </span>
+                    <span class="btn-tooltip" th:text="#{sign.last}"></span>
+                  </button>
+                </div>
               </div>
-            </div>
-            <!-- download button -->
-            <div class="margin-auto-parent">
-              <button id="download-pdf" class="btn btn-primary mb-2 show-on-file-selected margin-center"
-                th:text="#{downloadPdf}"></button>
+              <!-- download button -->
+              <button id="download-pdf" class="btn btn-primary mb-2 show-on-file-selected margin-center" th:text="#{downloadPdf}"></button>
             </div>
           </div>
         </div>

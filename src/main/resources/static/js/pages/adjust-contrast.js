@@ -224,11 +224,13 @@ async function downloadPDF() {
 document.getElementById('fileInput-input').addEventListener('change', function (e) {
   const fileInput = e.target;
   fileInput.addEventListener('file-input-change', async (e) => {
-    const {allFiles} = e.detail;
-    if (allFiles && allFiles.length > 0) {
-      const file = allFiles[0];
-      inputFileName = file.name;
-      renderPDFAndSaveOriginalImageData(file);
+    if (e.detail) {
+      const {allFiles} = e.detail;
+      if (allFiles && allFiles.length > 0) {
+        const file = allFiles[0];
+        inputFileName = file.name;
+        renderPDFAndSaveOriginalImageData(file);
+      }
     }
   });
 });
