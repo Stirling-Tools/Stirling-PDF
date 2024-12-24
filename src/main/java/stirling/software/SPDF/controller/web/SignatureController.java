@@ -2,7 +2,6 @@ package stirling.software.SPDF.controller.web;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +17,15 @@ import stirling.software.SPDF.service.SignatureService;
 @RequestMapping("/api/v1/general")
 public class SignatureController {
 
-    @Autowired private SignatureService signatureService;
+    private final SignatureService signatureService;
 
-    @Autowired(required = false)
-    private UserServiceInterface userService;
+    private final UserServiceInterface userService;
+
+    public SignatureController(
+            SignatureService signatureService, UserServiceInterface userService) {
+        this.signatureService = signatureService;
+        this.userService = userService;
+    }
 
     @GetMapping("/sign/{fileName}")
     public ResponseEntity<byte[]> getSignature(@PathVariable(name = "fileName") String fileName)
@@ -30,15 +34,14 @@ public class SignatureController {
         if (userService != null) {
             username = userService.getCurrentUsername();
         }
-
         // Verify access permission
         if (!signatureService.hasAccessToFile(username, fileName)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         byte[] imageBytes = signatureService.getSignatureBytes(username, fileName);
         return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG) // Adjust based on file type
+                .contentType( // Adjust based on file type
+                        MediaType.IMAGE_JPEG)
                 .body(imageBytes);
     }
 }

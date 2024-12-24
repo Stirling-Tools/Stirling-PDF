@@ -2,7 +2,6 @@ package stirling.software.SPDF.controller.web;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -19,25 +18,25 @@ import stirling.software.SPDF.utils.FileInfo;
 @Tag(name = "Database Management", description = "Database management and security APIs")
 public class DatabaseWebController {
 
-    @Autowired private DatabaseBackupHelper databaseBackupHelper;
+    private final DatabaseBackupHelper databaseBackupHelper;
+
+    public DatabaseWebController(DatabaseBackupHelper databaseBackupHelper) {
+        this.databaseBackupHelper = databaseBackupHelper;
+    }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/database")
     public String database(HttpServletRequest request, Model model, Authentication authentication) {
         String error = request.getParameter("error");
         String confirmed = request.getParameter("infoMessage");
-
         if (error != null) {
             model.addAttribute("error", error);
         } else if (confirmed != null) {
             model.addAttribute("infoMessage", confirmed);
         }
-
         List<FileInfo> backupList = databaseBackupHelper.getBackupList();
         model.addAttribute("backupFiles", backupList);
-
         model.addAttribute("databaseVersion", databaseBackupHelper.getH2Version());
-
         return "database";
     }
 }

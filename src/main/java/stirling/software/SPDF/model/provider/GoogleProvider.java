@@ -13,6 +13,10 @@ public class GoogleProvider extends Provider {
     private static final String tokenUri = "https://www.googleapis.com/oauth2/v4/token";
     private static final String userInfoUri =
             "https://www.googleapis.com/oauth2/v3/userinfo?alt=json";
+    private String clientId;
+    private String clientSecret;
+    private Collection<String> scopes = new ArrayList<>();
+    private String useAsUsername = "email";
 
     public String getAuthorizationuri() {
         return authorizationUri;
@@ -25,11 +29,6 @@ public class GoogleProvider extends Provider {
     public String getUserinfouri() {
         return userInfoUri;
     }
-
-    private String clientId;
-    private String clientSecret;
-    private Collection<String> scopes = new ArrayList<>();
-    private String useAsUsername = "email";
 
     @Override
     public String getIssuer() {

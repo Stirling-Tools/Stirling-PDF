@@ -1,20 +1,9 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.awt.Color;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.awt.*;
+import java.io.*;
 import java.nio.file.Files;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.Security;
-import java.security.UnrecoverableKeyException;
+import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -89,6 +78,151 @@ public class CertSignController {
 
     static {
         Security.addProvider(new BouncyCastleProvider());
+    }
+
+    private final CustomPDDocumentFactory pdfDocumentFactory;
+
+    @Autowired
+    public CertSignController(CustomPDDocumentFactory pdfDocumentFactory) {
+        this.pdfDocumentFactory = pdfDocumentFactory;
+    }
+
+    private static void sign(
+            CustomPDDocumentFactory pdfDocumentFactory,
+            byte[] input,
+            OutputStream output,
+            CreateSignature instance,
+            Boolean showSignature,
+            Integer pageNumber,
+            String name,
+            String location,
+            String reason,
+            Boolean showLogo) {
+        try (PDDocument doc = pdfDocumentFactory.load(input)) {
+            PDSignature signature = new PDSignature();
+            signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
+            signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
+            signature.setName(name);
+            signature.setLocation(location);
+            signature.setReason(reason);
+            signature.setSignDate(Calendar.getInstance());
+
+            if (showSignature) {
+                SignatureOptions signatureOptions = new SignatureOptions();
+                signatureOptions.setVisualSignature(
+                        instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
+                signatureOptions.setPage(pageNumber);
+
+                doc.addSignature(signature, instance, signatureOptions);
+
+            } else {
+                doc.addSignature(signature, instance);
+            }
+            doc.saveIncremental(output);
+        } catch (Exception e) {
+            log.error("exception", e);
+        }
+    }
+
+    @PostMapping(consumes = "multipart/form-data", value = "/cert-sign")
+    @Operation(
+            summary = "Sign PDF with a Digital Certificate",
+            description =
+                    "This endpoint accepts a PDF file, a digital certificate and related information to sign"
+                            + " the PDF. It then returns the digitally signed PDF file. Input:PDF Output:PDF"
+                            + " Type:SISO")
+    public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
+            throws Exception {
+        MultipartFile pdf = request.getFileInput();
+        String certType = request.getCertType();
+        MultipartFile privateKeyFile = request.getPrivateKeyFile();
+        MultipartFile certFile = request.getCertFile();
+        MultipartFile p12File = request.getP12File();
+        MultipartFile jksfile = request.getJksFile();
+        String password = request.getPassword();
+        Boolean showSignature = request.isShowSignature();
+        String reason = request.getReason();
+        String location = request.getLocation();
+        String name = request.getName();
+        Integer pageNumber = request.getPageNumber() - 1;
+        Boolean showLogo = request.isShowLogo();
+
+        if (certType == null) {
+            throw new IllegalArgumentException("Cert type must be provided");
+        }
+
+        KeyStore ks = null;
+
+        switch (certType) {
+            case "PEM":
+                ks = KeyStore.getInstance("JKS");
+                ks.load(null);
+                PrivateKey privateKey = getPrivateKeyFromPEM(privateKeyFile.getBytes(), password);
+                Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
+                ks.setKeyEntry(
+                        "alias", privateKey, password.toCharArray(), new Certificate[] {cert});
+                break;
+            case "PKCS12":
+                ks = KeyStore.getInstance("PKCS12");
+                ks.load(p12File.getInputStream(), password.toCharArray());
+                break;
+            case "JKS":
+                ks = KeyStore.getInstance("JKS");
+                ks.load(jksfile.getInputStream(), password.toCharArray());
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid cert type: " + certType);
+        }
+
+        CreateSignature createSignature = new CreateSignature(ks, password.toCharArray());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        sign(
+                pdfDocumentFactory,
+                pdf.getBytes(),
+                baos,
+                createSignature,
+                showSignature,
+                pageNumber,
+                name,
+                location,
+                reason,
+                showLogo);
+        return WebResponseUtils.boasToWebResponse(
+                baos,
+                Filenames.toSimpleFileName(pdf.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
+                        + "_signed.pdf");
+    }
+
+    private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
+            throws IOException, OperatorCreationException, PKCSException {
+        try (PEMParser pemParser =
+                new PEMParser(new InputStreamReader(new ByteArrayInputStream(pemBytes)))) {
+            Object pemObject = pemParser.readObject();
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+            PrivateKeyInfo pkInfo;
+            if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo) {
+                InputDecryptorProvider decProv =
+                        new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
+                pkInfo = ((PKCS8EncryptedPrivateKeyInfo) pemObject).decryptPrivateKeyInfo(decProv);
+            } else if (pemObject instanceof PEMEncryptedKeyPair) {
+                PEMDecryptorProvider decProv =
+                        new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
+                pkInfo =
+                        ((PEMEncryptedKeyPair) pemObject)
+                                .decryptKeyPair(decProv)
+                                .getPrivateKeyInfo();
+            } else {
+                pkInfo = ((PEMKeyPair) pemObject).getPrivateKeyInfo();
+            }
+            return converter.getPrivateKey(pkInfo);
+        }
+    }
+
+    private Certificate getCertificateFromPEM(byte[] pemBytes)
+            throws IOException, CertificateException {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(pemBytes)) {
+            return CertificateFactory.getInstance("X.509").generateCertificate(bis);
+        }
     }
 
     class CreateSignature extends CreateSignatureBase {
@@ -196,151 +330,6 @@ public class CertSignController {
                 doc.save(baos);
                 return new ByteArrayInputStream(baos.toByteArray());
             }
-        }
-    }
-
-    private final CustomPDDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public CertSignController(CustomPDDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
-
-    @PostMapping(consumes = "multipart/form-data", value = "/cert-sign")
-    @Operation(
-            summary = "Sign PDF with a Digital Certificate",
-            description =
-                    "This endpoint accepts a PDF file, a digital certificate and related information to sign"
-                            + " the PDF. It then returns the digitally signed PDF file. Input:PDF Output:PDF"
-                            + " Type:SISO")
-    public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
-            throws Exception {
-        MultipartFile pdf = request.getFileInput();
-        String certType = request.getCertType();
-        MultipartFile privateKeyFile = request.getPrivateKeyFile();
-        MultipartFile certFile = request.getCertFile();
-        MultipartFile p12File = request.getP12File();
-        MultipartFile jksfile = request.getJksFile();
-        String password = request.getPassword();
-        Boolean showSignature = request.isShowSignature();
-        String reason = request.getReason();
-        String location = request.getLocation();
-        String name = request.getName();
-        Integer pageNumber = request.getPageNumber() - 1;
-        Boolean showLogo = request.isShowLogo();
-
-        if (certType == null) {
-            throw new IllegalArgumentException("Cert type must be provided");
-        }
-
-        KeyStore ks = null;
-
-        switch (certType) {
-            case "PEM":
-                ks = KeyStore.getInstance("JKS");
-                ks.load(null);
-                PrivateKey privateKey = getPrivateKeyFromPEM(privateKeyFile.getBytes(), password);
-                Certificate cert = (Certificate) getCertificateFromPEM(certFile.getBytes());
-                ks.setKeyEntry(
-                        "alias", privateKey, password.toCharArray(), new Certificate[] {cert});
-                break;
-            case "PKCS12":
-                ks = KeyStore.getInstance("PKCS12");
-                ks.load(p12File.getInputStream(), password.toCharArray());
-                break;
-            case "JKS":
-                ks = KeyStore.getInstance("JKS");
-                ks.load(jksfile.getInputStream(), password.toCharArray());
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid cert type: " + certType);
-        }
-
-        CreateSignature createSignature = new CreateSignature(ks, password.toCharArray());
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        sign(
-                pdfDocumentFactory,
-                pdf.getBytes(),
-                baos,
-                createSignature,
-                showSignature,
-                pageNumber,
-                name,
-                location,
-                reason,
-                showLogo);
-        return WebResponseUtils.boasToWebResponse(
-                baos,
-                Filenames.toSimpleFileName(pdf.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
-                        + "_signed.pdf");
-    }
-
-    private static void sign(
-            CustomPDDocumentFactory pdfDocumentFactory,
-            byte[] input,
-            OutputStream output,
-            CreateSignature instance,
-            Boolean showSignature,
-            Integer pageNumber,
-            String name,
-            String location,
-            String reason,
-            Boolean showLogo) {
-        try (PDDocument doc = pdfDocumentFactory.load(input)) {
-            PDSignature signature = new PDSignature();
-            signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
-            signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
-            signature.setName(name);
-            signature.setLocation(location);
-            signature.setReason(reason);
-            signature.setSignDate(Calendar.getInstance());
-
-            if (showSignature) {
-                SignatureOptions signatureOptions = new SignatureOptions();
-                signatureOptions.setVisualSignature(
-                        instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
-                signatureOptions.setPage(pageNumber);
-
-                doc.addSignature(signature, instance, signatureOptions);
-
-            } else {
-                doc.addSignature(signature, instance);
-            }
-            doc.saveIncremental(output);
-        } catch (Exception e) {
-            log.error("exception", e);
-        }
-    }
-
-    private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
-            throws IOException, OperatorCreationException, PKCSException {
-        try (PEMParser pemParser =
-                new PEMParser(new InputStreamReader(new ByteArrayInputStream(pemBytes)))) {
-            Object pemObject = pemParser.readObject();
-            JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
-            PrivateKeyInfo pkInfo;
-            if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo) {
-                InputDecryptorProvider decProv =
-                        new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
-                pkInfo = ((PKCS8EncryptedPrivateKeyInfo) pemObject).decryptPrivateKeyInfo(decProv);
-            } else if (pemObject instanceof PEMEncryptedKeyPair) {
-                PEMDecryptorProvider decProv =
-                        new JcePEMDecryptorProviderBuilder().build(password.toCharArray());
-                pkInfo =
-                        ((PEMEncryptedKeyPair) pemObject)
-                                .decryptKeyPair(decProv)
-                                .getPrivateKeyInfo();
-            } else {
-                pkInfo = ((PEMKeyPair) pemObject).getPrivateKeyInfo();
-            }
-            return converter.getPrivateKey(pkInfo);
-        }
-    }
-
-    private Certificate getCertificateFromPEM(byte[] pemBytes)
-            throws IOException, CertificateException {
-        try (ByteArrayInputStream bis = new ByteArrayInputStream(pemBytes)) {
-            return CertificateFactory.getInstance("X.509").generateCertificate(bis);
         }
     }
 }

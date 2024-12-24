@@ -31,7 +31,7 @@ public class SPdfApplicationTest {
 
     @BeforeEach
     public void setUp() {
-        sPdfApplication = new SPdfApplication();
+        sPdfApplication = new SPdfApplication(env, applicationProperties, null);
         sPdfApplication.setServerPortStatic("8080");
     }
 
