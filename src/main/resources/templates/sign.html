@@ -21,8 +21,6 @@
   </th:block>
   <script th:src="@{'/js/thirdParty/signature_pad.umd.min.js'}"></script>
   <script th:src="@{'/js/thirdParty/interact.min.js'}"></script>
-  <script type="module" th:src="@{'/js/pages/sign.js'}"></script>
-
 </head>
 
 <body>
@@ -169,51 +167,6 @@
                 </div>
               </div>
             </div>
-
-            <script>
-              const imageUpload = document.querySelector('input[name=image-upload]');
-              imageUpload.addEventListener('change', e => {
-                if (!e.target.files) return;
-                for (const imageFile of e.target.files) {
-                  var reader = new FileReader();
-                  reader.readAsDataURL(imageFile);
-                  reader.onloadend = function (e) {
-                    DraggableUtils.createDraggableCanvasFromUrl(e.target.result);
-                  };
-                }
-              });
-            </script>
-            <script>
-              function addDraggableFromText() {
-                const sigText = document.getElementById('sigText').value;
-                const font = document.querySelector('select[name=font]').value;
-                const fontSize = 100;
-
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                ctx.font = `${fontSize}px ${font}`;
-                const textWidth = ctx.measureText(sigText).width;
-                const textHeight = fontSize;
-
-                let paragraphs = sigText.split(/\r?\n/);
-
-                canvas.width = textWidth;
-                canvas.height = paragraphs.length * textHeight * 1.35; // for tails
-                ctx.font = `${fontSize}px ${font}`;
-
-                ctx.textBaseline = 'top';
-
-                let y = 0;
-
-                paragraphs.forEach(paragraph => {
-                  ctx.fillText(paragraph, 0, y);
-                  y += fontSize;
-                });
-
-                const dataURL = canvas.toDataURL();
-                DraggableUtils.createDraggableCanvasFromUrl(dataURL);
-              }
-            </script>
             <script th:src="@{'/js/sign/signature-canvas.js'}"></script>
   <!-- draggables box -->
   <div class="draggable-buttons-box ignore-rtl">
@@ -286,6 +239,7 @@
               <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
               <script src="https://cdn.jsdelivr.net/npm/fabric@latest/dist/index.min.js"></script>
               <script th:src="@{'/js/draggable-utils.js'}"></script>
+              <script type="module" th:src="@{'/js/pages/sign.js'}"></script>
             </div>
             <!-- download button -->
             <div class="margin-auto-parent">
