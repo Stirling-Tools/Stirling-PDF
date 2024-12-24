@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
@@ -46,7 +47,7 @@ public class PipelineProcessor {
 
     public PipelineProcessor(
             ApiDocService apiDocService,
-            UserServiceInterface userService,
+            @Autowired(required = false) UserServiceInterface userService,
             ServletContext servletContext) {
         this.apiDocService = apiDocService;
         this.userService = userService;

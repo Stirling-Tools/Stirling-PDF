@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,7 @@ class AppUpdateService {
     private final ShowAdminInterface showAdmin;
 
     public AppUpdateService(
-            ApplicationProperties applicationProperties, ShowAdminInterface showAdmin) {
+            ApplicationProperties applicationProperties, @Autowired(required = false) ShowAdminInterface showAdmin) {
         this.applicationProperties = applicationProperties;
         this.showAdmin = showAdmin;
     }

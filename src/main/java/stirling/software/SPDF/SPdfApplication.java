@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -40,7 +41,7 @@ public class SPdfApplication {
     private String baseUrl;
 
     public SPdfApplication(
-            Environment env, ApplicationProperties applicationProperties, WebBrowser webBrowser) {
+            Environment env, ApplicationProperties applicationProperties, @Autowired(required = false) WebBrowser webBrowser) {
         this.env = env;
         this.applicationProperties = applicationProperties;
         this.webBrowser = webBrowser;

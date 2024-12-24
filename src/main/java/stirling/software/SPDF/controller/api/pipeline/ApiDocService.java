@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -34,7 +35,7 @@ public class ApiDocService {
     Map<String, List<String>> outputToFileTypes = new HashMap<>();
     JsonNode apiDocsJsonRootNode;
 
-    public ApiDocService(ServletContext servletContext, UserServiceInterface userService) {
+    public ApiDocService(ServletContext servletContext, @Autowired(required = false) UserServiceInterface userService) {
         this.servletContext = servletContext;
         this.userService = userService;
     }

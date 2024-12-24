@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternUtils;
@@ -36,7 +37,7 @@ public class GeneralWebController {
     private static final String SIGNATURE_BASE_PATH = "customFiles/static/signatures/";
     private static final String ALL_USERS_FOLDER = "ALL_USERS";
     private final SignatureService signatureService;
-    private final UserServiceInterface userService;
+    private final @Autowired(required = false) UserServiceInterface userService;
     private final ResourceLoader resourceLoader;
 
     public GeneralWebController(

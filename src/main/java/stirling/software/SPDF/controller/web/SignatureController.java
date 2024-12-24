@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.web;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class SignatureController {
 
     private final SignatureService signatureService;
 
-    private final UserServiceInterface userService;
+    private final @Autowired(required = false) UserServiceInterface userService;
 
     public SignatureController(
             SignatureService signatureService, UserServiceInterface userService) {

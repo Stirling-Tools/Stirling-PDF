@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 
+import stirling.software.SPDF.UI.WebBrowser;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,13 +26,12 @@ public class SPdfApplicationTest {
 
     @Mock
     private ApplicationProperties applicationProperties;
-
+    
     @InjectMocks
     private SPdfApplication sPdfApplication;
 
     @BeforeEach
     public void setUp() {
-        sPdfApplication = new SPdfApplication(env, applicationProperties, null);
         sPdfApplication.setServerPortStatic("8080");
     }
 
