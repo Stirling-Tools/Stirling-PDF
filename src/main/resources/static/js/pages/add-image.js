@@ -1,3 +1,5 @@
+window.goToFirstOrLastPage = goToFirstOrLastPage;
+
 document.getElementById('download-pdf').addEventListener('click', async () => {
   const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
   const modifiedPdfBytes = await modifiedPdf.save();
@@ -45,3 +47,12 @@ imageUpload.addEventListener('change', (e) => {
     };
   }
 });
+
+async function goToFirstOrLastPage(page) {
+  if (page) {
+    const lastPage = DraggableUtils.pdfDoc.numPages;
+    await DraggableUtils.goToPage(lastPage - 1);
+  } else {
+    await DraggableUtils.goToPage(0);
+  }
+}

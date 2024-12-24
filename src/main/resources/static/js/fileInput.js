@@ -146,7 +146,13 @@ function setupFileInput(chooser) {
     const files = allFiles;
     showOrHideSelectedFilesContainer(files);
 
-    const filesInfo = files.map((f) => ({name: f.name, size: f.size, uniqueId: f.uniqueId}));
+    const filesInfo = files.map((f) => ({
+      name: f.name,
+      size: f.size,
+      uniqueId: f.uniqueId,
+      type: f.type,
+      url: URL.createObjectURL(f),
+    }));
 
     const selectedFilesContainer = $(inputContainer).siblings('.selected-files');
     selectedFilesContainer.empty();
@@ -157,7 +163,25 @@ function setupFileInput(chooser) {
       $(fileContainer).addClass(fileContainerClasses);
       $(fileContainer).attr('id', info.uniqueId);
 
-      let fileIconContainer = createFileIconContainer(info);
+      let fileIconContainer = document.createElement('div');
+
+      if (info.type.startsWith('image/')) {
+        let imgPreview = document.createElement('img');
+        imgPreview.src = info.url;
+        imgPreview.alt = 'Preview';
+        imgPreview.style.width = '50px';
+        imgPreview.style.height = '50px';
+        imgPreview.style.objectFit = 'cover';
+        $(fileIconContainer).append(imgPreview);
+
+        $(fileContainer).attr('draggable', 'true');
+        $(fileContainer).on('dragstart', (e) => {
+          e.originalEvent.dataTransfer.setData('fileUrl', info.url);
+          e.originalEvent.dataTransfer.setData('uniqueId', info.uniqueId);
+        });
+      } else {
+        fileIconContainer = createFileIconContainer(info);
+      }
 
       let fileInfoContainer = createFileInfoContainer(info);
 
@@ -175,7 +199,24 @@ function setupFileInput(chooser) {
       selectedFilesContainer.append(fileContainer);
     });
 
-    showOrHideSelectedFilesContainer(filesInfo);
+    const pageContainers = $('#box-drag-container');
+    pageContainers.off('dragover').on('dragover', (e) => {
+      e.preventDefault();
+    });
+
+    pageContainers.off('drop').on('drop', (e) => {
+      e.preventDefault();
+      const fileUrl = e.originalEvent.dataTransfer.getData('fileUrl');
+
+      if (fileUrl) {
+        const existingImages = $(e.target).find(`img[src="${fileUrl}"]`);
+        if (existingImages.length === 0) {
+          DraggableUtils.createDraggableCanvasFromUrl(fileUrl);
+        }
+      }
+    });
+
+    showOrHideSelectedFilesContainer(files);
   }
 
   function showOrHideSelectedFilesContainer(files) {
