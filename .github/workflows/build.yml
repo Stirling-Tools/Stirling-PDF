@@ -43,7 +43,7 @@ jobs:
       - name: Build with Gradle and with spring security
         run: ./gradlew clean build
         env:
-          DOCKER_ENABLE_SECURITY: false
+          DOCKER_ENABLE_SECURITY: true
           
   docker-compose-tests:
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
