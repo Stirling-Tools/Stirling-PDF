@@ -246,10 +246,11 @@ html {
 
 #pageBasedRedactionOverlay {
   position: absolute;
-  left: 34%;
-  top: 20%;
+  left: 50%;
+  top: 50%;
   background-color: var(--md-sys-color-surface);
   color: var(--md-sys-color-on-surface);
   border-radius: 3rem;
   z-index: 100;
+  transform: translate(-50%, -50%);
 }
