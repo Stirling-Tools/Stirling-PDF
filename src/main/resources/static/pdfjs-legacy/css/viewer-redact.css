@@ -5012,7 +5012,7 @@ dialog :link {
     display: grid;
   }
 
-  #toolbarViewerLeft .showMoreBtnContainer {
+  #toolbarViewerLeft #showMoreBtnContainer {
     grid-row: 1;
     grid-column: 1;
   }
