@@ -4895,7 +4895,7 @@ dialog :link {
   }
 } */
 
-#showMoreBtn {
+#showMoreBtnContainer {
   display: none;
 }
 .toolbar img.main-icon {
@@ -4905,7 +4905,7 @@ dialog :link {
 }
 
 @media (max-width: 1125px) {
-  .splitToolbarButton {
+  #showMoreBtnContainer {
     display: flex;
   }
 
