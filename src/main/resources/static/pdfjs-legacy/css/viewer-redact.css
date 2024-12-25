@@ -5012,7 +5012,7 @@ dialog :link {
     display: grid;
   }
 
-  #toolbarViewerLeft .splitToolbarButton {
+  #toolbarViewerLeft .showMoreBtnContainer {
     grid-row: 1;
     grid-column: 1;
   }
@@ -5041,7 +5041,7 @@ dialog :link {
     line-height: 0;
 
     margin-top: auto;
-    margin-bottom: 5px
+    margin-bottom: -4px
   }
 
 }
