@@ -80,7 +80,18 @@ html {
   pointer-events: var(--textLayer-pointer-events);
 }
 
-#man-text-select-redact, #man-shape-redact, #downloadBtn, #uploadBtn, #pageBasedRedactionBtn, #pdfToImageBtn {
+#showMoreBtnIcon::before {
+  left: 5px;
+  top: 5px;
+}
+
+#showMoreBtn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#man-text-select-redact, #man-shape-redact, #downloadBtn, #uploadBtn, #pageBasedRedactionBtn, #pdfToImageBtn, #showMoreBtn {
   height: var(--toolButton-height);
   width: var(--toolButton-width);
 
@@ -89,19 +100,19 @@ html {
   user-select: none;
 }
 
-#text-selection, #shape-selection, #downloadBtnIcon, #uploadBtnIcon, #pageBasedRedactionBtnIcon, #pdfToImageBtnIcon {
+#text-selection, #shape-selection, #downloadBtnIcon, #uploadBtnIcon, #pageBasedRedactionBtnIcon, #pdfToImageBtnIcon, #showMoreBtnIcon {
   position: relative;
   font-size: var(--toolButton-icon-font-size);
 }
 
-:is(#man-shape-redact, #man-text-select-redact, #sidebarToggle, #viewThumbnail, #viewOutline).toggled {
+:is(#man-shape-redact, #man-text-select-redact, #sidebarToggle, #viewThumbnail, #viewOutline, #showMoreBtn).toggled {
   background-color: rgb(50, 159, 243);
   color: rgb(255 255 255);
   outline:rgb(50, 159, 243) !important;
   border-color: rgb(50, 159, 243) !important;
 }
 
-:is(#man-shape-redact, #man-text-select-redact, #redactionsPaletteContainer, #downloadBtn, #uploadBtn, #pageBasedRedactionBtn, #pdfToImageBtn):hover {
+:is(#man-shape-redact, #man-text-select-redact, #redactionsPaletteContainer, #downloadBtn, #uploadBtn, #pageBasedRedactionBtn, #pdfToImageBtn, #showMoreBtn):hover {
   background-color: rgba(6, 114, 197, 0.82);
   color: rgb(255 255 255);
   outline:rgba(6, 114, 197, 0.82) !important;
@@ -116,7 +127,7 @@ html {
   overflow: hidden;
 }
 
-#redactionsPaletteContainer * {
+#redactionsPaletteContainer *, #showMoreBtn * {
   user-select: none;
   pointer-events: none;
 }

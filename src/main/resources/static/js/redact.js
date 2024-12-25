@@ -48,6 +48,30 @@ window.addEventListener("load", (e) => {
   let outerContainer = document.getElementById("outerContainer");
   let printContainer = document.getElementById("printContainer");
 
+  let toolbarViewerRight = document.getElementById("toolbarViewerRight");
+  let showMoreBtn = document.getElementById("showMoreBtn");
+
+  window.onresize = (e) => {
+    if (window.innerWidth > 1125 && showMoreBtn.classList.contains("toggled")) {
+      showMoreBtn.click();
+    } else if (
+      window.innerWidth > 1125 &&
+      toolbarViewerRight.hasAttribute("style")
+    ) {
+      toolbarViewerRight.style.removeProperty("display");
+    }
+  };
+
+  showMoreBtn.onclick = (e) => {
+    if (showMoreBtn.classList.contains("toggled")) {
+      toolbarViewerRight.style.display = "none";
+      showMoreBtn.classList.remove("toggled");
+    } else {
+      toolbarViewerRight.style.display = "flex";
+      showMoreBtn.classList.add("toggled");
+    }
+  };
+
   let viewer = document.getElementById("viewer");
 
   hiddenInput.files = undefined;

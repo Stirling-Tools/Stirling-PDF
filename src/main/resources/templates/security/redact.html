@@ -35,9 +35,9 @@
           <span class="tool-header-text" th:text="#{redact.header}"></span>
         </div>
         <form th:action="@{'api/v1/security/redact'}" method="post" enctype="multipart/form-data">
-            <div
-              th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
-            </div>
+          <div
+            th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, disableMultipleFiles=true, accept='application/pdf')}">
+          </div>
           <div class="mb-3 form-check d-none">
             <input type="checkbox" id="convertPDFToImage" name="convertPDFToImage" checked>
             <label for="convertPDFToImage" th:text="#{redact.convertPDFToImageLabel}"></label>
@@ -53,29 +53,29 @@
           </div>
           <input type="hidden" name="redactions" id="redactions-input">
           <button type="submit" id="submitBtn" class="btn btn-primary d-none" th:text="#{redact.submit}"></button>
-          </form>
+        </form>
       </div>
-      </div>
-      </div>
+    </div>
+    </div>
 
-      <div id="pageBasedRedactionOverlay" class="d-none col-md-4 row justify-content-center align-content-center">
-        <div class="bg-card">
-          <div class="tool-header">
-            <span class="material-symbols-rounded tool-header-icon security">document_scanner</span>
-            <span class="tool-header-text" th:text="#{redact.pageBasedRedaction}"></span>
-          </div>
-          <div class="mb-3">
-            <label for="pageNumbers" th:text="#{redact.pageRedactionNumbers.title} + ':'" class="mb-2"></label>
-            <input type="text" class="form-control" data-for="pageNumbers"
-              th:placeholder="#{redact.pageRedactionNumbers.placeholder}">
-          </div>
-          <div class="mb-3 d-flex">
-            <label for="pageRedactColor" th:text="#{redact.pageRedactionColor.title}"></label>
-            <input data-for="pageRedactColor" type="color" class="ms-3" value="#000000">
-          </div>
-          <button class="btn btn-danger" th:text="#{close}"></button>
-        </div>
+  <div id="pageBasedRedactionOverlay" class="d-none col-md-4 row justify-content-center align-content-center">
+    <div class="bg-card">
+      <div class="tool-header">
+        <span class="material-symbols-rounded tool-header-icon security">document_scanner</span>
+        <span class="tool-header-text" th:text="#{redact.pageBasedRedaction}"></span>
       </div>
+      <div class="mb-3">
+        <label for="pageNumbers" th:text="#{redact.pageRedactionNumbers.title} + ':'" class="mb-2"></label>
+        <input type="text" class="form-control" data-for="pageNumbers"
+          th:placeholder="#{redact.pageRedactionNumbers.placeholder}">
+      </div>
+      <div class="mb-3 d-flex">
+        <label for="pageRedactColor" th:text="#{redact.pageRedactionColor.title}"></label>
+        <input data-for="pageRedactColor" type="color" class="ms-3" value="#000000">
+      </div>
+      <button class="btn btn-danger" th:text="#{close}"></button>
+    </div>
+  </div>
   <div id="outerContainer" class="d-none">
     <div id="sidebarContainer">
       <div id="toolbarSidebar">
@@ -362,21 +362,26 @@
         <div id="toolbarContainer">
           <div id="toolbarViewer">
             <div id="toolbarViewerLeft">
+              <div class="splitToolbarButton">
+                <button id="showMoreBtn" class="btn-primary">
+                  <span id="showMoreBtnIcon" class="material-symbols-rounded">more_horiz</span>
+                </button>
+              </div>
               <button id="sidebarToggle" class="toolbarButton mt-2" title="Toggle Sidebar" tabindex="11"
                 data-l10n-id="pdfjs-toggle-sidebar-button" aria-expanded="false" aria-controls="sidebarContainer">
                 <span data-l10n-id="pdfjs-toggle-sidebar-button-label">Toggle Sidebar</span>
               </button>
-              <div class="toolbarButtonSpacer"></div>
+              <div class="toolbarButtonSpacer d-none"></div>
               <button id="viewFind" class="d-none toolbarButton" title="Find in Document" tabindex="12"
                 data-l10n-id="pdfjs-findbar-button" aria-expanded="false" aria-controls="findbar">
                 <span data-l10n-id="pdfjs-findbar-button-label">Find</span>
               </button>
-              <div class="splitToolbarButton hiddenSmallView me-3 ms-3">
+              <div class="splitToolbarButton hiddenSmallView">
                 <button class="toolbarButton btn-secondary toolbar-btn-hover" title="Previous Page" id="previous" tabindex="13"
                   data-l10n-id="pdfjs-previous-button">
                   <span data-l10n-id="pdfjs-previous-button-label">Previous</span>
                 </button>
-                <div class="splitToolbarButtonSeparator"></div>
+                <div class="splitToolbarButtonSeparator d-none"></div>
                 <button class="toolbarButton btn-secondary toolbar-btn-hover" title="Next Page" id="next" tabindex="14"
                   data-l10n-id="pdfjs-next-button">
                   <span data-l10n-id="pdfjs-next-button-label">Next</span>
@@ -387,8 +392,73 @@
                   data-l10n-id="pdfjs-page-input" autocomplete="off">
               </span>
               <span id="numPages" class="toolbarLabel"></span>
-              <img class="main-icon" th:src="@{'/favicon.svg'}" alt="icon"
-                style="height: calc(var(--toolbar-height) - 0.375rem); width: calc(var(--toolbar-height) - 0.375rem);inset: 5px;">
+              <img class="main-icon" th:src="@{'/favicon.svg'}" alt="icon">
+              </div>
+              <div id="toolbarViewerMiddle">
+                <div class="splitToolbarButton">
+                  <button id="zoomOut" class="toolbarButton btn-primary toolbar-btn-hover" title="Zoom Out" tabindex="21"
+                    data-l10n-id="pdfjs-zoom-out-button">
+                    <span data-l10n-id="pdfjs-zoom-out-button-label">Zoom Out</span>
+                  </button>
+                  <div class="splitToolbarButtonSeparator"></div>
+                  <button id="zoomIn" class="toolbarButton btn-primary toolbar-btn-hover" title="Zoom In" tabindex="22"
+                    data-l10n-id="pdfjs-zoom-in-button">
+                    <span data-l10n-id="pdfjs-zoom-in-button-label">Zoom In</span>
+                  </button>
+                </div>
+                <span id="scaleSelectContainer" class="dropdownToolbarButton">
+                  <select id="scaleSelect" title="Zoom" tabindex="23" data-l10n-id="pdfjs-zoom-select">
+                    <option id="pageAutoOption" title="" value="auto" selected="selected" data-l10n-id="pdfjs-page-scale-auto">
+                      Automatic Zoom</option>
+                    <option id="pageActualOption" title="" value="page-actual" data-l10n-id="pdfjs-page-scale-actual">
+                      Actual Size</option>
+                    <option id="pageFitOption" title="" value="page-fit" data-l10n-id="pdfjs-page-scale-fit">Page
+                      Fit
+                    </option>
+                    <option id="pageWidthOption" title="" value="page-width" data-l10n-id="pdfjs-page-scale-width">
+                      Page Width</option>
+                    <option id="customScaleOption" title="" value="custom" disabled="disabled" hidden="true"
+                      data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 0 }'>0%</option>
+                    <option title="" value="0.5" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 50 }'>
+                      50%</option>
+                    <option title="" value="0.75" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 75 }'>75%
+                    </option>
+                    <option title="" value="1" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 100 }'>
+                      100%</option>
+                    <option title="" value="1.25" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 125 }'>125%
+                    </option>
+                    <option title="" value="1.5" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 150 }'>150%
+                    </option>
+                    <option title="" value="2" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 200 }'>
+                      200%</option>
+                    <option title="" value="3" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 300 }'>
+                      300%</option>
+                    <option title="" value="4" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 400 }'>
+                      400%</option>
+                  </select>
+                </span>
+              </div>
+              <div id="redactionsToolbarViewer" class="splitToolbarButton d-flex">
+                <button id="man-text-select-redact" class="btn-primary" title="Text-based selection redaction" tabindex="22">
+                  <span id="text-selection" class="material-symbols-rounded user-select-none pe-none">text_select_start
+                  </span>
+                </button>
+                <button id="man-shape-redact" class="btn-primary" title="Shape drawing redaction" tabindex="22">
+                  <span id="shape-selection" class="material-symbols-rounded user-select-none pe-none">pageless
+                  </span>
+                </button>
+                <button id="redactionsPaletteContainer" class="btn-primary">
+                  <label id="redactions-palette" class="material-symbols-rounded palette-color text-center"
+                    style="--palette-color: #000000;">
+                    palette
+                    <input type="color" name="color-picker" class="d-none">
+                  </label>
+                </button>
+                <button id="apply-redaction" title="Apply changes" class="btn-success d-none" disabled>
+                  <span id="apply-redaction-icon" class="material-symbols-rounded">
+                    check
+                  </span>
+                </button>
             </div>
             <div id="toolbarViewerRight">
               <div class="splitToolbarButton">
@@ -456,72 +526,6 @@
                 data-l10n-id="pdfjs-tools-button">
                 <span data-l10n-id="pdfjs-tools-button-label">Tools</span>
               </button>
-            </div>
-            <div id="toolbarViewerMiddle">
-              <div class="splitToolbarButton me-3 ms-3">
-                <button id="zoomOut" class="toolbarButton btn-primary toolbar-btn-hover" title="Zoom Out" tabindex="21"
-                  data-l10n-id="pdfjs-zoom-out-button">
-                  <span data-l10n-id="pdfjs-zoom-out-button-label">Zoom Out</span>
-                </button>
-                <div class="splitToolbarButtonSeparator"></div>
-                <button id="zoomIn" class="toolbarButton btn-primary toolbar-btn-hover" title="Zoom In" tabindex="22"
-                  data-l10n-id="pdfjs-zoom-in-button">
-                  <span data-l10n-id="pdfjs-zoom-in-button-label">Zoom In</span>
-                </button>
-              </div>
-              <span id="scaleSelectContainer" class="dropdownToolbarButton">
-                <select id="scaleSelect" title="Zoom" tabindex="23" data-l10n-id="pdfjs-zoom-select">
-                  <option id="pageAutoOption" title="" value="auto" selected="selected"
-                    data-l10n-id="pdfjs-page-scale-auto">Automatic Zoom</option>
-                  <option id="pageActualOption" title="" value="page-actual" data-l10n-id="pdfjs-page-scale-actual">
-                    Actual Size</option>
-                  <option id="pageFitOption" title="" value="page-fit" data-l10n-id="pdfjs-page-scale-fit">Page
-                    Fit
-                  </option>
-                  <option id="pageWidthOption" title="" value="page-width" data-l10n-id="pdfjs-page-scale-width">
-                    Page Width</option>
-                  <option id="customScaleOption" title="" value="custom" disabled="disabled" hidden="true"
-                    data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 0 }'>0%</option>
-                  <option title="" value="0.5" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 50 }'>
-                    50%</option>
-                  <option title="" value="0.75" data-l10n-id="pdfjs-page-scale-percent"
-                    data-l10n-args='{ "scale": 75 }'>75%</option>
-                  <option title="" value="1" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 100 }'>
-                    100%</option>
-                  <option title="" value="1.25" data-l10n-id="pdfjs-page-scale-percent"
-                    data-l10n-args='{ "scale": 125 }'>125%</option>
-                  <option title="" value="1.5" data-l10n-id="pdfjs-page-scale-percent"
-                    data-l10n-args='{ "scale": 150 }'>150%</option>
-                  <option title="" value="2" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 200 }'>
-                    200%</option>
-                  <option title="" value="3" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 300 }'>
-                    300%</option>
-                  <option title="" value="4" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 400 }'>
-                    400%</option>
-                </select>
-              </span>
-              <div class="splitToolbarButton ms-3">
-                <button id="man-text-select-redact" class="btn-primary" title="Text-based selection redaction" tabindex="22">
-                  <span id="text-selection" class="material-symbols-rounded user-select-none pe-none">text_select_start
-                    </span>
-                    </button>
-                    <button id="man-shape-redact" class="btn-primary" title="Shape drawing redaction" tabindex="22">
-                      <span id="shape-selection" class="material-symbols-rounded user-select-none pe-none">pageless
-                    </span>
-                    </button>
-                    <button id="redactionsPaletteContainer" class="btn-primary">
-                      <label id="redactions-palette" class="material-symbols-rounded palette-color text-center"
-                        style="--palette-color: #000000;">
-                        palette
-                        <input type="color" name="color-picker" class="d-none">
-                      </label>
-                  </button>
-                <button id="apply-redaction" title="Apply changes" class="btn-success d-none" disabled>
-                  <span id="apply-redaction-icon" class="material-symbols-rounded">
-                    check
-                  </span>
-                </button>
-              </div>
             </div>
           </div>
           <div id="loadingBar">
