@@ -4909,6 +4909,10 @@ dialog :link {
     display: flex;
   }
 
+  #toolbarViewerMiddle > .splitToolbarButton {
+    display: flex;
+  }
+
   #toolbarViewerRight {
     display: none;
     margin-left: 0;
