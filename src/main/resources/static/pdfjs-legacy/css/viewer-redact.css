@@ -4948,6 +4948,40 @@ dialog :link {
   #redactionsToolbarViewer {
     order: 2;
   }
+
+
+  #pageBasedRedactionOverlay > .bg-card {
+    padding: 1.5rem;
+  }
+
+  #pageBasedRedactionOverlay > .bg-card > div.tool-header {
+    display: flex;
+    column-gap: 10px;
+  }
+
+  #pageBasedRedactionOverlay > .bg-card > div.tool-header > span:nth-child(1) {
+    margin: auto;
+    height: 3.5rem;
+    width: 3.5rem;
+    border-radius: 15px;
+    font-size: 2.5rem;
+  }
+
+  #pageBasedRedactionOverlay > .bg-card > div.tool-header > span:nth-child(2) {
+    font-size: 1.5rem;
+  }
+
+  #pageBasedRedactionOverlay > .bg-card > div:nth-child(3) {
+    flex-direction: column;
+    row-gap: 3px;
+  }
+
+  #pageBasedRedactionOverlay > .bg-card > div:nth-child(3) > input {
+    width: 100%;
+    height: 30px;
+    margin-left: 0 !important;
+    flex: none;
+  }
 }
 
 @media (max-width: 510px) {
