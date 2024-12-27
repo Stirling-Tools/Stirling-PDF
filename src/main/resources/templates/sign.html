@@ -44,7 +44,7 @@
             <div class="tab-group show-on-file-selected">
               <div class="tab-container" th:title="#{sign.upload}">
                 <div
-                  th:replace="~{fragments/common :: fileSelector(name='image-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}">
+                  th:replace="~{fragments/common :: fileSelector(name='image-upload', disableMultipleFiles=false, multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}">
                 </div>
               </div>
 
@@ -232,7 +232,13 @@
       </span>
       <span class="btn-tooltip" th:text="#{sign.last}"></span>
     </button>
-  </div>
+                  <button id="download-pdf" class="btn btn-outline-secondary">
+                    <span class="material-symbols-rounded">
+                      download
+                    </span>
+                    <span class="btn-tooltip" th:text="#{downloadPdf}"></span>
+                  </button>
+                  </div>
             <div id="box-drag-container" class="show-on-file-selected">
 
               <canvas id="pdf-canvas"></canvas>
@@ -241,11 +247,7 @@
               <script th:src="@{'/js/draggable-utils.js'}"></script>
               <script type="module" th:src="@{'/js/pages/sign.js'}"></script>
             </div>
-            <!-- download button -->
-            <div class="margin-auto-parent">
-              <button id="download-pdf" class="btn btn-primary mb-2 show-on-file-selected margin-center"
-                th:text="#{downloadPdf}"></button>
-            </div>
+
           </div>
         </div>
       </div>

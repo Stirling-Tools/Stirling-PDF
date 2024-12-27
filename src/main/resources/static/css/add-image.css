@@ -6,6 +6,7 @@
   box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
   width: 100%;
 }
+
 .draggable-buttons-box {
   position: relative;
   top: 0;
@@ -13,11 +14,18 @@
   width: 100%;
   display: flex;
   gap: 5px;
+  z-index: 5;
 }
-.draggable-buttons-box > button {
-  z-index: 10;
+
+.draggable-buttons-box>button {
+  z-index: 4;
   background-color: rgba(13, 110, 253, 0.1);
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width:4rem;
 }
+
+
 .draggable-canvas {
   border: 1px solid red;
   position: absolute;

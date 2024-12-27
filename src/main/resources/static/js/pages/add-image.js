@@ -1,13 +1,26 @@
 window.goToFirstOrLastPage = goToFirstOrLastPage;
 
 document.getElementById('download-pdf').addEventListener('click', async () => {
-  const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
-  const modifiedPdfBytes = await modifiedPdf.save();
-  const blob = new Blob([modifiedPdfBytes], {type: 'application/pdf'});
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = originalFileName + '_addedImage.pdf';
-  link.click();
+  const downloadButton = document.getElementById('download-pdf');
+  const originalContent = downloadButton.innerHTML;
+
+  downloadButton.disabled = true;
+  downloadButton.innerHTML = `
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+  `;
+
+  try {
+    const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
+    const modifiedPdfBytes = await modifiedPdf.save();
+    const blob = new Blob([modifiedPdfBytes], {type: 'application/pdf'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = originalFileName + '_addedImage.pdf';
+    link.click();
+  } finally {
+    downloadButton.disabled = false;
+    downloadButton.innerHTML = originalContent;
+  }
 });
 let originalFileName = '';
 document.querySelector('input[name=pdf-upload]').addEventListener('change', async (event) => {

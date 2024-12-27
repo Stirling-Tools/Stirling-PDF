@@ -29,8 +29,6 @@ select#font-select option {
   display: flex;
   gap: 5px;
   z-index: 5;
-  overflow: hidden;
-
 }
 
 .draggable-buttons-box>button {
@@ -38,6 +36,7 @@ select#font-select option {
   background-color: rgba(13, 110, 253, 0.1);
   flex: 1 1 auto;
   min-width: 0;
+  max-width:4rem;
 }
 
 

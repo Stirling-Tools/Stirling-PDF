@@ -118,6 +118,7 @@
   row-gap: 1px;
   height: 60px;
   width: 60px;
+  top:4px;
 }
 
 .file-icon {
@@ -165,8 +166,8 @@
   height: 15px;
   width: 15px;
 
-  right: 10px;
-  top: -5px;
+  right: 0px;
+  top: -17px;
 }
 
 .remove-selected-file * {

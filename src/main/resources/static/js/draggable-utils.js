@@ -249,6 +249,7 @@ const DraggableUtils = {
         context.imageSmoothingQuality = 'high';
         context.drawImage(myImage, 0, 0, myImage.width, myImage.height);
         this.showRotationControls(canvasContainer);
+        this.lastInteracted = canvasContainer;
 
         resolve(canvasContainer);
       };
