@@ -44,6 +44,11 @@ function hideInitialPage() {
 }
 
 window.addEventListener("load", (e) => {
+  let isChromium =
+    !!window.chrome ||
+    (!!navigator.userAgentData &&
+      navigator.userAgentData.brands.some((data) => data.brand == "Chromium"));
+
   let hiddenInput = document.getElementById("fileInput");
   let outerContainer = document.getElementById("outerContainer");
   let printContainer = document.getElementById("printContainer");
@@ -323,10 +328,16 @@ window.addEventListener("load", (e) => {
 
       function setMousePosition(e) {
         let ev = e || window.event; //Moz || IE
-        if (ev.pageX) {
-          //Moz
+        if (!isChromium && ev.pageX) {
           mouse.x = e.layerX;
           mouse.y = e.layerY;
+        } else if (isChromium) {
+          mouse.x = e.offsetX;
+          mouse.y = e.offsetY;
+        } else {
+          let rect = (e.target || e.srcElement).getBoundingClientRect();
+          mouse.x = e.clientX - rect.left;
+          mouse.y = e.clientY - rect.top;
         }
       }
 
