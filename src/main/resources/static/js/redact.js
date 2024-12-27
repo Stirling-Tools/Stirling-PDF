@@ -487,6 +487,33 @@ window.addEventListener("load", (e) => {
     redactTextSelection();
   });
 
+  function rotateTextBox(rect, textLayerRect, angle) {
+    let left, top, width, height;
+    if (!angle || angle == 0) {
+      left = rect.left - textLayerRect.left;
+      top = rect.top - textLayerRect.top;
+      width = rect.width;
+      height = rect.height;
+    } else if (angle == 90) {
+      left = rect.top - textLayerRect.top;
+      top = textLayerRect.right - rect.right;
+      width = rect.height;
+      height = rect.width;
+    } else if (angle == 180) {
+      left = textLayerRect.right - rect.right;
+      top = textLayerRect.bottom - rect.bottom;
+      width = rect.width;
+      height = rect.height;
+    } else if (angle == 270) {
+      left = textLayerRect.bottom - rect.bottom;
+      top = rect.left - textLayerRect.left;
+      width = rect.height;
+      height = rect.width;
+    }
+
+    return { left, top, width, height };
+  }
+
   function redactTextSelection() {
     let selection = window.getSelection();
     if (!selection || selection.rangeCount <= 0) return;
@@ -512,28 +539,11 @@ window.addEventListener("load", (e) => {
       let redactionElement = document.createElement("div");
       redactionElement.classList.add("selected-wrapper");
 
-      let left, top, width, height;
-      if (!angle || angle == 0) {
-        left = rect.left - textLayerRect.left;
-        top = rect.top - textLayerRect.top;
-        width = rect.width;
-        height = rect.height;
-      } else if (angle == 90) {
-        left = rect.top - textLayerRect.top;
-        top = textLayerRect.right - rect.right;
-        width = rect.height;
-        height = rect.width;
-      } else if (angle == 180) {
-        left = textLayerRect.right - rect.right;
-        top = textLayerRect.bottom - rect.bottom;
-        width = rect.width;
-        height = rect.height;
-      } else if (angle == 270) {
-        left = textLayerRect.bottom - rect.bottom;
-        top = rect.left - textLayerRect.left;
-        width = rect.height;
-        height = rect.width;
-      }
+      let { left, top, width, height } = rotateTextBox(
+        rect,
+        textLayerRect,
+        angle
+      );
 
       let leftDisplayScaled = _scaleToDisplay(left);
       let topDisplayScaled = _scaleToDisplay(top);
