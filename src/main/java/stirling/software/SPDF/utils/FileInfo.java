@@ -11,14 +11,13 @@ import lombok.Data;
 @AllArgsConstructor
 @Data
 public class FileInfo {
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private String fileName;
     private String filePath;
     private LocalDateTime modificationDate;
     private long fileSize;
     private LocalDateTime creationDate;
-
-    private static final DateTimeFormatter DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     // Converts the file path string to a Path object.
     public Path getFilePathAsPath() {

@@ -4,25 +4,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSInputStream;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
-import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
-import org.apache.pdfbox.pdmodel.PDJavascriptNameTreeNode;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
@@ -82,6 +70,48 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 public class GetInfoOnPDF {
 
     static ObjectMapper objectMapper = new ObjectMapper();
+
+    private static void addOutlinesToArray(PDOutlineItem outline, ArrayNode arrayNode) {
+        if (outline == null) return;
+
+        ObjectNode outlineNode = objectMapper.createObjectNode();
+        outlineNode.put("Title", outline.getTitle());
+        // You can add other properties if needed
+        arrayNode.add(outlineNode);
+
+        PDOutlineItem child = outline.getFirstChild();
+        while (child != null) {
+            addOutlinesToArray(child, arrayNode);
+            child = child.getNextSibling();
+        }
+    }
+
+    public static boolean checkForStandard(PDDocument document, String standardKeyword) {
+        // Check XMP Metadata
+        try {
+            PDMetadata pdMetadata = document.getDocumentCatalog().getMetadata();
+            if (pdMetadata != null) {
+                COSInputStream metaStream = pdMetadata.createInputStream();
+                DomXmpParser domXmpParser = new DomXmpParser();
+                XMPMetadata xmpMeta = domXmpParser.parse(metaStream);
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                new XmpSerializer().serialize(xmpMeta, baos, true);
+                String xmpString = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+
+                if (xmpString.contains(standardKeyword)) {
+                    return true;
+                }
+            }
+        } catch (
+                Exception
+                        e) { // Catching general exception for brevity, ideally you'd catch specific
+            // exceptions.
+            log.error("exception", e);
+        }
+
+        return false;
+    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/get-info-on-pdf")
     @Operation(summary = "Summary here", description = "desc. Input:PDF Output:JSON Type:SISO")
@@ -606,21 +636,6 @@ public class GetInfoOnPDF {
         return state ? "Allowed" : "Not Allowed";
     }
 
-    private static void addOutlinesToArray(PDOutlineItem outline, ArrayNode arrayNode) {
-        if (outline == null) return;
-
-        ObjectNode outlineNode = objectMapper.createObjectNode();
-        outlineNode.put("Title", outline.getTitle());
-        // You can add other properties if needed
-        arrayNode.add(outlineNode);
-
-        PDOutlineItem child = outline.getFirstChild();
-        while (child != null) {
-            addOutlinesToArray(child, arrayNode);
-            child = child.getNextSibling();
-        }
-    }
-
     public String getPageOrientation(double width, double height) {
         if (width > height) {
             return "Landscape";
@@ -676,33 +691,6 @@ public class GetInfoOnPDF {
         dimensionInfo.put("Width (cm)", String.format("%.2f", widthInCm));
         dimensionInfo.put("Height (cm)", String.format("%.2f", heightInCm));
         return dimensionInfo;
-    }
-
-    public static boolean checkForStandard(PDDocument document, String standardKeyword) {
-        // Check XMP Metadata
-        try {
-            PDMetadata pdMetadata = document.getDocumentCatalog().getMetadata();
-            if (pdMetadata != null) {
-                COSInputStream metaStream = pdMetadata.createInputStream();
-                DomXmpParser domXmpParser = new DomXmpParser();
-                XMPMetadata xmpMeta = domXmpParser.parse(metaStream);
-
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                new XmpSerializer().serialize(xmpMeta, baos, true);
-                String xmpString = new String(baos.toByteArray(), StandardCharsets.UTF_8);
-
-                if (xmpString.contains(standardKeyword)) {
-                    return true;
-                }
-            }
-        } catch (
-                Exception
-                        e) { // Catching general exception for brevity, ideally you'd catch specific
-            // exceptions.
-            log.error("exception", e);
-        }
-
-        return false;
     }
 
     public ArrayNode exploreStructureTree(List<Object> nodes) {

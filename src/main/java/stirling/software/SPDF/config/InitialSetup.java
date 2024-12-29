@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
@@ -23,25 +22,26 @@ import stirling.software.SPDF.utils.GeneralUtils;
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
 public class InitialSetup {
 
-    @Autowired private ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
+
+    public InitialSetup(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     @PostConstruct
     public void init() throws IOException {
         initUUIDKey();
-
         initSecretKey();
-
         initEnableCSRFSecurity();
-
         initLegalUrls();
-
         initSetAppVersion();
     }
 
     public void initUUIDKey() throws IOException {
         String uuid = applicationProperties.getAutomaticallyGenerated().getUUID();
         if (!GeneralUtils.isValidUUID(uuid)) {
-            uuid = UUID.randomUUID().toString(); // Generating a random UUID as the secret key
+            // Generating a random UUID as the secret key
+            uuid = UUID.randomUUID().toString();
             GeneralUtils.saveKeyToConfig("AutomaticallyGenerated.UUID", uuid);
             applicationProperties.getAutomaticallyGenerated().setUUID(uuid);
         }
@@ -50,7 +50,8 @@ public class InitialSetup {
     public void initSecretKey() throws IOException {
         String secretKey = applicationProperties.getAutomaticallyGenerated().getKey();
         if (!GeneralUtils.isValidUUID(secretKey)) {
-            secretKey = UUID.randomUUID().toString(); // Generating a random UUID as the secret key
+            // Generating a random UUID as the secret key
+            secretKey = UUID.randomUUID().toString();
             GeneralUtils.saveKeyToConfig("AutomaticallyGenerated.key", secretKey);
             applicationProperties.getAutomaticallyGenerated().setKey(secretKey);
         }
@@ -76,7 +77,6 @@ public class InitialSetup {
             GeneralUtils.saveKeyToConfig("legal.termsAndConditions", defaultTermsUrl, false);
             applicationProperties.getLegal().setTermsAndConditions(defaultTermsUrl);
         }
-
         // Initialize Privacy Policy
         String privacyUrl = applicationProperties.getLegal().getPrivacyPolicy();
         if (StringUtils.isEmpty(privacyUrl)) {
@@ -87,7 +87,6 @@ public class InitialSetup {
     }
 
     public void initSetAppVersion() throws IOException {
-
         String appVersion = "0.0.0";
         Resource resource = new ClassPathResource("version.properties");
         Properties props = new Properties();
@@ -95,7 +94,6 @@ public class InitialSetup {
             props.load(resource.getInputStream());
             appVersion = props.getProperty("version");
         } catch (Exception e) {
-
         }
         applicationProperties.getAutomaticallyGenerated().setAppVersion(appVersion);
         GeneralUtils.saveKeyToConfig("AutomaticallyGenerated.appVersion", appVersion, false);

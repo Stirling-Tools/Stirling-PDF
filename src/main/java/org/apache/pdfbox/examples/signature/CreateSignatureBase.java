@@ -97,12 +97,12 @@ public abstract class CreateSignatureBase implements SignatureInterface {
         this.privateKey = privateKey;
     }
 
-    public final void setCertificateChain(final Certificate[] certificateChain) {
-        this.certificateChain = certificateChain;
-    }
-
     public Certificate[] getCertificateChain() {
         return certificateChain;
+    }
+
+    public final void setCertificateChain(final Certificate[] certificateChain) {
+        this.certificateChain = certificateChain;
     }
 
     public void setTsaUrl(String tsaUrl) {
@@ -152,6 +152,10 @@ public abstract class CreateSignatureBase implements SignatureInterface {
         }
     }
 
+    public boolean isExternalSigning() {
+        return externalSigning;
+    }
+
     /**
      * Set if external signing scenario should be used. If {@code false}, SignatureInterface would
      * be used for signing.
@@ -162,9 +166,5 @@ public abstract class CreateSignatureBase implements SignatureInterface {
      */
     public void setExternalSigning(boolean externalSigning) {
         this.externalSigning = externalSigning;
-    }
-
-    public boolean isExternalSigning() {
-        return externalSigning;
     }
 }
