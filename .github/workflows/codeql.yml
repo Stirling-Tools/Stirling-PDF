@@ -11,15 +11,14 @@
 #
 name: "CodeQL"
 
-#disable for now
-#on:
-#  push:
-#    branches: ["main"]
-#  pull_request:
+on:
+ push:
+   branches: ["main"]
+ pull_request:
     # The branches below must be a subset of the branches above
-#    branches: ["main"]
-#  schedule:
-#    - cron: "0 0 * * 1"
+   branches: ["main"]
+ schedule:
+   - cron: "0 0 * * 1"
 
 permissions:
   contents: read
@@ -36,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["java"]
+        language: ["java", "python", "javascript", "kotlin"]
         # CodeQL supports [ $supported-codeql-languages ]
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
