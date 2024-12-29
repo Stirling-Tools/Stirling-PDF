@@ -673,9 +673,40 @@ window.addEventListener("load", (e) => {
       if (activeOverlay) hideOverlay();
       redactionElement.classList.add("active-redaction");
       activeOverlay = redactionOverlay;
+      activeOverlay.style.visibility = "hidden";
       activeOverlay.style.display = "flex";
       textLayer = textLayer || getTextLayer(redactionElement);
-      if (textLayer) redactionOverlay.style.transform = `rotate(${textLayer.getAttribute('data-main-rotation') * -1}deg)`;
+      let angle = parseInt(textLayer.getAttribute('data-main-rotation'));
+      if (textLayer) redactionOverlay.style.transform = `rotate(${angle * -1}deg)`;
+
+      activeOverlay.style.removeProperty('left');
+      activeOverlay.style.removeProperty('top');
+
+      let textRect = textLayer.getBoundingClientRect();
+      let overlayRect = redactionOverlay.getBoundingClientRect();
+
+      let leftOffset = 0, topOffset = 0;
+      if (overlayRect.right > textRect.right) {
+        leftOffset = textRect.right - overlayRect.right;
+      } else if (overlayRect.left < textRect.left) {
+        leftOffset = textRect.left - overlayRect.left;
+      }
+
+      if (overlayRect.top < textRect.top) {
+        topOffset = textRect.top - overlayRect.top;
+      } else if (overlayRect.bottom > textRect.bottom) {
+        topOffset = textRect.bottom - overlayRect.bottom;
+      }
+
+      switch (angle) {
+        case 90: [leftOffset, topOffset] = [topOffset, leftOffset]; break;
+        case 180: [leftOffset, topOffset] = [-leftOffset, -topOffset]; break;
+        case 270: [leftOffset, topOffset] = [-topOffset, leftOffset]; break;
+      }
+
+      if (leftOffset != 0) activeOverlay.style.left = `calc(50% + ${leftOffset}px`;
+      if (topOffset != 0) activeOverlay.style.top = `calc(100% + ${topOffset}px`;
+      activeOverlay.style.visibility = "unset";
     };
 
     redactionElement.appendChild(redactionOverlay);
