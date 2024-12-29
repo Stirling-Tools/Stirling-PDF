@@ -411,7 +411,7 @@ window.addEventListener("load", (e) => {
         element.classList.add("selected-wrapper");
         element.classList.remove("rectangle");
 
-        addRedactionOverlay(element, drawnRedaction);
+        addRedactionOverlay(element, drawnRedaction, canvas);
         redactions.push(drawnRedaction);
         _setRedactionsInput(redactions);
 
@@ -453,6 +453,13 @@ window.addEventListener("load", (e) => {
         canvas.style.cursor = "crosshair";
       }
     }
+  });
+
+
+  PDFViewerApplication.eventBus.on("rotationchanging", (e) => {
+    const rotationDegree = e.pagesRotation;
+    if (activeOverlay)
+      activeOverlay.style.transform = `rotate(${rotationDegree * -1}deg)`;
   });
 
   function _getScaleFactor() {
@@ -583,7 +590,7 @@ window.addEventListener("load", (e) => {
 
       redactionsArea.appendChild(redactionElement);
 
-      addRedactionOverlay(redactionElement, redactionInfo);
+      addRedactionOverlay(redactionElement, redactionInfo, textLayer);
     }
 
     _setRedactionsInput(redactions);
@@ -618,7 +625,7 @@ window.addEventListener("load", (e) => {
     redactionsInput.value = stringifiedRedactions;
   }
 
-  function addRedactionOverlay(redactionElement, redactionInfo) {
+  function addRedactionOverlay(redactionElement, redactionInfo, textLayer) {
     let redactionOverlay = document.createElement("div");
 
     let deleteBtn = $(
@@ -667,6 +674,8 @@ window.addEventListener("load", (e) => {
       redactionElement.classList.add("active-redaction");
       activeOverlay = redactionOverlay;
       activeOverlay.style.display = "flex";
+      textLayer = textLayer || getTextLayer(redactionElement);
+      if (textLayer) redactionOverlay.style.transform = `rotate(${textLayer.getAttribute('data-main-rotation') * -1}deg)`;
     };
 
     redactionElement.appendChild(redactionOverlay);
