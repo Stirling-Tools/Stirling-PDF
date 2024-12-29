@@ -10,7 +10,7 @@
   z-index: 10;
 }
 
-.selected-wrapper:hover:not(:has(svg:hover)) {
+.selected-wrapper:hover:not(:has(.redaction-overlay:hover)) {
   outline-color: var(--palette-color, #000000);
   background-color: var(--palette-color, #000000);
   z-index: 10;
@@ -23,7 +23,7 @@
   display: flex;
   position: absolute;
 
-  left: 40%;
+  left: 50%;
   top: 100%;
 
   min-width: 25px;
@@ -31,7 +31,7 @@
 
   min-height: 25px;
 
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 
   column-gap: 5px;
   row-gap: 2px;
@@ -43,6 +43,7 @@
 
   background-color: rgb(0 96 170);
   outline: 1px solid gray;
+  translate: -50% -100%;
 }
 
 .redaction-overlay svg {
