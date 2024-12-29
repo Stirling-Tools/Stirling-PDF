@@ -3060,7 +3060,7 @@
 :root {
   --viewer-container-height: 0;
   --pdfViewer-padding-bottom: 0;
-  --page-margin: 1px auto -8px;
+  --page-margin: 10px auto;
   --page-border: 9px solid transparent;
   --spreadHorizontalWrapped-margin-LR: -3.5px;
   --loading-icon-delay: 400ms;
@@ -3069,7 +3069,7 @@
 @media screen and (forced-colors: active) {
   :root {
     --pdfViewer-padding-bottom: 9px;
-    --page-margin: 8px auto -1px;
+    --page-margin: 10px auto;
     --page-border: 1px solid CanvasText;
     --spreadHorizontalWrapped-margin-LR: 3.5px;
   }
@@ -3111,7 +3111,6 @@
 }
 
 .pdfViewer .canvasWrapper {
-  overflow: hidden;
   width: 100%;
   height: 100%;
 }
