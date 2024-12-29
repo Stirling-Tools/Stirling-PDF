@@ -203,6 +203,7 @@ window.addEventListener("load", (e) => {
   PDFViewerApplication.downloadOrSave = doNothing;
   PDFViewerApplication.triggerPrinting = doNothing;
 
+  let redactionContainersDivs = {};
   PDFViewerApplication.eventBus.on("pagerendered", (e) => {
     removePDFJSButtons();
 
@@ -222,7 +223,7 @@ window.addEventListener("load", (e) => {
     let redactionsContainer = document.getElementById(
       `redactions-container-${e.pageNumber}`
     );
-    if (!redactionsContainer) {
+    if (!redactionsContainer && !redactionContainersDivs[`${e.pageNumber}`]) {
       redactionsContainer = document.createElement("div");
       redactionsContainer.style.position = "relative";
       redactionsContainer.style.height = "100%";
@@ -231,6 +232,22 @@ window.addEventListener("load", (e) => {
       redactionsContainer.style.setProperty("z-index", "unset");
 
       layer.appendChild(redactionsContainer);
+      redactionContainersDivs[`${e.pageNumber}`] = redactionsContainer;
+    } else if (!redactionsContainer && redactionContainersDivs[`${e.pageNumber}`]) {
+      redactionsContainer = redactionContainersDivs[`${e.pageNumber}`];
+
+      layer.appendChild(redactionsContainer);
+      // Dispatch event to update text layer references for elements' events
+      redactionsContainer
+        .querySelectorAll(".selected-wrapper")
+        .forEach((area) =>
+          area.dispatchEvent(
+            new CustomEvent("textLayer-reference-changed", {
+              bubbles: true,
+              detail: { textLayer: layer },
+            })
+          )
+        );
     }
 
     initDraw(layer, redactionsContainer);
@@ -667,6 +684,10 @@ window.addEventListener("load", (e) => {
 
     redactionOverlay.classList.add("redaction-overlay");
     redactionOverlay.style.display = "none";
+
+    redactionElement.addEventListener("textLayer-reference-changed", (e) => {
+      textLayer = e.detail.textLayer;
+    });
 
     redactionElement.onclick = (e) => {
       if (e.target != redactionElement) return;
