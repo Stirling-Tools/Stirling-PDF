@@ -75,10 +75,12 @@
 
 html {
   --textLayer-pointer-events: auto;
+  --textLayer-user-select: auto;
 }
 
 .textLayer * {
   pointer-events: var(--textLayer-pointer-events);
+  user-select: var(--textLayer-user-select);
 }
 
 #showMoreBtnIcon::before {

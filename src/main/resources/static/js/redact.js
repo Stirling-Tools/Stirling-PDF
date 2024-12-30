@@ -304,6 +304,10 @@ window.addEventListener("load", (e) => {
           "--textLayer-pointer-events",
           "none"
         );
+        document.documentElement.style.setProperty(
+          "--textLayer-user-select",
+          "none"
+        );
         redactionMode = RedactionModes.DRAWING;
       }
     }
@@ -313,6 +317,10 @@ window.addEventListener("load", (e) => {
       drawRedactionBtn.classList.remove("toggled");
       document.documentElement.style.setProperty(
         "--textLayer-pointer-events",
+        "auto"
+      );
+      document.documentElement.style.setProperty(
+        "--textLayer-user-select",
         "auto"
       );
       window.dispatchEvent(new CustomEvent("reset-drawing", { bubbles: true }));
@@ -333,6 +341,10 @@ window.addEventListener("load", (e) => {
         canvas.style.cursor = "default";
         document.documentElement.style.setProperty(
           "--textLayer-pointer-events",
+          "auto"
+        );
+        document.documentElement.style.setProperty(
+          "--textLayer-user-select",
           "auto"
         );
       });
