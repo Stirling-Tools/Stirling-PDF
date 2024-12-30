@@ -389,7 +389,7 @@ For those wanting to use Stirling-PDF's backend API to link with their own custo
 
 - User must have the folder `./configs` volumed within Docker so that it is retained during updates.
 - Docker users must download the security jar version by setting `DOCKER_ENABLE_SECURITY` to `true` in environment variables.
-- Then either enable login via the `settings.yml` file or set `SECURITY_ENABLE_LOGIN` to `true`.
+- Then either enable login via the `settings.yml` file or set `SECURITY_ENABLELOGIN` to `true`.
 - Now the initial user will be generated with username `admin` and password `stirling`. On login, you will be forced to change the password to a new one. You can also use the environment variables `SECURITY_INITIALLOGIN_USERNAME` and `SECURITY_INITIALLOGIN_PASSWORD` to set your own credentials straight away (recommended to remove them after user creation).
 
 Once the above has been done, on restart, a new `stirling-pdf-DB.mv.db` will show if everything worked.
