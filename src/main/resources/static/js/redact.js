@@ -49,6 +49,11 @@ window.addEventListener("load", (e) => {
     (!!navigator.userAgentData &&
       navigator.userAgentData.brands.some((data) => data.brand == "Chromium"));
 
+  let isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && window['safari'].pushNotification));
+  let isWebkit = navigator.userAgent.search(/webkit/i)>0;
+  let isGecko = navigator.userAgent.search(/gecko/i)>0;
+  let isFirefox = typeof InstallTrigger !== 'undefined';
+
   let hiddenInput = document.getElementById("fileInput");
   let outerContainer = document.getElementById("outerContainer");
   let printContainer = document.getElementById("printContainer");
@@ -344,13 +349,12 @@ window.addEventListener("load", (e) => {
       });
 
       function setMousePosition(e) {
-        let ev = e || window.event; //Moz || IE
-        if (!isChromium && ev.pageX) {
-          mouse.x = e.layerX;
-          mouse.y = e.layerY;
-        } else if (isChromium) {
+        if (isChromium || isSafari || isWebkit) {
           mouse.x = e.offsetX;
           mouse.y = e.offsetY;
+        } else if (isFirefox || isGecko) {
+          mouse.x = e.layerX;
+          mouse.y = e.layerY;
         } else {
           let rect = (e.target || e.srcElement).getBoundingClientRect();
           mouse.x = e.clientX - rect.left;
