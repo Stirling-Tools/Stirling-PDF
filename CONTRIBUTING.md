@@ -35,9 +35,9 @@ Documentation for Stirling-PDF is handled in a separate repository. Please see [
 
 First, make sure you've read the section [Pull Requests](#pull-requests).
 
-To build from the source, please follow this [Guide](LocalRunGuide.md).
-
 If, at any point in time, you have a question, please feel free to ask in the same issue thread or in our [Discord](https://discord.gg/FJUSXUSYec).
+
+Developers should review our [Developer Guide](DeveloperGuide.md)
 
 ## License
 
