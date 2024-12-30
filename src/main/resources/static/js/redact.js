@@ -474,9 +474,7 @@ window.addEventListener("load", (e) => {
 
 
   PDFViewerApplication.eventBus.on("rotationchanging", (e) => {
-    const rotationDegree = e.pagesRotation;
-    if (activeOverlay)
-      activeOverlay.style.transform = `rotate(${rotationDegree * -1}deg)`;
+    hideOverlay();
   });
 
   function _getScaleFactor() {
