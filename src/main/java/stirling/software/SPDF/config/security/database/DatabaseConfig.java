@@ -45,7 +45,7 @@ public class DatabaseConfig {
         ApplicationProperties.Datasource datasource = system.getDatasource();
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 
-        if (datasource.isEnableCustomDatabase()) {
+        if (!datasource.isEnableCustomDatabase()) {
             log.debug("Using default H2 database");
 
             dataSourceBuilder.driverClassName(DEFAULT_DRIVER);

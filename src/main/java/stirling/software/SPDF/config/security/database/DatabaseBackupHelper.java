@@ -23,6 +23,7 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.support.EncodedResource;
+import org.springframework.jdbc.datasource.init.CannotReadScriptException;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.stereotype.Service;
@@ -59,7 +60,11 @@ public class DatabaseService implements DatabaseInterface {
     public boolean hasBackup() {
         Path filePath = Paths.get(BACKUP_DIR + "*");
 
-        return Files.exists(filePath);
+        if (Files.exists(filePath)) {
+            return !getBackupList().isEmpty();
+        }
+
+        return false;
     }
 
     /**
@@ -107,8 +112,8 @@ public class DatabaseService implements DatabaseInterface {
         if (!hasBackup()) throw new BackupNotFoundException("No backup scripts were found.");
 
         List<FileInfo> backupList = this.getBackupList();
-        backupList.sort(Comparator.comparing(FileInfo::getModificationDate).reversed());
 
+        backupList.sort(Comparator.comparing(FileInfo::getModificationDate).reversed());
         executeDatabaseScript(Paths.get(backupList.get(0).getFilePath()));
     }
 
@@ -141,7 +146,7 @@ public class DatabaseService implements DatabaseInterface {
 
     /** Filter and delete old backups if there are more than 5 */
     @Override
-    public void exportDatabase() throws SQLException {
+    public void exportDatabase() {
         List<FileInfo> filteredBackupList =
                 this.getBackupList().stream()
                         .filter(backup -> !backup.getFileName().startsWith(BACKUP_PREFIX + "user_"))
@@ -163,10 +168,8 @@ public class DatabaseService implements DatabaseInterface {
             log.info("Database export completed: {}", insertOutputFilePath);
         } catch (SQLException e) {
             log.error("Error during database export: {}", e.getMessage(), e);
-            throw e;
-        } catch (ScriptException e) {
+        } catch (CannotReadScriptException e) {
             log.error("Error during database export: File {} not found", insertOutputFilePath);
-            throw e;
         }
     }
 
