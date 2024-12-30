@@ -32,7 +32,7 @@ class DatabaseConfigTest {
 
         when(applicationProperties.getSystem()).thenReturn(system);
         when(system.getDatasource()).thenReturn(datasource);
-        when(datasource.isEnableCustomDatabase()).thenReturn(true);
+        when(datasource.isEnableCustomDatabase()).thenReturn(false);
 
         var result = databaseConfig.dataSource();
 
@@ -46,7 +46,7 @@ class DatabaseConfigTest {
 
         when(applicationProperties.getSystem()).thenReturn(system);
         when(system.getDatasource()).thenReturn(datasource);
-        when(datasource.isEnableCustomDatabase()).thenReturn(false);
+        when(datasource.isEnableCustomDatabase()).thenReturn(true);
         when(datasource.getType()).thenReturn("postgresql");
         when(datasource.getHostName()).thenReturn("localhost");
         when(datasource.getPort()).thenReturn(5432);
@@ -67,7 +67,7 @@ class DatabaseConfigTest {
 
         when(applicationProperties.getSystem()).thenReturn(system);
         when(system.getDatasource()).thenReturn(datasource);
-        when(datasource.isEnableCustomDatabase()).thenReturn(false);
+        when(datasource.isEnableCustomDatabase()).thenReturn(true);
         when(datasource.getType()).thenReturn(datasourceType);
 
         assertThrows(UnsupportedProviderException.class, () -> databaseConfig.dataSource());
