@@ -9,6 +9,7 @@ if (!isScriptExecuted) {
     document.querySelectorAll('.custom-file-chooser').forEach(setupFileInput);
   });
 }
+let hasDroppedImage = false;
 
 function setupFileInput(chooser) {
   const elementId = chooser.getAttribute('data-bs-element-id');
@@ -18,6 +19,11 @@ function setupFileInput(chooser) {
 
   let inputContainer = document.getElementById(inputContainerId);
 
+  if (inputContainer.id === 'pdf-upload-input-container') {
+    inputContainer.querySelector('#dragAndDrop').innerHTML = window.fileInput.dragAndDropPDF;
+  } else if (inputContainer.id === 'image-upload-input-container') {
+    inputContainer.querySelector('#dragAndDrop').innerHTML = window.fileInput.dragAndDropImage;
+  }
   let allFiles = [];
   let overlay;
   let dragCounter = 0;
@@ -141,7 +147,6 @@ function setupFileInput(chooser) {
     files.forEach((file) => dataTransfer.items.add(file));
     return dataTransfer;
   }
-
   function handleFileInputChange(inputElement) {
     const files = allFiles;
     showOrHideSelectedFilesContainer(files);
@@ -166,6 +171,9 @@ function setupFileInput(chooser) {
       let fileIconContainer = document.createElement('div');
 
       if (info.type.startsWith('image/')) {
+        const isDragAndDropEnabled =
+          window.location.pathname.includes('add-image') || window.location.pathname.includes('sign');
+
         let imgPreview = document.createElement('img');
         imgPreview.src = info.url;
         imgPreview.alt = 'Preview';
@@ -174,11 +182,22 @@ function setupFileInput(chooser) {
         imgPreview.style.objectFit = 'cover';
         $(fileIconContainer).append(imgPreview);
 
-        $(fileContainer).attr('draggable', 'true');
-        $(fileContainer).on('dragstart', (e) => {
-          e.originalEvent.dataTransfer.setData('fileUrl', info.url);
-          e.originalEvent.dataTransfer.setData('uniqueId', info.uniqueId);
-        });
+        if (isDragAndDropEnabled) {
+          let dragIcon = document.createElement('div');
+          dragIcon.classList.add('drag-icon');
+          dragIcon.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M360-160q-33 0-56.5-23.5T280-240q0-33 23.5-56.5T360-320q33 0 56.5 23.5T440-240q0 33-23.5 56.5T360-160Zm240 0q-33 0-56.5-23.5T520-240q0-33 23.5-56.5T600-320q33 0 56.5 23.5T680-240q0 33-23.5 56.5T600-160ZM360-400q-33 0-56.5-23.5T280-480q0-33 23.5-56.5T360-560q33 0 56.5 23.5T440-480q0 33-23.5 56.5T360-400Zm240 0q-33 0-56.5-23.5T520-480q0-33 23.5-56.5T600-560q33 0 56.5 23.5T680-480q0 33-23.5 56.5T600-400ZM360-640q-33 0-56.5-23.5T280-720q0-33 23.5-56.5T360-800q33 0 56.5 23.5T440-720q0 33-23.5 56.5T360-640Zm240 0q-33 0-56.5-23.5T520-720q0-33 23.5-56.5T600-800q33 0 56.5 23.5T680-720q0 33-23.5 56.5T600-640Z"/></svg>';
+          fileContainer.appendChild(dragIcon);
+
+          $(fileContainer).attr('draggable', 'true');
+          $(fileContainer).on('dragstart', (e) => {
+            e.originalEvent.dataTransfer.setData('fileUrl', info.url);
+            e.originalEvent.dataTransfer.setData('uniqueId', info.uniqueId);
+            e.originalEvent.dataTransfer.setDragImage(imgPreview, imgPreview.width / 2, imgPreview.height / 2);
+          });
+        } else {
+          $(fileContainer).removeAttr('draggable');
+        }
       } else {
         fileIconContainer = createFileIconContainer(info);
       }
@@ -192,13 +211,10 @@ function setupFileInput(chooser) {
       $(removeBtn).append(removeBtnIconHTML);
       $(removeBtn).attr('data-file-id', info.uniqueId).click(removeFileListener);
 
-      $(fileContainer).append(fileIconContainer);
-      $(fileContainer).append(fileInfoContainer);
-      $(fileContainer).append(removeBtn);
+      $(fileContainer).append(fileIconContainer, fileInfoContainer, removeBtn);
 
       selectedFilesContainer.append(fileContainer);
     });
-
     const pageContainers = $('#box-drag-container');
     pageContainers.off('dragover').on('dragover', (e) => {
       e.preventDefault();
@@ -214,14 +230,48 @@ function setupFileInput(chooser) {
           DraggableUtils.createDraggableCanvasFromUrl(fileUrl);
         }
       }
+      const overlayElement = chooser.querySelector('.drag-drop-overlay');
+      if (overlayElement) {
+        overlayElement.style.display = 'none';
+      }
+      hasDroppedImage = true;
     });
 
     showOrHideSelectedFilesContainer(files);
   }
 
   function showOrHideSelectedFilesContainer(files) {
-    if (files && files.length > 0) chooser.style.setProperty('--selected-files-display', 'flex');
-    else chooser.style.setProperty('--selected-files-display', 'none');
+    if (files && files.length > 0) {
+      chooser.style.setProperty('--selected-files-display', 'flex');
+    } else {
+      chooser.style.setProperty('--selected-files-display', 'none');
+    }
+    const isDragAndDropEnabled =
+      (window.location.pathname.includes('add-image') || window.location.pathname.includes('sign')) &&
+      files.some((file) => file.type.startsWith('image/'));
+
+    if (!isDragAndDropEnabled) return;
+
+    const selectedFilesContainer = chooser.querySelector('.selected-files');
+
+    let overlayElement = chooser.querySelector('.drag-drop-overlay');
+    if (!overlayElement) {
+      selectedFilesContainer.style.position = 'relative';
+      overlayElement = document.createElement('div');
+      overlayElement.classList.add('draggable-image-overlay');
+
+      overlayElement.innerHTML = 'Drag images to add them to the page';
+      selectedFilesContainer.appendChild(overlayElement);
+    }
+    if (hasDroppedImage) overlayElement.style.display = files && files.length > 0 ? 'flex' : 'none';
+
+    selectedFilesContainer.addEventListener('mouseenter', () => {
+      overlayElement.style.display = 'none';
+    });
+
+    selectedFilesContainer.addEventListener('mouseleave', () => {
+      if (!hasDroppedImage) overlayElement.style.display = files && files.length > 0 ? 'flex' : 'none';
+    });
   }
 
   function removeFileListener(e) {

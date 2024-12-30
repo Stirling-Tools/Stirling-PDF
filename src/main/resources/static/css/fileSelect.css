@@ -220,3 +220,41 @@
   border-radius: 1rem;
   border: 1px solid rgb(105, 116, 134, 0.5);
 }
+
+.draggable-image-overlay{
+  position: absolute;
+  background: rgba(0, 0, 0, 0.7);
+  display: none;
+  z-index: 10;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  pointer-events: none;
+  left:0;
+  top:0;
+  height:100%;
+  width:100%;
+  border-radius: 1rem;
+}
+
+.small-file-container:hover .drag-icon {
+  display: flex;
+}
+
+.drag-icon {
+  display: none;
+  position: absolute;
+  top: 5px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1;
+}
