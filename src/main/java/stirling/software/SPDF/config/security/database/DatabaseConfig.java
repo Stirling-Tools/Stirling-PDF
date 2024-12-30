@@ -46,7 +46,7 @@ public class DatabaseConfig {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 
         if (!datasource.isEnableCustomDatabase()) {
-            log.debug("Using default H2 database");
+            log.info("Using default H2 database");
 
             dataSourceBuilder.driverClassName(DEFAULT_DRIVER);
             dataSourceBuilder.url(DATASOURCE_DEFAULT_URL);
@@ -55,6 +55,7 @@ public class DatabaseConfig {
             return dataSourceBuilder.build();
         }
 
+        log.info("Using custom database");
         dataSourceBuilder.driverClassName(getDriverClassName(datasource.getType()));
         dataSourceBuilder.url(
                 getDataSourceUrl(

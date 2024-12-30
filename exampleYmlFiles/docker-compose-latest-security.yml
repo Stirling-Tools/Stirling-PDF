@@ -1,7 +1,7 @@
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Security
-    image: stirlingtools/stirling-pdf:latest
+    image: stirlingtools/stirling-pdf:test
     deploy:
       resources:
         limits:
@@ -36,7 +36,7 @@ services:
       SYSTEM_DATASOURCE_HOSTNAME: "db"
       SYSTEM_DATASOURCE_PORT: "5432"
       SYSTEM_DATASOURCE_NAME: "stirling_pdf"
-      SYSTEM_DATASOURCE_ENABLECUSTOMDATABASE: "false"
+      SYSTEM_DATASOURCE_ENABLECUSTOMDATABASE: "true"
       SYSTEM_DATASOURCE_USERNAME: "admin"
       SYSTEM_DATASOURCE_PASSWORD: "stirling"
     restart: on-failure:5
