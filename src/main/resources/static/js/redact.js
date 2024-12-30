@@ -474,6 +474,7 @@ window.addEventListener("load", (e) => {
 
 
   PDFViewerApplication.eventBus.on("rotationchanging", (e) => {
+    if (!activeOverlay) return;
     hideOverlay();
   });
 
