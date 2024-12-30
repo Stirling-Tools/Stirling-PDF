@@ -692,6 +692,13 @@ window.addEventListener("load", (e) => {
       if (activeOverlay) hideOverlay();
       redactionElement.classList.add("active-redaction");
       activeOverlay = redactionOverlay;
+      _adjustActiveOverlayCoordinates();
+    };
+
+    redactionElement.appendChild(redactionOverlay);
+
+    // Adjust active overlay coordinates to avoid placing the overlay out of page bounds
+    function _adjustActiveOverlayCoordinates() {
       activeOverlay.style.visibility = "hidden";
       activeOverlay.style.display = "flex";
       textLayer = textLayer || getTextLayer(redactionElement);
@@ -726,9 +733,7 @@ window.addEventListener("load", (e) => {
       if (leftOffset != 0) activeOverlay.style.left = `calc(50% + ${leftOffset}px`;
       if (topOffset != 0) activeOverlay.style.top = `calc(100% + ${topOffset}px`;
       activeOverlay.style.visibility = "unset";
-    };
-
-    redactionElement.appendChild(redactionOverlay);
+    }
   }
 });
 
