@@ -720,7 +720,7 @@ window.addEventListener("load", (e) => {
       }
 
       switch (angle) {
-        case 90: [leftOffset, topOffset] = [topOffset, leftOffset]; break;
+        case 90: [leftOffset, topOffset] = [topOffset, -leftOffset]; break;
         case 180: [leftOffset, topOffset] = [-leftOffset, -topOffset]; break;
         case 270: [leftOffset, topOffset] = [-topOffset, leftOffset]; break;
       }
