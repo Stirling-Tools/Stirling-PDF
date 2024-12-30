@@ -169,11 +169,9 @@ function setupFileInput(chooser) {
       $(fileContainer).attr('id', info.uniqueId);
 
       let fileIconContainer = document.createElement('div');
-
+      const isDragAndDropEnabled =
+        window.location.pathname.includes('add-image') || window.location.pathname.includes('sign');
       if (info.type.startsWith('image/')) {
-        const isDragAndDropEnabled =
-          window.location.pathname.includes('add-image') || window.location.pathname.includes('sign');
-
         let imgPreview = document.createElement('img');
         imgPreview.src = info.url;
         imgPreview.alt = 'Preview';
@@ -204,16 +202,19 @@ function setupFileInput(chooser) {
 
       let fileInfoContainer = createFileInfoContainer(info);
 
-      let removeBtn = document.createElement('div');
-      removeBtn.classList.add('remove-selected-file');
+      if (!isDragAndDropEnabled) {
+        let removeBtn = document.createElement('div');
+        removeBtn.classList.add('remove-selected-file');
 
-      let removeBtnIconHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#C02223"><path d="m339-288 141-141 141 141 51-51-141-141 141-141-51-51-141 141-141-141-51 51 141 141-141 141 51 51ZM480-96q-79 0-149-30t-122.5-82.5Q156-261 126-331T96-480q0-80 30-149.5t82.5-122Q261-804 331-834t149-30q80 0 149.5 30t122 82.5Q804-699 834-629.5T864-480q0 79-30 149t-82.5 122.5Q699-156 629.5-126T480-96Z"/></svg>`;
-      $(removeBtn).append(removeBtnIconHTML);
-      $(removeBtn).attr('data-file-id', info.uniqueId).click(removeFileListener);
-
-      $(fileContainer).append(fileIconContainer, fileInfoContainer, removeBtn);
+        let removeBtnIconHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#C02223"><path d="m339-288 141-141 141 141 51-51-141-141 141-141-51-51-141 141-141-141-51 51 141 141-141 141 51 51ZM480-96q-79 0-149-30t-122.5-82.5Q156-261 126-331T96-480q0-80 30-149.5t82.5-122Q261-804 331-834t149-30q80 0 149.5 30t122 82.5Q804-699 834-629.5T864-480q0 79-30 149t-82.5 122.5Q699-156 629.5-126T480-96Z"/></svg>`;
+        $(removeBtn).append(removeBtnIconHTML);
+        $(removeBtn).attr('data-file-id', info.uniqueId).click(removeFileListener);
+        $(fileContainer).append(removeBtn);
+      }
+      $(fileContainer).append(fileIconContainer, fileInfoContainer);
 
       selectedFilesContainer.append(fileContainer);
+      enableImagePreviewOnDoubleClick();
     });
     const pageContainers = $('#box-drag-container');
     pageContainers.off('dragover').on('dragover', (e) => {
@@ -325,5 +326,41 @@ function setupFileInput(chooser) {
     let inputElement = document.getElementById(elementId);
     removeFileById(fileId, inputElement);
     showOrHideSelectedFilesContainer(allFiles);
+  });
+
+  function enableImagePreviewOnDoubleClick() {
+    let imagePreviewModal = document.createElement('div');
+    imagePreviewModal.id = 'imagePreviewModal';
+    imagePreviewModal.classList.add('image-preview-modal');
+
+    let imgElement = document.createElement('img');
+    imgElement.style.maxWidth = '90%';
+    imgElement.style.maxHeight = '90%';
+    imagePreviewModal.appendChild(imgElement);
+
+    document.body.appendChild(imagePreviewModal);
+
+    function closeModal() {
+      imagePreviewModal.style.display = 'none';
+    }
+
+    imagePreviewModal.addEventListener('click', closeModal);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && imagePreviewModal.style.display === 'flex') {
+        closeModal();
+      }
+    });
+
+    document.querySelectorAll('.selected-files img').forEach((img) => {
+      img.addEventListener('dblclick', function () {
+        imgElement.src = this.src;
+        imagePreviewModal.style.display = 'flex';
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    enableImagePreviewOnDoubleClick();
   });
 }
