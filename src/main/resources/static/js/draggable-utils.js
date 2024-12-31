@@ -69,6 +69,8 @@ const DraggableUtils = {
           move: (event) => {
             const target = event.target;
 
+            const MAX_CHANGE = 60;
+
             let width = event.rect.width - 2 * this.padding;
             let height = event.rect.height - 2 * this.padding;
 
@@ -80,7 +82,6 @@ const DraggableUtils = {
 
               const aspectRatio = originalWidth / originalHeight;
 
-              // Maintain aspect ratio if Ctrl key is not pressed
               if (!event.ctrlKey) {
                 if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
                   height = width / aspectRatio;
@@ -89,38 +90,42 @@ const DraggableUtils = {
                 }
               }
 
+              const widthChange = width - originalWidth;
+              const heightChange = height - originalHeight;
+
+              if (Math.abs(widthChange) > MAX_CHANGE || Math.abs(heightChange) > MAX_CHANGE) {
+                const scale = MAX_CHANGE / Math.max(Math.abs(widthChange), Math.abs(heightChange));
+                width = originalWidth + widthChange * scale;
+                height = originalHeight + heightChange * scale;
+              }
+
               const cosAngle = Math.abs(Math.cos(angle));
               const sinAngle = Math.abs(Math.sin(angle));
               const boundingWidth = width * cosAngle + height * sinAngle;
               const boundingHeight = width * sinAngle + height * cosAngle;
 
-              // Adjust x and y only for specific edges to prevent conflicts
               if (event.edges.left) {
                 const dx = event.deltaRect.left;
-                x += dx; // Move the element left when resizing from the left
+                x += dx;
               }
               if (event.edges.top) {
                 const dy = event.deltaRect.top;
-                y += dy; // Move the element up when resizing from the top
+                y += dy;
               }
 
-              // Only update x or y if the corresponding edge is being resized
-              if (event.edges.left || event.edges.top) {
-                target.style.transform = `translate(${x}px, ${y}px)`;
-                target.setAttribute('data-bs-x', x);
-                target.setAttribute('data-bs-y', y);
-              }
-
+              target.style.transform = `translate(${x}px, ${y}px)`;
               target.style.width = `${boundingWidth + 2 * this.padding}px`;
               target.style.height = `${boundingHeight + 2 * this.padding}px`;
 
               canvas.style.width = `${width}px`;
               canvas.style.height = `${height}px`;
+              canvas.style.transform = `translate(${(boundingWidth - width) / 2}px, ${
+                (boundingHeight - height) / 2
+              }px) rotate(${angle}rad)`;
 
-              const translateX = (boundingWidth - width) / 2;
-              const translateY = (boundingHeight - height) / 2;
+              target.setAttribute('data-bs-x', x);
+              target.setAttribute('data-bs-y', y);
 
-              canvas.style.transform = `translate(${translateX}px, ${translateY}px) rotate(${angle}rad)`;
               this.lastInteracted = target;
             }
           },
