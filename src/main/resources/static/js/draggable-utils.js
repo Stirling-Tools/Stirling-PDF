@@ -121,6 +121,7 @@ const DraggableUtils = {
               const translateY = (boundingHeight - height) / 2;
 
               canvas.style.transform = `translate(${translateX}px, ${translateY}px) rotate(${angle}rad)`;
+              this.lastInteracted = target;
             }
           },
         },

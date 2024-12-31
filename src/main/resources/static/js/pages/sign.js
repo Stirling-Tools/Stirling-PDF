@@ -73,6 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.show-on-file-selected').forEach((el) => {
     el.style.cssText = 'display:none !important';
   });
+  document.querySelectorAll('.small-file-container-saved img ').forEach((img) => {
+    img.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('fileUrl', img.src);
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Delete') {
+      DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted());
+    }
+  });
 });
 
 const imageUpload = document.querySelector('input[name=image-upload]');

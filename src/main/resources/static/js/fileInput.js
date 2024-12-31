@@ -193,6 +193,7 @@ function setupFileInput(chooser) {
             e.originalEvent.dataTransfer.setData('uniqueId', info.uniqueId);
             e.originalEvent.dataTransfer.setDragImage(imgPreview, imgPreview.width / 2, imgPreview.height / 2);
           });
+          enableImagePreviewOnClick(fileIconContainer);
         } else {
           $(fileContainer).removeAttr('draggable');
         }
@@ -214,7 +215,6 @@ function setupFileInput(chooser) {
       $(fileContainer).append(fileIconContainer, fileInfoContainer);
 
       selectedFilesContainer.append(fileContainer);
-      enableImagePreviewOnDoubleClick();
     });
     const pageContainers = $('#box-drag-container');
     pageContainers.off('dragover').on('dragover', (e) => {
@@ -327,40 +327,52 @@ function setupFileInput(chooser) {
     removeFileById(fileId, inputElement);
     showOrHideSelectedFilesContainer(allFiles);
   });
+  function enableImagePreviewOnClick(container) {
+    const imagePreviewModal = document.getElementById('imagePreviewModal') || createImagePreviewModal();
 
-  function enableImagePreviewOnDoubleClick() {
-    let imagePreviewModal = document.createElement('div');
-    imagePreviewModal.id = 'imagePreviewModal';
-    imagePreviewModal.classList.add('image-preview-modal');
-
-    let imgElement = document.createElement('img');
-    imgElement.style.maxWidth = '90%';
-    imgElement.style.maxHeight = '90%';
-    imagePreviewModal.appendChild(imgElement);
-
-    document.body.appendChild(imagePreviewModal);
-
-    function closeModal() {
-      imagePreviewModal.style.display = 'none';
-    }
-
-    imagePreviewModal.addEventListener('click', closeModal);
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && imagePreviewModal.style.display === 'flex') {
-        closeModal();
+    container.querySelectorAll('img').forEach((img) => {
+      if (!img.hasPreviewListener) {
+        img.addEventListener('mouseup', function () {
+          const imgElement = imagePreviewModal.querySelector('img');
+          imgElement.src = this.src;
+          imagePreviewModal.style.display = 'flex';
+        });
+        img.hasPreviewListener = true;
       }
     });
 
-    document.querySelectorAll('.selected-files img').forEach((img) => {
-      img.addEventListener('dblclick', function () {
-        imgElement.src = this.src;
-        imagePreviewModal.style.display = 'flex';
-      });
-    });
-  }
+    function createImagePreviewModal() {
+      const modal = document.createElement('div');
+      modal.id = 'imagePreviewModal';
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.width = '100vw';
+      modal.style.height = '100vh';
+      modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+      modal.style.display = 'none';
+      modal.style.justifyContent = 'center';
+      modal.style.alignItems = 'center';
+      modal.style.zIndex = '2000';
 
-  document.addEventListener('DOMContentLoaded', () => {
-    enableImagePreviewOnDoubleClick();
-  });
+      const imgElement = document.createElement('img');
+      imgElement.style.maxWidth = '90%';
+      imgElement.style.maxHeight = '90%';
+
+      modal.appendChild(imgElement);
+      document.body.appendChild(modal);
+
+      modal.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+          modal.style.display = 'none';
+        }
+      });
+
+      return modal;
+    }
+  }
 }

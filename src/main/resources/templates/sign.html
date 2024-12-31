@@ -59,13 +59,6 @@
 
               <div class="tab-container" th:title="#{sign.saved}">
                 <div class="saved-signatures-section" th:if="${not #lists.isEmpty(signatures)}">
-                  <!-- View Toggle Button -->
-                  <div class="view-toggle mb-3">
-                    <button class="btn btn-outline-secondary btn-sm" onclick="toggleSignatureView()">
-                      <span class="material-symbols-rounded grid-view-text">view_list</span>
-                      <span class="material-symbols-rounded list-view-text" style="display: none;">grid_view</span>
-                    </button>
-                  </div>
 
                   <!-- Preview Modal -->
                   <div class="modal fade" id="signaturePreview" tabindex="-1">
@@ -87,66 +80,37 @@
                       </div>
                     </div>
                   </div>
-
-                  <!-- Grid View -->
-                  <div id="gridView">
                     <!-- Personal Signatures -->
-                    <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Personal'])}">
+                    <div th:if="${not #lists.isEmpty(signatures.?[category == 'Personal'])}">
                       <h5 th:text="#{sign.personalSigs}"></h5>
-                      <div class="signature-grid">
-                        <div th:each="sig : ${signatures}" th:if="${sig.category == 'Personal'}" class="signature-item">
+                      <div class="selected-files flex-wrap" style="position: relative; display:flex">
+                        <div th:each="sig : ${signatures}" th:if="${sig.category == 'Personal'}" class="small-file-container-saved d-flex flex-column justify-content-center align-items-center">
+                          <div class="drag-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M360-160q-33 0-56.5-23.5T280-240q0-33 23.5-56.5T360-320q33 0 56.5 23.5T440-240q0 33-23.5 56.5T360-160Zm240 0q-33 0-56.5-23.5T520-240q0-33 23.5-56.5T600-320q33 0 56.5 23.5T680-240q0 33-23.5 56.5T600-160ZM360-400q-33 0-56.5-23.5T280-480q0-33 23.5-56.5T360-560q33 0 56.5 23.5T440-480q0 33-23.5 56.5T360-400Zm240 0q-33 0-56.5-23.5T520-480q0-33 23.5-56.5T600-560q33 0 56.5 23.5T680-480q0 33-23.5 56.5T600-400ZM360-640q-33 0-56.5-23.5T280-720q0-33 23.5-56.5T360-800q33 0 56.5 23.5T440-720q0 33-23.5 56.5T360-640Zm240 0q-33 0-56.5-23.5T520-720q0-33 23.5-56.5T600-800q33 0 56.5 23.5T680-720q0 33-23.5 56.5T600-640Z"></path></svg></div>
                           <img th:src="@{'/api/v1/general/sign/' + ${sig.fileName}}" th:alt="${sig.fileName}"
-                            th:data-filename="${sig.fileName}" style="max-width: 200px; cursor: pointer;"
-                            onclick="DraggableUtils.createDraggableCanvasFromUrl(this.src)" />
-                          <div class="signature-name" th:text="${sig.fileName}"></div>
+                            th:data-filename="${sig.fileName}" style="width: 50px; height: 50px; object-fit: cover;"/>
+                            <div class="file-info d-flex flex-column align-items-center justify-content-center">
+                              <div class="signature-name" th:text="${sig.fileName}"></div>
+                        </div>
+
                         </div>
                       </div>
                     </div>
 
                     <!-- Shared Signatures -->
-                    <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Shared'])}">
+                    <div th:if="${not #lists.isEmpty(signatures.?[category == 'Shared'])}">
                       <h5 th:text="#{sign.sharedSigs}"></h5>
-                      <div class="signature-grid">
-                        <div th:each="sig : ${signatures}" th:if="${sig.category == 'Shared'}" class="signature-item">
+                      <div class="selected-files flex-wrap" style="position: relative; display: flex;">
+                        <div th:each="sig : ${signatures}" th:if="${sig.category == 'Shared'}" class="small-file-container-saved d-flex flex-column justify-content-center align-items-center">
+                          <div class="drag-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M360-160q-33 0-56.5-23.5T280-240q0-33 23.5-56.5T360-320q33 0 56.5 23.5T440-240q0 33-23.5 56.5T360-160Zm240 0q-33 0-56.5-23.5T520-240q0-33 23.5-56.5T600-320q33 0 56.5 23.5T680-240q0 33-23.5 56.5T600-160ZM360-400q-33 0-56.5-23.5T280-480q0-33 23.5-56.5T360-560q33 0 56.5 23.5T440-480q0 33-23.5 56.5T360-400Zm240 0q-33 0-56.5-23.5T520-480q0-33 23.5-56.5T600-560q33 0 56.5 23.5T680-480q0 33-23.5 56.5T600-400ZM360-640q-33 0-56.5-23.5T280-720q0-33 23.5-56.5T360-800q33 0 56.5 23.5T440-720q0 33-23.5 56.5T360-640Zm240 0q-33 0-56.5-23.5T520-720q0-33 23.5-56.5T600-800q33 0 56.5 23.5T680-720q0 33-23.5 56.5T600-640Z"></path></svg></div>
                           <img th:src="@{'/api/v1/general/sign/' + ${sig.fileName}}" th:alt="${sig.fileName}"
-                            th:data-filename="${sig.fileName}" style="max-width: 200px; cursor: pointer;"
-                            onclick="DraggableUtils.createDraggableCanvasFromUrl(this.src)" />
+                            th:data-filename="${sig.fileName}" style="width: 50px; height: 50px; object-fit: cover;"/>
+                        <div class="file-info d-flex flex-column align-items-center justify-content-center">
                           <div class="signature-name" th:text="${sig.fileName}"></div>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- List View (Initially Hidden) -->
-                  <div id="listView" style="display: none;">
-                    <!-- Personal Signatures -->
-                    <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Personal'])}">
-                      <h5 th:text="#{sign.personalSigs}"></h5>
-                      <div class="signature-list">
-                        <div th:each="sig : ${signatures}" th:if="${sig.category == 'Personal'}"
-                          class="signature-list-item" th:data-src="@{'/api/v1/general/sign/' + ${sig.fileName}}"
-                          onclick="previewSignature(this)">
-                          <div class="signature-list-info">
-                            <span th:text="${sig.fileName}" class="signature-list-name"></span>
-                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <!-- Shared Signatures -->
-                    <div class="signature-category" th:if="${not #lists.isEmpty(signatures.?[category == 'Shared'])}">
-                      <h5 th:text="#{sign.sharedSigs}"></h5>
-                      <div class="signature-list">
-                        <div th:each="sig : ${signatures}" th:if="${sig.category == 'Shared'}"
-                          class="signature-list-item" th:data-src="@{'/api/v1/general/sign/' + ${sig.fileName}}"
-                          onclick="previewSignature(this)">
-                          <div class="signature-list-info">
-                            <span th:text="${sig.fileName}" class="signature-list-name"></span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
                 <div th:if="${#lists.isEmpty(signatures)}" class="text-center p-3">
                   <p th:text="#{sign.noSavedSigs}">No saved signatures found</p>

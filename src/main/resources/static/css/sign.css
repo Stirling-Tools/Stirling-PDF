@@ -149,3 +149,15 @@ select#font-select option {
 .input-with-icon input {
   padding-left: 2.2rem;
 }
+
+.small-file-container-saved {
+  padding-top: 1px;
+  position: relative;
+  row-gap: 1px;
+  height: 60px;
+  width: 60px;
+  top:4px;
+}
+.small-file-container-saved:hover .drag-icon {
+  display: flex;
+}
