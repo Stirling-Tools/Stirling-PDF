@@ -156,6 +156,14 @@ html {
   background-color: var(--palette-color);
 }
 
+#redactions-palette >  input[type=color] {
+  visibility: hidden;
+  position: absolute;
+  left: 0;
+  top: var(--toolButton-height);
+  height: 0;
+}
+
 #apply-redaction {
   height: var(--toolButton-height);
   width: var(--toolButton-width);
