@@ -168,6 +168,21 @@ class PdfContainer {
       input.click();
     });
   }
+
+  async handleDroppedFiles(files, nextSiblingElement = null) {
+    if (files.length > 0) {
+      const pages = await this.addFilesFromFiles(files, nextSiblingElement, []);
+      this.updateFilename(files[0]?.name || 'untitled');
+
+      const selectAll = document.getElementById('select-pages-container');
+      if (selectAll) {
+        selectAll.classList.remove('hidden');
+      }
+
+      return pages;
+    }
+  }
+
   async addFilesFromFiles(files, nextSiblingElement, pages) {
     this.fileName = files[0].name;
     for (var i = 0; i < files.length; i++) {
