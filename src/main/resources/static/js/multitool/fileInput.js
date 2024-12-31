@@ -8,7 +8,7 @@ class FileDragManager {
     this.setCallback(cb);
 
     // Prevent default behavior for drag events
-    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
       document.body.addEventListener(eventName, preventDefaults, false);
     });
 
@@ -21,13 +21,13 @@ class FileDragManager {
     this.dragleaveListener = this.dragleaveListener.bind(this);
     this.dropListener = this.dropListener.bind(this);
 
-    document.body.addEventListener("dragenter", this.dragenterListener);
-    document.body.addEventListener("dragleave", this.dragleaveListener);
+    document.body.addEventListener('dragenter', this.dragenterListener);
+    document.body.addEventListener('dragleave', this.dragleaveListener);
     // Add drop event listener
-    document.body.addEventListener("drop", this.dropListener);
+    document.body.addEventListener('drop', this.dropListener);
   }
 
-  setActions({ updateFilename }) {
+  setActions({updateFilename}) {
     this.updateFilename = updateFilename;
   }
 
@@ -35,7 +35,7 @@ class FileDragManager {
     if (cb) {
       this.callback = cb;
     } else {
-      this.callback = (files) => console.warn("FileDragManager not set");
+      this.callback = (files) => console.warn('FileDragManager not set');
     }
   }
 
@@ -43,21 +43,21 @@ class FileDragManager {
     this.dragCounter++;
     if (!this.overlay) {
       // Create and show the overlay
-      this.overlay = document.createElement("div");
-      this.overlay.style.position = "fixed";
+      this.overlay = document.createElement('div');
+      this.overlay.style.position = 'fixed';
       this.overlay.style.top = 0;
       this.overlay.style.left = 0;
-      this.overlay.style.width = "100%";
-      this.overlay.style.height = "100%";
-      this.overlay.style.background = "rgba(0, 0, 0, 0.5)";
-      this.overlay.style.color = "#fff";
-      this.overlay.style.zIndex = "1000";
-      this.overlay.style.display = "flex";
-      this.overlay.style.alignItems = "center";
-      this.overlay.style.justifyContent = "center";
-      this.overlay.style.pointerEvents = "none";
-      this.overlay.innerHTML = "<p>Drop files anywhere to upload</p>";
-      document.getElementById("content-wrap").appendChild(this.overlay);
+      this.overlay.style.width = '100%';
+      this.overlay.style.height = '100%';
+      this.overlay.style.background = 'rgba(0, 0, 0, 0.5)';
+      this.overlay.style.color = '#fff';
+      this.overlay.style.zIndex = '1000';
+      this.overlay.style.display = 'flex';
+      this.overlay.style.alignItems = 'center';
+      this.overlay.style.justifyContent = 'center';
+      this.overlay.style.pointerEvents = 'none';
+      this.overlay.innerHTML = '<p>Drop files anywhere to upload</p>';
+      document.getElementById('content-wrap').appendChild(this.overlay);
     }
   }
 
@@ -87,16 +87,16 @@ class FileDragManager {
           this.overlay = null;
         }
 
-        this.updateFilename(files ? files[0].name : "");
+        this.updateFilename(files ? files[0].name : '');
       });
   }
 
   async addImageFile(file, nextSiblingElement) {
-    const div = document.createElement("div");
-    div.classList.add("page-container");
+    const div = document.createElement('div');
+    div.classList.add('page-container');
 
-    var img = document.createElement("img");
-    img.classList.add("page-image");
+    var img = document.createElement('img');
+    img.classList.add('page-image');
     img.src = URL.createObjectURL(file);
     div.appendChild(img);
 

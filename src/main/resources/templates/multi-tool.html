@@ -216,7 +216,7 @@
       undoManager
     )
 
-    fileDragManager.setCallback(async (files) => pdfContainer.addFilesFromFiles(files));
+    fileDragManager.setCallback(async (files) => pdfContainer.handleDroppedFiles(files));
     document.addEventListener('keydown', function(event) {
     let targetElementId = event.target.id;
 
