@@ -73,7 +73,8 @@
         <label for="pageRedactColor" th:text="#{redact.pageRedactionColor.title}"></label>
         <input data-for="pageRedactColor" type="color" class="ms-3" value="#000000">
       </div>
-      <button class="btn btn-danger" th:text="#{close}"></button>
+      <button id="closePageRedactionBtn" class="btn btn-danger" th:text="#{close}"></button>
+      <button id="applyPageRedactionBtn" class="btn btn-success ms-3" th:text="#{apply}"></button>
     </div>
   </div>
   <div id="outerContainer" class="d-none">

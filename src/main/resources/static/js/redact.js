@@ -107,17 +107,25 @@ window.addEventListener("load", (e) => {
   pageBasedRedactionBtn.onclick = (e) =>
     pageBasedRedactionOverlay.classList.remove("d-none");
 
-  pageBasedRedactionOverlay.querySelector("button").onclick = (e) =>
+  let applyPageRedactionBtn = document.getElementById("applyPageRedactionBtn");
+  applyPageRedactionBtn.onclick = (e) => {
     pageBasedRedactionOverlay.classList.add("d-none");
+    pageBasedRedactionOverlay.querySelectorAll("input").forEach((input) => {
+      const id = input.getAttribute("data-for");
+      let formInput = document.getElementById(id);
+      if (formInput) formInput.value = input.value;
+    });
+  };
 
-  pageBasedRedactionOverlay.querySelectorAll("input").forEach(
-    (input) =>
-      (input.onchange = (e) => {
-        const id = input.getAttribute("data-for");
-        let formInput = document.getElementById(id);
-        if (formInput) formInput.value = input.value;
-      })
-  );
+  let closePageRedactionBtn = document.getElementById("closePageRedactionBtn");
+  closePageRedactionBtn.onclick = (e) => {
+    pageBasedRedactionOverlay.classList.add("d-none");
+    pageBasedRedactionOverlay.querySelectorAll("input").forEach((input) => {
+      const id = input.getAttribute("data-for");
+      let formInput = document.getElementById(id);
+      if (formInput) input.value = formInput.value;
+    });
+  };
 
   let pdfToImageCheckbox = document.getElementById("convertPDFToImage");
 
