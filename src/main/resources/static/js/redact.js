@@ -28,10 +28,10 @@ function extractPagesDetailed(pagesInput, totalPageCount) {
       pagesDetailed.all = true;
       return pagesDetailed;
     } else if (isValidFunction(trimmedPart)) {
-      pagesDetailed.functions.add(insertMultiplicationBeforeN(trimmedPart));
+      pagesDetailed.functions.add(formatNFunction(trimmedPart));
     } else if (trimmedPart.includes('-')) {
-      let range = trimmedPart.split('-').filter(s => s);
-      if (range && range.length == 2 && range[0] > 0 && range[1] > 0)  pagesDetailed.ranges.add({low: range[0], high: range[1]});
+      let range = trimmedPart.replaceAll(' ', '').split('-').filter(s => s);
+      if (range && range.length == 2 && range[0].trim() > 0 && range[1].trim() > 0)  pagesDetailed.ranges.add({low: range[0].trim(), high: range[1].trim()});
     } else if (isPageNumber(trimmedPart)) {
       pagesDetailed.numbers.add((trimmedPart <= totalPageCount) ? trimmedPart : totalPageCount);
     }
@@ -40,8 +40,18 @@ function extractPagesDetailed(pagesInput, totalPageCount) {
   return pagesDetailed;
 }
 
+function formatNFunction(expression) {
+  let result = insertMultiplicationBeforeN(expression.replaceAll(' ', ''));
+  let multiplyByOpeningRoundBracketPattern = /([0-9n)])\(/g; // example: n(n-1), 9(n-1), (n-1)(n-2)
+  return result.replaceAll(multiplyByOpeningRoundBracketPattern, "$1*(");
+}
+
 function insertMultiplicationBeforeN(expression) {
-  return expression.replaceAll(/(\d)n/g, "$1*n");
+  let result = expression.replaceAll(/(\d)n/g, "$1*n");
+  while (result.match(/nn/)) {
+    result = result.replaceAll(/nn/g, "n*n"); // From nn -> n*n
+  }
+  return result;
 }
 
 function validatePages(pages) {
@@ -55,7 +65,7 @@ function validatePages(pages) {
     } else if (trimmedPart.includes('-')) {
       let range = trimmedPart.split('-').filter(s => s);
       if (!range || range.length != 2) errors.push(`${trimmedPart} is an invalid range, it should consist of from-to, example: 1-5`);
-      else if (range[0] <= 0 || range[1] <= 0) errors.push(`${trimmedPart} has invalid range(s), page numbers should be positive.`);
+      else if (range[0].trim() <= 0 || range[1].trim() <= 0) errors.push(`${trimmedPart} has invalid range(s), page numbers should be positive.`);
     } else if (!isPageNumber(trimmedPart)) {
       errors.push(`${trimmedPart} is invalid, it should either be a function, page number or a range.`);
     }
