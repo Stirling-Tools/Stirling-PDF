@@ -43,7 +43,11 @@ function extractPagesDetailed(pagesInput, totalPageCount) {
 function formatNFunction(expression) {
   let result = insertMultiplicationBeforeN(expression.replaceAll(' ', ''));
   let multiplyByOpeningRoundBracketPattern = /([0-9n)])\(/g; // example: n(n-1), 9(n-1), (n-1)(n-2)
-  return result.replaceAll(multiplyByOpeningRoundBracketPattern, "$1*(");
+  result = result.replaceAll(multiplyByOpeningRoundBracketPattern, "$1*(");
+
+  let multiplyByClosingRoundBracketPattern = /\)([0-9n)])/g; // example: (n-1)n, (n-1)9, (n-1)(n-2)
+  result = result.replaceAll(multiplyByClosingRoundBracketPattern, ")*$1");
+  return result;
 }
 
 function insertMultiplicationBeforeN(expression) {
