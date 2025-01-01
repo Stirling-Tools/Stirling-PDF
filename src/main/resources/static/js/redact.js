@@ -193,15 +193,7 @@ window.addEventListener("load", (e) => {
   let { errors } = validatePages(value);
   if (errors && errors.length > 0) {
     applyPageRedactionBtn.disabled = "true";
-    input.classList.add('is-invalid');
-
-    errors.forEach(error => {
-      let element = document.createElement('div');
-      element.classList.add('invalid-feedback');
-      element.classList.add('list-styling');
-      element.textContent = error;
-      parentElement.appendChild(element);
-    });
+    displayFieldErrorMessages(input, errors);
   } else {
     applyPageRedactionBtn.removeAttribute('disabled');
     input.classList.add('is-valid');
@@ -217,16 +209,9 @@ window.addEventListener("load", (e) => {
 
         resetFieldFeedbackMessages(input, input.parentElement);
 
-        if (errors && errors.length > 0) {
+        if (errors?.length > 0) {
           applyPageRedactionBtn.disabled = true;
-          input.classList.add('is-invalid');
-          errors.forEach(error => {
-             let element = document.createElement('div');
-             element.classList.add('invalid-feedback');
-             element.classList.add('list-styling');
-             element.textContent = error;
-             input.parentElement.appendChild(element);
-           });
+          displayFieldErrorMessages(input, errors);
         } else {
           pageBasedRedactionOverlay.classList.add("d-none");
           applyRedactionBtn.removeAttribute('disabled');
@@ -235,19 +220,7 @@ window.addEventListener("load", (e) => {
           let totalPagesCount = PDFViewerApplication.pdfViewer.pagesCount;
           let pagesDetailed = extractPagesDetailed(input.value, totalPagesCount);
           redactedPagesDetails = pagesDetailed;
-          if (pagesDetailed.all) {
-            addRedactedPagePreview('#viewer > .page');
-          } else {
-            document.querySelectorAll('.textLayer').forEach(textLayer => textLayer.classList.remove('redacted-page-preview'));
-            setPageNumbersFromRange(pagesDetailed, totalPagesCount);
-            setPageNumbersFromNFunctions(pagesDetailed, totalPagesCount);
-
-            let pageNumbers = Array.from(pagesDetailed.numbers);
-            if (pageNumbers && pageNumbers.length > 0) {
-              let pagesSelector = pageNumbers.map(number => `#viewer > .page[data-page-number="${number}"]`).join(',');
-              addRedactedPagePreview(pagesSelector);
-            }
-          }
+          addPageRedactionPreviewToPages(pagesDetailed, totalPagesCount);
         }
       } else if (id == 'pageRedactColor') setPageRedactionColor(input.value);
       let formInput = document.getElementById(id);
@@ -261,9 +234,7 @@ window.addEventListener("load", (e) => {
     pageBasedRedactionOverlay.querySelectorAll("input").forEach((input) => {
       const id = input.getAttribute("data-for");
       if (id == 'pageNumbers') {
-        input.classList.remove('is-invalid');
-        input.classList.remove('is-valid');
-        input.parentElement.querySelectorAll('.invalid-feedback').forEach(feedback => feedback.remove());
+        resetFieldFeedbackMessages(input, input.parentElement);
       }
       let formInput = document.getElementById(id);
       if (formInput) input.value = formInput.value;
@@ -918,12 +889,39 @@ window.addEventListener("load", (e) => {
   }
 });
 
+function addPageRedactionPreviewToPages(pagesDetailed, totalPagesCount) {
+  if (pagesDetailed.all) {
+    addRedactedPagePreview('#viewer > .page');
+  } else {
+    document.querySelectorAll('.textLayer').forEach(textLayer => textLayer.classList.remove('redacted-page-preview'));
+    setPageNumbersFromRange(pagesDetailed, totalPagesCount);
+    setPageNumbersFromNFunctions(pagesDetailed, totalPagesCount);
+
+    let pageNumbers = Array.from(pagesDetailed.numbers);
+    if (pageNumbers?.length > 0) {
+      let pagesSelector = pageNumbers.map(number => `#viewer > .page[data-page-number="${number}"]`).join(',');
+      addRedactedPagePreview(pagesSelector);
+    }
+  }
+}
+
 function resetFieldFeedbackMessages(input, parentElement) {
   if(parentElement) parentElement.querySelectorAll('.invalid-feedback').forEach(feedback => feedback.remove());
   if (input) {
   input.classList.remove('is-invalid');
   input.classList.remove('is-valid');
   }
+}
+
+function displayFieldErrorMessages(input, errors) {
+  input.classList.add('is-invalid');
+  errors.forEach(error => {
+    let element = document.createElement('div');
+    element.classList.add('invalid-feedback');
+    element.classList.add('list-styling');
+    element.textContent = error;
+    input.parentElement.appendChild(element);
+  });
 }
 
 function setPageRedactionColor(color) {
