@@ -17,9 +17,14 @@ public class ConvertToImageRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Choose between a single image containing all pages or separate images for each page",
-            allowableValues = {"single", "multiple"})
-    private String singleOrMultiple;
+                    "Choose single image containing all pages or separate images for each page or custom single image",
+            allowableValues = {"single", "multiple", "custom"})
+    private String imageResultType;
+
+    @Schema(
+            description =
+                    "The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')\"")
+    private String pageNumbers;
 
     @Schema(
             description = "The color type of the output image(s)",

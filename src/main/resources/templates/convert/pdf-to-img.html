@@ -33,11 +33,17 @@
                   </select>
                 </div>
                 <div class="mb-3">
-                  <label th:text="#{pdfToImage.singleOrMultiple}"></label>
-                  <select class="form-control" name="singleOrMultiple">
+                  <label th:text="#{pdfToImage.imageResultType}"></label>
+                  <select class="form-control" name="imageResultType" id="imageResultType">
                     <option value="multiple" th:text="#{pdfToImage.multi}"></option>
                     <option value="single" th:text="#{pdfToImage.single}"></option>
+                    <option value="custom" th:text="#{pdfToImage.custom}"></option>
                   </select>
+                </div>
+                <!-- New section that is displayed dynamically -->
+                <div class="mb-3" id="singleOptionSection" style="display: none;">
+                  <label for="pageNumbers" th:text="#{pdfToImage.customPageNumber}"></label>
+                  <input type="number" name="pageNumbers" class="form-control" id="pageNumbers" value="1">
                 </div>
                 <div class="mb-3">
                   <label th:text="#{pdfToImage.colorType}"></label>
@@ -59,5 +65,18 @@
       </div>
       <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
+
   </body>
+<script>
+  document.getElementById('imageResultType').addEventListener('change', function () {
+    const selectedValue = this.value;
+    const singleOptionSection = document.getElementById('singleOptionSection');
+
+    if (selectedValue === 'custom') {
+      singleOptionSection.style.display = 'block';
+    } else {
+      singleOptionSection.style.display = 'none';
+    }
+  });
+</script>
 </html>

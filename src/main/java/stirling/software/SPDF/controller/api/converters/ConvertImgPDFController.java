@@ -59,10 +59,10 @@ public class ConvertImgPDFController {
             throws NumberFormatException, Exception {
         MultipartFile file = request.getFileInput();
         String imageFormat = request.getImageFormat();
-        String singleOrMultiple = request.getSingleOrMultiple();
+        String imageResultType = request.getImageResultType();
         String colorType = request.getColorType();
         String dpi = request.getDpi();
-
+        String pageNumbers = request.getPageNumbers();
         Path tempFile = null;
         Path tempOutputDir = null;
         Path tempPdfPath = null;
@@ -77,7 +77,8 @@ public class ConvertImgPDFController {
                 colorTypeResult = ImageType.BINARY;
             }
             // returns bytes for image
-            boolean singleImage = "single".equals(singleOrMultiple);
+            boolean singleImage =
+                    "single".equals(imageResultType) || "custom".equals(imageResultType);
             String filename =
                     Filenames.toSimpleFileName(file.getOriginalFilename())
                             .replaceFirst("[.][^.]+$", "");
@@ -91,7 +92,8 @@ public class ConvertImgPDFController {
                             colorTypeResult,
                             singleImage,
                             Integer.valueOf(dpi),
-                            filename);
+                            filename,
+                            pageNumbers);
             if (result == null || result.length == 0) {
                 log.error("resultant bytes for {} is null, error converting ", filename);
             }
