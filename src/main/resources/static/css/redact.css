@@ -292,3 +292,11 @@ html {
   user-select: none;
   pointer-events: none;
 }
+
+.overlay-colorpicker-window {
+  position: absolute;
+  left: 0;
+  top: 24px;
+  height: 0;
+  visibility: hidden;
+}

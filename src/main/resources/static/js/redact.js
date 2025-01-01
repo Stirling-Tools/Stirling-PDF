@@ -821,16 +821,23 @@ window.addEventListener("load", (e) => {
     };
 
     let colorPaletteLabel = $(
-      `<label class="material-symbols-rounded palette-color">
+      `<label class="material-symbols-rounded palette-color position-relative">
          palette
        </label>`
     )[0];
 
+
     let colorPaletteInput = $(`
-         <input type="color" name="color-picker" class="d-none">
+      <input type="color" name="color-picker" class="overlay-colorpicker-window">
       `)[0];
 
-    colorPaletteLabel.appendChild(colorPaletteInput);
+      colorPaletteLabel.appendChild(colorPaletteInput);
+
+    colorPaletteLabel.onclick = (e) => {
+      if (colorPaletteLabel === e.target) {
+        e.stopPropagation();
+      }
+    }
 
     colorPaletteInput.onchange = (e) => {
       let color = e.target.value;
