@@ -265,3 +265,9 @@ html {
   z-index: 100;
   transform: translate(-50%, -50%);
 }
+
+.list-styling {
+  display: list-item !important;
+  margin-left: 15px;
+  list-style-type: disc;
+}

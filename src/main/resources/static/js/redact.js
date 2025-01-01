@@ -7,6 +7,34 @@ let activeOverlay;
 
 const doNothing = () => {};
 
+function validatePages(pages) {
+  let parts = pages.split(',').filter(s => s);
+  let errors = [];
+  for (let part of parts) {
+    let trimmedPart = part.trim();
+    if ("all" == trimmedPart) continue;
+    else if (trimmedPart.includes('n')) {
+      if (!isValidFunction(trimmedPart)) errors.push(`${trimmedPart} is an invalid function, it should consist of digits 0-9, n, *, -, /, (, ), \\.`);
+    } else if (trimmedPart.includes('-')) {
+      let range = trimmedPart.split('-').filter(s => s);
+      if (!range || range.length != 2) errors.push(`${trimmedPart} is an invalid range, it should consist of from-to, example: 1-5`);
+      else if (range[0] <= 0 || range[1] <= 0) errors.push(`${trimmedPart} has invalid range(s), page numbers should be positive.`);
+    } else if (!isPageNumber(trimmedPart)) {
+      errors.push(`${trimmedPart} is invalid, it should either be a function, page number or a range.`);
+    }
+  }
+
+  return {errors};
+ }
+
+ function isPageNumber(page) {
+  return /^[0-9]*$/.test(page);
+ }
+
+ function isValidFunction(part) {
+  return part.includes('n') && (/[0-9n+\-*/() ]+$/).test(part);
+ }
+
 function hideContainer(container) {
   container?.classList.add("d-none");
 }
@@ -107,11 +135,58 @@ window.addEventListener("load", (e) => {
   pageBasedRedactionBtn.onclick = (e) =>
     pageBasedRedactionOverlay.classList.remove("d-none");
 
+ pageBasedRedactionOverlay.querySelector("input[type=text]").onchange = (e) => {
+  let input = e.target;
+  let parentElement =  input.parentElement;
+
+  parentElement.querySelectorAll('.invalid-feedback').forEach(feedback => feedback.remove());
+  input.classList.remove('is-invalid');
+
+  let value = input.value.trim();
+  let { errors } = validatePages(value);
+  if (errors && errors.length > 0) {
+    applyPageRedactionBtn.disabled = "true";
+    input.classList.add('is-invalid');
+
+    errors.forEach(error => {
+      let element = document.createElement('div');
+      element.classList.add('invalid-feedback');
+      element.classList.add('list-styling');
+      element.textContent = error;
+      parentElement.appendChild(element);
+    });
+  } else {
+    applyPageRedactionBtn.removeAttribute('disabled');
+    input.classList.add('is-valid');
+  }
+ }
+
   let applyPageRedactionBtn = document.getElementById("applyPageRedactionBtn");
   applyPageRedactionBtn.onclick = (e) => {
-    pageBasedRedactionOverlay.classList.add("d-none");
     pageBasedRedactionOverlay.querySelectorAll("input").forEach((input) => {
       const id = input.getAttribute("data-for");
+      if (id == 'pageNumbers') {
+        let {errors} = validatePages(input.value);
+
+        input.classList.remove('is-invalid');
+        input.parentElement.querySelectorAll('.invalid-feedback').forEach(feedback => feedback.remove());
+
+        if (errors && errors.length > 0) {
+          applyPageRedactionBtn.disabled = true;
+          input.classList.add('is-invalid');
+          errors.forEach(error => {
+             let element = document.createElement('div');
+             element.classList.add('invalid-feedback');
+             element.classList.add('list-styling');
+             element.textContent = error;
+             input.parentElement.appendChild(element);
+           });
+        } else {
+          pageBasedRedactionOverlay.classList.add("d-none");
+          applyRedactionBtn.removeAttribute('disabled');
+          input.classList.remove('is-valid');
+        }
+      }
       let formInput = document.getElementById(id);
       if (formInput) formInput.value = input.value;
     });
@@ -122,6 +197,11 @@ window.addEventListener("load", (e) => {
     pageBasedRedactionOverlay.classList.add("d-none");
     pageBasedRedactionOverlay.querySelectorAll("input").forEach((input) => {
       const id = input.getAttribute("data-for");
+      if (id == 'pageNumbers') {
+        input.classList.remove('is-invalid');
+        input.classList.remove('is-valid');
+        input.parentElement.querySelectorAll('.invalid-feedback').forEach(feedback => feedback.remove());
+      }
       let formInput = document.getElementById(id);
       if (formInput) input.value = formInput.value;
     });
