@@ -187,8 +187,7 @@ window.addEventListener("load", (e) => {
   let input = e.target;
   let parentElement =  input.parentElement;
 
-  parentElement.querySelectorAll('.invalid-feedback').forEach(feedback => feedback.remove());
-  input.classList.remove('is-invalid');
+  resetFieldFeedbackMessages(input, parentElement);
 
   let value = input.value.trim();
   let { errors } = validatePages(value);
@@ -216,8 +215,7 @@ window.addEventListener("load", (e) => {
       if (id == 'pageNumbers') {
         let {errors} = validatePages(input.value);
 
-        input.classList.remove('is-invalid');
-        input.parentElement.querySelectorAll('.invalid-feedback').forEach(feedback => feedback.remove());
+        resetFieldFeedbackMessages(input, input.parentElement);
 
         if (errors && errors.length > 0) {
           applyPageRedactionBtn.disabled = true;
@@ -919,6 +917,14 @@ window.addEventListener("load", (e) => {
     }
   }
 });
+
+function resetFieldFeedbackMessages(input, parentElement) {
+  if(parentElement) parentElement.querySelectorAll('.invalid-feedback').forEach(feedback => feedback.remove());
+  if (input) {
+  input.classList.remove('is-invalid');
+  input.classList.remove('is-valid');
+  }
+}
 
 function setPageRedactionColor(color) {
   document.documentElement.style.setProperty('--page-redaction-color', color);
