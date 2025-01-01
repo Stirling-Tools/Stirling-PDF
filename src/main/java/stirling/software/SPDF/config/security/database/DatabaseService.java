@@ -133,7 +133,7 @@ public class DatabaseService implements DatabaseInterface {
     }
 
     /** Imports a database backup from the specified path. */
-    private void importDatabaseFromUI(Path tempTemplatePath) throws IOException {
+    public boolean importDatabaseFromUI(Path tempTemplatePath) throws IOException {
         executeDatabaseScript(tempTemplatePath);
         LocalDateTime dateNow = LocalDateTime.now();
         DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
@@ -142,6 +142,7 @@ public class DatabaseService implements DatabaseInterface {
                         BACKUP_PREFIX + "user_" + dateNow.format(myFormatObj) + SQL_SUFFIX);
         Files.copy(tempTemplatePath, insertOutputFilePath);
         Files.deleteIfExists(tempTemplatePath);
+        return true;
     }
 
     /** Filter and delete old backups if there are more than 5 */
