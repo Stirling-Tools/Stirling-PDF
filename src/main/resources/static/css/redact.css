@@ -1,3 +1,7 @@
+:root {
+  --page-redaction-color: #000000;
+}
+
 .textLayer span::selection,
 .textLayer span::-moz-selection {
   background-color: rgba(0, 100, 0, 0.26);
@@ -270,4 +274,21 @@ html {
   display: list-item !important;
   margin-left: 15px;
   list-style-type: disc;
+}
+
+.redacted-page {
+  --page-redaction-color: none;
+}
+
+.redacted-page-preview {
+  border: 2px solid blue;
+}
+
+.redacted-page-preview:hover {
+  background-color: var(--page-redaction-color) !important;
+}
+
+.redacted-page-preview * {
+  user-select: none;
+  pointer-events: none;
 }

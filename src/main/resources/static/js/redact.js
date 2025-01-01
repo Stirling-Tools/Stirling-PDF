@@ -7,6 +7,43 @@ let activeOverlay;
 
 const doNothing = () => {};
 
+function addRedactedPagePreview(pagesSelector) {
+  document.querySelectorAll(pagesSelector).forEach(page => {
+    let textLayer = page.querySelector('.textLayer');
+    if (textLayer) textLayer.classList.add('redacted-page-preview');
+  });
+}
+
+function extractPagesDetailed(pagesInput, totalPageCount) {
+  let parts = pagesInput.split(',').filter(s => s);
+  let pagesDetailed = {
+    numbers: new Set(),
+    functions: new Set(),
+    ranges: new Set(),
+    all: false
+  };
+  for (let part of parts) {
+    let trimmedPart = part.trim();
+    if ("all" == trimmedPart) {
+      pagesDetailed.all = true;
+      return pagesDetailed;
+    } else if (isValidFunction(trimmedPart)) {
+      pagesDetailed.functions.add(insertMultiplicationBeforeN(trimmedPart));
+    } else if (trimmedPart.includes('-')) {
+      let range = trimmedPart.split('-').filter(s => s);
+      if (range && range.length == 2 && range[0] > 0 && range[1] > 0)  pagesDetailed.ranges.add({low: range[0], high: range[1]});
+    } else if (isPageNumber(trimmedPart)) {
+      pagesDetailed.numbers.add((trimmedPart <= totalPageCount) ? trimmedPart : totalPageCount);
+    }
+  }
+
+  return pagesDetailed;
+}
+
+function insertMultiplicationBeforeN(expression) {
+  return expression.replaceAll(/(\d)n/g, "$1*n");
+}
+
 function validatePages(pages) {
   let parts = pages.split(',').filter(s => s);
   let errors = [];
@@ -128,6 +165,7 @@ window.addEventListener("load", (e) => {
 
   let applyRedactionBtn = document.getElementById("apply-redaction");
 
+  let redactedPagesDetails = {numbers: new Set(), ranges: new Set(), functions: new Set(), all: false};
   let pageBasedRedactionBtn = document.getElementById("pageBasedRedactionBtn");
   let pageBasedRedactionOverlay = document.getElementById(
     "pageBasedRedactionOverlay"
@@ -185,8 +223,25 @@ window.addEventListener("load", (e) => {
           pageBasedRedactionOverlay.classList.add("d-none");
           applyRedactionBtn.removeAttribute('disabled');
           input.classList.remove('is-valid');
+
+          let totalPagesCount = PDFViewerApplication.pdfViewer.pagesCount;
+          let pagesDetailed = extractPagesDetailed(input.value, totalPagesCount);
+          redactedPagesDetails = pagesDetailed;
+          if (pagesDetailed.all) {
+            addRedactedPagePreview('#viewer > .page');
+          } else {
+            document.querySelectorAll('.textLayer').forEach(textLayer => textLayer.classList.remove('redacted-page-preview'));
+            setPageNumbersFromRange(pagesDetailed, totalPagesCount);
+            setPageNumbersFromNFunctions(pagesDetailed, totalPagesCount);
+
+            let pageNumbers = Array.from(pagesDetailed.numbers);
+            if (pageNumbers && pageNumbers.length > 0) {
+              let pagesSelector = pageNumbers.map(number => `#viewer > .page[data-page-number="${number}"]`).join(',');
+              addRedactedPagePreview(pagesSelector);
+            }
+          }
         }
-      }
+      } else if (id == 'pageRedactColor') setPageRedactionColor(input.value);
       let formInput = document.getElementById(id);
       if (formInput) formInput.value = input.value;
     });
@@ -310,6 +365,12 @@ window.addEventListener("load", (e) => {
 
     let layer = e.source.textLayer.div;
     layer.setAttribute("data-page", e.pageNumber);
+    if (redactedPagesDetails.all || redactedPagesDetails.numbers.has(e.pageNumber)) {
+      layer.classList.add('redacted-page-preview');
+    } else {
+      layer.classList.remove('redacted-page-preview');
+    }
+
     zoomScaleValue = e.source.scale ? e.source.scale : e.source.pageScale;
     document.documentElement.style.setProperty("--zoom-scale", zoomScaleValue);
 
@@ -841,6 +902,29 @@ window.addEventListener("load", (e) => {
     }
   }
 });
+
+function setPageRedactionColor(color) {
+  document.documentElement.style.setProperty('--page-redaction-color', color);
+}
+
+function setPageNumbersFromNFunctions(pagesDetailed, totalPagesCount) {
+  pagesDetailed.functions.forEach(fun => {
+    if (!isValidFunction(fun)) return;
+    for (let n = 1; n <= totalPagesCount; n++) {
+      let pageNumber = eval(fun);
+      if (!pageNumber || pageNumber <= 0 || pageNumber > totalPagesCount) continue;
+      pagesDetailed.numbers.add(pageNumber);
+    }
+  });
+}
+
+function setPageNumbersFromRange(pagesDetailed, totalPagesCount) {
+  pagesDetailed.ranges.forEach(range => {
+    for (let i = range.low; i <= range.high && i <= totalPagesCount; i++) {
+      pagesDetailed.numbers.add(i);
+    }
+  });
+}
 
 function hideOverlay() {
   activeOverlay.style.display = "none";
