@@ -70,7 +70,11 @@
           th:placeholder="#{redact.pageRedactionNumbers.placeholder}">
       </div>
       <div class="mb-3 d-flex">
-        <label for="pageRedactColor" th:text="#{redact.pageRedactionColor.title}"></label>
+        <label for="pageRedactColor" th:inline="text" class="pe-none user-select-none">
+          [[#{redact.redactionColor.title}]]
+          <span class="material-symbols-rounded">palette</span>
+          :
+        </label>
         <input data-for="pageRedactColor" type="color" class="ms-3" value="#000000">
       </div>
       <button id="closePageRedactionBtn" class="btn btn-danger" th:text="#{close}"></button>
