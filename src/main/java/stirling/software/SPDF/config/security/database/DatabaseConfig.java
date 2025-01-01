@@ -3,6 +3,7 @@ package stirling.software.SPDF.config.security.database;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,10 +26,12 @@ public class DatabaseConfig {
     public static final String POSTGRES_DRIVER = "org.postgresql.Driver";
 
     private final ApplicationProperties applicationProperties;
+    private final boolean runningEE;
 
     @Autowired
-    public DatabaseConfig(ApplicationProperties applicationProperties) {
+    public DatabaseConfig(ApplicationProperties applicationProperties, boolean runningEE) {
         this.applicationProperties = applicationProperties;
+        this.runningEE = runningEE;
     }
 
     /**
@@ -40,31 +43,45 @@ public class DatabaseConfig {
      * @throws UnsupportedProviderException if the type of database selected is not supported
      */
     @Bean
+    @Qualifier("dataSource")
     public DataSource dataSource() throws UnsupportedProviderException {
-        ApplicationProperties.System system = applicationProperties.getSystem();
-        ApplicationProperties.Datasource datasource = system.getDatasource();
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 
-        if (!datasource.isEnableCustomDatabase()) {
-            log.info("Using default H2 database");
-
-            dataSourceBuilder.driverClassName(DEFAULT_DRIVER);
-            dataSourceBuilder.url(DATASOURCE_DEFAULT_URL);
-            dataSourceBuilder.username(DEFAULT_USERNAME);
-
-            return dataSourceBuilder.build();
+        if (!runningEE) {
+            return useDefaultDataSource(dataSourceBuilder);
         }
 
-        log.info("Using custom database");
-        dataSourceBuilder.driverClassName(getDriverClassName(datasource.getType()));
-        dataSourceBuilder.url(
-                getDataSourceUrl(
-                        datasource.getType(),
-                        datasource.getHostName(),
-                        datasource.getPort(),
-                        datasource.getName()));
+        ApplicationProperties.System system = applicationProperties.getSystem();
+        ApplicationProperties.Datasource datasource = system.getDatasource();
+
+        if (!datasource.isEnableCustomDatabase()) {
+            return useDefaultDataSource(dataSourceBuilder);
+        }
+
+        log.info("Using custom database configuration");
+
+        if (!datasource.getCustomDatabaseUrl().isBlank()) {
+            dataSourceBuilder.url(datasource.getCustomDatabaseUrl());
+        } else {
+            dataSourceBuilder.driverClassName(getDriverClassName(datasource.getType()));
+            dataSourceBuilder.url(
+                    generateCustomDataSourceUrl(
+                            datasource.getType(),
+                            datasource.getHostName(),
+                            datasource.getPort(),
+                            datasource.getName()));
+        }
         dataSourceBuilder.username(datasource.getUsername());
         dataSourceBuilder.password(datasource.getPassword());
+
+        return dataSourceBuilder.build();
+    }
+
+    private DataSource useDefaultDataSource(DataSourceBuilder<?> dataSourceBuilder) {
+        log.info("Using default H2 database");
+
+        dataSourceBuilder.url(DATASOURCE_DEFAULT_URL);
+        dataSourceBuilder.username(DEFAULT_USERNAME);
 
         return dataSourceBuilder.build();
     }
@@ -78,7 +95,7 @@ public class DatabaseConfig {
      * @param dataSourceName the name the database to connect to
      * @return the <code>DataSource</code> URL
      */
-    private String getDataSourceUrl(
+    private String generateCustomDataSourceUrl(
             String dataSourceType, String hostname, Integer port, String dataSourceName) {
         return DATASOURCE_URL_TEMPLATE.formatted(dataSourceType, hostname, port, dataSourceName);
     }

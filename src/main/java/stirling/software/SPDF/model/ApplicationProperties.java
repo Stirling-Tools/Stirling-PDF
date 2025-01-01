@@ -253,6 +253,7 @@ public class ApplicationProperties {
     @Data
     public static class Datasource {
         private boolean enableCustomDatabase;
+        private String customDatabaseUrl;
         private String type;
         private String hostName;
         private Integer port;

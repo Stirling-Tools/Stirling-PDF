@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config.security.database;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,8 +23,21 @@ class DatabaseConfigTest {
     @Mock
     private ApplicationProperties applicationProperties;
 
-    @InjectMocks
     private DatabaseConfig databaseConfig;
+
+    @BeforeEach
+    void setUp() {
+        databaseConfig = new DatabaseConfig(applicationProperties, true);
+    }
+
+    @Test
+    void testDataSource_whenRunningEEIsFalse() throws UnsupportedProviderException {
+        databaseConfig = new DatabaseConfig(applicationProperties, false);
+
+        var result = databaseConfig.dataSource();
+
+        assertInstanceOf(DataSource.class, result);
+    }
 
     @Test
     void testDefaultConfigurationForDataSource() throws UnsupportedProviderException {
@@ -40,6 +54,23 @@ class DatabaseConfigTest {
     }
 
     @Test
+    void testCustomUrlForDataSource() throws UnsupportedProviderException {
+        var system = mock(ApplicationProperties.System.class);
+        var datasource = mock(ApplicationProperties.Datasource.class);
+
+        when(applicationProperties.getSystem()).thenReturn(system);
+        when(system.getDatasource()).thenReturn(datasource);
+        when(datasource.isEnableCustomDatabase()).thenReturn(true);
+        when(datasource.getCustomDatabaseUrl()).thenReturn("jdbc:postgresql://mockUrl");
+        when(datasource.getUsername()).thenReturn("test");
+        when(datasource.getPassword()).thenReturn("pass");
+
+        var result = databaseConfig.dataSource();
+
+        assertInstanceOf(DataSource.class, result);
+    }
+
+    @Test
     void testCustomConfigurationForDataSource() throws UnsupportedProviderException {
         var system = mock(ApplicationProperties.System.class);
         var datasource = mock(ApplicationProperties.Datasource.class);
@@ -47,12 +78,13 @@ class DatabaseConfigTest {
         when(applicationProperties.getSystem()).thenReturn(system);
         when(system.getDatasource()).thenReturn(datasource);
         when(datasource.isEnableCustomDatabase()).thenReturn(true);
+        when(datasource.getCustomDatabaseUrl()).thenReturn("");
         when(datasource.getType()).thenReturn("postgresql");
-        when(datasource.getHostName()).thenReturn("localhost");
-        when(datasource.getPort()).thenReturn(5432);
-        when(datasource.getName()).thenReturn("postgres");
-        when(datasource.getUsername()).thenReturn("postgres");
-        when(datasource.getPassword()).thenReturn("postgres");
+        when(datasource.getHostName()).thenReturn("test");
+        when(datasource.getPort()).thenReturn(1234);
+        when(datasource.getName()).thenReturn("test_db");
+        when(datasource.getUsername()).thenReturn("test");
+        when(datasource.getPassword()).thenReturn("pass");
 
         var result = databaseConfig.dataSource();
 
@@ -68,6 +100,7 @@ class DatabaseConfigTest {
         when(applicationProperties.getSystem()).thenReturn(system);
         when(system.getDatasource()).thenReturn(datasource);
         when(datasource.isEnableCustomDatabase()).thenReturn(true);
+        when(datasource.getCustomDatabaseUrl()).thenReturn("");
         when(datasource.getType()).thenReturn(datasourceType);
 
         assertThrows(UnsupportedProviderException.class, () -> databaseConfig.dataSource());
