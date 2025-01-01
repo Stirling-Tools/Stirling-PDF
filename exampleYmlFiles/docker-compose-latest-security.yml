@@ -6,8 +6,6 @@ services:
       resources:
         limits:
           memory: 4G
-    depends_on:
-      - db
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP' && curl -fL http://localhost:8080/ | grep -q 'Please sign in'"]
       interval: 5s
@@ -32,8 +30,4 @@ services:
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
-      SYSTEM_DATASOURCE_ENABLECUSTOMDATABASE: "true"
-      SYSTEM_DATASOURCE_CUSTOMDATABASEURL: "jdbc:postgresql://db:5432/stirling_pdf"
-      SYSTEM_DATASOURCE_USERNAME: "admin"
-      SYSTEM_DATASOURCE_PASSWORD: "stirling"
     restart: on-failure:5

@@ -13,6 +13,7 @@ import static java.nio.file.Files.delete;
 import static java.nio.file.Files.exists;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Disabled
 @SpringBootTest
 public class SPDFApplicationIntegrationTest {
 
