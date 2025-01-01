@@ -300,3 +300,23 @@ html {
   height: 0;
   visibility: hidden;
 }
+
+.redacted-thumbnail-image-preview {
+  border: 2px solid blue;
+}
+
+.redacted-thumbnail-preview {
+  position: relative;
+}
+
+.redacted-thumbnail-preview:hover::after {
+  content: '';
+  background-color: var(--page-redaction-color);
+
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  height: var(--thumbnail-height);
+  width: var(--thumbnail-width);
+}

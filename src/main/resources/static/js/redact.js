@@ -14,6 +14,25 @@ function addRedactedPagePreview(pagesSelector) {
   });
 }
 
+function addRedactedThumbnailPreview(sidebarPagesSelector) {
+  document.querySelectorAll(sidebarPagesSelector).forEach(thumbnail => {
+    thumbnail.classList.add('redacted-thumbnail-preview');
+      let thumbnailImage = thumbnail.querySelector('.thumbnailImage');
+      if (thumbnailImage)
+        thumbnailImage.classList.add('redacted-thumbnail-image-preview');
+  })
+}
+
+function removeRedactedPagePreview() {
+  document.querySelectorAll('.textLayer').forEach(textLayer => textLayer.classList.remove('redacted-page-preview'));
+  document.querySelectorAll('#thumbnailView > a > div.thumbnail').forEach(thumbnail => {
+    thumbnail.classList.remove('redacted-thumbnail-preview');
+    let thumbnailImage = thumbnail.querySelector('.thumbnailImage');
+    if (thumbnailImage)
+      thumbnailImage.classList.remove('redacted-thumbnail-image-preview');
+  });
+}
+
 function extractPagesDetailed(pagesInput, totalPageCount) {
   let parts = pagesInput.split(',').filter(s => s);
   let pagesDetailed = {
@@ -896,8 +915,10 @@ window.addEventListener("load", (e) => {
 function addPageRedactionPreviewToPages(pagesDetailed, totalPagesCount) {
   if (pagesDetailed.all) {
     addRedactedPagePreview('#viewer > .page');
+    addRedactedThumbnailPreview('#thumbnailView > a > div.thumbnail');
   } else {
-    document.querySelectorAll('.textLayer').forEach(textLayer => textLayer.classList.remove('redacted-page-preview'));
+    removeRedactedPagePreview();
+
     setPageNumbersFromRange(pagesDetailed, totalPagesCount);
     setPageNumbersFromNFunctions(pagesDetailed, totalPagesCount);
 
@@ -905,6 +926,8 @@ function addPageRedactionPreviewToPages(pagesDetailed, totalPagesCount) {
     if (pageNumbers?.length > 0) {
       let pagesSelector = pageNumbers.map(number => `#viewer > .page[data-page-number="${number}"]`).join(',');
       addRedactedPagePreview(pagesSelector);
+      let thumbnailSelector = pageNumbers.map(number => `#thumbnailView > a > div.thumbnail[data-page-number="${number}"]`).join(',');
+      addRedactedThumbnailPreview(thumbnailSelector);
     }
   }
 }
