@@ -43,7 +43,7 @@
                 <!-- New section that is displayed dynamically -->
                 <div class="mb-3" id="singleOptionSection" style="display: none;">
                   <label for="pageNumbers" th:text="#{pdfToImage.customPageNumber}"></label>
-                  <input type="number" name="pageNumbers" class="form-control" id="pageNumbers" value="1">
+                  <input type="number" name="pageNumbers" class="form-control" id="pageNumbers">
                 </div>
                 <div class="mb-3">
                   <label th:text="#{pdfToImage.colorType}"></label>
@@ -71,11 +71,14 @@
   document.getElementById('imageResultType').addEventListener('change', function () {
     const selectedValue = this.value;
     const singleOptionSection = document.getElementById('singleOptionSection');
+    const pageNumbers = document.getElementById('pageNumbers');
 
     if (selectedValue === 'custom') {
       singleOptionSection.style.display = 'block';
+      pageNumbers.value = 1;
     } else {
       singleOptionSection.style.display = 'none';
+      pageNumbers.value = "";
     }
   });
 </script>

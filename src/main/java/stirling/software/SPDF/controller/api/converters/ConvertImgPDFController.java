@@ -93,7 +93,7 @@ public class ConvertImgPDFController {
                             singleImage,
                             Integer.valueOf(dpi),
                             filename,
-                            pageNumbers);
+                            "custom".equalsIgnoreCase(imageResultType) ? pageNumbers : "");
             if (result == null || result.length == 0) {
                 log.error("resultant bytes for {} is null, error converting ", filename);
             }
