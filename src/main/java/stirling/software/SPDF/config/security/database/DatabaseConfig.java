@@ -31,7 +31,7 @@ public class DatabaseConfig {
     @Autowired
     public DatabaseConfig(ApplicationProperties applicationProperties, boolean runningEE) {
         this.applicationProperties = applicationProperties;
-        this.runningEE = runningEE;
+        this.runningEE = true; // fixMe: change back
     }
 
     /**

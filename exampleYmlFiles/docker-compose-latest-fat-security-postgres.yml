@@ -60,4 +60,4 @@ services:
       timeout: 5s
       retries: 10
     volumes:
-      - ./stirling/latest/data:/var/lib/postgresql/data
+      - ./stirling/latest/data:/pgdata

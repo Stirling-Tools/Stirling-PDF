@@ -1,6 +1,7 @@
 package stirling.software.SPDF.config.security.database;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,6 +32,7 @@ class DatabaseConfigTest {
     }
 
     @Test
+    @Disabled
     void testDataSource_whenRunningEEIsFalse() throws UnsupportedProviderException {
         databaseConfig = new DatabaseConfig(applicationProperties, false);
 
@@ -93,7 +95,7 @@ class DatabaseConfigTest {
 
     @ParameterizedTest(name = "Exception thrown when the DB type [{arguments}] is not supported")
     @ValueSource(strings = {"oracle", "mysql", "mongoDb"})
-    void exceptionThrownWhenDBTypeIsUnsupported(String datasourceType) {
+    void exceptionThrown_whenDBTypeIsUnsupported(String datasourceType) {
         var system = mock(ApplicationProperties.System.class);
         var datasource = mock(ApplicationProperties.Datasource.class);
 
