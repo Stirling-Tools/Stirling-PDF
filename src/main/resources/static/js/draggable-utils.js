@@ -59,7 +59,7 @@ const DraggableUtils = {
         },
       })
       .resizable({
-        edges: {left: true, right: true, bottom: true, top: true},
+        edges: { left: true, right: true, bottom: true, top: true },
         listeners: {
           start: (event) => {
             const target = event.target;
@@ -119,9 +119,8 @@ const DraggableUtils = {
 
               canvas.style.width = `${width}px`;
               canvas.style.height = `${height}px`;
-              canvas.style.transform = `translate(${(boundingWidth - width) / 2}px, ${
-                (boundingHeight - height) / 2
-              }px) rotate(${angle}rad)`;
+              canvas.style.transform = `translate(${(boundingWidth - width) / 2}px, ${(boundingHeight - height) / 2
+                }px) rotate(${angle}rad)`;
 
               target.setAttribute('data-bs-x', x);
               target.setAttribute('data-bs-y', y);
@@ -132,7 +131,7 @@ const DraggableUtils = {
         },
         modifiers: [
           interact.modifiers.restrictSize({
-            min: {width: 50, height: 50},
+            min: { width: 50, height: 50 },
           }),
         ],
         inertia: true,
@@ -189,6 +188,7 @@ const DraggableUtils = {
     }
   },
   onInteraction(target) {
+    this.lastInteracted = target;
     // this.boxDragContainer.appendChild(target);
     // target.appendChild(target.querySelector(".display-canvas"));
   },
@@ -341,7 +341,7 @@ const DraggableUtils = {
     }
   },
   getLastInteracted() {
-    return this.boxDragContainer.querySelector('.draggable-canvas:last-of-type');
+    return this.lastInteracted;
   },
   showRotationControls(element) {
     const rotationControls = document.getElementById('rotation-controls');
@@ -452,7 +452,7 @@ const DraggableUtils = {
     // render the page onto the canvas
     var renderContext = {
       canvasContext: this.pdfCanvas.getContext('2d'),
-      viewport: page.getViewport({scale: 1}),
+      viewport: page.getViewport({ scale: 1 }),
     };
     await page.render(renderContext).promise;
 

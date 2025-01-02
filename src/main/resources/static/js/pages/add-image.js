@@ -12,7 +12,7 @@ document.getElementById('download-pdf').addEventListener('click', async () => {
   try {
     const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
     const modifiedPdfBytes = await modifiedPdf.save();
-    const blob = new Blob([modifiedPdfBytes], {type: 'application/pdf'});
+    const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = originalFileName + '_addedImage.pdf';
@@ -26,13 +26,13 @@ let originalFileName = '';
 document.querySelector('input[name=pdf-upload]').addEventListener('change', async (event) => {
   const fileInput = event.target;
   fileInput.addEventListener('file-input-change', async (e) => {
-    const {allFiles} = e.detail;
+    const { allFiles } = e.detail;
     if (allFiles && allFiles.length > 0) {
       const file = allFiles[0];
       originalFileName = file.name.replace(/\.[^/.]+$/, '');
       const pdfData = await file.arrayBuffer();
       pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs-legacy/pdf.worker.mjs';
-      const pdfDoc = await pdfjsLib.getDocument({data: pdfData}).promise;
+      const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
       await DraggableUtils.renderPage(pdfDoc, 0);
 
       document.querySelectorAll('.show-on-file-selected').forEach((el) => {
@@ -44,6 +44,11 @@ document.querySelector('input[name=pdf-upload]').addEventListener('change', asyn
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.show-on-file-selected').forEach((el) => {
     el.style.cssText = 'display:none !important';
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Delete') {
+      DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted());
+    }
   });
 });
 
