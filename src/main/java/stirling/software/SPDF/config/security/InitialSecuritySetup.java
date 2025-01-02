@@ -3,7 +3,6 @@ package stirling.software.SPDF.config.security;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -17,11 +16,20 @@ import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 @Component
 public class InitialSecuritySetup {
 
-    @Autowired private UserService userService;
+    private final UserService userService;
 
-    @Autowired private ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
 
-    @Autowired private DatabaseInterface databaseService;
+    private final DatabaseInterface databaseService;
+
+    public InitialSecuritySetup(
+            UserService userService,
+            ApplicationProperties applicationProperties,
+            DatabaseInterface databaseService) {
+        this.userService = userService;
+        this.applicationProperties = applicationProperties;
+        this.databaseService = databaseService;
+    }
 
     @PostConstruct
     public void init() {

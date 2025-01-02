@@ -2,7 +2,6 @@ package stirling.software.SPDF.config.security.database;
 
 import javax.sql.DataSource;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -28,7 +27,6 @@ public class DatabaseConfig {
     private final ApplicationProperties applicationProperties;
     private final boolean runningEE;
 
-    @Autowired
     public DatabaseConfig(ApplicationProperties applicationProperties, boolean runningEE) {
         this.applicationProperties = applicationProperties;
         this.runningEE = true; // fixMe: change back

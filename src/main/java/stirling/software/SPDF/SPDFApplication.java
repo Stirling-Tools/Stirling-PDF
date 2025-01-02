@@ -10,8 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -32,8 +30,6 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @EnableScheduling
 @SpringBootApplication
 public class SPDFApplication {
-
-    private static final Logger logger = LoggerFactory.getLogger(SPDFApplication.class);
 
     private static String serverPortStatic;
     private static String baseUrlStatic;
@@ -74,7 +70,7 @@ public class SPDFApplication {
         if (Files.exists(Paths.get("configs/settings.yml"))) {
             propertyFiles.put("spring.config.additional-location", "file:configs/settings.yml");
         } else {
-            logger.warn("External configuration file 'configs/settings.yml' does not exist.");
+            log.warn("External configuration file 'configs/settings.yml' does not exist.");
         }
 
         if (Files.exists(Paths.get("configs/custom_settings.yml"))) {
@@ -87,7 +83,7 @@ public class SPDFApplication {
                     "spring.config.additional-location",
                     existingLocation + "file:configs/custom_settings.yml");
         } else {
-            logger.warn("Custom configuration file 'configs/custom_settings.yml' does not exist.");
+            log.warn("Custom configuration file 'configs/custom_settings.yml' does not exist.");
         }
         Properties finalProps = new Properties();
 
@@ -110,7 +106,7 @@ public class SPDFApplication {
             Files.createDirectories(Path.of("customFiles/static/"));
             Files.createDirectories(Path.of("customFiles/templates/"));
         } catch (Exception e) {
-            logger.error("Error creating directories: {}", e.getMessage());
+            log.error("Error creating directories: {}", e.getMessage());
         }
 
         printStartupLogs();
@@ -139,11 +135,11 @@ public class SPDFApplication {
                         SystemCommand.runCommand(rt, "xdg-open " + url);
                     }
                 } catch (Exception e) {
-                    logger.error("Error opening browser: {}", e.getMessage());
+                    log.error("Error opening browser: {}", e.getMessage());
                 }
             }
         }
-        logger.info("Running configs {}", applicationProperties.toString());
+        log.info("Running configs {}", applicationProperties.toString());
     }
 
     @Value("${server.port:8080}")
@@ -165,9 +161,9 @@ public class SPDFApplication {
     }
 
     private static void printStartupLogs() {
-        logger.info("Stirling-PDF Started.");
+        log.info("Stirling-PDF Started.");
         String url = baseUrlStatic + ":" + getStaticPort();
-        logger.info("Navigate to {}", url);
+        log.info("Navigate to {}", url);
     }
 
     private static String[] getActiveProfile(String[] args) {
