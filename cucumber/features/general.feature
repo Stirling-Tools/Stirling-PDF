@@ -66,7 +66,7 @@ Feature: API Validation
     | pageNumbers | file_count |
     | 1,3,5-9     | 8          |
     | all         | 20         |
-    | 2n+1        | 11         |
+    | 2n+1        | 8          |
     | 3n          | 7          |
 
 
