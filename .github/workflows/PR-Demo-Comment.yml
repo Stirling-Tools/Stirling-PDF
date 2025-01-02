@@ -75,7 +75,7 @@ jobs:
     needs: check-comment
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: read
+      pull-requests: write
       issues: write
 
     steps:
