@@ -6,13 +6,15 @@ on:
   pull_request:
     branches: ["main"]
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     permissions:
+      actions: read
       security-events: write
 
     strategy:
@@ -44,7 +46,7 @@ jobs:
         run: ./gradlew clean build
         env:
           DOCKER_ENABLE_SECURITY: true
-          
+
   docker-compose-tests:
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
     #     (github.event_name == 'pull_request' &&
