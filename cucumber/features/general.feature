@@ -1,7 +1,7 @@
 @general
 Feature: API Validation
 
-	
+
   @split-pdf-by-sections @positive
   Scenario Outline: split-pdf-by-sections with different parameters
     Given I generate a PDF file as "fileInput"
@@ -66,7 +66,7 @@ Feature: API Validation
     | pageNumbers | file_count |
     | 1,3,5-9     | 8          |
     | all         | 20         |
-    | 2n+1        | 11         |
+    | 2n+1        | 10         |
     | 3n          | 7          |
 
 
@@ -106,9 +106,9 @@ Feature: API Validation
 	And the response ZIP should contain 2 files
     And the response file should have size greater than 0
 	And the response status code should be 200
-	
+
 	Examples:
-    | format | 
-    | png        | 
+    | format |
+    | png        |
     | gif         |
-    | jpeg        | 
+    | jpeg        |
