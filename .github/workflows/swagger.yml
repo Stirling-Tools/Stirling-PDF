@@ -6,7 +6,8 @@ on:
     branches:
       - master
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   push:

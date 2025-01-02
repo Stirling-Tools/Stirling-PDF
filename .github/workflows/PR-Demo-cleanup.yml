@@ -4,7 +4,8 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
 
-permissions: read-all
+permissions:
+  contents: read
 
 env:
   SERVER_IP: ${{ secrets.VPS_IP }}  # Add this to your GitHub secrets
