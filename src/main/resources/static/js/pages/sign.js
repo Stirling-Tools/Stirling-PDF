@@ -73,6 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.show-on-file-selected').forEach((el) => {
     el.style.cssText = 'display:none !important';
   });
+  document.querySelectorAll('.small-file-container-saved img ').forEach((img) => {
+    img.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('fileUrl', img.src);
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Delete') {
+      DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted());
+    }
+  });
 });
 
 const imageUpload = document.querySelector('input[name=image-upload]');
@@ -203,11 +213,26 @@ async function goToFirstOrLastPage(page) {
 }
 
 document.getElementById('download-pdf').addEventListener('click', async () => {
-  const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
-  const modifiedPdfBytes = await modifiedPdf.save();
-  const blob = new Blob([modifiedPdfBytes], {type: 'application/pdf'});
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = originalFileName + '_signed.pdf';
-  link.click();
+  const downloadButton = document.getElementById('download-pdf');
+  const originalContent = downloadButton.innerHTML;
+
+  downloadButton.disabled = true;
+  downloadButton.innerHTML = `
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+  `;
+
+  try {
+    const modifiedPdf = await DraggableUtils.getOverlayedPdfDocument();
+    const modifiedPdfBytes = await modifiedPdf.save();
+    const blob = new Blob([modifiedPdfBytes], {type: 'application/pdf'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = originalFileName + '_signed.pdf';
+    link.click();
+  } catch (error) {
+    console.error('Error downloading PDF:', error);
+  } finally {
+    downloadButton.disabled = false;
+    downloadButton.innerHTML = originalContent;
+  }
 });
