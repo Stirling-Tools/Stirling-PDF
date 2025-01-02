@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
@@ -45,7 +44,6 @@ public class DatabaseService implements DatabaseInterface {
     private final ApplicationProperties applicationProperties;
     private final DataSource dataSource;
 
-    @Autowired
     public DatabaseService(ApplicationProperties applicationProperties, DataSource dataSource) {
         this.applicationProperties = applicationProperties;
         this.dataSource = dataSource;
@@ -75,33 +73,39 @@ public class DatabaseService implements DatabaseInterface {
     @Override
     public List<FileInfo> getBackupList() {
         List<FileInfo> backupFiles = new ArrayList<>();
-        Path backupPath = Paths.get(BACKUP_DIR);
 
-        try (DirectoryStream<Path> stream =
-                Files.newDirectoryStream(
-                        backupPath,
-                        path ->
-                                path.getFileName().toString().startsWith(BACKUP_PREFIX)
-                                        && path.getFileName().toString().endsWith(SQL_SUFFIX))) {
-            for (Path entry : stream) {
-                BasicFileAttributes attrs = Files.readAttributes(entry, BasicFileAttributes.class);
-                LocalDateTime modificationDate =
-                        LocalDateTime.ofInstant(
-                                attrs.lastModifiedTime().toInstant(), ZoneId.systemDefault());
-                LocalDateTime creationDate =
-                        LocalDateTime.ofInstant(
-                                attrs.creationTime().toInstant(), ZoneId.systemDefault());
-                long fileSize = attrs.size();
-                backupFiles.add(
-                        new FileInfo(
-                                entry.getFileName().toString(),
-                                entry.toString(),
-                                modificationDate,
-                                fileSize,
-                                creationDate));
+        if (isH2Database()) {
+            Path backupPath = Paths.get(BACKUP_DIR);
+
+            try (DirectoryStream<Path> stream =
+                    Files.newDirectoryStream(
+                            backupPath,
+                            path ->
+                                    path.getFileName().toString().startsWith(BACKUP_PREFIX)
+                                            && path.getFileName()
+                                                    .toString()
+                                                    .endsWith(SQL_SUFFIX))) {
+                for (Path entry : stream) {
+                    BasicFileAttributes attrs =
+                            Files.readAttributes(entry, BasicFileAttributes.class);
+                    LocalDateTime modificationDate =
+                            LocalDateTime.ofInstant(
+                                    attrs.lastModifiedTime().toInstant(), ZoneId.systemDefault());
+                    LocalDateTime creationDate =
+                            LocalDateTime.ofInstant(
+                                    attrs.creationTime().toInstant(), ZoneId.systemDefault());
+                    long fileSize = attrs.size();
+                    backupFiles.add(
+                            new FileInfo(
+                                    entry.getFileName().toString(),
+                                    entry.toString(),
+                                    modificationDate,
+                                    fileSize,
+                                    creationDate));
+                }
+            } catch (IOException e) {
+                log.error("Error reading backup directory: {}", e.getMessage(), e);
             }
-        } catch (IOException e) {
-            log.error("Error reading backup directory: {}", e.getMessage(), e);
         }
 
         return backupFiles;
@@ -196,11 +200,7 @@ public class DatabaseService implements DatabaseInterface {
     public String getH2Version() {
         String version = "Unknown";
 
-        if (applicationProperties
-                .getSystem()
-                .getDatasource()
-                .getType()
-                .equals(ApplicationProperties.Driver.H2.name())) {
+        if (isH2Database()) {
             try (Connection conn = dataSource.getConnection()) {
                 try (Statement stmt = conn.createStatement();
                         ResultSet rs = stmt.executeQuery("SELECT H2VERSION() AS version")) {
@@ -215,6 +215,13 @@ public class DatabaseService implements DatabaseInterface {
         }
 
         return version;
+    }
+
+    private boolean isH2Database() {
+        ApplicationProperties.Datasource datasource =
+                applicationProperties.getSystem().getDatasource();
+        return !datasource.isEnableCustomDatabase()
+                || datasource.getType().equals(ApplicationProperties.Driver.H2.name());
     }
 
     /**
@@ -251,11 +258,7 @@ public class DatabaseService implements DatabaseInterface {
     }
 
     private void executeDatabaseScript(Path scriptPath) {
-        if (applicationProperties
-                .getSystem()
-                .getDatasource()
-                .getType()
-                .equals(ApplicationProperties.Driver.H2.name())) {
+        if (isH2Database()) {
             try (Connection conn = dataSource.getConnection()) {
                 ScriptUtils.executeSqlScript(
                         conn, new EncodedResource(new PathResource(scriptPath)));

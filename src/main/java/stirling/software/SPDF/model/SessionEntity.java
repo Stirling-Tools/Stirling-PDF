@@ -15,7 +15,7 @@ import lombok.Data;
 public class SessionEntity implements Serializable {
     @Id private String sessionId;
 
-    @Lob private String principalName;
+    private String principalName;
 
     private Date lastRequest;
 

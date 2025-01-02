@@ -77,8 +77,7 @@ public class DatabaseController {
     @GetMapping("/import-database-file/{fileName}")
     public String importDatabaseFromBackupUI(
             @Parameter(description = "Name of the file to import", required = true) @PathVariable
-                    String fileName)
-            throws IOException {
+                    String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return "redirect:/database?error=fileNullOrEmpty";
         }
