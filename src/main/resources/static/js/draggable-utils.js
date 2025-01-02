@@ -8,6 +8,7 @@ const DraggableUtils = {
   documentsMap: new Map(),
   lastInteracted: null,
   padding: 15,
+  maintainRatioEnabled: true,
   init() {
     interact('.draggable-canvas')
       .draggable({
@@ -82,7 +83,7 @@ const DraggableUtils = {
 
               const aspectRatio = originalWidth / originalHeight;
 
-              if (!event.ctrlKey) {
+              if (!event.ctrlKey && this.maintainRatioEnabled) {
                 if (Math.abs(event.deltaRect.width) >= Math.abs(event.deltaRect.height)) {
                   height = width / aspectRatio;
                 } else {
@@ -266,6 +267,18 @@ const DraggableUtils = {
       };
     });
   },
+  toggleMaintainRatio() {
+    this.maintainRatioEnabled = !this.maintainRatioEnabled;
+    const button = document.getElementById('ratioToggleBtn');
+    if (this.maintainRatioEnabled) {
+      button.classList.remove('btn-danger');
+      button.classList.add('btn-outline-secondary');
+    } else {
+      button.classList.remove('btn-outline-secondary');
+      button.classList.add('btn-danger');
+    }
+  },
+
   deleteAllDraggableCanvases() {
     this.boxDragContainer.querySelectorAll('.draggable-canvas').forEach((el) => el.remove());
   },

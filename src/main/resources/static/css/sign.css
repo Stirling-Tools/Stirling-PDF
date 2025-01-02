@@ -25,18 +25,19 @@ select#font-select option {
   position: relative;
   top: 0;
   padding: 10px;
-  width: 100%;
+  width: calc(100% + 4.4rem);
   display: flex;
   gap: 5px;
   z-index: 5;
+  margin-left: -2.2rem;
 }
 
 .draggable-buttons-box>button {
   z-index: 4;
   background-color: rgba(13, 110, 253, 0.1);
   flex: 1 1 auto;
-  min-width: 0;
-  max-width:4rem;
+  min-width: 2.5rem;
+  max-width: 4rem;
 }
 
 
@@ -51,7 +52,7 @@ select#font-select option {
   line-height: 20px;
   position: absolute;
   cursor: grab;
-  top:-30px;
+  top: -30px;
   left: calc(50% - 10px);
 }
 
@@ -156,8 +157,9 @@ select#font-select option {
   row-gap: 1px;
   height: 60px;
   width: 60px;
-  top:4px;
+  top: 4px;
 }
+
 .small-file-container-saved:hover .drag-icon {
   display: flex;
 }
