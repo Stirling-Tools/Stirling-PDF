@@ -2,22 +2,32 @@
   position: relative;
   margin: 20px 0;
 }
+
 #pdf-canvas {
   box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.384);
   width: 100%;
 }
+
 .draggable-buttons-box {
-  position: absolute;
+  position: relative;
   top: 0;
   padding: 10px;
-  width: 100%;
+  width: calc(100% + 4.4rem);
   display: flex;
   gap: 5px;
+  z-index: 5;
+  margin-left: -2.2rem;
 }
-.draggable-buttons-box > button {
-  z-index: 10;
+
+.draggable-buttons-box>button {
+  z-index: 4;
   background-color: rgba(13, 110, 253, 0.1);
+  flex: 1 1 auto;
+  min-width: 2.5rem;
+  max-width: 4rem;
 }
+
+
 .draggable-canvas {
   border: 1px solid red;
   position: absolute;
@@ -25,4 +35,21 @@
   user-select: none;
   top: 0px;
   left: 0;
+}
+
+.input-with-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.input-with-icon .icon {
+  position: absolute;
+  left: 0.5rem;
+  pointer-events: none;
+  color: #aaa;
+}
+
+.input-with-icon input {
+  padding-left: 2.2rem;
 }
