@@ -1,18 +1,10 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -24,7 +16,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -48,12 +39,14 @@ import stirling.software.SPDF.service.CustomPDDocumentFactory;
 @Slf4j
 public class OCRController {
 
-    @Autowired private ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
 
     private final CustomPDDocumentFactory pdfDocumentFactory;
 
-    @Autowired
-    public OCRController(CustomPDDocumentFactory pdfDocumentFactory) {
+    public OCRController(
+            ApplicationProperties applicationProperties,
+            CustomPDDocumentFactory pdfDocumentFactory) {
+        this.applicationProperties = applicationProperties;
         this.pdfDocumentFactory = pdfDocumentFactory;
     }
 
@@ -78,13 +71,11 @@ public class OCRController {
         MultipartFile inputFile = request.getFileInput();
         List<String> languages = request.getLanguages();
         String ocrType = request.getOcrType();
-
         Path tempDir = Files.createTempDirectory("ocr_process");
         Path tempInputFile = tempDir.resolve("input.pdf");
         Path tempOutputDir = tempDir.resolve("output");
         Path tempImagesDir = tempDir.resolve("images");
         Path finalOutputFile = tempDir.resolve("final_output.pdf");
-
         Files.createDirectories(tempOutputDir);
         Files.createDirectories(tempImagesDir);
         Process process = null;
@@ -93,39 +84,32 @@ public class OCRController {
             inputFile.transferTo(tempInputFile.toFile());
             PDFMergerUtility merger = new PDFMergerUtility();
             merger.setDestinationFileName(finalOutputFile.toString());
-
             try (PDDocument document = pdfDocumentFactory.load(tempInputFile.toFile())) {
                 PDFRenderer pdfRenderer = new PDFRenderer(document);
                 int pageCount = document.getNumberOfPages();
-
                 for (int pageNum = 0; pageNum < pageCount; pageNum++) {
                     PDPage page = document.getPage(pageNum);
                     boolean hasText = false;
-
                     // Check for existing text
                     try (PDDocument tempDoc = new PDDocument()) {
                         tempDoc.addPage(page);
                         PDFTextStripper stripper = new PDFTextStripper();
                         hasText = !stripper.getText(tempDoc).trim().isEmpty();
                     }
-
                     boolean shouldOcr =
                             switch (ocrType) {
                                 case "skip-text" -> !hasText;
                                 case "force-ocr" -> true;
                                 default -> true;
                             };
-
                     Path pageOutputPath =
                             tempOutputDir.resolve(String.format("page_%d.pdf", pageNum));
-
                     if (shouldOcr) {
                         // Convert page to image
                         BufferedImage image = pdfRenderer.renderImageWithDPI(pageNum, 300);
                         Path imagePath =
                                 tempImagesDir.resolve(String.format("page_%d.png", pageNum));
                         ImageIO.write(image, "png", imagePath.toFile());
-
                         // Build OCR command
                         List<String> command = new ArrayList<>();
                         command.add("tesseract");
@@ -136,11 +120,10 @@ public class OCRController {
                                         .toString());
                         command.add("-l");
                         command.add(String.join("+", languages));
-                        command.add("pdf"); // Always output PDF
-
+                        // Always output PDF
+                        command.add("pdf");
                         ProcessBuilder pb = new ProcessBuilder(command);
                         process = pb.start();
-
                         // Capture any error output
                         try (BufferedReader reader =
                                 new BufferedReader(
@@ -150,13 +133,11 @@ public class OCRController {
                                 log.debug("Tesseract: {}", line);
                             }
                         }
-
                         int exitCode = process.waitFor();
                         if (exitCode != 0) {
                             throw new RuntimeException(
                                     "Tesseract failed with exit code: " + exitCode);
                         }
-
                         // Add OCR'd PDF to merger
                         merger.addSource(pageOutputPath.toFile());
                     } else {
@@ -169,29 +150,24 @@ public class OCRController {
                     }
                 }
             }
-
             // Merge all pages into final PDF
             merger.mergeDocuments(null);
-
             // Read the final PDF file
             byte[] pdfContent = Files.readAllBytes(finalOutputFile);
             String outputFilename =
                     Filenames.toSimpleFileName(inputFile.getOriginalFilename())
                                     .replaceFirst("[.][^.]+$", "")
                             + "_OCR.pdf";
-
             return ResponseEntity.ok()
                     .header(
                             "Content-Disposition",
                             "attachment; filename=\"" + outputFilename + "\"")
                     .contentType(MediaType.APPLICATION_PDF)
                     .body(pdfContent);
-
         } finally {
             if (process != null) {
                 process.destroy();
             }
-
             // Clean up temporary files
             deleteDirectory(tempDir);
         }
@@ -203,17 +179,14 @@ public class OCRController {
             log.warn("File {} does not exist, skipping", file);
             return;
         }
-
         try (FileInputStream fis = new FileInputStream(file)) {
             ZipEntry zipEntry = new ZipEntry(filename);
             zipOut.putNextEntry(zipEntry);
-
             byte[] buffer = new byte[1024];
             int length;
             while ((length = fis.read(buffer)) >= 0) {
                 zipOut.write(buffer, 0, length);
             }
-
             zipOut.closeEntry();
         }
     }

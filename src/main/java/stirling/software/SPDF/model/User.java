@@ -111,12 +111,12 @@ public class User implements Serializable {
         this.enabled = enabled;
     }
 
-    public void setAuthenticationType(AuthenticationType authenticationType) {
-        this.authenticationType = authenticationType.toString().toLowerCase();
-    }
-
     public String getAuthenticationType() {
         return authenticationType;
+    }
+
+    public void setAuthenticationType(AuthenticationType authenticationType) {
+        this.authenticationType = authenticationType.toString().toLowerCase();
     }
 
     public Set<Authority> getAuthorities() {

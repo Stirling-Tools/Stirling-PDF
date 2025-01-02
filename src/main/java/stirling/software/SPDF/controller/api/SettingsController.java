@@ -2,11 +2,12 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,7 +21,11 @@ import stirling.software.SPDF.utils.GeneralUtils;
 @Hidden
 public class SettingsController {
 
-    @Autowired ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
+
+    public SettingsController(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     @PostMapping("/update-enable-analytics")
     @Hidden
@@ -32,7 +37,6 @@ public class SettingsController {
         }
         GeneralUtils.saveKeyToConfig("system.enableAnalytics", String.valueOf(enabled), false);
         applicationProperties.getSystem().setEnableAnalytics(String.valueOf(enabled));
-
         return ResponseEntity.ok("Updated");
     }
 }
