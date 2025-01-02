@@ -6,7 +6,8 @@ on:
     paths:
       - "src/main/resources/messages_en_GB.properties"
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   update-translations-main:
