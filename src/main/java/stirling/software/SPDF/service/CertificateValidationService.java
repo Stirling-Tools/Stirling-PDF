@@ -1,25 +1,10 @@
 package stirling.software.SPDF.service;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.cert.CertPath;
-import java.security.cert.CertPathValidator;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.PKIXParameters;
-import java.security.cert.TrustAnchor;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.security.cert.*;
+import java.util.*;
 
 import org.springframework.stereotype.Service;
 

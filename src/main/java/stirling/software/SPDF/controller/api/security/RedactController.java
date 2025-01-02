@@ -1,6 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;

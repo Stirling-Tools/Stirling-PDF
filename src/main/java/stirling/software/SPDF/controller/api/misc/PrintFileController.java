@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;

@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -34,19 +33,31 @@ import stirling.software.SPDF.utils.FileMonitor;
 @Slf4j
 public class PipelineDirectoryProcessor {
 
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private ApiDocService apiDocService;
-    @Autowired PipelineProcessor processor;
-    @Autowired FileMonitor fileMonitor;
+    private final ObjectMapper objectMapper;
 
-    final String watchedFoldersDir;
-    final String finishedFoldersDir;
+    private final ApiDocService apiDocService;
+
+    private final PipelineProcessor processor;
+
+    private final FileMonitor fileMonitor;
+
+    private final String watchedFoldersDir;
+
+    private final String finishedFoldersDir;
 
     public PipelineDirectoryProcessor(
+            ObjectMapper objectMapper,
+            ApiDocService apiDocService,
             @Qualifier("watchedFoldersDir") String watchedFoldersDir,
-            @Qualifier("finishedFoldersDir") String finishedFoldersDir) {
+            @Qualifier("finishedFoldersDir") String finishedFoldersDir,
+            PipelineProcessor processor,
+            FileMonitor fileMonitor) {
+        this.objectMapper = objectMapper;
+        this.apiDocService = apiDocService;
         this.watchedFoldersDir = watchedFoldersDir;
         this.finishedFoldersDir = finishedFoldersDir;
+        this.processor = processor;
+        this.fileMonitor = fileMonitor;
     }
 
     @Scheduled(fixedRate = 60000)
@@ -81,13 +92,11 @@ public class PipelineDirectoryProcessor {
     public void handleDirectory(Path dir) throws IOException {
         log.info("Handling directory: {}", dir);
         Path processingDir = createProcessingDirectory(dir);
-
         Optional<Path> jsonFileOptional = findJsonFile(dir);
         if (!jsonFileOptional.isPresent()) {
             log.warn("No .JSON settings file found. No processing will happen for dir {}.", dir);
             return;
         }
-
         Path jsonFile = jsonFileOptional.get();
         PipelineConfig config = readAndParseJson(jsonFile);
         processPipelineOperations(dir, processingDir, jsonFile, config);
@@ -166,13 +175,11 @@ public class PipelineDirectoryProcessor {
     private Path resolveUniqueFilePath(Path directory, String originalFileName) {
         Path filePath = directory.resolve(originalFileName);
         int counter = 1;
-
         while (Files.exists(filePath)) {
             String newName = appendSuffixToFileName(originalFileName, "(" + counter + ")");
             filePath = directory.resolve(newName);
             counter++;
         }
-
         return filePath;
     }
 
@@ -211,17 +218,14 @@ public class PipelineDirectoryProcessor {
         for (Resource resource : resources) {
             String outputFileName = createOutputFileName(resource, config);
             Path outputPath = determineOutputPath(config, dir);
-
             if (!Files.exists(outputPath)) {
                 Files.createDirectories(outputPath);
                 log.info("Created directory: {}", outputPath);
             }
-
             Path outputFile = outputPath.resolve(outputFileName);
             try (OutputStream os = new FileOutputStream(outputFile.toFile())) {
                 os.write(((ByteArrayResource) resource).getByteArray());
             }
-
             log.info("File moved and renamed to {}", outputFile);
         }
     }
@@ -230,7 +234,6 @@ public class PipelineDirectoryProcessor {
         String resourceName = resource.getFilename();
         String baseName = resourceName.substring(0, resourceName.lastIndexOf('.'));
         String extension = resourceName.substring(resourceName.lastIndexOf('.') + 1);
-
         String outputFileName =
                 config.getOutputPattern()
                                 .replace("{filename}", baseName)
@@ -245,7 +248,6 @@ public class PipelineDirectoryProcessor {
                                                 .format(DateTimeFormatter.ofPattern("HHmmss")))
                         + "."
                         + extension;
-
         return outputFileName;
     }
 
@@ -255,7 +257,6 @@ public class PipelineDirectoryProcessor {
                         .replace("{outputFolder}", finishedFoldersDir)
                         .replace("{folderName}", dir.toString())
                         .replaceAll("\\\\?watchedFolders", "");
-
         return Paths.get(outputDir).isAbsolute() ? Paths.get(outputDir) : Paths.get(".", outputDir);
     }
 

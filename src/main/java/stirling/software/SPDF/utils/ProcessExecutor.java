@@ -1,10 +1,6 @@
 package stirling.software.SPDF.utils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.InterruptedIOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,20 +17,17 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Slf4j
 public class ProcessExecutor {
 
-    private static ApplicationProperties applicationProperties = new ApplicationProperties();
-
-    public enum Processes {
-        LIBRE_OFFICE,
-        PDFTOHTML,
-        PYTHON_OPENCV,
-        WEASYPRINT,
-        INSTALL_APP,
-        CALIBRE,
-        TESSERACT,
-        QPDF
-    }
-
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
+    private static ApplicationProperties applicationProperties = new ApplicationProperties();
+    private final Semaphore semaphore;
+    private final boolean liveUpdates;
+    private long timeoutDuration;
+
+    private ProcessExecutor(int semaphoreLimit, boolean liveUpdates, long timeout) {
+        this.semaphore = new Semaphore(semaphoreLimit);
+        this.liveUpdates = liveUpdates;
+        this.timeoutDuration = timeout;
+    }
 
     public static ProcessExecutor getInstance(Processes processType) {
         return getInstance(processType, true);
@@ -133,16 +126,6 @@ public class ProcessExecutor {
                             };
                     return new ProcessExecutor(semaphoreLimit, liveUpdates, timeoutMinutes);
                 });
-    }
-
-    private final Semaphore semaphore;
-    private final boolean liveUpdates;
-    private long timeoutDuration;
-
-    private ProcessExecutor(int semaphoreLimit, boolean liveUpdates, long timeout) {
-        this.semaphore = new Semaphore(semaphoreLimit);
-        this.liveUpdates = liveUpdates;
-        this.timeoutDuration = timeout;
     }
 
     public ProcessExecutorResult runCommandWithOutputHandling(List<String> command)
@@ -269,6 +252,17 @@ public class ProcessExecutor {
             semaphore.release();
         }
         return new ProcessExecutorResult(exitCode, messages);
+    }
+
+    public enum Processes {
+        LIBRE_OFFICE,
+        PDFTOHTML,
+        PYTHON_OPENCV,
+        WEASYPRINT,
+        INSTALL_APP,
+        CALIBRE,
+        TESSERACT,
+        QPDF
     }
 
     public class ProcessExecutorResult {
