@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
-      issues: write
+      issues: read
     if: |
       github.event.issue.pull_request &&
       (
@@ -74,6 +74,9 @@ jobs:
   deploy-pr:
     needs: check-comment
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
 
     steps:
       - name: Harden Runner
