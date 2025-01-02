@@ -13,6 +13,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.ImageType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -31,11 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.converters.ConvertToImageRequest;
 import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
 import stirling.software.SPDF.service.CustomPDDocumentFactory;
-import stirling.software.SPDF.utils.CheckProgramInstall;
-import stirling.software.SPDF.utils.PdfUtils;
-import stirling.software.SPDF.utils.ProcessExecutor;
+import stirling.software.SPDF.utils.*;
 import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
 @RequestMapping("/api/v1/convert")
@@ -59,7 +59,7 @@ public class ConvertImgPDFController {
             throws NumberFormatException, Exception {
         MultipartFile file = request.getFileInput();
         String imageFormat = request.getImageFormat();
-        String imageResultType = request.getImageResultType();
+        String singleOrMultiple = request.getSingleOrMultiple();
         String colorType = request.getColorType();
         String dpi = request.getDpi();
         String pageNumbers = request.getPageNumbers();
@@ -67,9 +67,12 @@ public class ConvertImgPDFController {
         Path tempOutputDir = null;
         Path tempPdfPath = null;
         byte[] result = null;
+        String[] pageOrderArr = pageNumbers != null ? pageNumbers.split(",") : new String[0];
 
         try {
-            byte[] pdfBytes = file.getBytes();
+            // Load the input PDF
+            byte[] newPdfBytes = rearrangePdfPages(file.getBytes(), pageOrderArr);
+
             ImageType colorTypeResult = ImageType.RGB;
             if ("greyscale".equals(colorType)) {
                 colorTypeResult = ImageType.GRAY;
@@ -77,23 +80,21 @@ public class ConvertImgPDFController {
                 colorTypeResult = ImageType.BINARY;
             }
             // returns bytes for image
-            boolean singleImage =
-                    "single".equals(imageResultType) || "custom".equals(imageResultType);
+            boolean singleImage = "single".equals(singleOrMultiple);
             String filename =
                     Filenames.toSimpleFileName(file.getOriginalFilename())
                             .replaceFirst("[.][^.]+$", "");
 
             result =
                     PdfUtils.convertFromPdf(
-                            pdfBytes,
+                            newPdfBytes,
                             "webp".equalsIgnoreCase(imageFormat)
                                     ? "png"
                                     : imageFormat.toUpperCase(),
                             colorTypeResult,
                             singleImage,
                             Integer.valueOf(dpi),
-                            filename,
-                            "custom".equalsIgnoreCase(imageResultType) ? pageNumbers : "");
+                            filename);
             if (result == null || result.length == 0) {
                 log.error("resultant bytes for {} is null, error converting ", filename);
             }
@@ -228,5 +229,47 @@ public class ConvertImgPDFController {
     private String getMediaType(String imageFormat) {
         String mimeType = URLConnection.guessContentTypeFromName("." + imageFormat);
         return "null".equals(mimeType) ? "application/octet-stream" : mimeType;
+    }
+
+    /**
+     * Rearranges the pages of the given PDF document based on the specified page order.
+     *
+     * @param pdfBytes The byte array of the original PDF file.
+     * @param pageOrderArr An array of page numbers indicating the new order.
+     * @return A byte array of the rearranged PDF.
+     * @throws IOException If an error occurs while processing the PDF.
+     */
+    private byte[] rearrangePdfPages(byte[] pdfBytes, String[] pageOrderArr) throws IOException {
+        // Load the input PDF
+        PDDocument document = Loader.loadPDF(pdfBytes);
+        int totalPages = document.getNumberOfPages();
+        List<Integer> newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+
+        // Create a new list to hold the pages in the new order
+        List<PDPage> newPages = new ArrayList<>();
+        for (int pageIndex : newPageOrder) {
+            newPages.add(document.getPage(pageIndex));
+        }
+
+        // Remove all the pages from the original document
+        for (int i = document.getNumberOfPages() - 1; i >= 0; i--) {
+            document.removePage(i);
+        }
+
+        // Add the pages in the new order
+        for (PDPage page : newPages) {
+            document.addPage(page);
+        }
+
+        // Convert PDDocument to byte array
+        byte[] newPdfBytes;
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            document.save(baos);
+            newPdfBytes = baos.toByteArray();
+        } finally {
+            document.close();
+        }
+
+        return newPdfBytes;
     }
 }

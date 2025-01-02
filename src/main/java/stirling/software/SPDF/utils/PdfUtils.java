@@ -132,9 +132,8 @@ public class PdfUtils {
             ImageType colorType,
             boolean singleImage,
             int DPI,
-            String filename,
-            String pagesToConvert // <-- new pagesToConvert param
-            ) throws IOException, Exception {
+            String filename)
+            throws IOException, Exception {
         try (PDDocument document = Loader.loadPDF(inputStream)) {
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             pdfRenderer.setSubsamplingAllowed(true);
@@ -143,7 +142,6 @@ public class PdfUtils {
             // Create a ByteArrayOutputStream to save the image(s) to
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-            List<Integer> pagesList = getPageIndicesToConvert(pagesToConvert, pageCount);
             if (singleImage) {
                 if ("tiff".equals(imageType.toLowerCase())
                         || "tif".equals(imageType.toLowerCase())) {
@@ -158,9 +156,8 @@ public class PdfUtils {
                         writer.setOutput(ios);
                         writer.prepareWriteSequence(null);
 
-                        for (int pageIndex : pagesList) {
-                            BufferedImage image =
-                                    pdfRenderer.renderImageWithDPI(pageIndex, DPI, colorType);
+                        for (int i = 0; i < pageCount; ++i) {
+                            BufferedImage image = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
                             writer.writeToSequence(new IIOImage(image, null, null), param);
                         }
 
@@ -182,8 +179,8 @@ public class PdfUtils {
                     // to avoid rendering the same page sizes multiple times
                     HashMap<PdfRenderSettingsKey, PdfImageDimensionValue> pageSizes =
                             new HashMap<>();
-                    for (int pageIndex : pagesList) {
-                        PDPage page = document.getPage(pageIndex);
+                    for (int i = 0; i < pageCount; ++i) {
+                        PDPage page = document.getPage(i);
                         PDRectangle mediaBox = page.getMediaBox();
                         int rotation = page.getRotation();
                         PdfRenderSettingsKey settings =
@@ -192,9 +189,8 @@ public class PdfUtils {
                         PdfImageDimensionValue dimension = pageSizes.get(settings);
                         if (dimension == null) {
                             // Render the image to get the dimensions
-                            pdfSizeImage =
-                                    pdfRenderer.renderImageWithDPI(pageIndex, DPI, colorType);
-                            pdfSizeImageIndex = pageIndex;
+                            pdfSizeImage = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
+                            pdfSizeImageIndex = i;
                             dimension =
                                     new PdfImageDimensionValue(
                                             pdfSizeImage.getWidth(), pdfSizeImage.getHeight());
@@ -217,11 +213,11 @@ public class PdfUtils {
                     // Check if the first image is the last rendered image
                     boolean firstImageAlreadyRendered = pdfSizeImageIndex == 0;
 
-                    for (int pageIndex : pagesList) {
-                        if (firstImageAlreadyRendered && pageIndex == 0) {
+                    for (int i = 0; i < pageCount; ++i) {
+                        if (firstImageAlreadyRendered && i == 0) {
                             pageImage = pdfSizeImage;
                         } else {
-                            pageImage = pdfRenderer.renderImageWithDPI(pageIndex, DPI, colorType);
+                            pageImage = pdfRenderer.renderImageWithDPI(i, DPI, colorType);
                         }
 
                         // Calculate the x-coordinate to center the image
@@ -265,26 +261,6 @@ public class PdfUtils {
             log.error("Error converting PDF to image", e);
             throw e;
         }
-    }
-
-    private static List<Integer> getPageIndicesToConvert(String pagesToConvert, int pageCount) {
-        List<Integer> pagesList = new ArrayList<>();
-
-        if (pagesToConvert.isEmpty()
-                || (Integer.parseInt(pagesToConvert.trim()) > pageCount)
-                || Integer.parseInt(pagesToConvert.trim()) <= 0) {
-            // Use all pages if pagesToConvert is empty or exceeds total pages
-            for (int i = 0; i < pageCount; i++) {
-                pagesList.add(i);
-            }
-        } else {
-            // Convert the pagesToConvert to an integer and add the corresponding page index
-            int pageIndex = Integer.parseInt(pagesToConvert.trim()) - 1;
-            if (pageIndex >= 0 && pageIndex < pageCount) {
-                pagesList.add(pageIndex);
-            }
-        }
-        return pagesList;
     }
 
     /**

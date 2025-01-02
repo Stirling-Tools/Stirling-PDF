@@ -17,9 +17,9 @@ public class ConvertToImageRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Choose single image containing all pages or separate images for each page or custom single image",
-            allowableValues = {"single", "multiple", "custom"})
-    private String imageResultType;
+                    "Choose between a single image containing all pages or separate images for each page",
+            allowableValues = {"single", "multiple"})
+    private String singleOrMultiple;
 
     @Schema(
             description =
