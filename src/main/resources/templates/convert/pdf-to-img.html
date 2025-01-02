@@ -34,7 +34,7 @@
                 </div>
                 <div class="mb-3">
                   <label th:text="#{pdfToImage.singleOrMultiple}"></label>
-                  <select class="form-control" name="singleOrMultiple" id="singleOrMultiple">
+                  <select class="form-control" name="singleOrMultiple">
                     <option value="multiple" th:text="#{pdfToImage.multi}"></option>
                     <option value="single" th:text="#{pdfToImage.single}"></option>
                   </select>
@@ -42,7 +42,8 @@
 
                 <div class="mb-3" id="singleOptionSection" >
                   <label for="pageNumbers" th:text="#{pageSelectionPrompt}"></label>
-                  <input type="text" name="pageNumbers" class="form-control" id="pageNumbers" value="all">
+                  <input type="text" name="pageNumbers" class="form-control" id="pageNumbers"
+                         th:placeholder="#{pdfToImage.placeholder}" required>
                 </div>
                 <div class="mb-3">
                   <label th:text="#{pdfToImage.colorType}"></label>
