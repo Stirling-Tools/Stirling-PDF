@@ -9,7 +9,8 @@ on:
       - "src/main/resources/messages_*.properties"
       - "scripts/ignore_translation.toml"
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   sync-readme:

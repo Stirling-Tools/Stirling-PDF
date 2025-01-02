@@ -4,7 +4,8 @@ on:
   schedule:
     - cron: "30 20 * * *"
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   labeler:
