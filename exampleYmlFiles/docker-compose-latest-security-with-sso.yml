@@ -38,8 +38,4 @@ services:
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
-      SYSTEM_DATASOURCE_ENABLECUSTOMDATABASE: "true"
-      SYSTEM_DATASOURCE_CUSTOMDATABASEURL: "jdbc:postgresql://db:5432/stirling_pdf"
-      SYSTEM_DATASOURCE_USERNAME: "admin"
-      SYSTEM_DATASOURCE_PASSWORD: "stirling"
     restart: on-failure:5
