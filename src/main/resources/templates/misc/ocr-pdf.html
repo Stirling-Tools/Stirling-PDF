@@ -41,36 +41,38 @@
               </div>
               <form th:if="${#lists.size(languages) > 0}" action="#" th:action="@{'/api/v1/misc/ocr-pdf'}" method="post" enctype="multipart/form-data" class="mb-3">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
-                <div class="mb-3">
-                  <label for="languages" class="form-label" th:text="#{ocr.selectText.1}"></label>
-                  <hr>
-                  <div id="languages">
-                    <div class="form-check" th:each="language, iterStat : ${languages}">
-                      <input type="checkbox" th:name="languages" th:value="${language}" required th:id="${'language-' + language}" onchange="handleLangSelection()" />
-                      <label th:for="${'language-' + language}" th:text="${language}"></label>
+                <div id="elementsContainer" style="display: none;">
+                  <div class="mb-3">
+                    <label for="languages" class="form-label" th:text="#{ocr.selectText.1}"></label>
+                    <hr>
+                    <div id="languages">
+                      <div class="form-check" th:each="language, iterStat : ${languages}">
+                        <input type="checkbox" th:name="languages" th:value="${language}" required th:id="${'language-' + language}" onchange="handleLangSelection()" />
+                        <label th:for="${'language-' + language}" th:text="${language}"></label>
+                      </div>
                     </div>
+                    <hr>
                   </div>
-                  <hr>
+                  <div class="mb-3">
+                    <label th:text="#{ocr.selectText.10}"></label>
+                    <select class="form-control" name="ocrType">
+                      <option value="skip-text" th:text="#{ocr.selectText.6}"></option>
+                      <option value="force-ocr" th:text="#{ocr.selectText.7}"></option>
+                      <option value="Normal" th:text="#{ocr.selectText.8}"></option>
+                    </select>
+                  </div>
+                  <br>
+                  <label for="languages" class="form-label" th:text="#{ocr.selectText.9}"></label>
+                  <div class="mb-3">
+                    <label th:text="#{ocr.selectText.12}"></label>
+                    <select class="form-control" name="ocrRenderType">
+                      <option value="hocr">HOCR (Latin/Roman alphabet only)</option>
+                      <option value="sandwich">Sandwich</option>
+                    </select>
+                  </div>
+                  <br>
+                  <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{ocr.submit}"></button>
                 </div>
-                <div class="mb-3">
-                  <label th:text="#{ocr.selectText.10}"></label>
-                  <select class="form-control" name="ocrType">
-                    <option value="skip-text" th:text="#{ocr.selectText.6}"></option>
-                    <option value="force-ocr" th:text="#{ocr.selectText.7}"></option>
-                    <option value="Normal" th:text="#{ocr.selectText.8}"></option>
-                  </select>
-                </div>
-                <br>
-                <label for="languages" class="form-label" th:text="#{ocr.selectText.9}"></label>
-                <div class="mb-3">
-                  <label th:text="#{ocr.selectText.12}"></label>
-                  <select class="form-control" name="ocrRenderType">
-                    <option value="hocr">HOCR (Latin/Roman alphabet only)</option>
-                    <option value="sandwich">Sandwich</option>
-                  </select>
-                </div>
-                <br>
-                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{ocr.submit}"></button>
               </form>
               <script>
                 const languageMap = {

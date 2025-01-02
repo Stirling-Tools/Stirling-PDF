@@ -113,11 +113,13 @@ window.addEventListener('resize', function () {
 
 fileInput.addEventListener('change', function (e) {
   fileInput.addEventListener('file-input-change', async (e) => {
-    const {allFiles} = e.detail;
-    if (allFiles && allFiles.length > 0) {
-      canvasesContainer.style.display = 'block'; // set for visual purposes
-      file = e.target.files[0];
-      renderPageFromFile(file);
+    if (e.detail) {
+      const {allFiles} = e.detail;
+      if (allFiles && allFiles.length > 0) {
+        canvasesContainer.style.display = 'block'; // set for visual purposes
+        file = e.target.files[0];
+        renderPageFromFile(file);
+      }
     }
   });
 });
