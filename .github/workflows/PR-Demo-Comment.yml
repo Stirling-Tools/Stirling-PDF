@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
-      issues: write
+      issues: read
     if: |
       github.event.issue.pull_request &&
       (
