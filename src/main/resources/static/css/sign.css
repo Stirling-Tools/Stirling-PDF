@@ -22,18 +22,38 @@ select#font-select option {
 }
 
 .draggable-buttons-box {
-  position: absolute;
+  position: relative;
   top: 0;
   padding: 10px;
-  width: 100%;
+  width: calc(100% + 4.4rem);
   display: flex;
   gap: 5px;
   z-index: 5;
+  margin-left: -2.2rem;
 }
 
 .draggable-buttons-box>button {
   z-index: 4;
   background-color: rgba(13, 110, 253, 0.1);
+  flex: 1 1 auto;
+  min-width: 2.5rem;
+  max-width: 4rem;
+}
+
+
+.rotation-handle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #3498db;
+  background-color: rgba(52, 152, 219, 0.1);
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 20px;
+  position: absolute;
+  cursor: grab;
+  top: -30px;
+  left: calc(50% - 10px);
 }
 
 .draggable-canvas {
@@ -112,4 +132,34 @@ select#font-select option {
 .view-toggle {
   text-align: right;
   padding: 0.5rem 1rem;
+}
+
+.input-with-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.input-with-icon .icon {
+  position: absolute;
+  left: 0.5rem;
+  pointer-events: none;
+  color: #aaa;
+}
+
+.input-with-icon input {
+  padding-left: 2.2rem;
+}
+
+.small-file-container-saved {
+  padding-top: 1px;
+  position: relative;
+  row-gap: 1px;
+  height: 60px;
+  width: 60px;
+  top: 4px;
+}
+
+.small-file-container-saved:hover .drag-icon {
+  display: flex;
 }
