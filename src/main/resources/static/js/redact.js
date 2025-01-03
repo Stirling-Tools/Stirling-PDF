@@ -542,37 +542,21 @@ window.addEventListener("load", (e) => {
         );
       };
 
-      canvas.onpointermove = function (e) {
-        setMousePosition(e);
-        if (element !== null) {
-          let scaleFactor = _getScaleFactor();
+      canvas.onpointerup = (e) => {
+        let isLeftClick = e.button == 0;
+        if (!isLeftClick) return;
 
-          let width = Math.abs(mouse.x - mouse.startX);
-          element.style.width = _toCalcZoomPx(_scaleToDisplay(width));
-
-          let height = Math.abs(mouse.y - mouse.startY);
-          element.style.height = _toCalcZoomPx(_scaleToDisplay(height));
-
-          let left = mouse.x - mouse.startX < 0 ? mouse.x : mouse.startX;
-          element.style.left = _toCalcZoomPx(_scaleToDisplay(left));
-
-          let top = mouse.y - mouse.startY < 0 ? mouse.y : mouse.startY;
-          element.style.top = _toCalcZoomPx(_scaleToDisplay(top));
-
-          if (drawnRedaction) {
-            drawnRedaction.left = _scaleToPDF(left, scaleFactor);
-            drawnRedaction.top = _scaleToPDF(top, scaleFactor);
-            drawnRedaction.width = _scaleToPDF(width, scaleFactor);
-            drawnRedaction.height = _scaleToPDF(height, scaleFactor);
-          }
-        }
-      };
-
-      canvas.onclick = function (e) {
         if (element !== null) {
           _saveAndResetDrawnRedaction();
           console.log("finished.");
-        } else {
+        }
+      };
+
+      canvas.onpointerdown = (e) => {
+        let isLeftClick = e.button == 0;
+        if (!isLeftClick) return;
+
+        if (element == null) {
           if (redactionMode !== RedactionModes.DRAWING) {
             console.warn(
               "Drawing attempt when redaction mode is",
@@ -585,6 +569,36 @@ window.addEventListener("load", (e) => {
         }
       };
 
+      canvas.onpointermove = function (e) {
+        setMousePosition(e);
+        if (element !== null) {
+          draw();
+        }
+      };
+
+      function draw() {
+        let scaleFactor = _getScaleFactor();
+
+        let width = Math.abs(mouse.x - mouse.startX);
+        element.style.width = _toCalcZoomPx(_scaleToDisplay(width));
+
+        let height = Math.abs(mouse.y - mouse.startY);
+        element.style.height = _toCalcZoomPx(_scaleToDisplay(height));
+
+        let left = mouse.x - mouse.startX < 0 ? mouse.x : mouse.startX;
+        element.style.left = _toCalcZoomPx(_scaleToDisplay(left));
+
+        let top = mouse.y - mouse.startY < 0 ? mouse.y : mouse.startY;
+        element.style.top = _toCalcZoomPx(_scaleToDisplay(top));
+
+        if (drawnRedaction) {
+          drawnRedaction.left = _scaleToPDF(left, scaleFactor);
+          drawnRedaction.top = _scaleToPDF(top, scaleFactor);
+          drawnRedaction.width = _scaleToPDF(width, scaleFactor);
+          drawnRedaction.height = _scaleToPDF(height, scaleFactor);
+        }
+      }
+
       function _clearDrawing() {
         if (element) element.remove();
         element = null;
@@ -592,13 +606,17 @@ window.addEventListener("load", (e) => {
       }
 
       function _saveAndResetDrawnRedaction() {
+        if (!element) return;
+        if ((!element.style.height || element.style.height.includes('(0px * var'))  || (!element.style.width || element.style.width.includes('(0px * var'))) {
+          element.remove();
+        } else {
         element.classList.add("selected-wrapper");
         element.classList.remove("rectangle");
 
         addRedactionOverlay(element, drawnRedaction, canvas);
         redactions.push(drawnRedaction);
         _setRedactionsInput(redactions);
-
+        }
         element = null;
         drawnRedaction = null;
         canvas.style.cursor = "default";
