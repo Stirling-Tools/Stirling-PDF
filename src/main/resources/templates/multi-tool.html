@@ -88,31 +88,31 @@
                   </button>
                   <button id="deselect-All-Container" class="btn btn-secondary enable-on-file hidden"
                     onclick="toggleSelectAll()" disabled>
-                    <span  class="material-symbols-rounded" id="deselect-icon">deselect</span>
-                      <span class="btn-tooltip" th:text="#{multiTool.deselectAll}"></span>
+                    <span class="material-symbols-rounded" id="deselect-icon">deselect</span>
+                    <span class="btn-tooltip" th:text="#{multiTool.deselectAll}"></span>
                   </button>
                   <button id="select-All-Container" class="btn btn-secondary enable-on-file hidden"
-                  onclick="toggleSelectAll()" disabled>
-                  <span  class="material-symbols-rounded"
-                    id="select-icon">select_all</span>
+                    onclick="toggleSelectAll()" disabled>
+                    <span class="material-symbols-rounded" id="select-icon">select_all</span>
                     <span class="btn-tooltip" th:text="#{multiTool.selectAll}"></span>
-                </button>
+                  </button>
                   <div class="button-container">
-                    <button id="delete-button" class="btn btn-danger delete hidden"  onclick="deleteSelected()">
+                    <button id="delete-button" class="btn btn-danger delete hidden" onclick="deleteSelected()">
                       <span class="material-symbols-rounded">delete</span>
                       <span class="btn-tooltip" th:text="#{multiTool.deleteSelected}"></span>
                     </button>
                   </div>
                   <div style="margin-left:auto">
-                    <button id="export-selected-button" class="btn btn-primary enable-on-file hidden"
-                      onclick="exportPdf(true)" disabled>
+                    <button id="export-selected-button"
+                      style="border-color: green; color:#b2e3a8; background: rgba(24, 122, 5, 1)"
+                      class="btn btn-primary enable-on-file hidden" onclick="exportPdf(true)" disabled>
                       <span class="btn-tooltip" th:text="#{multiTool.downloadSelected}"></span>
-                      <span  class="material-symbols-rounded">
+                      <span class="material-symbols-rounded">
                         file_save
                       </span>
                     </button>
-                    <button id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf(false)"
-                      disabled>
+                    <button style="border-color: green; color:#b2e3a8; background: rgba(24, 122, 5, 1)"
+                      id="export-button" class="btn btn-primary enable-on-file" onclick="exportPdf(false)" disabled>
                       <span class="material-symbols-rounded">
                         download
                       </span>
@@ -124,7 +124,8 @@
                   <div style="display:flex; height:3rem; margin-right:1rem">
                     <h5 th:text="#{multiTool.selectedPages}" style="white-space: nowrap; margin-right: 1rem;">Selected
                       Pages</h5>
-                    <input type="text" id="csv-input" class="form-control" style="height:2.5rem" placeholder="1,3,5-10"  value="">
+                    <input type="text" id="csv-input" class="form-control" style="height:2.5rem" placeholder="1,3,5-10"
+                      value="">
                   </div>
                   <ul id="selected-pages-list" class="pages-list"></ul>
                 </div>
@@ -151,29 +152,29 @@
     window.selectAll = false;
 
     window.translations = {
-        rotateLeft: '[[#{multiTool.rotateLeft}]]',
-        rotateRight: '[[#{multiTool.rotateRight}]]',
-        moveLeft: '[[#{multiTool.moveLeft}]]',
-        moveRight: '[[#{multiTool.moveRight}]]',
-        delete: '[[#{multiTool.delete}]]',
-        split: '[[#{multiTool.split}]]',
-        addFile: '[[#{multiTool.addFile}]]',
-        insertPageBreak:'[[#{multiTool.insertPageBreak}]]',
-        dragDropMessage:'[[#{multiTool.dragDropMessage}]]',
-        undo: '[[#{multiTool.undo}]]',
-        redo: '[[#{multiTool.redo}]]',
+      rotateLeft: '[[#{multiTool.rotateLeft}]]',
+      rotateRight: '[[#{multiTool.rotateRight}]]',
+      moveLeft: '[[#{multiTool.moveLeft}]]',
+      moveRight: '[[#{multiTool.moveRight}]]',
+      delete: '[[#{multiTool.delete}]]',
+      split: '[[#{multiTool.split}]]',
+      addFile: '[[#{multiTool.addFile}]]',
+      insertPageBreak: '[[#{multiTool.insertPageBreak}]]',
+      dragDropMessage: '[[#{multiTool.dragDropMessage}]]',
+      undo: '[[#{multiTool.undo}]]',
+      redo: '[[#{multiTool.redo}]]',
     };
 
     window.decrypt = {
-                    passwordPrompt: '[[#{decrypt.passwordPrompt}]]',
-                    cancelled: '[[#{decrypt.cancelled}]]',
-                    noPassword: '[[#{decrypt.noPassword}]]',
-                    invalidPassword: '[[#{decrypt.invalidPassword}]]',
-                    invalidPasswordHeader: '[[#{decrypt.invalidPasswordHeader}]]',
-                    unexpectedError: '[[#{decrypt.unexpectedError}]]',
-                    serverError: '[[#{decrypt.serverError}]]',
-                    success: '[[#{decrypt.success}]]',
-              }
+      passwordPrompt: '[[#{decrypt.passwordPrompt}]]',
+      cancelled: '[[#{decrypt.cancelled}]]',
+      noPassword: '[[#{decrypt.noPassword}]]',
+      invalidPassword: '[[#{decrypt.invalidPassword}]]',
+      invalidPasswordHeader: '[[#{decrypt.invalidPasswordHeader}]]',
+      unexpectedError: '[[#{decrypt.unexpectedError}]]',
+      serverError: '[[#{decrypt.serverError}]]',
+      success: '[[#{decrypt.success}]]',
+    }
 
     const csvInput = document.getElementById("csv-input");
     csvInput.addEventListener("keydown", function (event) {
@@ -217,18 +218,18 @@
     )
 
     fileDragManager.setCallback(async (files) => pdfContainer.handleDroppedFiles(files));
-    document.addEventListener('keydown', function(event) {
-    let targetElementId = event.target.id;
+    document.addEventListener('keydown', function (event) {
+      let targetElementId = event.target.id;
 
-    // To avoid undoing/redoing the page when the user is simply undoing/redoing text
-    const isFilenameInputField = (targetElementId === 'filename-input') && (event.target === document.activeElement);
+      // To avoid undoing/redoing the page when the user is simply undoing/redoing text
+      const isFilenameInputField = (targetElementId === 'filename-input') && (event.target === document.activeElement);
 
-    const isUndo = (event.ctrlKey && event.key === 'z');
-    const isRedo = (event.ctrlKey && event.key == 'y');
-    if (isUndo && !isFilenameInputField)
-      undoManager.undo();
-    else if (isRedo && !isFilenameInputField) undoManager.redo();
-});
+      const isUndo = (event.ctrlKey && event.key === 'z');
+      const isRedo = (event.ctrlKey && event.key == 'y');
+      if (isUndo && !isFilenameInputField)
+        undoManager.undo();
+      else if (isRedo && !isFilenameInputField) undoManager.redo();
+    });
   </script>
 </body>
 
