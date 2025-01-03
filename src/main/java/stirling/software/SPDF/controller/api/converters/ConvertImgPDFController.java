@@ -67,8 +67,11 @@ public class ConvertImgPDFController {
         Path tempOutputDir = null;
         Path tempPdfPath = null;
         byte[] result = null;
-        String[] pageOrderArr = pageNumbers != null ? pageNumbers.split(",") : new String[0];
-
+        String[] pageOrderArr =
+                (pageNumbers != null && !pageNumbers.trim().isEmpty())
+                        ? pageNumbers.split(",")
+                        : new String[] {"all"};
+        ;
         try {
             // Load the input PDF
             byte[] newPdfBytes = rearrangePdfPages(file.getBytes(), pageOrderArr);
