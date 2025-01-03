@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import stirling.software.SPDF.model.AuthenticationType;
 import stirling.software.SPDF.model.Role;
 import stirling.software.SPDF.model.User;
 import stirling.software.SPDF.model.api.user.UsernameAndPass;
+import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 
 @Controller
 @Tag(name = "User", description = "User APIs")
@@ -52,7 +54,7 @@ public class UserController {
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
     public String register(@ModelAttribute UsernameAndPass requestModel, Model model)
-            throws IOException {
+            throws SQLException, UnsupportedProviderException {
         if (userService.usernameExistsIgnoreCase(requestModel.getUsername())) {
             model.addAttribute("error", "Username already exists");
             return "register";
@@ -74,7 +76,7 @@ public class UserController {
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes)
-            throws IOException {
+            throws IOException, SQLException, UnsupportedProviderException {
         if (!userService.isUsernameValid(newUsername)) {
             return new RedirectView("/account?messageType=invalidUsername", true);
         }
@@ -117,7 +119,7 @@ public class UserController {
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes)
-            throws IOException {
+            throws SQLException, UnsupportedProviderException {
         if (principal == null) {
             return new RedirectView("/change-creds?messageType=notAuthenticated", true);
         }
@@ -145,7 +147,7 @@ public class UserController {
             HttpServletRequest request,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes)
-            throws IOException {
+            throws SQLException, UnsupportedProviderException {
         if (principal == null) {
             return new RedirectView("/account?messageType=notAuthenticated", true);
         }
@@ -166,7 +168,7 @@ public class UserController {
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/updateUserSettings")
     public String updateUserSettings(HttpServletRequest request, Principal principal)
-            throws IOException {
+            throws SQLException, UnsupportedProviderException {
         Map<String, String[]> paramMap = request.getParameterMap();
         Map<String, String> updates = new HashMap<>();
         for (Map.Entry<String, String[]> entry : paramMap.entrySet()) {
@@ -188,7 +190,7 @@ public class UserController {
             @RequestParam(name = "authType") String authType,
             @RequestParam(name = "forceChange", required = false, defaultValue = "false")
                     boolean forceChange)
-            throws IllegalArgumentException, IOException {
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!userService.isUsernameValid(username)) {
             return new RedirectView("/addUsers?messageType=invalidUsername", true);
         }
@@ -232,7 +234,7 @@ public class UserController {
             @RequestParam(name = "username") String username,
             @RequestParam(name = "role") String role,
             Authentication authentication)
-            throws IOException {
+            throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (!userOpt.isPresent()) {
             return new RedirectView("/addUsers?messageType=userNotFound", true);
@@ -270,7 +272,7 @@ public class UserController {
             @PathVariable("username") String username,
             @RequestParam("enabled") boolean enabled,
             Authentication authentication)
-            throws IOException {
+            throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (!userOpt.isPresent()) {
             return new RedirectView("/addUsers?messageType=userNotFound", true);

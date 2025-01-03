@@ -18,7 +18,7 @@ public class LicenseKeyChecker {
 
     private final ApplicationProperties applicationProperties;
 
-    private boolean enterpriseEnbaledResult = false;
+    private boolean enterpriseEnabledResult = false;
 
     @Autowired
     public LicenseKeyChecker(
@@ -35,12 +35,12 @@ public class LicenseKeyChecker {
 
     private void checkLicense() {
         if (!applicationProperties.getEnterpriseEdition().isEnabled()) {
-            enterpriseEnbaledResult = false;
+            enterpriseEnabledResult = false;
         } else {
-            enterpriseEnbaledResult =
+            enterpriseEnabledResult =
                     licenseService.verifyLicense(
                             applicationProperties.getEnterpriseEdition().getKey());
-            if (enterpriseEnbaledResult) {
+            if (enterpriseEnabledResult) {
                 log.info("License key is valid.");
             } else {
                 log.info("License key is invalid.");
@@ -55,6 +55,6 @@ public class LicenseKeyChecker {
     }
 
     public boolean getEnterpriseEnabledResult() {
-        return enterpriseEnbaledResult;
+        return enterpriseEnabledResult;
     }
 }
