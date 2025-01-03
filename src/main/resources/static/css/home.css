@@ -56,15 +56,14 @@
   user-select: none;
   cursor: pointer;
   gap: 10px;
-}
 
 .feature-group-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 3fr));
-  gap: 30px 30px;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 3fr));
+  gap: 10px 0px;
   overflow: hidden;
   margin: -20px;
-  padding: 20px;
+  padding: 10px;
   box-sizing:content-box;
 }
 
