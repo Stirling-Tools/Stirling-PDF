@@ -74,6 +74,9 @@ jobs:
   deploy-pr:
     needs: check-comment
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
 
     steps:
       - name: Harden Runner
