@@ -214,6 +214,7 @@ public class WatermarkController {
                                 + Math.abs(watermarkHeight * Math.cos(radians)));
 
         // Calculating the number of rows and columns.
+
         int watermarkRows = (int) (pageHeight / newWatermarkHeight + 1);
         int watermarkCols = (int) (pageWidth / newWatermarkWidth + 1);
 

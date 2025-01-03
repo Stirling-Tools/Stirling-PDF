@@ -25,6 +25,6 @@ public class EEAppConfig {
 
     @Bean(name = "runningEE")
     public boolean runningEnterpriseEdition() {
-        return licenseKeyChecker.getEnterpriseEnabledResult();
+    	return licenseKeyChecker.getEnterpriseEnabledResult();
     }
 }
