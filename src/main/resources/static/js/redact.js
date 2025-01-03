@@ -628,6 +628,7 @@ window.addEventListener("load", (e) => {
 
       function _clearDrawing() {
         if (element) element.remove();
+        if (drawingLayer == canvas) drawingLayer = null;
         element = null;
         drawnRedaction = null;
       }
@@ -965,45 +966,28 @@ function calculateMouseCoordinateToRotatedBox(canvas, e) {
   let angle = parseInt(canvas.getAttribute('data-main-rotation'));
   switch (angle) {
     case 0:
-      left = e.pageX - textRect.left;
-      if (left < 0) left = 0;
-      else if (left > textRect.width) left = textRect.width;
-
-      top = e.pageY - textRect.top;
-      if (top < 0) top = 0;
-      else if (top > textRect.height) top = textRect.height;
+      left = clamp(e.pageX - textRect.left, 0, textRect.width);
+      top = clamp(e.pageY - textRect.top, 0, textRect.height);
       break;
 
     case 90:
-      left = e.pageY - textRect.top;
-      if (left < 0) left = 0;
-      else if (left > textRect.height) left = textRect.height;
-      top = textRect.right - e.pageX;
-      if (top < 0) top = 0;
-      else if (top > textRect.width) top = textRect.width;
+      left = clamp(e.pageY - textRect.top, 0, textRect.height);
+      top = clamp(textRect.right - e.pageX, 0, textRect.width);
       break;
     case 180:
-      left = textRect.right - e.pageX;
-      top = textRect.bottom - e.pageY;
-
-      if (left < 0) left = 0;
-      else if (left > textRect.width) left = textRect.width;
-
-      if (top < 0) top = 0;
-      else if (top > textRect.height) top = textRect.height;
+      left = clamp(textRect.right - e.pageX, 0, textRect.width);
+      top = clamp(textRect.bottom - e.pageY, 0, textRect.width);
       break;
     case 270:
-      left = textRect.bottom - e.pageY;
-      top = e.pageX - textRect.left;
-
-      if (left < 0) left = 0;
-      else if (left > textRect.height) left = textRect.height;
-
-      if (top < 0) top = 0;
-      else if (top > textRect.width) top = textRect.width;
+      left = clamp(textRect.bottom - e.pageY, 0, textRect.height);
+      top = clamp(e.pageX - textRect.left, 0, textRect.width);
       break;
   }
   return { left, top };
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(value, max));
 }
 
 function addPageRedactionPreviewToPages(pagesDetailed, totalPagesCount) {
