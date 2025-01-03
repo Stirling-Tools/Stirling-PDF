@@ -4,6 +4,7 @@ import UUID from "./uuid.js";
 let zoomScaleValue = 1.0;
 
 let activeOverlay;
+let drawingLayer = null;
 
 const doNothing = () => {};
 
@@ -406,6 +407,10 @@ window.addEventListener("load", (e) => {
         );
     }
 
+    document.onpointerup = (e) => {
+      if (drawingLayer && e.target != drawingLayer && e.button == 0) drawingLayer.dispatchEvent(new Event('external-pointerup'));
+    }
+
     initDraw(layer, redactionsContainer);
 
     function _handleTextSelectionRedactionBtnClick(e) {
@@ -552,6 +557,28 @@ window.addEventListener("load", (e) => {
         }
       };
 
+      canvas.addEventListener('external-pointerup', (e) => {
+        if (element != null) {
+        _saveAndResetDrawnRedaction();
+        }
+      });
+
+      canvas.onpointerleave = (e) => {
+          let ev = copyEvent(e, 'pointerleave');
+          let { left, top } = calculateMouseCoordinateToRotatedBox(canvas, e);
+
+          ev.layerX = left;
+          ev.offsetX = left;
+
+          ev.layerY = top;
+          ev.offsetY = top;
+
+        setMousePosition(ev);
+        if (element !== null) {
+          draw();
+        }
+      }
+
       canvas.onpointerdown = (e) => {
         let isLeftClick = e.button == 0;
         if (!isLeftClick) return;
@@ -617,6 +644,7 @@ window.addEventListener("load", (e) => {
         redactions.push(drawnRedaction);
         _setRedactionsInput(redactions);
         }
+        drawingLayer = null;
         element = null;
         drawnRedaction = null;
         canvas.style.cursor = "default";
@@ -628,6 +656,7 @@ window.addEventListener("load", (e) => {
 
         element = document.createElement("div");
         element.className = "rectangle";
+        drawingLayer = canvas;
 
         let left = mouse.x;
         let top = mouse.y;
@@ -930,6 +959,53 @@ window.addEventListener("load", (e) => {
   }
 });
 
+function calculateMouseCoordinateToRotatedBox(canvas, e) {
+  let textRect = canvas.getBoundingClientRect();
+  let left, top = 0;
+  let angle = parseInt(canvas.getAttribute('data-main-rotation'));
+  switch (angle) {
+    case 0:
+      left = e.pageX - textRect.left;
+      if (left < 0) left = 0;
+      else if (left > textRect.width) left = textRect.width;
+
+      top = e.pageY - textRect.top;
+      if (top < 0) top = 0;
+      else if (top > textRect.height) top = textRect.height;
+      break;
+
+    case 90:
+      left = e.pageY - textRect.top;
+      if (left < 0) left = 0;
+      else if (left > textRect.height) left = textRect.height;
+      top = textRect.right - e.pageX;
+      if (top < 0) top = 0;
+      else if (top > textRect.width) top = textRect.width;
+      break;
+    case 180:
+      left = textRect.right - e.pageX;
+      top = textRect.bottom - e.pageY;
+
+      if (left < 0) left = 0;
+      else if (left > textRect.width) left = textRect.width;
+
+      if (top < 0) top = 0;
+      else if (top > textRect.height) top = textRect.height;
+      break;
+    case 270:
+      left = textRect.bottom - e.pageY;
+      top = e.pageX - textRect.left;
+
+      if (left < 0) left = 0;
+      else if (left > textRect.height) left = textRect.height;
+
+      if (top < 0) top = 0;
+      else if (top > textRect.width) top = textRect.width;
+      break;
+  }
+  return { left, top };
+}
+
 function addPageRedactionPreviewToPages(pagesDetailed, totalPagesCount) {
   if (pagesDetailed.all) {
     addRedactedPagePreview('#viewer > .page');
@@ -1010,4 +1086,11 @@ function _isEmptyRedaction(redaction) {
 
 function _nonEmptyRedaction(redaction) {
   return !_isEmptyRedaction(redaction);
+}
+
+
+function copyEvent(e, type) {
+  if (type == 'pointerleave') return {layerX: e.layerX, layerY: e.layerY, pageX: e.pageX, pageY: e.pageY, clientX: e.clientX, clientY: e.clientY, button: e.button, height: e.height, width: e.width, offsetX: e.offsetX, offsetY: e.offsetY, pointerId: e.pointerId, pointerType: e.pointerType, type: e.type, screenX: e.screenX, screenY: e.screenY, tiltX: e.tiltX, tiltY: e.tiltY, x: e.x, y: e.y, altKey: e.altKey, ctrlKey: e.ctrlKey, isPrimary: e.isPrimary, isTrusted: e.isTrusted, metaKey: e.metaKey, pressure: e.pressure, returnValue: e.returnValue, shiftKey: e.shiftKey, timeStamp: e.timeStamp, which: e.which, twist: e.twist, tangentialPressure: e.tangentialPressure, target: e.target, srcElement: e.srcElement, relatedTarget: e.relatedTarget, rangeOffset: e.rangeOffset, rangeParent: e.rangeParent, explicitOriginalTarget: e.explicitOriginalTarget, eventPhase: e.eventPhase, detail: e.detail, defaultPrevented: e.defaultPrevented, currentTarget: e.currentTarget, buttons: e.buttons, azimuthAngle: e.azimuthAngle, altitudeAngle: e.altitudeAngle};
+
+  return {};
 }
