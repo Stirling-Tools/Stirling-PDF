@@ -213,7 +213,10 @@
                     unexpectedError: '[[#{decrypt.unexpectedError}]]',
                     serverError: '[[#{decrypt.serverError}]]',
                     success: '[[#{decrypt.success}]]',
-              };</script>
+              };
+              window.fileInput = {
+                dragAndDropPDF : '[[#{fileChooser.dragAndDropPDF}]]',
+                dragAndDropImage : '[[#{fileChooser.dragAndDropImage}]]'};</script>
                 <div class="custom-file-chooser mb-3" th:attr="data-bs-unique-id=${name}, data-bs-element-id=${name+'-input'}, data-bs-element-container-id=${name+'-input-container'}, data-bs-files-selected=#{filesSelected}, data-bs-pdf-prompt=#{pdfPrompt}">
                   <div class="mb-3 d-flex flex-row justify-content-center align-items-center flex-wrap input-container" th:name="${name}+'-input'" th:id="${name}+'-input-container'" th:data-text="#{fileChooser.hoveredDragAndDrop}">
                       <label class="file-input-btn d-none">
@@ -222,7 +225,7 @@
                       </label>
                       <div th:text="#{fileChooser.click}"></div>
                       <div th:text="#{fileChooser.or}"></div>
-                      <div th:text="#{fileChooser.dragAndDrop}"></div>
+                      <div  th:text="#{fileChooser.dragAndDrop}" id="dragAndDrop"></div>
                   </div>
                     <div class="selected-files flex-wrap"></div>
                 </div>

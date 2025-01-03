@@ -9,7 +9,8 @@ on:
       - "src/main/resources/messages_*.properties"
       - "scripts/ignore_translation.toml"
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   sync-readme:
@@ -42,7 +43,7 @@ jobs:
           git diff --staged --quiet || git commit -m ":memo: Sync README
           > Made via sync_files.yml" || echo "no changes"
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@5e914681df9dc83aa4e4905692ca88beb2f9e91f # v7.0.5
+        uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7.0.6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Update files

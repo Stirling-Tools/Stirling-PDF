@@ -22,22 +22,31 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.model.ApiKeyAuthenticationToken;
+import stirling.software.SPDF.model.ApplicationProperties;
+import stirling.software.SPDF.model.ApplicationProperties.Security;
+import stirling.software.SPDF.model.ApplicationProperties.Security.OAUTH2;
+import stirling.software.SPDF.model.ApplicationProperties.Security.SAML2;
 import stirling.software.SPDF.model.User;
 
+@Slf4j
 @Component
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
+    private final ApplicationProperties applicationProperties;
     private final UserService userService;
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final boolean loginEnabledValue;
 
     public UserAuthenticationFilter(
+            @Lazy ApplicationProperties applicationProperties,
             @Lazy UserService userService,
             SessionPersistentRegistry sessionPersistentRegistry,
             @Qualifier("loginEnabled") boolean loginEnabledValue) {
+        this.applicationProperties = applicationProperties;
         this.userService = userService;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.loginEnabledValue = loginEnabledValue;
@@ -121,33 +130,67 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
         // Check if the authenticated user is disabled and invalidate their session if so
         if (authentication != null && authentication.isAuthenticated()) {
+
+            Security securityProp = applicationProperties.getSecurity();
+            LoginMethod loginMethod = LoginMethod.UNKNOWN;
+
+            boolean blockRegistration = false;
+
+            // Extract username and determine the login method
             Object principal = authentication.getPrincipal();
             String username = null;
             if (principal instanceof UserDetails) {
                 username = ((UserDetails) principal).getUsername();
+                loginMethod = LoginMethod.USERDETAILS;
             } else if (principal instanceof OAuth2User) {
                 username = ((OAuth2User) principal).getName();
+                loginMethod = LoginMethod.OAUTH2USER;
+                OAUTH2 oAuth = securityProp.getOauth2();
+                blockRegistration = oAuth != null && oAuth.getBlockRegistration();
             } else if (principal instanceof CustomSaml2AuthenticatedPrincipal) {
                 username = ((CustomSaml2AuthenticatedPrincipal) principal).getName();
+                loginMethod = LoginMethod.SAML2USER;
+                SAML2 saml2 = securityProp.getSaml2();
+                blockRegistration = saml2 != null && saml2.getBlockRegistration();
             } else if (principal instanceof String) {
                 username = (String) principal;
+                loginMethod = LoginMethod.STRINGUSER;
             }
 
+            // Retrieve all active sessions for the user
             List<SessionInformation> sessionsInformations =
                     sessionPersistentRegistry.getAllSessions(principal, false);
 
+            // Check if the user exists, is disabled, or needs session invalidation
             if (username != null) {
+                log.debug("Validating user: {}", username);
                 boolean isUserExists = userService.usernameExistsIgnoreCase(username);
                 boolean isUserDisabled = userService.isUserDisabled(username);
 
+                boolean notSsoLogin =
+                        !loginMethod.equals(LoginMethod.OAUTH2USER)
+                                && !loginMethod.equals(LoginMethod.SAML2USER);
+
+                // Block user registration if not allowed by configuration
+                if (blockRegistration && !isUserExists) {
+                    log.warn("Blocked registration for OAuth2/SAML user: {}", username);
+                    response.sendRedirect(
+                            request.getContextPath() + "/logout?oauth2_admin_blocked_user=true");
+                    return;
+                }
+
+                // Expire sessions and logout if the user does not exist or is disabled
                 if (!isUserExists || isUserDisabled) {
+                    log.info(
+                            "Invalidating session for disabled or non-existent user: {}", username);
                     for (SessionInformation sessionsInformation : sessionsInformations) {
                         sessionsInformation.expireNow();
                         sessionPersistentRegistry.expireSession(sessionsInformation.getSessionId());
                     }
                 }
 
-                if (!isUserExists) {
+                // Redirect to logout if credentials are invalid
+                if (!isUserExists && notSsoLogin) {
                     response.sendRedirect(request.getContextPath() + "/logout?badcredentials=true");
                     return;
                 }
@@ -159,6 +202,25 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private enum LoginMethod {
+        USERDETAILS("UserDetails"),
+        OAUTH2USER("OAuth2User"),
+        STRINGUSER("StringUser"),
+        UNKNOWN("Unknown"),
+        SAML2USER("Saml2User");
+
+        private String method;
+
+        LoginMethod(String method) {
+            this.method = method;
+        }
+
+        @Override
+        public String toString() {
+            return method;
+        }
     }
 
     @Override
