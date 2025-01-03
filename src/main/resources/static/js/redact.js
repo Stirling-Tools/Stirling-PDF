@@ -9,38 +9,44 @@ let drawingLayer = null;
 const doNothing = () => {};
 
 function addRedactedPagePreview(pagesSelector) {
-  document.querySelectorAll(pagesSelector).forEach(page => {
-    let textLayer = page.querySelector('.textLayer');
-    if (textLayer) textLayer.classList.add('redacted-page-preview');
+  document.querySelectorAll(pagesSelector).forEach((page) => {
+    let textLayer = page.querySelector(".textLayer");
+    if (textLayer) textLayer.classList.add("redacted-page-preview");
   });
 }
 
 function addRedactedThumbnailPreview(sidebarPagesSelector) {
-  document.querySelectorAll(sidebarPagesSelector).forEach(thumbnail => {
-    thumbnail.classList.add('redacted-thumbnail-preview');
-      let thumbnailImage = thumbnail.querySelector('.thumbnailImage');
-      if (thumbnailImage)
-        thumbnailImage.classList.add('redacted-thumbnail-image-preview');
-  })
-}
-
-function removeRedactedPagePreview() {
-  document.querySelectorAll('.textLayer').forEach(textLayer => textLayer.classList.remove('redacted-page-preview'));
-  document.querySelectorAll('#thumbnailView > a > div.thumbnail').forEach(thumbnail => {
-    thumbnail.classList.remove('redacted-thumbnail-preview');
-    let thumbnailImage = thumbnail.querySelector('.thumbnailImage');
+  document.querySelectorAll(sidebarPagesSelector).forEach((thumbnail) => {
+    thumbnail.classList.add("redacted-thumbnail-preview");
+    let thumbnailImage = thumbnail.querySelector(".thumbnailImage");
     if (thumbnailImage)
-      thumbnailImage.classList.remove('redacted-thumbnail-image-preview');
+      thumbnailImage.classList.add("redacted-thumbnail-image-preview");
   });
 }
 
+function removeRedactedPagePreview() {
+  document
+    .querySelectorAll(".textLayer")
+    .forEach((textLayer) =>
+      textLayer.classList.remove("redacted-page-preview")
+    );
+  document
+    .querySelectorAll("#thumbnailView > a > div.thumbnail")
+    .forEach((thumbnail) => {
+      thumbnail.classList.remove("redacted-thumbnail-preview");
+      let thumbnailImage = thumbnail.querySelector(".thumbnailImage");
+      if (thumbnailImage)
+        thumbnailImage.classList.remove("redacted-thumbnail-image-preview");
+    });
+}
+
 function extractPagesDetailed(pagesInput, totalPageCount) {
-  let parts = pagesInput.split(',').filter(s => s);
+  let parts = pagesInput.split(",").filter((s) => s);
   let pagesDetailed = {
     numbers: new Set(),
     functions: new Set(),
     ranges: new Set(),
-    all: false
+    all: false,
   };
   for (let part of parts) {
     let trimmedPart = part.trim();
@@ -49,11 +55,25 @@ function extractPagesDetailed(pagesInput, totalPageCount) {
       return pagesDetailed;
     } else if (isValidFunction(trimmedPart)) {
       pagesDetailed.functions.add(formatNFunction(trimmedPart));
-    } else if (trimmedPart.includes('-')) {
-      let range = trimmedPart.replaceAll(' ', '').split('-').filter(s => s);
-      if (range && range.length == 2 && range[0].trim() > 0 && range[1].trim() > 0)  pagesDetailed.ranges.add({low: range[0].trim(), high: range[1].trim()});
+    } else if (trimmedPart.includes("-")) {
+      let range = trimmedPart
+        .replaceAll(" ", "")
+        .split("-")
+        .filter((s) => s);
+      if (
+        range &&
+        range.length == 2 &&
+        range[0].trim() > 0 &&
+        range[1].trim() > 0
+      )
+        pagesDetailed.ranges.add({
+          low: range[0].trim(),
+          high: range[1].trim(),
+        });
     } else if (isPageNumber(trimmedPart)) {
-      pagesDetailed.numbers.add((trimmedPart <= totalPageCount) ? trimmedPart : totalPageCount);
+      pagesDetailed.numbers.add(
+        trimmedPart <= totalPageCount ? trimmedPart : totalPageCount
+      );
     }
   }
 
@@ -61,7 +81,7 @@ function extractPagesDetailed(pagesInput, totalPageCount) {
 }
 
 function formatNFunction(expression) {
-  let result = insertMultiplicationBeforeN(expression.replaceAll(' ', ''));
+  let result = insertMultiplicationBeforeN(expression.replaceAll(" ", ""));
   let multiplyByOpeningRoundBracketPattern = /([0-9n)])\(/g; // example: n(n-1), 9(n-1), (n-1)(n-2)
   result = result.replaceAll(multiplyByOpeningRoundBracketPattern, "$1*(");
 
@@ -79,32 +99,43 @@ function insertMultiplicationBeforeN(expression) {
 }
 
 function validatePages(pages) {
-  let parts = pages.split(',').filter(s => s);
+  let parts = pages.split(",").filter((s) => s);
   let errors = [];
   for (let part of parts) {
     let trimmedPart = part.trim();
     if ("all" == trimmedPart) continue;
-    else if (trimmedPart.includes('n')) {
-      if (!isValidFunction(trimmedPart)) errors.push(`${trimmedPart} is an invalid function, it should consist of digits 0-9, n, *, -, /, (, ), \\.`);
-    } else if (trimmedPart.includes('-')) {
-      let range = trimmedPart.split('-').filter(s => s);
-      if (!range || range.length != 2) errors.push(`${trimmedPart} is an invalid range, it should consist of from-to, example: 1-5`);
-      else if (range[0].trim() <= 0 || range[1].trim() <= 0) errors.push(`${trimmedPart} has invalid range(s), page numbers should be positive.`);
+    else if (trimmedPart.includes("n")) {
+      if (!isValidFunction(trimmedPart))
+        errors.push(
+          `${trimmedPart} is an invalid function, it should consist of digits 0-9, n, *, -, /, (, ), \\.`
+        );
+    } else if (trimmedPart.includes("-")) {
+      let range = trimmedPart.split("-").filter((s) => s);
+      if (!range || range.length != 2)
+        errors.push(
+          `${trimmedPart} is an invalid range, it should consist of from-to, example: 1-5`
+        );
+      else if (range[0].trim() <= 0 || range[1].trim() <= 0)
+        errors.push(
+          `${trimmedPart} has invalid range(s), page numbers should be positive.`
+        );
     } else if (!isPageNumber(trimmedPart)) {
-      errors.push(`${trimmedPart} is invalid, it should either be a function, page number or a range.`);
+      errors.push(
+        `${trimmedPart} is invalid, it should either be a function, page number or a range.`
+      );
     }
   }
 
-  return {errors};
- }
+  return { errors };
+}
 
- function isPageNumber(page) {
+function isPageNumber(page) {
   return /^[0-9]*$/.test(page);
- }
+}
 
- function isValidFunction(part) {
-  return part.includes('n') && (/[0-9n+\-*/() ]+$/).test(part);
- }
+function isValidFunction(part) {
+  return part.includes("n") && /[0-9n+\-*/() ]+$/.test(part);
+}
 
 function hideContainer(container) {
   container?.classList.add("d-none");
@@ -148,10 +179,17 @@ window.addEventListener("load", (e) => {
     (!!navigator.userAgentData &&
       navigator.userAgentData.brands.some((data) => data.brand == "Chromium"));
 
-  let isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && window['safari'].pushNotification));
-  let isWebkit = navigator.userAgent.search(/webkit/i)>0;
-  let isGecko = navigator.userAgent.search(/gecko/i)>0;
-  let isFirefox = typeof InstallTrigger !== 'undefined';
+  let isSafari =
+    /constructor/i.test(window.HTMLElement) ||
+    (function (p) {
+      return p.toString() === "[object SafariRemoteNotification]";
+    })(
+      !window["safari"] ||
+        (typeof safari !== "undefined" && window["safari"].pushNotification)
+    );
+  let isWebkit = navigator.userAgent.search(/webkit/i) > 0;
+  let isGecko = navigator.userAgent.search(/gecko/i) > 0;
+  let isFirefox = typeof InstallTrigger !== "undefined";
 
   let hiddenInput = document.getElementById("fileInput");
   let outerContainer = document.getElementById("outerContainer");
@@ -199,7 +237,12 @@ window.addEventListener("load", (e) => {
 
   let applyRedactionBtn = document.getElementById("apply-redaction");
 
-  let redactedPagesDetails = {numbers: new Set(), ranges: new Set(), functions: new Set(), all: false};
+  let redactedPagesDetails = {
+    numbers: new Set(),
+    ranges: new Set(),
+    functions: new Set(),
+    all: false,
+  };
   let pageBasedRedactionBtn = document.getElementById("pageBasedRedactionBtn");
   let pageBasedRedactionOverlay = document.getElementById(
     "pageBasedRedactionOverlay"
@@ -207,29 +250,31 @@ window.addEventListener("load", (e) => {
   pageBasedRedactionBtn.onclick = (e) =>
     pageBasedRedactionOverlay.classList.remove("d-none");
 
- pageBasedRedactionOverlay.querySelector("input[type=text]").onchange = (e) => {
-  let input = e.target;
-  let parentElement =  input.parentElement;
+  pageBasedRedactionOverlay.querySelector("input[type=text]").onchange = (
+    e
+  ) => {
+    let input = e.target;
+    let parentElement = input.parentElement;
 
-  resetFieldFeedbackMessages(input, parentElement);
+    resetFieldFeedbackMessages(input, parentElement);
 
-  let value = input.value.trim();
-  let { errors } = validatePages(value);
-  if (errors && errors.length > 0) {
-    applyPageRedactionBtn.disabled = "true";
-    displayFieldErrorMessages(input, errors);
-  } else {
-    applyPageRedactionBtn.removeAttribute('disabled');
-    input.classList.add('is-valid');
-  }
- }
+    let value = input.value.trim();
+    let { errors } = validatePages(value);
+    if (errors && errors.length > 0) {
+      applyPageRedactionBtn.disabled = "true";
+      displayFieldErrorMessages(input, errors);
+    } else {
+      applyPageRedactionBtn.removeAttribute("disabled");
+      input.classList.add("is-valid");
+    }
+  };
 
   let applyPageRedactionBtn = document.getElementById("applyPageRedactionBtn");
   applyPageRedactionBtn.onclick = (e) => {
     pageBasedRedactionOverlay.querySelectorAll("input").forEach((input) => {
       const id = input.getAttribute("data-for");
-      if (id == 'pageNumbers') {
-        let {errors} = validatePages(input.value);
+      if (id == "pageNumbers") {
+        let { errors } = validatePages(input.value);
 
         resetFieldFeedbackMessages(input, input.parentElement);
 
@@ -238,15 +283,18 @@ window.addEventListener("load", (e) => {
           displayFieldErrorMessages(input, errors);
         } else {
           pageBasedRedactionOverlay.classList.add("d-none");
-          applyRedactionBtn.removeAttribute('disabled');
-          input.classList.remove('is-valid');
+          applyRedactionBtn.removeAttribute("disabled");
+          input.classList.remove("is-valid");
 
           let totalPagesCount = PDFViewerApplication.pdfViewer.pagesCount;
-          let pagesDetailed = extractPagesDetailed(input.value, totalPagesCount);
+          let pagesDetailed = extractPagesDetailed(
+            input.value,
+            totalPagesCount
+          );
           redactedPagesDetails = pagesDetailed;
           addPageRedactionPreviewToPages(pagesDetailed, totalPagesCount);
         }
-      } else if (id == 'pageRedactColor') setPageRedactionColor(input.value);
+      } else if (id == "pageRedactColor") setPageRedactionColor(input.value);
       let formInput = document.getElementById(id);
       if (formInput) formInput.value = input.value;
     });
@@ -257,7 +305,7 @@ window.addEventListener("load", (e) => {
     pageBasedRedactionOverlay.classList.add("d-none");
     pageBasedRedactionOverlay.querySelectorAll("input").forEach((input) => {
       const id = input.getAttribute("data-for");
-      if (id == 'pageNumbers') {
+      if (id == "pageNumbers") {
         resetFieldFeedbackMessages(input, input.parentElement);
       }
       let formInput = document.getElementById(id);
@@ -368,10 +416,13 @@ window.addEventListener("load", (e) => {
 
     let layer = e.source.textLayer.div;
     layer.setAttribute("data-page", e.pageNumber);
-    if (redactedPagesDetails.all || redactedPagesDetails.numbers.has(e.pageNumber)) {
-      layer.classList.add('redacted-page-preview');
+    if (
+      redactedPagesDetails.all ||
+      redactedPagesDetails.numbers.has(e.pageNumber)
+    ) {
+      layer.classList.add("redacted-page-preview");
     } else {
-      layer.classList.remove('redacted-page-preview');
+      layer.classList.remove("redacted-page-preview");
     }
 
     zoomScaleValue = e.source.scale ? e.source.scale : e.source.pageScale;
@@ -390,7 +441,10 @@ window.addEventListener("load", (e) => {
 
       layer.appendChild(redactionsContainer);
       redactionContainersDivs[`${e.pageNumber}`] = redactionsContainer;
-    } else if (!redactionsContainer && redactionContainersDivs[`${e.pageNumber}`]) {
+    } else if (
+      !redactionsContainer &&
+      redactionContainersDivs[`${e.pageNumber}`]
+    ) {
       redactionsContainer = redactionContainersDivs[`${e.pageNumber}`];
 
       layer.appendChild(redactionsContainer);
@@ -408,8 +462,9 @@ window.addEventListener("load", (e) => {
     }
 
     document.onpointerup = (e) => {
-      if (drawingLayer && e.target != drawingLayer && e.button == 0) drawingLayer.dispatchEvent(new Event('external-pointerup'));
-    }
+      if (drawingLayer && e.target != drawingLayer && e.button == 0)
+        drawingLayer.dispatchEvent(new Event("external-pointerup"));
+    };
 
     initDraw(layer, redactionsContainer);
 
@@ -557,27 +612,27 @@ window.addEventListener("load", (e) => {
         }
       };
 
-      canvas.addEventListener('external-pointerup', (e) => {
+      canvas.addEventListener("external-pointerup", (e) => {
         if (element != null) {
-        _saveAndResetDrawnRedaction();
+          _saveAndResetDrawnRedaction();
         }
       });
 
       canvas.onpointerleave = (e) => {
-          let ev = copyEvent(e, 'pointerleave');
-          let { left, top } = calculateMouseCoordinateToRotatedBox(canvas, e);
+        let ev = copyEvent(e, "pointerleave");
+        let { left, top } = calculateMouseCoordinateToRotatedBox(canvas, e);
 
-          ev.layerX = left;
-          ev.offsetX = left;
+        ev.layerX = left;
+        ev.offsetX = left;
 
-          ev.layerY = top;
-          ev.offsetY = top;
+        ev.layerY = top;
+        ev.offsetY = top;
 
         setMousePosition(ev);
         if (element !== null) {
           draw();
         }
-      }
+      };
 
       canvas.onpointerdown = (e) => {
         let isLeftClick = e.button == 0;
@@ -635,15 +690,20 @@ window.addEventListener("load", (e) => {
 
       function _saveAndResetDrawnRedaction() {
         if (!element) return;
-        if ((!element.style.height || element.style.height.includes('(0px * var'))  || (!element.style.width || element.style.width.includes('(0px * var'))) {
+        if (
+          !element.style.height ||
+          element.style.height.includes("(0px * var") ||
+          !element.style.width ||
+          element.style.width.includes("(0px * var")
+        ) {
           element.remove();
         } else {
-        element.classList.add("selected-wrapper");
-        element.classList.remove("rectangle");
+          element.classList.add("selected-wrapper");
+          element.classList.remove("rectangle");
 
-        addRedactionOverlay(element, drawnRedaction, canvas);
-        redactions.push(drawnRedaction);
-        _setRedactionsInput(redactions);
+          addRedactionOverlay(element, drawnRedaction, canvas);
+          redactions.push(drawnRedaction);
+          _setRedactionsInput(redactions);
         }
         drawingLayer = null;
         element = null;
@@ -686,7 +746,6 @@ window.addEventListener("load", (e) => {
       }
     }
   });
-
 
   PDFViewerApplication.eventBus.on("rotationchanging", (e) => {
     if (!activeOverlay) return;
@@ -876,18 +935,17 @@ window.addEventListener("load", (e) => {
        </label>`
     )[0];
 
-
     let colorPaletteInput = $(`
       <input type="color" name="color-picker" class="overlay-colorpicker-window">
       `)[0];
 
-      colorPaletteLabel.appendChild(colorPaletteInput);
+    colorPaletteLabel.appendChild(colorPaletteInput);
 
     colorPaletteLabel.onclick = (e) => {
       if (colorPaletteLabel === e.target) {
         e.stopPropagation();
       }
-    }
+    };
 
     colorPaletteInput.onchange = (e) => {
       let color = e.target.value;
@@ -925,16 +983,18 @@ window.addEventListener("load", (e) => {
       activeOverlay.style.visibility = "hidden";
       activeOverlay.style.display = "flex";
       textLayer = textLayer || getTextLayer(redactionElement);
-      let angle = parseInt(textLayer.getAttribute('data-main-rotation'));
-      if (textLayer) redactionOverlay.style.transform = `rotate(${angle * -1}deg)`;
+      let angle = parseInt(textLayer.getAttribute("data-main-rotation"));
+      if (textLayer)
+        redactionOverlay.style.transform = `rotate(${angle * -1}deg)`;
 
-      activeOverlay.style.removeProperty('left');
-      activeOverlay.style.removeProperty('top');
+      activeOverlay.style.removeProperty("left");
+      activeOverlay.style.removeProperty("top");
 
       let textRect = textLayer.getBoundingClientRect();
       let overlayRect = redactionOverlay.getBoundingClientRect();
 
-      let leftOffset = 0, topOffset = 0;
+      let leftOffset = 0,
+        topOffset = 0;
       if (overlayRect.right > textRect.right) {
         leftOffset = textRect.right - overlayRect.right;
       } else if (overlayRect.left < textRect.left) {
@@ -948,13 +1008,21 @@ window.addEventListener("load", (e) => {
       }
 
       switch (angle) {
-        case 90: [leftOffset, topOffset] = [topOffset, -leftOffset]; break;
-        case 180: [leftOffset, topOffset] = [-leftOffset, -topOffset]; break;
-        case 270: [leftOffset, topOffset] = [-topOffset, leftOffset]; break;
+        case 90:
+          [leftOffset, topOffset] = [topOffset, -leftOffset];
+          break;
+        case 180:
+          [leftOffset, topOffset] = [-leftOffset, -topOffset];
+          break;
+        case 270:
+          [leftOffset, topOffset] = [-topOffset, leftOffset];
+          break;
       }
 
-      if (leftOffset != 0) activeOverlay.style.left = `calc(50% + ${leftOffset}px`;
-      if (topOffset != 0) activeOverlay.style.top = `calc(100% + ${topOffset}px`;
+      if (leftOffset != 0)
+        activeOverlay.style.left = `calc(50% + ${leftOffset}px`;
+      if (topOffset != 0)
+        activeOverlay.style.top = `calc(100% + ${topOffset}px`;
       activeOverlay.style.visibility = "unset";
     }
   }
@@ -962,8 +1030,9 @@ window.addEventListener("load", (e) => {
 
 function calculateMouseCoordinateToRotatedBox(canvas, e) {
   let textRect = canvas.getBoundingClientRect();
-  let left, top = 0;
-  let angle = parseInt(canvas.getAttribute('data-main-rotation'));
+  let left,
+    top = 0;
+  let angle = parseInt(canvas.getAttribute("data-main-rotation"));
   switch (angle) {
     case 0:
       left = clamp(e.pageX - textRect.left, 0, textRect.width);
@@ -992,8 +1061,8 @@ function clamp(value, min, max) {
 
 function addPageRedactionPreviewToPages(pagesDetailed, totalPagesCount) {
   if (pagesDetailed.all) {
-    addRedactedPagePreview('#viewer > .page');
-    addRedactedThumbnailPreview('#thumbnailView > a > div.thumbnail');
+    addRedactedPagePreview("#viewer > .page");
+    addRedactedThumbnailPreview("#thumbnailView > a > div.thumbnail");
   } else {
     removeRedactedPagePreview();
 
@@ -1002,50 +1071,61 @@ function addPageRedactionPreviewToPages(pagesDetailed, totalPagesCount) {
 
     let pageNumbers = Array.from(pagesDetailed.numbers);
     if (pageNumbers?.length > 0) {
-      let pagesSelector = pageNumbers.map(number => `#viewer > .page[data-page-number="${number}"]`).join(',');
+      let pagesSelector = pageNumbers
+        .map((number) => `#viewer > .page[data-page-number="${number}"]`)
+        .join(",");
       addRedactedPagePreview(pagesSelector);
-      let thumbnailSelector = pageNumbers.map(number => `#thumbnailView > a > div.thumbnail[data-page-number="${number}"]`).join(',');
+      let thumbnailSelector = pageNumbers
+        .map(
+          (number) =>
+            `#thumbnailView > a > div.thumbnail[data-page-number="${number}"]`
+        )
+        .join(",");
       addRedactedThumbnailPreview(thumbnailSelector);
     }
   }
 }
 
 function resetFieldFeedbackMessages(input, parentElement) {
-  if(parentElement) parentElement.querySelectorAll('.invalid-feedback').forEach(feedback => feedback.remove());
+  if (parentElement)
+    parentElement
+      .querySelectorAll(".invalid-feedback")
+      .forEach((feedback) => feedback.remove());
   if (input) {
-  input.classList.remove('is-invalid');
-  input.classList.remove('is-valid');
+    input.classList.remove("is-invalid");
+    input.classList.remove("is-valid");
   }
 }
 
 function displayFieldErrorMessages(input, errors) {
-  input.classList.add('is-invalid');
-  errors.forEach(error => {
-    let element = document.createElement('div');
-    element.classList.add('invalid-feedback');
-    element.classList.add('list-styling');
+  input.classList.add("is-invalid");
+  errors.forEach((error) => {
+    let element = document.createElement("div");
+    element.classList.add("invalid-feedback");
+    element.classList.add("list-styling");
     element.textContent = error;
     input.parentElement.appendChild(element);
   });
 }
 
 function setPageRedactionColor(color) {
-  document.documentElement.style.setProperty('--page-redaction-color', color);
+  document.documentElement.style.setProperty("--page-redaction-color", color);
 }
 
 function setPageNumbersFromNFunctions(pagesDetailed, totalPagesCount) {
-  pagesDetailed.functions.forEach(fun => {
+  pagesDetailed.functions.forEach((fun) => {
     if (!isValidFunction(fun)) return;
     for (let n = 1; n <= totalPagesCount; n++) {
       let pageNumber = eval(fun);
-      if (!pageNumber || pageNumber <= 0 || pageNumber > totalPagesCount) continue;
+      if (!pageNumber || pageNumber <= 0 || pageNumber > totalPagesCount)
+        continue;
       pagesDetailed.numbers.add(pageNumber);
     }
   });
 }
 
 function setPageNumbersFromRange(pagesDetailed, totalPagesCount) {
-  pagesDetailed.ranges.forEach(range => {
+  pagesDetailed.ranges.forEach((range) => {
     for (let i = range.low; i <= range.high && i <= totalPagesCount; i++) {
       pagesDetailed.numbers.add(i);
     }
@@ -1072,9 +1152,55 @@ function _nonEmptyRedaction(redaction) {
   return !_isEmptyRedaction(redaction);
 }
 
-
 function copyEvent(e, type) {
-  if (type == 'pointerleave') return {layerX: e.layerX, layerY: e.layerY, pageX: e.pageX, pageY: e.pageY, clientX: e.clientX, clientY: e.clientY, button: e.button, height: e.height, width: e.width, offsetX: e.offsetX, offsetY: e.offsetY, pointerId: e.pointerId, pointerType: e.pointerType, type: e.type, screenX: e.screenX, screenY: e.screenY, tiltX: e.tiltX, tiltY: e.tiltY, x: e.x, y: e.y, altKey: e.altKey, ctrlKey: e.ctrlKey, isPrimary: e.isPrimary, isTrusted: e.isTrusted, metaKey: e.metaKey, pressure: e.pressure, returnValue: e.returnValue, shiftKey: e.shiftKey, timeStamp: e.timeStamp, which: e.which, twist: e.twist, tangentialPressure: e.tangentialPressure, target: e.target, srcElement: e.srcElement, relatedTarget: e.relatedTarget, rangeOffset: e.rangeOffset, rangeParent: e.rangeParent, explicitOriginalTarget: e.explicitOriginalTarget, eventPhase: e.eventPhase, detail: e.detail, defaultPrevented: e.defaultPrevented, currentTarget: e.currentTarget, buttons: e.buttons, azimuthAngle: e.azimuthAngle, altitudeAngle: e.altitudeAngle};
+  if (type == "pointerleave")
+    return {
+      layerX: e.layerX,
+      layerY: e.layerY,
+      pageX: e.pageX,
+      pageY: e.pageY,
+      clientX: e.clientX,
+      clientY: e.clientY,
+      button: e.button,
+      height: e.height,
+      width: e.width,
+      offsetX: e.offsetX,
+      offsetY: e.offsetY,
+      pointerId: e.pointerId,
+      pointerType: e.pointerType,
+      type: e.type,
+      screenX: e.screenX,
+      screenY: e.screenY,
+      tiltX: e.tiltX,
+      tiltY: e.tiltY,
+      x: e.x,
+      y: e.y,
+      altKey: e.altKey,
+      ctrlKey: e.ctrlKey,
+      isPrimary: e.isPrimary,
+      isTrusted: e.isTrusted,
+      metaKey: e.metaKey,
+      pressure: e.pressure,
+      returnValue: e.returnValue,
+      shiftKey: e.shiftKey,
+      timeStamp: e.timeStamp,
+      which: e.which,
+      twist: e.twist,
+      tangentialPressure: e.tangentialPressure,
+      target: e.target,
+      srcElement: e.srcElement,
+      relatedTarget: e.relatedTarget,
+      rangeOffset: e.rangeOffset,
+      rangeParent: e.rangeParent,
+      explicitOriginalTarget: e.explicitOriginalTarget,
+      eventPhase: e.eventPhase,
+      detail: e.detail,
+      defaultPrevented: e.defaultPrevented,
+      currentTarget: e.currentTarget,
+      buttons: e.buttons,
+      azimuthAngle: e.azimuthAngle,
+      altitudeAngle: e.altitudeAngle,
+    };
 
   return {};
 }
