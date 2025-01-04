@@ -80,6 +80,7 @@ public class SPdfApplication {
         app.addInitializers(new ConfigInitializer());
         Map<String, String> propertyFiles = new HashMap<>();
         // External config files
+        log.info("Settings file: {}", InstallationPathConfig.getSettingsPath());
         if (Files.exists(Paths.get(InstallationPathConfig.getSettingsPath()))) {
             propertyFiles.put(
                     "spring.config.additional-location",

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -40,6 +41,7 @@ import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 
 @Configuration
 @ConfigurationProperties(prefix = "")
+@EnableConfigurationProperties(ApplicationProperties.class)
 @Data
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
@@ -65,6 +67,9 @@ public class ApplicationProperties {
         PropertySource<?> propertySource =
                 new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
         environment.getPropertySources().addFirst(propertySource);
+        
+        log.info("Loaded properties: " + propertySource.getSource());
+        
         return propertySource;
     }
 
