@@ -272,7 +272,7 @@ public class EndpointConfiguration {
         
         if (!bookAndHtmlFormatsInstalled) {
         	if(groupsToRemove == null) {
-        		groupsToRemove = new ArrayList<String>();
+        		groupsToRemove = new ArrayList<>();
         	}
             groupsToRemove.add("Calibre");
         }

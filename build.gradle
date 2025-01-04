@@ -124,6 +124,7 @@ jpackage {
     	launcherAsService = false
     	appVersion = project.version
     	
+    	winConsole = false
         winMenu = true  // Creates start menu entry
         winShortcut = true  // Creates desktop shortcut
         winShortcutPrompt = true  // Lets user choose whether to create shortcuts
