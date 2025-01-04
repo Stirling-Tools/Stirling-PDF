@@ -106,7 +106,7 @@ AutomaticallyGenerated:
   
 processExecutor:
   sessionLimit:    # Process executor instances limits
-   libreOfficeSessionLimit: 1
+    libreOfficeSessionLimit: 1
     pdfToHtmlSessionLimit: 1
     qpdfSessionLimit: 4
     tesseractSessionLimit: 1
