@@ -47,6 +47,17 @@ jobs:
         env:
           DOCKER_ENABLE_SECURITY: true
 
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-jdk-${{ matrix.jdk-version }}
+          path: |
+            build/reports/tests/
+            build/test-results/
+            build/reports/problems/
+          retention-days: 3
+          
   docker-compose-tests:
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
     #     (github.event_name == 'pull_request' &&
