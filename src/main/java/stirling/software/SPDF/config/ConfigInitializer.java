@@ -22,18 +22,9 @@ import org.springframework.context.ConfigurableApplicationContext;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ConfigInitializer
-        implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+public class ConfigInitializer {
 
-    @Override
-    public void initialize(ConfigurableApplicationContext applicationContext) {
-        try {
-            log.info("Setting up configs from templates");
-            ensureConfigExists();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize application configuration", e);
-        }
-    }
+
 
     public void ensureConfigExists() throws IOException, URISyntaxException {
         // Define the path to the external config directory
@@ -54,6 +45,7 @@ public class ConfigInitializer
                             "Resource file not found: settings.yml.template");
                 }
             }
+            log.info("Created settings file from template");
         } else {
 
             // Define the path to the config settings file

@@ -2,6 +2,7 @@ package stirling.software.SPDF;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -77,7 +78,14 @@ public class SPdfApplication {
             props.put("spring.main.web-application-type", "servlet");
         }
         app.setAdditionalProfiles("default");
-        app.addInitializers(new ConfigInitializer());
+        
+        ConfigInitializer initializer = new ConfigInitializer();
+        try {
+			initializer.ensureConfigExists();
+		} catch (IOException | URISyntaxException e) {
+			log.error("Error initialising configuration", e);
+		}
+        
         Map<String, String> propertyFiles = new HashMap<>();
         // External config files
         log.info("Settings file: {}", InstallationPathConfig.getSettingsPath());

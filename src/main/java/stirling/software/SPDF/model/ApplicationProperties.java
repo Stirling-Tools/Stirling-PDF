@@ -41,7 +41,6 @@ import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 
 @Configuration
 @ConfigurationProperties(prefix = "")
-@EnableConfigurationProperties(ApplicationProperties.class)
 @Data
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
