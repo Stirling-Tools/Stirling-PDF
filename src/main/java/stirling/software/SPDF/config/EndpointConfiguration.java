@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -268,7 +269,11 @@ public class EndpointConfiguration {
     	if(applicationProperties != null && applicationProperties.getEndpoints() != null) {
         List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
         List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
+        
         if (!bookAndHtmlFormatsInstalled) {
+        	if(groupsToRemove == null) {
+        		groupsToRemove = new ArrayList<String>();
+        	}
             groupsToRemove.add("Calibre");
         }
         if (endpointsToRemove != null) {
