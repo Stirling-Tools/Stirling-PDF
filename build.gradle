@@ -258,7 +258,7 @@ spotless {
 //        rules=['unused-dependency']
 //    }
 tasks.wrapper {
-    gradleVersion = "8.7"
+    gradleVersion = "8.12"
 }
 //tasks.withType(JavaCompile) {
 //    options.compilerArgs << "-Xlint:deprecation"
@@ -299,7 +299,6 @@ dependencies {
 
 		implementation "org.springframework.session:spring-session-core:$springBootVersion"
 
-	    implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         // Don't upgrade h2database
         runtimeOnly "com.h2database:h2:2.3.232"
         constraints {
@@ -308,7 +307,7 @@ dependencies {
             implementation "org.opensaml:opensaml-saml-impl:$openSamlVersion"
         }
         implementation "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
-//		implementation 'org.springframework.security:spring-security-core:$springSecuritySamlVersion'
+		// implementation 'org.springframework.security:spring-security-core:$springSecuritySamlVersion'
         implementation 'com.coveo:saml-client:5.0.0'
 
 

@@ -163,6 +163,9 @@ public class AccountWebController {
                 case "invalid_destination":
                     erroroauth = "login.invalid_destination";
                     break;
+                case "relying_party_registration_not_found":
+                    erroroauth = "login.relyingPartyRegistrationNotFound";
+                    break;
                 // Valid InResponseTo was not available from the validation context, unable to
                 // evaluate
                 case "invalid_in_response_to":

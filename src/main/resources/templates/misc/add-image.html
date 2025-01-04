@@ -1,65 +1,123 @@
 <!DOCTYPE html>
-<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}" xmlns:th="https://www.thymeleaf.org">
-  <head>
+<html th:lang="${#locale.language}" th:dir="#{language.direction}" th:data-language="${#locale.toString()}"
+  xmlns:th="https://www.thymeleaf.org">
+
+<head>
   <th:block th:insert="~{fragments/common :: head(title=#{addImage.title}, header=#{addImage.header})}"></th:block>
-    <script th:src="@{'/js/thirdParty/interact.min.js'}"></script>
-    <link rel="stylesheet" th:href="@{'/css/add-image.css'}">
-  </head>
+  <script th:src="@{'/js/thirdParty/interact.min.js'}"></script>
+  <link rel="stylesheet" th:href="@{'/css/add-image.css'}">
+</head>
 
-  <body>
-    <div id="page-container">
-      <div id="content-wrap">
-        <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
-        <br><br>
-        <div class="container">
-          <div class="row justify-content-center">
-            <div class="col-md-6 bg-card">
-              <div class="tool-header">
-                <span class="material-symbols-rounded tool-header-icon other">add_photo_alternate</span>
-                <span class="tool-header-text" th:text="#{addImage.header}"></span>
+<body>
+  <div id="page-container">
+    <div id="content-wrap">
+      <th:block th:insert="~{fragments/navbar.html :: navbar}"></th:block>
+      <br><br>
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6 bg-card">
+            <div class="tool-header">
+              <span class="material-symbols-rounded tool-header-icon other">add_photo_alternate</span>
+              <span class="tool-header-text" th:text="#{addImage.header}"></span>
+            </div>
+
+            <!-- pdf selector -->
+            <div
+              th:replace="~{fragments/common :: fileSelector(name='pdf-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf')}">
+            </div>
+            <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
+            <script type="module" th:src="@{'/js/pages/add-image.js'}"></script>
+            <div class="tab-group show-on-file-selected">
+              <div
+                th:replace="~{fragments/common :: fileSelector(name='image-upload', disableMultipleFiles=false, multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}">
               </div>
+            </div>
 
-              <!-- pdf selector -->
-              <div th:replace="~{fragments/common :: fileSelector(name='pdf-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
-              <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
-              <script type="module" th:src="@{'/js/pages/add-image.js'}"></script>
-              <div class="tab-group show-on-file-selected">
-                  <div th:replace="~{fragments/common :: fileSelector(name='image-upload', disableMultipleFiles=true, multipleInputsForSingleRequest=true, accept='image/*', inputText=#{imgPrompt})}"></div>
-              </div>
-
-              <!-- draggables box -->
-              <div id="box-drag-container" class="show-on-file-selected">
-                <canvas id="pdf-canvas"></canvas>
-                <script th:src="@{'/js/draggable-utils.js'}"></script>
-                <div class="draggable-buttons-box ignore-rtl">
-                  <button class="btn btn-outline-secondary" onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
-                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
-                    </svg>
-                  </button>
-                  <button class="btn btn-outline-secondary" onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.incrementPage() : DraggableUtils.decrementPage()" style="margin-left:auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-left" viewBox="0 0 16 16">
-                      <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
-                    </svg>
-                  </button>
-                  <button class="btn btn-outline-secondary" onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.decrementPage() : DraggableUtils.incrementPage()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-right" viewBox="0 0 16 16">
-                      <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
-                    </svg>
-                  </button>
+            <div class="draggable-buttons-box ignore-rtl">
+              <button class="btn btn-outline-secondary"
+                onclick="DraggableUtils.deleteDraggableCanvas(DraggableUtils.getLastInteracted())"
+                style="color: #C02223; border-color: #C02223; background-color: rgba(255, 0, 0, 0.1);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash"
+                  viewBox="0 0 16 16">
+                  <path
+                    d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z" />
+                  <path
+                    d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z" />
+                </svg>
+                <span class="btn-tooltip" th:text="#{sign.delete}"></span>
+              </button>
+              <button class="btn btn-outline-secondary"
+                onclick="DraggableUtils.addAllPagesDraggableCanvas(DraggableUtils.getLastInteracted())">
+                <span class="material-symbols-rounded">
+                  content_copy
+                </span>
+                <span class="btn-tooltip" th:text="#{sign.addToAll}"></span>
+              </button>
+              <div id="rotation-controls" class="align-items-center" style="display: none;">
+                <div class="input-with-icon">
+                  <span class="material-symbols-rounded icon" style="margin-right: 3px;">
+                    screen_rotation
+                  </span>
+                  <input type="number" id="rotation-input" class="form-control form-control-sm me-2" value="0" step="10"
+                    style="width: 6rem" />
                 </div>
               </div>
-
-              <!-- download button -->
-              <div class="margin-auto-parent">
-                <button id="download-pdf" class="btn btn-primary mb-2 show-on-file-selected margin-center" th:text="#{downloadPdf}"></button>
-              </div>
+              <button id="ratioToggleBtn" class="btn btn-outline-secondary"
+                onclick="DraggableUtils.toggleMaintainRatio()">
+                <span class="material-symbols-rounded">
+                  Aspect_Ratio
+                </span>
+                <span class="btn-tooltip" th:text="#{sign.maintainRatio}"></span>
+              </button>
+              <button class="btn btn-outline-secondary" onclick="goToFirstOrLastPage(false)" style="margin-left:auto">
+                <span class="material-symbols-rounded">
+                  keyboard_double_arrow_left
+                </span>
+                <span class="btn-tooltip" th:text="#{sign.first}"></span>
+              </button>
+              <button class="btn btn-outline-secondary" id="incrementPage"
+                onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.incrementPage() : DraggableUtils.decrementPage()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                  class="bi bi-chevron-left" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd"
+                    d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z" />
+                </svg>
+                <span class="btn-tooltip" th:text="#{sign.previous}"></span>
+              </button>
+              <button class="btn btn-outline-secondary" id="decrementPage"
+                onclick="document.documentElement.getAttribute('dir')==='rtl' ? DraggableUtils.decrementPage() : DraggableUtils.incrementPage()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                  class="bi bi-chevron-right" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd"
+                    d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                </svg>
+                <span class="btn-tooltip" th:text="#{sign.next}"></span>
+              </button>
+              <button class="btn btn-outline-secondary" onclick="goToFirstOrLastPage(true)">
+                <span class="material-symbols-rounded">
+                  keyboard_double_arrow_right
+                </span>
+                <span class="btn-tooltip" th:text="#{sign.last}"></span>
+              </button>
+              <button id="download-pdf" class="btn btn-outline-secondary"
+                style="border-color: green; color:#b2e3a8; background: rgba(24, 122, 5, 1)">
+                <span class="material-symbols-rounded">
+                  download
+                </span>
+                <span class="btn-tooltip" th:text="#{downloadPdf}"></span>
+              </button>
+            </div>
+            <!-- draggables box -->
+            <div id="box-drag-container" class="show-on-file-selected">
+              <canvas id="pdf-canvas"></canvas>
+              <script th:src="@{'/js/draggable-utils.js'}"></script>
             </div>
           </div>
         </div>
       </div>
-      <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
     </div>
-  </body>
+    <th:block th:insert="~{fragments/footer.html :: footer}"></th:block>
+  </div>
+</body>
+
 </html>

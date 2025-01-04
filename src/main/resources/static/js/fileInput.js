@@ -9,6 +9,7 @@ if (!isScriptExecuted) {
     document.querySelectorAll('.custom-file-chooser').forEach(setupFileInput);
   });
 }
+let hasDroppedImage = false;
 
 function setupFileInput(chooser) {
   const elementId = chooser.getAttribute('data-bs-element-id');
@@ -18,6 +19,11 @@ function setupFileInput(chooser) {
 
   let inputContainer = document.getElementById(inputContainerId);
 
+  if (inputContainer.id === 'pdf-upload-input-container') {
+    inputContainer.querySelector('#dragAndDrop').innerHTML = window.fileInput.dragAndDropPDF;
+  } else if (inputContainer.id === 'image-upload-input-container') {
+    inputContainer.querySelector('#dragAndDrop').innerHTML = window.fileInput.dragAndDropImage;
+  }
   let allFiles = [];
   let overlay;
   let dragCounter = 0;
@@ -141,12 +147,17 @@ function setupFileInput(chooser) {
     files.forEach((file) => dataTransfer.items.add(file));
     return dataTransfer;
   }
-
   function handleFileInputChange(inputElement) {
     const files = allFiles;
     showOrHideSelectedFilesContainer(files);
 
-    const filesInfo = files.map((f) => ({name: f.name, size: f.size, uniqueId: f.uniqueId}));
+    const filesInfo = files.map((f) => ({
+      name: f.name,
+      size: f.size,
+      uniqueId: f.uniqueId,
+      type: f.type,
+      url: URL.createObjectURL(f),
+    }));
 
     const selectedFilesContainer = $(inputContainer).siblings('.selected-files');
     selectedFilesContainer.empty();
@@ -157,30 +168,111 @@ function setupFileInput(chooser) {
       $(fileContainer).addClass(fileContainerClasses);
       $(fileContainer).attr('id', info.uniqueId);
 
-      let fileIconContainer = createFileIconContainer(info);
+      let fileIconContainer = document.createElement('div');
+      const isDragAndDropEnabled =
+        window.location.pathname.includes('add-image') || window.location.pathname.includes('sign');
+      if (info.type.startsWith('image/')) {
+        let imgPreview = document.createElement('img');
+        imgPreview.src = info.url;
+        imgPreview.alt = 'Preview';
+        imgPreview.style.width = '50px';
+        imgPreview.style.height = '50px';
+        imgPreview.style.objectFit = 'cover';
+        $(fileIconContainer).append(imgPreview);
+
+        if (isDragAndDropEnabled) {
+          let dragIcon = document.createElement('div');
+          dragIcon.classList.add('drag-icon');
+          dragIcon.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M360-160q-33 0-56.5-23.5T280-240q0-33 23.5-56.5T360-320q33 0 56.5 23.5T440-240q0 33-23.5 56.5T360-160Zm240 0q-33 0-56.5-23.5T520-240q0-33 23.5-56.5T600-320q33 0 56.5 23.5T680-240q0 33-23.5 56.5T600-160ZM360-400q-33 0-56.5-23.5T280-480q0-33 23.5-56.5T360-560q33 0 56.5 23.5T440-480q0 33-23.5 56.5T360-400Zm240 0q-33 0-56.5-23.5T520-480q0-33 23.5-56.5T600-560q33 0 56.5 23.5T680-480q0 33-23.5 56.5T600-400ZM360-640q-33 0-56.5-23.5T280-720q0-33 23.5-56.5T360-800q33 0 56.5 23.5T440-720q0 33-23.5 56.5T360-640Zm240 0q-33 0-56.5-23.5T520-720q0-33 23.5-56.5T600-800q33 0 56.5 23.5T680-720q0 33-23.5 56.5T600-640Z"/></svg>';
+          fileContainer.appendChild(dragIcon);
+
+          $(fileContainer).attr('draggable', 'true');
+          $(fileContainer).on('dragstart', (e) => {
+            e.originalEvent.dataTransfer.setData('fileUrl', info.url);
+            e.originalEvent.dataTransfer.setData('uniqueId', info.uniqueId);
+            e.originalEvent.dataTransfer.setDragImage(imgPreview, imgPreview.width / 2, imgPreview.height / 2);
+          });
+          enableImagePreviewOnClick(fileIconContainer);
+        } else {
+          $(fileContainer).removeAttr('draggable');
+        }
+      } else {
+        fileIconContainer = createFileIconContainer(info);
+      }
 
       let fileInfoContainer = createFileInfoContainer(info);
 
-      let removeBtn = document.createElement('div');
-      removeBtn.classList.add('remove-selected-file');
+      if (!isDragAndDropEnabled) {
+        let removeBtn = document.createElement('div');
+        removeBtn.classList.add('remove-selected-file');
 
-      let removeBtnIconHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#C02223"><path d="m339-288 141-141 141 141 51-51-141-141 141-141-51-51-141 141-141-141-51 51 141 141-141 141 51 51ZM480-96q-79 0-149-30t-122.5-82.5Q156-261 126-331T96-480q0-80 30-149.5t82.5-122Q261-804 331-834t149-30q80 0 149.5 30t122 82.5Q804-699 834-629.5T864-480q0 79-30 149t-82.5 122.5Q699-156 629.5-126T480-96Z"/></svg>`;
-      $(removeBtn).append(removeBtnIconHTML);
-      $(removeBtn).attr('data-file-id', info.uniqueId).click(removeFileListener);
-
-      $(fileContainer).append(fileIconContainer);
-      $(fileContainer).append(fileInfoContainer);
-      $(fileContainer).append(removeBtn);
+        let removeBtnIconHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#C02223"><path d="m339-288 141-141 141 141 51-51-141-141 141-141-51-51-141 141-141-141-51 51 141 141-141 141 51 51ZM480-96q-79 0-149-30t-122.5-82.5Q156-261 126-331T96-480q0-80 30-149.5t82.5-122Q261-804 331-834t149-30q80 0 149.5 30t122 82.5Q804-699 834-629.5T864-480q0 79-30 149t-82.5 122.5Q699-156 629.5-126T480-96Z"/></svg>`;
+        $(removeBtn).append(removeBtnIconHTML);
+        $(removeBtn).attr('data-file-id', info.uniqueId).click(removeFileListener);
+        $(fileContainer).append(removeBtn);
+      }
+      $(fileContainer).append(fileIconContainer, fileInfoContainer);
 
       selectedFilesContainer.append(fileContainer);
     });
+    const pageContainers = $('#box-drag-container');
+    pageContainers.off('dragover').on('dragover', (e) => {
+      e.preventDefault();
+    });
 
-    showOrHideSelectedFilesContainer(filesInfo);
+    pageContainers.off('drop').on('drop', (e) => {
+      e.preventDefault();
+      const fileUrl = e.originalEvent.dataTransfer.getData('fileUrl');
+
+      if (fileUrl) {
+        const existingImages = $(e.target).find(`img[src="${fileUrl}"]`);
+        if (existingImages.length === 0) {
+          DraggableUtils.createDraggableCanvasFromUrl(fileUrl);
+        }
+      }
+      const overlayElement = chooser.querySelector('.drag-drop-overlay');
+      if (overlayElement) {
+        overlayElement.style.display = 'none';
+      }
+      hasDroppedImage = true;
+    });
+
+    showOrHideSelectedFilesContainer(files);
   }
 
   function showOrHideSelectedFilesContainer(files) {
-    if (files && files.length > 0) chooser.style.setProperty('--selected-files-display', 'flex');
-    else chooser.style.setProperty('--selected-files-display', 'none');
+    if (files && files.length > 0) {
+      chooser.style.setProperty('--selected-files-display', 'flex');
+    } else {
+      chooser.style.setProperty('--selected-files-display', 'none');
+    }
+    const isDragAndDropEnabled =
+      (window.location.pathname.includes('add-image') || window.location.pathname.includes('sign')) &&
+      files.some((file) => file.type.startsWith('image/'));
+
+    if (!isDragAndDropEnabled) return;
+
+    const selectedFilesContainer = chooser.querySelector('.selected-files');
+
+    let overlayElement = chooser.querySelector('.drag-drop-overlay');
+    if (!overlayElement) {
+      selectedFilesContainer.style.position = 'relative';
+      overlayElement = document.createElement('div');
+      overlayElement.classList.add('draggable-image-overlay');
+
+      overlayElement.innerHTML = 'Drag images to add them to the page';
+      selectedFilesContainer.appendChild(overlayElement);
+    }
+    if (hasDroppedImage) overlayElement.style.display = files && files.length > 0 ? 'flex' : 'none';
+
+    selectedFilesContainer.addEventListener('mouseenter', () => {
+      overlayElement.style.display = 'none';
+    });
+
+    selectedFilesContainer.addEventListener('mouseleave', () => {
+      if (!hasDroppedImage) overlayElement.style.display = files && files.length > 0 ? 'flex' : 'none';
+    });
   }
 
   function removeFileListener(e) {
@@ -235,4 +327,52 @@ function setupFileInput(chooser) {
     removeFileById(fileId, inputElement);
     showOrHideSelectedFilesContainer(allFiles);
   });
+  function enableImagePreviewOnClick(container) {
+    const imagePreviewModal = document.getElementById('imagePreviewModal') || createImagePreviewModal();
+
+    container.querySelectorAll('img').forEach((img) => {
+      if (!img.hasPreviewListener) {
+        img.addEventListener('mouseup', function () {
+          const imgElement = imagePreviewModal.querySelector('img');
+          imgElement.src = this.src;
+          imagePreviewModal.style.display = 'flex';
+        });
+        img.hasPreviewListener = true;
+      }
+    });
+
+    function createImagePreviewModal() {
+      const modal = document.createElement('div');
+      modal.id = 'imagePreviewModal';
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.width = '100vw';
+      modal.style.height = '100vh';
+      modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+      modal.style.display = 'none';
+      modal.style.justifyContent = 'center';
+      modal.style.alignItems = 'center';
+      modal.style.zIndex = '2000';
+
+      const imgElement = document.createElement('img');
+      imgElement.style.maxWidth = '90%';
+      imgElement.style.maxHeight = '90%';
+
+      modal.appendChild(imgElement);
+      document.body.appendChild(modal);
+
+      modal.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+          modal.style.display = 'none';
+        }
+      });
+
+      return modal;
+    }
+  }
 }

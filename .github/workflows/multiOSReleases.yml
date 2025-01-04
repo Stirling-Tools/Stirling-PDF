@@ -5,7 +5,8 @@ on:
   release:
     types: [created]
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   build-installers:
@@ -42,7 +43,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
         with:
-          gradle-version: 8.7
+          gradle-version: 8.12
 
       # Install Windows dependencies
       - name: Install WiX Toolset

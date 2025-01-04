@@ -6,7 +6,8 @@ on:
     paths:
       - "src/main/resources/messages_en_GB.properties"
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   update-translations-main:
@@ -50,7 +51,7 @@ jobs:
       - name: Create Pull Request
         id: cpr
         if: env.CHANGES_DETECTED == 'true'
-        uses: peter-evans/create-pull-request@5e914681df9dc83aa4e4905692ca88beb2f9e91f # v7.0.5
+        uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7.0.6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Update translation files"

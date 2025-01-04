@@ -9,14 +9,13 @@ on:
 
 permissions:
   contents: read
-  packages: write
-  id-token: write
 
 jobs:
   push:
     runs-on: ubuntu-latest
     permissions:
       packages: write
+      id-token: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
@@ -33,7 +32,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
         with:
-          gradle-version: 8.7
+          gradle-version: 8.12
 
       - name: Run Gradle Command
         run: ./gradlew clean build
@@ -42,7 +41,7 @@ jobs:
 
       - name: Install cosign
         if: github.ref == 'refs/heads/master'
-        uses: sigstore/cosign-installer@v3.7.0
+        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
         with:
           cosign-release: 'v2.4.1'
 
