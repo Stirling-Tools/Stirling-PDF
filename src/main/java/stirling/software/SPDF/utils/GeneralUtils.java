@@ -86,7 +86,7 @@ public class GeneralUtils {
 
             // Allow only http and https protocols
             String protocol = url.getProtocol();
-            if (!protocol.equals("http") && !protocol.equals("https")) {
+            if (!"http".equals(protocol) && !"https".equals(protocol)) {
                 return false; // Disallow other protocols
             }
 
