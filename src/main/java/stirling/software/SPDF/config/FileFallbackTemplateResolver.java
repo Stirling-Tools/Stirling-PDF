@@ -33,7 +33,8 @@ public class FileFallbackTemplateResolver extends AbstractConfigurableTemplateRe
             String characterEncoding,
             Map<String, Object> templateResolutionAttributes) {
         Resource resource =
-                resourceLoader.getResource("file:./customFiles/templates/" + resourceName);
+                resourceLoader.getResource(
+                        "file:" + InstallationPathConfig.getTemplatesPath() + resourceName);
         try {
             if (resource.exists() && resource.isReadable()) {
                 return new FileTemplateResource(resource.getFile().getPath(), characterEncoding);

@@ -22,9 +22,11 @@ import org.apache.pdfbox.text.TextPosition;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.HighContrastColorCombination;
 import stirling.software.SPDF.model.api.misc.ReplaceAndInvert;
 
+@Slf4j
 public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
 
     private String textColor;
@@ -93,17 +95,17 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
                         try {
                             font = PDFontFactory.createFont(text.getFont().getCOSObject());
                         } catch (IOException io) {
-                            System.out.println("Primary font not found, using fallback font.");
+                            log.info("Primary font not found, using fallback font.");
                             font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
                         }
                         // if a character is not supported by font, then look for supported font
                         try {
                             byte[] bytes = font.encode(unicodeText);
                         } catch (IOException io) {
-                            System.out.println("text could not be encoded ");
+                            log.info("text could not be encoded ");
                             font = checkSupportedFontForCharacter(unicodeText);
                         } catch (IllegalArgumentException ie) {
-                            System.out.println("text not supported by font ");
+                            log.info("text not supported by font ");
                             font = checkSupportedFontForCharacter(unicodeText);
                         } finally {
                             // if any other font is not supported, then replace default character *
@@ -157,9 +159,9 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
                 byte[] bytes = currentFont.encode(unicodeText);
                 return currentFont;
             } catch (IOException io) {
-                System.out.println("text could not be encoded ");
+                log.info("text could not be encoded ");
             } catch (IllegalArgumentException ie) {
-                System.out.println("text not supported by font ");
+                log.info("text not supported by font ");
             }
         }
         return null;

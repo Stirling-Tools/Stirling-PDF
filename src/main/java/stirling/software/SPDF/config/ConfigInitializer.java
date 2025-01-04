@@ -28,6 +28,7 @@ public class ConfigInitializer
     @Override
     public void initialize(ConfigurableApplicationContext applicationContext) {
         try {
+            log.info("Setting up configs from templates");
             ensureConfigExists();
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize application configuration", e);
@@ -36,7 +37,7 @@ public class ConfigInitializer
 
     public void ensureConfigExists() throws IOException, URISyntaxException {
         // Define the path to the external config directory
-        Path destPath = Paths.get("configs", "settings.yml");
+        Path destPath = Paths.get(InstallationPathConfig.getSettingsPath());
 
         // Check if the file already exists
         if (Files.notExists(destPath)) {
@@ -56,7 +57,7 @@ public class ConfigInitializer
         } else {
 
             // Define the path to the config settings file
-            Path settingsPath = Paths.get("configs", "settings.yml");
+            Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
             // Load the template resource
             URL settingsTemplateResource =
                     getClass().getClassLoader().getResource("settings.yml.template");
@@ -120,7 +121,7 @@ public class ConfigInitializer
         }
 
         // Create custom settings file if it doesn't exist
-        Path customSettingsPath = Paths.get("configs", "custom_settings.yml");
+        Path customSettingsPath = Paths.get(InstallationPathConfig.getCustomSettingsPath());
         if (!Files.exists(customSettingsPath)) {
             Files.createFile(customSettingsPath);
         }

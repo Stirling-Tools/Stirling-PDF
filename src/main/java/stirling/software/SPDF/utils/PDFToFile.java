@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -64,7 +65,7 @@ public class PDFToFile {
                             .runCommandWithOutputHandling(command, tempOutputDir.toFile());
 
             // Get output files
-            List<File> outputFiles = Arrays.asList(tempOutputDir.toFile().listFiles());
+            File[] outputFiles = Objects.requireNonNull(tempOutputDir.toFile().listFiles());
 
             // Return output files in a ZIP archive
             fileName = pdfBaseName + "ToHtml.zip";

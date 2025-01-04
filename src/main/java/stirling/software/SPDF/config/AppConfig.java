@@ -136,16 +136,6 @@ public class AppConfig {
         return false;
     }
 
-    @Bean(name = "watchedFoldersDir")
-    public String watchedFoldersDir() {
-        return "./pipeline/watchedFolders/";
-    }
-
-    @Bean(name = "finishedFoldersDir")
-    public String finishedFoldersDir() {
-        return "./pipeline/finishedFolders/";
-    }
-
     @Bean(name = "directoryFilter")
     public Predicate<Path> processOnlyFiles() {
         return path -> {
