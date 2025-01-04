@@ -258,7 +258,7 @@ spotless {
 //        rules=['unused-dependency']
 //    }
 tasks.wrapper {
-    gradleVersion = "8.7"
+    gradleVersion = "8.12"
 }
 //tasks.withType(JavaCompile) {
 //    options.compilerArgs << "-Xlint:deprecation"

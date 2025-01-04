@@ -4,7 +4,8 @@ on:
   push:
     branches: [main]
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   update:
@@ -19,7 +20,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: 3.12
       - name: Run Pre-Commit Hooks
@@ -35,7 +36,7 @@ jobs:
           git diff --staged --quiet || git commit -m ":file_folder: pre-commit
           > Made via .github/workflows/pre_commit.yml" || echo "pre-commit: no changes"
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@5e914681df9dc83aa4e4905692ca88beb2f9e91f # v7.0.5
+        uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7.0.6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "ci: 🤖 format everything with pre-commit"
