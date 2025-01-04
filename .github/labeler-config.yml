@@ -49,12 +49,17 @@ Documentation:
 
 Docker:
   - changed-files:
+    - any-glob-to-any-file: '.github/workflows/build.yml'
+    - any-glob-to-any-file: '.github/workflows/push-docker.yml'
     - any-glob-to-any-file: 'Dockerfile'
-    - any-glob-to-any-file: 'Dockerfile-*'
+    - any-glob-to-any-file: 'Dockerfile.*'
     - any-glob-to-any-file: 'exampleYmlFiles/*.yml'
+    - any-glob-to-any-file: 'scripts/download-security-jar.sh'
     - any-glob-to-any-file: 'scripts/init.sh'
     - any-glob-to-any-file: 'scripts/init-without-ocr.sh'
     - any-glob-to-any-file: 'scripts/installFonts.sh'
+    - any-glob-to-any-file: 'test.sh'
+    - any-glob-to-any-file: 'test2.sh'
 
 Test:
   - changed-files:
