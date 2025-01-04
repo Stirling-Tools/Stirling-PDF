@@ -6,19 +6,59 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class InstallationPathConfig {
+    private static final String BASE_PATH;
 
-    public static String getPath() {
-        if (Boolean.parseBoolean(
-                java.lang.System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
+    // Root paths
+    private static final String LOG_PATH;
+    private static final String CONFIG_PATH;
+    private static final String PIPELINE_PATH;
+    private static final String CUSTOM_FILES_PATH;
+    private static final String CLIENT_WEBUI_PATH;
 
-            String os = java.lang.System.getProperty("os.name").toLowerCase();
+    // Config paths
+    private static final String SETTINGS_PATH;
+    private static final String CUSTOM_SETTINGS_PATH;
+
+    // Pipeline paths
+    private static final String PIPELINE_WATCHED_FOLDERS_PATH;
+    private static final String PIPELINE_FINISHED_FOLDERS_PATH;
+
+    // Custom file paths
+    private static final String STATIC_PATH;
+    private static final String TEMPLATES_PATH;
+    private static final String SIGNATURES_PATH;
+
+    static {
+        BASE_PATH = initializeBasePath();
+
+        // Initialize root paths
+        LOG_PATH = BASE_PATH + "logs" + File.separator;
+        CONFIG_PATH = BASE_PATH + "configs" + File.separator;
+        PIPELINE_PATH = BASE_PATH + "pipeline" + File.separator;
+        CUSTOM_FILES_PATH = BASE_PATH + "customFiles" + File.separator;
+        CLIENT_WEBUI_PATH = BASE_PATH + "clientWebUI" + File.separator;
+
+        // Initialize config paths
+        SETTINGS_PATH = CONFIG_PATH + "settings.yml";
+        CUSTOM_SETTINGS_PATH = CONFIG_PATH + "custom_settings.yml";
+
+        // Initialize pipeline paths
+        PIPELINE_WATCHED_FOLDERS_PATH = PIPELINE_PATH + "watchedFolders" + File.separator;
+        PIPELINE_FINISHED_FOLDERS_PATH = PIPELINE_PATH + "finishedFolders" + File.separator;
+
+        // Initialize custom file paths
+        STATIC_PATH = CUSTOM_FILES_PATH + "static" + File.separator;
+        TEMPLATES_PATH = CUSTOM_FILES_PATH + "templates" + File.separator;
+        SIGNATURES_PATH = CUSTOM_FILES_PATH + "signatures" + File.separator;
+    }
+
+    private static String initializeBasePath() {
+        if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_DESKTOP_UI", "false"))) {
+            String os = System.getProperty("os.name").toLowerCase();
             if (os.contains("win")) {
-                return java.lang.System.getenv("APPDATA")
-                        + File.separator
-                        + "Stirling-PDF"
-                        + File.separator;
+                return System.getenv("APPDATA") + File.separator + "Stirling-PDF" + File.separator;
             } else if (os.contains("mac")) {
-                return java.lang.System.getProperty("user.home")
+                return System.getProperty("user.home")
                         + File.separator
                         + "Library"
                         + File.separator
@@ -27,7 +67,7 @@ public class InstallationPathConfig {
                         + "Stirling-PDF"
                         + File.separator;
             } else {
-                return java.lang.System.getProperty("user.home")
+                return System.getProperty("user.home")
                         + File.separator
                         + ".config"
                         + File.separator
@@ -38,56 +78,55 @@ public class InstallationPathConfig {
         return "./";
     }
 
-    // Root paths
+    public static String getPath() {
+        return BASE_PATH;
+    }
+
     public static String getLogPath() {
-        return getPath() + "logs" + File.separator;
+        return LOG_PATH;
     }
 
     public static String getConfigPath() {
-        return getPath() + "configs" + File.separator;
+        return CONFIG_PATH;
     }
 
     public static String getPipelinePath() {
-        return getPath() + "pipeline" + File.separator;
+        return PIPELINE_PATH;
     }
 
     public static String getCustomFilesPath() {
-        return getPath() + "customFiles" + File.separator;
+        return CUSTOM_FILES_PATH;
     }
 
     public static String getClientWebUIPath() {
-        return getPath() + "clientWebUI" + File.separator;
+        return CLIENT_WEBUI_PATH;
     }
 
-    // configs
     public static String getSettingsPath() {
-        log.info(getConfigPath() + "settings.yml");
-        return getConfigPath() + "settings.yml";
+        return SETTINGS_PATH;
     }
 
     public static String getCustomSettingsPath() {
-        return getConfigPath() + "custom_settings.yml";
+        return CUSTOM_SETTINGS_PATH;
     }
 
-    // pipeline
     public static String getPipelineWatchedFoldersDir() {
-        return getPipelinePath() + "watchedFolders" + File.separator;
+        return PIPELINE_WATCHED_FOLDERS_PATH;
     }
 
     public static String getPipelineFinishedFoldersDir() {
-        return getPipelinePath() + "finishedFolders" + File.separator;
+        return PIPELINE_FINISHED_FOLDERS_PATH;
     }
 
-    // custom files
     public static String getStaticPath() {
-        return getCustomFilesPath() + "static" + File.separator;
+        return STATIC_PATH;
     }
 
     public static String getTemplatesPath() {
-        return getCustomFilesPath() + "templates" + File.separator;
+        return TEMPLATES_PATH;
     }
 
     public static String getSignaturesPath() {
-        return getCustomFilesPath() + "signatures" + File.separator;
+        return SIGNATURES_PATH;
     }
 }
