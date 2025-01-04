@@ -27,7 +27,7 @@ ext {
 }
 
 group = "stirling.software"
-version = "0.36.5"
+version = "0.36.6"
 
 
 java {
@@ -123,11 +123,12 @@ jpackage {
     windows {
     	launcherAsService = false
     	appVersion = project.version
-        winConsole = false
-        winDirChooser = true
-        winMenu = true
-        winShortcut = true
-        winPerUserInstall = true
+    	
+        winMenu = true  // Creates start menu entry
+        winShortcut = true  // Creates desktop shortcut
+        winShortcutPrompt = true  // Lets user choose whether to create shortcuts
+        winDirChooser = true  // Allows users to choose installation directory
+        winPerUserInstall = false
         winMenuGroup = "Stirling Software"
         winUpgradeUuid = "2a43ed0c-b8c2-40cf-89e1-751129b87641" // Unique identifier for updates
         winHelpUrl = "https://github.com/Stirling-Tools/Stirling-PDF"

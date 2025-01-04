@@ -11,13 +11,11 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider.ResponseToken;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
-import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.security.UserService;
 import stirling.software.SPDF.model.User;
 
-@Component
 @Slf4j
 public class CustomSaml2ResponseAuthenticationConverter
         implements Converter<ResponseToken, Saml2Authentication> {

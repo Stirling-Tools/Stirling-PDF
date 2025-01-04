@@ -40,6 +40,7 @@ import me.friwi.jcefmaven.EnumProgress;
 import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
 import me.friwi.jcefmaven.impl.progress.ConsoleProgressHandler;
 import stirling.software.SPDF.UI.WebBrowser;
+import stirling.software.SPDF.config.InstallationPathConfig;
 
 @Component
 @Slf4j
@@ -72,7 +73,8 @@ public class DesktopBrowser implements WebBrowser {
                         CefAppBuilder builder = new CefAppBuilder();
                         configureCefSettings(builder);
                         builder.setProgressHandler(createProgressHandler());
-
+                        builder.setInstallDir(
+                                new File(InstallationPathConfig.getClientWebUIPath()));
                         // Build and initialize CEF
                         cefApp = builder.build();
                         client = cefApp.createClient();
@@ -99,8 +101,16 @@ public class DesktopBrowser implements WebBrowser {
 
     private void configureCefSettings(CefAppBuilder builder) {
         CefSettings settings = builder.getCefSettings();
-        settings.cache_path = new File("jcef-bundle").getAbsolutePath();
-        settings.root_cache_path = new File("jcef-bundle").getAbsolutePath();
+        String basePath = InstallationPathConfig.getClientWebUIPath();
+        log.info("basePath " + basePath);
+        settings.cache_path = new File(basePath + "cache").getAbsolutePath();
+        settings.root_cache_path = new File(basePath + "root_cache").getAbsolutePath();
+        //        settings.browser_subprocess_path = new File(basePath +
+        // "subprocess").getAbsolutePath();
+        //        settings.resources_dir_path = new File(basePath + "resources").getAbsolutePath();
+        //        settings.locales_dir_path = new File(basePath + "locales").getAbsolutePath();
+        settings.log_file = new File(basePath, "debug.log").getAbsolutePath();
+
         settings.persist_session_cookies = true;
         settings.windowless_rendering_enabled = false;
         settings.log_severity = CefSettings.LogSeverity.LOGSEVERITY_INFO;
@@ -212,6 +222,9 @@ public class DesktopBrowser implements WebBrowser {
     }
 
     private void setupLoadHandler() {
+        final long initStartTime = System.currentTimeMillis();
+        log.info("Setting up load handler at: {}", initStartTime);
+
         client.addLoadHandler(
                 new CefLoadHandlerAdapter() {
                     @Override
@@ -220,32 +233,77 @@ public class DesktopBrowser implements WebBrowser {
                             boolean isLoading,
                             boolean canGoBack,
                             boolean canGoForward) {
+                        log.debug(
+                                "Loading state change - isLoading: {}, canGoBack: {}, canGoForward: {}, "
+                                        + "browserInitialized: {}, Time elapsed: {}ms",
+                                isLoading,
+                                canGoBack,
+                                canGoForward,
+                                browserInitialized,
+                                System.currentTimeMillis() - initStartTime);
+
                         if (!isLoading && !browserInitialized) {
+                            log.info(
+                                    "Browser finished loading, preparing to initialize UI components");
                             browserInitialized = true;
                             SwingUtilities.invokeLater(
                                     () -> {
-                                        if (loadingWindow != null) {
-                                            Timer timer =
-                                                    new Timer(
-                                                            500,
-                                                            e -> {
-                                                                loadingWindow.dispose();
-                                                                loadingWindow = null;
+                                        try {
+                                            if (loadingWindow != null) {
+                                                log.info("Starting UI initialization sequence");
 
-                                                                frame.dispose();
-                                                                frame.setOpacity(1.0f);
-                                                                frame.setUndecorated(false);
-                                                                frame.pack();
-                                                                frame.setSize(1280, 800);
-                                                                frame.setLocationRelativeTo(null);
-                                                                frame.setVisible(true);
-                                                                frame.requestFocus();
-                                                                frame.toFront();
-                                                                browser.getUIComponent()
-                                                                        .requestFocus();
-                                                            });
-                                            timer.setRepeats(false);
-                                            timer.start();
+                                                // Close loading window first
+                                                loadingWindow.setVisible(false);
+                                                loadingWindow.dispose();
+                                                loadingWindow = null;
+                                                log.info("Loading window disposed");
+
+                                                // Then setup the main frame
+                                                frame.setVisible(false);
+                                                frame.dispose();
+                                                frame.setOpacity(1.0f);
+                                                frame.setUndecorated(false);
+                                                frame.pack();
+                                                frame.setSize(1280, 800);
+                                                frame.setLocationRelativeTo(null);
+                                                log.debug("Frame reconfigured");
+
+                                                // Show the main frame
+                                                frame.setVisible(true);
+                                                frame.requestFocus();
+                                                frame.toFront();
+                                                log.info("Main frame displayed and focused");
+
+                                                // Focus the browser component
+                                                Timer focusTimer =
+                                                        new Timer(
+                                                                100,
+                                                                e -> {
+                                                                    try {
+                                                                        browser.getUIComponent()
+                                                                                .requestFocus();
+                                                                        log.info(
+                                                                                "Browser component focused");
+                                                                    } catch (Exception ex) {
+                                                                        log.error(
+                                                                                "Error focusing browser",
+                                                                                ex);
+                                                                    }
+                                                                });
+                                                focusTimer.setRepeats(false);
+                                                focusTimer.start();
+                                            }
+                                        } catch (Exception e) {
+                                            log.error("Error during UI initialization", e);
+                                            // Attempt cleanup on error
+                                            if (loadingWindow != null) {
+                                                loadingWindow.dispose();
+                                                loadingWindow = null;
+                                            }
+                                            if (frame != null) {
+                                                frame.setVisible(true);
+                                                frame.requestFocus();
+                                            }
                                         }
                                     });
                         }

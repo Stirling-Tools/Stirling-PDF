@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.api.HandleDataRequest;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -35,22 +34,12 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Tag(name = "Pipeline", description = "Pipeline APIs")
 public class PipelineController {
 
-    final String watchedFoldersDir = "./pipeline/watchedFolders/";
-
-    final String finishedFoldersDir = "./pipeline/finishedFolders/";
-
     private final PipelineProcessor processor;
-
-    private final ApplicationProperties applicationProperties;
 
     private final ObjectMapper objectMapper;
 
-    public PipelineController(
-            PipelineProcessor processor,
-            ApplicationProperties applicationProperties,
-            ObjectMapper objectMapper) {
+    public PipelineController(PipelineProcessor processor, ObjectMapper objectMapper) {
         this.processor = processor;
-        this.applicationProperties = applicationProperties;
         this.objectMapper = objectMapper;
     }
 
