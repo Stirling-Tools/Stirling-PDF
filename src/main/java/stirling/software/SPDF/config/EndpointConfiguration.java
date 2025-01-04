@@ -265,6 +265,7 @@ public class EndpointConfiguration {
     }
 
     private void processEnvironmentConfigs() {
+    	if(applicationProperties != null && applicationProperties.getEndpoints() != null) {
         List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
         List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
         if (!bookAndHtmlFormatsInstalled) {
@@ -281,6 +282,7 @@ public class EndpointConfiguration {
                 disableGroup(group.trim());
             }
         }
+    	}
     }
 
     public Set<String> getEndpointsForGroup(String group) {
