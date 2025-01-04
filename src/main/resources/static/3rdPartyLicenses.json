@@ -85,27 +85,6 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
-            "moduleUrl": "https://github.com/FasterXML/jackson-jaxrs-providers/jackson-jaxrs-base",
-            "moduleVersion": "2.18.2",
-            "moduleLicense": "The Apache Software License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
-            "moduleUrl": "https://github.com/FasterXML/jackson-jaxrs-providers/jackson-jaxrs-json-provider",
-            "moduleVersion": "2.18.2",
-            "moduleLicense": "The Apache Software License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
-            "moduleUrl": "https://github.com/FasterXML/jackson-modules-base",
-            "moduleVersion": "2.18.2",
-            "moduleLicense": "The Apache Software License, Version 2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
             "moduleName": "com.fasterxml.jackson.module:jackson-module-parameter-names",
             "moduleUrl": "https://github.com/FasterXML/jackson-modules-java8/jackson-module-parameter-names",
             "moduleVersion": "2.18.2",
@@ -363,20 +342,6 @@
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
-            "moduleName": "com.unboundid.product.scim2:scim2-sdk-client",
-            "moduleUrl": "https://github.com/pingidentity/scim2",
-            "moduleVersion": "2.3.5",
-            "moduleLicense": "UnboundID SCIM2 SDK Free Use License",
-            "moduleLicenseUrl": "https://github.com/pingidentity/scim2"
-        },
-        {
-            "moduleName": "com.unboundid.product.scim2:scim2-sdk-common",
-            "moduleUrl": "https://github.com/pingidentity/scim2",
-            "moduleVersion": "2.3.5",
-            "moduleLicense": "UnboundID SCIM2 SDK Free Use License",
-            "moduleLicenseUrl": "https://github.com/pingidentity/scim2"
-        },
-        {
             "moduleName": "com.zaxxer:HikariCP",
             "moduleUrl": "https://github.com/brettwooldridge/HikariCP",
             "moduleVersion": "5.1.0",
@@ -583,20 +548,6 @@
             "moduleVersion": "4.0.2",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
-        },
-        {
-            "moduleName": "javax.activation:javax.activation-api",
-            "moduleUrl": "http://www.oracle.com",
-            "moduleVersion": "1.2.0",
-            "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0",
-            "moduleLicenseUrl": "https://opensource.org/licenses/CDDL-1.0"
-        },
-        {
-            "moduleName": "javax.xml.bind:jaxb-api",
-            "moduleUrl": "http://www.oracle.com/",
-            "moduleVersion": "2.3.1",
-            "moduleLicense": "GPL2 w/ CPE",
-            "moduleLicenseUrl": "https://oss.oracle.com/licenses/CDDL+GPL-1.1"
         },
         {
             "moduleName": "me.friwi:gluegen-rt",
