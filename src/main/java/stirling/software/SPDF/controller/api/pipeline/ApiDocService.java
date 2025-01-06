@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.ServletContext;
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.SPdfApplication;
+import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.ApiEndpoint;
 import stirling.software.SPDF.model.Role;
 
@@ -44,7 +44,7 @@ public class ApiDocService {
 
     private String getApiDocsUrl() {
         String contextPath = servletContext.getContextPath();
-        String port = SPdfApplication.getStaticPort();
+        String port = SPDFApplication.getStaticPort();
         return "http://localhost:" + port + contextPath + "/v1/api-docs";
     }
 
