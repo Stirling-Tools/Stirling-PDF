@@ -86,23 +86,25 @@
       <div id="toolbarSidebar">
         <div id="toolbarSidebarLeft">
           <div id="sidebarViewButtons" class="splitToolbarButton toggled" role="radiogroup">
-            <button id="viewThumbnail" class="toolbarButton toggled toolbar-btn-hover" title="Show Thumbnails" tabindex="2"
+            <button id="viewThumbnail" class="toolbarButton toggled toolbar-btn-hover" tabindex="2"
               data-l10n-id="pdfjs-thumbs-button" role="radio" aria-checked="true" aria-controls="thumbnailView">
-              <span data-l10n-id="pdfjs-thumbs-button-label">Thumbnails</span>
+              <span class="btn-tooltip" th:text="#{redact.showThumbnails}"></span>
             </button>
             <button id="viewOutline" class="toolbarButton toolbar-btn-hover"
-              title="Show Document Outline (double-click to expand/collapse all items)" tabindex="3"
+              tabindex="3"
               data-l10n-id="pdfjs-document-outline-button" role="radio" aria-checked="false"
               aria-controls="outlineView">
-              <span data-l10n-id="pdfjs-document-outline-button-label">Document Outline</span>
+              <span class="btn-tooltip" th:text="#{redact.showDocumentOutline}"></span>
             </button>
-            <button id="viewAttachments" class="d-none toolbarButton" title="Show Attachments" tabindex="4"
+            <button id="viewAttachments" class="d-none toolbarButton" tabindex="4"
               data-l10n-id="pdfjs-attachments-button" role="radio" aria-checked="false" aria-controls="attachmentsView">
+              <span class="btn-tooltip" th:text="#{redact.showAttachments}"></span>
               <span data-l10n-id="pdfjs-attachments-button-label">Attachments</span>
             </button>
             <button id="viewLayers" class="d-none toolbarButton"
-              title="Show Layers (double-click to reset all layers to the default state)" tabindex="5"
+              tabindex="5"
               data-l10n-id="pdfjs-layers-button" role="radio" aria-checked="false" aria-controls="layersView">
+              <span class="btn-tooltip" th:text="#{redact.showLayers}"></span>
               <span data-l10n-id="pdfjs-layers-button-label">Layers</span>
             </button>
           </div>
@@ -112,9 +114,9 @@
           <div id="outlineOptionsContainer">
             <div class="verticalToolbarSeparator"></div>
 
-            <button id="currentOutlineItem" class="toolbarButton" disabled="disabled" title="Find Current Outline Item"
+            <button id="currentOutlineItem" class="toolbarButton" disabled="disabled"
               tabindex="6" data-l10n-id="pdfjs-current-outline-item-button">
-              <span data-l10n-id="pdfjs-current-outline-item-button-label">Current Outline Item</span>
+              <span class="btn-tooltip" th:text="#{redact.findCurrentOutlineItem}"></span>
             </button>
           </div>
         </div>
@@ -372,9 +374,9 @@
                   <span id="showMoreBtnIcon" class="material-symbols-rounded">more_horiz</span>
                 </button>
               </div>
-              <button id="sidebarToggle" class="toolbarButton mt-2" title="Toggle Sidebar" tabindex="11"
+              <button id="sidebarToggle" class="toolbarButton mt-2" tabindex="11"
                 data-l10n-id="pdfjs-toggle-sidebar-button" aria-expanded="false" aria-controls="sidebarContainer">
-                <span data-l10n-id="pdfjs-toggle-sidebar-button-label">Toggle Sidebar</span>
+                <span class="btn-tooltip" th:text="#{redact.toggleSidebar}"></span>
               </button>
               <div class="toolbarButtonSpacer d-none"></div>
               <button id="viewFind" class="d-none toolbarButton" title="Find in Document" tabindex="12"
@@ -382,18 +384,18 @@
                 <span data-l10n-id="pdfjs-findbar-button-label">Find</span>
               </button>
               <div class="splitToolbarButton hiddenSmallView">
-                <button class="toolbarButton btn-secondary toolbar-btn-hover" title="Previous Page" id="previous" tabindex="13"
+                <button class="toolbarButton btn-secondary toolbar-btn-hover" id="previous" tabindex="13"
                   data-l10n-id="pdfjs-previous-button">
-                  <span data-l10n-id="pdfjs-previous-button-label">Previous</span>
+                  <span class="btn-tooltip" th:text="#{redact.previousPage}"></span>
                 </button>
                 <div class="splitToolbarButtonSeparator d-none"></div>
-                <button class="toolbarButton btn-secondary toolbar-btn-hover" title="Next Page" id="next" tabindex="14"
+                <button class="toolbarButton btn-secondary toolbar-btn-hover" id="next" tabindex="14"
                   data-l10n-id="pdfjs-next-button">
-                  <span data-l10n-id="pdfjs-next-button-label">Next</span>
+                  <span class="btn-tooltip" th:text="#{redact.nextPage}"></span>
                 </button>
               </div>
               <span class="loadingInput start">
-                <input type="number" id="pageNumber" class="toolbarField" title="Page" value="1" min="1" tabindex="15"
+                <input type="number" id="pageNumber" class="toolbarField" value="1" min="1" tabindex="15"
                   data-l10n-id="pdfjs-page-input" autocomplete="off">
               </span>
               <span id="numPages" class="toolbarLabel"></span>
@@ -401,65 +403,69 @@
               </div>
               <div id="toolbarViewerMiddle">
                 <div class="splitToolbarButton">
-                  <button id="zoomOut" class="toolbarButton btn-primary toolbar-btn-hover" title="Zoom Out" tabindex="21"
+                  <button id="zoomOut" class="toolbarButton btn-primary toolbar-btn-hover" tabindex="21"
                     data-l10n-id="pdfjs-zoom-out-button">
-                    <span data-l10n-id="pdfjs-zoom-out-button-label">Zoom Out</span>
+                    <span class="btn-tooltip" th:text="#{redact.zoomOut}"></span>
                   </button>
                   <div class="splitToolbarButtonSeparator"></div>
-                  <button id="zoomIn" class="toolbarButton btn-primary toolbar-btn-hover" title="Zoom In" tabindex="22"
+                  <button id="zoomIn" class="toolbarButton btn-primary toolbar-btn-hover" tabindex="22"
                     data-l10n-id="pdfjs-zoom-in-button">
-                    <span data-l10n-id="pdfjs-zoom-in-button-label">Zoom In</span>
+                    <span class="btn-tooltip" th:text="#{redact.zoomIn}"></span>
                   </button>
                 </div>
                 <span id="scaleSelectContainer" class="dropdownToolbarButton">
-                  <select id="scaleSelect" title="Zoom" tabindex="23" data-l10n-id="pdfjs-zoom-select">
-                    <option id="pageAutoOption" title="" value="auto" selected="selected" data-l10n-id="pdfjs-page-scale-auto">
+                  <select id="scaleSelect" tabindex="23" data-l10n-id="pdfjs-zoom-select">
+                    <option id="pageAutoOption" value="auto" selected="selected" data-l10n-id="pdfjs-page-scale-auto">
                       Automatic Zoom</option>
-                    <option id="pageActualOption" title="" value="page-actual" data-l10n-id="pdfjs-page-scale-actual">
+                    <option id="pageActualOption" value="page-actual" data-l10n-id="pdfjs-page-scale-actual">
                       Actual Size</option>
-                    <option id="pageFitOption" title="" value="page-fit" data-l10n-id="pdfjs-page-scale-fit">Page
+                    <option id="pageFitOption" value="page-fit" data-l10n-id="pdfjs-page-scale-fit">Page
                       Fit
                     </option>
-                    <option id="pageWidthOption" title="" value="page-width" data-l10n-id="pdfjs-page-scale-width">
+                    <option id="pageWidthOption" value="page-width" data-l10n-id="pdfjs-page-scale-width">
                       Page Width</option>
-                    <option id="customScaleOption" title="" value="custom" disabled="disabled" hidden="true"
+                    <option id="customScaleOption" value="custom" disabled="disabled" hidden="true"
                       data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 0 }'>0%</option>
-                    <option title="" value="0.5" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 50 }'>
+                    <option value="0.5" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 50 }'>
                       50%</option>
-                    <option title="" value="0.75" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 75 }'>75%
+                    <option value="0.75" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 75 }'>75%
                     </option>
-                    <option title="" value="1" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 100 }'>
+                    <option value="1" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 100 }'>
                       100%</option>
-                    <option title="" value="1.25" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 125 }'>125%
+                    <option value="1.25" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 125 }'>125%
                     </option>
-                    <option title="" value="1.5" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 150 }'>150%
+                    <option value="1.5" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 150 }'>150%
                     </option>
-                    <option title="" value="2" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 200 }'>
+                    <option value="2" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 200 }'>
                       200%</option>
-                    <option title="" value="3" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 300 }'>
+                    <option value="3" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 300 }'>
                       300%</option>
-                    <option title="" value="4" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 400 }'>
+                    <option value="4" data-l10n-id="pdfjs-page-scale-percent" data-l10n-args='{ "scale": 400 }'>
                       400%</option>
                   </select>
                 </span>
               </div>
               <div id="redactionsToolbarViewer" class="splitToolbarButton d-flex">
-                <button id="man-text-select-redact" class="btn-primary" title="Text-based selection redaction" tabindex="22">
+                <button id="man-text-select-redact" class="btn-primary"  tabindex="22">
+                  <span class="btn-tooltip" th:text="#{redact.textBasedRedaction}"></span>
                   <span id="text-selection" class="material-symbols-rounded user-select-none pe-none">text_select_start
                   </span>
                 </button>
-                <button id="man-shape-redact" class="btn-primary" title="Shape drawing redaction" tabindex="22">
+                <button id="man-shape-redact" class="btn-primary" tabindex="22">
+                  <span class="btn-tooltip" th:text="#{redact.boxRedaction}"></span>
                   <span id="shape-selection" class="material-symbols-rounded user-select-none pe-none">pageless
                   </span>
                 </button>
                 <button id="redactionsPaletteContainer" class="btn-primary">
+                  <span class="btn-tooltip" th:text="#{redact.colourPicker}"></span>
                   <label id="redactions-palette" class="material-symbols-rounded palette-color text-center"
                     style="--palette-color: #000000;">
                     palette
                     <input type="color" name="color-picker">
                   </label>
                 </button>
-                <button id="apply-redaction" title="Apply changes" class="btn-success d-none" disabled>
+                <button id="apply-redaction" class="btn-success d-none" disabled>
+                  <span class="btn-tooltip" th:text="#{redact.applyChanges}"></span>
                   <span id="apply-redaction-icon" class="material-symbols-rounded">
                     check
                   </span>
@@ -467,22 +473,26 @@
             </div>
             <div id="toolbarViewerRight">
               <div class="splitToolbarButton">
-                <button id="pdfToImageBtn" th:title="#{redact.convertPDFToImageLabel}" class="btn-success">
+                <button id="pdfToImageBtn" class="btn-success">
+                  <span class="btn-tooltip" th:text="#{redact.convertPDFToImageLabel}"></span>
                   <span id="pdfToImageBtnIcon" class="material-symbols-rounded">
                     image
                   </span>
                 </button>
-                <button id="pageBasedRedactionBtn" th:title="#{redact.pageBasedRedaction}" class="btn-primary">
+                <button id="pageBasedRedactionBtn" class="btn-primary">
+                  <span class="btn-tooltip" th:text="#{redact.pageBasedRedaction}"></span>
                   <span id="pageBasedRedactionBtnIcon" class="material-symbols-rounded">
                     document_scanner
                   </span>
                 </button>
-                <button id="uploadBtn" title="Upload" class="btn-primary">
+                <button id="uploadBtn" class="btn-primary">
+                  <span class="btn-tooltip" th:text="#{redact.upload}"></span>
                   <span id="uploadBtnIcon" class="material-symbols-rounded">
                     upload
                   </span>
                 </button>
-                <button id="downloadBtn" title="Submit" class="btn-primary">
+                <button id="downloadBtn"  class="btn-primary">
+                  <span class="btn-tooltip" th:text="#{redact.export}"></span>
                   <span id="downloadBtnIcon" class="material-symbols-rounded">
                     download
                   </span>

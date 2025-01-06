@@ -126,4 +126,19 @@ input[data-autocompleted] {
 }
 .btn:hover .btn-tooltip {
   display: block;
-  }
+}
+.btn-primary:hover .btn-tooltip {
+    display: block;
+}
+.btn-success:hover .btn-tooltip {
+    display: block;
+}
+.btn-secondary:hover .btn-tooltip {
+    display: block;
+}
+.btn-toolbarButton:hover .btn-tooltip {
+    display: block;
+}
+.toolbarButton:hover .btn-tooltip {
+  display: block;
+}
