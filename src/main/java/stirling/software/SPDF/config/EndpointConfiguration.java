@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -267,20 +268,26 @@ public class EndpointConfiguration {
     }
 
     private void processEnvironmentConfigs() {
-        List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
-        List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
-        if (!bookAndHtmlFormatsInstalled) {
-            groupsToRemove.add("Calibre");
-        }
-        if (endpointsToRemove != null) {
-            for (String endpoint : endpointsToRemove) {
-                disableEndpoint(endpoint.trim());
-            }
-        }
+        if (applicationProperties != null && applicationProperties.getEndpoints() != null) {
+            List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
+            List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
 
-        if (groupsToRemove != null) {
-            for (String group : groupsToRemove) {
-                disableGroup(group.trim());
+            if (!bookAndHtmlFormatsInstalled) {
+                if (groupsToRemove == null) {
+                    groupsToRemove = new ArrayList<>();
+                }
+                groupsToRemove.add("Calibre");
+            }
+            if (endpointsToRemove != null) {
+                for (String endpoint : endpointsToRemove) {
+                    disableEndpoint(endpoint.trim());
+                }
+            }
+
+            if (groupsToRemove != null) {
+                for (String group : groupsToRemove) {
+                    disableGroup(group.trim());
+                }
             }
         }
     }

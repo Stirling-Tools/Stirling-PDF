@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.SPDF.service.SignatureService;
@@ -34,8 +35,6 @@ import stirling.software.SPDF.service.SignatureService;
 @Slf4j
 public class GeneralWebController {
 
-    private static final String SIGNATURE_BASE_PATH = "customFiles/static/signatures/";
-    private static final String ALL_USERS_FOLDER = "ALL_USERS";
     private final SignatureService signatureService;
     private final UserServiceInterface userService;
     private final ResourceLoader resourceLoader;
@@ -223,7 +222,9 @@ public class GeneralWebController {
         // Extract font names from classpath
         fontNames.addAll(getFontNamesFromLocation("classpath:static/fonts/*.woff2"));
         // Extract font names from external directory
-        fontNames.addAll(getFontNamesFromLocation("file:customFiles/static/fonts/*"));
+        fontNames.addAll(
+                getFontNamesFromLocation(
+                        "file:" + InstallationPathConfig.getStaticPath() + "fonts/*"));
         return fontNames;
     }
 

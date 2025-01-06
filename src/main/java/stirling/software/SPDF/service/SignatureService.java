@@ -13,14 +13,19 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.util.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.model.SignatureFile;
 
 @Service
 @Slf4j
 public class SignatureService {
 
-    private static final String SIGNATURE_BASE_PATH = "customFiles/signatures/";
-    private static final String ALL_USERS_FOLDER = "ALL_USERS";
+    private final String SIGNATURE_BASE_PATH;
+    private final String ALL_USERS_FOLDER = "ALL_USERS";
+
+    public SignatureService() {
+        SIGNATURE_BASE_PATH = InstallationPathConfig.getSignaturesPath();
+    }
 
     public boolean hasAccessToFile(String username, String fileName) throws IOException {
         validateFileName(fileName);

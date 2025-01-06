@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,6 +24,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.utils.FileMonitor;
@@ -48,14 +48,12 @@ public class PipelineDirectoryProcessor {
     public PipelineDirectoryProcessor(
             ObjectMapper objectMapper,
             ApiDocService apiDocService,
-            @Qualifier("watchedFoldersDir") String watchedFoldersDir,
-            @Qualifier("finishedFoldersDir") String finishedFoldersDir,
             PipelineProcessor processor,
             FileMonitor fileMonitor) {
         this.objectMapper = objectMapper;
         this.apiDocService = apiDocService;
-        this.watchedFoldersDir = watchedFoldersDir;
-        this.finishedFoldersDir = finishedFoldersDir;
+        this.watchedFoldersDir = InstallationPathConfig.getPipelineWatchedFoldersDir();
+        this.finishedFoldersDir = InstallationPathConfig.getPipelineFinishedFoldersDir();
         this.processor = processor;
         this.fileMonitor = fileMonitor;
     }

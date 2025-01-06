@@ -1,4 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+	<define name="LOG_PATH" class="stirling.software.SPDF.config.LogbackPropertyLoader" />
 
     <!-- Console Appender -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -7,34 +9,29 @@
         </encoder>
     </appender>
 
-    <!-- Rolling File Appender -->
+    <!-- Rolling File Appender for Auth Logs -->
     <appender name="AUTHLOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/invalid-auths.log</file>
+        <file>${LOG_PATH}/invalid-auths.log</file>
         <encoder>
             <pattern>%d %p %c{1} [%thread] %m%n</pattern>
         </encoder>
-
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- daily rollover and keep 7 days' worth of history -->
-            <fileNamePattern>logs/auth-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${LOG_PATH}/auth-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>1</maxHistory>
         </rollingPolicy>
     </appender>
 
-    <!-- Rolling File Appender -->
+    <!-- Rolling File Appender for General Logs -->
     <appender name="GENERAL" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/info.log</file>
+        <file>${LOG_PATH}/info.log</file>
         <encoder>
             <pattern>%d %p %c{1} [%thread] %m%n</pattern>
         </encoder>
-
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- daily rollover and keep 7 days' worth of history -->
-            <fileNamePattern>logs/info-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${LOG_PATH}/info-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>1</maxHistory>
         </rollingPolicy>
     </appender>
-
 
     <!-- Root Logger -->
     <root level="INFO">
@@ -43,10 +40,9 @@
     </root>
 
     <!-- Specific Logger -->
-    <logger name="stirling.software.SPDF.config.security.CustomAuthenticationFailureHandler" level="ERROR"
-            additivity="false">
+    <logger name="stirling.software.SPDF.config.security.CustomAuthenticationFailureHandler" 
+            level="ERROR" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="AUTHLOG"/>
     </logger>
-
 </configuration>
