@@ -2,6 +2,7 @@ package stirling.software.SPDF;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,6 +25,7 @@ import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.UI.WebBrowser;
 import stirling.software.SPDF.config.ConfigInitializer;
+import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @SpringBootApplication
@@ -76,15 +78,27 @@ public class SPdfApplication {
             props.put("spring.main.web-application-type", "servlet");
         }
         app.setAdditionalProfiles("default");
-        app.addInitializers(new ConfigInitializer());
+
+        ConfigInitializer initializer = new ConfigInitializer();
+        try {
+            initializer.ensureConfigExists();
+        } catch (IOException | URISyntaxException e) {
+            log.error("Error initialising configuration", e);
+        }
+
         Map<String, String> propertyFiles = new HashMap<>();
         // External config files
-        if (Files.exists(Paths.get("configs/settings.yml"))) {
-            propertyFiles.put("spring.config.additional-location", "file:configs/settings.yml");
+        log.info("Settings file: {}", InstallationPathConfig.getSettingsPath());
+        if (Files.exists(Paths.get(InstallationPathConfig.getSettingsPath()))) {
+            propertyFiles.put(
+                    "spring.config.additional-location",
+                    "file:" + InstallationPathConfig.getSettingsPath());
         } else {
-            log.warn("External configuration file 'configs/settings.yml' does not exist.");
+            log.warn(
+                    "External configuration file '{}' does not exist.",
+                    InstallationPathConfig.getSettingsPath());
         }
-        if (Files.exists(Paths.get("configs/custom_settings.yml"))) {
+        if (Files.exists(Paths.get(InstallationPathConfig.getCustomSettingsPath()))) {
             String existingLocation =
                     propertyFiles.getOrDefault("spring.config.additional-location", "");
             if (!existingLocation.isEmpty()) {
@@ -92,9 +106,11 @@ public class SPdfApplication {
             }
             propertyFiles.put(
                     "spring.config.additional-location",
-                    existingLocation + "file:configs/custom_settings.yml");
+                    existingLocation + "file:" + InstallationPathConfig.getCustomSettingsPath());
         } else {
-            log.warn("Custom configuration file 'configs/custom_settings.yml' does not exist.");
+            log.warn(
+                    "Custom configuration file '{}' does not exist.",
+                    InstallationPathConfig.getCustomSettingsPath());
         }
         Properties finalProps = new Properties();
         if (!propertyFiles.isEmpty()) {
@@ -110,8 +126,8 @@ public class SPdfApplication {
         app.run(args);
         // Ensure directories are created
         try {
-            Files.createDirectories(Path.of("customFiles/static/"));
-            Files.createDirectories(Path.of("customFiles/templates/"));
+            Files.createDirectories(Path.of(InstallationPathConfig.getTemplatesPath()));
+            Files.createDirectories(Path.of(InstallationPathConfig.getStaticPath()));
         } catch (Exception e) {
             log.error("Error creating directories: {}", e.getMessage());
         }

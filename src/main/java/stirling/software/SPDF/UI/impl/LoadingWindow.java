@@ -14,9 +14,12 @@ public class LoadingWindow extends JDialog {
     private final JLabel statusLabel;
     private final JPanel mainPanel;
     private final JLabel brandLabel;
+    private long startTime;
 
     public LoadingWindow(Frame parent, String initialUrl) {
         super(parent, "Initializing Stirling-PDF", true);
+        startTime = System.currentTimeMillis();
+        log.info("Creating LoadingWindow - initialization started at: {}", startTime);
 
         // Initialize components
         mainPanel = new JPanel();
@@ -29,8 +32,8 @@ public class LoadingWindow extends JDialog {
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.weightx = 1.0; // Add horizontal weight
-        gbc.weighty = 0.0; // Add vertical weight
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.0;
 
         // Add icon
         try {
@@ -43,12 +46,14 @@ public class LoadingWindow extends JDialog {
                         iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
                         gbc.gridy = 0;
                         mainPanel.add(iconLabel, gbc);
+                        log.debug("Icon loaded and scaled successfully");
                     }
                 }
             }
         } catch (Exception e) {
             log.error("Failed to load icon", e);
         }
+
         // URL Label with explicit size
         brandLabel = new JLabel(initialUrl);
         brandLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -63,6 +68,7 @@ public class LoadingWindow extends JDialog {
         statusLabel.setPreferredSize(new Dimension(300, 25));
         gbc.gridy = 2;
         mainPanel.add(statusLabel, gbc);
+
         // Progress bar with explicit size
         progressBar = new JProgressBar(0, 100);
         progressBar.setStringPainted(true);
@@ -82,33 +88,78 @@ public class LoadingWindow extends JDialog {
         setAlwaysOnTop(true);
         setProgress(0);
         setStatus("Starting...");
+
+        log.info(
+                "LoadingWindow initialization completed in {}ms",
+                System.currentTimeMillis() - startTime);
     }
 
     public void setProgress(final int progress) {
         SwingUtilities.invokeLater(
                 () -> {
                     try {
-                        progressBar.setValue(Math.min(Math.max(progress, 0), 100));
-                        progressBar.setString(progress + "%");
+                        int validProgress = Math.min(Math.max(progress, 0), 100);
+                        log.info(
+                                "Setting progress to {}% at {}ms since start",
+                                validProgress, System.currentTimeMillis() - startTime);
+
+                        // Log additional details when near 90%
+                        if (validProgress >= 85 && validProgress <= 95) {
+                            log.info(
+                                    "Near 90% progress - Current status: {}, Window visible: {}, "
+                                            + "Progress bar responding: {}, Memory usage: {}MB",
+                                    statusLabel.getText(),
+                                    isVisible(),
+                                    progressBar.isEnabled(),
+                                    Runtime.getRuntime().totalMemory() / (1024 * 1024));
+
+                            // Add thread state logging
+                            Thread currentThread = Thread.currentThread();
+                            log.debug(
+                                    "Current thread state - Name: {}, State: {}, Priority: {}",
+                                    currentThread.getName(),
+                                    currentThread.getState(),
+                                    currentThread.getPriority());
+                        }
+
+                        progressBar.setValue(validProgress);
+                        progressBar.setString(validProgress + "%");
                         mainPanel.revalidate();
                         mainPanel.repaint();
                     } catch (Exception e) {
-                        log.error("Error updating progress", e);
+                        log.error("Error updating progress to " + progress, e);
                     }
                 });
     }
 
     public void setStatus(final String status) {
-        log.info(status);
+        log.info(
+                "Status update at {}ms - Setting status to: {}",
+                System.currentTimeMillis() - startTime,
+                status);
+
         SwingUtilities.invokeLater(
                 () -> {
                     try {
-                        statusLabel.setText(status != null ? status : "");
+                        String validStatus = status != null ? status : "";
+                        statusLabel.setText(validStatus);
+
+                        // Log UI state when status changes
+                        log.debug(
+                                "UI State - Window visible: {}, Progress: {}%, Status: {}",
+                                isVisible(), progressBar.getValue(), validStatus);
+
                         mainPanel.revalidate();
                         mainPanel.repaint();
                     } catch (Exception e) {
-                        log.error("Error updating status", e);
+                        log.error("Error updating status to: " + status, e);
                     }
                 });
+    }
+
+    @Override
+    public void dispose() {
+        log.info("LoadingWindow disposing after {}ms", System.currentTimeMillis() - startTime);
+        super.dispose();
     }
 }

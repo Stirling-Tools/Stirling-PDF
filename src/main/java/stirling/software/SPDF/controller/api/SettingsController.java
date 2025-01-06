@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.utils.GeneralUtils;
 
@@ -33,7 +34,8 @@ public class SettingsController {
         if (!"undefined".equals(applicationProperties.getSystem().getEnableAnalytics())) {
             return ResponseEntity.status(HttpStatus.ALREADY_REPORTED)
                     .body(
-                            "Setting has already been set, To adjust please edit /config/settings.yml");
+                            "Setting has already been set, To adjust please edit "
+                                    + InstallationPathConfig.getSettingsPath());
         }
         GeneralUtils.saveKeyToConfig("system.enableAnalytics", String.valueOf(enabled), false);
         applicationProperties.getSystem().setEnableAnalytics(String.valueOf(enabled));
