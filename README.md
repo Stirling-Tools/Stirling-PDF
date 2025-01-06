@@ -14,8 +14,9 @@
 
 All files and PDFs exist either exclusively on the client side, reside in server memory only during task execution, or temporarily reside in a file solely for the execution of the task. Any file downloaded by the user will have been deleted from the server by that point.
 
+Homepage: [https://stirlingpdf.com](https://stirlingpdf.com)
 
-All information available at [https://docs.stirlingpdf.com/](https://docs.stirlingpdf.com/)
+All documentation available at [https://docs.stirlingpdf.com/](https://docs.stirlingpdf.com/)
 
 ![stirling-home](images/stirling-home.jpg)
 
