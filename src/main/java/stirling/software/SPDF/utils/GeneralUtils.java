@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.simpleyaml.configuration.file.YamlFile;
 import org.simpleyaml.configuration.file.YamlFileWrapper;
@@ -230,8 +228,7 @@ public class GeneralUtils {
             Double result = evaluator.evaluate(sanitizedExpression);
 
             // Check if the result is null or not within bounds
-            if (result == null)
-                break;
+            if (result == null) break;
 
             if (result.intValue() > 0 && result.intValue() <= maxValue)
                 results.add(result.intValue());
@@ -242,11 +239,15 @@ public class GeneralUtils {
 
     private static String sanitizeNFunction(String expression, int nValue) {
         String sanitizedExpression = expression.replace(" ", "");
-        String multiplyByOpeningRoundBracketPattern = "([0-9n)])\\("; // example: n(n-1), 9(n-1), (n-1)(n-2)
-        sanitizedExpression = sanitizedExpression.replaceAll(multiplyByOpeningRoundBracketPattern, "$1*(");
+        String multiplyByOpeningRoundBracketPattern =
+                "([0-9n)])\\("; // example: n(n-1), 9(n-1), (n-1)(n-2)
+        sanitizedExpression =
+                sanitizedExpression.replaceAll(multiplyByOpeningRoundBracketPattern, "$1*(");
 
-        String multiplyByClosingRoundBracketPattern = "\\)([0-9n)])"; // example: (n-1)n, (n-1)9, (n-1)(n-2)
-        sanitizedExpression = sanitizedExpression.replaceAll(multiplyByClosingRoundBracketPattern, ")*$1");
+        String multiplyByClosingRoundBracketPattern =
+                "\\)([0-9n)])"; // example: (n-1)n, (n-1)9, (n-1)(n-2)
+        sanitizedExpression =
+                sanitizedExpression.replaceAll(multiplyByClosingRoundBracketPattern, ")*$1");
 
         sanitizedExpression = insertMultiplicationBeforeN(sanitizedExpression, nValue);
         return sanitizedExpression;

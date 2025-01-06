@@ -16,15 +16,11 @@ import org.simpleyaml.configuration.comments.CommentType;
 import org.simpleyaml.configuration.file.YamlFile;
 import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
 import org.simpleyaml.configuration.implementation.snakeyaml.lib.DumperOptions;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ConfigInitializer {
-
-
 
     public void ensureConfigExists() throws IOException, URISyntaxException {
         // Define the path to the external config directory

@@ -78,14 +78,14 @@ public class SPdfApplication {
             props.put("spring.main.web-application-type", "servlet");
         }
         app.setAdditionalProfiles("default");
-        
+
         ConfigInitializer initializer = new ConfigInitializer();
         try {
-			initializer.ensureConfigExists();
-		} catch (IOException | URISyntaxException e) {
-			log.error("Error initialising configuration", e);
-		}
-        
+            initializer.ensureConfigExists();
+        } catch (IOException | URISyntaxException e) {
+            log.error("Error initialising configuration", e);
+        }
+
         Map<String, String> propertyFiles = new HashMap<>();
         // External config files
         log.info("Settings file: {}", InstallationPathConfig.getSettingsPath());

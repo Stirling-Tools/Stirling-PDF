@@ -266,28 +266,28 @@ public class EndpointConfiguration {
     }
 
     private void processEnvironmentConfigs() {
-    	if(applicationProperties != null && applicationProperties.getEndpoints() != null) {
-        List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
-        List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
-        
-        if (!bookAndHtmlFormatsInstalled) {
-        	if(groupsToRemove == null) {
-        		groupsToRemove = new ArrayList<>();
-        	}
-            groupsToRemove.add("Calibre");
-        }
-        if (endpointsToRemove != null) {
-            for (String endpoint : endpointsToRemove) {
-                disableEndpoint(endpoint.trim());
-            }
-        }
+        if (applicationProperties != null && applicationProperties.getEndpoints() != null) {
+            List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
+            List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
 
-        if (groupsToRemove != null) {
-            for (String group : groupsToRemove) {
-                disableGroup(group.trim());
+            if (!bookAndHtmlFormatsInstalled) {
+                if (groupsToRemove == null) {
+                    groupsToRemove = new ArrayList<>();
+                }
+                groupsToRemove.add("Calibre");
+            }
+            if (endpointsToRemove != null) {
+                for (String endpoint : endpointsToRemove) {
+                    disableEndpoint(endpoint.trim());
+                }
+            }
+
+            if (groupsToRemove != null) {
+                for (String group : groupsToRemove) {
+                    disableGroup(group.trim());
+                }
             }
         }
-    	}
     }
 
     public Set<String> getEndpointsForGroup(String group) {
