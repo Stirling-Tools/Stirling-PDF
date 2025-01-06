@@ -4006,16 +4006,8 @@ body {
   color: var(--dialog-button-hover-color);
 }
 
-.toolbarButton > span {
-  display: inline-block;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
-
 :is(.toolbarButton, .secondaryToolbarButton, .dialogButton)[disabled] {
-  opacity: 0.5;
-}
+ background-color : rgba(169, 201, 246, 0.5);}
 
 .splitToolbarButton > .toolbarButton:is(:hover, :focus-visible),
 .dropdownToolbarButton:hover {
