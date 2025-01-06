@@ -1239,6 +1239,13 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "org.postgresql:postgresql",
+            "moduleUrl": "https://jdbc.postgresql.org/",
+            "moduleVersion": "42.7.4",
+            "moduleLicense": "BSD-2-Clause",
+            "moduleLicenseUrl": "https://jdbc.postgresql.org/about/license.html"
+        },
+        {
             "moduleName": "org.slf4j:jul-to-slf4j",
             "moduleUrl": "http://www.slf4j.org",
             "moduleVersion": "2.0.16",
