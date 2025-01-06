@@ -18,6 +18,12 @@ public class SecurityWebController {
         return "security/auto-redact";
     }
 
+    @GetMapping("/redact")
+    public String redactForm(Model model) {
+        model.addAttribute("currentPage", "redact");
+        return "security/redact";
+    }
+
     @GetMapping("/add-password")
     @Hidden
     public String addPasswordForm(Model model) {
