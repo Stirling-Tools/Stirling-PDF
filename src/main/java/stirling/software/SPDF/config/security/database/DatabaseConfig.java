@@ -29,7 +29,7 @@ public class DatabaseConfig {
 
     public DatabaseConfig(ApplicationProperties applicationProperties, boolean runningEE) {
         this.applicationProperties = applicationProperties;
-        this.runningEE = true; // fixMe: change back
+        this.runningEE = runningEE;
     }
 
     /**
@@ -59,6 +59,10 @@ public class DatabaseConfig {
         log.info("Using custom database configuration");
 
         if (!datasource.getCustomDatabaseUrl().isBlank()) {
+            if (datasource.getCustomDatabaseUrl().contains("postgresql")) {
+                dataSourceBuilder.driverClassName(POSTGRES_DRIVER);
+            }
+
             dataSourceBuilder.url(datasource.getCustomDatabaseUrl());
         } else {
             dataSourceBuilder.driverClassName(getDriverClassName(datasource.getType()));

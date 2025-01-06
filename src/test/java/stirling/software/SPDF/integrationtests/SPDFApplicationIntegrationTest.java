@@ -3,7 +3,6 @@ package stirling.software.SPDF.integrationtests;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import stirling.software.SPDF.SPDFApplication;
@@ -13,7 +12,6 @@ import static java.nio.file.Files.delete;
 import static java.nio.file.Files.exists;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Disabled
 @SpringBootTest
 public class SPDFApplicationIntegrationTest {
 

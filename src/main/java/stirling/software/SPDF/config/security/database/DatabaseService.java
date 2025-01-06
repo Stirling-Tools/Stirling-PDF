@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -20,11 +21,8 @@ import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
-import org.springframework.core.io.PathResource;
-import org.springframework.core.io.support.EncodedResource;
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
 import org.springframework.jdbc.datasource.init.ScriptException;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -50,13 +48,14 @@ public class DatabaseService implements DatabaseInterface {
     }
 
     /**
-     * Checks if there is at least one backup
+     * Checks if there is at least one backup. First checks if the directory exists, then checks if
+     * there are backup scripts within the directory
      *
      * @return true if there are backup scripts, false if there are not
      */
     @Override
     public boolean hasBackup() {
-        Path filePath = Paths.get(BACKUP_DIR + "*");
+        Path filePath = Paths.get(BACKUP_DIR);
 
         if (Files.exists(filePath)) {
             return !getBackupList().isEmpty();
@@ -116,9 +115,11 @@ public class DatabaseService implements DatabaseInterface {
         if (!hasBackup()) throw new BackupNotFoundException("No backup scripts were found.");
 
         List<FileInfo> backupList = this.getBackupList();
-
         backupList.sort(Comparator.comparing(FileInfo::getModificationDate).reversed());
-        executeDatabaseScript(Paths.get(backupList.get(0).getFilePath()));
+
+        Path latestExport = Paths.get(backupList.get(0).getFilePath());
+
+        executeDatabaseScript(latestExport);
     }
 
     /** Imports a database backup from the specified file. */
@@ -149,7 +150,6 @@ public class DatabaseService implements DatabaseInterface {
         return true;
     }
 
-    /** Filter and delete old backups if there are more than 5 */
     @Override
     public void exportDatabase() {
         List<FileInfo> filteredBackupList =
@@ -166,16 +166,21 @@ public class DatabaseService implements DatabaseInterface {
         Path insertOutputFilePath =
                 this.getBackupFilePath(BACKUP_PREFIX + dateNow.format(myFormatObj) + SQL_SUFFIX);
 
-        try (Connection conn = dataSource.getConnection()) {
-            ScriptUtils.executeSqlScript(
-                    conn, new EncodedResource(new PathResource(insertOutputFilePath)));
+        if (isH2Database()) {
+            String query = "SCRIPT SIMPLE COLUMNS DROP to ?;";
 
-            log.info("Database export completed: {}", insertOutputFilePath);
-        } catch (SQLException e) {
-            log.error("Error during database export: {}", e.getMessage(), e);
-        } catch (CannotReadScriptException e) {
-            log.error("Error during database export: File {} not found", insertOutputFilePath);
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, insertOutputFilePath.toString());
+                stmt.execute();
+            } catch (SQLException e) {
+                log.error("Error during database export: {}", e.getMessage(), e);
+            } catch (CannotReadScriptException e) {
+                log.error("Error during database export: File {} not found", insertOutputFilePath);
+            }
         }
+
+        log.info("Database export completed: {}", insertOutputFilePath);
     }
 
     private static void deleteOldestBackup(List<FileInfo> filteredBackupList) {
@@ -259,17 +264,20 @@ public class DatabaseService implements DatabaseInterface {
 
     private void executeDatabaseScript(Path scriptPath) {
         if (isH2Database()) {
-            try (Connection conn = dataSource.getConnection()) {
-                ScriptUtils.executeSqlScript(
-                        conn, new EncodedResource(new PathResource(scriptPath)));
+            String query = "RUNSCRIPT from ?;";
 
-                log.info("Database import completed: {}", scriptPath);
+            try (Connection conn = dataSource.getConnection();
+                    PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, scriptPath.toString());
+                stmt.execute();
             } catch (SQLException e) {
                 log.error("Error during database import: {}", e.getMessage(), e);
             } catch (ScriptException e) {
                 log.error("Error: File {} not found", scriptPath.toString(), e);
             }
         }
+
+        log.info("Database import completed: {}", scriptPath);
     }
 
     /**

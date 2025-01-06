@@ -1,20 +1,17 @@
 package stirling.software.SPDF.config.security.database;
 
+import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.provider.UnsupportedProviderException;
-
-import javax.sql.DataSource;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,7 +29,6 @@ class DatabaseConfigTest {
     }
 
     @Test
-    @Disabled
     void testDataSource_whenRunningEEIsFalse() throws UnsupportedProviderException {
         databaseConfig = new DatabaseConfig(applicationProperties, false);
 

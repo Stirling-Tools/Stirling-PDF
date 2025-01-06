@@ -86,14 +86,14 @@ system:
   tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: undefined # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
   datasource:
-    enableCustomDatabase: true # set this property to 'true' if you would like to use your own custom database configuration
+    enableCustomDatabase: false # set this property to 'true' if you would like to use your own custom database configuration
     customDatabaseUrl: jdbc:postgresql://localhost:5432/postgres # set the url for your own custom database connection. If provided, the type, hostName, port and name are not necessary and will not be used
+    username: postgres # set the database username
+    password: postgres # set the database password
     type: postgresql # the type of the database to set (e.g. 'h2', 'postgresql')
     hostName: localhost # the host name to use for the database url. Set to 'localhost' when running the app locally. Set to match the name of the container name of your database container when running the app on a server (Docker configuration)
     port: 5432 # set the port number of the database. Ensure this matches the port the database is listening to
     name: postgres # set the name of your database. Should match the name of the database you create
-    username: postgres # set the database username
-    password: postgres # set the database password
 
 ui:
   appName: '' # application's visible name
