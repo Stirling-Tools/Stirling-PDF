@@ -16,6 +16,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 
 import stirling.software.SPDF.model.ApplicationProperties;
+import static java.nio.file.Files.createDirectories;
+import static java.nio.file.Files.createFile;
+import static java.nio.file.Files.delete;
+import static java.nio.file.Files.exists;
 
 @ExtendWith(MockitoExtension.class)
 public class SPDFApplicationTest {

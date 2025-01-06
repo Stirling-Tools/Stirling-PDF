@@ -27,8 +27,8 @@ services:
       UMASK: "022"
       SYSTEM_DEFAULTLOCALE: en-US
       UI_APPNAME: Stirling-PDF
-      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest-fat with Security
-      UI_APPNAMENAVBAR: Stirling-PDF Latest-fat
+      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest-fat with Security and PostgreSQL
+      UI_APPNAMENAVBAR: Stirling-PDF Latest-fat-PostgreSQL
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
