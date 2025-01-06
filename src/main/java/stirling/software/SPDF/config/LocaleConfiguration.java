@@ -2,7 +2,6 @@ package stirling.software.SPDF.config;
 
 import java.util.Locale;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
@@ -16,7 +15,11 @@ import stirling.software.SPDF.model.ApplicationProperties;
 @Configuration
 public class LocaleConfiguration implements WebMvcConfigurer {
 
-    @Autowired ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
+
+    public LocaleConfiguration(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -34,21 +37,17 @@ public class LocaleConfiguration implements WebMvcConfigurer {
     @Bean
     public LocaleResolver localeResolver() {
         SessionLocaleResolver slr = new SessionLocaleResolver();
-
         String appLocaleEnv = applicationProperties.getSystem().getDefaultLocale();
-        Locale defaultLocale =
-                Locale.UK; // Fallback to UK locale if environment variable is not set
-
+        Locale defaultLocale = // Fallback to UK locale if environment variable is not set
+                Locale.UK;
         if (appLocaleEnv != null && !appLocaleEnv.isEmpty()) {
             Locale tempLocale = Locale.forLanguageTag(appLocaleEnv);
             String tempLanguageTag = tempLocale.toLanguageTag();
-
             if (appLocaleEnv.equalsIgnoreCase(tempLanguageTag)) {
                 defaultLocale = tempLocale;
             } else {
                 tempLocale = Locale.forLanguageTag(appLocaleEnv.replace("_", "-"));
                 tempLanguageTag = tempLocale.toLanguageTag();
-
                 if (appLocaleEnv.equalsIgnoreCase(tempLanguageTag)) {
                     defaultLocale = tempLocale;
                 } else {
@@ -57,7 +56,6 @@ public class LocaleConfiguration implements WebMvcConfigurer {
                 }
             }
         }
-
         slr.setDefaultLocale(defaultLocale);
         return slr;
     }

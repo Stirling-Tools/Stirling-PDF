@@ -19,7 +19,7 @@
               <form id="PDFToCSVForm" th:action="@{'/api/v1/convert/pdf/csv'}" method="post" enctype="multipart/form-data">
                 <input  id="pageId" type="hidden" name="pageId">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='application/pdf')}"></div>
-                <button type="submit" class="btn btn-primary" th:text="#{PDFToCSV.submit}" id="submitBtn"></button>
+                <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{PDFToCSV.submit}"></button>
               </form>
               <p id="instruction-text" style="margin: 0; display: none" th:text="#{PDFToCSV.prompt}"></p>
 
@@ -34,7 +34,6 @@
                 <canvas id="overlayCanvas" style="position: absolute; top: 0; left: 0; z-index: 2; width: 100%"></canvas>
               </div>
               <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
-              <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
               <script type="module" th:src="@{'/js/pages/pdf-to-csv.js'}">
               </script>
             </div>

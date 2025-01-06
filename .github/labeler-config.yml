@@ -30,6 +30,8 @@ Security:
     - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/model/provider/**/*'
     - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/model/AuthenticationType.java'
     - any-glob-to-any-file: 'scripts/download-security-jar.sh'
+    - any-glob-to-any-file: '.github/workflows/dependency-review.yml'
+    - any-glob-to-any-file: '.github/workflows/scorecards.yml'
 
 API:
   - changed-files:
@@ -37,6 +39,7 @@ API:
     - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/controller/api/**/*'
     - any-glob-to-any-file: 'scripts/png_to_webp.py'
     - any-glob-to-any-file: 'split_photos.py'
+    - any-glob-to-any-file: '.github/workflows/swagger.yml'
 
 Documentation:
   - changed-files:
@@ -46,17 +49,25 @@ Documentation:
 
 Docker:
   - changed-files:
+    - any-glob-to-any-file: '.github/workflows/build.yml'
+    - any-glob-to-any-file: '.github/workflows/push-docker.yml'
     - any-glob-to-any-file: 'Dockerfile'
-    - any-glob-to-any-file: 'Dockerfile-*'
+    - any-glob-to-any-file: 'Dockerfile.*'
     - any-glob-to-any-file: 'exampleYmlFiles/*.yml'
+    - any-glob-to-any-file: 'scripts/download-security-jar.sh'
     - any-glob-to-any-file: 'scripts/init.sh'
     - any-glob-to-any-file: 'scripts/init-without-ocr.sh'
     - any-glob-to-any-file: 'scripts/installFonts.sh'
+    - any-glob-to-any-file: 'test.sh'
+    - any-glob-to-any-file: 'test2.sh'
 
 Test:
   - changed-files:
     - any-glob-to-any-file: 'cucumber/**/*'
     - any-glob-to-any-file: 'src/test**/*'
+    - any-glob-to-any-file: '.pre-commit-config'
+    - any-glob-to-any-file: '.github/workflows/pre_commit.yml'
+    - any-glob-to-any-file: '.github/workflows/scorecards.yml'
 
 Github:
   - changed-files:

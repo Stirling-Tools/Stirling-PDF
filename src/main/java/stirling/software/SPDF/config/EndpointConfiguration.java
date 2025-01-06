@@ -7,24 +7,23 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.ApplicationProperties;
 
 @Service
+@Slf4j
 @DependsOn({"bookAndHtmlFormatsInstalled"})
 public class EndpointConfiguration {
-    private static final Logger logger = LoggerFactory.getLogger(EndpointConfiguration.class);
+
+    private static final String REMOVE_BLANKS = "remove-blanks";
+    private final ApplicationProperties applicationProperties;
     private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
-
-    private final ApplicationProperties applicationProperties;
-
     private boolean bookAndHtmlFormatsInstalled;
 
     @Autowired
@@ -43,7 +42,7 @@ public class EndpointConfiguration {
 
     public void disableEndpoint(String endpoint) {
         if (!endpointStatuses.containsKey(endpoint) || endpointStatuses.get(endpoint) != false) {
-            logger.debug("Disabling {}", endpoint);
+            log.debug("Disabling {}", endpoint);
             endpointStatuses.put(endpoint, false);
         }
     }
@@ -87,7 +86,7 @@ public class EndpointConfiguration {
                         .collect(Collectors.toList());
 
         if (!disabledList.isEmpty()) {
-            logger.info(
+            log.info(
                     "Total disabled endpoints: {}. Disabled endpoints: {}",
                     disabledList.size(),
                     String.join(", ", disabledList));
@@ -289,6 +288,4 @@ public class EndpointConfiguration {
     public Set<String> getEndpointsForGroup(String group) {
         return endpointGroups.getOrDefault(group, new HashSet<>());
     }
-
-    private static final String REMOVE_BLANKS = "remove-blanks";
 }

@@ -14,7 +14,6 @@
       th:href="@{'/css/pipeline.css'}"
       th:if="${currentPage == 'pipeline'}"
     />
-    <script th:src="@{'/js/thirdParty/pdf-lib.min.js'}"></script>
     <script th:inline="javascript">
       const saveSettings = /*[[#{pipelineOptions.saveSettings}]]*/ "";
       const deletePipelineText = /*[[#{pipeline.deletePrompt}]]*/ "Are you sure you want to delete pipeline";
@@ -77,14 +76,14 @@
                   </div>
                   <br/>
                   <a
-                    href="https://github.com/Stirling-Tools/Stirling-PDF/blob/main/PipelineFeature.md"
+                    href="https://docs.stirlingpdf.com/Advanced%20Configuration/Pipeline"
                     target="_blank"
                     th:text="#{pipeline.help}"
                     >Pipeline Help</a
                   >
                   <br/>
                   <a
-                    href="https://github.com/Stirling-Tools/Stirling-PDF/blob/main/FolderScanning.md"
+                    href="https://docs.stirlingpdf.com/Advanced%20Configuration/Folder%20Scanning"
                     target="_blank"
                     th:text="#{pipeline.scanHelp}"
                     >Folder Scanning Help</a
@@ -194,7 +193,7 @@
                   </div>
                 </div>
                 <script th:src="@{'/js/fetch-utils.js'}"></script>
-                <script th:src="@{'/js/pipeline.js'}"></script>\
+                <script th:src="@{'/js/pipeline.js'}"></script>
             </div>
           </div>
         </div>

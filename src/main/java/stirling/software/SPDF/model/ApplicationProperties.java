@@ -79,6 +79,23 @@ public class ApplicationProperties {
             return saml2.getEnabled() || oauth2.getEnabled();
         }
 
+        public boolean isUserPass() {
+            return (loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString())
+                    || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
+        }
+
+        public boolean isOauth2Activ() {
+            return (oauth2 != null
+                    && oauth2.getEnabled()
+                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
+        }
+
+        public boolean isSaml2Activ() {
+            return (saml2 != null
+                    && saml2.getEnabled()
+                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
+        }
+
         public enum LoginMethods {
             ALL("all"),
             NORMAL("normal"),
@@ -97,23 +114,6 @@ public class ApplicationProperties {
             }
         }
 
-        public boolean isUserPass() {
-            return (loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString())
-                    || loginMethod.equalsIgnoreCase(LoginMethods.ALL.toString()));
-        }
-
-        public boolean isOauth2Activ() {
-            return (oauth2 != null
-                    && oauth2.getEnabled()
-                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
-        }
-
-        public boolean isSaml2Activ() {
-            return (saml2 != null
-                    && saml2.getEnabled()
-                    && !loginMethod.equalsIgnoreCase(LoginMethods.NORMAL.toString()));
-        }
-
         @Data
         public static class InitialLogin {
             private String username;
@@ -122,18 +122,19 @@ public class ApplicationProperties {
 
         @Getter
         @Setter
+        @ToString
         public static class SAML2 {
             private Boolean enabled = false;
             private Boolean autoCreateUser = false;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
-            private String idpMetadataUri;
+            @ToString.Exclude private String idpMetadataUri;
             private String idpSingleLogoutUrl;
             private String idpSingleLoginUrl;
             private String idpIssuer;
             private String idpCert;
-            private String privateKey;
-            private String spCert;
+            @ToString.Exclude private String privateKey;
+            @ToString.Exclude private String spCert;
 
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {

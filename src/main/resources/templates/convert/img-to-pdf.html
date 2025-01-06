@@ -17,7 +17,7 @@
                 <span class="material-symbols-rounded tool-header-icon image">image</span>
                 <span class="tool-header-text" th:text="#{imageToPDF.header}"></span>
               </div>
-              <form method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/img/pdf'}">
+              <form  id="imageToPDFForm" method="post" enctype="multipart/form-data" th:action="@{'/api/v1/convert/img/pdf'}">
                 <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, accept='image/*', inputText=#{imgPrompt})}"></div>
                 <div class="mb-3">
                   <label for="fitOption" th:text="#{imageToPDF.selectLabel}">Fit Options</label>
@@ -51,15 +51,18 @@
                 <br>
                 <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{imageToPDF.submit}"></button>
                 <script>
-                  $('#fileInput-input').on('change', function() {
-                    var files = document.getElementById("fileInput-input").files;
+                  $('#fileInput-input').on('change', function(e) {
+                    const fileInput = e.target;
+                    fileInput.addEventListener('file-input-change', async (e) => {
+                    const {allFiles} = e.detail;
                     var conversionType = document.getElementById("conversionType");
-                    console.log("files.length=" + files.length)
-                    if (files.length > 1) {
+                    console.log("files.length=" + allFiles.length)
+                    if (allFiles.length > 1) {
                       conversionType.disabled = false;
                     } else {
                       conversionType.disabled = true;
                     }
+                    });
                   });
 
                   $('#conversionType').change(function() {
@@ -72,6 +75,38 @@
                       override.value = "multi";
                     }
                   });
+                  document.getElementById("imageToPDFForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+
+    const fitOptionSelect = document.getElementById("fitOption");
+    const fitOptionValue = fitOptionSelect ? fitOptionSelect.value : "fit-to-page"; // Default value
+    formData.append("fitOption", fitOptionValue);
+
+    const overrideInput = document.getElementById("override");
+    console.log("Override value before submission:", overrideInput.value);
+
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+    }
+
+    try {
+        const response = await fetch(form.action, {
+            method: "POST",
+            body: formData
+        });
+
+        if (response.ok) {
+            console.log("Form successfully submitted");
+        } else {
+            console.error("Failed to submit the form");
+        }
+    } catch (error) {
+        console.error("Error submitting the form:", error);
+    }
+});
                 </script>
               </form>
             </div>

@@ -4,31 +4,22 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.NetworkInterface;
-import java.net.URI;
-import java.net.URL;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.simpleyaml.configuration.file.YamlFile;
 import org.simpleyaml.configuration.file.YamlFileWrapper;
 import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
 import org.simpleyaml.configuration.implementation.snakeyaml.lib.DumperOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fathzer.soft.javaluator.DoubleEvaluator;
@@ -36,9 +27,10 @@ import com.fathzer.soft.javaluator.DoubleEvaluator;
 import io.github.pixee.security.HostValidator;
 import io.github.pixee.security.Urls;
 
-public class GeneralUtils {
+import lombok.extern.slf4j.Slf4j;
 
-    private static final Logger logger = LoggerFactory.getLogger(GeneralUtils.class);
+@Slf4j
+public class GeneralUtils {
 
     public static File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
         File tempFile = Files.createTempFile("temp", null).toFile();
@@ -121,10 +113,15 @@ public class GeneralUtils {
             InetAddress address = InetAddress.getByName(host);
 
             // Check for local addresses
-            return address.isAnyLocalAddress() ||  // Matches 0.0.0.0 or similar
-                   address.isLoopbackAddress() || // Matches 127.0.0.1 or ::1
-                   address.isSiteLocalAddress() || // Matches private IPv4 ranges: 192.168.x.x, 10.x.x.x, 172.16.x.x to 172.31.x.x
-                   address.getHostAddress().startsWith("fe80:"); // Matches link-local IPv6 addresses
+            return address.isAnyLocalAddress()
+                    || // Matches 0.0.0.0 or similar
+                    address.isLoopbackAddress()
+                    || // Matches 127.0.0.1 or ::1
+                    address.isSiteLocalAddress()
+                    || // Matches private IPv4 ranges: 192.168.x.x, 10.x.x.x, 172.16.x.x to
+                    // 172.31.x.x
+                    address.getHostAddress()
+                            .startsWith("fe80:"); // Matches link-local IPv6 addresses
         } catch (Exception e) {
             return false; // Return false for invalid or unresolved addresses
         }
@@ -225,30 +222,49 @@ public class GeneralUtils {
             throw new IllegalArgumentException("Invalid expression");
         }
 
-        int n = 0;
-        while (true) {
+        for (int n = 1; n <= maxValue; n++) {
             // Replace 'n' with the current value of n, correctly handling numbers before
             // 'n'
-            String sanitizedExpression = insertMultiplicationBeforeN(expression, n);
+            String sanitizedExpression = sanitizeNFunction(expression, n);
             Double result = evaluator.evaluate(sanitizedExpression);
 
             // Check if the result is null or not within bounds
-            if (result == null || result <= 0 || result.intValue() > maxValue) {
-                if (n != 0) break;
-            } else {
+            if (result == null)
+                break;
+
+            if (result.intValue() > 0 && result.intValue() <= maxValue)
                 results.add(result.intValue());
-            }
-            n++;
         }
 
         return results;
     }
 
+    private static String sanitizeNFunction(String expression, int nValue) {
+        String sanitizedExpression = expression.replace(" ", "");
+        String multiplyByOpeningRoundBracketPattern = "([0-9n)])\\("; // example: n(n-1), 9(n-1), (n-1)(n-2)
+        sanitizedExpression = sanitizedExpression.replaceAll(multiplyByOpeningRoundBracketPattern, "$1*(");
+
+        String multiplyByClosingRoundBracketPattern = "\\)([0-9n)])"; // example: (n-1)n, (n-1)9, (n-1)(n-2)
+        sanitizedExpression = sanitizedExpression.replaceAll(multiplyByClosingRoundBracketPattern, ")*$1");
+
+        sanitizedExpression = insertMultiplicationBeforeN(sanitizedExpression, nValue);
+        return sanitizedExpression;
+    }
+
     private static String insertMultiplicationBeforeN(String expression, int nValue) {
         // Insert multiplication between a number and 'n' (e.g., "4n" becomes "4*n")
         String withMultiplication = expression.replaceAll("(\\d)n", "$1*n");
+        withMultiplication = formatConsecutiveNsForNFunction(withMultiplication);
         // Now replace 'n' with its current value
         return withMultiplication.replace("n", String.valueOf(nValue));
+    }
+
+    private static String formatConsecutiveNsForNFunction(String expression) {
+        String text = expression;
+        while (text.matches(".*n{2,}.*")) {
+            text = text.replaceAll("(?<!n)n{2}", "n*n");
+        }
+        return text;
     }
 
     private static List<Integer> handlePart(String part, int totalPages, int offset) {
@@ -296,7 +312,7 @@ public class GeneralUtils {
             try {
                 Files.createDirectories(folder);
             } catch (IOException e) {
-                logger.error("exception", e);
+                log.error("exception", e);
                 return false;
             }
         }

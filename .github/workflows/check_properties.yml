@@ -1,42 +1,55 @@
-name: Check Properties Files
+name: Check Properties Files on PR
 
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
       - "src/main/resources/messages_*.properties"
-  push:
-    branches: ["main"]
-    paths:
-      - "src/main/resources/messages_en_GB.properties"
+
+permissions:
+  contents: read # Allow read access to repository content
 
 jobs:
   check-files:
     if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
+    permissions:
+      issues: write # Allow posting comments on issues/PRs
+      pull-requests: write
     steps:
-      - name: Checkout main branch first
-        uses: actions/checkout@v4
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
         with:
-          ref: main
-          path: main-branch
-          fetch-depth: 0
+          egress-policy: audit
 
-      - name: Checkout PR branch
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-          path: pr-branch
-          fetch-depth: 0
+      - name: Checkout main branch first
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: "3.x"
 
-      - name: Install GitHub CLI
-        run: sudo apt-get update && sudo apt-get install -y gh
+      - name: Get PR data
+        id: get-pr-data
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const repoOwner = context.payload.repository.owner.login;
+            const repoName = context.payload.repository.name;
+            const branch = context.payload.pull_request.head.ref;
+
+            console.log(`PR Number: ${prNumber}`);
+            console.log(`Repo Owner: ${repoOwner}`);
+            console.log(`Repo Name: ${repoName}`);
+            console.log(`Branch: ${branch}`);
+
+            core.setOutput("pr_number", prNumber);
+            core.setOutput("repo_owner", repoOwner);
+            core.setOutput("repo_name", repoName);
+            core.setOutput("branch", branch);
+        continue-on-error: true
 
       - name: Fetch PR changed files
         id: fetch-pr-changes
@@ -44,45 +57,125 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Fetching PR changed files..."
-          cd pr-branch
-          gh repo set-default ${{ github.repository }}
-          # Store files in a safe way, only allowing valid properties files
           echo "Getting list of changed files from PR..."
-          gh pr view ${{ github.event.pull_request.number }} --json files -q ".files[].path" | grep -E '^src/main/resources/messages_[a-zA-Z_]+\.properties$' > ../changed_files.txt
-          cd ..
+          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^src/main/resources/messages_[a-zA-Z_]+\.properties$' > changed_files.txt # Filter only matching property files
 
-          echo "Processing changed files..."
-          mapfile -t CHANGED_FILES < changed_files.txt
-
-          CHANGED_FILES_STR="${CHANGED_FILES[*]}"
-          echo "CHANGED_FILES=${CHANGED_FILES_STR}" >> $GITHUB_ENV
-
-          echo "Changed files: ${CHANGED_FILES_STR}"
-
-      - name: Determine reference file
+      - name: Determine reference file test
         id: determine-file
-        run: |
-          echo "Determining reference file..."
-          if grep -Fxq "src/main/resources/messages_en_GB.properties" changed_files.txt; then
-              echo "Using PR branch reference file"
-              echo "REFERENCE_FILE=pr-branch/src/main/resources/messages_en_GB.properties" >> $GITHUB_ENV
-          else
-              echo "Using main branch reference file"
-              echo "REFERENCE_FILE=main-branch/src/main/resources/messages_en_GB.properties" >> $GITHUB_ENV
-          fi
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require("fs");
+            const path = require("path");
 
-      - name: Show REFERENCE_FILE
-        run: echo "Reference file is set to ${REFERENCE_FILE}"
+            const prNumber = ${{ steps.get-pr-data.outputs.pr_number }};
+            const repoOwner = "${{ steps.get-pr-data.outputs.repo_owner }}";
+            const repoName = "${{ steps.get-pr-data.outputs.repo_name }}";
+
+            const prRepoOwner = "${{ github.event.pull_request.head.repo.owner.login }}";
+            const prRepoName = "${{ github.event.pull_request.head.repo.name }}";
+            const branch = "${{ steps.get-pr-data.outputs.branch }}";
+
+            console.log(`Determining reference file for PR #${prNumber}`);
+
+            // Validate inputs
+            const validateInput = (input, regex, name) => {
+              if (!regex.test(input)) {
+                throw new Error(`Invalid ${name}: ${input}`);
+              }
+            };
+
+            validateInput(repoOwner, /^[a-zA-Z0-9_-]+$/, "repository owner");
+            validateInput(repoName, /^[a-zA-Z0-9._-]+$/, "repository name");
+            validateInput(branch, /^[a-zA-Z0-9._/-]+$/, "branch name");
+
+            // Get the list of changed files in the PR
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: repoOwner,
+              repo: repoName,
+              pull_number: prNumber,
+            });
+
+            // Filter for relevant files based on the PR changes
+            const changedFiles = files
+              .map(file => file.filename)
+              .filter(file => /^src\/main\/resources\/messages_[a-zA-Z_]+\.properties$/.test(file));
+
+            console.log("Changed files:", changedFiles);
+
+            // Create a temporary directory for PR files
+            const tempDir = "pr-branch";
+            if (!fs.existsSync(tempDir)) {
+              fs.mkdirSync(tempDir, { recursive: true });
+            }
+
+            // Download and save each changed file
+            for (const file of changedFiles) {
+              const { data: fileContent } = await github.rest.repos.getContent({
+                owner: prRepoOwner,
+                repo: prRepoName,
+                path: file,
+                ref: branch,
+              });
+
+              const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
+              const filePath = path.join(tempDir, file);
+              const dirPath = path.dirname(filePath);
+
+              if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true });
+              }
+
+              fs.writeFileSync(filePath, content);
+              console.log(`Saved file: ${filePath}`);
+            }
+
+            // Output the list of changed files for further processing
+            const fileList = changedFiles.join(" ");
+            core.exportVariable("FILES_LIST", fileList);
+            console.log("Files saved and listed in FILES_LIST.");
+
+            // Determine reference file
+            let referenceFilePath;
+            if (changedFiles.includes("src/main/resources/messages_en_GB.properties")) {
+              console.log("Using PR branch reference file.");
+              const { data: fileContent } = await github.rest.repos.getContent({
+                owner: prRepoOwner,
+                repo: prRepoName,
+                path: "src/main/resources/messages_en_GB.properties",
+                ref: branch,
+              });
+
+              referenceFilePath = "pr-branch-messages_en_GB.properties";
+              const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
+              fs.writeFileSync(referenceFilePath, content);
+            } else {
+              console.log("Using main branch reference file.");
+              const { data: fileContent } = await github.rest.repos.getContent({
+                owner: repoOwner,
+                repo: repoName,
+                path: "src/main/resources/messages_en_GB.properties",
+                ref: "main",
+              });
+
+              referenceFilePath = "main-branch-messages_en_GB.properties";
+              const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
+              fs.writeFileSync(referenceFilePath, content);
+            }
+
+            console.log(`Reference file path: ${referenceFilePath}`);
+            core.exportVariable("REFERENCE_FILE", referenceFilePath);
 
       - name: Run Python script to check files
         id: run-check
         run: |
           echo "Running Python script to check files..."
-          python main-branch/.github/scripts/check_language_properties.py \
+          python .github/scripts/check_language_properties.py \
             --actor ${{ github.event.pull_request.user.login }} \
             --reference-file "${REFERENCE_FILE}" \
-            --branch pr-branch \
-            --files "${CHANGED_FILES[@]}" > result.txt || true
+            --branch "pr-branch" \
+            --files "${FILES_LIST[@]}" > result.txt
+        continue-on-error: true # Continue the job even if this step fails
 
       - name: Capture output
         id: capture-output
@@ -95,7 +188,7 @@ jobs:
             echo "EOF" >> $GITHUB_ENV
             echo "${SCRIPT_OUTPUT}"
 
-            # Set FAIL_JOB to true if SCRIPT_OUTPUT contains ❌
+            # Determine job failure based on script output
             if [[ "$SCRIPT_OUTPUT" == *"❌"* ]]; then
               echo "FAIL_JOB=true" >> $GITHUB_ENV
             else
@@ -109,23 +202,23 @@ jobs:
 
       - name: Post comment on PR
         if: env.SCRIPT_OUTPUT != ''
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const { GITHUB_REPOSITORY, SCRIPT_OUTPUT } = process.env;
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
-            const prNumber = context.issue.number;
+            const issueNumber = context.issue.number;
 
             // Find existing comment
             const comments = await github.rest.issues.listComments({
               owner: repoOwner,
               repo: repoName,
-              issue_number: prNumber
+              issue_number: issueNumber
             });
 
             const comment = comments.data.find(c => c.body.includes("## 🚀 Translation Verification Summary"));
 
-            // Only allow the action user to update comments
+            // Only update or create comments by the action user
             const expectedActor = "github-actions[bot]";
 
             if (comment && comment.user.login === expectedActor) {
@@ -142,7 +235,7 @@ jobs:
               await github.rest.issues.createComment({
                 owner: repoOwner,
                 repo: repoName,
-                issue_number: prNumber,
+                issue_number: issueNumber,
                 body: `## 🚀 Translation Verification Summary\n\n\n${SCRIPT_OUTPUT}\n`
               });
               console.log("Created new comment.");
@@ -155,59 +248,3 @@ jobs:
         run: |
           echo "Failing the job because errors were detected."
           exit 1
-
-  update-translations-main:
-    if: github.event_name == 'push'
-    permissions:
-      contents: write
-      pull-requests: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Run Python script to check files
-        id: run-check
-        run: |
-          echo "Running Python script to check files..."
-          python .github/scripts/check_language_properties.py \
-            --reference-file src/main/resources/messages_en_GB.properties \
-            --branch main
-
-      - name: Set up git config
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Add translation keys
-        run: |
-          git add src/main/resources/messages_*.properties
-          git diff --staged --quiet || echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
-
-      - name: Create Pull Request
-        id: cpr
-        if: env.CHANGES_DETECTED == 'true'
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Update translation files"
-          committer: GitHub Action <action@github.com>
-          author: GitHub Action <action@github.com>
-          signoff: true
-          branch: update_translation_files
-          title: "Update translation files"
-          add-paths: |
-            src/main/resources/messages_*.properties
-          body: |
-            Auto-generated by [create-pull-request][1]
-
-            [1]: https://github.com/peter-evans/create-pull-request
-          labels: Translation
-          draft: false
-          delete-branch: true
-          sign-commits: true

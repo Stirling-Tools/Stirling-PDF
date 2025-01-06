@@ -29,13 +29,9 @@
 }
 
 .drag-manager_dragging {
-  width: 0px;
-  visibility: hidden;
+  opacity: 0.2;
 }
 
-.drag-manager_draghover {
-  width: 375px !important;
-}
 
 .drag-manager_draghover .insert-file-button-container {
   display: none !important;
@@ -46,11 +42,11 @@
 }
 
 html[dir="ltr"] .drag-manager_draghover img {
-  left: calc(50% + 62.5px) !important;
+  left: 80% !important;
 }
 
 html[dir="rtl"] .drag-manager_draghover img {
-  left: 125px;
+  left: 25px;
 }
 
 .drag-manager_dragging-container .hide-on-drag {
@@ -58,14 +54,17 @@ html[dir="rtl"] .drag-manager_draghover img {
 }
 
 .drag-manager_endpoint {
-  width: 80px;
-  height: 100%;
+  width: 150px;
+  height: 250px;
   background-color: #ffffff10;
   transition: width 0.1s;
   animation: end-drop-expand 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-left:16px;
+  border-radius: 8px;
+
 }
 
 .drag-manager_endpoint svg {
@@ -74,7 +73,8 @@ html[dir="rtl"] .drag-manager_draghover img {
 }
 
 .drag-manager_endpoint.drag-manager_draghover {
-  width: 150px !important;
+  width: 180px !important;
+  border: 2px solid darkgreen;
 }
 
 @keyframes end-drop-expand {
@@ -84,4 +84,13 @@ html[dir="rtl"] .drag-manager_draghover img {
   to {
     width: 80px;
   }
+}
+.moved-element img {
+  border: 8px solid #198754;
+  border-radius: 3px;
+  transition: border  0.5s ease-out;
+}
+
+.moved-element.remove img{
+  border: 8px solid transparent;
 }

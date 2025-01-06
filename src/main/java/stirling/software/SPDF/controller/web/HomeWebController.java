@@ -6,9 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -22,13 +19,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
+import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Dependency;
 
 @Controller
+@Slf4j
 public class HomeWebController {
 
-    private static final Logger logger = LoggerFactory.getLogger(HomeWebController.class);
+    private final ApplicationProperties applicationProperties;
+
+    public HomeWebController(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
 
     @GetMapping("/about")
     @Hidden
@@ -50,7 +53,7 @@ public class HomeWebController {
                     mapper.readValue(json, new TypeReference<Map<String, List<Dependency>>>() {});
             model.addAttribute("dependencies", data.get("dependencies"));
         } catch (IOException e) {
-            logger.error("exception", e);
+            log.error("exception", e);
         }
         return "licenses";
     }
@@ -70,8 +73,6 @@ public class HomeWebController {
     public String root(Model model) {
         return "redirect:/";
     }
-
-    @Autowired ApplicationProperties applicationProperties;
 
     @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
     @ResponseBody

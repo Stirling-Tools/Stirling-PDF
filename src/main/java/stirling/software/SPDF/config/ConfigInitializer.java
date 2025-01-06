@@ -16,15 +16,14 @@ import org.simpleyaml.configuration.comments.CommentType;
 import org.simpleyaml.configuration.file.YamlFile;
 import org.simpleyaml.configuration.implementation.SimpleYamlImplementation;
 import org.simpleyaml.configuration.implementation.snakeyaml.lib.DumperOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ConfigInitializer
         implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-    private static final Logger logger = LoggerFactory.getLogger(ConfigInitializer.class);
 
     @Override
     public void initialize(ConfigurableApplicationContext applicationContext) {
@@ -149,7 +148,7 @@ public class ConfigInitializer
                     .commentSide(settingsTemplateFile.getComment(path, CommentType.SIDE));
         } else {
             // Log if the key is not found in both YAML files
-            logger.info("Key not found in both YAML files: " + path);
+            log.info("Key not found in both YAML files: " + path);
         }
     }
 }
