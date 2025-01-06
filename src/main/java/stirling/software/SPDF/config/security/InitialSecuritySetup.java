@@ -1,49 +1,56 @@
 package stirling.software.SPDF.config.security;
 
-import java.io.IOException;
+import java.sql.SQLException;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
+import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.Role;
+import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 
-@Component
 @Slf4j
+@Component
 public class InitialSecuritySetup {
 
     private final UserService userService;
 
     private final ApplicationProperties applicationProperties;
 
-    private final DatabaseBackupInterface databaseBackupHelper;
+    private final DatabaseInterface databaseService;
 
     public InitialSecuritySetup(
             UserService userService,
             ApplicationProperties applicationProperties,
-            DatabaseBackupInterface databaseBackupHelper) {
+            DatabaseInterface databaseService) {
         this.userService = userService;
         this.applicationProperties = applicationProperties;
-        this.databaseBackupHelper = databaseBackupHelper;
+        this.databaseService = databaseService;
     }
 
     @PostConstruct
-    public void init() throws IllegalArgumentException, IOException {
-        if (databaseBackupHelper.hasBackup() && !userService.hasUsers()) {
-            databaseBackupHelper.importDatabase();
-        } else if (!userService.hasUsers()) {
-            initializeAdminUser();
-        } else {
-            databaseBackupHelper.exportDatabase();
+    public void init() {
+        try {
+            if (databaseService.hasBackup()) {
+                databaseService.importDatabase();
+            }
+
+            if (!userService.hasUsers()) {
+                initializeAdminUser();
+            }
+
             userService.migrateOauth2ToSSO();
+            initializeInternalApiUser();
+        } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
+            log.error("Failed to initialize security setup.", e);
+            System.exit(1);
         }
-        initializeInternalApiUser();
     }
 
-    private void initializeAdminUser() throws IOException {
+    private void initializeAdminUser() throws SQLException, UnsupportedProviderException {
         String initialUsername =
                 applicationProperties.getSecurity().getInitialLogin().getUsername();
         String initialPassword =
@@ -52,36 +59,34 @@ public class InitialSecuritySetup {
                 && !initialUsername.isEmpty()
                 && initialPassword != null
                 && !initialPassword.isEmpty()
-                && !userService.findByUsernameIgnoreCase(initialUsername).isPresent()) {
-            try {
-                userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
-                log.info("Admin user created: " + initialUsername);
-            } catch (IllegalArgumentException e) {
-                log.error("Failed to initialize security setup", e);
-                System.exit(1);
-            }
+                && userService.findByUsernameIgnoreCase(initialUsername).isEmpty()) {
+
+            userService.saveUser(initialUsername, initialPassword, Role.ADMIN.getRoleId());
+            log.info("Admin user created: {}", initialUsername);
         } else {
             createDefaultAdminUser();
         }
     }
 
-    private void createDefaultAdminUser() throws IllegalArgumentException, IOException {
+    private void createDefaultAdminUser() throws SQLException, UnsupportedProviderException {
         String defaultUsername = "admin";
         String defaultPassword = "stirling";
-        if (!userService.findByUsernameIgnoreCase(defaultUsername).isPresent()) {
+
+        if (userService.findByUsernameIgnoreCase(defaultUsername).isEmpty()) {
             userService.saveUser(defaultUsername, defaultPassword, Role.ADMIN.getRoleId(), true);
-            log.info("Default admin user created: " + defaultUsername);
+            log.info("Default admin user created: {}", defaultUsername);
         }
     }
 
-    private void initializeInternalApiUser() throws IllegalArgumentException, IOException {
+    private void initializeInternalApiUser()
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!userService.usernameExistsIgnoreCase(Role.INTERNAL_API_USER.getRoleId())) {
             userService.saveUser(
                     Role.INTERNAL_API_USER.getRoleId(),
                     UUID.randomUUID().toString(),
                     Role.INTERNAL_API_USER.getRoleId());
             userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
-            log.info("Internal API user created: " + Role.INTERNAL_API_USER.getRoleId());
+            log.info("Internal API user created: {}", Role.INTERNAL_API_USER.getRoleId());
         }
         userService.syncCustomApiUser(applicationProperties.getSecurity().getCustomGlobalAPIKey());
     }
