@@ -14,6 +14,8 @@ jobs:
     permissions:
       contents: write
       packages: write
+      id-token: write
+      attestations: write
     strategy:
       matrix:
         enable_security: [true, false]
@@ -48,38 +50,60 @@ jobs:
 
       - name: Get version number
         id: versionNumber
-        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+          echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Rename binarie
-        run: cp ./build/launch4j/Stirling-PDF.exe ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+      - name: Rename binaries
+        run: |
+          cp ./build/launch4j/Stirling-PDF.exe ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+          cp ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
 
-      - name: Upload Assets binarie
-        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
-        with:
-          path: ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
-          name: Stirling-PDF-Server${{ matrix.file_suffix }}.exe
-          overwrite: true
-          retention-days: 1
-          if-no-files-found: error
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
 
-      - name: Upload binaries to release
+      - name: Sign JAR with Cosign OIDC
+        run: |
+          cosign sign-blob \
+            --yes \
+            --oidc-client-id sigstore \
+            --oidc-issuer https://token.actions.githubusercontent.com \
+            ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar \
+            > ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar.sig
+
+      - name: Sign EXE with Cosign OIDC
+        run: |
+          cosign sign-blob  \
+            --yes \
+            --oidc-client-id sigstore \
+            --oidc-issuer https://token.actions.githubusercontent.com \
+            ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe \
+            > ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.sig
+
+      - name: Generate Attestations for JAR
+        run: |
+          cosign attest-blob  \
+            --predicate - \
+            --yes \
+            --oidc-client-id sigstore \
+            --oidc-issuer https://token.actions.githubusercontent.com \
+            ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar \
+            > ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar.intoto.jsonl
+
+      - name: Generate Attestations for EXE
+        run: |
+          cosign attest-blob  \
+            --predicate - \
+            --yes \
+            --oidc-client-id sigstore \
+            --oidc-issuer https://token.actions.githubusercontent.com \
+            ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe \
+            > ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.intoto.jsonl
+
+      - name: Upload binaries and signatures to release
         uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
         with:
-          files: ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
-
-      - name: Rename jar binaries
-        run: cp ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
-
-      - name: Upload Assets jar binaries
-        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
-        with:
-          path: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
-          name: Stirling-PDF${{ matrix.file_suffix }}.jar
-          overwrite: true
-          retention-days: 1
-          if-no-files-found: error
-
-      - name: Upload jar binaries to release
-        uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
-        with:
-          files: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+          tag_name: v${{ steps.versionNumber.outputs.versionNumber }}
+          files: |
+            ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.*
+            ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.*
