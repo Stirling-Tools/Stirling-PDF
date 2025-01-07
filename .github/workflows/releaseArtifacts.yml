@@ -100,7 +100,7 @@ jobs:
             ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe \
             > ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.intoto.jsonl
 
-      - name: Upload binaries and signatures to release
+      - name: Upload binaries, attestations and signatures to release
         uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
         with:
           tag_name: v${{ steps.versionNumber.outputs.versionNumber }}
