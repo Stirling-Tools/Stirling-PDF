@@ -9,6 +9,7 @@ Front End:
     - any-glob-to-any-file: 'src/main/resources/templates/**/*'
     - any-glob-to-any-file: 'src/main/resources/static/**/*'
     - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/controller/web/**'
+    - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/UI/**/*'
 
 Java:
   - changed-files:
@@ -29,6 +30,7 @@ Security:
     - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/config/security/**/*'
     - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/model/provider/**/*'
     - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/model/AuthenticationType.java'
+    - any-glob-to-any-file: 'src/main/java/stirling/software/SPDF/model/BackupNotFoundException.java'
     - any-glob-to-any-file: 'scripts/download-security-jar.sh'
     - any-glob-to-any-file: '.github/workflows/dependency-review.yml'
     - any-glob-to-any-file: '.github/workflows/scorecards.yml'
