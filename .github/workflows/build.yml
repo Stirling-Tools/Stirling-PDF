@@ -57,7 +57,7 @@ jobs:
             build/test-results/
             build/reports/problems/
           retention-days: 3
-          
+
   docker-compose-tests:
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
     #     (github.event_name == 'pull_request' &&
@@ -105,7 +105,7 @@ jobs:
 
       - name: Pip requirements
         run: |
-           pip install -r ./cucumber/requirements.txt
+           pip install --require-hashes -r ./cucumber/requirements.txt
 
       - name: Run Docker Compose Tests
         run: |
