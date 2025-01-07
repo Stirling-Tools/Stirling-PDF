@@ -59,6 +59,7 @@ sourceSets {
                 exclude "stirling/software/SPDF/model/ApiKeyAuthenticationToken.java"
                 exclude "stirling/software/SPDF/model/AttemptCounter.java"
                 exclude "stirling/software/SPDF/model/Authority.java"
+                exclude "stirling/software/SPDF/model/BackupNotFoundException.java"
                 exclude "stirling/software/SPDF/model/PersistentLogin.java"
                 exclude "stirling/software/SPDF/model/SessionEntity.java"
                 exclude "stirling/software/SPDF/model/User.java"
@@ -146,7 +147,7 @@ jpackage {
     windows {
     	launcherAsService = false
     	appVersion = project.version
-    	
+
     	winConsole = false
         winMenu = true  // Creates start menu entry
         winShortcut = true  // Creates desktop shortcut
