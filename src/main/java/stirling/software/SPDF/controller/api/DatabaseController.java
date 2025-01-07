@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 import org.eclipse.jetty.http.HttpStatus;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -30,6 +31,7 @@ import stirling.software.SPDF.config.security.database.DatabaseService;
 @Controller
 @RequestMapping("/api/v1/database")
 @PreAuthorize("hasRole('ROLE_ADMIN')")
+@Conditional(H2SQLCondition.class)
 @Tag(name = "Database", description = "Database APIs for backup, import, and management")
 public class DatabaseController {
 
