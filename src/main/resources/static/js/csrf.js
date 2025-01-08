@@ -17,19 +17,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Find all forms and add CSRF token
     const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        // Remove any existing CSRF input fields
-        const existingCsrfInputs = form.querySelectorAll('input[name="_csrf"]');
-        existingCsrfInputs.forEach(input => input.remove());
+    const csrfToken = decodeCsrfToken(getCsrfToken());
+    
+    // Only proceed if we have a cookie-based token
+    if (csrfToken) {
+        forms.forEach(form => {
+            // Only now remove existing CSRF input fields since we have a new token
+            const existingCsrfInputs = form.querySelectorAll('input[name="_csrf"]');
+            existingCsrfInputs.forEach(input => input.remove());
 
-        // Create and add new CSRF input field
-        const csrfToken = decodeCsrfToken(getCsrfToken());
-        if (csrfToken) {
+            // Create and add new CSRF input field
             const csrfInput = document.createElement('input');
             csrfInput.type = 'hidden';
             csrfInput.name = '_csrf';
             csrfInput.value = csrfToken;
             form.appendChild(csrfInput);
-        }
-    });
+        });
+    }
 });
