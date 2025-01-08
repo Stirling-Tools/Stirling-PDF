@@ -178,9 +178,9 @@ public class DatabaseService implements DatabaseInterface {
             } catch (CannotReadScriptException e) {
                 log.error("Error during database export: File {} not found", insertOutputFilePath);
             }
-        }
 
-        log.info("Database export completed: {}", insertOutputFilePath);
+            log.info("Database export completed: {}", insertOutputFilePath);
+        }
     }
 
     private static void deleteOldestBackup(List<FileInfo> filteredBackupList) {
@@ -226,7 +226,7 @@ public class DatabaseService implements DatabaseInterface {
         ApplicationProperties.Datasource datasource =
                 applicationProperties.getSystem().getDatasource();
         return !datasource.isEnableCustomDatabase()
-                || datasource.getType().equals(ApplicationProperties.Driver.H2.name());
+                || datasource.getType().equalsIgnoreCase(ApplicationProperties.Driver.H2.name());
     }
 
     /**
