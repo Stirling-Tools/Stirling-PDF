@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      packages: write
       id-token: write
       attestations: write
     strategy:
@@ -62,43 +61,27 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
 
-      - name: Sign JAR with Cosign OIDC
-        run: |
-          cosign sign-blob \
-            --yes \
-            --oidc-client-id sigstore \
-            --oidc-issuer https://token.actions.githubusercontent.com \
-            ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar \
-            > ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar.sig
-
-      - name: Sign EXE with Cosign OIDC
-        run: |
-          cosign sign-blob  \
-            --yes \
-            --oidc-client-id sigstore \
-            --oidc-issuer https://token.actions.githubusercontent.com \
-            ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe \
-            > ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.sig
-
-      - name: Generate Attestations for JAR
+      - name: Sign, Generate Attestations for JAR
         run: |
           cosign attest-blob  \
             --predicate - \
             --yes \
             --oidc-client-id sigstore \
             --oidc-issuer https://token.actions.githubusercontent.com \
-            ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar \
-            > ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar.intoto.jsonl
+            --output-signature ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar.sig \
+            --output-attestation ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar.intoto.jsonl \
+            ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
 
-      - name: Generate Attestations for EXE
+      - name: Sign, Generate Attestations for EXE
         run: |
           cosign attest-blob  \
             --predicate - \
             --yes \
             --oidc-client-id sigstore \
             --oidc-issuer https://token.actions.githubusercontent.com \
-            ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe \
-            > ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.intoto.jsonl
+            --output-signature ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.sig \
+            --output-attestation ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.intoto.jsonl \
+            ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
 
       - name: Upload binaries, attestations and signatures to release
         uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
