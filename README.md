@@ -118,7 +118,7 @@ Stirling-PDF currently supports 38 languages!
 | Language                                     | Progress                               |
 | -------------------------------------------- | -------------------------------------- |
 | Arabic (العربية) (ar_AR)                        | ![91%](https://geps.dev/progress/91)   |
-| Azerbaijani (Azərbaycan Dili) (az_AZ)        | ![90%](https://geps.dev/progress/90)   |
+| Azerbaijani (Azərbaycan Dili) (az_AZ)        | ![89%](https://geps.dev/progress/89)   |
 | Basque (Euskara) (eu_ES)                     | ![51%](https://geps.dev/progress/51)   |
 | Bulgarian (Български) (bg_BG)                | ![87%](https://geps.dev/progress/87)   |
 | Catalan (Català) (ca_CA)                     | ![81%](https://geps.dev/progress/81)   |
@@ -129,9 +129,9 @@ Stirling-PDF currently supports 38 languages!
 | English (English) (en_GB)                    | ![100%](https://geps.dev/progress/100) |
 | English (US) (en_US)                         | ![100%](https://geps.dev/progress/100) |
 | French (Français) (fr_FR)                    | ![93%](https://geps.dev/progress/93)   |
-| German (Deutsch) (de_DE)                     | ![97%](https://geps.dev/progress/97)   |
+| German (Deutsch) (de_DE)                     | ![96%](https://geps.dev/progress/96)   |
 | Greek (Ελληνικά) (el_GR)                     | ![87%](https://geps.dev/progress/87)   |
-| Hindi (हिंदी) (hi_IN)                          | ![86%](https://geps.dev/progress/86)   |
+| Hindi (हिंदी) (hi_IN)                          | ![85%](https://geps.dev/progress/85)   |
 | Hungarian (Magyar) (hu_HU)                   | ![88%](https://geps.dev/progress/88)   |
 | Indonesian (Bahasa Indonesia) (id_ID)        | ![88%](https://geps.dev/progress/88)   |
 | Irish (Gaeilge) (ga_IE)                      | ![80%](https://geps.dev/progress/80)   |
@@ -141,7 +141,7 @@ Stirling-PDF currently supports 38 languages!
 | Norwegian (Norsk) (no_NB)                    | ![80%](https://geps.dev/progress/80)   |
 | Persian (فارسی) (fa_IR)                      | ![95%](https://geps.dev/progress/95)   |
 | Polish (Polski) (pl_PL)                      | ![87%](https://geps.dev/progress/87)   |
-| Portuguese (Português) (pt_PT)               | ![88%](https://geps.dev/progress/88)   |
+| Portuguese (Português) (pt_PT)               | ![87%](https://geps.dev/progress/87)   |
 | Portuguese Brazilian (Português) (pt_BR)     | ![95%](https://geps.dev/progress/95)   |
 | Romanian (Română) (ro_RO)                    | ![82%](https://geps.dev/progress/82)   |
 | Russian (Русский) (ru_RU)                    | ![87%](https://geps.dev/progress/87)   |
