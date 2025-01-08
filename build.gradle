@@ -52,8 +52,9 @@ sourceSets {
         java {
             if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
                 exclude "stirling/software/SPDF/config/security/**"
-                exclude "stirling/software/SPDF/controller/api/UserController.java"
                 exclude "stirling/software/SPDF/controller/api/DatabaseController.java"
+                exclude "stirling/software/SPDF/controller/api/UserController.java"
+                exclude "stirling/software/SPDF/controller/api/H2SQLCondition.java"
                 exclude "stirling/software/SPDF/controller/web/AccountWebController.java"
                 exclude "stirling/software/SPDF/controller/web/DatabaseWebController.java"
                 exclude "stirling/software/SPDF/model/ApiKeyAuthenticationToken.java"
@@ -69,7 +70,6 @@ sourceSets {
             if (System.getenv("STIRLING_PDF_DESKTOP_UI") == "false") {
             	exclude "stirling/software/SPDF/UI/impl/**"
             }
-
 
         }
     }
