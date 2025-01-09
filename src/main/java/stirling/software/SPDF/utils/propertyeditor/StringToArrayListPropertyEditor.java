@@ -24,8 +24,8 @@ public class StringToArrayListPropertyEditor extends PropertyEditorSupport {
         }
         try {
             objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-            TypeReference<ArrayList<RedactionArea>> typeRef = new TypeReference<ArrayList<RedactionArea>>() {
-            };
+            TypeReference<ArrayList<RedactionArea>> typeRef =
+                    new TypeReference<ArrayList<RedactionArea>>() {};
             List<RedactionArea> list = objectMapper.readValue(text, typeRef);
             setValue(list);
         } catch (Exception e) {
