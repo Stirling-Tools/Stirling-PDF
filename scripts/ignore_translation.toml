@@ -247,6 +247,11 @@ ignore = [
     'showJS.tags',
 ]
 
+[zh_BO]
+ignore = [
+    'language.direction',
+]
+
 [zh_CN]
 ignore = [
     'language.direction',
