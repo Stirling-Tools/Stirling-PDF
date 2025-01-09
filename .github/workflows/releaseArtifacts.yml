@@ -9,12 +9,10 @@ permissions:
   contents: read
 
 jobs:
-  push:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write
-      attestations: write
     strategy:
       matrix:
         enable_security: [true, false]
@@ -23,6 +21,8 @@ jobs:
             file_suffix: "-with-login"
           - enable_security: false
             file_suffix: ""
+    outputs:
+      version: ${{ steps.versionNumber.outputs.versionNumber }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
@@ -55,38 +55,118 @@ jobs:
 
       - name: Rename binaries
         run: |
-          cp ./build/launch4j/Stirling-PDF.exe ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
-          cp ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+          mv ./build/launch4j/Stirling-PDF.exe ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+          mv ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+
+      - name: Debug build artifacts
+        run: |
+          echo "Current Directory: $(pwd)"
+          ls -R ./build/libs
+          ls -R ./build/launch4j
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        with:
+          name: binaries${{ matrix.file_suffix }}
+          path: |
+            ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.*
+            ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.*
+
+  sign_verify:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        enable_security: [true, false]
+        include:
+          - enable_security: true
+            file_suffix: "-with-login"
+          - enable_security: false
+            file_suffix: ""
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: binaries${{ matrix.file_suffix }}
+      - name: Display structure of downloaded files
+        run: ls -R
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
 
-      - name: Sign, Generate Attestations for JAR
-        run: |
-          cosign attest-blob  \
-            --predicate - \
-            --yes \
-            --oidc-client-id sigstore \
-            --oidc-issuer https://token.actions.githubusercontent.com \
-            --output-signature ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar.sig \
-            --output-attestation ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar.intoto.jsonl \
-            ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+      - name: Generate key pair
+        run: cosign generate-key-pair
 
-      - name: Sign, Generate Attestations for EXE
+      - name: Sign and generate attestations
         run: |
-          cosign attest-blob  \
-            --predicate - \
+          cosign sign-blob \
+            --key ./cosign.key \
             --yes \
-            --oidc-client-id sigstore \
-            --oidc-issuer https://token.actions.githubusercontent.com \
-            --output-signature ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.sig \
-            --output-attestation ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.intoto.jsonl \
-            ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+            --output-signature ./libs/Stirling-PDF${{ matrix.file_suffix }}.jar.sig \
+            ./libs/Stirling-PDF${{ matrix.file_suffix }}.jar
 
-      - name: Upload binaries, attestations and signatures to release
+          cosign attest-blob \
+            --predicate - \
+            --key ./cosign.key \
+            --yes \
+            --output-attestation ./libs/Stirling-PDF${{ matrix.file_suffix }}.jar.intoto.jsonl \
+            ./libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+
+          cosign verify-blob \
+            --key ./cosign.pub \
+            --signature ./libs/Stirling-PDF${{ matrix.file_suffix }}.jar.sig \
+            ./libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+
+          cosign sign-blob \
+            --key ./cosign.key \
+            --yes \
+            --output-signature ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.sig \
+            ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+
+          cosign attest-blob \
+            --predicate - \
+            --key ./cosign.key \
+            --yes \
+            --output-attestation ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.intoto.jsonl \
+            ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+
+          cosign verify-blob \
+            --key ./cosign.pub \
+            --signature ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.sig \
+            ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        with:
+          name: signed${{ matrix.file_suffix }}
+          path: |
+            ./libs/Stirling-PDF${{ matrix.file_suffix }}.*
+            ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.*
+
+  release:
+    needs: [build, sign_verify]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        enable_security: [true, false]
+        include:
+          - enable_security: true
+            file_suffix: "-with-login"
+          - enable_security: false
+            file_suffix: ""
+    steps:
+      - name: Download signed artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: signed${{ matrix.file_suffix }}
+
+      - name: Upload binaries, attestations and signatures to Release and create GitHub Release
         uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
         with:
-          tag_name: v${{ steps.versionNumber.outputs.versionNumber }}
+          tag_name: v${{ needs.build.outputs.version }}
+          generate_release_notes: true
           files: |
-            ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.*
-            ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.*
+            ./libs/Stirling-PDF*
+            ./launch4j/Stirling-PDF-Server*
