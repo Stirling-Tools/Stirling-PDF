@@ -11,48 +11,88 @@
     <div class="your-container-class"></div>
     <div class="container-flex">
       <main class="form-signin">
-        <script>
-          document.addEventListener('modeChanged', function(e) {
-            var mode = e.detail;
-
-            document.body.classList.remove("light-mode", "dark-mode", "rainbow-mode"); // remove all mode classes first
-
-            switch (mode) {
-              case "on":
-                document.body.classList.add("dark-mode");
-                break;
-              case "off":
-                document.body.classList.add("light-mode");
-                break;
-              case "rainbow":
-                document.body.classList.add("rainbow-mode");
-                break;
-            }
-          });
-
-          document.addEventListener('DOMContentLoaded', function() {
-            const defaultLocale = getStoredOrDefaultLocale();
-            checkUserLanguage(defaultLocale);
-
-            const dropdownItems = document.querySelectorAll('.lang_dropdown-item');
-            let activeItem;
-
-            for (let i = 0; i < dropdownItems.length; i++) {
-              const item = dropdownItems[i];
-              item.classList.remove('active');
-              if (item.dataset.bsLanguageCode === defaultLocale) {
-                item.classList.add('active');
-                activeItem = item;
-              }
-              item.addEventListener('click', handleDropdownItemClick);
-            }
-
-            const dropdown = document.getElementById('languageDropdown');
-
-            if (activeItem) {
-              dropdown.innerHTML = activeItem.innerHTML;  // This will set the dropdown button's content to the active language's flag and name
-            }
-          });
+        <script th:inline="javascript">
+         const redirectAttempts = parseInt(localStorage.getItem('ssoRedirectAttempts') || '0');
+		 const urlParams = new URLSearchParams(window.location.search);
+		 const hasRedirectError = urlParams.has('error');
+		 const hasLogout = urlParams.has('logout');
+		 const hasMessage = urlParams.has('message');
+		 const MAX_REDIRECT_ATTEMPTS = 3;
+		
+		 document.addEventListener('modeChanged', function(e) {
+		     var mode = e.detail;
+		
+		     document.body.classList.remove("light-mode", "dark-mode", "rainbow-mode"); // remove all mode classes first
+		
+		     switch (mode) {
+		         case "on":
+		             document.body.classList.add("dark-mode");
+		             break;
+		         case "off":
+		             document.body.classList.add("light-mode");
+		             break;
+		         case "rainbow":
+		             document.body.classList.add("rainbow-mode");
+		             break;
+		     }
+		 });
+		
+		 document.addEventListener('DOMContentLoaded', function() {
+		
+		     const runningEE = [[${@runningEE}]];
+	         const SSOAutoLogin = [[${@SSOAutoLogin}]];
+	         const loginMethod = [[${loginMethod}]];
+	         const providerList = [[${providerlist}]];
+		     const shouldAutoRedirect = !hasRedirectError &&
+		         !hasLogout &&
+		         !hasMessage &&
+		         redirectAttempts < MAX_REDIRECT_ATTEMPTS &&
+		         loginMethod !== 'normal' && runningEE && SSOAutoLogin;
+		
+		     console.log('Should redirect:', shouldAutoRedirect, {
+		         'No error': !hasRedirectError,
+		         'No logout': !hasLogout,
+		         'No message': !hasMessage,
+		         'Under max attempts': redirectAttempts < MAX_REDIRECT_ATTEMPTS,
+		         'Is OAuth2': loginMethod === 'oauth2'
+		     });
+		
+		     if (shouldAutoRedirect && providerList && Object.keys(providerList).length > 0) {
+		         localStorage.setItem('ssoRedirectAttempts', redirectAttempts + 1);
+		         const firstProvider = Object.keys(providerList)[0];
+		         window.location.href = firstProvider;
+		     }
+		
+		     // Reset redirect attempts if successful login or after 1 hour
+		     const lastAttemptTime = parseInt(localStorage.getItem('lastRedirectAttempt') || '0');
+		     if (Date.now() - lastAttemptTime > 3600000) { // 1 hour
+		         localStorage.setItem('ssoRedirectAttempts', '0');
+		     }
+		     localStorage.setItem('lastRedirectAttempt', Date.now().toString());
+		
+		
+		     const defaultLocale = getStoredOrDefaultLocale();
+		     checkUserLanguage(defaultLocale);
+		
+		     const dropdownItems = document.querySelectorAll('.lang_dropdown-item');
+		     let activeItem;
+		
+		     for (let i = 0; i < dropdownItems.length; i++) {
+		         const item = dropdownItems[i];
+		         item.classList.remove('active');
+		         if (item.dataset.bsLanguageCode === defaultLocale) {
+		             item.classList.add('active');
+		             activeItem = item;
+		         }
+		         item.addEventListener('click', handleDropdownItemClick);
+		     }
+		
+		     const dropdown = document.getElementById('languageDropdown');
+		
+		     if (activeItem) {
+		         dropdown.innerHTML = activeItem.innerHTML; // This will set the dropdown button's content to the active language's flag and name
+		     }
+		 });
         </script>
         <div class="text-center">
           <img class="my-4" th:src="@{'/favicon.svg'}" alt="favicon" width="144" height="144">

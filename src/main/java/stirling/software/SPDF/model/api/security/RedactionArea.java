@@ -1,17 +1,20 @@
 package stirling.software.SPDF.model.api.security;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.Data;
 
 @Data
 public class RedactionArea {
     @Schema(description = "The left edge point of the area to be redacted.")
     private Double x;
+
     @Schema(description = "The top edge point of the area to be redacted.")
     private Double y;
 
     @Schema(description = "The height of the area to be redacted.")
     private Double height;
+
     @Schema(description = "The width of the area to be redacted.")
     private Double width;
 

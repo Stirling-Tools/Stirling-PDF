@@ -94,7 +94,7 @@ public class KeygenLicenseVerifier {
                         .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        log.info(" validateLicenseResponse body: " + response.body());
+        log.debug(" validateLicenseResponse body: " + response.body());
         JsonNode jsonResponse = objectMapper.readTree(response.body());
         if (response.statusCode() == 200) {
 

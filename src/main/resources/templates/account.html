@@ -267,7 +267,7 @@
               </div>
 
               <script th:inline="javascript">
-                document.addEventListener("DOMContentLoaded", function() {
+                document.addEventListener("DOMContentLoaded", async function() {
                   const settingsTableBody = document.querySelector("#settingsTable tbody");
 
                   /*<![CDATA[*/
@@ -306,28 +306,38 @@
                     location.reload();  // Refresh the page after sync
                   });
 
-                  document.getElementById('syncToAccount').addEventListener('click', function() {
+                  document.getElementById('syncToAccount').addEventListener('click', async  function() {
                     /*<![CDATA[*/
-                    const urlUpdateUserSettings = /*[[@{/api/v1/user/updateUserSettings}]]*/ "/api/v1/user/updateUserSettings";
-                    /*]]>*/
-                    let form = document.createElement("form");
-                    form.method = "POST";
-                    form.action = urlUpdateUserSettings;  // Your endpoint URL
-
-                    for (let i = 0; i < localStorage.length; i++) {
-                      const key = localStorage.key(i);
-                      if(key !== 'debug' && key !== '0' && key !== '1' && !key.includes('pdfjs') && !key.includes('posthog') && !key.includes('pageViews')) { // Only send non-ignored keys
-                        let hiddenField = document.createElement("input");
-                        hiddenField.type = "hidden";
-                        hiddenField.name = key;
-                        hiddenField.value = localStorage.getItem(key);
-                        form.appendChild(hiddenField);
-                      }
-                    }
-
-                    document.body.appendChild(form);
-                    form.submit();
-                  });
+			        const urlUpdateUserSettings = /*[[@{/api/v1/user/updateUserSettings}]]*/ "/api/v1/user/updateUserSettings";
+			        /*]]>*/
+			        
+			        let settings = {};
+			        for (let i = 0; i < localStorage.length; i++) {
+			          const key = localStorage.key(i);
+			          if(key !== 'debug' && key !== '0' && key !== '1' && !key.includes('pdfjs') && !key.includes('posthog') && !key.includes('pageViews')) {
+			            settings[key] = localStorage.getItem(key);
+			          }
+			        }
+			
+			        try {
+			          const response = await window.fetchWithCsrf(urlUpdateUserSettings, {
+			            method: 'POST',
+			            headers: {
+			              'Content-Type': 'application/json',
+			            },
+			            body: JSON.stringify(settings)
+			          });
+			
+			          if (response.ok) {
+			            location.reload();
+			          } else {
+			            alert('Error syncing settings to account');
+			          }
+			        } catch (error) {
+			          console.error('Error:', error);
+			          alert('Error syncing settings to account');
+			        }
+			      });
 
                 });
               </script>
