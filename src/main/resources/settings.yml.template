@@ -63,6 +63,7 @@ security:
 enterpriseEdition:
   enabled: false # set to 'true' to enable enterprise edition
   key: 00000000-0000-0000-0000-000000000000
+  SSOAutoLogin: false # Enable to auto login to first provided SSO
   CustomMetadata:
     autoUpdateMetadata: false # set to 'true' to automatically update metadata with below values
     author: username # supports text such as 'John Doe' or types such as username to autopopulate with user's username
@@ -86,8 +87,8 @@ system:
   tessdataDir: /usr/share/tessdata # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
   enableAnalytics: 'true' # set to 'true' to enable analytics, set to 'false' to disable analytics; for enterprise users, this is set to true
   datasource:
-    enableCustomDatabase: false # set this property to 'true' if you would like to use your own custom database configuration
-    customDatabaseUrl: jdbc:postgresql://localhost:5432/postgres # set the url for your own custom database connection. If provided, the type, hostName, port and name are not necessary and will not be used
+    enableCustomDatabase: false # Enterprise users ONLY, set this property to 'true' if you would like to use your own custom database configuration
+    customDatabaseUrl: '' # eg jdbc:postgresql://localhost:5432/postgres, set the url for your own custom database connection. If provided, the type, hostName, port and name are not necessary and will not be used
     username: postgres # set the database username
     password: postgres # set the database password
     type: postgresql # the type of the database to set (e.g. 'h2', 'postgresql')

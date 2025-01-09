@@ -366,6 +366,7 @@ public class ApplicationProperties {
         private boolean enabled;
         @ToString.Exclude private String key;
         private int maxUsers;
+        private boolean ssoAutoLogin;
         private CustomMetadata customMetadata = new CustomMetadata();
 
         @Data
