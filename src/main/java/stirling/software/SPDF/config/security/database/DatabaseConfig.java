@@ -27,7 +27,9 @@ public class DatabaseConfig {
     private final ApplicationProperties applicationProperties;
     private final boolean runningEE;
 
-    public DatabaseConfig(ApplicationProperties applicationProperties, @Qualifier("runningEE") boolean runningEE) {
+    public DatabaseConfig(
+            ApplicationProperties applicationProperties,
+            @Qualifier("runningEE") boolean runningEE) {
         this.applicationProperties = applicationProperties;
         this.runningEE = runningEE;
     }

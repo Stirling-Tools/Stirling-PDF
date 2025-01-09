@@ -27,7 +27,7 @@ public class EEAppConfig {
     public boolean runningEnterpriseEdition() {
         return licenseKeyChecker.getEnterpriseEnabledResult();
     }
-    
+
     @Bean(name = "SSOAutoLogin")
     public boolean ssoAutoLogin() {
         return applicationProperties.getEnterpriseEdition().isSsoAutoLogin();
