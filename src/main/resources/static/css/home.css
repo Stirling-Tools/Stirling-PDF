@@ -46,17 +46,17 @@
   display: flex;
       flex-direction: column;
       min-width: 10rem;
-      flex: 1 1 auto;
+      flex: 1 1 min(12rem, 100%);
       box-sizing: border-box;
 }
 
 .feature-rows{
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  grid-auto-flow: dense;
-  gap: 1rem;
-width:100%;
-
+  display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    box-sizing: border-box;
 }
 
 .feature-group-header {
