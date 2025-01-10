@@ -308,37 +308,36 @@
 
                   document.getElementById('syncToAccount').addEventListener('click', async  function() {
                     /*<![CDATA[*/
-			        const urlUpdateUserSettings = /*[[@{/api/v1/user/updateUserSettings}]]*/ "/api/v1/user/updateUserSettings";
-			        /*]]>*/
-			        
-			        let settings = {};
-			        for (let i = 0; i < localStorage.length; i++) {
-			          const key = localStorage.key(i);
-			          if(key !== 'debug' && key !== '0' && key !== '1' && !key.includes('pdfjs') && !key.includes('posthog') && !key.includes('pageViews')) {
-			            settings[key] = localStorage.getItem(key);
-			          }
-			        }
-			
-			        try {
-			          const response = await window.fetchWithCsrf(urlUpdateUserSettings, {
-			            method: 'POST',
-			            headers: {
-			              'Content-Type': 'application/json',
-			            },
-			            body: JSON.stringify(settings)
-			          });
-			
-			          if (response.ok) {
-			            location.reload();
-			          } else {
-			            alert('Error syncing settings to account');
-			          }
-			        } catch (error) {
-			          console.error('Error:', error);
-			          alert('Error syncing settings to account');
-			        }
-			      });
+                    const urlUpdateUserSettings = /*[[@{/api/v1/user/updateUserSettings}]]*/ "/api/v1/user/updateUserSettings";
+                    /*]]>*/
 
+                    let settings = {};
+                    for (let i = 0; i < localStorage.length; i++) {
+                      const key = localStorage.key(i);
+                      if(key !== 'debug' && key !== '0' && key !== '1' && !key.includes('pdfjs') && !key.includes('posthog') && !key.includes('pageViews')) {
+                        settings[key] = localStorage.getItem(key);
+                      }
+                    }
+
+                    try {
+                      const response = await window.fetchWithCsrf(urlUpdateUserSettings, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(settings)
+                      });
+
+                      if (response.ok) {
+                        location.reload();
+                      } else {
+                        alert('Error syncing settings to account');
+                      }
+                    } catch (error) {
+                      console.error('Error:', error);
+                      alert('Error syncing settings to account');
+                    }
+                  });
                 });
               </script>
               <div class="mb-3 mt-4 text-center">
