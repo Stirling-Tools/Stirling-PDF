@@ -38,21 +38,25 @@
 
 .features-container {
   display: flex;
-  flex-direction: column;
   gap: 30px;
+  justify-content: center;
 }
 
 .feature-group {
   display: flex;
-  flex-direction: column;
-  width: 14rem;
+      flex-direction: column;
+      min-width: 10rem;
+      flex: 1 1 auto;
+      box-sizing: border-box;
 }
 
 .feature-rows{
-          display: flex;
-          flex-direction: row;
-          width: 120%;
-          flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  grid-auto-flow: dense;
+  gap: 1rem;
+width:100%;
+
 }
 
 .feature-group-header {
@@ -64,6 +68,7 @@
   cursor: pointer;
   gap: 10px;
 }
+
 .feature-group-container {
   padding: 10px;
 }

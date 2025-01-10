@@ -874,6 +874,8 @@ textarea.form-control {
 .dropdown-item {
   color: var(--md-sys-color-on-surface);
   padding: 0.25rem 1rem;
+  border-radius: 3rem;
+
 }
 
 .dropdown-item:focus,
@@ -881,7 +883,6 @@ textarea.form-control {
   color: var(--md-sys-color-on-surface);
   background-color: var(--md-sys-color-surface-5);
   border-radius: 3rem;
-  font-weight: 500;
   font-variation-settings: var(--md-sys-icon-fill-1);
 }
 
