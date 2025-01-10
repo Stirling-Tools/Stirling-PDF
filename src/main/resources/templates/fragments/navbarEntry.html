@@ -2,7 +2,7 @@
 th:if="${@endpointConfiguration.isEndpointEnabled(endpoint)}">
   <a th:id="@{${endpoint}}" class="dropdown-item" style="position:relative"  href="#" th:href="@{${endpoint}}"
     th:classappend="${endpoint.equals(currentPage)} ?  ${toolGroup} + ' active' : '' + ${toolGroup}"
-    th:data-bs-tags="#{${tagKey}}">
+    th:data-bs-tags="#{${tagKey}}" th:data-bs-title='#{${titleKey}}'>
     <span class="nav-tooltip" th:text="#{${descKey}}"></span>
     <div style="height:2.5rem;align-items: center;display: flex" class="icon" alt="icon" th:class="@{${toolGroup}}">
       <span class="material-symbols-rounded nav-icon" th:text="@{${toolIcon}}"></span>

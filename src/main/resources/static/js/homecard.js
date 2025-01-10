@@ -1,6 +1,9 @@
 function filterCards() {
   var input = document.getElementById('searchBar');
-  var filter = input.value.toUpperCase();
+  var filter = input.value.toUpperCase().trim();
+
+  // Split the input filter into individual words for multi-word matching
+  var filterWords = filter.split(/[\s,;.\-]+/);
 
   let featureGroups = document.querySelectorAll('.feature-group');
   const collapsedGroups = getCollapsedGroups();
@@ -12,15 +15,18 @@ function filterCards() {
     for (var i = 0; i < cards.length; i++) {
       var card = cards[i];
       var title = card.getAttribute('title') || '';
-      //var text = card.querySelector('p.card-text').innerText;
 
       // Get the navbar tags associated with the card
       var navbarItem = document.querySelector(`a.dropdown-item[href="${card.id}"]`);
       var navbarTags = navbarItem ? navbarItem.getAttribute('data-bs-tags') : '';
+      var navbarTags = navbarItem ? navbarTags + ',' + navbarItem.getAttribute('data-bs-title') : '';
 
-      var content = title + ' ' + navbarTags;
+      var content = (title + ' ' + navbarTags).toUpperCase();
 
-      if (content.toUpperCase().indexOf(filter) > -1) {
+      // Check if all words in the filter match the content
+      var matches = filterWords.every((word) => content.includes(word));
+
+      if (matches) {
         card.style.display = '';
         groupMatchesFilter = true;
       } else {
