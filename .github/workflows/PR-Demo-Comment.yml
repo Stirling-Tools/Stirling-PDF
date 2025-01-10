@@ -26,7 +26,8 @@ jobs:
         github.event.comment.user.login == 'Ludy87' ||
         github.event.comment.user.login == 'LaserKaspar' ||
         github.event.comment.user.login == 'sbplat' ||
-        github.event.comment.user.login == 'reecebrowne'
+        github.event.comment.user.login == 'reecebrowne' ||
+        github.event.comment.user.login == 'DarioGii'
       )
     outputs:
       pr_number: ${{ steps.get-pr.outputs.pr_number }}
@@ -107,7 +108,9 @@ jobs:
 
       - name: Get version number
         id: versionNumber
-        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+          echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0

@@ -52,13 +52,15 @@ sourceSets {
         java {
             if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
                 exclude "stirling/software/SPDF/config/security/**"
-                exclude "stirling/software/SPDF/controller/api/UserController.java"
                 exclude "stirling/software/SPDF/controller/api/DatabaseController.java"
+                exclude "stirling/software/SPDF/controller/api/UserController.java"
+                exclude "stirling/software/SPDF/controller/api/H2SQLCondition.java"
                 exclude "stirling/software/SPDF/controller/web/AccountWebController.java"
                 exclude "stirling/software/SPDF/controller/web/DatabaseWebController.java"
                 exclude "stirling/software/SPDF/model/ApiKeyAuthenticationToken.java"
                 exclude "stirling/software/SPDF/model/AttemptCounter.java"
                 exclude "stirling/software/SPDF/model/Authority.java"
+                exclude "stirling/software/SPDF/model/BackupNotFoundException.java"
                 exclude "stirling/software/SPDF/model/PersistentLogin.java"
                 exclude "stirling/software/SPDF/model/SessionEntity.java"
                 exclude "stirling/software/SPDF/model/User.java"
@@ -69,7 +71,29 @@ sourceSets {
             	exclude "stirling/software/SPDF/UI/impl/**"
             }
 
+        }
+    }
 
+    test {
+        java {
+            if (System.getenv("DOCKER_ENABLE_SECURITY") == "false") {
+                exclude "stirling/software/SPDF/config/security/**"
+                exclude "stirling/software/SPDF/controller/api/UserControllerTest.java"
+                exclude "stirling/software/SPDF/controller/api/DatabaseControllerTest.java"
+                exclude "stirling/software/SPDF/controller/web/AccountWebControllerTest.java"
+                exclude "stirling/software/SPDF/controller/web/DatabaseWebControllerTest.java"
+                exclude "stirling/software/SPDF/model/ApiKeyAuthenticationTokenTest.java"
+                exclude "stirling/software/SPDF/model/AttemptCounterTest.java"
+                exclude "stirling/software/SPDF/model/AuthorityTest.java"
+                exclude "stirling/software/SPDF/model/PersistentLoginTest.java"
+                exclude "stirling/software/SPDF/model/SessionEntityTest.java"
+                exclude "stirling/software/SPDF/model/UserTest.java"
+                exclude "stirling/software/SPDF/repository/**"
+            }
+
+            if (System.getenv("STIRLING_PDF_DESKTOP_UI") == "false") {
+                exclude "stirling/software/SPDF/UI/impl/**"
+            }
         }
     }
 }
@@ -123,11 +147,13 @@ jpackage {
     windows {
     	launcherAsService = false
     	appVersion = project.version
-        winConsole = false
-        winDirChooser = true
-        winMenu = true
-        winShortcut = true
-        winPerUserInstall = true
+
+    	winConsole = false
+        winMenu = true  // Creates start menu entry
+        winShortcut = true  // Creates desktop shortcut
+        winShortcutPrompt = true  // Lets user choose whether to create shortcuts
+        winDirChooser = true  // Allows users to choose installation directory
+        winPerUserInstall = false
         winMenuGroup = "Stirling Software"
         winUpgradeUuid = "2a43ed0c-b8c2-40cf-89e1-751129b87641" // Unique identifier for updates
         winHelpUrl = "https://github.com/Stirling-Tools/Stirling-PDF"
@@ -257,7 +283,7 @@ spotless {
 //        rules=['unused-dependency']
 //    }
 tasks.wrapper {
-    gradleVersion = "8.7"
+    gradleVersion = "8.12"
 }
 //tasks.withType(JavaCompile) {
 //    options.compilerArgs << "-Xlint:deprecation"
@@ -297,10 +323,12 @@ dependencies {
         implementation "org.springframework.boot:spring-boot-starter-oauth2-client:$springBootVersion"
 
 		implementation "org.springframework.session:spring-session-core:$springBootVersion"
+        implementation "org.springframework:spring-jdbc:6.2.1"
 
 	    implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
         // Don't upgrade h2database
         runtimeOnly "com.h2database:h2:2.3.232"
+        runtimeOnly "org.postgresql:postgresql:42.7.4"
         constraints {
             implementation "org.opensaml:opensaml-core:$openSamlVersion"
             implementation "org.opensaml:opensaml-saml-api:$openSamlVersion"

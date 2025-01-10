@@ -11,17 +11,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.servlet.http.HttpServletRequest;
-import stirling.software.SPDF.config.security.database.DatabaseBackupHelper;
+import stirling.software.SPDF.config.security.database.DatabaseService;
 import stirling.software.SPDF.utils.FileInfo;
 
 @Controller
 @Tag(name = "Database Management", description = "Database management and security APIs")
 public class DatabaseWebController {
 
-    private final DatabaseBackupHelper databaseBackupHelper;
+    private final DatabaseService databaseService;
 
-    public DatabaseWebController(DatabaseBackupHelper databaseBackupHelper) {
-        this.databaseBackupHelper = databaseBackupHelper;
+    public DatabaseWebController(DatabaseService databaseService) {
+        this.databaseService = databaseService;
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -34,9 +34,12 @@ public class DatabaseWebController {
         } else if (confirmed != null) {
             model.addAttribute("infoMessage", confirmed);
         }
-        List<FileInfo> backupList = databaseBackupHelper.getBackupList();
+        List<FileInfo> backupList = databaseService.getBackupList();
         model.addAttribute("backupFiles", backupList);
-        model.addAttribute("databaseVersion", databaseBackupHelper.getH2Version());
+        model.addAttribute("databaseVersion", databaseService.getH2Version());
+        if ("Unknown".equalsIgnoreCase(databaseService.getH2Version())) {
+            model.addAttribute("infoMessage", "notSupported");
+        }
         return "database";
     }
 }

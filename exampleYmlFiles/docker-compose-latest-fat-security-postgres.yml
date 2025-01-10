@@ -1,0 +1,63 @@
+services:
+  stirling-pdf:
+    container_name: Stirling-PDF-Security-Fat-Postgres
+    image: stirlingtools/stirling-pdf:latest-fat-postgres
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    depends_on:
+      - db
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'" ]
+      interval: 5s
+      timeout: 10s
+      retries: 16
+    ports:
+      - 8080:8080
+    volumes:
+      - ./stirling/latest/data:/usr/share/tessdata:rw
+      - ./stirling/latest/config:/configs:rw
+      - ./stirling/latest/logs:/logs:rw
+    environment:
+      DOCKER_ENABLE_SECURITY: "true"
+      SECURITY_ENABLELOGIN: "false"
+      PUID: 1002
+      PGID: 1002
+      UMASK: "022"
+      SYSTEM_DEFAULTLOCALE: en-US
+      UI_APPNAME: Stirling-PDF
+      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest-fat with Security and PostgreSQL
+      UI_APPNAMENAVBAR: Stirling-PDF Latest-fat-PostgreSQL
+      SYSTEM_MAXFILESIZE: "100"
+      METRICS_ENABLED: "true"
+      SYSTEM_GOOGLEVISIBILITY: "true"
+      SYSTEM_DATASOURCE_ENABLECUSTOMDATABASE: "true"
+      SYSTEM_DATASOURCE_CUSTOMDATABASEURL: "jdbc:postgresql://db:5432/stirling_pdf"
+      SYSTEM_DATASOURCE_USERNAME: "admin"
+      SYSTEM_DATASOURCE_PASSWORD: "stirling"
+    restart: on-failure:5
+
+  db:
+    image: 'postgres:17.2-alpine'
+    restart: on-failure:5
+    container_name: db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: "stirling_pdf"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "stirling"
+    shm_size: "512mb"
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin stirling_pdf" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - ./stirling/latest/data:/pgdata

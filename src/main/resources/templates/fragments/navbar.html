@@ -82,61 +82,62 @@
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-single-page', 'looks_one', 'home.PdfToSinglePage.title', 'home.PdfToSinglePage.desc', 'PdfToSinglePage.tags', 'organize')}">
                         </div>
                       </div>
-                      <div id="stacked" class="navbar-item col-lg-2 col-sm-6 py px-xl-1 px-2"style="display:flex; flex-direction: column;">
-                      <!-- Convert to PDF menu items -->
-                      <div class="navbar-item py px-xl-1 px-2" style="margin-bottom: 1rem;">
-                        <h6 class="menu-title" th:text="#{navbar.sections.convertTo}"></h6>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('img-to-pdf', 'image', 'home.imageToPdf.title', 'home.imageToPdf.desc', 'imageToPdf.tags', 'image')}">
+                      <div id="stacked" class="navbar-item col-lg-2 col-sm-6 py px-xl-1 px-2"
+                        style="display:flex; flex-direction: column;">
+                        <!-- Convert to PDF menu items -->
+                        <div class="navbar-item py px-xl-1 px-2" style="margin-bottom: 1rem;">
+                          <h6 class="menu-title" th:text="#{navbar.sections.convertTo}"></h6>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('img-to-pdf', 'picture_as_pdf', 'home.imageToPdf.title', 'home.imageToPdf.desc', 'imageToPdf.tags', 'image')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('file-to-pdf', 'draft', 'home.fileToPDF.title', 'home.fileToPDF.desc', 'fileToPDF.tags', 'convert')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('url-to-pdf', 'link', 'home.URLToPDF.title', 'home.URLToPDF.desc', 'URLToPDF.tags', 'convert')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('html-to-pdf', 'html', 'home.HTMLToPDF.title', 'home.HTMLToPDF.desc', 'HTMLToPDF.tags', 'convert')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('markdown-to-pdf', 'markdown', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags', 'convert')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('book-to-pdf', 'book', 'home.BookToPDF.title', 'home.BookToPDF.desc', 'BookToPDF.tags', 'convert')}">
+                          </div>
                         </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('file-to-pdf', 'draft', 'home.fileToPDF.title', 'home.fileToPDF.desc', 'fileToPDF.tags', 'convert')}">
-                        </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('url-to-pdf', 'link', 'home.URLToPDF.title', 'home.URLToPDF.desc', 'URLToPDF.tags', 'convert')}">
-                        </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('html-to-pdf', 'html', 'home.HTMLToPDF.title', 'home.HTMLToPDF.desc', 'HTMLToPDF.tags', 'convert')}">
-                        </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('markdown-to-pdf', 'markdown', 'home.MarkdownToPDF.title', 'home.MarkdownToPDF.desc', 'MarkdownToPDF.tags', 'convert')}">
-                        </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('book-to-pdf', 'book', 'home.BookToPDF.title', 'home.BookToPDF.desc', 'BookToPDF.tags', 'convert')}">
+                        <!-- Convert from PDF menu items -->
+                        <div class="navbar-item py px-xl-1">
+                          <h6 class="menu-title" th:text="#{navbar.sections.convertFrom}"></h6>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-img', 'photo_library', 'home.pdfToImage.title', 'home.pdfToImage.desc', 'pdfToImage.tags', 'image')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-word', 'description', 'home.PDFToWord.title', 'home.PDFToWord.desc', 'PDFToWord.tags', 'word')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-presentation', 'slideshow', 'home.PDFToPresentation.title', 'home.PDFToPresentation.desc', 'PDFToPresentation.tags', 'ppt')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-text', 'text_fields', 'home.PDFToText.title', 'home.PDFToText.desc', 'PDFToText.tags', 'convert')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-html', 'html', 'home.PDFToHTML.title', 'home.PDFToHTML.desc', 'PDFToHTML.tags', 'convert')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-xml', 'code', 'home.PDFToXML.title', 'home.PDFToXML.desc', 'PDFToXML.tags', 'convert')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-pdfa', 'picture_as_pdf', 'home.pdfToPDFA.title', 'home.pdfToPDFA.desc', 'pdfToPDFA.tags', 'convert')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-csv', 'csv', 'home.tableExtraxt.title', 'home.tableExtraxt.desc', 'pdfToPDFA.tags', 'convert')}">
+                          </div>
+                          <div
+                            th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-book', 'book', 'home.PDFToBook.title', 'home.PDFToBook.desc', 'PDFToBook.tags', 'convert')}">
+                          </div>
                         </div>
                       </div>
-                      <!-- Convert from PDF menu items -->
-                      <div class="navbar-item py px-xl-1">
-                        <h6 class="menu-title" th:text="#{navbar.sections.convertFrom}"></h6>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-img', 'image', 'home.pdfToImage.title', 'home.pdfToImage.desc', 'pdfToImage.tags', 'image')}">
-                        </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-word', 'description', 'home.PDFToWord.title', 'home.PDFToWord.desc', 'PDFToWord.tags', 'word')}">
-                        </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-presentation', 'slideshow', 'home.PDFToPresentation.title', 'home.PDFToPresentation.desc', 'PDFToPresentation.tags', 'ppt')}">
-                        </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-text', 'text_fields', 'home.PDFToText.title', 'home.PDFToText.desc', 'PDFToText.tags', 'convert')}">
-                        </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-html', 'html', 'home.PDFToHTML.title', 'home.PDFToHTML.desc', 'PDFToHTML.tags', 'convert')}">
-                        </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-xml', 'code', 'home.PDFToXML.title', 'home.PDFToXML.desc', 'PDFToXML.tags', 'convert')}">
-                        </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-pdfa', 'picture_as_pdf', 'home.pdfToPDFA.title', 'home.pdfToPDFA.desc', 'pdfToPDFA.tags', 'convert')}">
-                        </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-csv', 'csv', 'home.tableExtraxt.title', 'home.tableExtraxt.desc', 'pdfToPDFA.tags', 'convert')}">
-                        </div>
-                        <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('pdf-to-book', 'book', 'home.PDFToBook.title', 'home.PDFToBook.desc', 'PDFToBook.tags', 'convert')}">
-                        </div>
-                      </div>
-                    </div>
                       <!-- Security menu items -->
                       <div class="navbar-item col-lg-2 col-sm-6 py px-xl-1 px-2">
                         <h6 class="menu-title" th:text="#{navbar.sections.security}"></h6>
@@ -159,8 +160,8 @@
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('cert-sign', 'workspace_premium', 'home.certSign.title', 'home.certSign.desc', 'certSign.tags', 'security')}">
                         </div>
                         <div
-			              th:replace="~{fragments/navbarEntry :: navbarEntry('validate-signature','verified','home.validateSignature.title','home.validateSignature.desc','validateSignature.tags','security')}">
-			            </div>
+                          th:replace="~{fragments/navbarEntry :: navbarEntry('validate-signature','verified','home.validateSignature.title','home.validateSignature.desc','validateSignature.tags','security')}">
+                        </div>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('remove-cert-sign', 'remove_moderator', 'home.removeCertSign.title', 'home.removeCertSign.desc', 'removeCertSign.tags', 'security')}">
                         </div>
@@ -168,7 +169,10 @@
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('sanitize-pdf', 'sanitizer', 'home.sanitizePdf.title', 'home.sanitizePdf.desc', 'sanitizePdf.tags', 'security')}">
                         </div>
                         <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('auto-redact', 'ink_eraser', 'home.autoRedact.title', 'home.autoRedact.desc', 'autoRedact.tags', 'security')}">
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('auto-redact', 'contract_delete', 'home.autoRedact.title', 'home.autoRedact.desc', 'autoRedact.tags', 'security')}">
+                        </div>
+                        <div
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('redact', 'playlist_remove', 'home.redact.title', 'home.redact.desc', 'redact.tags', 'security')}">
                         </div>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('stamp', 'approval', 'home.AddStampRequest.title', 'home.AddStampRequest.desc', 'AddStampRequest.tags', 'security')}">
@@ -190,7 +194,7 @@
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('add-image', 'add_photo_alternate', 'home.addImage.title', 'home.addImage.desc', 'addImage.tags', 'other')}">
                         </div>
                         <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('extract-images', 'photo_library', 'home.extractImages.title', 'home.extractImages.desc', 'extractImages.tags', 'other')}">
+                          th:replace="~{fragments/navbarEntry :: navbarEntry ('extract-images', 'wallpaper', 'home.extractImages.title', 'home.extractImages.desc', 'extractImages.tags', 'other')}">
                         </div>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('flatten', 'layers_clear', 'home.flatten.title', 'home.flatten.desc', 'flatten.tags', 'other')}">
@@ -227,7 +231,7 @@
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('pipeline', 'family_history', 'home.pipeline.title', 'home.pipeline.desc', 'pipeline.tags', 'advance')}">
                         </div>
                         <div
-                          th:replace="~{fragments/navbarEntry :: navbarEntry ('auto-rename', 'text_fields_alt', 'home.auto-rename.title', 'home.auto-rename.desc', 'auto-rename.tags', 'advance')}">
+                          th:replace="~{fragments/navbarEntryCustom :: navbarEntry ('auto-rename', '/images/rename.svg#icon-rename', 'home.auto-rename.title', 'home.auto-rename.desc', 'auto-rename.tags', 'advance')}">
                         </div>
                         <div
                           th:replace="~{fragments/navbarEntry :: navbarEntry ('repair', 'build', 'home.repair.title', 'home.repair.desc', 'repair.tags', 'advance')}">
@@ -275,7 +279,7 @@
             </a>
           </li>
 
-          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('pipeline')}" >
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('pipeline')}">
             <a class="nav-link" href="#" th:href="@{'/pipeline'}"
               th:classappend="${currentPage}=='pipeline' ? 'active' : ''" th:title="#{home.pipeline.desc}">
               <span class="material-symbols-rounded">
@@ -285,7 +289,7 @@
             </a>
           </li>
 
-          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('compress-pdf')}" >
+          <li class="nav-item" th:if="${@endpointConfiguration.isEndpointEnabled('compress-pdf')}">
             <a class="nav-link" href="#" title="#{home.compressPdfs.title}" th:href="@{'/compress-pdf'}"
               th:classappend="${currentPage}=='compress-pdf' ? 'active' : ''" th:title="#{home.compressPdfs.desc}">
               <span class="material-symbols-rounded">
@@ -327,17 +331,18 @@
               <span class="icon-text icon-hide" th:data-text="#{navbar.favorite}" th:text="#{navbar.favorite}"></span>
             </a>
             <div class="dropdown-menu dropdown-menu-tp dropdown-mw-28" aria-labelledby="navbarDropdown-5">
-              <div class="dropdown-menu-wrapper px-xl-2 px-2" id="favoritesDropdown" >
-              <!-- Dropdown items will be added here by JavaScript -->
+              <div class="dropdown-menu-wrapper px-xl-2 px-2" id="favoritesDropdown">
+                <!-- Dropdown items will be added here by JavaScript -->
+              </div>
             </div>
-          </div>
           </li>
           <li class="nav-item">
             <a class="nav-link" id="dark-mode-toggle" href="#" th:title="#{navbar.darkmode}">
               <span class="material-symbols-rounded" id="dark-mode-icon">
                 dark_mode
               </span>
-              <span class="icon-text icon-hide" id="dark-mode-text" th:data-text="#{navbar.darkmode}" th:text="#{navbar.darkmode}"></span>
+              <span class="icon-text icon-hide" id="dark-mode-text" th:data-text="#{navbar.darkmode}"
+                th:text="#{navbar.darkmode}"></span>
             </a>
           </li>
           <li class="nav-item dropdown">
@@ -358,7 +363,8 @@
           </li>
 
           <li class="nav-item dropdown">
-            <a class="nav-link" href="#" id="searchDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" th:title="#{navbar.search}">
+            <a class="nav-link" href="#" id="searchDropdown" role="button" data-bs-toggle="dropdown"
+              aria-haspopup="true" aria-expanded="false" th:title="#{navbar.search}">
               <span class="material-symbols-rounded">
                 search
               </span>
@@ -367,7 +373,8 @@
             <div class="dropdown-menu dropdown-menu-tp" aria-labelledby="searchDropdown">
               <div class="dropdown-menu-wrapper px-xl-2 px-2">
                 <form th:action="@{''}" class="d-flex p-2 search-form" id="searchForm">
-                  <input class="form-control search-input" type="search" th:placeholder="#{navbar.search}" aria-label="Search" id="navbarSearchInput">
+                  <input class="form-control search-input" type="search" th:placeholder="#{navbar.search}"
+                    aria-label="Search" id="navbarSearchInput">
                 </form>
                 <!-- Search Results -->
                 <div id="searchResults" class="search-results scrollable-y dropdown-mw-20"></div>
@@ -376,13 +383,15 @@
           </li>
 
           <li class="nav-item" th:if="${!@runningEE}">
-            <a href="https://stirlingpdf.com/pricing" class="nav-link go-pro-link" target="_blank" rel="noopener noreferrer">
+            <a href="https://stirlingpdf.com/pricing" class="nav-link go-pro-link" target="_blank"
+              rel="noopener noreferrer">
               <span class="go-pro-badge" th:text="#{enterpriseEdition.button}"></span>
             </a>
           </li>
           <li class="nav-item">
             <!-- Settings Button -->
-            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#settingsModal" th:title="#{navbar.settings}">
+            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#settingsModal"
+              th:title="#{navbar.settings}">
               <span class="material-symbols-rounded">
                 settings
               </span>
@@ -417,10 +426,12 @@
                 th:title="#{visitGithub}">
                 <img th:src="@{'/images/github.svg'}" alt="github">
               </a>
-              <a href="https://hub.docker.com/r/stirlingtools/stirling-pdf" class="mx-1" role="button" target="_blank"th:title="#{seeDockerHub}">
+              <a href="https://hub.docker.com/r/stirlingtools/stirling-pdf" class="mx-1" role="button" target="_blank"
+                th:title="#{seeDockerHub}">
                 <img th:src="@{'/images/docker.svg'}" alt="docker">
               </a>
-              <a href="https://discord.gg/Cn8pWhQRxZ" class="mx-1" role="button" target="_blank" th:title="#{joinDiscord}">
+              <a href="https://discord.gg/Cn8pWhQRxZ" class="mx-1" role="button" target="_blank"
+                th:title="#{joinDiscord}">
                 <img th:src="@{'/images/discord.svg'}" alt="discord">
               </a>
             </div>
@@ -441,7 +452,7 @@
             </select>
           </div>
           <div class="mb-3">
-            <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label><br/>
+            <label for="zipThreshold" th:utext="#{settings.zipThreshold}"></label><br />
             <input type="range" class="form-range" min="1" max="9" step="1" id="zipThreshold" value="4">
             <span id="zipThresholdValue" class="ms-2"></span>
           </div>

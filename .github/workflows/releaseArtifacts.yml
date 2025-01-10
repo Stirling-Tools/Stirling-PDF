@@ -9,11 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  push:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
     strategy:
       matrix:
         enable_security: [true, false]
@@ -22,6 +19,8 @@ jobs:
             file_suffix: "-with-login"
           - enable_security: false
             file_suffix: ""
+    outputs:
+      version: ${{ steps.versionNumber.outputs.versionNumber }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
@@ -38,7 +37,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
         with:
-          gradle-version: 8.7
+          gradle-version: 8.12
 
       - name: Generate jar (With Security=${{ matrix.enable_security }})
         run: ./gradlew clean createExe
@@ -48,38 +47,134 @@ jobs:
 
       - name: Get version number
         id: versionNumber
-        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
+          echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Rename binarie
-        run: cp ./build/launch4j/Stirling-PDF.exe ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+      - name: Rename binaries
+        run: |
+          mv ./build/launch4j/Stirling-PDF.exe ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+          mv ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
 
-      - name: Upload Assets binarie
+      - name: Debug build artifacts
+        run: |
+          echo "Current Directory: $(pwd)"
+          ls -R ./build/libs
+          ls -R ./build/launch4j
+
+      - name: Upload build artifacts
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
-          path: ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
-          name: Stirling-PDF-Server${{ matrix.file_suffix }}.exe
-          overwrite: true
-          retention-days: 1
-          if-no-files-found: error
+          name: binaries${{ matrix.file_suffix }}
+          path: |
+            ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.*
+            ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.*
 
-      - name: Upload binaries to release
-        uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
+  sign_verify:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        enable_security: [true, false]
+        include:
+          - enable_security: true
+            file_suffix: "-with-login"
+          - enable_security: false
+            file_suffix: ""
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
         with:
-          files: ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+          egress-policy: audit
 
-      - name: Rename jar binaries
-        run: cp ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+      - name: Download build artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: binaries${{ matrix.file_suffix }}
+      - name: Display structure of downloaded files
+        run: ls -R
 
-      - name: Upload Assets jar binaries
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
+
+      - name: Generate key pair
+        run: cosign generate-key-pair
+
+      - name: Sign and generate attestations
+        run: |
+          cosign sign-blob \
+            --key ./cosign.key \
+            --yes \
+            --output-signature ./libs/Stirling-PDF${{ matrix.file_suffix }}.jar.sig \
+            ./libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+
+          cosign attest-blob \
+            --predicate - \
+            --key ./cosign.key \
+            --yes \
+            --output-attestation ./libs/Stirling-PDF${{ matrix.file_suffix }}.jar.intoto.jsonl \
+            ./libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+
+          cosign verify-blob \
+            --key ./cosign.pub \
+            --signature ./libs/Stirling-PDF${{ matrix.file_suffix }}.jar.sig \
+            ./libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+
+          cosign sign-blob \
+            --key ./cosign.key \
+            --yes \
+            --output-signature ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.sig \
+            ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+
+          cosign attest-blob \
+            --predicate - \
+            --key ./cosign.key \
+            --yes \
+            --output-attestation ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.intoto.jsonl \
+            ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+
+          cosign verify-blob \
+            --key ./cosign.pub \
+            --signature ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe.sig \
+            ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+
+      - name: Upload signed artifacts
         uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
-          path: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
-          name: Stirling-PDF${{ matrix.file_suffix }}.jar
-          overwrite: true
-          retention-days: 1
-          if-no-files-found: error
+          name: signed${{ matrix.file_suffix }}
+          path: |
+            ./libs/Stirling-PDF${{ matrix.file_suffix }}.*
+            ./launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.*
 
-      - name: Upload jar binaries to release
+  release:
+    needs: [build, sign_verify]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        enable_security: [true, false]
+        include:
+          - enable_security: true
+            file_suffix: "-with-login"
+          - enable_security: false
+            file_suffix: ""
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
+        with:
+          egress-policy: audit
+
+      - name: Download signed artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: signed${{ matrix.file_suffix }}
+
+      - name: Upload binaries, attestations and signatures to Release and create GitHub Release
         uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
         with:
-          files: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+          tag_name: v${{ needs.build.outputs.version }}
+          generate_release_notes: true
+          files: |
+            ./libs/Stirling-PDF*
+            ./launch4j/Stirling-PDF-Server*

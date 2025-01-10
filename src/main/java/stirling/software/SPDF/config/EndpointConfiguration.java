@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -135,6 +136,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "remove-cert-sign");
         addEndpointToGroup("Security", "sanitize-pdf");
         addEndpointToGroup("Security", "auto-redact");
+        addEndpointToGroup("Security", "redact");
 
         // Adding endpoints to "Other" group
         addEndpointToGroup("Other", "ocr-pdf");
@@ -234,6 +236,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "markdown-to-pdf");
         addEndpointToGroup("Java", "show-javascript");
         addEndpointToGroup("Java", "auto-redact");
+        addEndpointToGroup("Java", "redact");
         addEndpointToGroup("Java", "pdf-to-csv");
         addEndpointToGroup("Java", "split-by-size-or-count");
         addEndpointToGroup("Java", "overlay-pdf");
@@ -265,20 +268,26 @@ public class EndpointConfiguration {
     }
 
     private void processEnvironmentConfigs() {
-        List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
-        List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
-        if (!bookAndHtmlFormatsInstalled) {
-            groupsToRemove.add("Calibre");
-        }
-        if (endpointsToRemove != null) {
-            for (String endpoint : endpointsToRemove) {
-                disableEndpoint(endpoint.trim());
-            }
-        }
+        if (applicationProperties != null && applicationProperties.getEndpoints() != null) {
+            List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
+            List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
 
-        if (groupsToRemove != null) {
-            for (String group : groupsToRemove) {
-                disableGroup(group.trim());
+            if (!bookAndHtmlFormatsInstalled) {
+                if (groupsToRemove == null) {
+                    groupsToRemove = new ArrayList<>();
+                }
+                groupsToRemove.add("Calibre");
+            }
+            if (endpointsToRemove != null) {
+                for (String endpoint : endpointsToRemove) {
+                    disableEndpoint(endpoint.trim());
+                }
+            }
+
+            if (groupsToRemove != null) {
+                for (String group : groupsToRemove) {
+                    disableGroup(group.trim());
+                }
             }
         }
     }

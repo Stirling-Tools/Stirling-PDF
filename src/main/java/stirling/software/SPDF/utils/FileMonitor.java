@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.config.InstallationPathConfig;
 
 @Component
 @Slf4j
@@ -34,9 +35,7 @@ public class FileMonitor {
      *     monitored, false otherwise
      */
     @Autowired
-    public FileMonitor(
-            @Qualifier("watchedFoldersDir") String rootDirectory,
-            @Qualifier("directoryFilter") Predicate<Path> pathFilter)
+    public FileMonitor(@Qualifier("directoryFilter") Predicate<Path> pathFilter)
             throws IOException {
         this.newlyDiscoveredFiles = new HashSet<>();
         this.path2KeyMapping = new HashMap<>();
@@ -44,7 +43,7 @@ public class FileMonitor {
         this.pathFilter = pathFilter;
         this.readyForProcessingFiles = ConcurrentHashMap.newKeySet();
         this.watchService = FileSystems.getDefault().newWatchService();
-        this.rootDir = Path.of(rootDirectory);
+        this.rootDir = Path.of(InstallationPathConfig.getPipelineWatchedFoldersDir());
     }
 
     private boolean shouldNotProcess(Path path) {

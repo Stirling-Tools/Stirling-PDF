@@ -1,6 +1,7 @@
 package stirling.software.SPDF.config.security;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -20,11 +21,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
-import stirling.software.SPDF.config.interfaces.DatabaseBackupInterface;
+import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.config.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.SPDF.config.security.session.SessionPersistentRegistry;
 import stirling.software.SPDF.controller.api.pipeline.UserServiceInterface;
 import stirling.software.SPDF.model.*;
+import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 import stirling.software.SPDF.repository.AuthorityRepository;
 import stirling.software.SPDF.repository.UserRepository;
 
@@ -42,7 +44,7 @@ public class UserService implements UserServiceInterface {
 
     private final SessionPersistentRegistry sessionRegistry;
 
-    private final DatabaseBackupInterface databaseBackupHelper;
+    private final DatabaseInterface databaseService;
 
     private final ApplicationProperties applicationProperties;
 
@@ -52,14 +54,14 @@ public class UserService implements UserServiceInterface {
             PasswordEncoder passwordEncoder,
             MessageSource messageSource,
             SessionPersistentRegistry sessionRegistry,
-            DatabaseBackupInterface databaseBackupHelper,
+            DatabaseInterface databaseService,
             ApplicationProperties applicationProperties) {
         this.userRepository = userRepository;
         this.authorityRepository = authorityRepository;
         this.passwordEncoder = passwordEncoder;
         this.messageSource = messageSource;
         this.sessionRegistry = sessionRegistry;
-        this.databaseBackupHelper = databaseBackupHelper;
+        this.databaseService = databaseService;
         this.applicationProperties = applicationProperties;
     }
 
@@ -76,7 +78,7 @@ public class UserService implements UserServiceInterface {
 
     // Handle OAUTH2 login and user auto creation.
     public boolean processSSOPostLogin(String username, boolean autoCreateUser)
-            throws IllegalArgumentException, IOException {
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             return false;
         }
@@ -163,12 +165,12 @@ public class UserService implements UserServiceInterface {
     }
 
     public void saveUser(String username, AuthenticationType authenticationType)
-            throws IllegalArgumentException, IOException {
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         saveUser(username, authenticationType, Role.USER.getRoleId());
     }
 
     public void saveUser(String username, AuthenticationType authenticationType, String role)
-            throws IllegalArgumentException, IOException {
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
@@ -179,11 +181,11 @@ public class UserService implements UserServiceInterface {
         user.addAuthority(new Authority(role, user));
         user.setAuthenticationType(authenticationType);
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
     public void saveUser(String username, String password)
-            throws IllegalArgumentException, IOException {
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
@@ -193,11 +195,11 @@ public class UserService implements UserServiceInterface {
         user.setEnabled(true);
         user.setAuthenticationType(AuthenticationType.WEB);
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
     public void saveUser(String username, String password, String role, boolean firstLogin)
-            throws IllegalArgumentException, IOException {
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
@@ -209,11 +211,11 @@ public class UserService implements UserServiceInterface {
         user.setAuthenticationType(AuthenticationType.WEB);
         user.setFirstLogin(firstLogin);
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
     public void saveUser(String username, String password, String role)
-            throws IllegalArgumentException, IOException {
+            throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         saveUser(username, password, role, false);
     }
 
@@ -247,7 +249,7 @@ public class UserService implements UserServiceInterface {
     }
 
     public void updateUserSettings(String username, Map<String, String> updates)
-            throws IOException {
+            throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = findByUsernameIgnoreCaseWithSettings(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
@@ -259,7 +261,7 @@ public class UserService implements UserServiceInterface {
             settingsMap.putAll(updates);
             user.setSettings(settingsMap);
             userRepository.save(user);
-            databaseBackupHelper.exportDatabase();
+            databaseService.exportDatabase();
         }
     }
 
@@ -280,38 +282,45 @@ public class UserService implements UserServiceInterface {
     }
 
     public void changeUsername(User user, String newUsername)
-            throws IllegalArgumentException, IOException {
+            throws IllegalArgumentException,
+                    IOException,
+                    SQLException,
+                    UnsupportedProviderException {
         if (!isUsernameValid(newUsername)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
         user.setUsername(newUsername);
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
-    public void changePassword(User user, String newPassword) throws IOException {
+    public void changePassword(User user, String newPassword)
+            throws SQLException, UnsupportedProviderException {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
-    public void changeFirstUse(User user, boolean firstUse) throws IOException {
+    public void changeFirstUse(User user, boolean firstUse)
+            throws SQLException, UnsupportedProviderException {
         user.setFirstLogin(firstUse);
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
-    public void changeRole(User user, String newRole) throws IOException {
+    public void changeRole(User user, String newRole)
+            throws SQLException, UnsupportedProviderException {
         Authority userAuthority = this.findRole(user);
         userAuthority.setAuthority(newRole);
         authorityRepository.save(userAuthority);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
-    public void changeUserEnabled(User user, Boolean enbeled) throws IOException {
+    public void changeUserEnabled(User user, Boolean enbeled)
+            throws SQLException, UnsupportedProviderException {
         user.setEnabled(enbeled);
         userRepository.save(user);
-        databaseBackupHelper.exportDatabase();
+        databaseService.exportDatabase();
     }
 
     public boolean isPasswordCorrect(User user, String currentPassword) {
@@ -397,7 +406,8 @@ public class UserService implements UserServiceInterface {
     }
 
     @Transactional
-    public void syncCustomApiUser(String customApiKey) throws IOException {
+    public void syncCustomApiUser(String customApiKey)
+            throws SQLException, UnsupportedProviderException {
         if (customApiKey == null || customApiKey.trim().length() == 0) {
             return;
         }
@@ -414,14 +424,14 @@ public class UserService implements UserServiceInterface {
             user.setApiKey(customApiKey);
             user.addAuthority(new Authority(Role.INTERNAL_API_USER.getRoleId(), user));
             userRepository.save(user);
-            databaseBackupHelper.exportDatabase();
+            databaseService.exportDatabase();
         } else {
             // Update API key if it has changed
             User user = existingUser.get();
             if (!customApiKey.equals(user.getApiKey())) {
                 user.setApiKey(customApiKey);
                 userRepository.save(user);
-                databaseBackupHelper.exportDatabase();
+                databaseService.exportDatabase();
             }
         }
     }

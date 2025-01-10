@@ -73,15 +73,15 @@ main() {
 
 
     # Building Docker images
-   # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
-  # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
+    # docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest -f ./Dockerfile .
+    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-ultra-lite -f ./Dockerfile.ultra-lite .
 	
     # Test each configuration
-    #run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
-	#docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down
+    run_tests "Stirling-PDF-Ultra-Lite" "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml"
+	docker-compose -f "./exampleYmlFiles/docker-compose-latest-ultra-lite.yml" down
 	
 
-  #  run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
+    #run_tests "Stirling-PDF" "./exampleYmlFiles/docker-compose-latest.yml"
 	#docker-compose -f "./exampleYmlFiles/docker-compose-latest.yml" down
 
     export DOCKER_ENABLE_SECURITY=true
