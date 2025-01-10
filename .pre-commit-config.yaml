@@ -20,7 +20,7 @@ repos:
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         files: \.(properties|html|css|js|py|md)$
-        exclude: (.vscode|.devcontainer|src/main/resources|Dockerfile)
+        exclude: (.vscode|.devcontainer|src/main/resources|Dockerfile|.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js)
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.22.0
     hooks:
