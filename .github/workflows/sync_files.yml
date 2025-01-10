@@ -30,7 +30,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: pip install tomlkit
+        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt
       - name: Sync README
         run: python scripts/counter_translation.py
       - name: Set up git config
