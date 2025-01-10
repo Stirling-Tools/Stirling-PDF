@@ -23,12 +23,35 @@
       <!-- Features -->
       <script th:src="@{'/js/homecard.js'}"></script>
       <div class=" container">
+          <div>
         <br>
         <span class="material-symbols-rounded search-icon">
           search
         </span>
         <input type="text" id="searchBar" onkeyup="filterCards()" th:placeholder="#{home.searchBar}" autofocus>
+        </div>
+        <div>
+        <!-- <div id="popularTools" >
+            <div
+                    th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.popular})}">
+            </div>
+            <div style="display: flex; flex-direction: row;">
+              <div
+              th:replace="~{fragments/navbarEntry :: navbarEntry('view-pdf', 'menu_book', 'home.viewPdf.title', 'home.viewPdf.desc', 'viewPdf.tags', 'other')}">
+            </div>
+            <div
+              th:replace="~{fragments/navbarEntry :: navbarEntry('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
+            </div>
+            <div
+              th:replace="~{fragments/navbarEntry :: navbarEntry('pipeline', 'family_history', 'home.pipeline.title', 'home.pipeline.desc', 'pipeline.tags', 'advance')}">
+            </div>
+            <div
+              th:replace="~{fragments/navbarEntry :: navbarEntry('compress-pdf', 'zoom_in_map', 'home.compressPdfs.title', 'home.compressPdfs.desc', 'compressPdfs.tags', 'advance')}">
+            </div>
 
+            </div>
+          </div> -->
+        </div>
         <div class="features-container">
 
           <div th:if="${@shouldShow}" class="feature-card favorite update-notice" id="update-link"
@@ -46,41 +69,14 @@
             </a>
           </div>
 
-          <div id="groupFavorites" class="feature-group">
+          <!-- <div id="groupFavorites" class="feature-group">
             <div th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.favorite})}">
             </div>
             <div class="feature-group-container">
             </div>
-          </div>
+          </div> -->
 
-          <div style="
-          display: flex;
-          flex-direction: row;
-          width: 100%;">
-          <div id="popularTools" class="feature-group">
-            <div
-                    th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.popular})}">
-            </div>
-            <div class="feature-group-container">
-              <div
-              th:replace="~{fragments/navbarEntry :: navbarEntry('view-pdf', 'menu_book', 'home.viewPdf.title', 'home.viewPdf.desc', 'viewPdf.tags', 'other')}">
-            </div>
-            <div
-              th:replace="~{fragments/navbarEntry :: navbarEntry('multi-tool', 'construction', 'home.multiTool.title', 'home.multiTool.desc', 'multiTool.tags', 'organize')}">
-            </div>
-            <div
-              th:replace="~{fragments/navbarEntry :: navbarEntry('pipeline', 'family_history', 'home.pipeline.title', 'home.pipeline.desc', 'pipeline.tags', 'advance')}">
-            </div>
-            <div
-              th:replace="~{fragments/navbarEntry :: navbarEntry('compress-pdf', 'zoom_in_map', 'home.compressPdfs.title', 'home.compressPdfs.desc', 'compressPdfs.tags', 'advance')}">
-            </div>
-
-            </div>
-          </div>
-
-
-
-
+          <div class="feature-rows">
           <div id="groupOrganize" class="feature-group">
             <div
               th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.organize})}">
@@ -121,7 +117,12 @@
             </div>
             </div>
           </div>
-          <div id="groupConvertTo" class="feature-group">
+          <div id="groupConvert" style="display: flex;
+              flex-direction: column;
+              height: 45rem;
+              gap:24px;
+              flex-wrap: wrap;">
+          <div id="groupConvertTo"  class="feature-group">
             <div
               th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertTo})}">
             </div>
@@ -146,7 +147,6 @@
             </div>
             </div>
           </div>
-
           <div id="groupConvertFrom" class="feature-group">
             <div
               th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.convertFrom})}">
@@ -181,6 +181,7 @@
             </div>
             </div>
           </div>
+        </div>
           <div id="groupSecurity" class="feature-group">
             <div
               th:replace="~{fragments/featureGroupHeader :: featureGroupHeader(groupTitle=#{navbar.sections.security})}">

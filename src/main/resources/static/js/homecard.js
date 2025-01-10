@@ -50,7 +50,6 @@ function resetOrTemporarilyExpandGroup(featureGroup, filterKeywords = '', collap
   } else {
     // Temporarily expands feature group without affecting the actual/stored collapsed groups
     featureGroup.classList.remove('collapsed');
-    featureGroup.querySelector('.header-expand-button').classList.remove('collapsed');
   }
 }
 
@@ -214,13 +213,10 @@ function toggleFavoritesOnly() {
 function expandCollapseToggle(group, expand = null) {
   if (expand === null) {
     group.classList.toggle('collapsed');
-    group.querySelector('.header-expand-button').classList.toggle('collapsed');
   } else if (expand) {
     group.classList.remove('collapsed');
-    group.querySelector('.header-expand-button').classList.remove('collapsed');
   } else {
     group.classList.add('collapsed');
-    group.querySelector('.header-expand-button').classList.add('collapsed');
   }
 
   const collapsed = localStorage.getItem('collapsedGroups') ? JSON.parse(localStorage.getItem('collapsedGroups')) : [];

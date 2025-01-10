@@ -45,26 +45,27 @@
 .feature-group {
   display: flex;
   flex-direction: column;
+  width: 14rem;
+}
+
+.feature-rows{
+          display: flex;
+          flex-direction: row;
+          width: 120%;
+          flex-wrap: wrap;
 }
 
 .feature-group-header {
   display: flex;
-  align-items: center;
   justify-content: flex-start;
   color: var(--md-sys-color-on-surface);
-  margin-bottom: 15px;
+  margin-top: 15px;
   user-select: none;
   cursor: pointer;
   gap: 10px;
-
+}
 .feature-group-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(12rem, 3fr));
-  gap: 10px 0px;
-  overflow: hidden;
-  margin: -20px;
   padding: 10px;
-  box-sizing:content-box;
 }
 
 .feature-group-container.animated-group {
