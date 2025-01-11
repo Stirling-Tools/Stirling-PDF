@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config.security.database;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -26,6 +27,7 @@ import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.config.interfaces.DatabaseInterface;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.exception.BackupNotFoundException;
@@ -37,12 +39,13 @@ public class DatabaseService implements DatabaseInterface {
 
     public static final String BACKUP_PREFIX = "backup_";
     public static final String SQL_SUFFIX = ".sql";
-    private static final String BACKUP_DIR = "configs/db/backup/";
+    private final String BACKUP_DIR;
 
     private final ApplicationProperties applicationProperties;
     private final DataSource dataSource;
 
     public DatabaseService(ApplicationProperties applicationProperties, DataSource dataSource) {
+    	BACKUP_DIR = InstallationPathConfig.getConfigPath() + "db" +  File.separator+  "backup" +  File.separator;
         this.applicationProperties = applicationProperties;
         this.dataSource = dataSource;
     }
