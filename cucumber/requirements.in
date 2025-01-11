@@ -1,5 +1,5 @@
 behave
 requests
-PyPDF2
+pypdf
 reportlab
 PyCryptodome
