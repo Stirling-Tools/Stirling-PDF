@@ -55,6 +55,7 @@ public class DatabaseService implements DatabaseInterface {
      */
     @Override
     public boolean hasBackup() {
+        createBackupDirectory();
         Path filePath = Paths.get(BACKUP_DIR);
 
         if (Files.exists(filePath)) {
@@ -74,6 +75,8 @@ public class DatabaseService implements DatabaseInterface {
         List<FileInfo> backupFiles = new ArrayList<>();
 
         if (isH2Database()) {
+            createBackupDirectory();
+
             Path backupPath = Paths.get(BACKUP_DIR);
 
             try (DirectoryStream<Path> stream =
@@ -108,6 +111,18 @@ public class DatabaseService implements DatabaseInterface {
         }
 
         return backupFiles;
+    }
+
+    private void createBackupDirectory() {
+        Path backupPath = Paths.get(BACKUP_DIR);
+        if (!Files.exists(backupPath)) {
+            try {
+                Files.createDirectories(backupPath);
+                log.debug("create backup directory: {}", BACKUP_DIR);
+            } catch (IOException e) {
+                log.error("Error create backup directory: {}", e.getMessage(), e);
+            }
+        }
     }
 
     @Override
@@ -255,6 +270,7 @@ public class DatabaseService implements DatabaseInterface {
      * @return the <code>Path</code> object for the given file name
      */
     public Path getBackupFilePath(String fileName) {
+        createBackupDirectory();
         Path filePath = Paths.get(BACKUP_DIR, fileName).normalize();
         if (!filePath.startsWith(BACKUP_DIR)) {
             throw new SecurityException("Path traversal detected");
