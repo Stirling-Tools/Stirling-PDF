@@ -1,5 +1,7 @@
 package stirling.software.SPDF.config.security.database;
 
+import java.io.File;
+
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -9,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import stirling.software.SPDF.config.InstallationPathConfig;
 import stirling.software.SPDF.model.ApplicationProperties;
 import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 
@@ -17,8 +20,8 @@ import stirling.software.SPDF.model.provider.UnsupportedProviderException;
 @Configuration
 public class DatabaseConfig {
 
-    public static final String DATASOURCE_DEFAULT_URL =
-            "jdbc:h2:file:./configs/stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE";
+    public final String DATASOURCE_DEFAULT_URL;
+            
     public static final String DATASOURCE_URL_TEMPLATE = "jdbc:%s://%s:%4d/%s";
     public static final String DEFAULT_DRIVER = "org.h2.Driver";
     public static final String DEFAULT_USERNAME = "sa";
@@ -30,6 +33,7 @@ public class DatabaseConfig {
     public DatabaseConfig(
             ApplicationProperties applicationProperties,
             @Qualifier("runningEE") boolean runningEE) {
+    	DATASOURCE_DEFAULT_URL = "jdbc:h2:file:" + InstallationPathConfig.getConfigPath() + File.separator + "stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE";
         this.applicationProperties = applicationProperties;
         this.runningEE = runningEE;
     }
