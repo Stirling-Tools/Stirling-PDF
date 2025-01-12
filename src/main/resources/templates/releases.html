@@ -390,10 +390,26 @@ async function loadReleases() {
         while (container.firstChild) {
             container.removeChild(container.firstChild);
         }
+        const cachedReleases = sessionStorage.getItem('releases');
 
-        const response = await fetch(GITHUB_API + '/releases');
-        if (!response.ok) throw new Error('Failed to fetch releases');
-        const releases = await response.json();
+        let releases;
+        if (cachedReleases) {
+            releases = JSON.parse(cachedReleases);
+            console.log("Read from storage");
+        } else {
+            const response = await fetch(GITHUB_API + '/releases');
+            if (!response.ok) {
+                if (response.status === 403) {
+                    throw new Error('API rate limit exceeded');
+                }
+                if (response.status === 404) {
+                    throw new Error('Repository not found');
+                }
+                throw new Error('Failed to fetch releases');
+            }
+            releases = await response.json();
+            sessionStorage.setItem('releases', JSON.stringify(releases));
+        }
 
         // Sort releases by version number (descending)
         releases.sort((a, b) => compareVersions(b.tag_name, a.tag_name));
