@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  labeler:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -28,8 +28,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler-config.yml
           sync-labels: true
-  labeler-build:
-    needs: build
+  build:
     runs-on: ubuntu-latest
 
     permissions:
@@ -82,7 +81,6 @@ jobs:
           retention-days: 3
 
   docker-compose-tests:
-    needs: build
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main' ||
     #     (github.event_name == 'pull_request' &&
     #     contains(github.event.pull_request.labels.*.name, 'licenses') == false &&
