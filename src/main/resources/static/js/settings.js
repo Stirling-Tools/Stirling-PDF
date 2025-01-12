@@ -39,4 +39,3 @@ document.getElementById("cacheInputs").addEventListener("change", function () {
   cacheInputs = this.checked ? "enabled" : "disabled";
   localStorage.setItem("cacheInputs", cacheInputs);
 });
-
