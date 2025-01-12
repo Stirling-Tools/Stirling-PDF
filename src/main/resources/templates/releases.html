@@ -274,9 +274,31 @@
 function formatText(text) {
     const container = document.createElement('div');
 
+    if (!text || typeof text !== 'string') {
+        console.error('Invalid input to formatText:', text);
+        return container;
+    }
+
+    let textWithoutComments;
+    try {
+        textWithoutComments = text.replace(
+            /<!-- Release notes generated using configuration in .github\/release\.yml at main -->/,
+            ''
+        );
+    } catch (error) {
+        console.error('Error in replace operation:', error);
+        return container;
+    }
+
     // Split the text into lines
-    const textWithoutComments = text.replace(/<!--[\s\S]*?-->/g, '');
-    const lines = textWithoutComments.split('\n');
+    let lines;
+    try {
+        lines = textWithoutComments.split('\n');
+    } catch (error) {
+        console.error('Error in split operation:', error);
+        return container;
+    }
+
     let currentList = null;
 
     lines.forEach(line => {
@@ -390,10 +412,26 @@ async function loadReleases() {
         while (container.firstChild) {
             container.removeChild(container.firstChild);
         }
+        const cachedReleases = sessionStorage.getItem('releases');
 
-        const response = await fetch(GITHUB_API + '/releases');
-        if (!response.ok) throw new Error('Failed to fetch releases');
-        const releases = await response.json();
+        let releases;
+        if (cachedReleases) {
+            releases = JSON.parse(cachedReleases);
+            console.log("Read from storage");
+        } else {
+            const response = await fetch(GITHUB_API + '/releases');
+            if (!response.ok) {
+                if (response.status === 403) {
+                    throw new Error('API rate limit exceeded');
+                }
+                if (response.status === 404) {
+                    throw new Error('Repository not found');
+                }
+                throw new Error('Failed to fetch releases');
+            }
+            releases = await response.json();
+            sessionStorage.setItem('releases', JSON.stringify(releases));
+        }
 
         // Sort releases by version number (descending)
         releases.sort((a, b) => compareVersions(b.tag_name, a.tag_name));
