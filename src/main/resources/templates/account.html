@@ -104,7 +104,14 @@
               </div>
               <script th:inline="javascript">
                 jQuery.validator.addMethod("usernamePattern", function(value, element) {
-                    return this.optional(element) || /^[a-zA-Z0-9][a-zA-Z0-9@._+-]*[a-zA-Z0-9]$|^(?=.{1,64}@)[A-Za-z0-9]+(\.[A-Za-z0-9_+.-]+)*@[^-][A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(\.[A-Za-z]{2,})$/.test(value);
+                  // Regular expression for user name: Min. 3 characters, max. 50 characters
+                  const regexUsername = /^[a-zA-Z0-9](?!.*[-@._+]{2,})([a-zA-Z0-9@._+-]{1,48})[a-zA-Z0-9]$/;
+
+                  // Regular expression for email addresses: Max. 320 characters, with RFC-like validation
+                  const regexEmail = /^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-Za-z0-9])?@[^-][A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*(?:\.[A-Za-z]{2,})$/;
+
+                  // Check if the field is optional or meets the requirements
+                  return this.optional(element) || regexUsername.test(value) || regexEmail.test(value);
                 }, /*[[#{invalidUsernameMessage}]]*/ "Invalid username format");
                 $(document).ready(function() {
                   $.validator.addMethod("passwordMatch", function(value, element) {
