@@ -106,41 +106,39 @@ jobs:
           egress-policy: audit
 
       - name: Checkout Repository
-        if: contains(github.event.pull_request.labels.*.name, 'build')
+        if: contains(github.event.pull_request.labels.*.name, 'build') || github.event_name == 'push'
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Java 17
-        if: contains(github.event.pull_request.labels.*.name, 'build')
+        if: contains(github.event.pull_request.labels.*.name, 'build') || github.event_name == 'push'
         uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
         with:
           java-version: "17"
           distribution: "adopt"
 
       - name: Set up Docker Buildx
-        if: contains(github.event.pull_request.labels.*.name, 'build')
+        if: contains(github.event.pull_request.labels.*.name, 'build') || github.event_name == 'push'
         uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5 # v3.8.0
 
       - name: Install Docker Compose
-        if: contains(github.event.pull_request.labels.*.name, 'build')
+        if: contains(github.event.pull_request.labels.*.name, 'build') || github.event_name == 'push'
         run: |
           sudo curl -SL "https://github.com/docker/compose/releases/download/v2.32.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
-        if: contains(github.event.pull_request.labels.*.name, 'build')
+        if: contains(github.event.pull_request.labels.*.name, 'build') || github.event_name == 'push'
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: "3.12"
 
       - name: Pip requirements
-        if: contains(github.event.pull_request.labels.*.name, 'build')
+        if: contains(github.event.pull_request.labels.*.name, 'build') || github.event_name == 'push'
         run: |
            pip install --require-hashes -r ./cucumber/requirements.txt
 
       - name: Run Docker Compose Tests
-        if: contains(github.event.pull_request.labels.*.name, 'build')
+        if: contains(github.event.pull_request.labels.*.name, 'build') || github.event_name == 'push'
         run: |
           chmod +x ./test.sh
           ./test.sh
-
-      - run: echo build
