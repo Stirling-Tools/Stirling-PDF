@@ -74,3 +74,16 @@ Test:
 Github:
   - changed-files:
     - any-glob-to-any-file: '.github/**/*'
+
+build:
+  - changed-files:
+    - any-glob-to-any-file: 'src/**/*'
+    - any-glob-to-any-file: 'pipeline/**/*'
+    - any-glob-to-any-file: 'gradle/**/*'
+    - any-glob-to-any-file: 'cucumber/**/*'
+    - any-glob-to-any-file: 'exampleYmlFiles/**/*'
+    - any-glob-to-any-file: '*.sh'
+    - any-glob-to-any-file: 'build.gradle'
+    - any-glob-to-any-file: 'Dockerfile'
+    - any-glob-to-any-file: 'Dockerfile*'
+    - any-glob-to-any-file: 'lauch4jConfig.xml'

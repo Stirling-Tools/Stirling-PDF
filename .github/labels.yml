@@ -108,3 +108,6 @@
 - name: "Priority: Low"
   color: "00FF00"
   description: "Issues or pull requests with low priority"
+- name: "build"
+  color: "#66FF00"
+  description: "Build: tests changes"
