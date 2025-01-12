@@ -29,7 +29,7 @@ public class SPDFApplicationTest {
 
     @Mock
     private ApplicationProperties applicationProperties;
-    
+
     @InjectMocks
     private SPDFApplication SPDFApplication;
 

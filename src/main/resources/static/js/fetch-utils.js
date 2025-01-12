@@ -4,7 +4,7 @@ window.fetchWithCsrf = async function(url, options = {}) {
             .split('; ')
             .find(row => row.startsWith('XSRF-TOKEN='))
             ?.split('=')[1];
-        
+
         if (cookieValue) {
             return cookieValue;
         }
@@ -14,10 +14,10 @@ window.fetchWithCsrf = async function(url, options = {}) {
 
     // Create a new options object to avoid modifying the passed object
     const fetchOptions = { ...options };
-    
+
     // Ensure headers object exists
     fetchOptions.headers = { ...options.headers };
-    
+
     // Add CSRF token if available
     const csrfToken = getCsrfToken();
     if (csrfToken) {

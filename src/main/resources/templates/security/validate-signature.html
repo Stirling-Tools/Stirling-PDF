@@ -21,9 +21,9 @@
                   <div th:replace="~{fragments/common :: fileSelector(name='fileInput', multipleInputsForSingleRequest=false, remoteCall='false', accept='application/pdf')}"></div>
                 </div>
                 <div class="mb-3">
-		          <label th:text="#{validateSignature.selectCustomCert}" ></label>
-		          <div th:replace="~{fragments/common :: fileSelector(name='certFile', multipleInputsForSingleRequest=false, notRequired=true, remoteCall='false', accept='.cer,.crt,.pem')}"></div>
-		        </div>
+              <label th:text="#{validateSignature.selectCustomCert}" ></label>
+              <div th:replace="~{fragments/common :: fileSelector(name='certFile', multipleInputsForSingleRequest=false, notRequired=true, remoteCall='false', accept='.cer,.crt,.pem')}"></div>
+            </div>
                 <div class="mb-3 text-left">
                   <button type="submit" id="submitBtn" class="btn btn-primary" th:text="#{validateSignature.submit}"></button>
                 </div>

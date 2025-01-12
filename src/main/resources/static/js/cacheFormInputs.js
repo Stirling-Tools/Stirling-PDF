@@ -1,10 +1,10 @@
 document.addEventListener("DOMContentLoaded", function() {
-  
+
   var cacheInputs = localStorage.getItem("cacheInputs") || "disabled";
   if (cacheInputs !== "enabled") {
     return; // Stop execution if caching is not enabled
   }
-  
+
   // Function to generate a key based on the form's action attribute
   function generateStorageKey(form) {
     const action = form.getAttribute('action');
@@ -24,11 +24,11 @@ document.addEventListener("DOMContentLoaded", function() {
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
       // Skip elements without names, passwords, files, hidden fields, and submit/reset buttons
-      if (!element.name || 
-          element.type === 'password' || 
-          element.type === 'file' || 
-          //element.type === 'hidden' || 
-          element.type === 'submit' || 
+      if (!element.name ||
+          element.type === 'password' ||
+          element.type === 'file' ||
+          //element.type === 'hidden' ||
+          element.type === 'submit' ||
           element.type === 'reset') {
         continue;
       }
