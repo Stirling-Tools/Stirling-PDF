@@ -274,9 +274,31 @@
 function formatText(text) {
     const container = document.createElement('div');
 
+    if (!text || typeof text !== 'string') {
+        console.error('Invalid input to formatText:', text);
+        return container;
+    }
+
+    let textWithoutComments;
+    try {
+        textWithoutComments = text.replace(
+            /<!-- Release notes generated using configuration in .github\/release\.yml at main -->/,
+            ''
+        );
+    } catch (error) {
+        console.error('Error in replace operation:', error);
+        return container;
+    }
+
     // Split the text into lines
-    const textWithoutComments = text.replace(/<!--[\s\S]*?-->/g, '');
-    const lines = textWithoutComments.split('\n');
+    let lines;
+    try {
+        lines = textWithoutComments.split('\n');
+    } catch (error) {
+        console.error('Error in split operation:', error);
+        return container;
+    }
+
     let currentList = null;
 
     lines.forEach(line => {
